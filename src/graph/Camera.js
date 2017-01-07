@@ -417,7 +417,7 @@ parsegraph_Camera.prototype.height = function()
     return this._height;
 };
 
-parsegraph_Camera.prototype.project  = function()
+parsegraph_Camera.prototype.project = function()
 {
     // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
     // Lookup the size the browser is displaying the canvas.
@@ -454,4 +454,4 @@ parsegraph_Camera.prototype.project  = function()
             this.graph().gl().drawingBufferHeight
         )
     );
-}
+};
