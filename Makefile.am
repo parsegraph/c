@@ -1,3 +1,5 @@
+# TODO Allow tests to be excluded for production uses.
+
 ACLOCAL_AMFLAGS = -I m4
 
 dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js
@@ -57,6 +59,9 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/LayoutState.js \
 	src/graph/Neighbors.js \
 	src/graph/Node.js \
+	src/alpha/Maths.js \
+	src/alpha/Physical.js \
+	src/alpha/Cam.js \
 	src/Parser.js \
 	src/user.js \
 	src/graph/Camera.js \
@@ -72,4 +77,4 @@ parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
 	cat $^ >$@
 	echo >>$@
 	echo "/* Generated `date` */" >>$@
-	chmod 0440 $@
+	chmod 0444 $@
