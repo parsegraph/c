@@ -831,3 +831,209 @@ function parsegraph_createExtent(copy)
 {
     return new parsegraph_Extent(copy);
 }
+
+parsegraph_Extent_Tests = new parsegraph_TestSuite("parsegraph_Extent");
+parsegraph_AllTests.addTest(parsegraph_Extent_Tests);
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.simplify", function() {
+    var extent = new parsegraph_Extent();
+    extent.appendLS(10, 20);
+    extent.appendLS(5, 20);
+    extent.simplify();
+    if(extent.numBounds() !== 1) {
+        return "Simplify must merge bounds with equal sizes.";
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.numBounds", function() {
+    var extent = new parsegraph_Extent();
+    if(extent.numBounds() !== 0) {
+        return "Extent must begin with an empty numBounds.";
+    }
+    extent.appendLS(1, 15);
+    if(extent.numBounds() !== 1) {
+        return "Append must only add one bound.";
+    }
+    extent.appendLS(1, 20);
+    extent.appendLS(1, 25);
+    if(extent.numBounds() !== 3) {
+        return "Append must only add one bound per call.";
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.separation", function() {
+    var forwardExtent = new parsegraph_Extent();
+    var backwardExtent = new parsegraph_Extent();
+
+    var testSeparation = function(expected) {
+        return forwardExtent.separation(backwardExtent) ==
+            backwardExtent.separation(forwardExtent) &&
+            forwardExtent.separation(backwardExtent) == expected;
+    };
+
+    forwardExtent.appendLS(50, 10);
+    backwardExtent.appendLS(50, 10);
+    if(!testSeparation(20)) {
+        console.log(testSeparation(20));
+        console.log(forwardExtent.separation(backwardExtent));
+        console.log(backwardExtent.separation(forwardExtent));
+        return "For single bounds, separation should be equivalent to the size of the " +
+            "forward and backward extents.";
+    }
+
+    backwardExtent.appendLS(50, 20);
+    forwardExtent.appendLS(50, 20);
+    if(!testSeparation(40)) {
+        return false;
+    }
+
+    backwardExtent.appendLS(50, 20);
+    forwardExtent.appendLS(50, 40);
+    if(!testSeparation(60)) {
+        return false;
+    }
+
+    backwardExtent.appendLS(50, 10);
+    forwardExtent.appendLS(50, 10);
+    if(!testSeparation(60)) {
+        return false;
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.Simple combinedExtent", function(resultDom) {
+    var rootNode = new parsegraph_Extent();
+    var forwardNode = new parsegraph_Extent();
+
+    rootNode.appendLS(50, 25);
+    forwardNode.appendLS(12, 6);
+    var separation = rootNode.separation(forwardNode);
+
+    var combined = rootNode.combinedExtent(forwardNode, 0, separation);
+
+    var expected = new parsegraph_Extent();
+    expected.appendLS(12, separation + 6);
+    expected.appendLS(38, 25);
+
+    if(!expected.equals(combined)) {
+        resultDom.appendChild(
+            expected.toDom("Expected forward extent")
+        );
+        resultDom.appendChild(
+            combined.toDom("Actual forward extent")
+        );
+        return "Combining extents does not work.";
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.equals", function(resultDom) {
+    var rootNode = new parsegraph_Extent();
+    var forwardNode = new parsegraph_Extent();
+
+    rootNode.appendLS(10, 10);
+    rootNode.appendLS(10, NaN);
+    rootNode.appendLS(10, 15);
+
+    forwardNode.appendLS(10, 10);
+    forwardNode.appendLS(10, NaN);
+    forwardNode.appendLS(10, 15);
+
+    if(!rootNode.equals(forwardNode)) {
+        return "Equals does not handle NaN well.";
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.combinedExtent with NaN", function(resultDom) {
+    var rootNode = new parsegraph_Extent();
+    var forwardNode = new parsegraph_Extent();
+
+
+    rootNode.appendLS(50, 25);
+
+    forwardNode.appendLS(10, NaN);
+    forwardNode.setBoundSizeAt(0, NaN);
+    if(!isNaN(forwardNode.boundSizeAt(0))) {
+        return forwardNode.boundSizeAt(0);
+    }
+    forwardNode.appendLS(30, 5);
+
+
+    var separation = rootNode.separation(forwardNode);
+    if(separation != 30) {
+        return "Separation doesn't even match. Actual=" + separation;
+    }
+
+    var combined = rootNode.combinedExtent(forwardNode,
+        0,
+        separation
+    );
+
+    var expected = new parsegraph_Extent();
+    expected.appendLS(10, 25);
+    expected.appendLS(30, 35);
+    expected.appendLS(10, 25);
+
+    if(!expected.equals(combined)) {
+        resultDom.appendChild(
+            expected.toDom("Expected forward extent")
+        );
+        resultDom.appendChild(
+            combined.toDom("Actual forward extent")
+        );
+        return "Combining extents does not work.";
+    }
+});
+
+parsegraph_Extent_Tests.addTest("parsegraph_Extent.combinedExtent", function(resultDom) {
+    var rootNode = new parsegraph_Extent();
+    var forwardNode = new parsegraph_Extent();
+
+    rootNode.appendLS(50, 25);
+    forwardNode.appendLS(12, 6);
+    var separation = rootNode.separation(forwardNode);
+
+    var combined = rootNode.combinedExtent(forwardNode,
+        25 - 6,
+        separation
+    );
+
+    var expected = new parsegraph_Extent();
+    expected.appendLS(19, 25);
+    expected.appendLS(12, separation + 6);
+    expected.appendLS(19, 25);
+
+    if(!expected.equals(combined)) {
+        resultDom.appendChild(
+            expected.toDom("Expected forward extent")
+        );
+        resultDom.appendChild(
+            combined.toDom("Actual forward extent")
+        );
+        return "Combining extents does not work.";
+    }
+});
+
+parsegraph_checkExtentsEqual = function(graph, caret, direction, expected, resultDom)
+{
+    if(caret.node().extentsAt(direction).equals(expected)) {
+        return true;
+    }
+    if(resultDom) {
+        resultDom.appendChild(
+            graph._container
+        );
+        resultDom.appendChild(
+            expected.toDom(
+                "Expected " + parsegraph_nameNodeDirection(direction) + " extent"
+            )
+        );
+        resultDom.appendChild(
+            caret.node().extentsAt(direction).toDom(
+                "Actual " + parsegraph_nameNodeDirection(direction) + " extent"
+            )
+        );
+        resultDom.appendChild(document.createTextNode(
+            "Extent offset = " + caret.node().extentOffsetAt(direction)
+        ));
+    }
+    return false;
+};

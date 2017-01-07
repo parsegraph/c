@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: #eee;
+}
+
+body > div {
+    width: 100%;
+    margin: 1em 0;
+    text-align: center;
+    position: absolute;
+}
+
+.parsegraph_Graph {
+    width: 500px;
+    height: 500px;
+}
+
+.Successful {
+    color: green;
+}
+
+.Crashed {
+    color: maroon;
+}
+
+.Failed {
+    color: red;
+}
+
+@media only screen and (max-width: 980px) {
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script>
+
+// TODO Extract these tests into their respective files.
+// TODO Create a file for AllTests.
+// TODO Allow tests to be excluded for production uses.
+// TODO Consider including files using template toolkit, and not 
+// TODO Windows server support
+// TODO nginx support
+document.addEventListener("DOMContentLoaded", function(event) {
+    parsegraph_initialize();
+
+    var main = document.body;
+
+    var result = parsegraph_AllTests.run();
+    result.connect(main);
+});
+</script>
+</head>
+<body>
+</body>
+</html>

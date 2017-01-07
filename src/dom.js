@@ -45,3 +45,21 @@ function fixedCharAt(str, idx)
     }
     return ret;
 }
+
+parsegraph_Browser_Tests = new parsegraph_TestSuite("Browser");
+parsegraph_AllTests.addTest(parsegraph_Browser_Tests);
+
+parsegraph_Browser_Tests.addTest("arguments referenced from other closures", function() {
+
+    var foo = function() {
+        var args = arguments;
+        return function() {
+            return args[0];
+        };
+    }
+
+    var c = foo(1)(2);
+    if(c !== 1) {
+        return "Closures cannot reference external arguments.";
+    }
+});

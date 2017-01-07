@@ -353,3 +353,5 @@ parsegraph_TestListener.prototype.TestStarted = function()
 parsegraph_TestListener.prototype.TestFinished = function()
 {
 };
+
+parsegraph_AllTests = new parsegraph_TestSuite();

@@ -109,6 +109,29 @@ var parsegraph_SLOT_STYLE = {
     horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
 };
 
+function parsegraph_style(type)
+{
+    type = parsegraph_readNodeType(type);
+
+    switch(type) {
+    case parsegraph_BUD:
+    {
+        return parsegraph_BUD_STYLE;
+    }
+    case parsegraph_SLOT:
+    {
+        return parsegraph_SLOT_STYLE;
+    }
+    case parsegraph_BLOCK:
+    {
+        return parsegraph_BLOCK_STYLE;
+    }
+    case parsegraph_NULL_NODE_TYPE:
+    default:
+        return null;
+    }
+};
+
 parsegraph_EXTENT_BORDER_COLOR = parsegraph_createColor(1, 1, 0, .2);
 parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;
 parsegraph_EXTENT_BACKGROUND_COLOR = parsegraph_createColor(1, 0, 0, .1);

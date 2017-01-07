@@ -672,23 +672,7 @@ parsegraph_Node.prototype.setLabel = function(label)
 
 parsegraph_Node.prototype.blockStyle = function()
 {
-    switch(this.type()) {
-    case parsegraph_BUD:
-    {
-        return parsegraph_BUD_STYLE;
-    }
-    case parsegraph_SLOT:
-    {
-        return parsegraph_SLOT_STYLE;
-    }
-    case parsegraph_BLOCK:
-    {
-        return parsegraph_BLOCK_STYLE;
-    }
-    case parsegraph_NULL_NODE_TYPE:
-    default:
-        throw new Error("Type must not be null");
-    }
+    return parsegraph_style(this.type());
 };
 
 parsegraph_Node.prototype.isSelectedAt = function(direction)
