@@ -271,8 +271,6 @@ this.Tick = function(elapsed)
     // print(offsetPlatform.position);
 
 
-    this.scheduleRepaint();
-
     this.input.Update();
 }; // Tick
 
@@ -329,8 +327,7 @@ alpha_GLWidget.prototype.connect = function(eventName, callback, thisArg)
 };
 
 /**
- * Schedules a repaint. Painting causes the scene
- * graph to be rebuilt.
+ * Schedules a repaint. Painting causes the scene to be rebuilt.
  */
 alpha_GLWidget.prototype.scheduleRepaint = function()
 {
@@ -355,15 +352,15 @@ alpha_GLWidget.prototype.scheduleRender = function()
     if(this._pendingRender != null) {
         return;
     }
-    var graph = this;
+    var widget = this;
     this._pendingRender = requestAnimationFrame(function() {
-        graph._pendingRender = null;
-        if(graph._needsRepaint) {
-            graph.paint();
-            graph._needsRepaint = false;
+        widget._pendingRender = null;
+        if(widget._needsRepaint) {
+            widget.paint();
+            widget._needsRepaint = false;
         }
 
-        graph.render();
+        widget.render();
     });
 };
 
@@ -427,7 +424,7 @@ alpha_GLWidget.prototype.render = function()
     this._gl.enable(this._gl.DEPTH_TEST);
 
 
-    /*glLoadMatrix(camera.GetViewMatrix());
+    glLoadMatrix(camera.GetViewMatrix());
     world.Draw();
     for(var i = 0; i <= swarm.length; ++i) {
         var v = swarm[i];
@@ -450,7 +447,7 @@ alpha_GLWidget.prototype.render = function()
     testCluster.Draw();
 
     glLoadMatrix(sphere.GetViewMatrix());
-    sphereC.Draw();*/
+    sphereC.Draw();
 
     if(typeof(this.afterRender) == "function") {
         this.afterRender();

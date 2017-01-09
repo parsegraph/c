@@ -59,8 +59,9 @@ var widget = new alpha_GLWidget();
 widget.Tick(0);
 var tick = function() {
     widget.Tick(alpha_GetTime());
+    widget.scheduleRepaint();
 };
-window.setInterval(tick, 1000 / 24);
+var tickIntervalId = window.setInterval(tick, 1000 / 24);
 
 document.body.appendChild(widget.container());
 
