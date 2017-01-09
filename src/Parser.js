@@ -350,4 +350,9 @@ function parse(str)
     }
 }
 
-parse("[AB, CD, [E, F], G] = (1, 2, 3)");
+parsegraph_Parser_Tests = new parsegraph_TestSuite("parsegraph_Parser");
+parsegraph_AllTests.addTest(parsegraph_Parser_Tests);
+
+parsegraph_Parser_Tests.addTest("parsegraph_Parser", function(resultDom) {
+    parse("[AB, CD, [E, F], G] = (1, 2, 3)");
+});
