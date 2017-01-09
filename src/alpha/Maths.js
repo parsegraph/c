@@ -13,6 +13,11 @@
 
 // Matrices:
 
+function alpha_random(min, max)
+{
+    return min + Math.round(Math.random() * (max - min));
+};
+
 //----------------------------------------------
 //----------------------------------------------
 //-----------      VECTORS     -----------------
@@ -199,10 +204,10 @@ alpha_Vector.prototype.AngleBetween = function(other)
     return Math.acos(dot / (this.Magnitude() * other.Magnitude()));
 }
 
-alpha_Vector.prototype.ToString = function()
+alpha_Vector.prototype.toString = function()
 {
     return "{x: " + this[0] + " y: " + this[1] + " z: " + this[2] + "}";
-}
+};
 
 alpha_Vector_Tests = new parsegraph_TestSuite("alpha_Vector");
 parsegraph_AllTests.addTest(alpha_Vector_Tests);
@@ -266,7 +271,9 @@ function alpha_Quaternion()
     this[3] = 1;
     this.length = 4;
 
-    this.Set.apply(this, arguments);
+    if(arguments.length > 0) {
+        this.Set.apply(this, arguments);
+    }
 }
 
 alpha_Quaternion.prototype.Clone = function()
@@ -418,27 +425,26 @@ alpha_Quaternion.prototype.ToAxisAndAngle = function()
     return [new alpha_Vector(x, y, z), angle];
 };
 
-function alpha_QuaternionFromAxisAndAngle(x, y, z, angle)
+function alpha_QuaternionFromAxisAndAngle()
 {
     var quat = new alpha_Quaternion(0, 0, 0, 1);
-    return quat.FromAxisAndAngle(x, y, z, angle);
+    return quat.FromAxisAndAngle.apply(quat, arguments);
 }
 
-alpha_Quaternion.prototype.FromAxisAndAngle = function(x, y, z, angle)
+alpha_Quaternion.prototype.FromAxisAndAngle = function()
 {
+    var x, y, z, angle;
     var axis = new alpha_Vector();
-    if(typeof x != "number") {
+    if(arguments.length > 2) {
         // passed as ({vector}, angle)
         // creates or copies the vector or Vector
-        axis.Set(x[0], x[1], x[2]);
-        angle = y;
+        axis.Set(arguments[0][0], arguments[0][1], arguments[0][2]);
+        angle = arguments[1];
     }
-    else if(angle) {
+    else  {
         // passed as ( x, y, z, angle) -- (rough check)
-        axis.Set(x, y, z);
-    }
-    else {
-        throw new Error("Quaternion.FromAxisAndAngle needs and angle");
+        axis.Set(arguments[0], arguments[1], arguments[2]);
+        angle = arguments[3];
     }
 
     axis.Normalize();
@@ -490,10 +496,10 @@ alpha_Quaternion.prototype.RotatedVector = function(x, y, z)
     var ay = a[1]
     var az = a[2];
 
-    var bw = b[W];
-    var bx = b[X];
-    var by = b[Y];
-    var bz = b[Z];
+    var bw = b[3];
+    var bx = b[0];
+    var by = b[1];
+    var bz = b[2];
     // removed all the mults by aw, which would result in 0;
 
     var q = new alpha_Quaternion(
@@ -549,7 +555,7 @@ alpha_Quaternion.prototype.RotatedVector2 = function(x, y, z)
     return new alpha_Vector(r[0], r[1], r[2]);
 };
 
-alpha_Quaternion.prototype.ToString = function()
+alpha_Quaternion.prototype.toString = function()
 {
     return "{x: " + this[0] + " y: " + this[1] + " z: " + this[2] + " w: " + this[3] + "}";
 };

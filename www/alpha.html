@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+.alpha_GLWidget {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: #eee;
+}
+
+body > div {
+    text-align: center;
+    position: absolute;
+}
+
+.Successful {
+    color: green;
+}
+
+.Crashed {
+    color: maroon;
+}
+
+.Failed {
+    color: red;
+}
+
+@media only screen and (max-width: 980px) {
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function(event) {
+
+parsegraph_initialize();
+
+var widget = new alpha_GLWidget();
+
+widget.Tick(0);
+var tick = function() {
+    widget.Tick(alpha_GetTime());
+};
+window.setInterval(tick, 1000 / 24);
+
+document.body.appendChild(widget.container());
+
+}); // DOMContentLoaded
+</script>
+</head>
+<body>
+</body>
+</html>

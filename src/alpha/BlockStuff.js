@@ -1,0 +1,850 @@
+// Version 1.5
+
+/*
+			Vector    Color
+			  |         |
+			 Face     Skin
+			  |         |
+			 Shape ---BlockType
+			            |
+			            ID -- just a number in a table with the BlockType as its value
+			            |
+			          Block
+			            |
+			          Cluster
+
+some of the above classes are really basic
+really nothing but tables
+they exist to make it easier to piece things together
+hopefully
+*/
+
+//--------------------------------------------
+//--------------------------------------------
+//---------------  Colors  -------------------
+//--------------------------------------------
+//--------------------------------------------
+// a simple class to make it easier to create colors;
+// usage:
+// local brown = Color( {.5,.25,1} ) or Color( .5,.25,1)
+// local tan = Color( 203, 133, 63);
+// local darkbrown = Color( "#3b2921")
+
+function alpha_Color()
+{
+    this[0] = 0;
+    this[1] = 0;
+    this[2] = 0;
+    this.length = 3;
+
+    if(arguments.length > 0) {
+        this.Set.apply(this, arguments);
+    }
+};
+
+alpha_Color.prototype.asRGB = function() {
+    return "rgb(" +
+        Math.round(this[0] * 255) + ", " +
+        Math.round(this[1] * 255) + ", " +
+        Math.round(this[2] * 255) + ")"
+};
+
+alpha_Color_Tests = new parsegraph_TestSuite("alpha_Color");
+parsegraph_AllTests.addTest(alpha_Color_Tests);
+
+alpha_Color_Tests.addTest("alpha_Color.<constructor>", function(resultDom) {
+    var v = new alpha_Color(.1, .2, .3);
+    if(v[0] != .1 || v[1] != .2 || v[2] != .3) {
+        resultDom.appendChild(document.createTextNode(v));
+        return "Constructor must accept arguments.";
+    }
+
+    v = new alpha_Color();
+    if(v[0] != 0 || v[1] != 0 || v[2] != 0) {
+        resultDom.appendChild(document.createTextNode(v));
+        return "Constructor must allow zero-arguments.";
+    }
+});
+
+alpha_Color.prototype.Set = function()
+{
+    var r, g, b;
+    if(arguments.length > 1) {
+        r = arguments[0];
+        g = arguments[1];
+        b = arguments[2];
+    }
+    else if(typeof arguments[0] === "number") {
+        r = arguments[0];
+        g = arguments[0];
+        b = arguments[0];
+    }
+    else if(typeof arguments[0] === "string") {
+        // passed a hex color (hopefully)
+        var start = 0;
+        if(arguments[0].charAt(0) === '#') {
+            // strip the # from it
+            start = 1;
+        }
+        r = Number.parseInt(arguments[0].substring(start, start + 2), 16);
+        g = Number.parseInt(arguments[0].substring(start + 2, start + 4), 16);
+        b = Number.parseInt(arguments[0].substring(start + 4, start + 6), 16);
+    }
+    else {
+        r = arguments[0][0];
+        g = arguments[0][1];
+        b = arguments[0][2];
+    }
+
+    if(r > 1) {
+        r = r / 255;
+    }
+    if(g > 1) {
+        g = g / 255;
+    }
+    if(b > 1) {
+        b = b / 255;
+    }
+
+    this[0] = r;
+    this[1] = g;
+    this[2] = b;
+};
+
+alpha_Color_Tests.addTest("alpha_Color.Set", function() {
+    var v = new alpha_Color(1);
+    v.Set(.2);
+    if(!v.Equals(new alpha_Color(.2, .2, .2))) {
+        console.log(v);
+        return "Set must allow single arguments.";
+    }
+
+    v.Set(.2, .3, .4);
+    if(!v.Equals(new alpha_Color(.2, .3, .4))) {
+        console.log(v);
+        return "Set must allow multiple arguments."
+    }
+
+    v.Set(new alpha_Color(.2, .3, .4));
+    if(!v.Equals(new alpha_Color(.2, .3, .4))) {
+        console.log(v);
+        return "Set must allow alpha_Colors as arguments."
+    }
+});
+
+alpha_Color.prototype.Equals = function()
+{
+    if(arguments.length > 1) {
+        for(var i = 0; i < this.length; ++i) {
+            if(this[i] != arguments[i]) {
+                return false;
+            }
+        }
+    }
+    else if(typeof arguments[0] === "number") {
+        for(var i = 0; i < this.length; ++i) {
+            if(this[i] != arguments[0]) {
+                return false;
+            }
+        }
+    }
+    else {
+        for(var i = 0; i < this.length; ++i) {
+            if(this[i] != arguments[0][i]) {
+                return false;
+            }
+        }
+    }
+    return true;
+};
+
+alpha_Color_Tests.addTest("alpha_Color.Equals", function() {
+    var v = new alpha_Color(1);
+    v.Set(.2);
+    if(!v.Equals(.2)) {
+        console.log(v);
+        return "Equals must accept a single numeric argument."
+    }
+
+    v.Set(.2, .3, .4);
+    if(!v.Equals(.2, .3, .4)) {
+        console.log(v);
+        return "Equals must accept mulitple arguments.";
+    }
+
+    v.Set(new alpha_Color(.2, .3, .4));
+    if(!v.Equals(new alpha_Color(.2, .3, .4))) {
+        console.log(v);
+        return "Equals accepts single alpha_Color arguments."
+    }
+});
+
+alpha_Color.prototype.toString = function()
+{
+    return "{" + this[0] + ", " + this[1] + ", " + this[2] + "}";
+};
+
+//--------------------------------------------
+//--------------------------------------------
+//---------------  Skin  ---------------------
+//--------------------------------------------
+//--------------------------------------------
+// the skin object is simply an ordered list of colors
+// one for each vertex of each face of a face
+// a skin can only be applied to a shape with
+// the same number of vertices
+// you create a skin by passing it a nested table of colors
+// skins aren't designed to be edited once created
+// Skin( {
+// 	{ green, green, green, green }, -- face 1 has 4 vertices
+// 	{ brown, brown, brown, brown }, -- face 2
+// 	{ brown, brown, brown, brown }, -- face 3
+// 		--and so on until you have the full skin
+// })
+function alpha_Skin()
+{
+    if(arguments.length > 1) {
+        // Passed faces directly.
+        this.length = arguments.length;
+        for(var i = 0; i < arguments.length; ++i) {
+            var face = arguments[i];
+            this[i] = [];
+            for(var j = 0; j < face.length; ++j) {
+                this[i].push(new alpha_Color(face[j]));
+                var c = face[j];
+            }
+        }
+    }
+    else if(arguments.length > 0) {
+        // Passed a single array of faces.
+        this.length = arguments[0].length;
+        for(var i = 0; i < arguments[0].length; ++i) {
+            var face = arguments[0][i];
+            this[i] = [];
+            for(var j = 0; j < face.length; ++j) {
+                this[i].push(new alpha_Color(face[j]));
+                var c = face[j];
+            }
+        }
+    }
+    else {
+        // An empty skin?
+        this.length = 0;
+    }
+};
+
+alpha_Skin_Tests = new parsegraph_TestSuite("alpha_Skin");
+parsegraph_AllTests.addTest(alpha_Skin_Tests);
+
+alpha_Skin_Tests.addTest("alpha_Skin.<constructor>", function(resultDom) {
+    var green = new alpha_Color(0, 1, 0);
+    var brown = new alpha_Color(.5, .5, 0);
+    var skin = new alpha_Skin([
+        [green, green, green, green], // face 1 has 4 vertices
+        [brown, brown, brown, brown], // face 2
+        [brown, brown, brown, brown] // face 3
+    ]);
+});
+
+alpha_Skin.prototype.forEach = function(callback, thisArg)
+{
+    thisArg = thisArg || this;
+    for(var i = 0; i < this.length; ++i) {
+        callback.call(thisArg, this[i], i, this);
+    }
+};
+
+alpha_Skin_Tests.addTest("alpha_Skin.forEach", function(resultDom) {
+    var green = new alpha_Color(0, 1, 0);
+    var brown = new alpha_Color(.5, .5, 0);
+    var skin = new alpha_Skin([
+        [green, green, green, green], // face 1 has 4 vertices
+        [brown, brown, brown, brown], // face 2
+        [brown, brown, brown, brown] // face 3
+    ]);
+
+    var maxRow = 0;
+    skin.forEach(function(face, i) {
+        maxRow = Math.max(maxRow, i);
+        switch(i) {
+            case 0:
+                if(!face[0].Equals(green) || !face[1].Equals(green) || !face[2].Equals(green) || !face[3].Equals(green)) {
+                    console.log(face);
+                    throw new Error("Face 0 does not match");
+                };
+                break;
+            case 1:
+                if(!face[0].Equals(brown) || !face[1].Equals(brown) || !face[2].Equals(brown) || !face[3].Equals(brown)) {
+                    console.log(face);
+                    throw new Error("Face 1 does not match");
+                };
+                break;
+            case 2:
+                if(!face[0].Equals(brown) || !face[1].Equals(brown) || !face[2].Equals(brown) || !face[3].Equals(brown)) {
+                    console.log(face);
+                    throw new Error("Face 2 does not match");
+                };
+                break;
+        }
+    });
+
+    if(maxRow != 2) {
+        return "Unexpected number of rows iterated: " + maxRow;
+    }
+});
+
+alpha_TRIANGLES = 0;
+alpha_QUADS = 1;
+
+//--------------------------------------------
+//--------------------------------------------
+//---------------  Face  ---------------------
+//--------------------------------------------
+//--------------------------------------------
+// face is a simple grouping of vertices
+// designed to be rendered by 1 call of GL_QUADS
+// or its ilk
+// local cubeTop = new alpha_Face(alpha_QUADS, vector, vector, vector, vector);
+//
+// Face does not copy the vectors.
+    // because its a temporary construction
+// Once it is passed to a shape the shape will copy it
+// DO NOT REUSE ( until after the face is applied to a shape )
+function alpha_Face()
+{
+    this.drawType = arguments[0];
+
+    if(arguments.length > 2) {
+        this.length = (arguments.length - 1);
+        for(var i = 1; i < arguments.length; ++i) {
+            this[i - 1] = arguments[i];
+        }
+    }
+    else {
+        this.length = arguments[1].length;
+        for(var i = 0; i < arguments[1].length; ++i) {
+            this[i] = arguments[1][i];
+        }
+    }
+};
+
+alpha_Face.prototype.Clone = function()
+{
+    var values = [];
+    for(var i = 0; i < this.length; ++i) {
+        values.push(this[i].Clone());
+    }
+    return new alpha_Face(this.drawType, values);
+};
+
+alpha_Face.prototype.toString = function()
+{
+    var rv = "";
+    for(var i = 0; i < this.length; ++i) {
+        if(i > 0) {
+            rv += ", ";
+        }
+        rv += this[i].toString();
+    }
+    return rv;
+};
+
+//--------------------------------------------
+//--------------------------------------------
+//--------------  Shape  ---------------------
+//--------------------------------------------
+//--------------------------------------------
+// shape is a list of faces
+// tha when all drawn will make some sort of ...
+// SHAPE -- SURPISE!
+// initialize it with a list of faces;
+// var CUBE = new alpha_Shape(
+    // cubeTop,
+    // cubeBottom,
+    // cubeLeft,
+    // cubeRight,
+    // cubeFront,
+    // cubeBack
+// )
+function alpha_Shape()
+{
+    this.length = arguments.length;
+    for(var i = 0; i < arguments.length; ++i) {
+        this[i] = arguments[i].Clone();
+    }
+}
+
+//--------------------------------------------
+//--------------------------------------------
+//----------- BlockTypes  --------------------
+//--------------------------------------------
+//--------------------------------------------
+// Blocktype is where you combine a Shape with A Skin
+// var stone = new alpha_BlockType("stone", "cube", Stone, graySkin)
+// BlockType automatically loads created BlockTypes into the BlockIDs table
+// it is some sort of hybrid object / masterlist
+
+function alpha_BlockTypes()
+{
+    this.blockIDs = [];
+    this.descriptions = [];
+}
+
+alpha_BlockTypes.prototype.Load = function(descSkin, descShape, skin, shape)
+{
+    return this.Create(descSkin, descShape, skin, shape);
+};
+
+/**
+ * creates a blocktype and returns the id.
+ */
+alpha_BlockTypes.prototype.Create = function(descSkin, descShape, skin, shape)
+{
+    for(var i = 0 ; i < shape.length; ++i) {
+        var face = shape[i];
+        for(var j = 0; j < face.length; ++j) {
+            if(!skin[i] || !skin[i][j]) {
+                throw new Error("Skin is too damn small");
+                // however I will let you wear it if its a little large!
+            }
+        }
+    }
+    if(!this.descriptions[descSkin]) {
+        // these descriptions aren't already in use
+        this.descriptions[descSkin] = {};
+        this.descriptions[descSkin][descShape] = {};
+    }
+    else if(this.descriptions[descSkin][descShape]) {
+        throw new Error("This Shape and Skin description combo is already in use");
+    }
+    else {
+        this.descriptions[descSkin][descShape] = {};
+    }
+
+    var blockType = [shape, skin];
+    this.blockIDs.push(blockType);
+    this.descriptions[descSkin][descShape] = (this.blockIDs.length - 1);
+    return this.descriptions[descSkin][descShape];
+};
+
+alpha_BlockTypes.prototype.Get = function()
+{
+    if(arguments.length == 1) {
+        var id = arguments[0];
+        return this.blockIDs[id];
+    }
+    var descSkin, descShape;
+    descSkin = arguments[0];
+    descShape = arguments[1];
+    if(this.descriptions[descSkin] == undefined) {
+        console.log(this.descriptions);
+        throw new Error("No such skin description exists for '" + (descSkin || "") + "'");
+    }
+    else if(this.descriptions[descSkin][descShape] == undefined) {
+        throw new Error("No such shape description exists for '" + (descShape || "") + "'");
+    }
+    return this.descriptions[descSkin][descShape];
+};
+
+alpha_BlockTypes_Tests = new parsegraph_TestSuite("alpha_BlockTypes");
+parsegraph_AllTests.addTest(alpha_BlockTypes_Tests);
+
+alpha_BlockTypes_Tests.addTest("alpha_BlockTypes", function(resultDom) {
+    var types = new alpha_BlockTypes();
+
+    var white = new alpha_Color(1, 1, 1);
+    var dbrown = new alpha_Color("#3b2921");
+    var lbrown = new alpha_Color("#604b42");
+    var ggreen = new alpha_Color("#0b9615");
+    var gray = new alpha_Color("#5e5a5e");
+    var lgray = new alpha_Color("#726f72");
+
+    var stone = new alpha_Skin(
+        [lgray, gray, lgray, gray], // top
+        [lgray, gray, lgray, gray], // front
+        [lgray, gray, lgray, gray], // left
+        [lgray, gray, lgray, gray], // back
+        [lgray, gray, lgray, gray], // right
+        [lgray, gray, lgray, gray], // bottom
+        [lgray, gray, lgray, gray], // misc
+        [lgray, gray, lgray, gray], // misc
+        [lgray, gray, lgray, gray], // misc
+        [lgray, gray, lgray, gray] // misc
+    );
+
+    // vertices!
+    var cubeStructure = [
+        new alpha_Vector(-0.5, 0.5, 0.5), // 1
+        new alpha_Vector(0.5, 0.5, 0.5), // 2
+        new alpha_Vector(0.5, 0.5, -0.5), // 3
+        new alpha_Vector(-0.5, 0.5, -0.5), // 4
+        new alpha_Vector(0.5, -0.5, 0.5), // 5
+        new alpha_Vector(-0.5, -0.5, 0.5), // 6
+        new alpha_Vector(-0.5, -0.5, -0.5), // 7
+        new alpha_Vector(0.5, -0.5, -0.5) // 8
+    ];
+    var v = cubeStructure;
+
+    // cube faces;
+    var Top    = new alpha_Face(v[2], v[3], v[0], v[1]);
+    var Front  = new alpha_Face(v[3], v[2], v[7], v[6]);
+    var Left   = new alpha_Face(v[0], v[3], v[6], v[5]);
+    var Back   = new alpha_Face(v[1], v[0], v[5], v[4]);
+    var Right  = new alpha_Face(v[2], v[1], v[4], v[7]);
+    var Bottom = new alpha_Face(v[6], v[7], v[4], v[5]);
+
+    // turn the faces into shapes
+
+    // top to bottom
+    // counter-clockwise
+    // front to back
+    var CUBE = new alpha_Shape(
+        Top,
+        Front,
+        Left,
+        Back,
+        Right,
+        Bottom
+    );
+
+    types.Create("stone", "cube", stone, CUBE);
+    if(types.Get("stone", "cube") != types.Get("stone", "cube")) {
+        return "Types do not match.";
+    }
+});
+
+//--------------------------------------------
+//--------------------------------------------
+//--------------  Blocks ---------------------
+//--------------------------------------------
+//--------------------------------------------
+
+function alpha_Block(id, x, y, z, orientation)
+{
+    var id, x, y, z, orientation;
+    if(arguments.length > 3) {
+        id = arguments[0];
+        x = arguments[1];
+        y = arguments[2];
+        z = arguments[3];
+        orientation = arguments[4];
+    }
+    else {
+        id = arguments[0];
+        x = arguments[1][0];
+        y = arguments[1][1];
+        z = arguments[1][2];
+        orientation = arguments[2];
+    }
+
+    this.id = id || 0;
+    this.orientation = orientation || 0;
+    if(this.orientation >= 24 || this.orientation < 0) {
+        throw new Error("Orientation cannot be out of bounds: " + this.orientation);
+    }
+
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+}
+
+alpha_Block.prototype.Equals = function()
+{
+    var fuzziness = 1e-10;
+    for(var i = 0; i < this.length; ++i) {
+        if(Math.abs(this[n] - other[n]) > fuzziness) {
+            // Found a significant difference.
+            return false;
+        }
+    }
+
+    // Equal.
+    return true;
+};
+
+alpha_Block.prototype.GetAngleAxis = function()
+{
+    return alpha_BlockOrientations[this.orientation].ToAxisAndAngle();
+};
+
+// naively calling this function results in a quaternion that you can
+// manipulate but not  destroy the Block.Orienations
+// passing something to actual lets you avoid the overhead of making a new
+// quaternion; and returns the same quaternion for the same rotation
+// for better comparing
+// in C these values would be const static
+alpha_Block.prototype.GetQuaternion = function(actual)
+{
+    if(actual) {
+        return alpha_BlockOrientations[this.orientation];
+    }
+    return new alpha_Quaternion(alpha_BlockOrientations[this.orientation])
+};
+
+var s45 = Math.sin(Math.PI/4) // Math.sqrt(2) / 2 or Math.sin(45)
+
+alpha_BlockOrientations = [
+    // BOTTOM
+    // X( 0 )  Y( 0 )  Z( 0 )
+    new alpha_Quaternion(0, 0, 0, 1), // 0
+    // X( 0 )  Y( 90 )  Z( 0 )
+    new alpha_Quaternion(0, s45, 0, s45), // 1
+    // X( 0 )  Y( 180 )  Z( 0 )
+    new alpha_Quaternion(0, 1, 0, 0), // 2
+    // X( 0 )  Y( 270 )  Z( 0 )
+    new alpha_Quaternion(0, s45, 0, -s45), // 3
+
+    // FRONT
+    // X( 90 )  Y( 0 )  Z( 0 )
+    new alpha_Quaternion( -s45 ,    0 ,    0 , -s45 ), // 4
+    // X( 90 )  Y( 90 )  Z( 0 )
+    new alpha_Quaternion( -0.5 , -0.5 , -0.5 , -0.5 ), // 5
+    // X( 90 )  Y( 180 )  Z( 0 )
+    new alpha_Quaternion(    0 , -s45 , -s45 ,    0 ), // 6
+    // X( 90 )  Y( 270 )  Z( 0 )
+    new alpha_Quaternion(  0.5 , -0.5 , -0.5 ,  0.5 ), // 7
+
+    // LEFT
+    // X( 0 )  Y( 0 )  Z( 270 )
+    new alpha_Quaternion(    0 ,  0   , -s45 ,  s45 ), // 8
+    // X( 0 )  Y( 90 )  Z( 270 )
+    new alpha_Quaternion(  0.5 ,  0.5 , -0.5 ,  0.5 ), // 9
+    // X( 0 )  Y( 180 )  Z( 270 )
+    new alpha_Quaternion(  s45 ,  s45 ,    0 ,    0 ), // 10
+    // X( 0 )  Y( 270 )  Z( 270 )
+    new alpha_Quaternion(  0.5 ,  0.5 ,  0.5 , -0.5 ), // 11
+
+    // BACK
+    // X( 270 )  Y( 0 )  Z( 0 )
+    new alpha_Quaternion( -s45 ,    0 ,    0 ,  s45 ), // 12
+    // X( 270 )  Y( 90 )  Z( 0 )
+    new alpha_Quaternion( -0.5 ,  0.5 , -0.5 ,  0.5 ), // 13
+    // X( 270 )  Y( 180 )  Z( 0 )
+    new alpha_Quaternion(    0 ,  s45 , -s45 ,    0 ), // 14
+    // X( 270 )  Y( 270 )  Z( 0 )
+    new alpha_Quaternion(  0.5 ,  0.5 , -0.5 , -0.5 ), // 15
+
+    // RIGHT
+    // X( 0 )  Y( 0 )  Z( 90 )
+    new alpha_Quaternion(    0 ,    0 , -s45 , -s45 ), // 16
+    // X( 0 )  Y( 90 )  Z( 90 )
+    new alpha_Quaternion(  0.5 , -0.5 , -0.5 , -0.5 ), // 17
+    // X( 0 )  Y( 180 )  Z( 90 )
+    new alpha_Quaternion(  s45 , -s45 ,    0 ,    0 ), // 18
+    // X( 0 )  Y( 270 )  Z( 90 )
+    new alpha_Quaternion(  0.5 , -0.5 ,  0.5 ,  0.5 ), // 19
+
+    // TOP
+    // X( 180 )  Y( 0 )  Z( 0 )
+    new alpha_Quaternion(    1 ,    0 ,    0 ,    0 ), // 20
+    // X( 180 )  Y( 90 )  Z( 0 )
+    new alpha_Quaternion(  s45 ,    0 ,  s45 ,    0 ), // 21
+    // X( 180 )  Y( 180 )  Z( 0 )
+    new alpha_Quaternion(    0 ,    0 ,    1 ,    0 ), // 22
+    // X( 180 )  Y( 270 )  Z( 0 )
+    new alpha_Quaternion( -s45 ,    0 ,  s45 ,    0 ) // 23
+];
+
+//--------------------------------------------
+//--------------------------------------------
+//-------------- Cluster  --------------------
+//--------------------------------------------
+//--------------------------------------------
+
+/**
+ * Cluster is where the information from blocks, blocktype, color and face
+ * actually gets put to use it figures out how to draw the blocks that have
+ * been added to it so that they can be drawn inside of 1 Matrix Push/Pop it
+ * would probably not be efficient to put a lot of moving objects inside of a
+ * single cluster as the cluster would have to be continuously updating
+ * everytime a block was edited
+ */
+function alpha_Cluster(blockTypes)
+{
+    if(!blockTypes) {
+        throw new Error("Cluster must be given a non-null blockTypes");
+    }
+    this.blockTypes = blockTypes;
+
+    this.drawTypes = [
+        [ [], [], [], [] ],
+        [ [], [], [], [] ]
+    ];  // X, Y, X, COLOR
+    this.blocks = [];
+};
+
+alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");
+parsegraph_AllTests.addTest(alpha_Cluster_Tests);
+
+alpha_Cluster_Tests.addTest("alpha_Cluster", function(resultDom) {
+    var BlockTypes = new alpha_BlockTypes();
+    alpha_standardBlockTypes(BlockTypes);
+    alpha_CubeMan(BlockTypes);
+
+    // test version 1.0
+    var cubeman = BlockTypes.Get("blank", "cubeman");
+
+    var testCluster = new alpha_Cluster(BlockTypes);
+    testCluster.AddBlock(new alpha_Block(cubeman, 0,5,0,1));
+    testCluster.CalculateVertices();
+});
+
+/**
+ * is this particular block in this cluster
+ */
+alpha_Cluster.prototype.HasBlock = function(block)
+{
+    for(var i = 0; i < this.blocks.length; ++i) {
+        if(this.blocks[i] == block) {
+            return i;
+        }
+    }
+    return null;
+};
+
+alpha_Cluster.prototype.AddBlock = function(block)
+{
+    if(!this.HasBlock(block)) {
+        this.blocks.push(block);
+    }
+    return block;
+};
+
+alpha_Cluster.prototype.RemoveBlock = function(block)
+{
+    var i = this.HasBlock(block);
+    if(i != null) {
+        return this.blocks.splice(i, 1)[0];
+    }
+};
+
+/**
+ * pass a table of blocks and it will add the ones that are new
+ */
+alpha_Cluster.prototype.AddBlocks = function()
+{
+    if(arguments.length > 1) {
+        for(var i = 0; i < arguments.length; ++i) {
+            this.AddBlock(arguments[i]);
+        }
+    }
+    else {
+        for(var i = 0; i < arguments[0].length; ++i) {
+            this.AddBlock(arguments[0][i]);
+        }
+    }
+};
+
+alpha_Cluster.prototype.ClearBlocks = function()
+{
+    this.blocks.splice(0, this.blocks.length);
+    this.CalculateVertices();
+};
+
+/**
+ * construct all of the vertices from the blocks and store them
+ * assuming only using GL_QUADS for now
+ */
+alpha_Cluster.prototype.CalculateVertices = function()
+{
+    // delete what we had;
+    this.drawTypes = [
+        [ [], [], [], [] ],
+        [ [], [], [], [] ]
+    ];  // X, Y, X, COLOR
+
+    // assign locals;
+    var x, y, z, c;
+
+    var currentDraw;
+    var currentColor = [null, null];
+
+    this.blocks.forEach(function(block) {
+        // get the faces from the blocktype
+        var bType = this.blockTypes.Get(block.id);
+        var quat = block.GetQuaternion( true );
+        if(!quat) {
+            console.log(block);
+            throw new Error("Block must not return a null quaternion");
+        }
+        if(!bType) {
+            return;
+        }
+        var shape = bType[0];
+        var skin = bType[1];
+        for(var i = 0; i < shape.length; ++i) { // vertices is face!
+            // every face has its own drawType;
+            var face = shape[i];
+            if(!face) {
+                throw new Error("Shape must not contain any null faces");
+            }
+            var draw = face.drawType;
+            // assign the vertices and colors to the correct drawType
+            if(draw != currentDraw) {
+                currentDraw = draw;
+
+                var d = this.drawTypes[draw];
+
+                x = d[0];
+                y = d[1];
+                z = d[2];
+                c = d[3];
+            }
+
+            var colors = skin[i];
+            for(var j = 0; j < face.length; ++j) {
+                var vertex = face[j];
+                if(!vertex) {
+                    throw new Error("Face must not contain any null vertices");
+                }
+                // get the color for this vertex;
+                var color = colors[j];
+                // rotate it; if it's not the default;
+                if(block.orientation > 1) {
+                    vertex = quat.RotatedVector(vertex);
+                }
+                // now translate it
+                vertex = vertex.Added(new alpha_Vector(block[0], block[1], block[2]));
+                // vector and cluster use the same indexes;
+                x.push(vertex[0]);
+                y.push(vertex[1]);
+                z.push(vertex[2]);
+
+                // if the next set of vertices are not using the current color;
+                if(!currentColor[draw] || !currentColor[draw].Equals(color)) {
+                    c.push(color);
+                    currentColor[draw] = color;
+                }
+            }
+        }
+    }, this);
+};
+
+alpha_Cluster.prototype.Draw = function()
+{
+    var vertex;
+    var color;
+
+    // Draw each type.
+    var drawThisType = function(draw) {
+        var drawTypes = this.drawTypes[draw];
+        var x, y, z, c;
+        x = drawTypes[0];
+        y = drawTypes[1];
+        z = drawTypes[2];
+        c = drawTypes[3];
+
+        glBegin(draw, function() {
+            for(var i = 0; i < x.length; ++i) {
+                color = c[i]; // if the vertex has a new color
+                if(color) {
+                    glColor(color[0], color[1], color[2]);
+                }
+                glVertex(x[i], y[i], z[i]);
+            }
+        });
+    };
+
+    drawThisType(alpha_QUADS);
+    drawThisType(alpha_TRIANGLES);
+};

@@ -56,8 +56,10 @@ function alpha_Camera(widget)
     if(!this.widget) {
         throw new Error("widget must not be null");
     }
-    this.width = this.widget.size.width;
-    this.height = this.widget.size.height;
+
+    // Dimensions of the widget's size.
+    this.width = null;
+    this.height = null;
 
     this.projectionDirty = true; // dirty until you call UpdateProjection();
     this.projectionMatrix = new alpha_Matrix();
@@ -244,13 +246,16 @@ alpha_Camera.prototype.GetNearDistance = function()
     return this.nearDistance;
 }
 
-// updates self.projectionMatrix;
+// updates this projectionMatrix;
 alpha_Camera.prototype.UpdateProjectionMatrix = function()
 {
     // if it won't change then just send it the current
     if(!this.projectionDirty) {
         return this.projectionMatrix;
     }
+
+    this.width = this.widget.canvas().width;
+    this.height = this.widget.canvas().height;
 
     var fovX = this.GetFovX() / this.zoomFactor;
     var fovY = this.GetFovY() / this.zoomFactor;
@@ -390,7 +395,7 @@ alpha_Camera.prototype.Pitch = function(angle)
     if(this.pitch >= pi_2 && angle > 0) {
         return false;
     }
-    if(self.pitch <= -pi_2 && angle < 0) {
+    if(this.pitch <= -pi_2 && angle < 0) {
         return false;
     }
 
@@ -410,9 +415,9 @@ alpha_Camera.prototype.Pitch = function(angle)
 
     this.pitch = pitch;
     // now rotate by that angle about the x axis;
-    var q = new Quaternion();
+    var q = new alpha_Quaternion();
     q.FromAxisAndAngle(1, 0, 0, angle);
-    this.SetOrientation(this.orientation.multiplied(q).clone());
+    this.SetOrientation(this.orientation.Multiplied(q).Clone());
 }
 
 alpha_Camera.prototype.Turn = function(angle)
@@ -422,9 +427,9 @@ alpha_Camera.prototype.Turn = function(angle)
         return;
     }
 
-    var q = new Quaternion();
+    var q = new alpha_Quaternion();
     q.FromAxisAndAngle(0, 1, 0, angle);
-    this.SetOrientation(q.multiplied(self.orientation).clone());
+    this.SetOrientation(q.Multiplied(this.GetOrientation()).Clone());
 }
 
 // these rotations take place at the speeds set by rotationSpeed
@@ -455,7 +460,7 @@ alpha_Camera.prototype.PitchDown = function(elapsed)
 // set which axis you want to align to
 alpha_Camera.prototype.AlignParentToMy = function(x, y)
 {
-    var q = Quaternion();
+    var q = new alpha_Quaternion();
     if(x == 0) {
         x = false;
     }
@@ -472,14 +477,14 @@ alpha_Camera.prototype.AlignParentToMy = function(x, y)
         // find the quaternion of our pitch; inverted.
         q.FromAxisAndAngle(1, 0, 0, -pitch);
         // our yaw in player space
-        q = parent.GetOrientation().multiplied(self.GetOrientation()).multiplied(q);
+        q = parent.GetOrientation().Multiplied(this.GetOrientation()).Multiplied(q);
         // set the parent to the new quaternion
         parent.SetOrientation(q);
         // set the camera to default identity
         // these makes the camera not move
         this.SetOrientation(0, 0, 0, 1);
         // set our pitch back to where it was
-        self.Pitch(pitch);
+        this.Pitch(pitch);
     }
     // if we want to match pitch only
     // no idea why you would want to do this
@@ -487,7 +492,7 @@ alpha_Camera.prototype.AlignParentToMy = function(x, y)
         // the quaternion of our pitch
         q.FromAxisAndAngle(1, 0, 0, pitch);
         // our pitch in parent space;
-        q = parent.GetOrientation().multiplied(q);
+        q = parent.GetOrientation().Multiplied(q);
         parent.SetOrientation(q);
         this.SetOrientation(0, 0, 0, 1);
 
@@ -499,9 +504,9 @@ alpha_Camera.prototype.AlignParentToMy = function(x, y)
     }
     else {
         // camera's orientation in parent space
-        q = parent.GetOrientation().multiplied(this.GetOrientation());
+        q = parent.GetOrientation().Multiplied(this.GetOrientation());
         parent.SetOrientation(q);
-        self.SetOrientation(0, 0, 0, 1);
+        this.SetOrientation(0, 0, 0, 1);
     }
 }
 
@@ -513,9 +518,9 @@ alpha_Camera.prototype.AlignParentToMy = function(x, y)
 alpha_Camera.prototype.SetPosition = function(x, y, z)
 {
     if(y == undefined) {
-        y = x.Y();
-        z = x.Z();
-        x = x.x();
+        y = x[1];
+        z = x[2];
+        x = x[0];
     }
     this.position.Set(x, y, z);
     this.modelDirty = true;
@@ -540,7 +545,7 @@ alpha_Camera.prototype.ChangePosition = function(x, y, z)
         z = x.Z();
         x = x.x();
     }
-    this.SetPosition(this.position.added(x, y, z));
+    this.SetPosition(this.position.Added(x, y, z));
 }
 
 // offset from the physical
@@ -568,7 +573,7 @@ alpha_Camera.prototype.ChangeOffset = function(x, y, z)
         z = x.Z();
         x = x.x();
     }
-    this.SetOffset(this.position.added(x, y, z));
+    this.SetOffset(this.position.Added(x, y, z));
 }
 
 // ------------------------------------------
@@ -589,7 +594,7 @@ alpha_Camera.prototype.GetMaxRange = function()
 // camera movement is easy; it can only move in and out
 alpha_Camera.prototype.Warp = function(distance)
 {
-    var z = self.position.Z();
+    var z = this.position[2];
 
     // preventing tons of tiny adjustments
     if(z <= 0 && distance < 0) {
@@ -698,7 +703,7 @@ alpha_Camera.prototype.Disengage = function()
 alpha_Camera.prototype.Engage = function()
 {
     if(this.freefloating) {
-        this.parent.Destroy(); // get rid of the invisible fucker
+        //this.parent.Destroy(); // get rid of the invisible fucker
         // if called from setparent reengage is already updated
         // just set this bool so we don't go in an infinite loop
         // been there, it sucks  -- GOD
@@ -730,7 +735,7 @@ alpha_Camera.prototype.SetParent = function(parent)
     this.parent = parent;
 }
 
-alpha_Camera.prototypeGetParent = function()
+alpha_Camera.prototype.GetParent = function()
 {
     return this.parent;
 }

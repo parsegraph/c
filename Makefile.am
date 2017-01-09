@@ -61,7 +61,12 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Node.js \
 	src/alpha/Maths.js \
 	src/alpha/Physical.js \
+	src/alpha/Input.js \
 	src/alpha/Cam.js \
+	src/alpha/BlockStuff.js \
+	src/alpha/BlockIDs.js \
+	src/alpha/CubeMan.js \
+	src/alpha/GLWidget.js \
 	src/Parser.js \
 	src/user.js \
 	src/graph/Camera.js \
