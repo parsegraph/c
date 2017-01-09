@@ -64,6 +64,7 @@ parsegraph_SCRIPT_FILES = \
 	src/alpha/Input.js \
 	src/alpha/Cam.js \
 	src/alpha/BlockStuff.js \
+	src/alpha/Cluster.js \
 	src/alpha/BlockIDs.js \
 	src/alpha/CubeMan.js \
 	src/alpha/GLWidget.js \
