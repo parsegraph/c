@@ -1,17 +1,17 @@
 // Version 1.5
 
 /*
-			Vector    Color
+			[Vector]    [Color]
 			  |         |
-			 Face     Skin
+			 [Face]     [Skin]
 			  |         |
-			 Shape ---BlockType
+			 [Shape] ---BlockType
 			            |
 			            ID -- just a number in a table with the BlockType as its value
 			            |
-			          Block
+		[alpha_Block(id, x, y, z, orientation)]
 			            |
-			          Cluster
+		    [alpha_Cluster(blockTypes)]
 
 some of the above classes are really basic
 really nothing but tables
@@ -519,7 +519,7 @@ alpha_BlockTypes_Tests.addTest("alpha_BlockTypes", function(resultDom) {
 //--------------------------------------------
 //--------------------------------------------
 
-function alpha_Block(id, x, y, z, orientation)
+function alpha_Block()
 {
     var id, x, y, z, orientation;
     if(arguments.length > 3) {
@@ -529,12 +529,15 @@ function alpha_Block(id, x, y, z, orientation)
         z = arguments[3];
         orientation = arguments[4];
     }
-    else {
+    else if(arguments.length === 3) {
         id = arguments[0];
         x = arguments[1][0];
         y = arguments[1][1];
         z = arguments[1][2];
         orientation = arguments[2];
+    }
+    else {
+        throw new Error("Unexpected number of arguments: " + arguments.length);
     }
 
     this.id = id || 0;
@@ -546,7 +549,22 @@ function alpha_Block(id, x, y, z, orientation)
     this[0] = x;
     this[1] = y;
     this[2] = z;
+
+    if(typeof this[0] !== "number" || typeof this[1] !== "number" || typeof this[2] !== "number") {
+        throw new Error("All block components must be numeric.");
+    }
 }
+
+function alpha_createBlock()
+{
+    if(arguments.length > 3) {
+        return new alpha_Block(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4]);
+    }
+    else if(arguments.length == 3) {
+        return new alpha_Block(arguments[0], arguments[1], arguments[2]);
+    }
+    throw new Error("Unexpected number of arguments: " + arguments.length);
+};
 
 alpha_Block.prototype.Equals = function()
 {

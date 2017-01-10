@@ -21,177 +21,176 @@ function alpha_GLWidget()
 
     this.camera = new alpha_Camera(this);
 
+    this.input = new alpha_Input(this);
+    this.input.SetMouseSensitivity(.4);
+
+    this.camera.SetFovX(60);
+    // this.camera.SetProperFOV(2,2);
+    this.camera.SetNearDistance(.01);
+    this.camera.SetFarDistance(150);
+    this.camera.SetNearDistance(1);
+    this.camera.SetPosition(0,0,0);
+    this.camera.SetOffset(0,4,0);
+
+//this.camera.PitchDown(40 * Math.PI / 180);
+
     // The identifier used to cancel a pending Render.
     this._pendingRender = null;
     this._needsRepaint = true;
 
     this._done = false;
 
-var BlockTypes = new alpha_BlockTypes();
-alpha_standardBlockTypes(BlockTypes);
-alpha_CubeMan(BlockTypes);
+    // test version 1.0
+    this.BlockTypes = new alpha_BlockTypes();
+    alpha_standardBlockTypes(this.BlockTypes);
+    alpha_CubeMan(this.BlockTypes);
 
 
-// test version 1.0
-var cubeman = BlockTypes.Get("blank", "cubeman");
+    var cubeman = this.BlockTypes.Get("blank", "cubeman");
 
-var testCluster = new alpha_Cluster(BlockTypes);
-testCluster.AddBlock(new alpha_Block(cubeman, 0,5,0,1));
-testCluster.CalculateVertices();
+    this.testCluster = new alpha_Cluster(this);
+    this.testCluster.AddBlock(cubeman, 0,5,0,1);
+    this.testCluster.CalculateVertices();
 
-var stone = BlockTypes.Get("stone", "cube");
-var grass = BlockTypes.Get("grass", "cube");
-var dirt = BlockTypes.Get( "dirt", "cube");
+    var stone = this.BlockTypes.Get("stone", "cube");
+    var grass = this.BlockTypes.Get("grass", "cube");
+    var dirt = this.BlockTypes.Get("dirt", "cube");
 
-var platform = new alpha_Cluster(BlockTypes);
-var world = new alpha_Cluster(BlockTypes)
+    this.platformCluster = new alpha_Cluster(this);
+    this.worldCluster = new alpha_Cluster(this);
 
-var playerCluster = new alpha_Cluster(BlockTypes);
+    this.playerCluster = new alpha_Cluster(this);
 
-for(var i = 0; i <= 2; ++i) {
-    playerCluster.AddBlock(new alpha_Block(grass,0,i,0,1));
-}
-
-playerCluster.AddBlock(new alpha_Block(grass,-1,3,0,17)); // left
-
-playerCluster.AddBlock(new alpha_Block(grass, 0,4,0, 13)); // head
-
-playerCluster.AddBlock(new alpha_Block(grass, 1, 3, 0,9)); // right
-playerCluster.CalculateVertices();
-
-
-for(var i = -15; i <= 15; ++i) {
-    for(var j = 1; j <= 30; ++j) {
-        var r = alpha_random(0, 23);
-        world.AddBlock(new alpha_Block(stone, i,-1,-j,r));
+    for(var i = 0; i <= 2; ++i) {
+        this.playerCluster.AddBlock(grass,0,i,0,1);
     }
-}
 
-for(var i = -15; i <= 15; ++i) {
-    for(var j = 0; j <= 8; ++j) {
-        var r = alpha_random(0, 23);
-        world.AddBlock(new alpha_Block(stone, i,-1,-30,r));
+    this.playerCluster.AddBlock(grass,-1,3,0,17); // left
+
+    this.playerCluster.AddBlock(grass, 0,4,0, 13); // head
+
+    this.playerCluster.AddBlock(grass, 1, 3, 0,9); // right
+    this.playerCluster.CalculateVertices();
+
+    var WORLD_SIZE = 15;
+    for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
+        for(var j = 1; j <= WORLD_SIZE * 2; ++j) {
+            var r = alpha_random(0, 23);
+            this.worldCluster.AddBlock(stone, i,-1,-j,r);
+        }
     }
-}
-world.CalculateVertices();
 
-// build a platform
-
-for(var i = -3; i <= 3; ++i) {
-    for(var j = -4; j <= 4; ++j) {
-        platform.AddBlock(new alpha_Block(grass,j,0,-i,1));
+    for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
+        for(var j = 0; j <= WORLD_SIZE * 2; ++j) {
+            var r = alpha_random(0, 23);
+            this.worldCluster.AddBlock(stone, i,-1,-30,r);
+        }
     }
-}
-platform.CalculateVertices();
+    this.worldCluster.CalculateVertices();
 
+    // build a platform
 
-var evPlatform = new alpha_Cluster(BlockTypes);
-for(var i = -2; i <= 2; ++i) {
-    for(var j = 3; j <= 4; ++j) {
-        evPlatform.AddBlock(new alpha_Block(dirt, j, 1, i, 1));
+    for(var i = -3; i <= 3; ++i) {
+        for(var j = -4; j <= 4; ++j) {
+            this.platformCluster.AddBlock(grass,j,0,-i,1);
+        }
     }
-}
-evPlatform.CalculateVertices();
-
-this.input = new alpha_Input(this);
-this.input.SetMouseSensitivity(.4);
+    this.platformCluster.CalculateVertices();
 
 
-var radius = 8;
-
-this.camera.SetFovX(60);
-// this.camera.SetProperFOV(2,2);
-this.camera.SetNearDistance(.01);
-this.camera.SetFarDistance(150);
-this.camera.SetNearDistance(1);
-this.camera.SetPosition(0,0,0);
-this.camera.SetOffset(0,4,0);
-
-//this.camera.PitchDown(40 * Math.PI / 180);
+    this.evPlatformCluster = new alpha_Cluster(this);
+    for(var i = -2; i <= 2; ++i) {
+        for(var j = 3; j <= 4; ++j) {
+            this.evPlatformCluster.AddBlock(dirt, j, 1, i, 1);
+        }
+    }
+    this.evPlatformCluster.CalculateVertices();
 
 
 
 
-var orbit = new alpha_Physical(this.camera);
-orbit.SetPosition(0,0, 0);
-var elevator = new alpha_Physical(this.camera);
-elevator.SetPosition(0,5,0);
+    this.orbit = new alpha_Physical(this.camera);
+    this.orbit.SetPosition(0,0, 0);
+    var elevator = new alpha_Physical(this.camera);
+    elevator.SetPosition(0,5,0);
 
 
-this.camera.SetParent(this.camera);
-var playerA = new alpha_Physical( this.camera );
-var playerB = new alpha_Physical( this.camera );
-var offsetPlatform = new alpha_Physical( this.camera );
-
-
-
-offsetPlatform.SetParent( this.camera );
-playerA.SetParent( offsetPlatform );
-playerB.SetParent( this.camera );
-
-this.camera.SetParent( playerB );
-
-playerA.SetPosition(10,1,0);
+    this.camera.SetParent(this.camera);
+    this.playerAPhysical = new alpha_Physical( this.camera );
+    this.playerBPhysical = new alpha_Physical( this.camera );
+    this.offsetPlatformPhysical = new alpha_Physical( this.camera );
 
 
 
-playerB.SetPosition(0,0,-3);
+    this.offsetPlatformPhysical.SetParent( this.camera );
+    this.playerAPhysical.SetParent( this.offsetPlatformPhysical );
+    this.playerBPhysical.SetParent( this.camera );
 
-offsetPlatform.SetPosition(0,0,-25);
-offsetPlatform.YawLeft(0);
-offsetPlatform.RollRight(0);
+    this.camera.SetParent( this.playerBPhysical );
 
-
-var sphere = new alpha_Physical(this.camera);
-sphere.SetPosition(45,0,0);
-
-var sphereC = new alpha_Cluster(BlockTypes);
-
-// first circle about the x-axis
-var rot = 0;
-for(var i=0; i < 24; ++i) {
-    var q = alpha_QuaternionFromAxisAndAngle(1,0,0,rot * Math.PI / 180);
-    rot += 15;
-    var p = q.RotatedVector(0,0,-radius);
-    sphereC.AddBlock(new alpha_Block(stone, p, 1));
-}
-
-rot = 0;
-for(var i=0; i < 24; ++i) {
-    var q = alpha_QuaternionFromAxisAndAngle(0,1,0,rot * Math.PI / 180);
-    rot += 15;
-
-    var p = q.RotatedVector(0,0,-radius);
-    sphereC.AddBlock(new alpha_Block(stone, p, 1));
-}
-
-sphereC.CalculateVertices();
+    this.playerAPhysical.SetPosition(10,1,0);
 
 
-var spot = new alpha_Vector(0,15,35);
-var swarm = [];
-for(var i = 0; i <= 100; ++i) {
-    swarm.push(new alpha_Physical(this.camera));
-    var x = alpha_random(1, 30);
-    var y = alpha_random(1, 30);
-    var z = alpha_random(1, 30);
-    swarm[i].SetPosition(spot.Added(x, y, z));
 
-    var x = alpha_random(-100,100)/100;
-    var y = alpha_random(-100,100)/100;
-    var z = alpha_random(-100,100)/100;
-    var w = alpha_random(-100,100)/100;
-    var q = new alpha_Quaternion(x,y,z,w);
-    q.Normalize();
-    swarm[i].SetOrientation(q);
-}
+    this.playerBPhysical.SetPosition(0,0,-3);
+
+    this.offsetPlatformPhysical.SetPosition(0,0,-25);
+    this.offsetPlatformPhysical.YawLeft(0);
+    this.offsetPlatformPhysical.RollRight(0);
 
 
-var fov = this.camera.GetFovX() * 180 / Math.PI;
-var timer = 0;
-this.Tick = function(elapsed)
+    this.spherePhysical = new alpha_Physical(this.camera);
+    this.spherePhysical.SetPosition(45,0,0);
+
+    var radius = 8;
+    this.sphereCluster = new alpha_Cluster(this);
+
+    // first circle about the x-axis
+    var rot = 0;
+    for(var i=0; i < 24; ++i) {
+        var q = alpha_QuaternionFromAxisAndAngle(1,0,0,rot * Math.PI / 180);
+        rot += 15;
+        var p = q.RotatedVector(0,0,-radius);
+        this.sphereCluster.AddBlock(stone, p, 1);
+    }
+
+    rot = 0;
+    for(var i=0; i < 24; ++i) {
+        var q = alpha_QuaternionFromAxisAndAngle(0,1,0,rot * Math.PI / 180);
+        rot += 15;
+
+        var p = q.RotatedVector(0,0,-radius);
+        this.sphereCluster.AddBlock(stone, p, 1);
+    }
+
+    this.sphereCluster.CalculateVertices();
+
+
+    var spot = new alpha_Vector(0,15,35);
+    this.swarm = [];
+    for(var i = 0; i < 100; ++i) {
+        this.swarm.push(new alpha_Physical(this.camera));
+        var x = alpha_random(1, 30);
+        var y = alpha_random(1, 30);
+        var z = alpha_random(1, 30);
+        this.swarm[i].SetPosition(spot.Added(x, y, z));
+
+        var x = alpha_random(-100,100)/100;
+        var y = alpha_random(-100,100)/100;
+        var z = alpha_random(-100,100)/100;
+        var w = alpha_random(-100,100)/100;
+        var q = new alpha_Quaternion(x,y,z,w);
+        q.Normalize();
+        this.swarm[i].SetOrientation(q);
+    }
+
+    this.time = 0;
+}; // alpha_GLWidget
+
+alpha_GLWidget.prototype.Tick = function(elapsed)
 {
-    timer = timer + elapsed;
+    this.time += elapsed;
+
     if(this.input.Get("SHIFT") > 0) {
         elapsed = elapsed * 10;
     }
@@ -200,12 +199,20 @@ this.Tick = function(elapsed)
         elapsed = elapsed / 10;
     }
 
-
-
-    this.camera.TurnLeft(this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed);
-    this.camera.TurnRight(this.input.Get("LeftMouseButton") * this.input.MouseRight() * elapsed );
-    this.camera.PitchUp(this.input.Get("LeftMouseButton") * this.input.MouseUp() * elapsed );
-    this.camera.PitchDown(this.input.Get("LeftMouseButton") * this.input.MouseDown() * elapsed );
+    //console.log("LeftMouseButton: " + this.input.Get("LeftMouseButton"));
+    //console.log("MouseLeft: " + this.input.MouseLeft());
+    this.camera.TurnLeft(
+        this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed
+    );
+    this.camera.TurnRight(
+        this.input.Get("LeftMouseButton") * this.input.MouseRight() * elapsed
+    );
+    this.camera.PitchUp(
+        this.input.Get("LeftMouseButton") * this.input.MouseUp() * elapsed
+    );
+    this.camera.PitchDown(
+        this.input.Get("LeftMouseButton") * this.input.MouseDown() * elapsed
+    );
     this.camera.MoveForward(this.input.MouseWheelDegreesUp() * elapsed);
     this.camera.MoveBackward(this.input.MouseWheelDegreesDown() * elapsed);
     this.camera.ZoomIn(this.input.Get("Y"), elapsed);
@@ -239,16 +246,10 @@ this.Tick = function(elapsed)
         this._done = false;
     }
 
-
-    this.printOnce(this.input.Get("RETURN"));
-
-
-
-
     var ymin;
-    for(var i = 0; i < swarm.length; ++i) {
-        var v = swarm[i];
-        if(timer < 6) {
+    for(var i = 0; i < this.swarm.length; ++i) {
+        var v = this.swarm[i];
+        if(this.time < 6) {
             v.MoveForward(elapsed);
             v.YawRight(2 * Math.PI / 180);
         }
@@ -260,21 +261,15 @@ this.Tick = function(elapsed)
         }
     }
 
+    this.orbit.Rotate(-.01, 0, 1, 0);
+    this.offsetPlatformPhysical.MoveLeft( elapsed );
+    this.offsetPlatformPhysical.YawLeft(.1 * Math.PI / 180);
+    // print(this.offsetPlatformPhysical.position);
 
-
-    orbit.Rotate(-.01, 0, 1, 0);
-    offsetPlatform.MoveLeft( elapsed );
-    offsetPlatform.YawLeft(.1 * Math.PI / 180);
-
-
-    // print("Cam", this.camera.orientation);
-    // print(offsetPlatform.position);
-
-
+    this.printOnce(this.input.Get("RETURN"));
     this.input.Update();
-}; // Tick
-
-}; // alpha_GLWidget
+    //console.log("Cam: " + this.camera.orientation);
+};
 
 alpha_GLWidget.prototype.setBackground = function()
 {
@@ -323,7 +318,57 @@ alpha_GLWidget.prototype.container = function()
 
 alpha_GLWidget.prototype.connect = function(eventName, callback, thisArg)
 {
-
+    var widget = this;
+    switch(eventName) {
+    case "keyPressed": {
+        return parsegraph_addEventListener(document, "keydown", function(event) {
+            callback.call(thisArg, event.key);
+        });
+        break;
+    }
+    case "keyReleased": {
+        return parsegraph_addEventListener(this.canvas(), "keyup", function(event) {
+            callback.call(thisArg, event.key);
+        });
+        break;
+    }
+    case "mousePressed": {
+        return parsegraph_addEventListener(this.canvas(), "mousedown", function(event) {
+            callback.call(thisArg, event.button, event.clientX, event.clientY);
+        });
+        break;
+    }
+    case "mouseReleased": {
+        return [
+            parsegraph_addEventListener(this.canvas(), "mouseup", function(event) {
+                callback.call(thisArg, event.button, event.clientX, event.clientY);
+            }),
+            parsegraph_addEventListener(this.canvas(), "mouseout", function(event) {
+                callback.call(thisArg, event.button, event.clientX, event.clientY);
+            })
+        ];
+        break;
+    }
+    case "mouseMoved": {
+        return parsegraph_addEventListener(this.canvas(), "mousemove", function(event) {
+            callback.call(thisArg, event.clientX, event.clientY);
+        });
+        break;
+    }
+    case "mouseWheelMoved": {
+        var onWheel = function(event) {
+            event.preventDefault();
+            var wheel = normalizeWheel(event);
+            callback.call(thisArg, wheel);
+        };
+        parsegraph_addEventListener(widget.canvas(), "DOMMouseScroll", onWheel, false);
+        parsegraph_addEventListener(widget.canvas(), "mousewheel", onWheel, false);
+        break;
+    }
+    default: {
+        throw new Error("Unhandled eventName: " + eventName);
+    }
+    }
 };
 
 /**
@@ -383,7 +428,7 @@ alpha_GLWidget.prototype.printOnce = function(bind)
     }
     this._done = true;
 
-    playerA.SetScale(2,2,2);
+    this.playerAPhysical.SetScale(2,2,2);
 
     // print(player)
 
@@ -410,7 +455,7 @@ alpha_GLWidget.prototype.paint = function()
  */
 alpha_GLWidget.prototype.render = function()
 {
-    this.camera.UpdateProjection();
+    var projection = this.camera.UpdateProjection();
 
     this._gl.clearColor(
         0, 0, 0, 0
@@ -424,30 +469,29 @@ alpha_GLWidget.prototype.render = function()
     this._gl.enable(this._gl.DEPTH_TEST);
 
 
-    glLoadMatrix(camera.GetViewMatrix());
-    world.Draw();
-    for(var i = 0; i <= swarm.length; ++i) {
-        var v = swarm[i];
-        glLoadMatrix(v.GetViewMatrix());
-        testCluster.Draw();
+    //console.log("camera.viewMatrix:\n" + this.camera.GetViewMatrix());
+    //console.log("viewMatrix * projection:\n" + viewMatrix.toString());
+    var viewMatrix = projection.Multiplied(this.camera.GetViewMatrix());
+    this.worldCluster.Draw(viewMatrix);
+
+
+    for(var i = 0; i < this.swarm.length; ++i) {
+        var v = this.swarm[i];
+        this.testCluster.Draw(v.GetViewMatrix().Multiplied(projection));
     }
 
-    glLoadMatrix(offsetPlatform.GetViewMatrix());
+    var platformMatrix = this.offsetPlatformPhysical.GetViewMatrix().Multiplied(projection);
+    this.platformCluster.Draw(platformMatrix);
+    this.evPlatformCluster.Draw(platformMatrix);
 
 
-    platform.Draw();
-    evPlatform.Draw();
+    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
 
-    glLoadMatrix(playerA.GetViewMatrix());
-    playerCluster.Draw();
+    this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));
 
+    this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
 
-    glLoadMatrix(playerB.GetViewMatrix());
-    testCluster.Draw();
-
-    glLoadMatrix(sphere.GetViewMatrix());
-    sphereC.Draw();
 
     if(typeof(this.afterRender) == "function") {
         this.afterRender();

@@ -493,7 +493,7 @@ alpha_Physical.prototype.GetViewMatrix = function(requestor)
 
     if(parent && parent != requestor) {
         var ancestors = parent.GetViewMatrix(requestor);
-        this.viewMatrix = this.GetModelMatrix() * ancestors;
+        this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors);
         return this.viewMatrix;
     }
     else {

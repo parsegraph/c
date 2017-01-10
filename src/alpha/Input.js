@@ -54,7 +54,7 @@ function alpha_Input(glwidget)
 
     glwidget.connect("mousePressed", function(button, x,y) {
         button = this.GetButtonName(button);
-        this[button] = One;
+        this[button] = 1;
 
         // reset for a new drag
         this.startX = x;
@@ -72,6 +72,7 @@ function alpha_Input(glwidget)
     }, this);
 
     glwidget.connect("mouseMoved", function( x, y) {
+        //console.log(x + ", " + y);
         this.endX = x;
         this.endY = y;
     });
@@ -92,29 +93,19 @@ function alpha_Input(glwidget)
 
 alpha_Input.prototype.Get = function(key)
 {
-    switch(key) {
-    case "RETURN":
-
-    case "U":
-    case "O":
-    case "L":
-    }
-    if(true) {
-        return 1;
-    }
-    return 0;
+    return this[key] ? 1 : 0;
 };
 
 alpha_Input.prototype.GetButtonName = function(button)
 {
-    if(button == "LeftButton") {
+    if(button == 0) {
         return "LeftMouseButton";
     }
-    if(button == "RightButton") {
+    if(button == 2) {
         return "RightMouseButton";
     }
-    if(button == "MiddleButton") {
-        return "MiddleMouseButton"
+    if(button == 1) {
+        return "MiddleMouseButton";
     }
     return button;
 };
@@ -149,7 +140,7 @@ alpha_Input.prototype.SetMouseSensitivity = function(sensitivity)
 alpha_Input.prototype.MouseLeft = function()
 {
     if(this.endX < this.startX) {
-        // mouse has moved right
+        //console.log("mouse has moved right");
         return (this.startX - this.endX) * this.GetMouseSensitivityX();
     }
 
@@ -159,7 +150,7 @@ alpha_Input.prototype.MouseLeft = function()
 alpha_Input.prototype.MouseRight = function()
 {
     if(this.endX > this.startX) {
-        // mouse has moved right
+        //console.log("mouse has moved right");
         return (this.endX - this.startX) * this.GetMouseSensitivityX();
     }
 

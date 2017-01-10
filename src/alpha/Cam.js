@@ -4,11 +4,7 @@
 // -- raytracing
 // -- TODO: figure out aiming for third person
 
-// TODO this.widget.size.width
-// TODO this.widget.size.height
-// TODO this.widget
 // TODO glGet
-// TODO alpha_Camera.prototype.UpdateProjection = function()
 
 
 // ----------------------------------------------
@@ -79,6 +75,17 @@ function alpha_Camera(widget)
     // not using disengage because we are not engaged
     this.SetParent(this.GetInvisiblePhysical(this));
 }
+
+alpha_Camera_Tests = new parsegraph_TestSuite("alpha_Camera");
+parsegraph_AllTests.addTest(alpha_Camera_Tests);
+
+alpha_Camera_Tests.addTest("alpha_Camera", function(resultDom) {
+    var widget = new alpha_GLWidget();
+    var cam = new alpha_Camera(widget);
+
+    //console.log(cam.GetModelMatrix().toString());
+    cam.GetViewMatrix();
+});
 
 // ----------------------------------------------
 // ------------ PROJECTION MATRIX ---------------
@@ -246,71 +253,6 @@ alpha_Camera.prototype.GetNearDistance = function()
     return this.nearDistance;
 }
 
-// updates this projectionMatrix;
-alpha_Camera.prototype.UpdateProjectionMatrix = function()
-{
-    // if it won't change then just send it the current
-    if(!this.projectionDirty) {
-        return this.projectionMatrix;
-    }
-
-    this.width = this.widget.canvas().width;
-    this.height = this.widget.canvas().height;
-
-    var fovX = this.GetFovX() / this.zoomFactor;
-    var fovY = this.GetFovY() / this.zoomFactor;
-
-    var near = this.nearDistance;
-    var far = this.farDistance;
-
-    var right = near * Math.tan(fovX / 2.0);
-    var left = -right;
-
-    var top = near * Math.tan(fovY / 2.0);
-    var bottom =  -top;
-
-    //var bottom = left / aspect;
-    //var top = right / aspect;
-
-    var H = (2.0 * near) / (right - left);
-    var V = (2.0 * near) / (top - bottom);
-    var A = (right + left) / (right - left);
-    var B = (top + bottom) / (top - bottom);
-    var C = -(far + near) / (far - near);
-    var D = -(2.0 * far * near) / (far - near);
-
-    var p = this.projectionMatrix;
-    p[1]  =  H;
-    p[2]  =  0;
-    p[3]  =  0;
-    p[4]  =  0;
-    p[5]  =  0;
-    p[6]  =  V;
-    p[7]  =  0;
-    p[8]  =  0;
-    p[9]  =  A;
-    p[10] =  B;
-    p[11] =  C;
-    p[12] = -1;
-    p[13] =  0;
-    p[14] =  0;
-    p[15] =  D;
-    p[16] =  0;
-
-    // the cleaner-looking, trashier version.
-    // Adjective combo world first!
-    /*
-    var projection = [
-        H, 0, 0, 0,
-        0, V, 0, 0,
-        A, B, C, -1,
-        0, 0, D, 0
-    ];
-    */
-
-    return p;
-}
-
 alpha_Camera.prototype.UpdateProjection = function()
 {
     // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
@@ -342,9 +284,61 @@ alpha_Camera.prototype.UpdateProjection = function()
     this.width = this.widget.canvas().width;
     this.height = this.widget.canvas().height;
 
-    this.UpdateProjectionMatrix();
+    // updates this projectionMatrix;
+    var fovX = this.GetFovX() / this.zoomFactor;
+    var fovY = this.GetFovY() / this.zoomFactor;
+
+    var near = this.nearDistance;
+    var far = this.farDistance;
+
+    var right = near * Math.tan(fovX / 2.0);
+    var left = -right;
+
+    var top = near * Math.tan(fovY / 2.0);
+    var bottom =  -top;
+
+    //var bottom = left / aspect;
+    //var top = right / aspect;
+
+    var H = (2.0 * near) / (right - left);
+    var V = (2.0 * near) / (top - bottom);
+    var A = (right + left) / (right - left);
+    var B = (top + bottom) / (top - bottom);
+    var C = -(far + near) / (far - near);
+    var D = -(2.0 * far * near) / (far - near);
+
+    var p = this.projectionMatrix;
+    p[0]  =  H;
+    p[1]  =  0;
+    p[2]  =  0;
+    p[3]  =  0;
+    p[4]  =  0;
+    p[5]  =  V;
+    p[6]  =  0;
+    p[7]  =  0;
+    p[8]  =  A;
+    p[9] =  B;
+    p[10] =  C;
+    p[11] = -1;
+    p[12] =  0;
+    p[13] =  0;
+    p[14] =  D;
+    p[15] =  0;
+
+    // the cleaner-looking, trashier version.
+    // Adjective combo world first!
+    /*
+    var projection = [
+        H, 0, 0, 0,
+        0, V, 0, 0,
+        A, B, C, -1,
+        0, 0, D, 0
+    ];
+    */
+
     this.projectionDirty = false;
-}
+    return p;
+};
 
 // -------------------------------------
 // ------------ Rotation ---------------
@@ -417,7 +411,7 @@ alpha_Camera.prototype.Pitch = function(angle)
     // now rotate by that angle about the x axis;
     var q = new alpha_Quaternion();
     q.FromAxisAndAngle(1, 0, 0, angle);
-    this.SetOrientation(this.orientation.Multiplied(q).Clone());
+    this.SetOrientation(this.orientation.Multiplied(q));
 }
 
 alpha_Camera.prototype.Turn = function(angle)
@@ -429,7 +423,7 @@ alpha_Camera.prototype.Turn = function(angle)
 
     var q = new alpha_Quaternion();
     q.FromAxisAndAngle(0, 1, 0, angle);
-    this.SetOrientation(q.Multiplied(this.GetOrientation()).Clone());
+    this.SetOrientation(q.Multiply(this.GetOrientation()));
 }
 
 // these rotations take place at the speeds set by rotationSpeed
@@ -541,9 +535,9 @@ alpha_Camera.prototype.GetPosition = function()
 alpha_Camera.prototype.ChangePosition = function(x, y, z)
 {
     if(y == undefined) {
-        y = x.Y();
-        z = x.Z();
-        x = x.x();
+        y = x[1];
+        z = x[2];
+        x = x[0];
     }
     this.SetPosition(this.position.Added(x, y, z));
 }
@@ -552,9 +546,9 @@ alpha_Camera.prototype.ChangePosition = function(x, y, z)
 alpha_Camera.prototype.SetOffset = function(x, y, z)
 {
     if(y == undefined) {
-        y = x.Y();
-        z = x.Z();
-        x = x.x();
+        y = x[1];
+        z = x[2];
+        x = x[0];
     }
     this.offset.Set(x, y, z);
     this.modelDirty = true;
@@ -569,9 +563,9 @@ alpha_Camera.prototype.GetOffset = function()
 alpha_Camera.prototype.ChangeOffset = function(x, y, z)
 {
     if(y == undefined) {
-        y = x.Y();
-        z = x.Z();
-        x = x.x();
+        y = x[1];
+        z = x[2];
+        x = x[0];
     }
     this.SetOffset(this.position.Added(x, y, z));
 }
@@ -777,7 +771,11 @@ alpha_Camera.prototype.GetViewMatrix = function(requestor)
 
     if(parent && parent != requestor) {
         var ancestors = parent.GetViewMatrix(requestor);
+        //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
+        //console.log("parent.viewMatrix:\n" + ancestors.toString());
+        //console.log("modelMatrix * ancestors:\n" + this.GetModelMatrix().Multiplied(ancestors));
         this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors).Inverse();
+        //console.log("this.viewMatrix:\n" + this.viewMatrix.toString());
         return this.viewMatrix;
     }
     else {
@@ -785,4 +783,4 @@ alpha_Camera.prototype.GetViewMatrix = function(requestor)
         // but why do extra math?
         return this.GetModelMatrix().Inverse();
     }
-}
+};

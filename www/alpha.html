@@ -56,12 +56,31 @@ parsegraph_initialize();
 
 var widget = new alpha_GLWidget();
 
-widget.Tick(0);
+var start = alpha_GetTime();
+
+// This flag is used to squelch rendering if that function
+// threw an exception and failed to complete.
+var needsRender = false;
 var tick = function() {
-    widget.Tick(alpha_GetTime());
+    // Check if a render is needed before another tick should occur.
+    if(needsRender) {
+        return;
+    }
+
+    // Update the scene.
+    console.log("Running tick... ");
+    widget.Tick(alpha_GetTime() - start);
+
+    // Set the render flag.
+    needsRender = true;
     widget.scheduleRepaint();
-};
-var tickIntervalId = window.setInterval(tick, 1000 / 24);
+    widget.afterRender = function() {
+        console.log("Tick and render complete.");
+        needsRender = false;
+    };
+}; // Tick
+tick();
+var tickIntervalId = window.setInterval(tick, 1000);
 
 document.body.appendChild(widget.container());
 
