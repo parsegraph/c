@@ -81,8 +81,8 @@ function alpha_Cluster(widget)
     this.faceBuffer = parsegraph_createPagingBuffer(
         this.gl, this.faceProgram
     );
-    this.a_position = this.faceBuffer.defineAttrib("a_position", 4);
-    this.a_color = this.faceBuffer.defineAttrib("a_color", 4);
+    this.a_position = this.faceBuffer.defineAttrib("a_position", 3);
+    this.a_color = this.faceBuffer.defineAttrib("a_color", 3);
 
     // Cache program locations.
     this.u_world = this.gl.getUniformLocation(

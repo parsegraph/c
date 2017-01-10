@@ -270,8 +270,6 @@ alpha_Camera.prototype.UpdateProjection = function()
         this.widget.canvas().width != displayWidth
         || this.widget.canvas().height != displayHeight
     ) {
-        this.projectionDirty = true;
-
         // Make the canvas the same size
         this.widget.canvas().width = displayWidth;
         this.widget.canvas().height = displayHeight;
@@ -328,17 +326,15 @@ alpha_Camera.prototype.UpdateProjection = function()
 
     // the cleaner-looking, trashier version.
     // Adjective combo world first!
-    /*
-    var projection = [
-        H, 0, 0, 0,
-        0, V, 0, 0,
-        A, B, C, -1,
-        0, 0, D, 0
-    ];
-    */
+//  var projection = [
+//      H, 0, 0, 0,
+//      0, V, 0, 0,
+//      A, B, C, -1,
+//      0, 0, D, 0
+//  ];
 
     this.projectionDirty = false;
-    return p;
+    return this.projectionMatrix;
 };
 
 // -------------------------------------

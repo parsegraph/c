@@ -45,16 +45,19 @@ function alpha_GLWidget()
     alpha_standardBlockTypes(this.BlockTypes);
     alpha_CubeMan(this.BlockTypes);
 
-
     var cubeman = this.BlockTypes.Get("blank", "cubeman");
 
     this.testCluster = new alpha_Cluster(this);
-    this.testCluster.AddBlock(cubeman, 0,5,0,1);
+    this.testCluster.AddBlock(cubeman, 0,5,0,0);
     this.testCluster.CalculateVertices();
 
     var stone = this.BlockTypes.Get("stone", "cube");
     var grass = this.BlockTypes.Get("grass", "cube");
     var dirt = this.BlockTypes.Get("dirt", "cube");
+
+    this.originCluster = new alpha_Cluster(this);
+    this.originCluster.AddBlock(stone,0,0,-50,0);
+    this.originCluster.CalculateVertices();
 
     this.platformCluster = new alpha_Cluster(this);
     this.worldCluster = new alpha_Cluster(this);
@@ -62,14 +65,14 @@ function alpha_GLWidget()
     this.playerCluster = new alpha_Cluster(this);
 
     for(var i = 0; i <= 2; ++i) {
-        this.playerCluster.AddBlock(grass,0,i,0,1);
+        this.playerCluster.AddBlock(grass,0,i,0,0);
     }
 
-    this.playerCluster.AddBlock(grass,-1,3,0,17); // left
+    this.playerCluster.AddBlock(grass,-1,3,0,16); // left
 
-    this.playerCluster.AddBlock(grass, 0,4,0, 13); // head
+    this.playerCluster.AddBlock(grass, 0,4,0, 12); // head
 
-    this.playerCluster.AddBlock(grass, 1, 3, 0,9); // right
+    this.playerCluster.AddBlock(grass, 1, 3, 0,8); // right
     this.playerCluster.CalculateVertices();
 
     var WORLD_SIZE = 15;
@@ -92,7 +95,7 @@ function alpha_GLWidget()
 
     for(var i = -3; i <= 3; ++i) {
         for(var j = -4; j <= 4; ++j) {
-            this.platformCluster.AddBlock(grass,j,0,-i,1);
+            this.platformCluster.AddBlock(grass,j,0,-i,0);
         }
     }
     this.platformCluster.CalculateVertices();
@@ -101,7 +104,7 @@ function alpha_GLWidget()
     this.evPlatformCluster = new alpha_Cluster(this);
     for(var i = -2; i <= 2; ++i) {
         for(var j = 3; j <= 4; ++j) {
-            this.evPlatformCluster.AddBlock(dirt, j, 1, i, 1);
+            this.evPlatformCluster.AddBlock(dirt, j, 1, i, 0);
         }
     }
     this.evPlatformCluster.CalculateVertices();
@@ -151,7 +154,7 @@ function alpha_GLWidget()
         var q = alpha_QuaternionFromAxisAndAngle(1,0,0,rot * Math.PI / 180);
         rot += 15;
         var p = q.RotatedVector(0,0,-radius);
-        this.sphereCluster.AddBlock(stone, p, 1);
+        this.sphereCluster.AddBlock(stone, p, 0);
     }
 
     rot = 0;
@@ -160,7 +163,7 @@ function alpha_GLWidget()
         rot += 15;
 
         var p = q.RotatedVector(0,0,-radius);
-        this.sphereCluster.AddBlock(stone, p, 1);
+        this.sphereCluster.AddBlock(stone, p, 0);
     }
 
     this.sphereCluster.CalculateVertices();
@@ -262,9 +265,10 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
     }
 
     this.orbit.Rotate(-.01, 0, 1, 0);
+    //console.log(this.offsetPlatformPhysical.position.toString());
     this.offsetPlatformPhysical.MoveLeft( elapsed );
     this.offsetPlatformPhysical.YawLeft(.1 * Math.PI / 180);
-    // print(this.offsetPlatformPhysical.position);
+    //console.log(this.offsetPlatformPhysical.position.toString());
 
     this.printOnce(this.input.Get("RETURN"));
     this.input.Update();
@@ -469,9 +473,11 @@ alpha_GLWidget.prototype.render = function()
     this._gl.enable(this._gl.DEPTH_TEST);
 
 
-    //console.log("camera.viewMatrix:\n" + this.camera.GetViewMatrix());
-    //console.log("viewMatrix * projection:\n" + viewMatrix.toString());
-    var viewMatrix = projection.Multiplied(this.camera.GetViewMatrix());
+    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+
+    //console.log("this.camera.GetViewMatrix() * projection:\n" + viewMatrix.toString());
+    //console.log(this.camera.GetViewMatrix().toString());
+    var viewMatrix = this.camera.GetViewMatrix().Multiplied(projection);
     this.worldCluster.Draw(viewMatrix);
 
 
@@ -480,6 +486,9 @@ alpha_GLWidget.prototype.render = function()
         this.testCluster.Draw(v.GetViewMatrix().Multiplied(projection));
     }
 
+
+    //console.log(projection.toString());
+    //console.log(this.offsetPlatformPhysical.GetViewMatrix().toString());
     var platformMatrix = this.offsetPlatformPhysical.GetViewMatrix().Multiplied(projection);
     this.platformCluster.Draw(platformMatrix);
     this.evPlatformCluster.Draw(platformMatrix);
@@ -501,6 +510,6 @@ alpha_GLWidget.prototype.render = function()
 var alpha_startTime = new Date();
 function alpha_GetTime()
 {
-    return new Date().getTime() - alpha_startTime.getTime();
+    return (new Date().getTime() - alpha_startTime.getTime()) / 1000;
 };
 

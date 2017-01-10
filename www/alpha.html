@@ -68,19 +68,21 @@ var tick = function() {
     }
 
     // Update the scene.
-    console.log("Running tick... ");
-    widget.Tick(alpha_GetTime() - start);
+    //console.log("Running tick... ");
+    var t = alpha_GetTime();
+    widget.Tick(t - start);
+    start = t;
 
     // Set the render flag.
     needsRender = true;
     widget.scheduleRepaint();
     widget.afterRender = function() {
-        console.log("Tick and render complete.");
+        //console.log("Tick and render complete.");
         needsRender = false;
     };
 }; // Tick
 tick();
-var tickIntervalId = window.setInterval(tick, 1000);
+var tickIntervalId = window.setInterval(tick, 1000/24);
 
 document.body.appendChild(widget.container());
 

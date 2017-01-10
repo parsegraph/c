@@ -117,6 +117,7 @@ alpha_Physical.prototype.Rotate = function(angle, x, y, z)
     }
     var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle)
     this.orientation.Multiply(q);
+    this.modelDirty = true;
 };
 
 alpha_Physical.prototype.RotateGlobal = function(angle, x, y, z)
@@ -127,6 +128,7 @@ alpha_Physical.prototype.RotateGlobal = function(angle, x, y, z)
     }
     var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
     this.orientation.Set(q.Multiply(this.orientation));
+    this.modelDirty = true;
 };
 
 /**
@@ -192,6 +194,7 @@ alpha_Physical.prototype.GetPosition = function()
 alpha_Physical.prototype.ChangePosition = function()
 {
     this.position.Add.apply(this.position, arguments);
+    this.modelDirty = true;
 };
 
 //------------------------------------------

@@ -137,13 +137,25 @@ alpha_Vector.prototype.Divided = function()
     return rv.Divide.apply(rv, arguments);
 }
 
-alpha_Vector.prototype.Equals = function(other)
+alpha_Vector.prototype.Equals = function()
 {
     var fuzziness = 1e-10;
-    for(var i = 0; i < this.length; ++i) {
-        if(Math.abs(this[n] - other[n]) > fuzziness) {
-            // Found a significant difference.
-            return false;
+    if(arguments.length > 1) {
+        // .Equals(x, y, z)
+        for(var i = 0; i < this.length; ++i) {
+            if(Math.abs(this[i] - arguments[i]) > fuzziness) {
+                // Found a significant difference.
+                return false;
+            }
+        }
+    }
+    else {
+        // .Equals(new alpha_Vector(x, y, z));
+        for(var i = 0; i < this.length; ++i) {
+            if(Math.abs(this[i] - arguments[0][i]) > fuzziness) {
+                // Found a significant difference.
+                return false;
+            }
         }
     }
 
@@ -270,6 +282,15 @@ alpha_Vector_Tests.addTest("alpha_Vector.Normalize", function() {
     }
 });
 
+alpha_Vector_Tests.addTest("alpha_Vector.Add", function() {
+    var a = new alpha_Vector(3, 4, 0);
+
+    a.Add(new alpha_Vector(1, 2, 3));
+    if(!a.Equals(4, 6, 3)) {
+        return "Add must add component-wise";
+    }
+});
+
 //----------------------------------------------
 //----------------------------------------------
 //-----------     QUATERNIONS  -----------------
@@ -294,6 +315,9 @@ function alpha_Quaternion()
     }
 }
 
+alpha_Quaternion_Tests = new parsegraph_TestSuite("alpha_Quaternion");
+parsegraph_AllTests.addTest(alpha_Quaternion_Tests);
+
 alpha_Quaternion.prototype.Clone = function()
 {
     return new alpha_Quaternion(this);
@@ -306,6 +330,7 @@ alpha_Quaternion.prototype.Multiply = function()
         this[1] *= arguments[0];
         this[2] *= arguments[0];
         this[3] *= arguments[0];
+        return;
     }
     // q = a * b
     var aw = this[3];
@@ -347,10 +372,20 @@ alpha_Quaternion.prototype.Multiplied = function()
 alpha_Quaternion.prototype.Equals = function(other)
 {
     var fuzziness = 1e-10;
-    for(var i = 0; i < this.length; ++i) {
-        if(Math.abs(this[n] - other[n]) > fuzziness) {
-            // Found a significant difference.
-            return false;
+    if(arguments.length > 1) {
+        for(var i = 0; i < this.length; ++i) {
+            if(Math.abs(this[i] - arguments[i]) > fuzziness) {
+                // Found a significant difference.
+                return false;
+            }
+        }
+    }
+    else {
+        for(var i = 0; i < this.length; ++i) {
+            if(Math.abs(this[i] - arguments[0][i]) > fuzziness) {
+                // Found a significant difference.
+                return false;
+            }
         }
     }
 
@@ -377,6 +412,15 @@ alpha_Quaternion.prototype.Normalize = function()
     }
     return this;
 }
+
+alpha_Quaternion_Tests.addTest("alpha_Quaternion.Normalize", function(resultDom) {
+    var q = new alpha_Quaternion();
+    q.Normalize();
+    if(!q.Equals(new alpha_Quaternion())) {
+        console.log(q.toString());
+        return q;
+    }
+});
 
 alpha_Quaternion.prototype.Set = function()
 {
@@ -494,13 +538,18 @@ alpha_Quaternion.prototype.InnerProduct = alpha_Quaternion.prototype.DotProduct;
 // so its been optimized to hell and back
 // a more normal, and decently optimized version is found next
 // this version is about 2x faster than RotatedVector2
-alpha_Quaternion.prototype.RotatedVector = function(x, y, z)
+alpha_Quaternion.prototype.RotatedVector = function()
 {
-    if(!z) {
-        // x = [x,y,z]
-        z = x[2];
-        y = x[1];
-        x = x[0]; // and now we overwrite
+    var x, y, z;
+    if(arguments.length > 1) {
+        x = arguments[0];
+        y = arguments[1];
+        z = arguments[2];
+    }
+    else {
+        x = arguments[0][0];
+        y = arguments[0][1];
+        z = arguments[0][2];
     }
 
     // vector to quat
