@@ -261,6 +261,7 @@ alpha_Camera.prototype.UpdateProjection = function()
     var displayHeight = this.widget.container().clientHeight;
 
     if(displayWidth == 0 || displayHeight == 0) {
+        console.log("No projection available.");
         return;
     }
 
