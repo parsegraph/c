@@ -192,8 +192,7 @@ alpha_Camera.prototype.ZoomOut = function(bind, elapsed)
         bind = 1;
     }
 
-    var zoom = this.zoomSpeed * bind * elapsed;
-    zoom = this.zoomFactor - zoom;
+    var zoom = this.zoomFactor - Math.pow(this.zoomSpeed, bind * elapsed);
     if(zoom < 1) {
         zoom = 1;
     }
