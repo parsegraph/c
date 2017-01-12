@@ -1,27 +1,3 @@
-alpha_Cluster_VertexShader =
-"uniform mat4 u_world;\n" +
-"\n" +
-"attribute vec3 a_position;\n" +
-"attribute vec3 a_color;\n" +
-"\n" +
-"varying highp vec3 contentColor;\n" +
-"\n" +
-"void main() {\n" +
-    "gl_Position = u_world * vec4(a_position, 1.0);" +
-    "contentColor = a_color;" +
-"}";
-
-alpha_Cluster_FragmentShader =
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec3 contentColor;\n" +
-"\n" +
-"void main() {\n" +
-    "gl_FragColor = vec4(contentColor, 1.0);" +
-"}";
-
 //--------------------------------------------
 //--------------------------------------------
 //-------------- Cluster  --------------------
@@ -50,44 +26,7 @@ function alpha_Cluster(widget)
 
     this.blocks = [];
 
-    this.faceProgram = this.gl.createProgram();
-
-    this.gl.attachShader(
-        this.faceProgram,
-        compileShader(
-            this.gl,
-            alpha_Cluster_VertexShader,
-            this.gl.VERTEX_SHADER
-        )
-    );
-
-    this.gl.attachShader(
-        this.faceProgram,
-        compileShader(
-            this.gl,
-            alpha_Cluster_FragmentShader,
-            this.gl.FRAGMENT_SHADER
-        )
-    );
-
-    this.gl.linkProgram(this.faceProgram);
-    if(!this.gl.getProgramParameter(
-        this.faceProgram, this.gl.LINK_STATUS
-    )) {
-        throw new Error("Cluster face program failed to link.");
-    }
-
-    // Prepare attribute buffers.
-    this.faceBuffer = parsegraph_createPagingBuffer(
-        this.gl, this.faceProgram
-    );
-    this.a_position = this.faceBuffer.defineAttrib("a_position", 3);
-    this.a_color = this.faceBuffer.defineAttrib("a_color", 3);
-
-    // Cache program locations.
-    this.u_world = this.gl.getUniformLocation(
-        this.faceProgram, "u_world"
-    );
+    this.facePainter = new alpha_FacePainter(widget);
 };
 
 alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");
@@ -159,7 +98,7 @@ alpha_Cluster.prototype.AddBlocks = function()
 alpha_Cluster.prototype.ClearBlocks = function()
 {
     this.blocks.splice(0, this.blocks.length);
-    this.faceBuffer.clear();
+    this.facePainter.Clear();
 };
 
 /**
@@ -168,7 +107,7 @@ alpha_Cluster.prototype.ClearBlocks = function()
 alpha_Cluster.prototype.CalculateVertices = function()
 {
     // delete what we had;
-    this.faceBuffer.clear();
+    this.facePainter.Clear();
 
     this.blocks.forEach(function(block) {
         var quat = block.GetQuaternion( true );
@@ -217,14 +156,10 @@ alpha_Cluster.prototype.CalculateVertices = function()
                     vertex = vertex.Added(new alpha_Vector(block[0], block[1], block[2]));
 
                     // vector and cluster use the same indexes
-                    this.faceBuffer.appendData(
-                        this.a_position,
+                    this.facePainter.Triangle(
                         vertex[0],
                         vertex[1],
-                        vertex[2]
-                    );
-                    this.faceBuffer.appendData(
-                        this.a_color,
+                        vertex[2],
                         color[0],
                         color[1],
                         color[2]
@@ -286,35 +221,7 @@ alpha_Cluster.prototype.CalculateVertices = function()
                     v4 = v4.Added(new alpha_Vector(block[0], block[1], block[2]));
 
                     // Translate quads to triangles
-                    var appendVertex = function(v) {
-                        this.faceBuffer.appendData(
-                            this.a_position,
-                            v[0],
-                            v[1],
-                            v[2]
-                        );
-                    };
-                    appendVertex.call(this, v1);
-                    appendVertex.call(this, v2);
-                    appendVertex.call(this, v3);
-                    appendVertex.call(this, v1);
-                    appendVertex.call(this, v3);
-                    appendVertex.call(this, v4);
-
-                    var appendColor = function(c) {
-                        this.faceBuffer.appendData(
-                            this.a_color,
-                            c[0],
-                            c[1],
-                            c[2]
-                        );
-                    };
-                    appendColor.call(this, c1);
-                    appendColor.call(this, c2);
-                    appendColor.call(this, c3);
-                    appendColor.call(this, c1);
-                    appendColor.call(this, c3);
-                    appendColor.call(this, c4);
+                    this.facePainter.Quad(v1, v2, v3, v4, c1, c2, c3, c4);
                 }
             } else {
                 throw new Error("Face must have a valid drawType property to read of either alpha_QUADS or alpha_TRIANGLES. (Given " + face.drawType + ")");
@@ -325,17 +232,5 @@ alpha_Cluster.prototype.CalculateVertices = function()
 
 alpha_Cluster.prototype.Draw = function(viewMatrix)
 {
-    if(!viewMatrix) {
-        throw new Error("A viewmatrix must be provided");
-    }
-    // Render faces.
-    this.gl.useProgram(
-        this.faceProgram
-    );
-    this.gl.uniformMatrix4fv(
-        this.u_world,
-        false,
-        viewMatrix.toArray()
-    );
-    this.faceBuffer.renderPages();
+    this.facePainter.Draw(viewMatrix);
 };

@@ -72,10 +72,9 @@ function alpha_Input(glwidget)
     }, this);
 
     glwidget.connect("mouseMoved", function( x, y) {
-        //console.log(x + ", " + y);
         this.endX = x;
         this.endY = y;
-    });
+    }, this);
 
     glwidget.connect("mouseWheelMoved", function(delta) {
         if(delta > 0) {
@@ -88,7 +87,7 @@ function alpha_Input(glwidget)
         else {
             // I have no idea how I got here
         }
-    });
+    }, this);
 };
 
 alpha_Input.prototype.Get = function(key)
@@ -140,8 +139,9 @@ alpha_Input.prototype.SetMouseSensitivity = function(sensitivity)
 alpha_Input.prototype.MouseLeft = function()
 {
     if(this.endX < this.startX) {
-        //console.log("mouse has moved right");
-        return (this.startX - this.endX) * this.GetMouseSensitivityX();
+        var change = this.startX - this.endX;
+        console.log("mouse has moved right " + change);
+        return change * this.GetMouseSensitivityX();
     }
 
     return 0;
@@ -150,8 +150,9 @@ alpha_Input.prototype.MouseLeft = function()
 alpha_Input.prototype.MouseRight = function()
 {
     if(this.endX > this.startX) {
-        //console.log("mouse has moved right");
-        return (this.endX - this.startX) * this.GetMouseSensitivityX();
+        var change = this.endX - this.startX;
+        console.log("mouse has moved left " + change);
+        return change * this.GetMouseSensitivityX();
     }
 
     return 0;
@@ -160,7 +161,9 @@ alpha_Input.prototype.MouseRight = function()
 alpha_Input.prototype.MouseUp = function()
 {
     if(this.endY < this.startY) {
-        return (this.startY - this.endY) * this.GetMouseSensitivityY();
+        var change = this.endY - this.startY;
+        console.log("mouse has moved down " + change);
+        return change * this.GetMouseSensitivityY();
     }
 
     return 0;
@@ -169,7 +172,9 @@ alpha_Input.prototype.MouseUp = function()
 alpha_Input.prototype.MouseDown = function()
 {
     if(this.endY > this.startY) {
-        return (this.endY - this.startY) * this.GetMouseSensitivityY();
+        var change = this.endY - this.startY;
+        console.log("mouse has moved up " + change);
+        return change * this.GetMouseSensitivityY();
     }
 
     return 0;

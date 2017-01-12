@@ -3,39 +3,52 @@
  *
  * Use graph.container() to add it to the DOM.
  */
-function parsegraph_Graph()
+function parsegraph_Graph(surface)
 {
-    this._backgroundColor = parsegraph_BACKGROUND_COLOR;
-
-    this._container = document.createElement("div");
-    this._container.className = "parsegraph_Graph";
-
-    // The canvas that will be drawn to.
-    this._canvas = document.createElement("canvas");
-    this._canvas.style.display = "block";
-    this._container.tabIndex = 0;
-    this._gl = this._canvas.getContext("experimental-webgl");
-    if(this._gl == null) {
-        this._gl = this._canvas.getContext("webgl");
-        if(this._gl == null) {
-            throw new Error("GL context is not supported");
-        }
+    if(!surface) {
+        throw new Error("Surface must be given to parsegraph_Graph");
     }
-
-    this._container.appendChild(this._canvas);
+    this._surface = surface;
+    this._canvas = surface.canvas();
+    this._container = surface.container();
+    this._gl = surface.gl();
 
     this._nodePainter = new parsegraph_NodePainter(this._gl);
-
-    // The identifier used to cancel a pending Render.
-    this._pendingRender = null;
-    this._needsRepaint = true;
 
     this._camera = new parsegraph_Camera(this);
 
     this._carets = [];
 
-    // Simplify use by scheduling a repaint on construction.
-    this.scheduleRepaint();
+    this._surface.addPainter(this.paint, this);
+    this._surface.addRenderer(this.render, this);
+};
+
+parsegraph_Graph.prototype.paint = function()
+{
+    this._nodePainter.clear();
+    this._nodePainter.setBackground(this.surface().backgroundColor());
+
+    this._carets.forEach(function(caret) {
+        this._nodePainter.drawCaret(caret[0], caret[1], caret[2]);
+    }, this);
+
+    // Paint the origin.
+    this._nodePainter.drawOrigin();
+};
+
+parsegraph_Graph.prototype.scheduleRender = function()
+{
+    this._surface.scheduleRender();
+};
+
+parsegraph_Graph.prototype.render = function()
+{
+    var world = this.camera().project();
+
+    this._gl.disable(this._gl.DEPTH_TEST);
+
+    this._nodePainter.setBackground(this._backgroundColor);
+    this._nodePainter.render(world, this.camera().scale());;
 };
 
 parsegraph_Graph.prototype.camera = function()
@@ -43,31 +56,24 @@ parsegraph_Graph.prototype.camera = function()
     return this._camera;
 };
 
-parsegraph_Graph.prototype.setBackground = function(color)
+parsegraph_Graph.prototype.surface = function()
 {
-    if(arguments.length > 1) {
-        return this.setBackground(
-            parsegraph_createColor.apply(this, arguments)
-        );
-    }
-    this._backgroundColor = color;
-
-    // Make it simple to change the background color; do not require a
-    // separate call to scheduleRepaint.
-    this.scheduleRepaint();
+    return this._surface;
 };
 
-/**
- * Retrieves the current background color.
- */
-parsegraph_Graph.prototype.backgroundColor = function()
+parsegraph_Graph.prototype.gl = function()
 {
-    return this._backgroundColor;
+    return this._surface._gl;
 };
 
-parsegraph_Graph.prototype.cancelRepaint = function()
+parsegraph_Graph.prototype.container = function()
 {
-    this._needsRepaint = false;
+    return this._surface._container;
+};
+
+parsegraph_Graph.prototype.canvas = function()
+{
+    return this._surface._canvas;
 };
 
 parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
@@ -82,7 +88,7 @@ parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
     this._carets.push([caret, worldX, worldY]);
 
     // Simplify use by scheduling a repaint.
-    this.scheduleRepaint();
+    this._surface.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.removePlot = function(caret)
@@ -94,81 +100,7 @@ parsegraph_Graph.prototype.removePlot = function(caret)
     }
 
     // Simplify use by scheduling a repaint.
-    this.scheduleRepaint();
-};
-
-/**
- * Schedules a repaint. Painting causes the scene
- * graph to be rebuilt.
- */
-parsegraph_Graph.prototype.scheduleRepaint = function()
-{
-    this.scheduleRender();
-    this._needsRepaint = true;
-};
-
-/**
- * Schedules a render. Rendering draws the scene graph.
- *
- * Rendering will cause repainting if needed.
- */
-parsegraph_Graph.prototype.scheduleRender = function()
-{
-    this._container.style.backgroundColor = this._backgroundColor.asRGB();
-
-    if(this._pendingRender != null) {
-        return;
-    }
-    var graph = this;
-    this._pendingRender = requestAnimationFrame(function() {
-        graph._pendingRender = null;
-        if(graph._needsRepaint) {
-            graph.paint();
-            graph._needsRepaint = false;
-        }
-
-        graph.render();
-    });
-};
-
-parsegraph_Graph.prototype.cancelRender = function()
-{
-    if(this._pendingRender != null) {
-        cancelAnimationFrame(this._pendingRender);
-        this._pendingRender = null;
-    }
-};
-
-parsegraph_Graph.prototype.paint = function()
-{
-    this._nodePainter.clear();
-    this._nodePainter.setBackground(this.backgroundColor());
-
-    this._carets.forEach(function(caret) {
-        this._nodePainter.drawCaret(caret[0], caret[1], caret[2]);
-    }, this);
-
-    // Paint the origin.
-    this._nodePainter.drawOrigin();
-};
-
-parsegraph_Graph.prototype.render = function()
-{
-    var world = this.camera().project();
-
-    this._container.style.backgroundColor = this._backgroundColor.asRGB();
-
-    this._gl.clearColor(
-        0, 0, 0, 0
-    );
-    this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
-
-    this._nodePainter.setBackground(this._backgroundColor);
-    this._nodePainter.render(world, this.camera().scale());;
-
-    if(typeof(this.afterRender) == "function") {
-        this.afterRender();
-    }
+    this._surface.scheduleRepaint();
 };
 
 /**
@@ -197,27 +129,9 @@ parsegraph_Graph.prototype.mouseDown = function(x, y)
     //console.log("Found selected node");
     selectedNode.setSelected(!selectedNode.isSelected());
 
-    this.scheduleRepaint();
+    this._surface.scheduleRepaint();
 
     return true;
-};
-
-parsegraph_Graph.prototype.canvas = function()
-{
-    return this._canvas;
-};
-
-parsegraph_Graph.prototype.gl = function()
-{
-    return this._gl;
-};
-
-/**
- * Returns the container that holds the canvas for this graph.
- */
-parsegraph_Graph.prototype.container = function()
-{
-    return this._container;
 };
 
 parsegraph_Graph_Tests = new parsegraph_TestSuite("parsegraph_Graph");

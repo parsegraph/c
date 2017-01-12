@@ -176,7 +176,7 @@ function parsegraph_Camera(graph)
             y = mouseInWorld[1];
             //alert("World: " + x + ", " + y + ". Touch: " + touchX + ", " + touchY);
 
-            if(!graph.mouseDown(x, y)) {
+            if(!graph.mouseDown || !graph.mouseDown(x, y)) {
                 touchstartTime = Date.now();
             }
             else {

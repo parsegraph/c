@@ -1,42 +1,31 @@
-function alpha_GLWidget()
+function alpha_GLWidget(surface)
 {
-    this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
-
-    this._container = document.createElement("div");
-    this._container.className = "alpha_GLWidget";
-
-    // The canvas that will be drawn to.
-    this._canvas = document.createElement("canvas");
-    this._canvas.style.display = "block";
-    this._container.tabIndex = 0;
-    this._gl = this._canvas.getContext("experimental-webgl");
-    if(this._gl == null) {
-        this._gl = this._canvas.getContext("webgl");
-        if(this._gl == null) {
-            throw new Error("GL context is not supported");
-        }
+    if(!surface) {
+        throw new Error("Surface must be provided");
     }
 
-    this._container.appendChild(this._canvas);
+    this._surface = surface;
+    this._gl = surface._gl;
+    this._canvas = surface._canvas;
+    this._container = surface._container;
+
+    this._surface.addRenderer(this.render, this);
+
+    this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
 
     this.camera = new alpha_Camera(this);
 
     this.input = new alpha_Input(this);
     this.input.SetMouseSensitivity(.4);
 
-    this.camera.SetFovX(60);
+    this.camera.SetFovX(45);
     // this.camera.SetProperFOV(2,2);
     this.camera.SetNearDistance(.01);
     this.camera.SetFarDistance(150);
     this.camera.SetNearDistance(1);
     this.camera.SetPosition(0,0,0);
-    this.camera.SetOffset(0,4,0);
 
 //this.camera.PitchDown(40 * Math.PI / 180);
-
-    // The identifier used to cancel a pending Render.
-    this._pendingRender = null;
-    this._needsRepaint = true;
 
     this._done = false;
 
@@ -56,7 +45,7 @@ function alpha_GLWidget()
     var dirt = this.BlockTypes.Get("dirt", "cube");
 
     this.originCluster = new alpha_Cluster(this);
-    this.originCluster.AddBlock(stone,0,0,-50,0);
+    //this.originCluster.AddBlock(stone,0,0,-50,0);
     this.originCluster.CalculateVertices();
 
     this.platformCluster = new alpha_Cluster(this);
@@ -75,11 +64,11 @@ function alpha_GLWidget()
     this.playerCluster.AddBlock(grass, 1, 3, 0,8); // right
     this.playerCluster.CalculateVertices();
 
-    var WORLD_SIZE = 15;
+    var WORLD_SIZE = 30;
     for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
         for(var j = 1; j <= WORLD_SIZE * 2; ++j) {
             var r = alpha_random(0, 23);
-            this.worldCluster.AddBlock(stone, i,-1,-j,r);
+            this.worldCluster.AddBlock([grass, stone][alpha_random(0, 1)], i,-1,-j,r);
         }
     }
 
@@ -194,16 +183,19 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
 {
     this.time += elapsed;
 
-    if(this.input.Get("SHIFT") > 0) {
+    if(this.input.Get("Shift") > 0) {
         elapsed = elapsed * 10;
     }
 
-    if(this.input.Get("SHIFT") > 0) {
+    if(this.input.Get("Shift") > 0) {
         elapsed = elapsed / 10;
     }
 
     //console.log("LeftMouseButton: " + this.input.Get("LeftMouseButton"));
-    //console.log("MouseLeft: " + this.input.MouseLeft());
+    //console.log("MouseLeft: " + this.input.MouseLeft() * elapsed);
+    //console.log("MouseLeft: " + (this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed));
+    //console.log("LeftMouse: " + this.input.Get("LeftMouseButton"));
+    //console.log("TurnLeft: " + this.input.MouseLeft() * elapsed);
     this.camera.TurnLeft(
         this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed
     );
@@ -218,25 +210,25 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
     );
     this.camera.MoveForward(this.input.MouseWheelDegreesUp() * elapsed);
     this.camera.MoveBackward(this.input.MouseWheelDegreesDown() * elapsed);
-    this.camera.ZoomIn(this.input.Get("Y"), elapsed);
-    this.camera.ZoomOut(this.input.Get("H"), elapsed);
+    this.camera.ZoomIn(this.input.Get("y"), elapsed);
+    this.camera.ZoomOut(this.input.Get("h"), elapsed);
 
 
 
-    this.camera.GetParent().MoveForward( this.input.Get("W") * elapsed );
-    this.camera.GetParent().MoveBackward( this.input.Get("S") * elapsed );
-    this.camera.GetParent().MoveLeft( this.input.Get("A") * elapsed );
-    this.camera.GetParent().MoveRight( this.input.Get("D") * elapsed );
-    this.camera.GetParent().MoveUp( this.input.Get("SPACE") * elapsed );
-    this.camera.GetParent().MoveDown( this.input.Get("SHIFT") * elapsed );
+    this.camera.GetParent().MoveForward( this.input.Get("w") * elapsed );
+    this.camera.GetParent().MoveBackward( this.input.Get("s") * elapsed );
+    this.camera.GetParent().MoveLeft( this.input.Get("a") * elapsed );
+    this.camera.GetParent().MoveRight( this.input.Get("d") * elapsed );
+    this.camera.GetParent().MoveUp( this.input.Get(" ") * elapsed );
+    this.camera.GetParent().MoveDown( this.input.Get("Shift") * elapsed );
 
 
-    this.camera.GetParent().YawLeft( this.input.Get("J") * elapsed );
-    this.camera.GetParent().YawRight( this.input.Get("L") * elapsed );
-    this.camera.GetParent().PitchUp( this.input.Get("K") * elapsed );
-    this.camera.GetParent().PitchDown( this.input.Get("I") * elapsed );
-    this.camera.GetParent().RollLeft( this.input.Get("U") * elapsed );
-    this.camera.GetParent().RollRight(this.input.Get("O") * elapsed );
+    this.camera.GetParent().YawLeft( this.input.Get("j") * elapsed );
+    this.camera.GetParent().YawRight( this.input.Get("l") * elapsed );
+    this.camera.GetParent().PitchUp( this.input.Get("k") * elapsed );
+    this.camera.GetParent().PitchDown( this.input.Get("i") * elapsed );
+    this.camera.GetParent().RollLeft( this.input.Get("u") * elapsed );
+    this.camera.GetParent().RollRight(this.input.Get("o") * elapsed );
 
 
     if(this.input.Get("RightMouseButton") > 0) {
@@ -270,9 +262,9 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
     this.offsetPlatformPhysical.YawLeft(.1 * Math.PI / 180);
     //console.log(this.offsetPlatformPhysical.position.toString());
 
-    this.printOnce(this.input.Get("RETURN"));
+    this.printOnce(this.input.Get("Enter"));
     this.input.Update();
-    //console.log("Cam: " + this.camera.orientation);
+    //console.log("Cam: " + this.camera.GetOrientation());
 };
 
 alpha_GLWidget.prototype.setBackground = function()
@@ -286,7 +278,7 @@ alpha_GLWidget.prototype.setBackground = function()
 
     // Make it simple to change the background color; do not require a
     // separate call to scheduleRepaint.
-    this.scheduleRepaint();
+    this._surface.scheduleRepaint();
 };
 
 /**
@@ -326,12 +318,13 @@ alpha_GLWidget.prototype.connect = function(eventName, callback, thisArg)
     switch(eventName) {
     case "keyPressed": {
         return parsegraph_addEventListener(document, "keydown", function(event) {
+            //console.log(event.key);
             callback.call(thisArg, event.key);
         });
         break;
     }
     case "keyReleased": {
-        return parsegraph_addEventListener(this.canvas(), "keyup", function(event) {
+        return parsegraph_addEventListener(document, "keyup", function(event) {
             callback.call(thisArg, event.key);
         });
         break;
@@ -375,52 +368,6 @@ alpha_GLWidget.prototype.connect = function(eventName, callback, thisArg)
     }
 };
 
-/**
- * Schedules a repaint. Painting causes the scene to be rebuilt.
- */
-alpha_GLWidget.prototype.scheduleRepaint = function()
-{
-    this.scheduleRender();
-    this._needsRepaint = true;
-};
-
-alpha_GLWidget.prototype.cancelRepaint = function()
-{
-    this._needsRepaint = false;
-};
-
-/**
- * Schedules a render. Rendering draws the scene.
- *
- * Rendering will cause repainting if needed.
- */
-alpha_GLWidget.prototype.scheduleRender = function()
-{
-    this._container.style.backgroundColor = this._backgroundColor.asRGB();
-
-    if(this._pendingRender != null) {
-        return;
-    }
-    var widget = this;
-    this._pendingRender = requestAnimationFrame(function() {
-        widget._pendingRender = null;
-        if(widget._needsRepaint) {
-            widget.paint();
-            widget._needsRepaint = false;
-        }
-
-        widget.render();
-    });
-};
-
-alpha_GLWidget.prototype.cancelRender = function()
-{
-    if(this._pendingRender != null) {
-        cancelAnimationFrame(this._pendingRender);
-        this._pendingRender = null;
-    }
-};
-
 alpha_GLWidget.prototype.printOnce = function(bind)
 {
     if(bind == 0) {
@@ -448,30 +395,15 @@ alpha_GLWidget.prototype.printOnce = function(bind)
 };
 
 /**
- * Fill memory buffers to prepare for rendering.
- */
-alpha_GLWidget.prototype.paint = function()
-{
-};
-
-/**
  * Render painted memory buffers.
  */
 alpha_GLWidget.prototype.render = function()
 {
     var projection = this.camera.UpdateProjection();
 
-    this._gl.clearColor(
-        0, 0, 0, 0
-    );
-    this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
-
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 
-
-
     this._gl.enable(this._gl.DEPTH_TEST);
-
 
     this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
@@ -484,6 +416,7 @@ alpha_GLWidget.prototype.render = function()
     for(var i = 0; i < this.swarm.length; ++i) {
         var v = this.swarm[i];
         this.testCluster.Draw(v.GetViewMatrix().Multiplied(projection));
+        //this.worldCluster.Draw(v.GetViewMatrix().Multiplied(projection));
     }
 
 
@@ -500,6 +433,7 @@ alpha_GLWidget.prototype.render = function()
     this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));
 
     this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
+
 
 
     if(typeof(this.afterRender) == "function") {

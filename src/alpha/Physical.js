@@ -179,6 +179,9 @@ alpha_Physical.prototype.RollRight = function(elapsed)
  */
 alpha_Physical.prototype.SetPosition = function()
 {
+    if(Number.isNaN(this.position[0])) {
+        throw new Error("Position became NaN.");
+    }
     this.position.Set.apply(this.position, arguments);
     this.modelDirty = true;
 };
@@ -193,6 +196,9 @@ alpha_Physical.prototype.GetPosition = function()
 
 alpha_Physical.prototype.ChangePosition = function()
 {
+    if(Number.isNaN(this.position[0])) {
+        throw new Error("Position became NaN!");
+    }
     this.position.Add.apply(this.position, arguments);
     this.modelDirty = true;
 };
@@ -305,6 +311,7 @@ alpha_Physical.prototype.GetVelocity = function()
 alpha_Physical.prototype.AddVelocity = function()
 {
     this.velocity.Add.apply(this.velocity, arguments);
+    this.modelDirty = true;
 };
 
 // Move commands adjust the velocity

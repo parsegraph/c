@@ -513,13 +513,22 @@ alpha_Quaternion.prototype.FromAxisAndAngle = function()
     angle = angle / 2;
     var sinangle = Math.sin(angle);
     // accessing an vector by [X] will not be correct
-    this.x = ( axis[0] * sinangle );
-    this.y = ( axis[1] * sinangle );
-    this.z = ( axis[2] * sinangle );
-    this.w = ( Math.cos(angle) );
+    this[0] = ( axis[0] * sinangle );
+    this[1] = ( axis[1] * sinangle );
+    this[2] = ( axis[2] * sinangle );
+    this[3] = ( Math.cos(angle) );
 
     return this;
 }
+
+alpha_Quaternion_Tests.addTest("FromAxisAndAngle", function(resultDom) {
+    var q = new alpha_Quaternion();
+    var angle = Math.PI / 2;
+    q.FromAxisAndAngle(0, 1, 0, angle);
+    if(!q.Equals(0, Math.PI / 2, 0, Math.PI / 2)) {
+        return q.toString();
+    }
+})
 
 alpha_Quaternion.prototype.DotProduct = function(other)
 {
