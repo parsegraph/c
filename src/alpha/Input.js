@@ -140,7 +140,7 @@ alpha_Input.prototype.MouseLeft = function()
 {
     if(this.endX < this.startX) {
         var change = this.startX - this.endX;
-        console.log("mouse has moved right " + change);
+        //console.log("mouse has moved right " + change);
         return change * this.GetMouseSensitivityX();
     }
 
@@ -151,7 +151,7 @@ alpha_Input.prototype.MouseRight = function()
 {
     if(this.endX > this.startX) {
         var change = this.endX - this.startX;
-        console.log("mouse has moved left " + change);
+        //console.log("mouse has moved left " + change);
         return change * this.GetMouseSensitivityX();
     }
 
@@ -162,7 +162,7 @@ alpha_Input.prototype.MouseUp = function()
 {
     if(this.endY < this.startY) {
         var change = this.endY - this.startY;
-        console.log("mouse has moved down " + change);
+        //console.log("mouse has moved down " + change);
         return change * this.GetMouseSensitivityY();
     }
 
@@ -173,7 +173,7 @@ alpha_Input.prototype.MouseDown = function()
 {
     if(this.endY > this.startY) {
         var change = this.endY - this.startY;
-        console.log("mouse has moved up " + change);
+        //console.log("mouse has moved up " + change);
         return change * this.GetMouseSensitivityY();
     }
 
@@ -203,6 +203,9 @@ alpha_Input.prototype.MouseWheelDegreesDown = function()
     return this.mouseWheelDown / 8;
 };
 
+/**
+ * Sets the start to the end, and clears mousewheel totals.
+ */
 alpha_Input.prototype.Update = function()
 {
     this.startX = this.endX;
@@ -213,6 +216,7 @@ alpha_Input.prototype.Update = function()
 
 alpha_Input.prototype.GrabMouse = function(bind)
 {
+    throw new Error("NYI");
     if(bind == 0) {
         return;
     };
@@ -229,6 +233,7 @@ alpha_Input.prototype.GrabMouse = function(bind)
 
 alpha_Input.prototype.ReleaseMouse = function(bind)
 {
+    throw new Error("NYI");
     if(bind == 0) {
         return;
     }
