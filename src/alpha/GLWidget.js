@@ -18,7 +18,7 @@ function alpha_GLWidget(surface)
     this.input = new alpha_Input(this);
     this.input.SetMouseSensitivity(.4);
 
-    this.camera.SetFovX(45);
+    this.camera.SetFovX(60);
     // this.camera.SetProperFOV(2,2);
     this.camera.SetNearDistance(.01);
     this.camera.SetFarDistance(150);
