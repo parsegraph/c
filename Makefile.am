@@ -59,11 +59,13 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/LayoutState.js \
 	src/graph/Neighbors.js \
 	src/graph/Node.js \
+	src/graph/Surface.js \
 	src/alpha/Maths.js \
 	src/alpha/Physical.js \
 	src/alpha/Input.js \
 	src/alpha/Cam.js \
 	src/alpha/BlockStuff.js \
+	src/alpha/FacePainter.js \
 	src/alpha/Cluster.js \
 	src/alpha/BlockIDs.js \
 	src/alpha/CubeMan.js \
