@@ -340,9 +340,9 @@ alpha_Camera.prototype.UpdateProjection = function()
 // ------------ Rotation ---------------
 // -------------------------------------
 
-alpha_Camera.prototype.SetOrientation = function(x, y, z, w)
+alpha_Camera.prototype.SetOrientation = function()
 {
-    this.orientation.Set(x, y, z, w);
+    this.orientation.Set.apply(this.orientation, arguments);
     this.modelDirty = true;
 }
 
