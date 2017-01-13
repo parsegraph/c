@@ -125,10 +125,7 @@ parsegraph_Graph.prototype.mouseDown = function(x, y)
     }
 
     // A node was found; show its options.
-    //console.log("Found selected node");
-    selectedNode.setSelected(!selectedNode.isSelected());
-
-    this._surface.scheduleRepaint();
+    selectedNode.click();
 
     return true;
 };

@@ -8,7 +8,7 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     this._graph = graph;
 
     this._neighbors = parsegraph_createNeighbors();
-    this._listener = null;
+    this._clickListener = null;
 
     this._type = newType;
     this._label = undefined;
@@ -27,8 +27,6 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     this._selected = false;
 
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
-
-    this._listener = null;
 
     // Check if a parent node was provided.
     if(fromNode != null) {
@@ -49,36 +47,36 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     }
 }
 
-parsegraph_Node.prototype.setEventListener = function(listener, thisArg)
+parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
 {
     if(!listener) {
-        this._listener = null;
+        this._clickListener = null;
     }
     else {
-        this._listener = [listener, thisArg];
+        this._clickListener = [listener, thisArg];
     }
 };
 
 /**
  * Returns whether this Node has a command handler.
  */
-parsegraph_Node.prototype.hasEventListener = function()
+parsegraph_Node.prototype.hasClickListener = function()
 {
-    return this._listener != null;
+    return this._clickListener != null;
 };
 
 /**
- * Invokes the event listener on this node. Used for e.g. mouseDown events.
+ * Invokes the click listener on this node.
  *
- * Throws if no listener is present. See hasListener().
+ * Does nothing if no click listener is present.
  */
-parsegraph_Node.prototype.event = function()
+parsegraph_Node.prototype.click = function()
 {
-    // Invoke the event listener.
-    if(!this.hasListener()) {
-        throw new Error("This Node does not have a event listener.");
+    // Invoke the click listener.
+    if(!this.hasClickListener()) {
+        return;
     }
-    return this._listener[0].apply(this._listener[1], arguments);
+    return this._clickListener[0].apply(this._clickListener[1], arguments);
 };
 
 parsegraph_Node.prototype.nodeFit = function()

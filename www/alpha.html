@@ -68,8 +68,15 @@ widget = new alpha_GLWidget(surface);
 
 var graph = new parsegraph_Graph(surface);
 
-var caret = new parsegraph_Caret(graph, 's');
-caret.spawnMove('f', 'b');
+var caret = new parsegraph_Caret(graph, 'bu');
+
+var clickChild = function() {
+    caret.spawnMove('f', 's');
+    graph.scheduleRepaint();
+    caret.onClick(clickChild);
+};
+caret.onClick(clickChild);
+
 graph.plot(caret);
 
 if(localStorage.getItem("alpha_graph") != null) {

@@ -229,14 +229,14 @@ parsegraph_Caret.prototype.erase = function(inDirection)
 };
 
 /**
- * Sets the event listener on the current node.
+ * Sets the click listener on the current node.
  *
  * caret.spawnMove('f', 'b');
- * caret.listen(this.handle, this);
+ * caret.onClick(this.handle, this);
  */
-parsegraph_Caret.prototype.listen = function(eventListener, thisArg)
+parsegraph_Caret.prototype.onClick = function(clickListener, thisArg)
 {
-    this.node().setListener(eventListener, thisArg);
+    this.node().setClickListener(clickListener, thisArg);
 };
 
 parsegraph_Caret.prototype.move = function(toDirection)
