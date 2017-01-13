@@ -53,6 +53,9 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
         this._clickListener = null;
     }
     else {
+        if(!thisArg) {
+            thisArg = this;
+        }
         this._clickListener = [listener, thisArg];
     }
 };
