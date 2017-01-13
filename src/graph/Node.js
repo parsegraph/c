@@ -8,6 +8,7 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     this._graph = graph;
 
     this._neighbors = parsegraph_createNeighbors();
+    this._listener = null;
 
     this._type = newType;
     this._label = undefined;
@@ -27,6 +28,8 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
 
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
 
+    this._listener = null;
+
     // Check if a parent node was provided.
     if(fromNode != null) {
         // A parent node was provided; this node is a child.
@@ -45,6 +48,38 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
         this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
     }
 }
+
+parsegraph_Node.prototype.setEventListener = function(listener, thisArg)
+{
+    if(!listener) {
+        this._listener = null;
+    }
+    else {
+        this._listener = [listener, thisArg];
+    }
+};
+
+/**
+ * Returns whether this Node has a command handler.
+ */
+parsegraph_Node.prototype.hasEventListener = function()
+{
+    return this._listener != null;
+};
+
+/**
+ * Invokes the event listener on this node. Used for e.g. mouseDown events.
+ *
+ * Throws if no listener is present. See hasListener().
+ */
+parsegraph_Node.prototype.event = function()
+{
+    // Invoke the event listener.
+    if(!this.hasListener()) {
+        throw new Error("This Node does not have a event listener.");
+    }
+    return this._listener[0].apply(this._listener[1], arguments);
+};
 
 parsegraph_Node.prototype.nodeFit = function()
 {

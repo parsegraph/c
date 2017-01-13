@@ -1,5 +1,8 @@
 function parsegraph_Caret(graph, rootType)
 {
+    if(!rootType) {
+        rootType = parsegraph_SLOT;
+    }
     // Create the root node.
     rootType = parsegraph_readNodeType(rootType);
     this._nodeRoot = new parsegraph_Node(graph, rootType);
@@ -223,6 +226,17 @@ parsegraph_Caret.prototype.erase = function(inDirection)
 {
     inDirection = parsegraph_readNodeDirection(inDirection);
     this.node().eraseNode(inDirection);
+};
+
+/**
+ * Sets the event listener on the current node.
+ *
+ * caret.spawnMove('f', 'b');
+ * caret.listen(this.handle, this);
+ */
+parsegraph_Caret.prototype.listen = function(eventListener, thisArg)
+{
+    this.node().setListener(eventListener, thisArg);
 };
 
 parsegraph_Caret.prototype.move = function(toDirection)

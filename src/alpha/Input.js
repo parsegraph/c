@@ -160,7 +160,7 @@ alpha_Input.prototype.MouseRight = function()
 
 alpha_Input.prototype.MouseUp = function()
 {
-    if(this.endY < this.startY) {
+    if(this.endY > this.startY) {
         var change = this.endY - this.startY;
         //console.log("mouse has moved down " + change);
         return change * this.GetMouseSensitivityY();
@@ -171,7 +171,7 @@ alpha_Input.prototype.MouseUp = function()
 
 alpha_Input.prototype.MouseDown = function()
 {
-    if(this.endY > this.startY) {
+    if(this.endY < this.startY) {
         var change = this.endY - this.startY;
         //console.log("mouse has moved up " + change);
         return change * this.GetMouseSensitivityY();

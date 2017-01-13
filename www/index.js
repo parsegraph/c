@@ -34,7 +34,7 @@ function buildTextDemo(graph, COUNT, text)
 
         caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
 
-        graph.scheduleRepaint();
+        graph.surface().scheduleRepaint();
         ++i
     };
 
@@ -78,7 +78,7 @@ function buildSelection(graph, COUNT)
     caret.pop();
 
     var addBlock = function() {
-        graph.scheduleRepaint();
+        graph.surface().scheduleRepaint();
 
         caret.moveToRoot();
         var d = parsegraph_FORWARD;
@@ -178,14 +178,18 @@ function buildPrimesDemo(graph, COUNT)
     //console.log(parsegraph_getTimeInMillis() - startTime);
 
     var scheduleAddBlock = function() {
-        for(var i = 0; i < 10; ++i) {
-            addBlock();
-        }
-        graph.scheduleRepaint();
         if(knownPrimes.length > COUNT) {
             // Completed.
             return;
         }
+        for(var i = 0; i < 10; ++i) {
+            addBlock();
+            if(knownPrimes.length > COUNT) {
+                // Completed.
+                break;
+            }
+        }
+        graph.surface().scheduleRepaint();
         window.setTimeout(scheduleAddBlock, 500);
     };
     scheduleAddBlock();
@@ -193,7 +197,7 @@ function buildPrimesDemo(graph, COUNT)
     return caret;
 }
 
-function showStatements(graph, COUNT)
+function showStatements(graph)
 {
     var wordDir = parsegraph_FORWARD;
     var lineDir = parsegraph_DOWNWARD;
@@ -322,7 +326,7 @@ function showHardTest(graph, server)
             caret.spawnMove('d', 'bud');
         }
 
-        graph.scheduleRepaint();
+        graph.surface().scheduleRepaint();
     }, this);
 
     return caret;
@@ -1017,7 +1021,7 @@ function init()
         cameraInfo.innerHTML = "Camera (" + graph.camera().x() + ", " + graph.camera().y() + "), scale=" + graph.camera().scale();
 
         if(graph._nodePainter._spotlightPainter.hasSpotlights()) {
-            graph.scheduleRender();
+            graph.surface().scheduleRender();
         }
     };
 
@@ -1105,7 +1109,7 @@ function init()
             return;
         }
 
-        graph.scheduleRender();
+        graph.surface().scheduleRender();
     });
 
     controls.appendChild(form.asDOM());

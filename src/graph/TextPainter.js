@@ -1,3 +1,10 @@
+// TODO SetFont, which would recreate GlyphAtlas
+// TODO Test lots of glyphs; set a limit if one can be found to exist
+// XXX TextPainter // "#extension GL_OES_standard_derivatives : enable\n" +
+
+//    measureText(text, fontSize, [wrapWidth])
+//    drawText(text, x, y, fontSize, [wrapWidthj, [scale])
+
 parsegraph_TextPainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "uniform float u_scale;\n" +
@@ -50,6 +57,9 @@ function parsegraph_TextPainter(gl)
 {
     this._gl = gl;
 
+    this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
+    this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
+
     this._glyphTexture = this._gl.createTexture();
 
     // Always use an upscaled font.
@@ -69,11 +79,17 @@ function parsegraph_TextPainter(gl)
         )
     );
 
+    var fragProgram = parsegraph_TextPainter_FragmentShader;
+    if(!this._gl.getExtension("OES_standard_derivatives")) {
+        // TODO Don't just default with the good version.
+        throw new Error("OES_standard_derivatives is required for TextPainter.");
+    }
+
     this._gl.attachShader(
         this._textProgram,
         compileShader(
             this._gl,
-            parsegraph_TextPainter_FragmentShader,
+            fragProgram,
             this._gl.FRAGMENT_SHADER
         )
     );
@@ -119,11 +135,28 @@ parsegraph_TextPainter.prototype.setColor = function(color)
     this._color = color;
 };
 
-parsegraph_TextPainter.prototype.measureText = function(text, fontSize, maxWidth)
+parsegraph_TextPainter.prototype.setWrapWidth = function(wrapWidth)
+{
+    this._wrapWidth = wrapWidth;
+};
+
+parsegraph_TextPainter.prototype.wrapWidth = function()
+{
+    return this._wrapWidth;
+};
+
+parsegraph_TextPainter.prototype.measureText = function(text, fontSize, wrapWidth)
 {
     var x = 0;
     var y = 0;
     var i = 0;
+
+    if(fontSize === undefined) {
+        fontSize = this.fontSize();
+    }
+    if(wrapWidth === undefined) {
+        wrapWidth = this.wrapWidth();
+    }
 
     var fontScale = fontSize / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
     var glyphData;
@@ -147,7 +180,7 @@ parsegraph_TextPainter.prototype.measureText = function(text, fontSize, maxWidth
         var glyphData = this._glyphAtlas.getGlyph(letter);
 
         // Check for wrapping.
-        if(maxWidth !== undefined && (x + glyphData.width) > maxWidth / fontScale) {
+        if(wrapWidth !== undefined && (x + glyphData.width) > wrapWidth / fontScale) {
             maxLineWidth = Math.max(maxLineWidth, x);
             x = 0;
             y += glyphData.height;
@@ -160,19 +193,35 @@ parsegraph_TextPainter.prototype.measureText = function(text, fontSize, maxWidth
     return [maxLineWidth * fontScale, y * fontScale];
 };
 
+parsegraph_TextPainter.prototype.setFontSize = function(fontSize)
+{
+    this._fontSize = fontSize;
+};
+
+parsegraph_TextPainter.prototype.fontSize = function()
+{
+    return this._fontSize;
+};
+
 /**
  * Draws the given text with the given font size at the provided location.
  * Text is drawn forwards and downwards from the given position.
  *
- * The maxWidth causes wrapping.
+ * The wrapWidth causes wrapping.
  *
  * The scale provided is the camera's scale, given for antialiasing. Defaults
  * to 1.0.
  */
-parsegraph_TextPainter.prototype.drawText = function(text, x, y, fontSize, maxWidth, scale)
+parsegraph_TextPainter.prototype.drawText = function(text, x, y, fontSize, wrapWidth, scale)
 {
     if(scale === undefined) {
         scale = 1.0;
+    }
+    if(fontSize === undefined) {
+        fontSize = this.fontSize();
+    }
+    if(wrapWidth === undefined) {
+        wrapWidth = this.wrapWidth();
     }
     var fontScale = fontSize / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
 
@@ -196,12 +245,12 @@ parsegraph_TextPainter.prototype.drawText = function(text, x, y, fontSize, maxWi
         }
         glyphData.painted = true;
 
-        if(maxWidth !== undefined && (x + glyphData.width * fontScale) > (originX + maxWidth)) {
+        if(wrapWidth !== undefined && (x + glyphData.width * fontScale) > (originX + wrapWidth)) {
             x = originX;
             y += glyphData.height * fontScale;
         //}
         //else {
-            //console.log(x, originX, originX + maxWidth);
+            //console.log(x, originX, originX + wrapWidth);
         }
 
         //console.log(letter + x + ", " + y + "(" + glyphData.width + "x" + glyphData.height + ")");

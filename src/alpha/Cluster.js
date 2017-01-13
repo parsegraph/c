@@ -18,15 +18,10 @@ function alpha_Cluster(widget)
         throw new Error("Cluster must be given a non-null alpha_GLWidget");
     }
     this.widget = widget;
-    this.gl = this.widget._gl;
-    if(!this.gl) {
-        //console.log(widget);
-        throw new Error("Cluster must be given a GL interface via alpha_GLWidget._gl")
-    }
 
     this.blocks = [];
 
-    this.facePainter = new alpha_FacePainter(widget);
+    this.facePainter = new alpha_FacePainter(widget.gl());
 };
 
 alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");

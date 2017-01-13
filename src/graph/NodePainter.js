@@ -75,6 +75,9 @@ parsegraph_NodePainter.prototype.backgroundColor = function()
  */
 parsegraph_NodePainter.prototype.render = function(world, scale)
 {
+    this._gl.disable(this._gl.CULL_FACE);
+    this._gl.disable(this._gl.DEPTH_TEST);
+
     this._gl.enable(this._gl.BLEND);
     this._gl.blendFunc(
         this._gl.SRC_ALPHA, this._gl.DST_ALPHA

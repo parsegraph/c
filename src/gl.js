@@ -198,6 +198,15 @@ function resize(gl) {
   }
 }
 
+function matrixIdentity3x3()
+{
+    return [
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    ];
+}
+
 function matrixCopy3x3(src)
 {
     return [

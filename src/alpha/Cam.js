@@ -38,22 +38,22 @@ var Z = 3;
 // -- and it passes information to and from physicals
 
 // the function returned by Camera();
-function alpha_Camera(widget)
+function alpha_Camera(surface)
 {
-    this.fovX = 1.05; // like 60.1
+    this.fovX = alpha_toRadians(60.1);
     this.fovY = 0;
 
     // zoomFactor = zoomSpeed ^ elapsed -- strange but yields a nice zoom
     this.zoomSpeed = 1;
     this.zoomFactor = 1;
-    this.farDistance = 500;
-    this.nearDistance = .5; // with collision detection I may be able to increase this
-    this.widget = widget;
-    if(!this.widget) {
-        throw new Error("widget must not be null");
+    this.farDistance = 2500;
+    this.nearDistance = 1; // with collision detection I may be able to increase this
+    this.surface = surface;
+    if(!this.surface) {
+        throw new Error("surface must not be null");
     }
 
-    // Dimensions of the widget's size.
+    // Dimensions of the surface's size.
     this.width = null;
     this.height = null;
 
@@ -80,8 +80,9 @@ alpha_Camera_Tests = new parsegraph_TestSuite("alpha_Camera");
 parsegraph_AllTests.addTest(alpha_Camera_Tests);
 
 alpha_Camera_Tests.addTest("alpha_Camera", function(resultDom) {
-    var widget = new alpha_GLWidget();
-    var cam = new alpha_Camera(widget);
+    var surface = new parsegraph_Surface();
+    var widget = new alpha_GLWidget(surface);
+    var cam = new alpha_Camera(surface);
 
     //console.log(cam.GetModelMatrix().toString());
     cam.GetViewMatrix();
@@ -256,8 +257,8 @@ alpha_Camera.prototype.UpdateProjection = function()
 {
     // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
     // Lookup the size the browser is displaying the canvas.
-    var displayWidth = this.widget.container().clientWidth;
-    var displayHeight = this.widget.container().clientHeight;
+    var displayWidth = this.surface.container().clientWidth;
+    var displayHeight = this.surface.container().clientHeight;
 
     if(displayWidth == 0 || displayHeight == 0) {
         //console.log("No projection available.");
@@ -266,72 +267,28 @@ alpha_Camera.prototype.UpdateProjection = function()
 
     // Check if the canvas is not the same size.
     if(
-        this.widget.canvas().width != displayWidth
-        || this.widget.canvas().height != displayHeight
+        this.surface.canvas().width != displayWidth
+        || this.surface.canvas().height != displayHeight
     ) {
         // Make the canvas the same size
-        this.widget.canvas().width = displayWidth;
-        this.widget.canvas().height = displayHeight;
+        this.surface.canvas().width = displayWidth;
+        this.surface.canvas().height = displayHeight;
 
         // Set the viewport to match
-        this.widget.gl().viewport(
-            0, 0, this.widget.canvas().width, this.widget.canvas().height
+        this.surface.gl().viewport(
+            0, 0, this.surface.canvas().width, this.surface.canvas().height
         );
     }
 
-    this.width = this.widget.canvas().width;
-    this.height = this.widget.canvas().height;
+    this.width = this.surface.canvas().width;
+    this.height = this.surface.canvas().height;
 
-    // updates this projectionMatrix;
-    var fovX = this.GetFovX() / this.zoomFactor;
-    var fovY = this.GetFovY() / this.zoomFactor;
-
-    var near = this.nearDistance;
-    var far = this.farDistance;
-
-    var right = near * Math.tan(fovX / 2.0);
-    var left = -right;
-
-    var top = near * Math.tan(fovY / 2.0);
-    var bottom =  -top;
-
-    //var bottom = left / aspect;
-    //var top = right / aspect;
-
-    var H = (2.0 * near) / (right - left);
-    var V = (2.0 * near) / (top - bottom);
-    var A = (right + left) / (right - left);
-    var B = (top + bottom) / (top - bottom);
-    var C = -(far + near) / (far - near);
-    var D = -(2.0 * far * near) / (far - near);
-
-    var p = this.projectionMatrix;
-    p[0]  =  H;
-    p[1]  =  0;
-    p[2]  =  0;
-    p[3]  =  0;
-    p[4]  =  0;
-    p[5]  =  V;
-    p[6]  =  0;
-    p[7]  =  0;
-    p[8]  =  A;
-    p[9] =  B;
-    p[10] =  C;
-    p[11] = -1;
-    p[12] =  0;
-    p[13] =  0;
-    p[14] =  D;
-    p[15] =  0;
-
-    // the cleaner-looking, trashier version.
-    // Adjective combo world first!
-//  var projection = [
-//      H, 0, 0, 0,
-//      0, V, 0, 0,
-//      A, B, C, -1,
-//      0, 0, D, 0
-//  ];
-
+    this.projectionMatrix.Set(makePerspective(
+        this.GetFovX() / this.zoomFactor,
+        this.width / this.height,
+        this.nearDistance,
+        this.farDistance
+    ));
     this.projectionDirty = false;
     return this.projectionMatrix;
 };
@@ -426,13 +383,13 @@ alpha_Camera.prototype.Turn = function(angle)
 alpha_Camera.prototype.TurnLeft = function(elapsed)
 {
     var angle = elapsed * this.rotationSpeed[1];
-    this.Turn(angle, 0, 1, 0);
+    this.Turn(angle);
 }
 
 alpha_Camera.prototype.TurnRight = function(elapsed)
 {
     var angle = elapsed * this.rotationSpeed[1];
-    this.Turn(-angle, 0, 1, 0);
+    this.Turn(-angle);
 }
 
 alpha_Camera.prototype.PitchUp = function(elapsed)

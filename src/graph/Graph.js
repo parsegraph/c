@@ -21,6 +21,8 @@ function parsegraph_Graph(surface)
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
+
+    this._input = new parsegraph_Input(this, this._camera);
 };
 
 parsegraph_Graph.prototype.paint = function()
@@ -44,9 +46,6 @@ parsegraph_Graph.prototype.scheduleRender = function()
 parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
-
-    this._gl.disable(this._gl.DEPTH_TEST);
-
     this._nodePainter.setBackground(this._backgroundColor);
     this._nodePainter.render(world, this.camera().scale());;
 };

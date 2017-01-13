@@ -25,16 +25,11 @@ alpha_FacePainter_FragmentShader =
 /**
  * Draws 3d faces in a solid color.
  */
-function alpha_FacePainter(widget)
+function alpha_FacePainter(gl)
 {
-    if(!widget) {
-        throw new Error("FacePainter must be given a non-null alpha_GLWidget");
-    }
-    this.widget = widget;
-    this.gl = this.widget._gl;
-    if(!this.gl) {
-        //console.log(widget);
-        throw new Error("FacePainter must be given a GL interface via alpha_GLWidget._gl")
+    this.gl = gl;
+    if(!this.gl || !this.gl.createProgram) {
+        throw new Error("FacePainter must be given a GL interface");
     }
 
     this.faceProgram = this.gl.createProgram();
@@ -82,7 +77,7 @@ parsegraph_AllTests.addTest(alpha_FacePainter_Tests);
 
 alpha_FacePainter_Tests.addTest("alpha_FacePainter", function(resultDom) {
     var widget = new alpha_GLWidget();
-    var painter = new alpha_FacePainter(widget);
+    var painter = new alpha_FacePainter(widget.gl());
 });
 
 alpha_FacePainter.prototype.Clear = function()
@@ -112,18 +107,22 @@ alpha_FacePainter.prototype.Triangle = function(v1, v2, v3, c1, c2, c3)
 
     this.faceBuffer.appendData(
         this.a_position,
-        v1, v2, v3
+        v1[0], v1[1], v1[2],
+        v2[0], v2[1], v2[2],
+        v3[0], v3[1], v3[2]
     );
     this.faceBuffer.appendData(
         this.a_color,
-        c1, c2, c3
+        c1[0], c1[1], c1[2],
+        c2[0], c2[1], c2[2],
+        c3[0], c3[1], c3[2]
     );
 };
 
 alpha_FacePainter.prototype.Draw = function(viewMatrix)
 {
     if(!viewMatrix) {
-        throw new Error("A viewmatrix must be provided");
+        throw new Error("A viewMatrix must be provided");
     }
     // Render faces.
     this.gl.useProgram(

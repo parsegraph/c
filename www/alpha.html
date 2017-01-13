@@ -48,97 +48,8 @@ body > div input {
 }
 </style>
 <script src="parsegraph-1.0.js"></script>
+<script src="index.js"></script>
 <script>
-
-function buildPrimesDemo(graph, COUNT)
-{
-    if(COUNT == undefined) {
-        COUNT = 50;
-    }
-    COUNT = Math.min(COUNT, 100);
-
-    parsegraph_HORIZONTAL_SEPARATION_PADDING = 1;
-    parsegraph_VERTICAL_SEPARATION_PADDING = 1;
-    parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
-
-    function makeModulo(frequency) {
-        var target = 0;
-
-        var object = {};
-
-        object.calculate = function(number) {
-            while(number > target) {
-                target += frequency;
-            }
-            return target - number;
-        };
-
-        object.value = function() {
-            return frequency;
-        };
-
-        return object;
-    };
-
-    var knownPrimes = [];
-    var candidate = 2;
-
-    var startTime = parsegraph_getTimeInMillis();
-
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
-    caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    var addBlock = function() {
-        caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-        caret.label(candidate);
-        caret.push();
-        var isPrime = true;
-        for(var i = 0; i < knownPrimes.length; ++i) {
-            var prime = knownPrimes[i];
-            modulus = prime.calculate(candidate);
-            if(modulus == 0) {
-                // It's a multiple, so there's no chance for primality.
-                caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
-                isPrime = false;
-            }
-            else {
-                caret.spawnMove(parsegraph_UPWARD, parsegraph_SLOT);
-            }
-        }
-
-        if(isPrime) {
-            caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
-            caret.label(candidate);
-            // The candidate is prime, so output it and add it to the list.
-            knownPrimes.push(makeModulo(candidate));
-        }
-
-        caret.pop();
-        ++candidate;
-    };
-
-    /*caret.push();
-    for(var i = 0; i < knownPrimes.length; ++i) {
-        caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
-    }
-    caret.pop();*/
-
-    //console.log(parsegraph_getTimeInMillis() - startTime);
-
-    var scheduleAddBlock = function() {
-        for(var i = 0; i < 10; ++i) {
-            addBlock();
-        }
-        graph.surface().scheduleRepaint();
-        if(knownPrimes.length > COUNT) {
-            // Completed.
-            return;
-        }
-        window.setTimeout(scheduleAddBlock, 500);
-    };
-    scheduleAddBlock();
-
-    return caret;
-}
 
 document.addEventListener("DOMContentLoaded", function(event) {
 
@@ -146,17 +57,60 @@ parsegraph_initialize();
 
 var surface = new parsegraph_Surface();
 
-var widget = new alpha_GLWidget(surface);
+var frameElapsed = 0;
+surface.addRenderer(function() {
+    // Start timing.
+    frameElapsed = parsegraph_getTimeInMillis();
+});
+
+var widget;
+widget = new alpha_GLWidget(surface);
+
 var graph = new parsegraph_Graph(surface);
 
-graph.plot(buildPrimesDemo(graph, 30));
+var caret = new parsegraph_Caret(graph, 's');
+caret.spawnMove('f', 'b');
+graph.plot(caret);
 
-var start = alpha_GetTime();
+if(localStorage.getItem("alpha_graph") != null) {
+    try {
+        var alpha_graph = JSON.parse(localStorage.getItem("alpha_graph"));
+        graph.camera().restore(alpha_graph);
+    } catch(e) {
+        console.log("Failed to parse alpha_graph saved state.\n" + e);
+    }
+}
+
+var textPainter = new parsegraph_TextPainter(surface.gl());
+
+textPainter._glyphAtlas.setAfterUpdate(surface.scheduleRender, surface);
+var textCamera = new parsegraph_Camera(surface);
+
+surface.addRenderer(function() {
+    var gl = surface.gl();
+
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(
+        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
+    );
+    textPainter.clear();
+    textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
+    var world = textCamera.project();
+    textPainter.render(world);
+});
+
+surface.addRenderer(function() {
+    localStorage.setItem("alpha_graph", JSON.stringify(graph.camera().toJSON()));
+});
 
 // This flag is used to squelch rendering if that function
 // threw an exception and failed to complete.
 var needsRender = false;
 var tickIntervalId;
+var start = alpha_GetTime();
 var tick = function() {
     // Check if a render is needed before another tick should occur.
     if(needsRender) {
@@ -164,15 +118,15 @@ var tick = function() {
     }
 
     // Update the scene.
-    //console.log("Running tick... ");
     var t = alpha_GetTime();
-    widget.Tick(t - start);
+    if(widget) {
+        widget.Tick(t - start);
+    }
     start = t;
 
     // Set the render flag.
     needsRender = true;
     surface.render();
-    //console.log("Tick and render complete.");
     needsRender = false;
     tickIntervalId = requestAnimationFrame(tick);
 }; // Tick

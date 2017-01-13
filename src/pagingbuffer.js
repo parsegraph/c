@@ -119,6 +119,9 @@ parsegraph_PagingBuffer.prototype.appendData = function(attribIndex/*, ... */)
             value.forEach(appendValue);
             return;
         }
+        if(Number.isNaN(value)) {
+            throw new Error("Value is not a number: " + value);
+        }
         pagingBuffer.getWorkingPage().buffers[attribIndex].push(value);
         pagingBuffer.getWorkingPage().needsUpdate = true;
     };
@@ -168,7 +171,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
 
     // Draw each page.
     this._pages.forEach(function(page) {
-        var numVertices;
+        var numIndices;
 
         // Prepare each vertex attribute.
         this._attribs.forEach(function(attrib, attribIndex) {
@@ -201,18 +204,19 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
                 0
             );
 
-            var thisNumVertices = bufferData.length / attrib.numComponents;
-            if(numVertices == undefined) {
-                numVertices = thisNumVertices;
+            var thisNumIndices = bufferData.length / attrib.numComponents;
+            if(numIndices == undefined) {
+                numIndices = thisNumIndices;
             }
             else {
-                numVertices = Math.min(numVertices, thisNumVertices);
+                numIndices = Math.min(numIndices, thisNumIndices);
             }
         }, this);
 
         // Draw the page's triangles.
-        if(numVertices > 0) {
-            this._gl.drawArrays(this._gl.TRIANGLES, 0, numVertices);
+        if(numIndices > 0) {
+            //console.log("Drawing " + numIndices + " indices");
+            this._gl.drawArrays(this._gl.TRIANGLES, 0, numIndices);
         }
 
         page.needsUpdate = false;

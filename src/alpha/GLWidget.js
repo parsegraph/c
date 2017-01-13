@@ -1,3 +1,4 @@
+// test version 1.0
 function alpha_GLWidget(surface)
 {
     if(!surface) {
@@ -9,11 +10,14 @@ function alpha_GLWidget(surface)
     this._canvas = surface._canvas;
     this._container = surface._container;
 
+    this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
 
     this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
 
     this.camera = new alpha_Camera(this);
+
+    this.facePainter = new alpha_FacePainter(this._gl);
 
     this.input = new alpha_Input(this);
     this.input.SetMouseSensitivity(.4);
@@ -29,7 +33,6 @@ function alpha_GLWidget(surface)
 
     this._done = false;
 
-    // test version 1.0
     this.BlockTypes = new alpha_BlockTypes();
     alpha_standardBlockTypes(this.BlockTypes);
     alpha_CubeMan(this.BlockTypes);
@@ -38,7 +41,6 @@ function alpha_GLWidget(surface)
 
     this.testCluster = new alpha_Cluster(this);
     this.testCluster.AddBlock(cubeman, 0,5,0,0);
-    this.testCluster.CalculateVertices();
 
     var stone = this.BlockTypes.Get("stone", "cube");
     var grass = this.BlockTypes.Get("grass", "cube");
@@ -46,7 +48,6 @@ function alpha_GLWidget(surface)
 
     this.originCluster = new alpha_Cluster(this);
     //this.originCluster.AddBlock(stone,0,0,-50,0);
-    this.originCluster.CalculateVertices();
 
     this.platformCluster = new alpha_Cluster(this);
     this.worldCluster = new alpha_Cluster(this);
@@ -62,7 +63,6 @@ function alpha_GLWidget(surface)
     this.playerCluster.AddBlock(grass, 0,4,0, 12); // head
 
     this.playerCluster.AddBlock(grass, 1, 3, 0,8); // right
-    this.playerCluster.CalculateVertices();
 
     var WORLD_SIZE = 30;
     for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
@@ -78,7 +78,6 @@ function alpha_GLWidget(surface)
             this.worldCluster.AddBlock(stone, i,-1,-30,r);
         }
     }
-    this.worldCluster.CalculateVertices();
 
     // build a platform
 
@@ -87,7 +86,6 @@ function alpha_GLWidget(surface)
             this.platformCluster.AddBlock(grass,j,0,-i,0);
         }
     }
-    this.platformCluster.CalculateVertices();
 
 
     this.evPlatformCluster = new alpha_Cluster(this);
@@ -96,7 +94,6 @@ function alpha_GLWidget(surface)
             this.evPlatformCluster.AddBlock(dirt, j, 1, i, 0);
         }
     }
-    this.evPlatformCluster.CalculateVertices();
 
 
 
@@ -155,7 +152,6 @@ function alpha_GLWidget(surface)
         this.sphereCluster.AddBlock(stone, p, 0);
     }
 
-    this.sphereCluster.CalculateVertices();
 
 
     var spot = new alpha_Vector(0,15,35);
@@ -178,6 +174,17 @@ function alpha_GLWidget(surface)
 
     this.time = 0;
 }; // alpha_GLWidget
+
+alpha_GLWidget.prototype.paint = function()
+{
+    this.evPlatformCluster.CalculateVertices();
+    this.testCluster.CalculateVertices();
+    this.originCluster.CalculateVertices();
+    this.playerCluster.CalculateVertices();
+    this.worldCluster.CalculateVertices();
+    this.platformCluster.CalculateVertices();
+    this.sphereCluster.CalculateVertices();
+};
 
 alpha_GLWidget.prototype.Tick = function(elapsed)
 {
@@ -404,6 +411,7 @@ alpha_GLWidget.prototype.render = function()
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 
     this._gl.enable(this._gl.DEPTH_TEST);
+    this._gl.enable(this._gl.CULL_FACE);
 
     this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
@@ -433,7 +441,6 @@ alpha_GLWidget.prototype.render = function()
     this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));
 
     this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
-
 
 
     if(typeof(this.afterRender) == "function") {
