@@ -13,6 +13,8 @@ function parsegraph_Graph(surface)
     this._container = surface.container();
     this._gl = surface.gl();
 
+    this._paintingDirty = true;
+
     this._nodePainter = new parsegraph_NodePainter(this._gl);
 
     this._camera = new parsegraph_Camera(this);
@@ -27,6 +29,10 @@ function parsegraph_Graph(surface)
 
 parsegraph_Graph.prototype.paint = function()
 {
+    if(!this._paintingDirty) {
+        return;
+    }
+
     this._nodePainter.clear();
     this._nodePainter.setBackground(this.surface().backgroundColor());
 
@@ -36,6 +42,14 @@ parsegraph_Graph.prototype.paint = function()
 
     // Paint the origin.
     this._nodePainter.drawOrigin();
+
+    this._paintingDirty = false;
+};
+
+parsegraph_Graph.prototype.scheduleRepaint = function()
+{
+    this._paintingDirty = true;
+    this._surface.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.scheduleRender = function()
@@ -87,7 +101,7 @@ parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
     this._carets.push([caret, worldX, worldY]);
 
     // Simplify use by scheduling a repaint.
-    this._surface.scheduleRepaint();
+    this.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.removePlot = function(caret)
@@ -99,7 +113,7 @@ parsegraph_Graph.prototype.removePlot = function(caret)
     }
 
     // Simplify use by scheduling a repaint.
-    this._surface.scheduleRepaint();
+    this.scheduleRepaint();
 };
 
 /**

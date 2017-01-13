@@ -29,6 +29,8 @@ function alpha_GLWidget(surface)
     this.camera.SetNearDistance(1);
     this.camera.SetPosition(0,0,0);
 
+    this.paintingDirty = true;
+
 //this.camera.PitchDown(40 * Math.PI / 180);
 
     this._done = false;
@@ -177,6 +179,9 @@ function alpha_GLWidget(surface)
 
 alpha_GLWidget.prototype.paint = function()
 {
+    if(!this.paintingDirty) {
+        return;
+    }
     this.evPlatformCluster.CalculateVertices();
     this.testCluster.CalculateVertices();
     this.originCluster.CalculateVertices();
@@ -184,6 +189,7 @@ alpha_GLWidget.prototype.paint = function()
     this.worldCluster.CalculateVertices();
     this.platformCluster.CalculateVertices();
     this.sphereCluster.CalculateVertices();
+    this.paintingDirty = false;
 };
 
 alpha_GLWidget.prototype.Tick = function(elapsed)
@@ -285,6 +291,15 @@ alpha_GLWidget.prototype.setBackground = function()
 
     // Make it simple to change the background color; do not require a
     // separate call to scheduleRepaint.
+    this.scheduleRepaint();
+};
+
+/**
+ * Marks this GLWidget as dirty and schedules a surface repaint.
+ */
+alpha_GLWidget.prototype.scheduleRepaint = function()
+{
+    this.paintingDirty = true;
     this._surface.scheduleRepaint();
 };
 
