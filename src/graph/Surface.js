@@ -108,7 +108,6 @@ parsegraph_Surface.prototype.addRenderer = function(renderer, thisArg)
     this._renderers.push([renderer, thisArg]);
 };
 
-
 parsegraph_Surface.prototype.paint = function()
 {
     this._painters.forEach(function(painter) {
