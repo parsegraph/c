@@ -14,7 +14,7 @@ function parsegraph_generateRectangleVertices(x, y, w, h) {
     ];
 }
 
-function parsegraph_getVerts(width,length,height)
+function getVerts(width,length,height)
 {
     return [
         // Front
