@@ -311,6 +311,11 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
     }
 
     this.layoutWasChanged(spawnDirection);
+
+    // Use the node fitting of the parent.
+    node.setNodeFit(this.nodeFit());
+
+    return node;
 };
 
 /**

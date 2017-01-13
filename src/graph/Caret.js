@@ -209,9 +209,6 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
     // Spawn a node in the given direction.
     this.node().spawnNode(inDirection, newContent);
 
-    // Use the node fitting of the parent.
-    this.node().nodeAt(inDirection).setNodeFit(this.node().nodeFit());
-
     // Use the given alignment mode.
     if(newAlignmentMode !== undefined) {
         newAlignmentMode = parsegraph_readNodeAlignment(newAlignmentMode);
