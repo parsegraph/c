@@ -68,6 +68,11 @@ parsegraph_Camera.prototype.setScale = function(scale)
     this.surface().scheduleRender();
 };
 
+parsegraph_Camera.prototype.toString = function()
+{
+    return "(" + this._cameraX + ", " + this._cameraY + ", " + this._scale + ")";
+};
+
 parsegraph_Camera.prototype.adjustOrigin = function(x, y)
 {
     this.setOrigin(
