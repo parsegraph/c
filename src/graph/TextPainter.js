@@ -130,9 +130,14 @@ parsegraph_createTextPainter = function(gl, size)
     return new parsegraph_TextPainter(gl, size);
 };
 
-parsegraph_TextPainter.prototype.setColor = function(color)
+parsegraph_TextPainter.prototype.setColor = function()
 {
-    this._color = color;
+    if(arguments.length > 1) {
+        this._color = parsegraph_createColor.apply(null, arguments);
+    }
+    else {
+        this._color = arguments[0];
+    }
 };
 
 parsegraph_TextPainter.prototype.setWrapWidth = function(wrapWidth)
