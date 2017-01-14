@@ -68,7 +68,7 @@ widget = new alpha_GLWidget(surface);
 
 var graph = new parsegraph_Graph(surface);
 
-var caret = new parsegraph_Caret(graph, 'bu');
+var caret = new parsegraph_Caret(graph, 'b');
 
 var clickChild = function() {
     // Spawn a reasonable child in an allowed direction.
@@ -137,6 +137,9 @@ var clickChild = function() {
             break;
         }
         child = this.spawnNode(dir, t);
+        if(dir == parsegraph_INWARD) {
+            child.setScale(parsegraph_SHRINK_SCALE);
+        }
         break;
     }
 
@@ -181,7 +184,16 @@ surface.addRenderer(function() {
         gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
     );
     textPainter.clear();
+    textPainter.setColor(1, 1, 1);
+
+
+
     textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
+    textPainter.setColor(1, .5, .5);
+    textPainter.setFontSize(20);
+    textPainter.drawText("x=" + graph.camera().x(), 8, 4 + textPainter.fontSize());
+    textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
+    textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
     var world = textCamera.project();
     textPainter.render(world);
 });
