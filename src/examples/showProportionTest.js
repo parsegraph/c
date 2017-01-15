@@ -12,7 +12,41 @@ function showProportionTest(graph, COUNT)
     }
     COUNT = Math.min(COUNT, 100);
 
-    var caret = new parsegraph_Caret(graph, parsegraph_SLOT);
+    var commands = ["Copy", "Cut", "Paste", "Delete", "Open", "New", "Test", "Build"];
+
+    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var selectedNode;
+    var attachCommands = function() {
+        caret.onClick(function() {
+            if(graph.isCarouselShown() && selectedNode == this) {
+                graph.clearCarousel();
+                graph.hideCarousel();
+                graph.scheduleRepaint();
+                return;
+            }
+            selectedNode = this;
+            graph.clearCarousel();
+
+            var i = 0;
+            commands.forEach(function(command) {
+                var commandCaret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+                commandCaret.label(command);
+                if(++i == 3) {
+                    commandCaret.spawnMove('d', 's');
+                    commandCaret.label(command);
+                    commandCaret.move('u');
+                }
+                graph.addToCarousel(commandCaret, command, function() {
+                    console.log("Clicked " + command);
+                }, this);
+            }, this);
+
+            graph.showCarousel();
+            graph.plotCarousel(this.absoluteX(), this.absoluteY());
+            graph.scheduleRepaint();
+        });
+    };
+    attachCommands();
 
     caret.fitExact();
 
@@ -23,7 +57,7 @@ function showProportionTest(graph, COUNT)
             for(var j = 0; j < COUNT - i - 1; ++j) {
                 caret.spawnMove('d', 'bud');
             }
-            caret.spawnMove('d', 'block');
+            caret.spawnMove('d', 'slot');
             caret.label(COUNT - i);
             caret.pop();
         };
@@ -31,7 +65,8 @@ function showProportionTest(graph, COUNT)
         spawnRow('f');
 
         caret.pull('d');
-        caret.spawnMove('d', 'slot');
+        caret.spawnMove('d', 'block');
+        attachCommands();
     }
 
     caret.moveToRoot();
