@@ -226,7 +226,6 @@ parsegraph_Graph.prototype.paint = function()
         this._carouselNodePainter.setBackground(this.surface().backgroundColor());
         this.arrangeCarousel();
         this._carouselCarets.forEach(function(caretData) {
-            console.log(caretData[6]);
             this._carouselNodePainter.drawCaret(
                 caretData[0],
                 this._carouselCoords[0] + caretData[4],
