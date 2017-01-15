@@ -113,16 +113,27 @@ parsegraph_Camera.prototype.height = function()
     return this._height;
 };
 
+parsegraph_Camera.prototype.canProject = function()
+{
+    var displayWidth = this.surface().container().clientWidth;
+    var displayHeight = this.surface().container().clientHeight;
+
+    return displayWidth != 0 && displayHeight != 0;
+};
+
 parsegraph_Camera.prototype.project = function()
 {
+    if(!this.canProject()) {
+        throw new Error(
+            "Camera cannot create a projection matrix because the " +
+            "target canvas has no size. Use canProject() to handle."
+        );
+    }
+
     // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
     // Lookup the size the browser is displaying the canvas.
     var displayWidth = this.surface().container().clientWidth;
     var displayHeight = this.surface().container().clientHeight;
-
-    if(displayWidth == 0 || displayHeight == 0) {
-        return null;
-    }
 
     // Check if the canvas is not the same size.
     if(

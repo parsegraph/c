@@ -14,13 +14,9 @@ function parsegraph_Surface()
     this._canvas = document.createElement("canvas");
     this._canvas.style.display = "block";
     this._container.tabIndex = 0;
-    this._gl = this._canvas.getContext("experimental-webgl");
-    if(this._gl == null) {
-        this._gl = this._canvas.getContext("webgl");
-        if(this._gl == null) {
-            throw new Error("GL context is not supported");
-        }
-    }
+
+    // GL content, not created until used.
+    this._gl = null;
 
     this._container.appendChild(this._canvas);
 
@@ -30,9 +26,6 @@ function parsegraph_Surface()
 
     this._painters = [];
     this._renderers = [];
-
-    // Simplify use by scheduling a repaint on construction.
-    this.scheduleRepaint();
 };
 
 parsegraph_Surface.prototype.cancelRepaint = function()
@@ -46,6 +39,9 @@ parsegraph_Surface.prototype.cancelRepaint = function()
  */
 parsegraph_Surface.prototype.scheduleRepaint = function()
 {
+    if(!this.canProject()) {
+        throw new Error("Refusing to schedule a repaint for an unprojectable surface.");
+    }
     this.scheduleRender();
     this._needsRepaint = true;
 };
@@ -87,6 +83,15 @@ parsegraph_Surface.prototype.canvas = function()
 
 parsegraph_Surface.prototype.gl = function()
 {
+    if(!this._gl) {
+        this._gl = this._canvas.getContext("experimental-webgl");
+        if(this._gl == null) {
+            this._gl = this._canvas.getContext("webgl");
+            if(this._gl == null) {
+                throw new Error("GL context is not supported");
+            }
+        }
+    }
     return this._gl;
 };
 
@@ -137,17 +142,39 @@ parsegraph_Surface.prototype.backgroundColor = function()
     return this._backgroundColor;
 };
 
+/**
+ * Returns whether the surface has a nonzero client width and height.
+ */
+parsegraph_Surface.prototype.canProject = function()
+{
+    var displayWidth = this.container().clientWidth;
+    var displayHeight = this.container().clientHeight;
+
+    return displayWidth != 0 && displayHeight != 0;
+};
+
+/**
+ * Invokes all renderers.
+ *
+ * Throws if canProject() returns false.
+ */
 parsegraph_Surface.prototype.render = function()
 {
+    if(!this.canProject()) {
+        throw new Error(
+            "Refusing to render to an unprojectable surface. Use canProject() to handle."
+        );
+    }
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
-    this._gl.clearColor(
+    var gl = this.gl();
+    gl.clearColor(
         this._backgroundColor._r,
         this._backgroundColor._g,
         this._backgroundColor._b,
         this._backgroundColor._a
     );
-    this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     this._renderers.forEach(function(renderer) {
         renderer[0].call(renderer[1]);

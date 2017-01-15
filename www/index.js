@@ -34,7 +34,7 @@ function buildTextDemo(graph, COUNT, text)
 
         caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
 
-        graph.surface().scheduleRepaint();
+        graph.scheduleRepaint();
         ++i
     };
 
@@ -78,7 +78,7 @@ function buildSelection(graph, COUNT)
     caret.pop();
 
     var addBlock = function() {
-        graph.surface().scheduleRepaint();
+        graph.scheduleRepaint();
 
         caret.moveToRoot();
         var d = parsegraph_FORWARD;
@@ -189,7 +189,7 @@ function buildPrimesDemo(graph, COUNT)
                 break;
             }
         }
-        graph.surface().scheduleRepaint();
+        graph.scheduleRepaint();
         window.setTimeout(scheduleAddBlock, 500);
     };
     scheduleAddBlock();
@@ -326,7 +326,7 @@ function showHardTest(graph, server)
             caret.spawnMove('d', 'bud');
         }
 
-        graph.surface().scheduleRepaint();
+        graph.scheduleRepaint();
     }, this);
 
     return caret;

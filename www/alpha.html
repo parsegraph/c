@@ -156,7 +156,6 @@ var clickChild = function() {
 };
 caret.onClick(clickChild);
 
-graph.scheduleRepaint();
 graph.plot(caret);
 
 if(localStorage.getItem("alpha_graph") != null) {
@@ -229,6 +228,7 @@ var tick = function() {
 tickIntervalId = requestAnimationFrame(tick);
 
 document.body.appendChild(surface.container());
+graph.scheduleRepaint();
 
 }); // DOMContentLoaded
 </script>

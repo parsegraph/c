@@ -3,19 +3,26 @@
  *
  * Use graph.container() to add it to the DOM.
  */
-function parsegraph_Graph(surface)
+function parsegraph_Graph()
 {
+    // Allow surface to be created implicitly.
+    var surface;
+    if(arguments.length == 0) {
+        surface = new parsegraph_Surface();
+    }
+    else {
+        surface = arguments[0];
+    }
     if(!surface) {
-        throw new Error("Surface must be given to parsegraph_Graph");
+        throw new Error("Surface must be given");
     }
     this._surface = surface;
     this._canvas = surface.canvas();
     this._container = surface.container();
-    this._gl = surface.gl();
 
     this._paintingDirty = true;
 
-    this._nodePainter = new parsegraph_NodePainter(this._gl);
+    this._nodePainter = null;
 
     this._camera = new parsegraph_Camera(this);
 
@@ -33,6 +40,9 @@ parsegraph_Graph.prototype.paint = function()
         return;
     }
 
+    if(!this._nodePainter) {
+        this._nodePainter = new parsegraph_NodePainter(this.gl());
+    }
     this._nodePainter.clear();
     this._nodePainter.setBackground(this.surface().backgroundColor());
 
@@ -99,9 +109,6 @@ parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
     }
 
     this._carets.push([caret, worldX, worldY]);
-
-    // Simplify use by scheduling a repaint.
-    this.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.removePlot = function(caret)
@@ -111,9 +118,6 @@ parsegraph_Graph.prototype.removePlot = function(caret)
             this._carets.splice(i, 1);
         }
     }
-
-    // Simplify use by scheduling a repaint.
-    this.scheduleRepaint();
 };
 
 /**

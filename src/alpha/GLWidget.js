@@ -1,12 +1,19 @@
 // test version 1.0
-function alpha_GLWidget(surface)
+function alpha_GLWidget()
 {
-    if(!surface) {
-        throw new Error("Surface must be provided");
+    // Allow surface to be created implicitly.
+    var surface;
+    if(arguments.length == 0) {
+        surface = new parsegraph_Surface();
     }
-
+    else {
+        surface = arguments[0];
+    }
+    if(!surface) {
+        throw new Error("Surface must be given");
+    }
     this._surface = surface;
-    this._gl = surface._gl;
+
     this._canvas = surface._canvas;
     this._container = surface._container;
 
@@ -16,8 +23,6 @@ function alpha_GLWidget(surface)
     this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
 
     this.camera = new alpha_Camera(this);
-
-    this.facePainter = new alpha_FacePainter(this._gl);
 
     this.input = new alpha_Input(this);
     this.input.SetMouseSensitivity(.4);
@@ -311,19 +316,24 @@ alpha_GLWidget.prototype.backgroundColor = function()
     return this._backgroundColor;
 };
 
-alpha_GLWidget.prototype.camera = function()
+alpha_GLWidget.prototype.Camera = function()
 {
-    return this._camera;
+    return this.camera;
 };
 
 alpha_GLWidget.prototype.canvas = function()
 {
-    return this._canvas;
+    return this.surface().canvas();
 };
 
 alpha_GLWidget.prototype.gl = function()
 {
-    return this._gl;
+    return this.surface().gl();
+};
+
+alpha_GLWidget.prototype.surface = function()
+{
+    return this._surface;
 };
 
 /**
@@ -425,8 +435,9 @@ alpha_GLWidget.prototype.render = function()
 
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 
-    this._gl.enable(this._gl.DEPTH_TEST);
-    this._gl.enable(this._gl.CULL_FACE);
+    var gl = this.gl();
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
 
     this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 

@@ -21,7 +21,8 @@ function alpha_Cluster(widget)
 
     this.blocks = [];
 
-    this.facePainter = new alpha_FacePainter(widget.gl());
+    // Declare GL Painters; create them only when needed to delay GL context's creation.
+    this.facePainter = null;
 };
 
 alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");
@@ -93,7 +94,6 @@ alpha_Cluster.prototype.AddBlocks = function()
 alpha_Cluster.prototype.ClearBlocks = function()
 {
     this.blocks.splice(0, this.blocks.length);
-    this.facePainter.Clear();
 };
 
 /**
@@ -101,8 +101,13 @@ alpha_Cluster.prototype.ClearBlocks = function()
  */
 alpha_Cluster.prototype.CalculateVertices = function()
 {
-    // delete what we had;
-    this.facePainter.Clear();
+    if(!this.facePainter) {
+        this.facePainter = new alpha_FacePainter(this.widget.gl());
+    }
+    else {
+        // delete what we had;
+        this.facePainter.Clear();
+    }
 
     this.blocks.forEach(function(block) {
         var quat = block.GetQuaternion( true );
@@ -227,5 +232,8 @@ alpha_Cluster.prototype.CalculateVertices = function()
 
 alpha_Cluster.prototype.Draw = function(viewMatrix)
 {
+    if(!this.facePainter) {
+        throw new Error("FacePainter must not be null. CalculateVertices was likely not called.");
+    }
     this.facePainter.Draw(viewMatrix);
 };
