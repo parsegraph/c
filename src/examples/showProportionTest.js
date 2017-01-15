@@ -12,7 +12,7 @@ function showProportionTest(graph, COUNT)
     }
     COUNT = Math.min(COUNT, 100);
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(graph, parsegraph_SLOT);
 
     caret.fitExact();
 
