@@ -800,7 +800,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
 
     if(this.label() !== undefined) {
         // This reference to the painter seems to be an wart of the design.
-        var textMetrics = this._graph._nodePainter._textPainter.measureText(
+        var textMetrics = this._graph.measureText(
             this.label(),
             style.fontSize,
             style.fontSize * style.letterWidth * style.maxLabelChars

@@ -7,6 +7,9 @@
 function parsegraph_NodePainter(gl)
 {
     this._gl = gl;
+    if(!this._gl || !this._gl.createProgram) {
+        throw new Error("A GL interface must be given");
+    }
 
     this._backgroundColor = parsegraph_BACKGROUND_COLOR;
 

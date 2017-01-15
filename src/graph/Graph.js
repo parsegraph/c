@@ -22,16 +22,25 @@ function parsegraph_Graph()
 
     this._paintingDirty = true;
 
-    this._nodePainter = null;
-
     this._camera = new parsegraph_Camera(this);
 
-    this._carets = [];
+    // World-rendered carets.
+    this._worldCarets = [];
+
+    // Carousel-rendered carets.
+    this._carouselCarets = [];
+    this._carouselCoords = [0, 0];
+    this._showCarousel = false;
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
 
     this._input = new parsegraph_Input(this, this._camera);
+
+    // GL painters; not created until needed.
+    this._worldNodePainter = null;
+    this._carouselNodePainter = null;
+    this._fanPainter = null;
 };
 
 parsegraph_Graph.prototype.camera = function()
@@ -46,17 +55,22 @@ parsegraph_Graph.prototype.surface = function()
 
 parsegraph_Graph.prototype.gl = function()
 {
-    return this._surface._gl;
+    return this.surface().gl();
 };
 
 parsegraph_Graph.prototype.container = function()
 {
-    return this._surface._container;
+    return this.surface().container();
 };
 
 parsegraph_Graph.prototype.canvas = function()
 {
-    return this._surface._canvas;
+    return this.surface().canvas();
+};
+
+parsegraph_Graph.prototype.input = function()
+{
+    return this._input;
 };
 
 parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
@@ -68,16 +82,48 @@ parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
         worldY = 0;
     }
 
-    this._carets.push([caret, worldX, worldY]);
+    this._worldCarets.push([caret, worldX, worldY]);
+};
+
+parsegraph_Graph.prototype.plotCarousel = function(worldX, worldY)
+{
+    this._carouselCoords[0] = worldX;
+    this._carouselCoords[1] = worldY;
+};
+
+parsegraph_Graph.prototype.showCarousel = function()
+{
+    this._showCarousel = true;
+};
+
+parsegraph_Graph.prototype.hideCarousel = function()
+{
+    this._showCarousel = false;
+};
+
+parsegraph_Graph.prototype.addToCarousel = function(caret, label, callback, thisArg)
+{
+    this._carouselCarets.push([caret, label, callback, thisArg]);
+};
+
+parsegraph_Graph.prototype.removeFromCarousel = function(caret)
+{
+    for(var i = 0; i < this._carouselCarets.length; ++i) {
+        if(this._carouselCarets[i][0] == caret) {
+            return this._carouselCarets.splice(i, 1);
+        }
+    }
+    return null;
 };
 
 parsegraph_Graph.prototype.removePlot = function(caret)
 {
-    for(var i = 0; i < this._carets.length; ++i) {
-        if(this._carets[i][0] == caret) {
-            this._carets.splice(i, 1);
+    for(var i = 0; i < this._worldCarets.length; ++i) {
+        if(this._worldCarets[i][0] == caret) {
+            return this._worldCarets.splice(i, 1);
         }
     }
+    return null;
 };
 
 /**
@@ -86,8 +132,8 @@ parsegraph_Graph.prototype.removePlot = function(caret)
 parsegraph_Graph.prototype.mouseDown = function(x, y)
 {
     // Test if there is a node under the given coordinates.
-    for(var i = this._carets.length - 1; i >= 0; --i) {
-        var caretData = this._carets[i];
+    for(var i = this._worldCarets.length - 1; i >= 0; --i) {
+        var caretData = this._worldCarets[i];
         var caret = caretData[0];
         var worldX = caretData[1];
         var worldY = caretData[2];
@@ -108,24 +154,46 @@ parsegraph_Graph.prototype.mouseDown = function(x, y)
     return true;
 };
 
+parsegraph_Graph.prototype.measureText = function()
+{
+    if(!this._worldNodePainter) {
+        throw new Error("measureText cannot be called without a node painter.");
+    }
+
+    var painter = this._worldNodePainter._textPainter;
+    return painter.measureText.apply(painter, arguments);
+};
+
 parsegraph_Graph.prototype.paint = function()
 {
     if(!this._paintingDirty) {
         return;
     }
 
-    if(!this._nodePainter) {
-        this._nodePainter = new parsegraph_NodePainter(this.gl());
+    if(!this._worldNodePainter) {
+        this._worldNodePainter = new parsegraph_NodePainter(this.gl());
     }
-    this._nodePainter.clear();
-    this._nodePainter.setBackground(this.surface().backgroundColor());
+    else {
+        this._worldNodePainter.clear();
+    }
 
-    this._carets.forEach(function(caret) {
-        this._nodePainter.drawCaret(caret[0], caret[1], caret[2]);
+    this._worldNodePainter.setBackground(this.surface().backgroundColor());
+    this._worldCarets.forEach(function(caretData) {
+        this._worldNodePainter.drawCaret.apply(this._worldNodePainter, caretData);
     }, this);
 
     // Paint the origin.
-    this._nodePainter.drawOrigin();
+    this._worldNodePainter.drawOrigin();
+
+    if(this._showCarousel) {
+        // Paint the carousel.
+        if(!this._fanPainter) {
+            this._fanPainter = new parsegraph_FanPainter(this.gl());
+        }
+        if(!this._carouselNodePainter) {
+            this._carouselNodePainter = new parsegraph_NodePainter(this.gl());
+        }
+    }
 
     this._paintingDirty = false;
 };
@@ -143,7 +211,17 @@ parsegraph_Graph.prototype.scheduleRender = function()
 
 parsegraph_Graph.prototype.render = function()
 {
+    // Paint the world.
     var world = this.camera().project();
-    this._nodePainter.setBackground(this._backgroundColor);
-    this._nodePainter.render(world, this.camera().scale());;
+    if(this._worldNodePainter) {
+        this._worldNodePainter.setBackground(this._backgroundColor);
+        this._worldNodePainter.render(world, this.camera().scale());;
+    }
+
+    // Render the carousel if requested.
+    if(this._showCarousel) {
+        this._fanPainter.render(world);
+        this._carouselNodePainter.setBackground(this._backgroundColor);
+        this._carouselNodePainter.render(world, 1);
+    }
 };

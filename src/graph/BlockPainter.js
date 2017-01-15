@@ -119,6 +119,9 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
 function parsegraph_BlockPainter(gl)
 {
     this._gl = gl;
+    if(!this._gl || !this._gl.createProgram) {
+        throw new Error("A GL interface must be given");
+    }
 
     // Compile the shader program.
     this._blockProgram = this._gl.createProgram();
