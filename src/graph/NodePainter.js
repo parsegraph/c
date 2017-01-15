@@ -225,7 +225,7 @@ parsegraph_NodePainter.prototype.clear = function()
     this._textPainter.clear();
 };
 
-parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, userScale)
 {
     var style = node.blockStyle();
     var painter = this._blockPainter;
@@ -254,7 +254,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
         if(x1 == x2) {
             // Vertical line.
             size = new parsegraph_Size(
-                parsegraph_LINE_THICKNESS * node.absoluteScale() * thickness,
+                parsegraph_LINE_THICKNESS * userScale * node.absoluteScale() * thickness,
                 Math.abs(y2 - y1)
             );
         }
@@ -262,7 +262,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
             // Horizontal line.
             size = new parsegraph_Size(
                 Math.abs(x2 - x1),
-                parsegraph_LINE_THICKNESS * node.absoluteScale() * thickness
+                parsegraph_LINE_THICKNESS * userScale * node.absoluteScale() * thickness
             );
         }
         painter.drawBlock(
@@ -271,7 +271,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
             size,
             0,
             0,
-            node.absoluteScale()
+            userScale * node.absoluteScale()
         );
     };
 
@@ -320,8 +320,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
             worldX + node.absoluteX(),
             worldY + node.absoluteY(),
             2 * node.brightness() * Math.max(
-                node.absoluteSize().width(),
-                node.absoluteSize().height()
+                userScale * node.absoluteSize().width(),
+                userScale * node.absoluteSize().height()
             ),
             new parsegraph_Color(
                 style.selectedBorderColor.r(),
@@ -348,8 +348,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
             worldX + node.absoluteX() + node.absoluteSize().width()*0,
             worldY + node.absoluteY() + node.absoluteSize().height()*.1,
             2 * node.brightness() * Math.max(
-                node.absoluteSize().width(),
-                node.absoluteSize().height()
+                userScale * node.absoluteSize().width(),
+                userScale * node.absoluteSize().height()
             ),
             new parsegraph_Color(0, 0, 0, 1)
             /*style.backgroundColor.premultiply(
@@ -361,10 +361,13 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
     painter.drawBlock(
         worldX + node.absoluteX(),
         worldY + node.absoluteY(),
-        parsegraph_createSize(node.absoluteSize().height()/1.5, node.absoluteSize().height()/1.5),
+        parsegraph_createSize(
+            userScale * node.absoluteSize().height()/1.5,
+            userScale * node.absoluteSize().height()/1.5
+        ),
         style.borderRoundness/1.5,
         style.borderThickness/1.5,
-        node.absoluteScale()
+        userScale * node.absoluteScale()
     );
 
     if(node.label() === undefined) {
@@ -373,8 +376,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
 
     var textMetrics = this._textPainter.measureText(
         node.label(),
-        style.fontSize * node.absoluteScale(),
-        style.maxLabelChars * style.fontSize * style.letterWidth * node.absoluteScale()
+        style.fontSize * userScale * node.absoluteScale(),
+        style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
     this._textPainter.setColor(
         node.isSelected() ?
@@ -384,10 +387,10 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
     this._textPainter.drawText(
         node.label(),
         worldX + node.absoluteX() - textMetrics[0]/2,
-        worldY + node.absoluteY() + node.sizeWithoutPadding().scaled(node.absoluteScale()).height() / 2 - textMetrics[1]/2,
-        style.fontSize * node.absoluteScale(),
-        style.fontSize * style.maxLabelChars * style.letterWidth * node.absoluteScale(),
-        node.absoluteScale()
+        worldY + node.absoluteY() + node.sizeWithoutPadding().scaled(userScale * node.absoluteScale()).height() / 2 - textMetrics[1]/2,
+        style.fontSize * userScale * node.absoluteScale(),
+        style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale(),
+        userScale * node.absoluteScale()
     );
 };
 
@@ -396,36 +399,39 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
-    var sceneSize = node.sizeWithoutPadding().scaled(node.absoluteScale());
+    var sceneSize = node.sizeWithoutPadding().scaled(userScale * node.absoluteScale());
     var sceneX = worldX + node.absoluteX();
     var sceneY = worldY + node.absoluteY();
 
     // Render and draw the scene texture.
 };
 
-parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userScale)
 {
     if(this.isExtentRenderingEnabled()) {
-        this.paintExtent(node, worldX, worldY);
+        this.paintExtent(node, worldX, worldY, userScale);
     }
 
     switch(node.type()) {
     case parsegraph_SLIDER:
-        return this.drawSlider(node, worldX, worldY);
+        return this.drawSlider(node, worldX, worldY, userScale);
         break;
     case parsegraph_SCENE:
-        this.paintLines(node, worldX, worldY);
-        this.paintStyledBlock(node, worldX, worldY);
-        return this.drawScene(node, worldX, worldY);
+        this.paintLines(node, worldX, worldY, userScale);
+        this.paintStyledBlock(node, worldX, worldY, userScale);
+        return this.drawScene(node, worldX, worldY, userScale);
         break;
     default:
-        this.paintLines(node, worldX, worldY);
-        this.paintStyledBlock(node, worldX, worldY);
+        this.paintLines(node, worldX, worldY, userScale);
+        this.paintStyledBlock(node, worldX, worldY, userScale);
     }
 };
 
-parsegraph_NodePainter.prototype.drawCaret = function(caret, worldX, worldY)
+parsegraph_NodePainter.prototype.drawCaret = function(caret, worldX, worldY, userScale)
 {
+    if(userScale === undefined) {
+        userScale = 1;
+    }
     caret.root().commitLayoutIteratively();
 
     var ordering = [caret.root()];
@@ -451,7 +457,7 @@ parsegraph_NodePainter.prototype.drawCaret = function(caret, worldX, worldY)
         addNode(node, parsegraph_BACKWARD);
         addNode(node, parsegraph_FORWARD);
 
-        this.drawNode(node, worldX, worldY);
+        this.drawNode(node, worldX, worldY, userScale);
     }
 }
 
@@ -489,7 +495,7 @@ parsegraph_NodePainter.prototype.drawOrigin = function()
     );
 };
 
-parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, userScale)
 {
     var bodySize = node.size();
 
@@ -521,8 +527,8 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY)
             painter.setBackgroundColor(color);
         }
 
-        var parentScale = node.absoluteScale();
-        var scale = directionData.node().absoluteScale();
+        var parentScale = userScale * node.absoluteScale();
+        var scale = userScale * directionData.node().absoluteScale();
 
         if(parsegraph_isVerticalNodeDirection(direction)) {
             var length = parsegraph_nodeDirectionSign(direction)
@@ -555,7 +561,7 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY)
     parsegraph_forEachCardinalNodeDirection(drawLine, this);
 };
 
-parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, userScale)
 {
     var painter = this._extentPainter;
     painter.setBorderColor(
@@ -572,21 +578,21 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
             rect,
             parsegraph_EXTENT_BORDER_ROUNDEDNESS,
             parsegraph_EXTENT_BORDER_THICKNESS,
-            node.absoluteScale()
+            userScale * node.absoluteScale()
         );
     };
 
     var paintDownwardExtent = function() {
         var extent = node.extentsAt(parsegraph_DOWNWARD);
         var rect = parsegraph_createRect(
-            node.absoluteX() - node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD),
+            node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD),
             node.absoluteY(),
             0, 0
         );
 
         extent.forEach(function(length, size) {
-            length *= node.absoluteScale();
-            size *= node.absoluteScale();
+            length *= userScale * node.absoluteScale();
+            size *= userScale * node.absoluteScale();
             rect.setWidth(length);
             rect.setHeight(size);
             paintBound(rect);
@@ -598,14 +604,14 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
     var paintUpwardExtent = function() {
         var extent = node.extentsAt(parsegraph_UPWARD);
         var rect = parsegraph_createRect(
-            node.absoluteX() - node.absoluteScale() * node.extentOffsetAt(parsegraph_UPWARD),
+            node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_UPWARD),
             0,
             0, 0
         );
 
         extent.forEach(function(length, size) {
-            length *= node.absoluteScale();
-            size *= node.absoluteScale();
+            length *= userScale * node.absoluteScale();
+            size *= userScale * node.absoluteScale();
             rect.setY(node.absoluteY() - size);
             rect.setWidth(length);
             rect.setHeight(size);
@@ -619,13 +625,13 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
         var extent = node.extentsAt(parsegraph_BACKWARD);
         var rect = parsegraph_createRect(
             0,
-            node.absoluteY() - node.absoluteScale() * node.extentOffsetAt(parsegraph_BACKWARD),
+            node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_BACKWARD),
             0, 0
         );
 
         extent.forEach(function(length, size) {
-            length *= node.absoluteScale();
-            size *= node.absoluteScale();
+            length *= userScale * node.absoluteScale();
+            size *= userScale * node.absoluteScale();
             rect.setHeight(length);
             rect.setX(node.absoluteX() - size);
             rect.setWidth(size);
@@ -639,13 +645,13 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
         var extent = node.extentsAt(parsegraph_FORWARD);
         var rect = parsegraph_createRect(
             node.absoluteX(),
-            node.absoluteY() - node.extentOffsetAt(parsegraph_FORWARD) * node.absoluteScale(),
+            node.absoluteY() - node.extentOffsetAt(parsegraph_FORWARD) * userScale * node.absoluteScale(),
             0, 0
         );
 
         extent.forEach(function(length, size, i) {
-            length *= node.absoluteScale();
-            size *= node.absoluteScale();
+            length *= userScale * node.absoluteScale();
+            size *= userScale * node.absoluteScale();
             rect.setHeight(length);
             rect.setWidth(size);
             paintBound(rect);
@@ -655,7 +661,7 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY)
     paintForwardExtent();
 };
 
-parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, worldY, userScale)
 {
     var style = node.blockStyle();
     var painter = this._blockPainter;
@@ -673,11 +679,11 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         );
 
         this._spotlightPainter.drawSpotlight(
-            worldX + node.absoluteX(),
-            worldY + node.absoluteY(),
+            worldX + userScale * node.absoluteX(),
+            worldY + userScale * node.absoluteY(),
             2 * node.brightness() * Math.max(
-                node.absoluteSize().width(),
-                node.absoluteSize().height()
+                userScale * node.absoluteSize().width(),
+                userScale * node.absoluteSize().height()
             ),
             new parsegraph_Color(
                 style.selectedBorderColor.r(),
@@ -701,11 +707,11 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         );
 
         this._spotlightPainter.drawSpotlight(
-            worldX + node.absoluteX() + node.absoluteSize().width()*0,
-            worldY + node.absoluteY() + node.absoluteSize().height()*.1,
+            worldX + userScale * node.absoluteX() + userScale * node.absoluteSize().width()*0,
+            worldY + userScale * node.absoluteY() + userScale * node.absoluteSize().height()*.1,
             2 * node.brightness() * Math.max(
-                node.absoluteSize().width(),
-                node.absoluteSize().height()
+                userScale * node.absoluteSize().width(),
+                userScale * node.absoluteSize().height()
             ),
             new parsegraph_Color(0, 0, 0, 1)
             /*style.backgroundColor.premultiply(
@@ -715,12 +721,12 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
     }
 
     painter.drawBlock(
-        worldX + node.absoluteX(),
-        worldY + node.absoluteY(),
-        node.absoluteSize(),
+        worldX + userScale * node.absoluteX(),
+        worldY + userScale * node.absoluteY(),
+        node.absoluteSize().scaled(userScale),
         style.borderRoundness,
         style.borderThickness,
-        node.absoluteScale()
+        node.absoluteScale() * userScale
     );
 
     if(node.label() === undefined) {
@@ -729,8 +735,8 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
 
     var textMetrics = this._textPainter.measureText(
         node.label(),
-        style.fontSize * node.absoluteScale(),
-        style.maxLabelChars * style.fontSize * style.letterWidth * node.absoluteScale()
+        style.fontSize * userScale * node.absoluteScale(),
+        style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
     this._textPainter.setColor(
         node.isSelected() ?
@@ -748,33 +754,33 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
             // Align vertical.
             this._textPainter.drawText(
                 node.label(),
-                worldX + node.absoluteX() - textMetrics[0]/2,
-                worldY + node.absoluteY() - node.absoluteScale() * nodeSize.height()/2,
-                style.fontSize * node.absoluteScale(),
-                style.fontSize * style.letterWidth * style.maxLabelChars * node.absoluteScale(),
-                node.absoluteScale()
+                worldX + userScale * node.absoluteX() - textMetrics[0]/2,
+                worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2,
+                style.fontSize * userScale * node.absoluteScale(),
+                style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale(),
+                userScale * node.absoluteScale()
             );
         }
         else {
             // Align horizontal.
             this._textPainter.drawText(
                 node.label(),
-                worldX + node.absoluteX() - node.absoluteScale() * nodeSize.width()/2,
-                worldY + node.absoluteY() - textMetrics[1]/2,
-                style.fontSize * node.absoluteScale(),
-                style.fontSize * style.letterWidth * style.maxLabelChars * node.absoluteScale(),
-                node.absoluteScale()
+                worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2,
+                worldY + userScale * node.absoluteY() - textMetrics[1]/2,
+                style.fontSize * userScale * node.absoluteScale(),
+                style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale(),
+                userScale * node.absoluteScale()
             );
         }
     }
     else {
         this._textPainter.drawText(
             node.label(),
-            worldX + node.absoluteX() - textMetrics[0]/2,
-            worldY + node.absoluteY() - textMetrics[1]/2,
-            style.fontSize * node.absoluteScale(),
-            style.fontSize * style.maxLabelChars * style.letterWidth * node.absoluteScale(),
-            node.absoluteScale()
+            worldX + userScale * node.absoluteX() - textMetrics[0]/2,
+            worldY + userScale * node.absoluteY() - textMetrics[1]/2,
+            style.fontSize * userScale * node.absoluteScale(),
+            style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale(),
+            userScale * node.absoluteScale()
         );
     }
 };

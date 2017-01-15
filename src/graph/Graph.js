@@ -96,6 +96,11 @@ parsegraph_Graph.prototype.showCarousel = function()
     this._showCarousel = true;
 };
 
+parsegraph_Graph.prototype.isCarouselShown = function()
+{
+    return this._showCarousel;
+};
+
 parsegraph_Graph.prototype.hideCarousel = function()
 {
     this._showCarousel = false;
@@ -103,7 +108,12 @@ parsegraph_Graph.prototype.hideCarousel = function()
 
 parsegraph_Graph.prototype.addToCarousel = function(caret, label, callback, thisArg)
 {
-    this._carouselCarets.push([caret, label, callback, thisArg]);
+    this._carouselCarets.push([caret, label, callback, thisArg, 0, 0]);
+};
+
+parsegraph_Graph.prototype.clearCarousel = function()
+{
+    this._carouselCarets.splice(0, this._carouselCarets.length);
 };
 
 parsegraph_Graph.prototype.removeFromCarousel = function(caret)
@@ -131,6 +141,22 @@ parsegraph_Graph.prototype.removePlot = function(caret)
  */
 parsegraph_Graph.prototype.mouseDown = function(x, y)
 {
+    if(this.isCarouselShown()) {
+        // Test if the click was within a carousel caret.
+        for(var i = this._carouselCarets.length - 1; i >= 0; --i) {
+            var carouselCaretData = this._carouselCarets[i];
+            var caret = carouselCaretData[0];
+            var worldX = carouselCaretData[4];
+            var worldY = carouselCaretData[5];
+            var userScale = carouselCaretData[6];
+            if(caret.nodeUnderCoords(x - worldX - this._carouselCoords[0], y - worldY - this._carouselCoords[1], userScale)) {
+                // Click was within a carousel caret; notify listener.
+                var callback = carouselCaretData[2];
+                var thisArg = carouselCaretData[3];
+                return callback.call(thisArg);
+            }
+        }
+    }
     // Test if there is a node under the given coordinates.
     for(var i = this._worldCarets.length - 1; i >= 0; --i) {
         var caretData = this._worldCarets[i];
@@ -188,14 +214,59 @@ parsegraph_Graph.prototype.paint = function()
     if(this._showCarousel) {
         // Paint the carousel.
         if(!this._fanPainter) {
-            this._fanPainter = new parsegraph_FanPainter(this.gl());
+            //this._fanPainter = new parsegraph_FanPainter(this.gl());
         }
         if(!this._carouselNodePainter) {
             this._carouselNodePainter = new parsegraph_NodePainter(this.gl());
         }
+        else {
+            this._carouselNodePainter.clear();
+        }
+        var i = 0;
+        this._carouselNodePainter.setBackground(this.surface().backgroundColor());
+        this.arrangeCarousel();
+        this._carouselCarets.forEach(function(caretData) {
+            console.log(caretData[6]);
+            this._carouselNodePainter.drawCaret(
+                caretData[0],
+                this._carouselCoords[0] + caretData[4],
+                this._carouselCoords[1] + caretData[5],
+                caretData[6]
+            );
+        }, this);
     }
 
     this._paintingDirty = false;
+};
+
+/**
+ * Arranges each carousel caret in a spiral.
+ */
+parsegraph_Graph.prototype.arrangeCarousel = function()
+{
+    this._carouselCarets.forEach(function(caretData, i) {
+        var root = caretData[0].root();
+        root.commitLayoutIteratively();
+
+        var caretRad = (i / this._carouselCarets.length) * (2 * Math.PI);
+        caretData[4] = 250 * Math.cos(caretRad);
+        caretData[5] = 250 * Math.sin(caretRad);
+        var commandSize = root.extentSize();
+
+        var xMax = 150;
+        var yMax = 150;
+        var xShrinkFactor = 1;
+        var yShrinkFactor = 1;
+        if(commandSize.width() > xMax) {
+            xShrinkFactor = commandSize.width() / xMax;
+        }
+
+        if(commandSize.height() > yMax) {
+            yShrinkFactor = commandSize.height() / yMax;
+        }
+
+        caretData[6] = 1/Math.max(xShrinkFactor, yShrinkFactor);
+    }, this);
 };
 
 parsegraph_Graph.prototype.scheduleRepaint = function()
@@ -215,12 +286,12 @@ parsegraph_Graph.prototype.render = function()
     var world = this.camera().project();
     if(this._worldNodePainter) {
         this._worldNodePainter.setBackground(this._backgroundColor);
-        this._worldNodePainter.render(world, this.camera().scale());;
+        this._worldNodePainter.render(world, this.camera().scale());
     }
 
     // Render the carousel if requested.
     if(this._showCarousel) {
-        this._fanPainter.render(world);
+        //this._fanPainter.render(world);
         this._carouselNodePainter.setBackground(this._backgroundColor);
         this._carouselNodePainter.render(world, 1);
     }

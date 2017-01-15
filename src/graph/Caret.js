@@ -17,8 +17,11 @@ function parsegraph_Caret(graph, rootType)
     this._savedNodes = {};
 };
 
-parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
+parsegraph_Caret.prototype.nodeUnderCoords = function(x, y, userScale)
 {
+    if(userScale === undefined) {
+        userScale = 1;
+    }
     this.root().commitLayoutIteratively();
 
     /**
@@ -26,26 +29,26 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
      */
     var inNodeBody = function(node) {
         if(
-            x < node.absoluteX()
-                - node.absoluteScale() * node.size().width()/2
+            x < userScale * node.absoluteX()
+                - userScale * node.absoluteScale() * node.size().width()/2
         ) {
             return false;
         }
         if(
-            x > node.absoluteX()
-                + node.absoluteScale() * node.size().width()/2
+            x > userScale * node.absoluteX()
+                + userScale * node.absoluteScale() * node.size().width()/2
         ) {
             return false;
         }
         if(
-            y < node.absoluteY()
-                - node.absoluteScale() * node.size().height()/2
+            y < userScale * node.absoluteY()
+                - userScale * node.absoluteScale() * node.size().height()/2
         ) {
             return false;
         }
         if(
-            y > node.absoluteY()
-                + node.absoluteScale() * node.size().height()/2
+            y > userScale * node.absoluteY()
+                + userScale * node.absoluteScale() * node.size().height()/2
         ) {
             return false;
         }
@@ -57,24 +60,24 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
      */
     var inNodeExtents = function(node) {
         if(
-            x < node.absoluteX() - node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
+            x < userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
         ) {
             return false;
         }
         if(
-            x > node.absoluteX() - node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-                + node.absoluteScale() * node.extentSize().width()
+            x > userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
+                + userScale * node.absoluteScale() * node.extentSize().width()
         ) {
             return false;
         }
         if(
-            y < node.absoluteY() - node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
+            y < userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
         ) {
             return false;
         }
         if(
-            y > node.absoluteY() - node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-                + node.absoluteScale() * node.extentSize().height()
+            y > userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
+                + userScale * node.absoluteScale() * node.extentSize().height()
         ) {
             return false;
         }
@@ -136,9 +139,9 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
         //console.log("Click is in node extent");
 
         // It is potentially within some child, so search the children.
-        if(Math.abs(y - candidate.absoluteY()) > Math.abs(x - candidate.absoluteX())) {
+        if(Math.abs(y - userScale * candidate.absoluteY()) > Math.abs(x - userScale * candidate.absoluteX())) {
             // Y extent is greater than X extent.
-            if(candidate.absoluteX() > x) {
+            if(userScale * candidate.absoluteX() > x) {
                 addCandidate(candidate, parsegraph_BACKWARD);
                 addCandidate(candidate, parsegraph_FORWARD);
             }
@@ -146,7 +149,7 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
                 addCandidate(candidate, parsegraph_FORWARD);
                 addCandidate(candidate, parsegraph_BACKWARD);
             }
-            if(candidate.absoluteY() > y) {
+            if(userScale * candidate.absoluteY() > y) {
                 addCandidate(candidate, parsegraph_UPWARD);
                 addCandidate(candidate, parsegraph_DOWNWARD);
             }
@@ -157,7 +160,7 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
         }
         else {
             // X extent is greater than Y extent.
-            if(candidate.absoluteY() > y) {
+            if(userScale * candidate.absoluteY() > y) {
                 addCandidate(candidate, parsegraph_UPWARD);
                 addCandidate(candidate, parsegraph_DOWNWARD);
             }
@@ -165,7 +168,7 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y)
                 addCandidate(candidate, parsegraph_DOWNWARD);
                 addCandidate(candidate, parsegraph_UPWARD);
             }
-            if(candidate.absoluteX() > x) {
+            if(userScale * candidate.absoluteX() > x) {
                 addCandidate(candidate, parsegraph_BACKWARD);
                 addCandidate(candidate, parsegraph_FORWARD);
             }
