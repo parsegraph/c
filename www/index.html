@@ -87,20 +87,18 @@ function init()
 
     main.appendChild(graph.container());
 
-    if(localStorage.getItem("cameraX") != null) {
-        graph.camera().setOrigin(
-            Number(localStorage.getItem("cameraX")),
-            Number(localStorage.getItem("cameraY"))
-        );
-        graph.camera().setScale(Number(localStorage.getItem("scale")));
+    if(localStorage.getItem("parsegraph_world_camera") != null) {
+        try {
+            var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
+            graph.camera().restore(parsegraph_world_camera);
+        } catch(e) {
+            console.log("Failed to parse saved camera state.\n" + e);
+        }
     }
 
-    graph.afterRender = function() {
-        localStorage.setItem("cameraX", graph.camera().x());
-        localStorage.setItem("cameraY", graph.camera().y());
-        localStorage.setItem("scale", graph.camera().scale());
-    };
-
+    surface.addRenderer(function() {
+        localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+    });
 
     var controls = document.createElement("div");
     controls.className = "controls";
