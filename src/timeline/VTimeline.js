@@ -229,10 +229,6 @@ parsegraph_VTimeline.prototype.render = function()
     if(this._renderText) {
         this._textPainter.render(world, this.camera().scale());
     }
-
-    if(typeof(this.afterRender) == "function") {
-        this.afterRender();
-    }
 };
 
 /**

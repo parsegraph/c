@@ -467,11 +467,6 @@ alpha_GLWidget.prototype.render = function()
     this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));
 
     this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
-
-
-    if(typeof(this.afterRender) == "function") {
-        this.afterRender();
-    }
 };
 
 var alpha_startTime = new Date();
