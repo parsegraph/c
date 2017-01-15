@@ -993,7 +993,9 @@ function init()
     parsegraph_addUserCommands(server);
 
     var main = document.body;
-    var graph = new parsegraph_Graph(parsegraph_SLOT);
+
+    var surface = new parsegraph_Surface();
+    var graph = new parsegraph_Graph(surface);
     GRAPH = graph;
 
     var COUNT = 25
