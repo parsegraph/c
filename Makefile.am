@@ -16,10 +16,12 @@ parsegraph.pc: parsegraph.pc.head
 
 # Distribute the core Javascript library.
 pkgdata_DATA = \
-	parsegraph-$(PACKAGE_VERSION).js
+	parsegraph-$(PACKAGE_VERSION).js \
+	parsegraph-examples-$(PACKAGE_VERSION).js
 
 CLEANFILES = \
-	parsegraph-$(PACKAGE_VERSION).js
+	parsegraph-$(PACKAGE_VERSION).js \
+	parsegraph-examples-$(PACKAGE_VERSION).js
 
 parsegraph_SCRIPT_FILES = \
 	src/TestSuite.js \
@@ -83,6 +85,29 @@ parsegraph_SCRIPT_FILES = \
 	src/timeline/VSunrisePainter.js
 
 parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
+	rm -f $@
+	cat $^ >$@
+	echo >>$@
+	echo "/* Generated `date` */" >>$@
+	chmod 0444 $@
+
+parsegraph_EXAMPLE_FILES = \
+	src/examples/createSliderDemo.js \
+	src/examples/showCorporateStructure.js \
+	src/examples/showHardTest.js \
+	src/examples/showStatements.js \
+	src/examples/buildSelection.js \
+	src/examples/showFunction.js \
+	src/examples/showIPAddresses.js \
+	src/examples/showMemoryBlocks.js \
+	src/examples/showProportionTest.js \
+	src/examples/showUlam.js \
+	src/examples/showSpiral.js \
+	src/examples/showCalendar.js \
+	src/examples/buildPrimesDemo.js \
+	src/examples/buildTextDemo.js
+
+parsegraph-examples-$(PACKAGE_VERSION).js: $(parsegraph_EXAMPLE_FILES)
 	rm -f $@
 	cat $^ >$@
 	echo >>$@
