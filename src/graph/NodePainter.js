@@ -198,6 +198,21 @@ parsegraph_NodePainter.prototype.isTextRenderingEnabled = function()
     return this._renderText;
 };
 
+parsegraph_NodePainter.prototype.enableSceneRendering = function()
+{
+    this._renderScenes = true;
+};
+
+parsegraph_NodePainter.prototype.disableSceneRendering = function()
+{
+    this._renderScenes = false;
+};
+
+parsegraph_NodePainter.prototype.isSceneRenderingEnabled = function()
+{
+    return this._renderScenes;
+};
+
 parsegraph_NodePainter.prototype.clear = function()
 {
     this._blockPainter.clear();
@@ -207,14 +222,203 @@ parsegraph_NodePainter.prototype.clear = function()
     this._textPainter.clear();
 };
 
+parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY)
+{
+    var style = node.blockStyle();
+    var painter = this._blockPainter;
+
+    var selectedColor = parsegraph_SELECTED_LINE_COLOR.premultiply(
+        this.backgroundColor()
+    );
+    var color = parsegraph_LINE_COLOR.premultiply(
+        this.backgroundColor()
+    );
+    if(node.isSelected()) {
+        painter.setBorderColor(selectedColor);
+        painter.setBackgroundColor(selectedColor);
+    }
+    else {
+        // Not selected.
+        painter.setBorderColor(color);
+        painter.setBackgroundColor(color);
+    }
+
+    var drawLine = function(x1, y1, x2, y2, thickness) {
+        var cx = x1 + (x2 - x1) / 2;
+        var cy = y1 + (y2 - y1) / 2;
+
+        var size = 0;
+        if(x1 == x2) {
+            // Vertical line.
+            size = new parsegraph_Size(
+                parsegraph_LINE_THICKNESS * node.absoluteScale() * thickness,
+                Math.abs(y2 - y1)
+            );
+        }
+        else {
+            // Horizontal line.
+            size = new parsegraph_Size(
+                Math.abs(x2 - x1),
+                parsegraph_LINE_THICKNESS * node.absoluteScale() * thickness
+            );
+        }
+        painter.drawBlock(
+            worldX + node.absoluteX() + cx,
+            worldY + node.absoluteY() + cy,
+            size,
+            0,
+            0,
+            node.absoluteScale()
+        );
+    };
+
+    // Draw the connecting line into the slider.
+    switch(node.parentDirection()) {
+    case parsegraph_UPWARD:
+        // Draw downward connecting line into the horizontal slider.
+        drawLine(
+            0, -node.absoluteSize().height() / 2,
+            0, 0,
+            1
+        );
+
+        // Draw the bar that the slider bud is on.
+        drawLine(
+            -node.absoluteSize().width() / 2, 0,
+            node.absoluteSize().width() / 2, 0,
+            .8
+        );
+
+        break;
+    case parsegraph_DOWNWARD:
+        // Draw upward connecting line into the horizontal slider.
+        break;
+    }
+    this._blockPainter
+
+    // Draw the first and last ticks.
+
+    // If snapping, show the intermediate ticks.
+
+    // Draw the bud's selection.
+    if(node.isSelected()) {
+        painter.setBorderColor(
+            style.selectedBorderColor.premultiply(
+                this.backgroundColor()
+            )
+        );
+        painter.setBackgroundColor(
+            style.selectedBackgroundColor.premultiply(
+                this.backgroundColor()
+            )
+        );
+
+        this._spotlightPainter.drawSpotlight(
+            worldX + node.absoluteX(),
+            worldY + node.absoluteY(),
+            2 * node.brightness() * Math.max(
+                node.absoluteSize().width(),
+                node.absoluteSize().height()
+            ),
+            new parsegraph_Color(
+                style.selectedBorderColor.r(),
+                style.selectedBorderColor.g(),
+                style.selectedBorderColor.b(),
+                1
+            )
+            //
+            //new parsegraph_Color(0, 0, 0, .5)
+        );
+    } else {
+        painter.setBorderColor(
+            style.borderColor.premultiply(
+                this.backgroundColor()
+            )
+        );
+        painter.setBackgroundColor(
+            style.backgroundColor.premultiply(
+                this.backgroundColor()
+            )
+        );
+
+        this._spotlightPainter.drawSpotlight(
+            worldX + node.absoluteX() + node.absoluteSize().width()*0,
+            worldY + node.absoluteY() + node.absoluteSize().height()*.1,
+            2 * node.brightness() * Math.max(
+                node.absoluteSize().width(),
+                node.absoluteSize().height()
+            ),
+            new parsegraph_Color(0, 0, 0, 1)
+            /*style.backgroundColor.premultiply(
+                this.backgroundColor()
+            )*/
+        );
+    }
+    // Draw the slider bud.
+    painter.drawBlock(
+        worldX + node.absoluteX(),
+        worldY + node.absoluteY(),
+        parsegraph_createSize(node.absoluteSize().height()/1.5, node.absoluteSize().height()/1.5),
+        style.borderRoundness/1.5,
+        style.borderThickness/1.5,
+        node.absoluteScale()
+    );
+
+    if(node.label() === undefined) {
+        return;
+    }
+
+    var textMetrics = this._textPainter.measureText(
+        node.label(),
+        style.fontSize * node.absoluteScale(),
+        style.maxLabelChars * style.fontSize * style.letterWidth * node.absoluteScale()
+    );
+    this._textPainter.setColor(
+        node.isSelected() ?
+            style.selectedFontColor :
+            style.fontColor
+    );
+    this._textPainter.drawText(
+        node.label(),
+        worldX + node.absoluteX() - textMetrics[0]/2,
+        worldY + node.absoluteY() + node.sizeWithoutPadding().scaled(node.absoluteScale()).height() / 2 - textMetrics[1]/2,
+        style.fontSize * node.absoluteScale(),
+        style.fontSize * style.maxLabelChars * style.letterWidth * node.absoluteScale(),
+        node.absoluteScale()
+    );
+};
+
+parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
+{
+    var style = node.blockStyle();
+    var painter = this._blockPainter;
+
+    var sceneSize = node.sizeWithoutPadding().scaled(node.absoluteScale());
+    var sceneX = worldX + node.absoluteX();
+    var sceneY = worldY + node.absoluteY();
+
+    // Render and draw the scene texture.
+};
+
 parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY)
 {
     if(this.isExtentRenderingEnabled()) {
         this.paintExtent(node, worldX, worldY);
     }
 
-    this.paintLines(node, worldX, worldY);
-    this.paintStyledBlock(node, worldX, worldY);
+    switch(node.type()) {
+    case parsegraph_SLIDER:
+        return this.drawSlider(node, worldX, worldY);
+        break;
+    case parsegraph_SCENE:
+        this.paintLines(node, worldX, worldY);
+        this.paintStyledBlock(node, worldX, worldY);
+        return this.drawScene(node, worldX, worldY);
+        break;
+    default:
+        this.paintLines(node, worldX, worldY);
+        this.paintStyledBlock(node, worldX, worldY);
+    }
 };
 
 parsegraph_NodePainter.prototype.drawCaret = function(caret, worldX, worldY)

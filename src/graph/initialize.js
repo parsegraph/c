@@ -21,10 +21,12 @@ function parsegraph_initialize(mathMode) {
     parsegraph_BUD = 10;
     parsegraph_SLOT = 11;
     parsegraph_BLOCK = 12;
+    parsegraph_SLIDER = 13;
+    parsegraph_SCENE = 14;
 
-    parsegraph_NULL_NODE_FIT = 13;
-    parsegraph_NODE_FIT_EXACT = 14;
-    parsegraph_NODE_FIT_LOOSE = 15;
+    parsegraph_NULL_NODE_FIT = 14;
+    parsegraph_NODE_FIT_EXACT = 15;
+    parsegraph_NODE_FIT_LOOSE = 16;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
@@ -101,6 +103,26 @@ function parsegraph_initialize(mathMode) {
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
+    parsegraph_SLIDER_STYLE = {
+        minWidth: parsegraph_BUD_RADIUS*24,
+        minHeight: parsegraph_BUD_RADIUS*3,
+        horizontalPadding: parsegraph_BUD_RADIUS/2,
+        verticalPadding: parsegraph_BUD_RADIUS/2,
+        borderColor: parsegraph_createColor(.8, .8, .5, 1),
+        backgroundColor: parsegraph_createColor(1, 1, .1, 1),
+        selectedBorderColor: parsegraph_createColor(1, 1, 0, 1),
+        selectedBackgroundColor: parsegraph_createColor(1, 1, .7, 1),
+        borderRoundness: parsegraph_BUD_RADIUS*8,
+        borderThickness: parsegraph_BUD_RADIUS*2,
+        maxLabelChars: 40,
+        fontColor: new parsegraph_Color(0, 0, 0, 1),
+        selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
+        fontSize: parsegraph_FONT_SIZE * (32/48),
+        letterWidth: .61,
+        verticalSeparation: 9 * parsegraph_VERTICAL_SEPARATION_PADDING,
+        horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
+    };
+
     parsegraph_BLOCK_STYLE = {
         minWidth: parsegraph_MIN_BLOCK_WIDTH,
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
@@ -112,6 +134,26 @@ function parsegraph_initialize(mathMode) {
         selectedBackgroundColor: parsegraph_createColor(.8, .8, 1, 1),
         borderRoundness: parsegraph_BUD_RADIUS*3,
         borderThickness: parsegraph_BUD_RADIUS*2,
+        maxLabelChars: 40,
+        fontColor: new parsegraph_Color(0, 0, 0, 1),
+        selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
+        fontSize: parsegraph_FONT_SIZE,
+        letterWidth: .61,
+        verticalSeparation: 6 * parsegraph_VERTICAL_SEPARATION_PADDING,
+        horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
+    };
+
+    parsegraph_SCENE_STYLE = {
+        minWidth: parsegraph_MIN_BLOCK_WIDTH,
+        minHeight: parsegraph_MIN_BLOCK_HEIGHT,
+        horizontalPadding: 3*parsegraph_BUD_RADIUS,
+        verticalPadding: .5*parsegraph_BUD_RADIUS,
+        borderColor: parsegraph_createColor(.8, .8, 1, 1),
+        backgroundColor: parsegraph_createColor(.75, .75, 1, .2),
+        selectedBorderColor: parsegraph_createColor(.9, .9, 1, 1),
+        selectedBackgroundColor: parsegraph_createColor(.8, .8, 1, 1),
+        borderRoundness: parsegraph_BUD_RADIUS*3,
+        borderThickness: parsegraph_BUD_RADIUS*1,
         maxLabelChars: 40,
         fontColor: new parsegraph_Color(0, 0, 0, 1),
         selectedFontColor: new parsegraph_Color(0, 0, 0, 1),

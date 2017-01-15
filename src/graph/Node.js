@@ -293,6 +293,12 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
     if(this.hasNode(spawnDirection)) {
         throw parsegraph_createException(parsegraph_ALREADY_OCCUPIED);
     }
+    if(this.type() == parsegraph_SLIDER) {
+        throw new Error("Sliders cannot have child nodes.");
+    }
+    if(this.type() == parsegraph_SCENE && spawnDirection == parsegraph_INWARD) {
+        throw new Error("Scenes cannot have inward nodes.");
+    }
 
     // Update the neighbor record.
     var neighbor = this._neighbors[spawnDirection];
@@ -777,6 +783,14 @@ parsegraph_Node.prototype.absoluteSize = function()
     return this.size().scaled(this.absoluteScale());
 };
 
+/**
+ * Returns the size of this node, based on this node's type and label.
+ *
+ * Sliders appear like blocks, though they render buds and their own lines internally.
+ * Scenes also appear like boxes.
+ *
+ * Consequently, since these types work like blocks, there is no special code for them here.
+ */
 parsegraph_Node.prototype.sizeWithoutPadding = function()
 {
     // Find the size of this node's drawing area.
