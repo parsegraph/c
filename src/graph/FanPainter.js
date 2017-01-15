@@ -71,20 +71,19 @@ function parsegraph_FanPainter(gl)
         this.fanProgram, "u_world"
     );
 };
-};
 
-parsegraph_FanPainter.prototype.selectRad(startRad, endRad)
+parsegraph_FanPainter.prototype.selectRad = function(startRad, endRad)
 {
     this._startRad = startRad;
     this._endRad = endRad;
 };
 
-parsegraph_FanPainter.prototype.selection()
+parsegraph_FanPainter.prototype.selection = function()
 {
     return [this._startRad, this._endRad];
 };
 
-parsegraph_FanPainter.prototype.selectDeg(startDeg, endDeg)
+parsegraph_FanPainter.prototype.selectDeg = function(startDeg, endDeg)
 {
     return this.select(alpha_ToRadians(startDeg), alpha_ToRadians(endDeg));
 };
