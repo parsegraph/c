@@ -4,30 +4,17 @@
 // -- raytracing
 // -- TODO: figure out aiming for third person
 
-// TODO glGet
-
-
-// ----------------------------------------------
-// ----------------- LOCALS ---------------------
-// ----------------------------------------------
-//var setmetatable = setmetatable;
-var tan = Math.tan;
-var atan = Math.atan;
 function alpha_toRadians(inDegrees)
 {
     return inDegrees * Math.PI / 180;
 }
-var toRadians = alpha_toRadians;
+alpha_ToRadians = alpha_toRadians;
 
 function alpha_toDegrees(inRadians)
 {
     return inRadians * 180 / Math.PI;
 }
-var toDegrees = alpha_toDegrees;
-var pi_2 = Math.PI / 2;
-var X = 1;
-var Y = 2;
-var Z = 3;
+alpha_ToDegrees = alpha_toDegrees;
 
 // ----------------------------------------------
 // ------------------- CAMERA  ------------------
