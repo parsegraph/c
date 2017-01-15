@@ -34,46 +34,6 @@ function parsegraph_Graph()
     this._input = new parsegraph_Input(this, this._camera);
 };
 
-parsegraph_Graph.prototype.paint = function()
-{
-    if(!this._paintingDirty) {
-        return;
-    }
-
-    if(!this._nodePainter) {
-        this._nodePainter = new parsegraph_NodePainter(this.gl());
-    }
-    this._nodePainter.clear();
-    this._nodePainter.setBackground(this.surface().backgroundColor());
-
-    this._carets.forEach(function(caret) {
-        this._nodePainter.drawCaret(caret[0], caret[1], caret[2]);
-    }, this);
-
-    // Paint the origin.
-    this._nodePainter.drawOrigin();
-
-    this._paintingDirty = false;
-};
-
-parsegraph_Graph.prototype.scheduleRepaint = function()
-{
-    this._paintingDirty = true;
-    this._surface.scheduleRepaint();
-};
-
-parsegraph_Graph.prototype.scheduleRender = function()
-{
-    this._surface.scheduleRender();
-};
-
-parsegraph_Graph.prototype.render = function()
-{
-    var world = this.camera().project();
-    this._nodePainter.setBackground(this._backgroundColor);
-    this._nodePainter.render(world, this.camera().scale());;
-};
-
 parsegraph_Graph.prototype.camera = function()
 {
     return this._camera;
@@ -146,4 +106,44 @@ parsegraph_Graph.prototype.mouseDown = function(x, y)
     selectedNode.click();
 
     return true;
+};
+
+parsegraph_Graph.prototype.paint = function()
+{
+    if(!this._paintingDirty) {
+        return;
+    }
+
+    if(!this._nodePainter) {
+        this._nodePainter = new parsegraph_NodePainter(this.gl());
+    }
+    this._nodePainter.clear();
+    this._nodePainter.setBackground(this.surface().backgroundColor());
+
+    this._carets.forEach(function(caret) {
+        this._nodePainter.drawCaret(caret[0], caret[1], caret[2]);
+    }, this);
+
+    // Paint the origin.
+    this._nodePainter.drawOrigin();
+
+    this._paintingDirty = false;
+};
+
+parsegraph_Graph.prototype.scheduleRepaint = function()
+{
+    this._paintingDirty = true;
+    this._surface.scheduleRepaint();
+};
+
+parsegraph_Graph.prototype.scheduleRender = function()
+{
+    this._surface.scheduleRender();
+};
+
+parsegraph_Graph.prototype.render = function()
+{
+    var world = this.camera().project();
+    this._nodePainter.setBackground(this._backgroundColor);
+    this._nodePainter.render(world, this.camera().scale());;
 };
