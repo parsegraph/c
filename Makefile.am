@@ -55,6 +55,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/GlyphAtlas.js \
 	src/graph/TextPainter.js \
 	src/graph/LinePainter.js \
+	src/graph/FanPainter.js \
 	src/graph/Node_commitLayout.js \
 	src/graph/constants.js \
 	src/graph/NodePainter.js \
