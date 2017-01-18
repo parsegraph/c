@@ -139,6 +139,9 @@ function parsegraph_Input(graph, camera)
             );
             zoomTouchDistance = dist;
         }
+
+        // Redraw.
+        camera.graph().scheduleRender();
     });
 
     var touchstartTime;
@@ -235,6 +238,9 @@ function parsegraph_Input(graph, camera)
             deltaX / camera.scale(),
             deltaY / camera.scale()
         );
+
+        // Redraw.
+        camera.graph().scheduleRender();
     };
 
     var attachedMouseListener = null;
