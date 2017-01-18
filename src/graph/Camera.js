@@ -19,7 +19,6 @@ parsegraph_Camera.prototype.setOrigin = function(x, y)
     }
     this._cameraX = x;
     this._cameraY = y;
-    this.surface().scheduleRender();
 }
 
 parsegraph_Camera.prototype.toJSON = function()
@@ -65,7 +64,6 @@ parsegraph_Camera.prototype.setScale = function(scale)
         throw new Error("scale must not be NaN.");
     }
     this._scale = scale;
-    this.surface().scheduleRender();
 };
 
 parsegraph_Camera.prototype.toString = function()
