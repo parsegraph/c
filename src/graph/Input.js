@@ -16,6 +16,11 @@ function parsegraph_Input(graph, camera)
         focused = false;
     });
 
+    /**
+     * Zooms to the given point.
+     *
+     * XXX Should this be in Graph or Camera?
+     */
     var zoomToPoint = function(scaleFactor, x, y) {
         // Get the current mouse position, in world space.
         var mouseInWorld = matrixTransform2D(
@@ -44,6 +49,9 @@ function parsegraph_Input(graph, camera)
         camera.graph().scheduleRender();
     };
 
+    /**
+     * The receiver of all graph canvas wheel events.
+     */
     var onWheel = function(event) {
         if(!focused) {
             return;
@@ -221,6 +229,9 @@ function parsegraph_Input(graph, camera)
      * Mouse event handling
      */
 
+    /**
+     * Receives events that cause the camera to be moved.
+     */
     var mouseoverListener = function(event) {
         var deltaX = event.clientX - mouseX;
         var deltaY = event.clientY - mouseY;
