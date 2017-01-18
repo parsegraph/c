@@ -18,9 +18,6 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
 
     this._scale = 1.0;
 
-    this._brightness = 0.75;
-    this._brightnessColor = new parsegraph_Color(1.0, 1.0, 1.0, 0.01);
-
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
@@ -740,19 +737,6 @@ parsegraph_Node.prototype.sizeIn = function(direction)
     else {
         return rv.width() / 2;
     }
-};
-
-parsegraph_Node.prototype.brightness = function()
-{
-    if(this.type() == parsegraph_BUD) {
-        return 2 * this._brightness;
-    }
-    return this._brightness;
-};
-
-parsegraph_Node.prototype.setBrightness = function(brightness)
-{
-    this._brightness = brightness;
 };
 
 parsegraph_Node.prototype.brightnessColor = function()

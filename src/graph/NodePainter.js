@@ -321,7 +321,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         this._spotlightPainter.drawSpotlight(
             worldX + node.absoluteX(),
             worldY + node.absoluteY(),
-            2 * node.brightness() * Math.max(
+            2 * style.brightness * Math.max(
                 userScale * node.absoluteSize().width(),
                 userScale * node.absoluteSize().height()
             ),
@@ -349,7 +349,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         this._spotlightPainter.drawSpotlight(
             worldX + node.absoluteX() + node.absoluteSize().width()*0,
             worldY + node.absoluteY() + node.absoluteSize().height()*.1,
-            2 * node.brightness() * Math.max(
+            2 * style.brightness * Math.max(
                 userScale * node.absoluteSize().width(),
                 userScale * node.absoluteSize().height()
             ),
@@ -683,7 +683,7 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         this._spotlightPainter.drawSpotlight(
             worldX + userScale * node.absoluteX(),
             worldY + userScale * node.absoluteY(),
-            2 * node.brightness() * Math.max(
+            2 * style.brightness * Math.max(
                 userScale * node.absoluteSize().width(),
                 userScale * node.absoluteSize().height()
             ),
