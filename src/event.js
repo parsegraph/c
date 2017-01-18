@@ -206,3 +206,28 @@ function parsegraph_addButtonListener(targetElement, listener, listenerThisArg)
 			   pixelY : pY };
 	}
 })();
+
+function parsegraph_writeError(ex)
+{
+    var err = "";
+    switch(typeof ex) {
+    case "string":
+    case "number":
+    case "boolean":
+    case "function":
+        err += ex;
+        break;
+    case "object":
+        if(typeof ex.toString == "function") {
+            err += ex.toString();
+        }
+        else if(typeof ex.toJSON == "function") {
+            err += ex.toJSON();
+        }
+        else {
+            err += ex;
+        }
+        break;
+    }
+    return err;
+};
