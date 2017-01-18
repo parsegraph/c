@@ -2,9 +2,9 @@ alpha_FacePainter_VertexShader =
 "uniform mat4 u_world;\n" +
 "\n" +
 "attribute vec3 a_position;\n" +
-"attribute vec3 a_color;\n" +
+"attribute vec4 a_color;\n" +
 "\n" +
-"varying highp vec3 contentColor;\n" +
+"varying highp vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
     "gl_Position = u_world * vec4(a_position, 1.0);" +
@@ -16,10 +16,10 @@ alpha_FacePainter_FragmentShader =
 "precision mediump float;\n" +
 "#endif\n" +
 "" +
-"varying highp vec3 contentColor;\n" +
+"varying highp vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
-    "gl_FragColor = vec4(contentColor, 1.0);" +
+    "gl_FragColor = contentColor;" +
 "}";
 
 /**
@@ -64,7 +64,7 @@ function alpha_FacePainter(gl)
         this.gl, this.faceProgram
     );
     this.a_position = this.faceBuffer.defineAttrib("a_position", 3);
-    this.a_color = this.faceBuffer.defineAttrib("a_color", 3);
+    this.a_color = this.faceBuffer.defineAttrib("a_color", 4);
 
     // Cache program locations.
     this.u_world = this.gl.getUniformLocation(
@@ -111,12 +111,21 @@ alpha_FacePainter.prototype.Triangle = function(v1, v2, v3, c1, c2, c3)
         v2[0], v2[1], v2[2],
         v3[0], v3[1], v3[2]
     );
-    this.faceBuffer.appendData(
-        this.a_color,
-        c1[0], c1[1], c1[2],
-        c2[0], c2[1], c2[2],
-        c3[0], c3[1], c3[2]
-    );
+    if(c1.length == 3) {
+        this.faceBuffer.appendData(
+            this.a_color,
+            c1[0], c1[1], c1[2], 1.0,
+            c2[0], c2[1], c2[2], 1.0,
+            c3[0], c3[1], c3[2], 1.0
+        );
+    } else {
+        this.faceBuffer.appendData(
+            this.a_color,
+            c1[0], c1[1], c1[2], c1[3],
+            c2[0], c2[1], c2[2], c2[3],
+            c3[0], c3[1], c3[2], c3[3]
+        );
+    }
 };
 
 alpha_FacePainter.prototype.Draw = function(viewMatrix)
