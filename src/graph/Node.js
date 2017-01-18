@@ -5,6 +5,7 @@ function parsegraph_createNode(graph, newType, fromNode, parentDirection)
 
 function parsegraph_Node(graph, newType, fromNode, parentDirection)
 {
+    this._id = parsegraph_generateID("parsegraph_Node");
     this._graph = graph;
 
     this._neighbors = parsegraph_createNeighbors();
