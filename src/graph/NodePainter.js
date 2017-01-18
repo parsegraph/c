@@ -707,19 +707,6 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
                 this.backgroundColor()
             )
         );
-
-        this._spotlightPainter.drawSpotlight(
-            worldX + userScale * node.absoluteX() + userScale * node.absoluteSize().width()*0,
-            worldY + userScale * node.absoluteY() + userScale * node.absoluteSize().height()*.1,
-            2 * node.brightness() * Math.max(
-                userScale * node.absoluteSize().width(),
-                userScale * node.absoluteSize().height()
-            ),
-            new parsegraph_Color(0, 0, 0, 1)
-            /*style.backgroundColor.premultiply(
-                this.backgroundColor()
-            )*/
-        );
     }
 
     painter.drawBlock(
