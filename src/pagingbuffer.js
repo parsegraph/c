@@ -93,6 +93,22 @@ parsegraph_PagingBuffer.prototype.defineAttrib = function(name, numComponents, d
     return this._attribs.length - 1;
 };
 
+parsegraph_PagingBuffer.prototype.appendRGB = function(attribIndex, color)
+{
+    if(typeof color.r == "function") {
+        return this.appendData(attribIndex, color.r(), color.g(), color.b());
+    }
+    return this.appendData(attribIndex, color.r, color.g, color.b);
+};
+
+parsegraph_PagingBuffer.prototype.appendRGBA = function(attribIndex, color)
+{
+    if(typeof color.r == "function") {
+        return this.appendData(attribIndex, color.r(), color.g(), color.b(), color.a());
+    }
+    return this.appendData(attribIndex, color.r, color.g, color.b, color.a);
+};
+
 /**
  * appendData(attribIndex, value1, value2, ...);
  * appendData(attribIndex, valueArray);
