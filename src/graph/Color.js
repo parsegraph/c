@@ -30,6 +30,26 @@ parsegraph_Color.prototype.a = function() {
     return this._a;
 };
 
+parsegraph_Color.prototype.setA = function(value) {
+    this._a = value;
+    return this;
+};
+
+parsegraph_Color.prototype.setR = function(value) {
+    this._r = value;
+    return this;
+};
+
+parsegraph_Color.prototype.setG = function(value) {
+    this._g = value;
+    return this;
+};
+
+parsegraph_Color.prototype.setB = function(value) {
+    this._b = value;
+    return this;
+};
+
 parsegraph_Color.prototype.multiply = function(other) {
     return new parsegraph_Color(
         this.r() * other.r(),
