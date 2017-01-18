@@ -58,13 +58,17 @@ parsegraph_Surface.prototype.scheduleRender = function()
     }
     var graph = this;
     this._pendingRender = requestAnimationFrame(function() {
-        graph._pendingRender = null;
-        if(graph._needsRepaint) {
-            graph.paint();
-            graph._needsRepaint = false;
-        }
+        try {
+            graph._pendingRender = null;
+            if(graph._needsRepaint) {
+                graph.paint();
+                graph._needsRepaint = false;
+            }
 
-        graph.render();
+            graph.render();
+        } catch(ex) {
+            alert("Render: " + parsegraph_writeError(ex));
+        }
     });
 };
 
