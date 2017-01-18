@@ -20,17 +20,23 @@ function parsegraph_Graph()
     this._canvas = surface.canvas();
     this._container = surface.container();
 
-    this._paintingDirty = true;
+    this._worldPaintingDirty = true;
+    this._carouselPaintingDirty = true;
 
     this._camera = new parsegraph_Camera(this);
 
     // World-rendered carets.
     this._worldCarets = [];
 
+    // The node currently under the cursor.
+    this._nodeUnderCursor = null;
+
     // Carousel-rendered carets.
     this._carouselCarets = [];
     this._carouselCoords = [0, 0];
+    this._carouselSize = 100;
     this._showCarousel = false;
+    this._selectedCarouselCaret = null;
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
@@ -91,6 +97,11 @@ parsegraph_Graph.prototype.plotCarousel = function(worldX, worldY)
     this._carouselCoords[1] = worldY;
 };
 
+parsegraph_Graph.prototype.setCarouselSize = function(size)
+{
+    this._carouselSize = size;
+};
+
 parsegraph_Graph.prototype.showCarousel = function()
 {
     this._showCarousel = true;
@@ -103,6 +114,7 @@ parsegraph_Graph.prototype.isCarouselShown = function()
 
 parsegraph_Graph.prototype.hideCarousel = function()
 {
+    this._selectedCarouselCaret = null;
     this._showCarousel = false;
 };
 
@@ -114,13 +126,18 @@ parsegraph_Graph.prototype.addToCarousel = function(caret, label, callback, this
 parsegraph_Graph.prototype.clearCarousel = function()
 {
     this._carouselCarets.splice(0, this._carouselCarets.length);
+    this._selectedCarouselCaret = null;
 };
 
 parsegraph_Graph.prototype.removeFromCarousel = function(caret)
 {
     for(var i = 0; i < this._carouselCarets.length; ++i) {
         if(this._carouselCarets[i][0] == caret) {
-            return this._carouselCarets.splice(i, 1);
+            var removed = this._carouselCarets.splice(i, 1)[0];
+            if(this._selectedCarouselCaret == removed) {
+                this._selectedCarouselCaret = null;
+            }
+            return removed;
         }
     }
     return null;
@@ -136,48 +153,132 @@ parsegraph_Graph.prototype.removePlot = function(caret)
     return null;
 };
 
+parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
+{
+    if(!this.isCarouselShown()) {
+        return false;
+    }
+    // Refuse service if there is no node under cursor.
+    if(!this.nodeUnderCursor()) {
+        return false;
+    }
+
+    if(Math.sqrt(
+        Math.pow(Math.abs(x - this.nodeUnderCursor().absoluteX()), 2) +
+        Math.pow(Math.abs(y - this.nodeUnderCursor().absoluteY()), 2)
+    ) < Math.max(
+        this.nodeUnderCursor().absoluteSize().width(),
+        this.nodeUnderCursor().absoluteSize().height()
+    ) * .75) {
+        if(asDown) {
+            // Down events within the inner region are treated as 'cancel.'
+            this.hideCarousel();
+            this.scheduleRepaint();
+            return true;
+        }
+
+        // Up events within the inner region are ignored.
+        return false;
+    }
+
+    var angleSpan = 2 * Math.PI / this._carouselCarets.length;
+    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+    if(mouseAngle < 0) {
+        // Upward half.
+        mouseAngle = 2 * Math.PI + mouseAngle;
+    }
+
+    var i = Math.floor(this._carouselCarets.length * (mouseAngle) / (2 * Math.PI));
+
+    // Click was within a carousel caret; notify listener.
+    //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
+    var carouselCaretData = this._carouselCarets[i];
+    var callback = carouselCaretData[2];
+    var thisArg = carouselCaretData[3];
+    callback.call(thisArg);
+    this.mouseOver(x, y);
+    this.scheduleRepaint();
+
+    return true;
+};
+
 /**
  * Receives a mouseDown event at the given coordinates, in world space.
  */
-parsegraph_Graph.prototype.mouseDown = function(x, y)
+parsegraph_Graph.prototype.clickWorld = function(x, y)
 {
-    if(this.isCarouselShown()) {
-        // Test if the click was within a carousel caret.
-        for(var i = this._carouselCarets.length - 1; i >= 0; --i) {
-            var carouselCaretData = this._carouselCarets[i];
-            var caret = carouselCaretData[0];
-            var worldX = carouselCaretData[4];
-            var worldY = carouselCaretData[5];
-            var userScale = carouselCaretData[6];
-            if(caret.nodeUnderCoords(x - worldX - this._carouselCoords[0], y - worldY - this._carouselCoords[1], userScale)) {
-                // Click was within a carousel caret; notify listener.
-                var callback = carouselCaretData[2];
-                var thisArg = carouselCaretData[3];
-                return callback.call(thisArg);
-            }
-        }
-    }
-    // Test if there is a node under the given coordinates.
-    for(var i = this._worldCarets.length - 1; i >= 0; --i) {
-        var caretData = this._worldCarets[i];
-        var caret = caretData[0];
-        var worldX = caretData[1];
-        var worldY = caretData[2];
-        var selectedNode = caret.nodeUnderCoords(x - worldX, y - worldY);
-        if(selectedNode) {
-            // Node located; no further search.
-            break;
-        }
-    }
+    var selectedNode = this.nodeUnderCoords(x, y);
     if(!selectedNode) {
         // No node found.
         return false;
     }
 
-    // A node was found; show its options.
+    // A node was found; invoke the node's click listener.
     selectedNode.click();
 
     return true;
+};
+
+/**
+ * Receives a mouseover event at the given coordinates, in world space.
+ */
+parsegraph_Graph.prototype.mouseOver = function(x, y)
+{
+    var selectedNode = this.nodeUnderCoords(x, y);
+    if(this._nodeUnderCursor && this._nodeUnderCursor != selectedNode) {
+        this._nodeUnderCursor.setSelected(false);
+        this.scheduleRepaint();
+    }
+    this._nodeUnderCursor = selectedNode;
+    if(!selectedNode) {
+        // No node found.
+        return null;
+    }
+
+    if(selectedNode.hasClickListener() && !selectedNode.isSelected()) {
+        selectedNode.setSelected(true);
+        this.scheduleRepaint();
+    }
+
+    return selectedNode;
+};
+
+parsegraph_Graph.prototype.nodeUnderCursor = function()
+{
+    return this._nodeUnderCursor;
+};
+
+parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
+{
+    if(!this.isCarouselShown()) {
+        return false;
+    }
+    var angleSpan = 2 * Math.PI / this._carouselCarets.length;
+    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+    //var i = Math.floor(this._carouselCarets.length * mouseAngle / (2 * Math.PI));
+    //console.log(i * angleSpan);
+    if(this._fanPainter) {
+        this._fanPainter.setSelectionAngle(mouseAngle);
+    }
+    this.scheduleCarouselRepaint();
+    return true;
+};
+
+parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
+{
+    // Test if there is a node under the given coordinates.
+    for(var i = this._worldCarets.length - 1; i >= 0; --i) {
+        var caretData = this._worldCarets[i];
+        var caret = caretData[0];
+        var caretX = caretData[1];
+        var caretY = caretData[2];
+        var selectedNode = caret.nodeUnderCoords(x - caretX, y - caretY);
+        if(selectedNode) {
+            // Node located; no further search.
+            return selectedNode;
+        }
+    }
+    return null;
 };
 
 parsegraph_Graph.prototype.measureText = function()
@@ -192,30 +293,27 @@ parsegraph_Graph.prototype.measureText = function()
 
 parsegraph_Graph.prototype.paint = function()
 {
-    if(!this._paintingDirty) {
-        return;
-    }
-
-    if(!this._worldNodePainter) {
-        this._worldNodePainter = new parsegraph_NodePainter(this.gl());
-    }
-    else {
-        this._worldNodePainter.clear();
-    }
-
-    this._worldNodePainter.setBackground(this.surface().backgroundColor());
-    this._worldCarets.forEach(function(caretData) {
-        this._worldNodePainter.drawCaret.apply(this._worldNodePainter, caretData);
-    }, this);
-
-    // Paint the origin.
-    this._worldNodePainter.drawOrigin();
-
-    if(this._showCarousel) {
-        // Paint the carousel.
-        if(!this._fanPainter) {
-            //this._fanPainter = new parsegraph_FanPainter(this.gl());
+    if(this._worldPaintingDirty) {
+        if(!this._worldNodePainter) {
+            this._worldNodePainter = new parsegraph_NodePainter(this.gl());
         }
+        else {
+            this._worldNodePainter.clear();
+        }
+
+        this._worldNodePainter.setBackground(this.surface().backgroundColor());
+        this._worldCarets.forEach(function(caretData) {
+            this._worldNodePainter.drawCaret.apply(this._worldNodePainter, caretData);
+        }, this);
+
+        // Paint the origin.
+        this._worldNodePainter.drawOrigin();
+
+        this._worldPaintingDirty = false;
+    }
+
+    if(this._carouselPaintingDirty && this._showCarousel) {
+        // Paint the carousel.
         if(!this._carouselNodePainter) {
             this._carouselNodePainter = new parsegraph_NodePainter(this.gl());
         }
@@ -233,9 +331,24 @@ parsegraph_Graph.prototype.paint = function()
                 caretData[6]
             );
         }, this);
-    }
+        if(!this._fanPainter) {
+            this._fanPainter = new parsegraph_FanPainter(this.gl());
+        }
+        else {
+            this._fanPainter.clear();
+        }
+        var fanPadding = 1.2;
+        this._fanPainter.setAscendingRadius(fanPadding * this._carouselSize);
+        this._fanPainter.setDescendingRadius(fanPadding * 2 * this._carouselSize);
+        this._fanPainter.selectRad(
+            this._carouselCoords[0], this._carouselCoords[1],
+            0, Math.PI * 2,
+            parsegraph_createColor(1, 1, 1, 1),
+            parsegraph_createColor(.5, .5, .5, .4)
+        );
 
-    this._paintingDirty = false;
+        this._carouselPaintingDirty = false;
+    }
 };
 
 /**
@@ -243,17 +356,22 @@ parsegraph_Graph.prototype.paint = function()
  */
 parsegraph_Graph.prototype.arrangeCarousel = function()
 {
+    var angleSpan = this._carouselCarets.length / (2 * Math.PI);
+
+    var parsegraph_CAROUSEL_RADIUS = 250;
+    var parsegraph_MAX_CAROUSEL_SIZE = 150;
+
     this._carouselCarets.forEach(function(caretData, i) {
         var root = caretData[0].root();
         root.commitLayoutIteratively();
 
-        var caretRad = (i / this._carouselCarets.length) * (2 * Math.PI);
-        caretData[4] = 250 * Math.cos(caretRad);
-        caretData[5] = 250 * Math.sin(caretRad);
+        var caretRad = angleSpan/2 + (i / this._carouselCarets.length) * (2 * Math.PI);
+        caretData[4] = parsegraph_CAROUSEL_RADIUS * Math.cos(caretRad);
+        caretData[5] = parsegraph_CAROUSEL_RADIUS * Math.sin(caretRad);
         var commandSize = root.extentSize();
 
-        var xMax = 150;
-        var yMax = 150;
+        var xMax = parsegraph_MAX_CAROUSEL_SIZE;
+        var yMax = parsegraph_MAX_CAROUSEL_SIZE;
         var xShrinkFactor = 1;
         var yShrinkFactor = 1;
         if(commandSize.width() > xMax) {
@@ -270,7 +388,13 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
 
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
-    this._paintingDirty = true;
+    this._worldPaintingDirty = true;
+    this._surface.scheduleRepaint();
+};
+
+parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
+{
+    this._carouselPaintingDirty = true;
     this._surface.scheduleRepaint();
 };
 
@@ -283,6 +407,10 @@ parsegraph_Graph.prototype.render = function()
 {
     // Paint the world.
     var world = this.camera().project();
+    if(this._showCarousel) {
+        this._fanPainter.render(world);
+    }
+
     if(this._worldNodePainter) {
         this._worldNodePainter.setBackground(this._backgroundColor);
         this._worldNodePainter.render(world, this.camera().scale());
@@ -290,7 +418,7 @@ parsegraph_Graph.prototype.render = function()
 
     // Render the carousel if requested.
     if(this._showCarousel) {
-        //this._fanPainter.render(world);
+        var gl = this.gl();
         this._carouselNodePainter.setBackground(this._backgroundColor);
         this._carouselNodePainter.render(world, 1);
     }

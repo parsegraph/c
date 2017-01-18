@@ -6,13 +6,18 @@ function parsegraph_Input(graph, camera)
     // Mouse position; used internally in event listeners.
     var mouseX;
     var mouseY;
+
+    // Whether the container is focused and not blurred.
     var focused = false;
 
-    parsegraph_addEventListener(graph.container(), "focus", function(event) {
+    // A map of event.key's to a true value.
+    var keydowns = {};
+
+    parsegraph_addEventListener(graph.canvas(), "focus", function(event) {
         focused = true;
     });
 
-    parsegraph_addEventListener(graph.container(), "blur", function(event) {
+    parsegraph_addEventListener(graph.canvas(), "blur", function(event) {
         focused = false;
     });
 
@@ -53,7 +58,7 @@ function parsegraph_Input(graph, camera)
      * The receiver of all graph canvas wheel events.
      */
     var onWheel = function(event) {
-        if(!focused) {
+        if(graph.isCarouselShown()) {
             return;
         }
         event.preventDefault();
@@ -104,6 +109,7 @@ function parsegraph_Input(graph, camera)
             return;
         }
         event.preventDefault();
+        //console.log("touchmove");
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches[i];
@@ -151,10 +157,8 @@ function parsegraph_Input(graph, camera)
     var touchstartTime;
 
     parsegraph_addEventListener(graph.canvas(), "touchstart", function(event) {
-        if(!focused) {
-            return;
-        }
         event.preventDefault();
+        focused = true;
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches.item(i);
@@ -172,16 +176,18 @@ function parsegraph_Input(graph, camera)
                 makeInverse3x3(camera.worldMatrix()),
                 touchX, touchY
             );
-            x = mouseInWorld[0];
-            y = mouseInWorld[1];
-            //alert("World: " + x + ", " + y + ". Touch: " + touchX + ", " + touchY);
+            lastMouseX = mouseInWorld[0];
+            lastMouseY = mouseInWorld[1];
 
-            if(!graph.mouseDown || !graph.mouseDown(x, y)) {
-                touchstartTime = Date.now();
+            if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
+                return;
             }
-            else {
+            if(graph.clickWorld(mouseInWorld[0], mouseInWorld[1])) {
                 touchstartTime = null;
+                return;
             }
+
+            touchstartTime = Date.now();
         }
 
         if(monitoredTouches.length > 1) {
@@ -197,7 +203,7 @@ function parsegraph_Input(graph, camera)
                 )
             );
         }
-    });
+    }, true);
 
     var isDoubleTouch = false;
     var touchendTimeout = 0;
@@ -216,8 +222,7 @@ function parsegraph_Input(graph, camera)
     };
 
     var removeTouchListener = function(event) {
-        event.preventDefault();
-
+        //console.log("touchend");
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches.item(i);
             removeTouchByIdentifier(touch.identifier);
@@ -226,6 +231,8 @@ function parsegraph_Input(graph, camera)
         if(touchstartTime != null && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS) {
             touchendTimeout = setTimeout(afterTouchTimeout, parsegraph_CLICK_DELAY_MILLIS);
         }
+
+        return true;
     };
 
     parsegraph_addEventListener(graph.canvas(), "touchend", removeTouchListener);
@@ -256,11 +263,34 @@ function parsegraph_Input(graph, camera)
     var attachedMouseListener = null;
     var mousedownTime = null;
 
-    parsegraph_addEventListener(graph.canvas(), "mousedown", function(event) {
-        if(!focused) {
-            return;
+    var lastMouseX = 0;
+    var lastMouseY = 0;
+
+    parsegraph_addEventListener(graph.canvas(), "mousemove", function(event) {
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(graph.camera().worldMatrix()),
+            event.clientX, event.clientY
+        );
+        lastMouseX = mouseInWorld[0];
+        lastMouseY = mouseInWorld[1];
+
+        if(graph.isCarouselShown()) {
+            return graph.mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
         }
-        event.preventDefault();
+
+        // Moving during a mousedown i.e. dragging (or zooming)
+        if(attachedMouseListener) {
+            return attachedMouseListener(event);
+        }
+
+        // Just a mouse moving over the (focused) canvas.
+        graph.mouseOver(mouseInWorld[0], mouseInWorld[1]);
+    });
+
+    parsegraph_addEventListener(graph.canvas(), "mousedown", function(event) {
+        focused = true;
+        //event.preventDefault();
+        graph.canvas().focus();
 
         mouseX = event.clientX;
         mouseY = event.clientY;
@@ -270,11 +300,13 @@ function parsegraph_Input(graph, camera)
             makeInverse3x3(camera.worldMatrix()),
             mouseX, mouseY
         );
-            //alert(camera.worldMatrix());
-        //alert("World: " + mouseInWorld + ". mouse: " + mouseX + ", " + mouseY);
+        lastMouseX = mouseInWorld[0];
+        lastMouseY = mouseInWorld[1];
 
-
-        if(graph.mouseDown(mouseInWorld[0], mouseInWorld[1])) {
+        if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
+            return;
+        }
+        else if(graph.clickWorld(mouseInWorld[0], mouseInWorld[1])) {
             mousedownTime = null;
             return;
         }
@@ -285,8 +317,6 @@ function parsegraph_Input(graph, camera)
         else {
             attachedMouseListener = mouseoverListener;
         }
-
-        parsegraph_addEventListener(graph.canvas(), "mousemove", attachedMouseListener);
 
         //console.log("Setting mousedown time");
         mousedownTime = Date.now();
@@ -324,10 +354,13 @@ function parsegraph_Input(graph, camera)
         //console.log("MOUSEUP");
 
         if(!attachedMouseListener) {
+            if(graph.clickCarousel(lastMouseX, lastMouseY, false)) {
+                // Mouseup affected carousel.
+                return;
+            }
             //console.log("No attached listeenr");
             return;
         }
-        parsegraph_removeEventListener(graph.canvas(), "mousemove", attachedMouseListener);
         attachedMouseListener = null;
 
         if(
@@ -348,6 +381,51 @@ function parsegraph_Input(graph, camera)
             //console.log("Click missed timeout");
         }
     };
+
+    parsegraph_addEventListener(document, "keydown", function(event) {
+        if(!focused) {
+            return;
+        }
+
+        if(keydowns[event.key]) {
+            // Already processed.
+            return;
+        }
+        keydowns[event.key] = new Date();
+
+        switch(event.key) {
+        case 'q':
+            if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
+                // Mousedown affected carousel.
+                return;
+            }
+            if(graph.nodeUnderCursor()) {
+                graph.nodeUnderCursor().click();
+            }
+            break;
+        }
+    });
+
+    parsegraph_addEventListener(document, "keyup", function(event) {
+        if(!focused) {
+            return;
+        }
+
+        if(!keydowns[event.key]) {
+            // Already processed.
+            return;
+        }
+        delete keydowns[event.key];
+
+        switch(event.key) {
+        case 'q':
+            if(graph.clickCarousel(lastMouseX, lastMouseY, false)) {
+                // Keyup affected carousel.
+                break;
+            }
+            break;
+        }
+    });
 
     parsegraph_addEventListener(graph.canvas(), "mouseup", removeMouseListener);
 

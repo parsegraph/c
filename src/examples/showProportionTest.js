@@ -12,16 +12,22 @@ function showProportionTest(graph, COUNT)
     }
     COUNT = Math.min(COUNT, 100);
 
-    var commands = ["Copy", "Cut", "Paste", "Delete", "Open", "New", "Test", "Build"];
+    var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 
     var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
     var selectedNode;
+
+    /**
+     * Attaches commands at the current position.
+     */
     var attachCommands = function() {
         caret.onClick(function() {
+            //console.log("OnClick" + this.id());
             if(graph.isCarouselShown() && selectedNode == this) {
                 graph.clearCarousel();
                 graph.hideCarousel();
                 graph.scheduleRepaint();
+                selectedNode = null;
                 return;
             }
             selectedNode = this;
@@ -37,15 +43,25 @@ function showProportionTest(graph, COUNT)
                     commandCaret.move('u');
                 }
                 graph.addToCarousel(commandCaret, command, function() {
-                    console.log("Clicked " + command);
+                    console.log("Clicked " + command + commandCaret.root().isSelected());
+                    graph.clearCarousel();
+                    graph.hideCarousel();
+                    graph.scheduleCarouselRepaint();
+                    selectedNode = null;
                 }, this);
             }, this);
 
             graph.showCarousel();
-            graph.plotCarousel(this.absoluteX(), this.absoluteY());
+            graph.setCarouselSize(Math.max(
+                selectedNode.size().width(),
+                selectedNode.size().height()
+            ));
+            graph.plotCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
             graph.scheduleRepaint();
         });
     };
+
+    // Attach the commands to the root.
     attachCommands();
 
     caret.fitExact();
@@ -66,6 +82,8 @@ function showProportionTest(graph, COUNT)
 
         caret.pull('d');
         caret.spawnMove('d', 'block');
+
+        // Attach commands for this block.
         attachCommands();
     }
 

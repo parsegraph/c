@@ -13,7 +13,7 @@ function parsegraph_Surface()
     // The canvas that will be drawn to.
     this._canvas = document.createElement("canvas");
     this._canvas.style.display = "block";
-    this._container.tabIndex = 0;
+    this._canvas.setAttribute("tabIndex", 0);
 
     // GL content, not created until used.
     this._gl = null;
