@@ -54,77 +54,85 @@ body > div input {
 
 function init()
 {
-    parsegraph_initialize();
+    try {
+        parsegraph_initialize();
 
-    var server = new parsegraph_CommandClient("./server.fcgi");
-    parsegraph_addUserCommands(server);
+        var server = new parsegraph_CommandClient("./server.fcgi");
+        parsegraph_addUserCommands(server);
 
-    var main = document.body;
+        var main = document.body;
 
-    var surface = new parsegraph_Surface();
-    var graph = new parsegraph_Graph(surface);
-    GRAPH = graph;
+        var surface = new parsegraph_Surface();
+        var graph = new parsegraph_Graph(surface);
+        GRAPH = graph;
 
-    var COUNT = 25
-    //graph.plot(showCorporateStructure(graph));
-    //graph.plot(buildPrimesDemo(graph, COUNT));
-    //graph.plot(buildTextDemo(graph, COUNT, "繁"));
-    //graph.plot(showMemoryBlocks(graph, COUNT));
-    //graph.plot(showSpiral(graph));
-    //graph.plot(showFunction(graph));
-    //graph.plot(showCalendar(graph));
-    //graph.plot(showUlam(graph, COUNT));
-    //graph.plot(createSliderDemo(graph));
+        var COUNT = 25
+        //graph.plot(showCorporateStructure(graph));
+        //graph.plot(buildPrimesDemo(graph, COUNT));
+        //graph.plot(buildTextDemo(graph, COUNT, "繁"));
+        //graph.plot(showMemoryBlocks(graph, COUNT));
+        //graph.plot(showSpiral(graph));
+        //graph.plot(showFunction(graph));
+        //graph.plot(showCalendar(graph));
+        //graph.plot(showUlam(graph, COUNT));
+        //graph.plot(createSliderDemo(graph));
 
-    // Look at alignment here first.
-    //graph.plot(showHardTest(graph, server));
-    //graph.plot(showStatements(graph));
+        // Look at alignment here first.
+        //graph.plot(showHardTest(graph, server));
+        //graph.plot(showStatements(graph));
 
-    // Then correct alignment here.
-    graph.plot(showProportionTest(graph, COUNT));
+        // Then correct alignment here.
+        graph.plot(showProportionTest(graph, COUNT));
 
-    //graph.plot(showIPAddresses(graph));
+        //graph.plot(showIPAddresses(graph));
 
-    main.appendChild(graph.container());
+        main.appendChild(graph.container());
 
-    if(localStorage.getItem("parsegraph_world_camera") != null) {
-        try {
-            var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-            graph.camera().restore(parsegraph_world_camera);
-        } catch(e) {
-            console.log("Failed to parse saved camera state.\n" + e);
+        if(localStorage.getItem("parsegraph_world_camera") != null) {
+            try {
+                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
+                graph.camera().restore(parsegraph_world_camera);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
         }
+
+        // Schedule the repaint.
+        surface.scheduleRepaint();
+
+        surface.addRenderer(function() {
+            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+        });
+
+        var controls = document.createElement("div");
+        controls.className = "controls";
+        main.appendChild(controls);
+        controls.style.bottom = ".5em";
+
+        var form = parsegraph_createForm();
+        form.button("resetOrigin", "Reset Camera");
+
+        form.addListener(function(sourceName, value) {
+            var defaultScale = .5;
+            if(sourceName == "resetOrigin") {
+                graph.camera().setOrigin(
+                    graph.gl().drawingBufferWidth / (2 * defaultScale),
+                    graph.gl().drawingBufferHeight / (2 * defaultScale)
+                );
+                graph.camera().setScale(defaultScale);
+            }
+            else {
+                return;
+            }
+
+            graph.scheduleRender();
+        });
+
+        controls.appendChild(form.asDOM());
+        main.appendChild(document.createElement("div"));
+    } catch(ex) {
+        alert("Init: " + parsegraph_writeError(ex));
     }
-
-    surface.addRenderer(function() {
-        localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
-    });
-
-    var controls = document.createElement("div");
-    controls.className = "controls";
-    main.appendChild(controls);
-    controls.style.bottom = ".5em";
-
-    var form = parsegraph_createForm();
-    form.button("resetOrigin", "Reset Camera");
-
-    form.addListener(function(sourceName, value) {
-        if(sourceName == "resetOrigin") {
-            graph.camera().setOrigin(
-                graph.gl().drawingBufferWidth / 2,
-                graph.gl().drawingBufferHeight / 2
-            );
-            graph.camera().setScale(1);
-        }
-        else {
-            return;
-        }
-
-        graph.scheduleRender();
-    });
-
-    controls.appendChild(form.asDOM());
-    main.appendChild(document.createElement("div"));
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
