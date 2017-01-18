@@ -131,11 +131,17 @@ parsegraph_PagingBuffer.prototype.appendData = function(attribIndex/*, ... */)
      */
     var pagingBuffer = this;
     var appendValue = function(value) {
-        if(Array.isArray(value)) {
+        if(typeof value.forEach == "function") {
             value.forEach(appendValue);
             return;
         }
-        if(Number.isNaN(value)) {
+        if(typeof value.length == "number") {
+            for(var i = 0; i < value.length; ++i) {
+                appendValue(value[i]);
+            }
+            return;
+        }
+        if(Number.isNaN(value) || typeof value != "number") {
             throw new Error("Value is not a number: " + value);
         }
         pagingBuffer.getWorkingPage().buffers[attribIndex].push(value);
@@ -221,6 +227,9 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
             );
 
             var thisNumIndices = bufferData.length / attrib.numComponents;
+            if(Math.round(thisNumIndices) != thisNumIndices) {
+                throw new Error("Odd number of indices for attrib " + attrib.name);
+            }
             if(numIndices == undefined) {
                 numIndices = thisNumIndices;
             }
