@@ -100,6 +100,9 @@ function parsegraph_Input(graph, camera)
     var touchY;
 
     parsegraph_addEventListener(graph.canvas(), "touchmove", function(event) {
+        if(!focused) {
+            return;
+        }
         event.preventDefault();
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
@@ -148,6 +151,9 @@ function parsegraph_Input(graph, camera)
     var touchstartTime;
 
     parsegraph_addEventListener(graph.canvas(), "touchstart", function(event) {
+        if(!focused) {
+            return;
+        }
         event.preventDefault();
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
@@ -251,6 +257,11 @@ function parsegraph_Input(graph, camera)
     var mousedownTime = null;
 
     parsegraph_addEventListener(graph.canvas(), "mousedown", function(event) {
+        if(!focused) {
+            return;
+        }
+        event.preventDefault();
+
         mouseX = event.clientX;
         mouseY = event.clientY;
 
