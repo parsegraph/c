@@ -68,6 +68,7 @@ parsegraph_Surface.prototype.scheduleRender = function()
             graph.render();
         } catch(ex) {
             alert("Render: " + parsegraph_writeError(ex));
+            throw ex;
         }
     });
 };

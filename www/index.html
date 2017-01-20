@@ -132,6 +132,7 @@ function init()
         main.appendChild(document.createElement("div"));
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
+        throw ex;
     }
 }
 
