@@ -7,11 +7,11 @@ function buildTextDemo(graph, COUNT, text)
         text = "";
     }
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
-    caret.node().setLabel("Rainback.");
+    caret.node().setLabel("Rainback");
 
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
     caret.move(parsegraph_DOWNWARD);
