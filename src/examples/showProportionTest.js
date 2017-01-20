@@ -26,7 +26,7 @@ function showProportionTest(graph, COUNT)
             if(graph.isCarouselShown() && selectedNode == this) {
                 graph.clearCarousel();
                 graph.hideCarousel();
-                graph.scheduleRepaint();
+                graph.scheduleCarouselRepaint();
                 selectedNode = null;
                 return;
             }
@@ -57,7 +57,7 @@ function showProportionTest(graph, COUNT)
                 selectedNode.size().height()
             ));
             graph.plotCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
-            graph.scheduleRepaint();
+            graph.scheduleCarouselRepaint();
         });
     };
 
