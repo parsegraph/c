@@ -34,11 +34,15 @@ function showMemoryBlocks(graph, COUNT)
             }
             r = Math.floor(Math.random() * 2);
             if(r % 2 == 0) {
-                caret.spawn('b', 'block');
+                caret.spawnMove('b', 'block');
+                caret.spawn('d', 'slider');
+                caret.move('f');
             }
             r = Math.floor(Math.random() * 2);
             if(r % 2 == 0) {
-                caret.spawn('f', 'block');
+                caret.spawnMove('f', 'block');
+                caret.spawn('d', 'slider');
+                caret.move('b');
             }
         }
 
