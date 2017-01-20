@@ -3,9 +3,14 @@ function parsegraph_Input(graph, camera)
     this._graph = graph;
     this._camera = camera;
 
-    // Mouse position; used internally in event listeners.
-    var mouseX;
-    var mouseY;
+    var attachedMouseListener = null;
+    var mousedownTime = null;
+
+    var touchX;
+    var touchY;
+
+    var lastMouseX = 0;
+    var lastMouseY = 0;
 
     // Whether the container is focused and not blurred.
     var focused = false;
@@ -101,9 +106,6 @@ function parsegraph_Input(graph, camera)
      * Touch event handling
      */
 
-    var touchX;
-    var touchY;
-
     parsegraph_addEventListener(graph.canvas(), "touchmove", function(event) {
         if(!focused) {
             return;
@@ -154,6 +156,39 @@ function parsegraph_Input(graph, camera)
         camera.graph().scheduleRender();
     });
 
+    var selectedSlider = null;
+    var sliderListener = function(mouseX, mouseY) {
+        // Get the current mouse position, in world space.
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(camera.worldMatrix()),
+            mouseX, mouseY
+        );
+        var x = mouseInWorld[0];
+        var y = mouseInWorld[1];
+        if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
+            var nodeWidth = selectedSlider.absoluteSize().width();
+            if(x <= selectedSlider.absoluteX() - nodeWidth / 2) {
+                // To the left!
+                selectedSlider.setValue(0);
+            }
+            else if(x >= selectedSlider.absoluteX() + nodeWidth / 2) {
+                // To the right!
+                selectedSlider.setValue(1);
+            }
+            else {
+                // In between.
+                //console.log("x=" + x);
+                //console.log("selectedSlider.absoluteX()=" + selectedSlider.absoluteX());
+                //console.log("PCT: " + (x - selectedSlider.absoluteX()));
+                //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
+                selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
+            }
+        }
+        graph.scheduleRepaint();
+
+        return true;
+    };
+
     var touchstartTime;
 
     parsegraph_addEventListener(graph.canvas(), "touchstart", function(event) {
@@ -176,14 +211,22 @@ function parsegraph_Input(graph, camera)
                 makeInverse3x3(camera.worldMatrix()),
                 touchX, touchY
             );
-            lastMouseX = mouseInWorld[0];
-            lastMouseY = mouseInWorld[1];
-
-            if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
+            if(graph.clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
+                lastMouseX = touchX;
+                lastMouseY = touchY;
                 return;
             }
-            if(graph.clickWorld(mouseInWorld[0], mouseInWorld[1])) {
+            var selectedNode = graph.nodeUnderCoords(lastMouseX, lastMouseY);
+            if(selectedNode) {
+                if(selectedNode.type() == parsegraph_SLIDER) {
+                    selectedSlider = selectedNode;
+                    attachedMouseListener = sliderListener;
+                    sliderListener(touchX, touchY);
+                    return;
+                }
+
                 touchstartTime = null;
+                selectedNode.click();
                 return;
             }
 
@@ -245,11 +288,11 @@ function parsegraph_Input(graph, camera)
     /**
      * Receives events that cause the camera to be moved.
      */
-    var mouseoverListener = function(event) {
-        var deltaX = event.clientX - mouseX;
-        var deltaY = event.clientY - mouseY;
-        mouseX = event.clientX;
-        mouseY = event.clientY;
+    var mouseDragListener = function(mouseX, mouseY) {
+        var deltaX = mouseX - lastMouseX;
+        var deltaY = mouseY - lastMouseY;
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
 
         camera.adjustOrigin(
             deltaX / camera.scale(),
@@ -260,30 +303,25 @@ function parsegraph_Input(graph, camera)
         camera.graph().scheduleRender();
     };
 
-    var attachedMouseListener = null;
-    var mousedownTime = null;
-
-    var lastMouseX = 0;
-    var lastMouseY = 0;
-
     parsegraph_addEventListener(graph.canvas(), "mousemove", function(event) {
-        var mouseInWorld = matrixTransform2D(
-            makeInverse3x3(graph.camera().worldMatrix()),
-            event.clientX, event.clientY
-        );
-        lastMouseX = mouseInWorld[0];
-        lastMouseY = mouseInWorld[1];
-
         if(graph.isCarouselShown()) {
+            var mouseInWorld = matrixTransform2D(
+                makeInverse3x3(graph.camera().worldMatrix()),
+                event.clientX, event.clientY
+            );
             return graph.mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
         }
 
         // Moving during a mousedown i.e. dragging (or zooming)
         if(attachedMouseListener) {
-            return attachedMouseListener(event);
+            return attachedMouseListener(event.clientX, event.clientY);
         }
 
         // Just a mouse moving over the (focused) canvas.
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(graph.camera().worldMatrix()),
+            event.clientX, event.clientY
+        );
         graph.mouseOver(mouseInWorld[0], mouseInWorld[1]);
     });
 
@@ -292,34 +330,41 @@ function parsegraph_Input(graph, camera)
         //event.preventDefault();
         graph.canvas().focus();
 
-        mouseX = event.clientX;
-        mouseY = event.clientY;
-
-        // Get the current mouse position, in world space.
         var mouseInWorld = matrixTransform2D(
             makeInverse3x3(camera.worldMatrix()),
-            mouseX, mouseY
+            event.clientX, event.clientY
         );
-        lastMouseX = mouseInWorld[0];
-        lastMouseY = mouseInWorld[1];
 
-        if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
+        if(graph.isCarouselShown()) {
+            graph.clickCarousel(mouseInWorld[0], mouseInWorld[1], true);
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
             return;
         }
-        else if(graph.clickWorld(mouseInWorld[0], mouseInWorld[1])) {
+
+        var selectedNode = graph.nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
+        if(selectedNode) {
+            if(selectedNode.type() == parsegraph_SLIDER) {
+                // A slider was clicked.
+                selectedSlider = selectedNode;
+                attachedMouseListener = sliderListener;
+                sliderListener(event.clientX, event.clientY);
+                return;
+            }
+
+            // A regular node was selected.
             mousedownTime = null;
+            selectedNode.click();
             return;
         }
 
-        if(event.shiftKey) {
-            attachedMouseListener = mouseScaleListener;
-        }
-        else {
-            attachedMouseListener = mouseoverListener;
-        }
+        // Dragging on the canvas.
+        attachedMouseListener = mouseDragListener;
 
         //console.log("Setting mousedown time");
         mousedownTime = Date.now();
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
 
         // This click is a second click following a recent click; it's a double-click.
         if(mouseupTimeout) {

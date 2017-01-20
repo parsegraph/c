@@ -13,6 +13,7 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
 
     this._type = newType;
     this._label = undefined;
+    this._value = null;
 
     this._layoutState = parsegraph_NEEDS_COMMIT;
 
@@ -547,6 +548,16 @@ parsegraph_Node.prototype.setType = function(newType)
 {
     this._type = newType;
     this.layoutWasChanged(parsegraph_INWARD);
+};
+
+parsegraph_Node.prototype.value = function()
+{
+    return this._value;
+};
+
+parsegraph_Node.prototype.setValue = function(newValue)
+{
+    this._value = newValue;
 };
 
 parsegraph_Node.prototype.typeAt = function(direction)

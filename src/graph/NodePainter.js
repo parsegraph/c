@@ -232,23 +232,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
-    var selectedColor = parsegraph_SELECTED_LINE_COLOR.premultiply(
-        this.backgroundColor()
-    );
-    var color = parsegraph_LINE_COLOR.premultiply(
-        this.backgroundColor()
-    );
-    if(node.isSelected()) {
-        painter.setBorderColor(selectedColor);
-        painter.setBackgroundColor(selectedColor);
-    }
-    else {
-        // Not selected.
-        painter.setBorderColor(color);
-        painter.setBackgroundColor(color);
-    }
-
-    var drawLine = function(x1, y1, x2, y2, thickness) {
+    var drawLine = function(x1, y1, x2, y2, thickness, color) {
         var cx = x1 + (x2 - x1) / 2;
         var cy = y1 + (y2 - y1) / 2;
 
@@ -267,6 +251,22 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
                 parsegraph_LINE_THICKNESS * userScale * node.absoluteScale() * thickness
             );
         }
+
+        if(color === undefined) {
+            if(node.isSelected()) {
+                color = parsegraph_SELECTED_LINE_COLOR.premultiply(
+                    style.backgroundColor
+                );
+            }
+            else {
+                color = parsegraph_LINE_COLOR.premultiply(
+                    style.backgroundColor
+                );
+            }
+        }
+
+        painter.setBorderColor(color);
+        painter.setBackgroundColor(color);
         painter.drawBlock(
             worldX + node.absoluteX() + cx,
             worldY + node.absoluteY() + cy,
@@ -299,78 +299,68 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         // Draw upward connecting line into the horizontal slider.
         break;
     }
-    this._blockPainter
 
     // Draw the first and last ticks.
 
     // If snapping, show the intermediate ticks.
 
-    // Draw the bud's selection.
-    if(node.isSelected()) {
-        painter.setBorderColor(
-            style.selectedBorderColor.premultiply(
-                this.backgroundColor()
-            )
-        );
-        painter.setBackgroundColor(
-            style.selectedBackgroundColor.premultiply(
-                this.backgroundColor()
-            )
-        );
+    if(parsegraph_isVerticalNodeDirection(node.parentDirection())) {
+        var value = node.value();
+        if(value == null) {
+            value = 0.5;
+        }
 
-        this._spotlightPainter.drawSpotlight(
-            worldX + node.absoluteX(),
+        var sliderWidth = userScale * node.absoluteSize().width();
+
+        if(node.isSelected()) {
+            painter.setBorderColor(
+                style.selectedBorderColor.premultiply(
+                    this.backgroundColor()
+                )
+            );
+            painter.setBackgroundColor(
+                style.selectedBackgroundColor.premultiply(
+                    this.backgroundColor()
+                )
+            );
+//            this._spotlightPainter.drawSpotlight(
+//                worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
+//                worldY + node.absoluteY(),
+//                2 * style.brightness * userScale * node.absoluteSize().height(),
+//                new parsegraph_Color(
+//                    style.selectedBorderColor.r(),
+//                    style.selectedBorderColor.g(),
+//                    style.selectedBorderColor.b(),
+//                    1
+//                )
+//            );
+        }
+        else {
+            painter.setBorderColor(
+                style.borderColor.premultiply(
+                    this.backgroundColor()
+                )
+            );
+            painter.setBackgroundColor(
+                style.backgroundColor.premultiply(
+                    this.backgroundColor()
+                )
+            );
+        }
+
+        // Draw the slider bud.
+        painter.drawBlock(
+            worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
             worldY + node.absoluteY(),
-            2 * style.brightness * Math.max(
-                userScale * node.absoluteSize().width(),
-                userScale * node.absoluteSize().height()
+            parsegraph_createSize(
+                userScale * node.absoluteSize().height()/1.5,
+                userScale * node.absoluteSize().height()/1.5
             ),
-            new parsegraph_Color(
-                style.selectedBorderColor.r(),
-                style.selectedBorderColor.g(),
-                style.selectedBorderColor.b(),
-                1
-            )
-            //
-            //new parsegraph_Color(0, 0, 0, .5)
-        );
-    } else {
-        painter.setBorderColor(
-            style.borderColor.premultiply(
-                this.backgroundColor()
-            )
-        );
-        painter.setBackgroundColor(
-            style.backgroundColor.premultiply(
-                this.backgroundColor()
-            )
-        );
-
-        this._spotlightPainter.drawSpotlight(
-            worldX + node.absoluteX() + node.absoluteSize().width()*0,
-            worldY + node.absoluteY() + node.absoluteSize().height()*.1,
-            2 * style.brightness * Math.max(
-                userScale * node.absoluteSize().width(),
-                userScale * node.absoluteSize().height()
-            ),
-            new parsegraph_Color(0, 0, 0, 1)
-            /*style.backgroundColor.premultiply(
-                this.backgroundColor()
-            )*/
+            style.borderRoundness/1.5,
+            style.borderThickness/1.5,
+            userScale * node.absoluteScale()
         );
     }
-    // Draw the slider bud.
-    painter.drawBlock(
-        worldX + node.absoluteX(),
-        worldY + node.absoluteY(),
-        parsegraph_createSize(
-            userScale * node.absoluteSize().height()/1.5,
-            userScale * node.absoluteSize().height()/1.5
-        ),
-        style.borderRoundness/1.5,
-        style.borderThickness/1.5,
-        userScale * node.absoluteScale()
-    );
 
     if(node.label() === undefined) {
         return;

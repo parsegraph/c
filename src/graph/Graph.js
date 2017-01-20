@@ -203,23 +203,6 @@ parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
 };
 
 /**
- * Receives a mouseDown event at the given coordinates, in world space.
- */
-parsegraph_Graph.prototype.clickWorld = function(x, y)
-{
-    var selectedNode = this.nodeUnderCoords(x, y);
-    if(!selectedNode) {
-        // No node found.
-        return false;
-    }
-
-    // A node was found; invoke the node's click listener.
-    selectedNode.click();
-
-    return true;
-};
-
-/**
  * Receives a mouseover event at the given coordinates, in world space.
  */
 parsegraph_Graph.prototype.mouseOver = function(x, y)
@@ -235,7 +218,11 @@ parsegraph_Graph.prototype.mouseOver = function(x, y)
         return null;
     }
 
-    if(selectedNode.hasClickListener() && !selectedNode.isSelected()) {
+    if(selectedNode.type() == parsegraph_SLIDER) {
+        selectedNode.setSelected(true);
+        this.scheduleRepaint();
+    }
+    else if(selectedNode.hasClickListener() && !selectedNode.isSelected()) {
         selectedNode.setSelected(true);
         this.scheduleRepaint();
     }
