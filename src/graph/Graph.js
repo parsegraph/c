@@ -153,23 +153,28 @@ parsegraph_Graph.prototype.removePlot = function(caret)
     return null;
 };
 
+/**
+ * Receives a click event on the carousel, in client coordinates.
+ */
 parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
 {
     if(!this.isCarouselShown()) {
         return false;
     }
-    // Refuse service if there is no node under cursor.
-    if(!this.nodeUnderCursor()) {
-        return false;
-    }
+
+    // Transform client coords to world coords.
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        x, y
+    );
+    x = mouseInWorld[0];
+    y = mouseInWorld[1];
 
     if(Math.sqrt(
-        Math.pow(Math.abs(x - this.nodeUnderCursor().absoluteX()), 2) +
-        Math.pow(Math.abs(y - this.nodeUnderCursor().absoluteY()), 2)
-    ) < Math.max(
-        this.nodeUnderCursor().absoluteSize().width(),
-        this.nodeUnderCursor().absoluteSize().height()
-    ) * .75) {
+        Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
+        Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
+    ) < this._carouselSize * .75
+    ) {
         if(asDown) {
             // Down events within the inner region are treated as 'cancel.'
             this.hideCarousel();
@@ -203,10 +208,17 @@ parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
 };
 
 /**
- * Receives a mouseover event at the given coordinates, in world space.
+ * Receives a mouseover event at the given coordinates, in client space.
  */
 parsegraph_Graph.prototype.mouseOver = function(x, y)
 {
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        x, y
+    );
+    x = mouseInWorld[0];
+    y = mouseInWorld[1];
+
     var selectedNode = this.nodeUnderCoords(x, y);
     if(this._nodeUnderCursor && this._nodeUnderCursor != selectedNode) {
         this._nodeUnderCursor.setSelected(false);
@@ -235,11 +247,22 @@ parsegraph_Graph.prototype.nodeUnderCursor = function()
     return this._nodeUnderCursor;
 };
 
+/**
+ * Receives a mouseover event on the carousel, in client coordinates.
+ */
 parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
 {
     if(!this.isCarouselShown()) {
         return false;
     }
+
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        x, y
+    );
+    x = mouseInWorld[0];
+    y = mouseInWorld[1];
+
     var angleSpan = 2 * Math.PI / this._carouselCarets.length;
     var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
     //var i = Math.floor(this._carouselCarets.length * mouseAngle / (2 * Math.PI));
@@ -251,6 +274,9 @@ parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
     return true;
 };
 
+/**
+ * Tests whether the given position, in world space, is within a node.
+ */
 parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
 {
     // Test if there is a node under the given coordinates.

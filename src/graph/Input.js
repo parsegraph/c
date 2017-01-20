@@ -18,11 +18,11 @@ function parsegraph_Input(graph, camera)
     // A map of event.key's to a true value.
     var keydowns = {};
 
-    parsegraph_addEventListener(graph.canvas(), "focus", function(event) {
+    parsegraph_addEventListener(graph.container(), "focus", function(event) {
         focused = true;
     });
 
-    parsegraph_addEventListener(graph.canvas(), "blur", function(event) {
+    parsegraph_addEventListener(graph.container(), "blur", function(event) {
         focused = false;
     });
 
@@ -185,6 +185,8 @@ function parsegraph_Input(graph, camera)
             }
         }
         graph.scheduleRepaint();
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
 
         return true;
     };
@@ -202,18 +204,12 @@ function parsegraph_Input(graph, camera)
                 "x":touch.clientX,
                 "y":touch.clientY
             });
-            touchX = touch.clientX;
-            touchY = touch.clientY;
+            lastMouseX = touch.clientX;
+            lastMouseY = touch.clientY;
 
             // Get the current mouse position, in world space.
             //alert(camera.worldMatrix());
-            var mouseInWorld = matrixTransform2D(
-                makeInverse3x3(camera.worldMatrix()),
-                touchX, touchY
-            );
-            if(graph.clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
-                lastMouseX = touchX;
-                lastMouseY = touchY;
+            if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
                 return;
             }
             var selectedNode = graph.nodeUnderCoords(lastMouseX, lastMouseY);
@@ -305,11 +301,10 @@ function parsegraph_Input(graph, camera)
 
     parsegraph_addEventListener(graph.canvas(), "mousemove", function(event) {
         if(graph.isCarouselShown()) {
-            var mouseInWorld = matrixTransform2D(
-                makeInverse3x3(graph.camera().worldMatrix()),
-                event.clientX, event.clientY
-            );
-            return graph.mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+
+            return graph.mouseOverCarousel(event.clientX, event.clientY);
         }
 
         // Moving during a mousedown i.e. dragging (or zooming)
@@ -318,30 +313,33 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
-        var mouseInWorld = matrixTransform2D(
-            makeInverse3x3(graph.camera().worldMatrix()),
-            event.clientX, event.clientY
-        );
-        graph.mouseOver(mouseInWorld[0], mouseInWorld[1]);
+        graph.mouseOver(event.clientX, event.clientY);
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
     });
 
     parsegraph_addEventListener(graph.canvas(), "mousedown", function(event) {
+        //console.log("Mousedown!");
         focused = true;
-        //event.preventDefault();
+        event.preventDefault();
         graph.canvas().focus();
+
+        if(graph.isCarouselShown()) {
+            //console.log("Clickcarousel");
+            graph.clickCarousel(event.clientX, event.clientY, true);
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+            // Carousel was hidden.
+            if(!graph.isCarouselShown()) {
+                graph.mouseOver(lastMouseX, lastMouseY);
+            }
+            return;
+        }
 
         var mouseInWorld = matrixTransform2D(
             makeInverse3x3(camera.worldMatrix()),
             event.clientX, event.clientY
         );
-
-        if(graph.isCarouselShown()) {
-            graph.clickCarousel(mouseInWorld[0], mouseInWorld[1], true);
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
-            return;
-        }
-
         var selectedNode = graph.nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
         if(selectedNode) {
             if(selectedNode.type() == parsegraph_SLIDER) {
@@ -355,6 +353,8 @@ function parsegraph_Input(graph, camera)
             // A regular node was selected.
             mousedownTime = null;
             selectedNode.click();
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
             return;
         }
 
@@ -401,6 +401,11 @@ function parsegraph_Input(graph, camera)
         if(!attachedMouseListener) {
             if(graph.clickCarousel(lastMouseX, lastMouseY, false)) {
                 // Mouseup affected carousel.
+
+                // Carousel was hidden.
+                if(!graph.isCarouselShown()) {
+                    graph.mouseOver(lastMouseX, lastMouseY);
+                }
                 return;
             }
             //console.log("No attached listeenr");
@@ -428,20 +433,28 @@ function parsegraph_Input(graph, camera)
     };
 
     parsegraph_addEventListener(document, "keydown", function(event) {
-        if(!focused) {
+        if(!focused && event.key != 'q') {
+            //console.log("Key event, but unfocused.");
             return;
         }
 
         if(keydowns[event.key]) {
             // Already processed.
+            //console.log("Key event, but already processed.");
             return;
         }
         keydowns[event.key] = new Date();
 
         switch(event.key) {
         case 'q':
+            //console.log("Q key for click pressed!");
             if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
                 // Mousedown affected carousel.
+
+                // Carousel was hidden.
+                if(!graph.isCarouselShown()) {
+                    graph.mouseOver(lastMouseX, lastMouseY);
+                }
                 return;
             }
             if(graph.nodeUnderCursor()) {
@@ -452,7 +465,7 @@ function parsegraph_Input(graph, camera)
     });
 
     parsegraph_addEventListener(document, "keyup", function(event) {
-        if(!focused) {
+        if(!focused && event.key != 'q') {
             return;
         }
 
@@ -466,7 +479,11 @@ function parsegraph_Input(graph, camera)
         case 'q':
             if(graph.clickCarousel(lastMouseX, lastMouseY, false)) {
                 // Keyup affected carousel.
-                break;
+
+                // Carousel was hidden.
+                if(!graph.isCarouselShown()) {
+                    graph.mouseOver(lastMouseX, lastMouseY);
+                }
             }
             break;
         }
