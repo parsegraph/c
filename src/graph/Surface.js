@@ -40,7 +40,7 @@ parsegraph_Surface.prototype.cancelRepaint = function()
 parsegraph_Surface.prototype.scheduleRepaint = function()
 {
     if(!this.canProject()) {
-        throw new Error("Refusing to schedule a repaint for an unprojectable surface.");
+        throw new Error("Refusing to schedule a repaint for an unprojectable surface. Use canProject() handle, and parent this surface's container to fix.");
     }
     this.scheduleRender();
     this._needsRepaint = true;
@@ -167,7 +167,7 @@ parsegraph_Surface.prototype.render = function()
 {
     if(!this.canProject()) {
         throw new Error(
-            "Refusing to render to an unprojectable surface. Use canProject() to handle."
+            "Refusing to render to an unprojectable surface. Use canProject() to handle, and parent this surface's container to fix."
         );
     }
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
