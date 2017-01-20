@@ -67,6 +67,7 @@ function init()
         GRAPH = graph;
 
         var COUNT = 25
+        main.appendChild(graph.container());
         //graph.plot(showCorporateStructure(graph));
         //graph.plot(buildPrimesDemo(graph, COUNT));
         //graph.plot(buildTextDemo(graph, COUNT, "繁"));
@@ -85,8 +86,6 @@ function init()
         graph.plot(showProportionTest(graph, COUNT));
 
         //graph.plot(showIPAddresses(graph));
-
-        main.appendChild(graph.container());
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {
