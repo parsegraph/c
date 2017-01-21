@@ -1,19 +1,15 @@
 parsegraph_SpotlightPainter_VertexShader =
 "uniform mat3 u_world;\n" +
-"uniform highp float u_time;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
 "attribute vec2 a_texCoord;\n" +
 "attribute vec4 a_color;\n" +
-"attribute highp float a_time;\n" +
-"attribute highp float a_elapsed;\n" +
 "\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
     "contentColor = a_color;" +
-    //"contentColor.a = 1.0 - (u_time - a_time)/a_elapsed;" +
     "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
     "texCoord = a_texCoord;" +
 "}";
@@ -71,28 +67,14 @@ function parsegraph_SpotlightPainter(gl)
     this._spotlightBuffer = parsegraph_createPagingBuffer(
         this._gl, this._program
     );
-    this._lastTime = null;
     this.a_position = this._spotlightBuffer.defineAttrib("a_position", 2);
     this.a_texCoord = this._spotlightBuffer.defineAttrib("a_texCoord", 2);
     this.a_color = this._spotlightBuffer.defineAttrib("a_color", 4);
-    this.a_time = this._spotlightBuffer.defineAttrib("a_time", 1);
-    this.a_elapsed = this._spotlightBuffer.defineAttrib("a_elapsed", 1);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
         this._program, "u_world"
     );
-    this.u_time = this._gl.getUniformLocation(
-        this._program, "u_time"
-    );
-};
-
-parsegraph_SpotlightPainter.prototype.hasSpotlights = function()
-{
-    if(this._lastTime == null) {
-        return false;
-    }
-    return parsegraph_getRuntimeInMillis()/1000 <= this._lastTime;
 };
 
 parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
@@ -122,22 +104,12 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
             color.b(),
             color.a()
         );
-        this._spotlightBuffer.appendData(
-            this.a_time,
-            parsegraph_getRuntimeInMillis()/1000
-        );
-        this._spotlightBuffer.appendData(
-            this.a_elapsed,
-            1.0
-        );
     }
-    this._lastTime = parsegraph_getRuntimeInMillis()/1000 + 1.0;
 };
 
 parsegraph_SpotlightPainter.prototype.clear = function()
 {
     this._spotlightBuffer.clear();
-    this._lastTime = null;
 };
 
 parsegraph_SpotlightPainter.prototype.render = function(world, scale)
@@ -150,10 +122,6 @@ parsegraph_SpotlightPainter.prototype.render = function(world, scale)
         this.u_world,
         false,
         world
-    );
-    this._gl.uniform1f(
-        this.u_time,
-        parsegraph_getRuntimeInMillis()/1000
     );
     this._spotlightBuffer.renderPages();
 };
