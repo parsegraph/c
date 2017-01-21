@@ -169,7 +169,6 @@ if(localStorage.getItem("alpha_graph") != null) {
 
 var textPainter = new parsegraph_TextPainter(surface.gl());
 
-textPainter._glyphAtlas.setAfterUpdate(surface.scheduleRender, surface);
 var textCamera = new parsegraph_Camera(surface);
 
 surface.addRenderer(function() {
