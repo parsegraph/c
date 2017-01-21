@@ -1,3 +1,7 @@
 #!/bin/bash
 
-watch 'make && make install && /bin/cp -u *.js www/* ~/public_html'
+TARGET=${*:-$HOME/public_html/parsegraph}
+
+mkdir -p $TARGET
+
+watch "make && make install && /bin/cp -vuf *.js www/* $TARGET"
