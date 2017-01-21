@@ -109,7 +109,7 @@ parsegraph_AllTests.addTest(parsegraph_FanPainter_Tests);
 parsegraph_FanPainter_Tests.addTest("parsegraph_FanPainter", function(resultDom) {
     var surface = new parsegraph_Surface();
     var painter = new parsegraph_FanPainter(surface.gl());
-    painter.selectDeg(0, 0, 0, 90);
+    painter.selectDeg(0, 0, 0, 90, new parsegraph_Color(0, 0, 0, 1), new parsegraph_Color(1, 0, 1, 1));
 });
 
 parsegraph_FanPainter.prototype.selectDeg = function(
