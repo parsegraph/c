@@ -561,7 +561,7 @@ alpha_Quaternion.prototype.DotProduct = function(other)
         rv += this[i] * other[i];
     }
     return rv;
-}
+};
 alpha_Quaternion.prototype.ScalarProduct = alpha_Quaternion.prototype.DotProduct;
 alpha_Quaternion.prototype.InnerProduct = alpha_Quaternion.prototype.DotProduct;
 
