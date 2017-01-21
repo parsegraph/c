@@ -524,11 +524,35 @@ alpha_Quaternion.prototype.FromAxisAndAngle = function()
 alpha_Quaternion_Tests.addTest("FromAxisAndAngle", function(resultDom) {
     var q = new alpha_Quaternion();
     var angle = Math.PI / 2;
+
     q.FromAxisAndAngle(0, 1, 0, angle);
-    if(!q.Equals(0, Math.PI / 2, 0, Math.PI / 2)) {
+    if(!q.Equals(
+        0, Math.sin(angle / 2), 0, Math.cos(angle / 2)
+    )) {
         return q.toString();
     }
-})
+
+    q.FromAxisAndAngle(0, 0, 1, angle);
+    if(!q.Equals(
+        0, 0, Math.sin(angle / 2), Math.cos(angle / 2)
+    )) {
+        return q.toString();
+    }
+
+    q.FromAxisAndAngle(1, 0, 0, angle);
+    if(!q.Equals(
+        Math.sin(angle / 2), 0, 0, Math.cos(angle / 2)
+    )) {
+        return q.toString();
+    }
+
+    q.FromAxisAndAngle(0, 0, 0, angle);
+    if(!q.Equals(
+        0, 0, 0, Math.cos(angle / 2)
+    )) {
+        return q.toString();
+    }
+});
 
 alpha_Quaternion.prototype.DotProduct = function(other)
 {
