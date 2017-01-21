@@ -12,6 +12,7 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     this._clickListener = null;
 
     this._type = newType;
+    this._style = parsegraph_style(this._type);
     this._label = undefined;
     this._value = null;
 
@@ -728,7 +729,13 @@ parsegraph_Node.prototype.setLabel = function(label)
 
 parsegraph_Node.prototype.blockStyle = function()
 {
-    return parsegraph_style(this.type());
+    return this._style;
+};
+
+parsegraph_Node.prototype.setBlockStyle = function(style)
+{
+    console.log("Block style set");
+    this._style = style;
 };
 
 parsegraph_Node.prototype.isSelectedAt = function(direction)

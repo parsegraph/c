@@ -17,6 +17,11 @@ function showProportionTest(graph, COUNT)
     var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
     var selectedNode;
 
+    var commandStyle = {};
+    commandStyle.prototype = parsegraph_style(parsegraph_BLOCK);
+    commandStyle.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
+    commandStyle.borderColor = new parsegraph_Color(1, 0, 0, 1);
+
     /**
      * Attaches commands at the current position.
      */
@@ -36,6 +41,8 @@ function showProportionTest(graph, COUNT)
             var i = 0;
             commands.forEach(function(command) {
                 var commandCaret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+
+                commandCaret.node().setBlockStyle(commandStyle);
                 commandCaret.label(command);
                 if(++i == 3) {
                     commandCaret.spawnMove('d', 's');
