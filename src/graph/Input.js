@@ -63,9 +63,6 @@ function parsegraph_Input(graph, camera)
      * The receiver of all graph canvas wheel events.
      */
     var onWheel = function(event) {
-        if(graph.isCarouselShown()) {
-            return;
-        }
         event.preventDefault();
 
         // Get the mouse coordinates, relative to bottom-left of the canvas.
