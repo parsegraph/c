@@ -126,6 +126,8 @@ function parsegraph_Input(graph, camera)
             }
             touchRecord.x = touch.clientX;
             touchRecord.y = touch.clientY;
+            lastMouseX = touch.clientX;
+            lastMouseY = touch.clientY;
         }
 
         if(monitoredTouches.length > 1) {
@@ -217,7 +219,7 @@ function parsegraph_Input(graph, camera)
                 if(selectedNode.type() == parsegraph_SLIDER) {
                     selectedSlider = selectedNode;
                     attachedMouseListener = sliderListener;
-                    sliderListener(touchX, touchY);
+                    sliderListener(lastMouseX, lastMouseY);
                     return;
                 }
 
@@ -270,6 +272,8 @@ function parsegraph_Input(graph, camera)
         if(touchstartTime != null && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS) {
             touchendTimeout = setTimeout(afterTouchTimeout, parsegraph_CLICK_DELAY_MILLIS);
         }
+
+        graph.clickCarousel(lastMouseX, lastMouseY, false);
 
         return true;
     };
