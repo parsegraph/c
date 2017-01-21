@@ -37,10 +37,18 @@ function getWholeChar(str, i) {
   return false;
 }
 
-function parsegraph_Token(type, text)
+/**
+ * Constructs a new token.
+ */
+function parsegraph_Token()
 {
-    this._type = type;
-    this._text = text;
+    this._type = arguments[0];
+    if(arguments.length > 1) {
+        this._text = arguments[1];
+    }
+    else {
+        this._text = null;
+    }
 }
 
 parsegraph_Token.prototype.type = function()
@@ -77,50 +85,68 @@ function parsegraph_nameTokenType(tokenType)
 {
     switch(tokenType) {
     case parsegraph_EOF:
-        return "End of file";
+        return "EOF";
     case parsegraph_NAME:
-        return "Name";
+        return "NAME";
     case parsegraph_COMMA:
-        return "Comma";
+        return "COMMA";
     case parsegraph_LBRACK:
-        return "Opening bracket";
+        return "LBRACK";
     case parsegraph_RBRACK:
-        return "Closing bracket";
+        return "RBRACK";
     case parsegraph_LPAREN:
-        return "Opening parenthesis";
+        return "LPAREN";
     case parsegraph_RPAREN:
-        return "Closing parenthesis";
+        return "RPAREN";
     case parsegraph_DIVIDE:
-        return "Divide";
+        return "DIVIDE";
     case parsegraph_SINGLE_QUOTE:
-        return "Single quote";
+        return "SINGLE_QUOTE";
     case parsegraph_DOUBLE_QUOTE:
-        return "Double quote";
+        return "DOUBLE_QUOTE";
     case parsegraph_BACK_QUOTE:
-        return "Backquote";
+        return "BACKQUOTE";
     case parsegraph_DOT:
-        return "Dot";
+        return "DOT";
     case parsegraph_ASSIGNMENT:
-        return "Assignment";
+        return "ASSIGNMENT";
     case parsegraph_EQUALS:
-        return "Equals";
+        return "EQUALS";
     case parsegraph_IDENTITY:
-        return "Identity";
+        return "IDENTITY";
     case parsegraph_NOT:
-        return "Not";
+        return "NOT";
     case parsegraph_NOT_EQUALS:
-        return "Not equals";
+        return "NOT_EQUALS";
     case parsegraph_NOT_IDENTICAL:
-        return "Not identical";
+        return "NOT_IDENTICAL";
     case parsegraph_INTEGER:
-        return "Integer";
+        return "INTEGER";
     }
     throw new Error("Unknown type " + tokenType);
 };
 
+parsegraph_Token.prototype.equals = function(other)
+{
+    if(!other) {
+        return false;
+    }
+    if(typeof other.type !== "function") {
+        return false;
+    }
+    if(typeof other.text !== "function") {
+        return false;
+    }
+    return this.type() == other.type() && this.text() == other.text();
+};
+
 parsegraph_Token.prototype.toString = function()
 {
-    return "<'" + this.text() + "', " + parsegraph_nameTokenType(this.type()) + ">";
+    var rv = parsegraph_nameTokenType(this.type());
+    if(this.text() !== null) {
+        rv += "=\"" + this.text() + "\"";
+    }
+    return rv;
 };
 
 // Based on 'Language Implementation Patterns' by Terence Parr
@@ -171,10 +197,8 @@ parsegraph_Lexer.prototype.match = function(candidate)
     }
 };
 
-function parse(str)
+function parsegraph_parse(str, callback, thisArg)
 {
-    console.log(str);
-
     var lexer = new parsegraph_Lexer(str);
     lexer.NAME = function() {
         var rv = "";
@@ -289,48 +313,48 @@ function parse(str)
                 continue;
             case ',':
                 this.consume();
-                return new parsegraph_Token(parsegraph_COMMA, ",");
+                return new parsegraph_Token(parsegraph_COMMA);
             case '.':
                 this.consume();
-                return new parsegraph_Token(parsegraph_DOT, ".");
+                return new parsegraph_Token(parsegraph_DOT);
             case '(':
                 this.consume();
-                return new parsegraph_Token(parsegraph_LPAREN, "(");
+                return new parsegraph_Token(parsegraph_LPAREN);
             case ')':
                 this.consume();
-                return new parsegraph_Token(parsegraph_RPAREN, ")");
+                return new parsegraph_Token(parsegraph_RPAREN);
             case '!':
                 this.consume();
                 if(this.c() == '=') {
                     this.consume();
                     if(this.c() == '=') {
                         // Identity
-                        return new parsegraph_Token(parsegraph_NOT_IDENTICAL, "!==");
+                        return new parsegraph_Token(parsegraph_NOT_IDENTICAL);
                     }
                     // Equality
-                    return new parsegraph_Token(parsegraph_NOT_EQUALS, "!=");
+                    return new parsegraph_Token(parsegraph_NOT_EQUALS);
                 }
                 // Assignment
-                return new parsegraph_Token(parsegraph_NOT, "!");
+                return new parsegraph_Token(parsegraph_NOT);
             case '=':
                 this.consume();
                 if(this.c() == '=') {
                     this.consume();
                     if(this.c() == '=') {
                         // Identity
-                        return new parsegraph_Token(parsegraph_IDENTITY, "===");
+                        return new parsegraph_Token(parsegraph_IDENTITY);
                     }
                     // Equality
-                    return new parsegraph_Token(parsegraph_EQUALS, "==");
+                    return new parsegraph_Token(parsegraph_EQUALS);
                 }
                 // Assignment
-                return new parsegraph_Token(parsegraph_ASSIGNMENT, "=");
+                return new parsegraph_Token(parsegraph_ASSIGNMENT);
             case '[':
                 this.consume();
-                return new parsegraph_Token(parsegraph_LBRACK, "[");
+                return new parsegraph_Token(parsegraph_LBRACK);
             case ']':
                 this.consume();
-                return new parsegraph_Token(parsegraph_RBRACK, "]");
+                return new parsegraph_Token(parsegraph_RBRACK);
             default:
                 if(this.c() == '-' || this.isDIGIT()) {
                     return this.NUMBER();
@@ -345,8 +369,16 @@ function parse(str)
         return new parsegraph_Token(parsegraph_EOF, "<EOF>");
     };
 
+    if(callback == undefined) {
+        var results = [];
+        for(var t = lexer.nextToken(); t.type() != parsegraph_EOF; t = lexer.nextToken()) {
+            results.push(t);
+        }
+        return results;
+    }
+
     for(var t = lexer.nextToken(); t.type() != parsegraph_EOF; t = lexer.nextToken()) {
-        console.log(t.toString());
+        callback.call(thisArg, t);
     }
 }
 
@@ -354,5 +386,41 @@ parsegraph_Parser_Tests = new parsegraph_TestSuite("parsegraph_Parser");
 parsegraph_AllTests.addTest(parsegraph_Parser_Tests);
 
 parsegraph_Parser_Tests.addTest("parsegraph_Parser", function(resultDom) {
-    parse("[AB, CD, [E, F], G] = (1, 2, 3)");
+    var assertEquals = function(given, expected) {
+        if(expected.length === 0) {
+            if(given.length !== 0) {
+                throw new Error("Expected no tokens, but received " + given.length + ".");
+            }
+            return;
+        }
+        if(given.length === 0) {
+            throw new Error("Given tokens must not be empty");
+        }
+        for(var i = 0; i < expected.length; ++i) {
+            if(i >= given.length) {
+                var remTokens = expected.length - given.length;
+                if(remTokens > 1) {
+                    throw new Error("Expected " + remTokens + " more tokens");
+                }
+                throw new Error("Expected " + expected[i].toString() + ", but parsed nothing.");
+            }
+            if(!given[i].equals(expected[i])) {
+                throw new Error("Expected " + expected[i].toString() + ", but parsed " + given[i].toString());
+            }
+        }
+    };
+
+    assertEquals(parsegraph_parse("[AB]"), [
+        new parsegraph_Token(parsegraph_LBRACK),
+        new parsegraph_Token(parsegraph_NAME, "AB"),
+        new parsegraph_Token(parsegraph_RBRACK)
+    ]);
+
+    assertEquals(parsegraph_parse("[AB, CD]"), [
+        new parsegraph_Token(parsegraph_LBRACK),
+        new parsegraph_Token(parsegraph_NAME, "AB"),
+        new parsegraph_Token(parsegraph_COMMA),
+        new parsegraph_Token(parsegraph_NAME, "CD"),
+        new parsegraph_Token(parsegraph_RBRACK)
+    ]);
 });
