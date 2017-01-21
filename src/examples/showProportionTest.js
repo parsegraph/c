@@ -17,10 +17,13 @@ function showProportionTest(graph, COUNT)
     var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
     var selectedNode;
 
-    var commandStyle = {};
-    commandStyle.prototype = parsegraph_style(parsegraph_BLOCK);
-    commandStyle.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
-    commandStyle.borderColor = new parsegraph_Color(1, 0, 0, 1);
+    var commandStyle = parsegraph_copyStyle(parsegraph_BLOCK);
+    commandStyle.backgroundColor = new parsegraph_Color(.4, 1, .4, 1);
+    commandStyle.borderColor = new parsegraph_Color(0, .5, 0, 1);
+
+    var commandItemStyle = parsegraph_copyStyle(parsegraph_BLOCK);
+    commandItemStyle.backgroundColor = new parsegraph_Color(1, 0, 0, 1);
+    commandItemStyle.borderColor = new parsegraph_Color(0, .5, 0, 1);
 
     /**
      * Attaches commands at the current position.
@@ -46,6 +49,7 @@ function showProportionTest(graph, COUNT)
                 commandCaret.label(command);
                 if(++i == 3) {
                     commandCaret.spawnMove('d', 's');
+                    commandCaret.node().setBlockStyle(commandItemStyle);
                     commandCaret.label(command);
                     commandCaret.move('u');
                 }

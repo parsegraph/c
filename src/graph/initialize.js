@@ -196,6 +196,18 @@ function parsegraph_initialize(mathMode) {
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;
 }
 
+function parsegraph_copyStyle(type)
+{
+    var rv = {};
+    var copiedStyle = parsegraph_style(type);
+
+    for(var styleName in copiedStyle) {
+        rv[styleName] = copiedStyle[styleName];
+    }
+
+    return rv;
+}
+
 function parsegraph_style(type)
 {
     type = parsegraph_readNodeType(type);
