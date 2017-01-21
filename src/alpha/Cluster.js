@@ -233,7 +233,7 @@ alpha_Cluster.prototype.CalculateVertices = function()
 alpha_Cluster.prototype.Draw = function(viewMatrix)
 {
     if(!this.facePainter) {
-        throw new Error("FacePainter must not be null. CalculateVertices was likely not called.");
+        this.CalculateVertices();
     }
     this.facePainter.Draw(viewMatrix);
 };
