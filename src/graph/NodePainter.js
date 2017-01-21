@@ -78,8 +78,6 @@ parsegraph_NodePainter.prototype.backgroundColor = function()
  */
 parsegraph_NodePainter.prototype.render = function(world, scale)
 {
-    this._textPainter._glyphAtlas.update();
-
     this._gl.disable(this._gl.CULL_FACE);
     this._gl.disable(this._gl.DEPTH_TEST);
 

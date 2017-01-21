@@ -60,7 +60,7 @@ function parsegraph_TextPainter(gl)
     this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
     this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
 
-    this._glyphTexture = this._gl.createTexture();
+    this._glyphTexture = null;
 
     // Always use an upscaled font.
     this._glyphAtlas = new parsegraph_GlyphAtlas(
@@ -321,10 +321,6 @@ parsegraph_TextPainter.prototype.drawText = function(text, x, y, fontSize, wrapW
         ++i;
         x += glyphData.width * fontScale;
     }
-
-    if(addedGlyphs) {
-        this._glyphAtlas.scheduleUpdate();
-    }
 };
 
 parsegraph_TextPainter.prototype.clear = function()
@@ -336,31 +332,37 @@ parsegraph_TextPainter.prototype.render = function(world, scale)
 {
     var gl = this._gl;
 
-    // Prepare texture.
-    this._gl.bindTexture(this._gl.TEXTURE_2D, this._glyphTexture);
-    this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, this._glyphAtlas.canvas());
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR_MIPMAP_LINEAR);
-    gl.generateMipmap(gl.TEXTURE_2D);
-
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_S, this._gl.CLAMP_TO_EDGE);
-    // Prevents t-coordinate wrapping (repeating).
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_T, this._gl.CLAMP_TO_EDGE);
+    if(this._glyphAtlas.needsUpdate()) {
+        this._glyphAtlas.update();
+        // Prepare texture.
+        if(!this._glyphTexture) {
+            this._glyphTexture = this._gl.createTexture();
+        }
+        gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+        console.log("Creating texture");
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphAtlas.canvas());
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // Prevents t-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
 
     // Load program.
     this._gl.useProgram(
         this._textProgram
     );
 
-    this._gl.activeTexture(this._gl.TEXTURE0);
-    this._gl.bindTexture(this._gl.TEXTURE_2D, this._glyphTexture);
-    this._gl.uniform1i(this.u_glyphTexture, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+    gl.uniform1i(this.u_glyphTexture, 0);
 
-    this._gl.uniform1f(this.u_scale, scale);
+    gl.uniform1f(this.u_scale, scale);
     //console.log("u_scale: " + scale);
 
     // Render text.
-    this._gl.uniformMatrix3fv(
+    gl.uniformMatrix3fv(
         this.u_world,
         false,
         world
