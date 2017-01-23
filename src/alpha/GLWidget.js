@@ -1,3 +1,7 @@
+// TODO Blocks in foreground are rendered improperly relative to the projection matrix.
+
+// TODO Mouse input appears to be... strangely interpreted.
+
 // test version 1.0
 function alpha_GLWidget()
 {
@@ -27,12 +31,13 @@ function alpha_GLWidget()
     this.input = new alpha_Input(this);
     this.input.SetMouseSensitivity(.4);
 
+    // Set the field of view.
     this.camera.SetFovX(60);
     // this.camera.SetProperFOV(2,2);
-    this.camera.SetNearDistance(.01);
+
+    // Set the camera's near and far distance.
     this.camera.SetFarDistance(150);
     this.camera.SetNearDistance(1);
-    this.camera.SetPosition(0,0,0);
 
     this.paintingDirty = true;
 
@@ -259,6 +264,7 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
         this._done = false;
     }
 
+    /*
     var ymin;
     for(var i = 0; i < this.swarm.length; ++i) {
         var v = this.swarm[i];
@@ -273,6 +279,7 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
             v.ChangePosition(0, -.2 ,0);
         }
     }
+    */
 
     this.orbit.Rotate(-.01, 0, 1, 0);
     //console.log(this.offsetPlatformPhysical.position.toString());
@@ -439,7 +446,7 @@ alpha_GLWidget.prototype.render = function()
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
-    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    //this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
     //console.log("this.camera.GetViewMatrix() * projection:\n" + viewMatrix.toString());
     //console.log(this.camera.GetViewMatrix().toString());
@@ -461,7 +468,7 @@ alpha_GLWidget.prototype.render = function()
     this.evPlatformCluster.Draw(platformMatrix);
 
 
-    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    //this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
 
     this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));

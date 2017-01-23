@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+.parsegraph_Surface {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: #eee;
+}
+
+body > div {
+    text-align: center;
+    position: absolute;
+}
+
+.Successful {
+    color: green;
+}
+
+.Crashed {
+    color: maroon;
+}
+
+.Failed {
+    color: red;
+}
+
+@media only screen and (max-width: 980px) {
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script src="parsegraph-examples-1.0.js"></script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function(event) {
+
+var surface = new parsegraph_Surface();
+
+var frameElapsed = 0;
+surface.addRenderer(function() {
+    // Start timing.
+    frameElapsed = parsegraph_getTimeInMillis();
+});
+
+var widget;
+widget = new alpha_GLWidget(surface);
+
+var textPainter = new parsegraph_TextPainter(surface.gl());
+var textCamera = new parsegraph_Camera(surface);
+
+surface.addRenderer(function() {
+    var gl = surface.gl();
+
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(
+        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
+    );
+    textPainter.clear();
+    textPainter.setColor(1, 1, 1);
+
+    textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
+    textPainter.setColor(1, .5, .5);
+    textPainter.setFontSize(20);
+    //textPainter.drawText("x=" + graph.camera().x(), 8, 4 + textPainter.fontSize());
+    //textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
+    //textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
+    var world = textCamera.project();
+    textPainter.render(world);
+});
+
+var speed=.6;
+widget:setCameraPosition(0, 0, 550);
+var total = 0;
+local function Position(elapsed)
+	total = total + (elapsed*speed);
+	widget:setCameraRotation(0, 0, 0);
+end;
+Position(0);
+Undoer(Timing.Every(Position));
+
+local startX, startY;
+widget:connect("mousePressed", function(button, x, y)
+	startX = x;
+	startY = y;
+	print(button);
+end);
+
+widget:connect("mouseMoved", function(x, y)
+	local deltaX = x - startX;
+	local deltaY = y - startY;
+	startX = x;
+	startY = y;
+	local cameraX, cameraY, cameraZ = widget:getCameraPosition();
+	cameraX = cameraX + (deltaX / 2);
+	cameraY = cameraY - (deltaY / 2)
+	widget:setCameraPosition(cameraX, cameraY, cameraZ);
+end);
+
+widget:connect("keyPressed", function(key)
+	print(key);
+end);
+
+rotq = 0
+widget:setRenderer(function()
+	local max = 15;
+	for i=1, max do
+		for j=1, max do
+			for k=1, max do
+				if k % 2 == 0 and j % 2 == 0 and i % 2 == 0 then
+					cv = getVerts(5,5,5);
+					glPushMatrix();
+	
+					glEnable(GL_DEPTH_TEST);
+					--glDisable(GL_MULTISAMPLE);
+					--It appears the small gaps between the cubes are due to smoothing and multisampling.  Initial tests seem to indicate smoothing and multisampling aren't enabled in rainbackGL.
+					--Vertex Buffer Objects are where its at.  Though storing 6 floats for xyz / rgb values seems expensive...can we cut down on it? 
+					glRotate(rotq*k/10, 0, 1, 1);
+					glRotate(rotq*i/15, 1, 0, 0);
+					glRotate(rotq*j/10, 1, 0, 1);
+					glTranslate(10*i, 10*j, 10*k);
+					glBegin(GL_QUADS);
+					--Front, COLOR
+					glColor(1, 1, 0);
+					glVertex(cv[1]);
+					glVertex(cv[2]);
+					glVertex(cv[3]);
+					glVertex(cv[4]);
+
+					--Left
+					glColor(1,0,1);
+					glVertex(cv[9]);
+					glVertex(cv[10]);
+					glVertex(cv[11]);
+					glVertex(cv[12]);	
+
+					--Right
+					glColor(0,0,1);
+					glVertex(cv[13]);
+					glVertex(cv[14]);
+					glVertex(cv[15]);
+					glVertex(cv[16]);
+					--Top
+					glColor(1,0,0);
+					glVertex(cv[17]);
+					glVertex(cv[18]);
+					glVertex(cv[19]);
+					glVertex(cv[20]);
+					--Bottom
+					glColor(0,1,0);
+					glVertex(cv[21]);
+					glVertex(cv[22]);
+					glVertex(cv[23]);
+					glVertex(cv[24]);
+					--Back
+					glColor(0,1,1);
+					glVertex(cv[5]);
+					glVertex(cv[6]);
+					glVertex(cv[7]);
+					glVertex(cv[8]);
+					glEnd();
+					glPopMatrix();
+					end;
+				end;
+			end;
+
+		--Not really necessary, but just constraining the value of this so it doesn't get massive when running in the background.
+		if rotq == 360 then 
+			rotq = 0;
+		end
+		rotq = rotq + 0.1;
+	end;
+end);
+
+// This flag is used to squelch rendering if that function
+// threw an exception and failed to complete.
+var tick = function() {
+    // Set the render flag.
+    surface.render();
+
+    tickIntervalId = requestAnimationFrame(tick);
+}; // Tick
+tickIntervalId = requestAnimationFrame(tick);
+
+document.body.appendChild(surface.container());
+
+}); // DOMContentLoaded
+</script>
+</head>
+<body>

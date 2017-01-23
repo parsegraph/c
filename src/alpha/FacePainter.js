@@ -144,4 +144,3 @@ alpha_FacePainter.prototype.Draw = function(viewMatrix)
     );
     this.faceBuffer.renderPages();
 };
-

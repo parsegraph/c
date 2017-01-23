@@ -487,12 +487,18 @@ alpha_Quaternion.prototype.ToAxisAndAngle = function()
     return [new alpha_Vector(x, y, z), angle];
 };
 
+/**
+ * Creates a new quaternion that is <angle> radians around the given unit vector axis.
+ */
 function alpha_QuaternionFromAxisAndAngle()
 {
     var quat = new alpha_Quaternion(0, 0, 0, 1);
     return quat.FromAxisAndAngle.apply(quat, arguments);
 }
 
+/**
+ * Sets this quaternion to <angle> radians around the given unit vector axis.
+ */
 alpha_Quaternion.prototype.FromAxisAndAngle = function()
 {
     var x, y, z, angle;

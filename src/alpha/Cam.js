@@ -507,7 +507,7 @@ alpha_Camera.prototype.ChangeOffset = function(x, y, z)
         z = x[2];
         x = x[0];
     }
-    this.SetOffset(this.position.Added(x, y, z));
+    this.SetOffset(this.offset.Added(x, y, z));
 }
 
 // ------------------------------------------

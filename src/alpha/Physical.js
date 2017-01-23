@@ -74,6 +74,15 @@ function alpha_Physical(parent)
     this.SetParent(parent);
 }
 
+// Register the test suite.
+alpha_Physical_Tests = new parsegraph_TestSuite("alpha_Physical");
+parsegraph_AllTests.addTest(alpha_Physical_Tests);
+
+alpha_Physical_Tests.addTest("alpha_Physical", function(resultDom) {
+    var surface = new alpha_GLWidget();
+    var orb = new alpha_Physical();
+});
+
 //-----------------------------------
 //---------- Rotation ---------------
 //-----------------------------------
@@ -223,6 +232,9 @@ alpha_Physical.prototype.Warp = function()
         x = arguments[0][0];
         y = arguments[0][1];
         z = arguments[0][2];
+    }
+    if(x == 0 && y == 0 && z == 0) {
+        return;
     }
 
     // Quaternions don't work correctly if they aren't normalized
@@ -426,7 +438,6 @@ alpha_Physical.prototype.GetModelMatrix = function()
     x = this.velocity[0];
     y = this.velocity[1];
     z = this.velocity[2];
-
     if(x != 0 || y != 0 || z != 0) {
         this.ApplyVelocity();
     }
@@ -493,17 +504,19 @@ alpha_Physical.prototype.GetModelMatrix = function()
 // it starts with a simple camera:CalculateViewMatrices();
 // I will return to this.
 
-alpha_Physical.prototype.GetViewMatrix = function(requestor)
+alpha_Physical.prototype.GetViewMatrix = function()
 {
-    var parent = this.parent;
     // if this was just called then we need to set who sent it
-    if(!requestor) {
+    var requestor;
+    if(arguments.length == 0) {
         requestor = this;
     }
+    else {
+        requestor = arguments[0];
+    }
 
-    if(parent && parent != requestor) {
-        var ancestors = parent.GetViewMatrix(requestor);
-        this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors);
+    if(this.parent && this.parent != requestor) {
+        this.viewMatrix = this.GetModelMatrix().Multiplied(this.parent.GetViewMatrix(requestor));
         return this.viewMatrix;
     }
     else {
@@ -544,3 +557,4 @@ alpha_Physical.prototype.GetWorldOrientation = function(requestor)
     }
     return self.orientation;
 };
+

@@ -18,6 +18,34 @@ function parsegraph_Input(graph, camera)
     // A map of event.key's to a true value.
     var keydowns = {};
 
+    var checkForNodeClick = function(clientX, clientY) {
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(this._camera.worldMatrix()),
+            clientX, clientY
+        );
+        var selectedNode = graph.nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
+        if(!selectedNode) {
+            return null;
+        }
+
+        // Check if the selected node was a slider.
+        if(selectedNode.type() == parsegraph_SLIDER) {
+            selectedSlider = selectedNode;
+            attachedMouseListener = sliderListener;
+            sliderListener(clientX, clientY);
+            return selectedNode;
+        }
+
+        // Check if the selected node has a click listener.
+        if(selectedNode.hasClickListener()) {
+            selectedNode.click();
+            return selectedNode;
+        }
+
+        // A node was clicked, but nothing to be done.
+        return null;
+    };
+
     parsegraph_addEventListener(graph.container(), "focus", function(event) {
         focused = true;
     });
@@ -211,17 +239,10 @@ function parsegraph_Input(graph, camera)
             if(graph.clickCarousel(lastMouseX, lastMouseY, true)) {
                 return;
             }
-            var selectedNode = graph.nodeUnderCoords(lastMouseX, lastMouseY);
-            if(selectedNode) {
-                if(selectedNode.type() == parsegraph_SLIDER) {
-                    selectedSlider = selectedNode;
-                    attachedMouseListener = sliderListener;
-                    sliderListener(lastMouseX, lastMouseY);
-                    return;
-                }
 
+            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
+                // A significant node was clicked.
                 touchstartTime = null;
-                selectedNode.click();
                 return;
             }
 
@@ -319,17 +340,18 @@ function parsegraph_Input(graph, camera)
         lastMouseY = event.clientY;
     });
 
-    parsegraph_addEventListener(graph.canvas(), "mousedown", function(event) {
+    parsegraph_addEventMethod(graph.canvas(), "mousedown", function(event) {
         //console.log("Mousedown!");
         focused = true;
         event.preventDefault();
         graph.canvas().focus();
 
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+
         if(graph.isCarouselShown()) {
             //console.log("Clickcarousel");
             graph.clickCarousel(event.clientX, event.clientY, true);
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
             // Carousel was hidden.
             if(!graph.isCarouselShown()) {
                 graph.mouseOver(lastMouseX, lastMouseY);
@@ -337,25 +359,9 @@ function parsegraph_Input(graph, camera)
             return;
         }
 
-        var mouseInWorld = matrixTransform2D(
-            makeInverse3x3(camera.worldMatrix()),
-            event.clientX, event.clientY
-        );
-        var selectedNode = graph.nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
-        if(selectedNode) {
-            if(selectedNode.type() == parsegraph_SLIDER) {
-                // A slider was clicked.
-                selectedSlider = selectedNode;
-                attachedMouseListener = sliderListener;
-                sliderListener(event.clientX, event.clientY);
-                return;
-            }
-
-            // A regular node was selected.
+        if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
+            // A significant node was clicked.
             mousedownTime = null;
-            selectedNode.click();
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
             return;
         }
 
@@ -364,8 +370,6 @@ function parsegraph_Input(graph, camera)
 
         //console.log("Setting mousedown time");
         mousedownTime = Date.now();
-        lastMouseX = event.clientX;
-        lastMouseY = event.clientY;
 
         // This click is a second click following a recent click; it's a double-click.
         if(mouseupTimeout) {
@@ -373,7 +377,7 @@ function parsegraph_Input(graph, camera)
             mouseupTimeout = null;
             isDoubleClick = true;
         }
-    });
+    }, this);
 
     var isDoubleClick = false;
     var mouseupTimeout = 0;
