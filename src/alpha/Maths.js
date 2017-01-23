@@ -647,17 +647,22 @@ alpha_Quaternion.prototype.RotatedVector = function()
 };
 
 // this is a decently optimized version; about twice as slow as version 1
-alpha_Quaternion.prototype.RotatedVector2 = function(x, y, z)
+alpha_Quaternion.prototype.RotatedVector2 = function()
 {
-    if(!z) {
-        // {x,y,z}
-        x = x[0];
-        y = x[1];
-        z = x[2];
+    var x, y, z;
+    if(arguments.length > 1) {
+        x = arguments[0];
+        y = arguments[1];
+        z = arguments[2];
+    }
+    else {
+        x = arguments[0][0];
+        y = arguments[0][1];
+        z = arguments[0][2];
     }
     var conjugate = this.Conjugate();
     var v = new alpha_Quaternion(x, y, z, 0);
-    var r = this.Multiplied(v).Multiply(confugate);
+    var r = this.Multiplied(v).Multiply(conjugate);
     return new alpha_Vector(r[0], r[1], r[2]);
 };
 
