@@ -86,11 +86,19 @@ surface.addRenderer(function() {
     textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
     textPainter.setColor(1, .5, .5);
     textPainter.setFontSize(20);
-    textPainter.drawText("position=" + widget.camera.position.toString(), 8, 4 + textPainter.fontSize());
-    textPainter.drawText("orientation=" + widget.camera.orientation.toString(), 8, 4 + 2 * textPainter.fontSize());
-    textPainter.drawText("offset=" + widget.camera.offset.toString(), 8, 4 + 3 * textPainter.fontSize());
-    //textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
-    //textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
+
+    var drawMultiline = function(x, y, text) {
+        var lines = text.split("\n");
+        for(var i = 0; i < lines.length; ++i) {
+            var line = lines[i];
+            textPainter.drawText(line, x, y + (1 + i) * textPainter.fontSize());
+        }
+    };
+
+    var t = "";
+    t += "position=" + widget.camera.position.toString() + "\n";
+    t += "orientation=" + widget.camera.orientation.toString();
+    drawMultiline(8, 4, t);
     var world = textCamera.project();
     textPainter.render(world);
 });
