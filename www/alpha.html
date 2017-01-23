@@ -66,107 +66,6 @@ surface.addRenderer(function() {
 var widget;
 widget = new alpha_GLWidget(surface);
 
-var graph = new parsegraph_Graph(surface);
-
-var caret = new parsegraph_Caret(graph, 'b');
-
-var clickChild = function() {
-    // Spawn a reasonable child in an allowed direction.
-    var child;
-
-    var dirs;
-    switch(this.type()) {
-    case parsegraph_BLOCK:
-    dirs = [
-        parsegraph_FORWARD,
-        parsegraph_DOWNWARD,
-        parsegraph_UPWARD,
-        parsegraph_BACKWARD,
-        parsegraph_INWARD
-    ];
-    break;
-    case parsegraph_SLOT:
-    if(this.parentDirection() && this.parentDirection() != parsegraph_OUTWARD) {
-        dirs = [
-            parsegraph_reverseNodeDirection(this.parentDirection()),
-            parsegraph_FORWARD,
-            parsegraph_BACKWARD,
-            parsegraph_UPWARD,
-            parsegraph_DOWNWARD,
-            parsegraph_INWARD
-        ];
-    }
-    else {
-        dirs = [
-            parsegraph_FORWARD,
-            parsegraph_BACKWARD,
-            parsegraph_UPWARD,
-            parsegraph_DOWNWARD,
-            parsegraph_INWARD
-        ];
-    }
-    break;
-    case parsegraph_BUD:
-    dirs = [
-        parsegraph_DOWNWARD,
-        parsegraph_FORWARD,
-        parsegraph_BACKWARD,
-        parsegraph_UPWARD
-    ];
-    break;
-    }
-
-    for(var i in dirs) {
-        var dir = dirs[i];
-        if(this.hasNode(dir)) {
-            continue;
-        }
-        if(this.type() == parsegraph_BUD && dir == parsegraph_INWARD) {
-            continue;
-        }
-        var t = parsegraph_BLOCK;
-        switch(this.type()) {
-        case parsegraph_BLOCK:
-            t = dir == parsegraph_INWARD ? parsegraph_SLOT : parsegraph_BUD;
-            break;
-        case parsegraph_SLOT:
-            t = dir == parsegraph_INWARD ? parsegraph_BLOCK : parsegraph_SLOT;
-            break;
-        case parsegraph_BUD:
-            t = parsegraph_BLOCK;
-            break;
-        }
-        child = this.spawnNode(dir, t);
-        if(dir == parsegraph_INWARD) {
-            child.setScale(parsegraph_SHRINK_SCALE);
-        }
-        break;
-    }
-
-    // Was a new child created?
-    if(!child) {
-        // Totally occupied; nothing can be done.
-        this.setSelected(!this.isSelected());
-    }
-    else {
-        // Set up the child.
-        child.setClickListener(clickChild);
-    }
-    graph.scheduleRepaint();
-};
-caret.onClick(clickChild);
-
-graph.plot(caret);
-
-if(localStorage.getItem("alpha_graph") != null) {
-    try {
-        var alpha_graph = JSON.parse(localStorage.getItem("alpha_graph"));
-        graph.camera().restore(alpha_graph);
-    } catch(e) {
-        console.log("Failed to parse alpha_graph saved state.\n" + e);
-    }
-}
-
 var textPainter = new parsegraph_TextPainter(surface.gl());
 
 var textCamera = new parsegraph_Camera(surface);
@@ -184,20 +83,16 @@ surface.addRenderer(function() {
     textPainter.clear();
     textPainter.setColor(1, 1, 1);
 
-
-
     textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
     textPainter.setColor(1, .5, .5);
     textPainter.setFontSize(20);
-    textPainter.drawText("x=" + graph.camera().x(), 8, 4 + textPainter.fontSize());
-    textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
-    textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
+    textPainter.drawText("position=" + widget.camera.position.toString(), 8, 4 + textPainter.fontSize());
+    textPainter.drawText("orientation=" + widget.camera.orientation.toString(), 8, 4 + 2 * textPainter.fontSize());
+    textPainter.drawText("offset=" + widget.camera.offset.toString(), 8, 4 + 3 * textPainter.fontSize());
+    //textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
+    //textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
     var world = textCamera.project();
     textPainter.render(world);
-});
-
-surface.addRenderer(function() {
-    localStorage.setItem("alpha_graph", JSON.stringify(graph.camera().toJSON()));
 });
 
 // This flag is used to squelch rendering if that function
@@ -228,7 +123,6 @@ var tick = function() {
 tickIntervalId = requestAnimationFrame(tick);
 
 document.body.appendChild(surface.container());
-graph.scheduleRepaint();
 
 }); // DOMContentLoaded
 </script>
