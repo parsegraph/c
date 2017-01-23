@@ -668,7 +668,7 @@ alpha_Quaternion.prototype.RotatedVector2 = function()
 
 alpha_Quaternion.prototype.toString = function()
 {
-    return "{x: " + this[0] + " y: " + this[1] + " z: " + this[2] + " w: " + this[3] + "}";
+    return "{x: " + this[0] + "\ny: " + this[1] + "\nz: " + this[2] + "\nw: " + this[3] + "}";
 };
 
 alpha_Quaternion.prototype.AngleBetween = function(other)
