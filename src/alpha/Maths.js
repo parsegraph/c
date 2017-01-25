@@ -489,6 +489,8 @@ alpha_Quaternion.prototype.ToAxisAndAngle = function()
 
 /**
  * Creates a new quaternion that is <angle> radians around the given unit vector axis.
+ *
+ * var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
  */
 function alpha_QuaternionFromAxisAndAngle()
 {
@@ -498,6 +500,8 @@ function alpha_QuaternionFromAxisAndAngle()
 
 /**
  * Sets this quaternion to <angle> radians around the given unit vector axis.
+ *
+ * q.FromAxisAndAngle(x, y, z, angle);
  */
 alpha_Quaternion.prototype.FromAxisAndAngle = function()
 {
@@ -685,6 +689,15 @@ alpha_Quaternion.prototype.AngleBetween = function(other)
 //----------------------------------------------
 //----------------------------------------------
 
+/**
+ * Constructs a Matrix.
+ *
+    // using quaternions for a Vector4
+    var r1 = new alpha_Quaternion(this[0], this[1], this[2], this[3]);
+    var r2 = new alpha_Quaternion(this[4], this[5], this[6], this[7]);
+    var r3 = new alpha_Quaternion(this[8], this[9], this[10], this[11]);
+    var r4 = new alpha_Quaternion(this[12], this[13], this[14], this[15]);
+*/
 function alpha_Matrix()
 {
     this.length = 16;
@@ -782,6 +795,40 @@ alpha_Matrix.prototype.Multiply = function(other)
         r4.DotProduct(c1), r4.DotProduct(c2), r4.DotProduct(c3), r4.DotProduct(c4)
     );
 }
+
+alpha_Matrix.prototype.Transform = function()
+{
+    var x, y, z, w;
+    if(arguments.length == 1) {
+        x = arguments[0][0];
+        y = arguments[0][1];
+        z = arguments[0][2];
+        w = arguments[0][3];
+        if(w === undefined) {
+            w = 1.0;
+        }
+    }
+    else {
+        x = arguments[0];
+        y = arguments[1];
+        z = arguments[2];
+        w = arguments[3];
+    }
+    if(w === undefined) {
+        return new alpha_Vector(
+            this[0] * x + this[1] * y + this[2] * z + this[3],
+            this[4] * x + this[5] * y + this[6] * z + this[7],
+            this[8] * x + this[9] * y + this[10] * z + this[11]
+        );
+    }
+
+    return new alpha_Quaternion(
+        this[0] * x + this[1] * y + this[2] * z + this[3] * w,
+        this[4] * x + this[5] * y + this[6] * z + this[7] * w,
+        this[8] * x + this[9] * y + this[10] * z + this[11] * w,
+        this[12] * x + this[13] * y + this[14] * z + this[15] * w
+    );
+};
 
 alpha_Matrix.prototype.Multiplied = function()
 {

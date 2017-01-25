@@ -228,7 +228,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
 
             var thisNumIndices = bufferData.length / attrib.numComponents;
             if(Math.round(thisNumIndices) != thisNumIndices) {
-                throw new Error("Odd number of indices for attrib " + attrib.name);
+                throw new Error("Odd number of indices for attrib " + attrib.name + ". Wanted " + Math.round(thisNumIndices) + ", but got " + thisNumIndices);
             }
             if(numIndices == undefined) {
                 numIndices = thisNumIndices;

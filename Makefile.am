@@ -74,6 +74,7 @@ parsegraph_SCRIPT_FILES = \
 	src/alpha/BlockIDs.js \
 	src/alpha/CubeMan.js \
 	src/alpha/GLWidget.js \
+	src/alpha/WeetPainter.js \
 	src/Parser.js \
 	src/user.js \
 	src/graph/Camera.js \

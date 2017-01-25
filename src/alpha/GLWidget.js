@@ -264,7 +264,6 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
         this._done = false;
     }
 
-    /*
     var ymin;
     for(var i = 0; i < this.swarm.length; ++i) {
         var v = this.swarm[i];
@@ -279,7 +278,6 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
             v.ChangePosition(0, -.2 ,0);
         }
     }
-    */
 
     this.orbit.Rotate(-.01, 0, 1, 0);
     //console.log(this.offsetPlatformPhysical.position.toString());

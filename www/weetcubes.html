@@ -51,55 +51,122 @@ body > div input {
 <script src="parsegraph-examples-1.0.js"></script>
 <script>
 
-document.addEventListener("DOMContentLoaded", function(event) {
+function alpha_WeetCubeWidget()
+{
+    var surface;
+    if(arguments.length === 0) {
+        surface = new parsegraph_Surface();
+    }
+    else {
+        surface = arguments[0];
+    }
+    this.surface = surface;
 
-var surface = new parsegraph_Surface();
+    this.surface.addPainter(this.paint, this);
+    this.surface.addRenderer(this.render, this);
 
-var frameElapsed = 0;
-surface.addRenderer(function() {
-    // Start timing.
-    frameElapsed = parsegraph_getTimeInMillis();
-});
+    this.cubePainter = null;
+    this.rotq = 0;
+}
 
-var widget;
-widget = new alpha_GLWidget(surface);
+alpha_WeetCubeWidget.prototype.paint = function()
+{
+    if(!this.cubePainter) {
+        this.cubePainter = new alpha_WeetPainter(this.surface.gl());
+    }
+    else {
+        this.cubePainter.Clear();
+    }
 
-var textPainter = new parsegraph_TextPainter(surface.gl());
-var textCamera = new parsegraph_Camera(surface);
+    var rotq = this.rotq;
+    var max = 5;
 
-surface.addRenderer(function() {
-    var gl = surface.gl();
+    var cubeSize = 10;
+    for(var i = 0; i < max; ++i) {
+        for(var j = 0; j < max; ++j) {
+            for(var k = 0; k < max; ++k) {
+                if(k % 2 != 0 || j % 2 != 0 || i % 2 != 0) {
+                    continue;
+                }
 
+                var m = new alpha_Matrix();
+                m.Rotate(alpha_QuaternionFromAxisAndAngle(
+                    0, 1, 1, rotq*k/10
+                ));
+                m.Rotate(alpha_QuaternionFromAxisAndAngle(
+                    1, 0, 0, rotq*i/15
+                ));
+                m.Rotate(alpha_QuaternionFromAxisAndAngle(
+                    1, 0, 1, rotq*j/10
+                ));
+                m.Translate(20*cubeSize*i, 20*cubeSize*j, 20*cubeSize*k);
+                this.cubePainter.Cube(m, cubeSize);
+            }
+        }
+
+        // Not really necessary, but just constraining the value of this so it
+        // doesn't get massive when running in the background.
+        if(rotq >= 360) {
+            rotq = 0;
+        }
+        rotq = rotq + 0.1;
+    }
+
+    this.rotq = rotq;
+};
+
+alpha_WeetCubeWidget.prototype.render = function()
+{
+    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+    // Lookup the size the browser is displaying the canvas.
+    var displayWidth = this.surface.container().clientWidth;
+    var displayHeight = this.surface.container().clientHeight;
+
+    if(displayWidth == 0 || displayHeight == 0) {
+        //console.log("No projection available.");
+        return;
+    }
+
+    // Check if the canvas is not the same size.
+    if(
+        this.surface.canvas().width != displayWidth
+        || this.surface.canvas().height != displayHeight
+    ) {
+        // Make the canvas the same size
+        this.surface.canvas().width = displayWidth;
+        this.surface.canvas().height = displayHeight;
+
+        // Set the viewport to match
+        this.surface.gl().viewport(
+            0, 0, this.surface.canvas().width, this.surface.canvas().height
+        );
+    }
+
+    this.width = this.surface.canvas().width;
+    this.height = this.surface.canvas().height;
+
+    var gl = this.surface.gl();
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
 
-    gl.enable(gl.BLEND);
-    gl.blendFunc(
-        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
-    );
-    textPainter.clear();
-    textPainter.setColor(1, 1, 1);
+    var projection = new alpha_Matrix(makePerspective(
+        Math.PI * 60 / 180,
+        this.width / this.height,
+        1,
+        100
+    ));
+    this.cubePainter.Draw(projection);
+};
 
-    textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
-    textPainter.setColor(1, .5, .5);
-    textPainter.setFontSize(20);
-    //textPainter.drawText("x=" + graph.camera().x(), 8, 4 + textPainter.fontSize());
-    //textPainter.drawText("y=" + graph.camera().y(), 8, 4 + 2 * textPainter.fontSize());
-    //textPainter.drawText("scale=" + graph.camera().scale(), 8, 4 + 3 * textPainter.fontSize());
-    var world = textCamera.project();
-    textPainter.render(world);
-});
+document.addEventListener("DOMContentLoaded", function(event) {
 
-var speed=.6;
-widget:setCameraPosition(0, 0, 550);
-var total = 0;
-local function Position(elapsed)
-	total = total + (elapsed*speed);
-	widget:setCameraRotation(0, 0, 0);
-end;
-Position(0);
-Undoer(Timing.Every(Position));
+parsegraph_initialize();
 
+var surface = new parsegraph_Surface();
+
+var widget = new alpha_WeetCubeWidget(surface);
+
+/*
 local startX, startY;
 widget:connect("mousePressed", function(button, x, y)
 	startX = x;
@@ -121,87 +188,29 @@ end);
 widget:connect("keyPressed", function(key)
 	print(key);
 end);
-
-rotq = 0
-widget:setRenderer(function()
-	local max = 15;
-	for i=1, max do
-		for j=1, max do
-			for k=1, max do
-				if k % 2 == 0 and j % 2 == 0 and i % 2 == 0 then
-					cv = getVerts(5,5,5);
-					glPushMatrix();
-	
-					glEnable(GL_DEPTH_TEST);
-					--glDisable(GL_MULTISAMPLE);
-					--It appears the small gaps between the cubes are due to smoothing and multisampling.  Initial tests seem to indicate smoothing and multisampling aren't enabled in rainbackGL.
-					--Vertex Buffer Objects are where its at.  Though storing 6 floats for xyz / rgb values seems expensive...can we cut down on it? 
-					glRotate(rotq*k/10, 0, 1, 1);
-					glRotate(rotq*i/15, 1, 0, 0);
-					glRotate(rotq*j/10, 1, 0, 1);
-					glTranslate(10*i, 10*j, 10*k);
-					glBegin(GL_QUADS);
-					--Front, COLOR
-					glColor(1, 1, 0);
-					glVertex(cv[1]);
-					glVertex(cv[2]);
-					glVertex(cv[3]);
-					glVertex(cv[4]);
-
-					--Left
-					glColor(1,0,1);
-					glVertex(cv[9]);
-					glVertex(cv[10]);
-					glVertex(cv[11]);
-					glVertex(cv[12]);	
-
-					--Right
-					glColor(0,0,1);
-					glVertex(cv[13]);
-					glVertex(cv[14]);
-					glVertex(cv[15]);
-					glVertex(cv[16]);
-					--Top
-					glColor(1,0,0);
-					glVertex(cv[17]);
-					glVertex(cv[18]);
-					glVertex(cv[19]);
-					glVertex(cv[20]);
-					--Bottom
-					glColor(0,1,0);
-					glVertex(cv[21]);
-					glVertex(cv[22]);
-					glVertex(cv[23]);
-					glVertex(cv[24]);
-					--Back
-					glColor(0,1,1);
-					glVertex(cv[5]);
-					glVertex(cv[6]);
-					glVertex(cv[7]);
-					glVertex(cv[8]);
-					glEnd();
-					glPopMatrix();
-					end;
-				end;
-			end;
-
-		--Not really necessary, but just constraining the value of this so it doesn't get massive when running in the background.
-		if rotq == 360 then 
-			rotq = 0;
-		end
-		rotq = rotq + 0.1;
-	end;
-end);
+*/
 
 // This flag is used to squelch rendering if that function
 // threw an exception and failed to complete.
-var tick = function() {
+var speed=.6;
+//surface.camera.setCameraPosition(0, 0, 550);
+var tick = function(t) {
     // Set the render flag.
+    surface.paint();
     surface.render();
 
-    tickIntervalId = requestAnimationFrame(tick);
+/*var total = 0;
+local function Position(elapsed)
+	total = total + (elapsed*speed);
+	widget:setCameraRotation(0, 0, 0);
+end;
+Position(0);
+Undoer(Timing.Every(Position));
+*/
+
+    tickIntervalId = window.setTimeout(tick, 50);
 }; // Tick
-tickIntervalId = requestAnimationFrame(tick);
+tickIntervalId = window.setTimeout(tick, 50);
 
 document.body.appendChild(surface.container());
 
