@@ -769,10 +769,10 @@ alpha_Matrix.prototype.Multiply = function(other)
     var r3 = new alpha_Quaternion(this[8], this[9], this[10], this[11]);
     var r4 = new alpha_Quaternion(this[12], this[13], this[14], this[15]);
 
-    var c1 = new alpha_Quaternion(other[0], other[1], other[2], other[3]);
-    var c2 = new alpha_Quaternion(other[4], other[5], other[6], other[7]);
-    var c3 = new alpha_Quaternion(other[8], other[9], other[10], other[11]);
-    var c4 = new alpha_Quaternion(other[12], other[13], other[14], other[15]);
+    var c1 = new alpha_Quaternion(other[0], other[4], other[8], other[12]);
+    var c2 = new alpha_Quaternion(other[1], other[5], other[9], other[13]);
+    var c3 = new alpha_Quaternion(other[2], other[6], other[10], other[14]);
+    var c4 = new alpha_Quaternion(other[3], other[7], other[11], other[15]);
 
     var dot = alpha_Quaternion.DotProduct;
     return this.Set(
