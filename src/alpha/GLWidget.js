@@ -420,7 +420,7 @@ alpha_GLWidget.prototype.printOnce = function(bind)
 
     // print(player)
 
-    // print(alpha_MatrixFromQuaternionAtVector(playerB.orientation, playerB.position ));
+    // print(alpha_RMatrix4FromQuaternionAtVector(playerB.orientation, playerB.position ));
 
     // print( playerB.GetPosition() )
     // print( translation )

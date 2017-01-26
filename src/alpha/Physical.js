@@ -64,8 +64,8 @@ function alpha_Physical(parent)
 {
     this.orientation = new alpha_Quaternion();
     this.position = new alpha_Vector();
-    this.modelMatrix = new alpha_Matrix();
-    this.viewMatrix = new alpha_Matrix();
+    this.modelMatrix = new alpha_RMatrix4();
+    this.viewMatrix = new alpha_RMatrix4();
     this.modelDirty = false; // whether or not the matrix needs to be updated;
     this.velocity = new alpha_Vector();
     this.rotationSpeed = new alpha_Vector(1, 1, 1);
@@ -526,7 +526,7 @@ alpha_Physical.prototype.GetViewMatrix = function()
 
 alpha_Physical.prototype.GetWorldPositionByViewMatrix = function()
 {
-    return new alpha_Matrix([
+    return new alpha_RMatrix4([
         1,0,0,0,
         0,1,0,0,
         0,0,1,0,

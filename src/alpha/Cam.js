@@ -45,10 +45,10 @@ function alpha_Camera(surface)
     this.height = null;
 
     this.projectionDirty = true; // dirty until you call UpdateProjection();
-    this.projectionMatrix = new alpha_Matrix();
+    this.projectionMatrix = new alpha_RMatrix4();
     this.modelDirty = true;
-    this.modelMatrix = new alpha_Matrix();
-    this.viewMatrix = new alpha_Matrix();
+    this.modelMatrix = new alpha_RMatrix4();
+    this.viewMatrix = new alpha_RMatrix4();
 
     this.pitch = 0; // a check value
     this.rotationSpeed = [1, 1];
