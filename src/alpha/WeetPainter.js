@@ -8,9 +8,7 @@ alpha_WeetPainter_VertexShader =
 "varying highp vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
-    "gl_Position = u_world * vec4((u_model * a_position).xyz, 1.0);" +
-    "gl_Position /= gl_Position.w;" +
-    "gl_Position.w = 1.0;" +
+    "gl_Position = u_world * u_model * a_position;" +
     "contentColor = a_color;" +
 "}";
 
@@ -146,27 +144,27 @@ alpha_WeetPainter.prototype.PaintCube = function()
         drawVert.call(this, c1);
         drawVert.call(this, c2);
         drawVert.call(this, c3);
-        //drawVert.call(this, c1);
-        //drawVert.call(this, c3);
-        //drawVert.call(this, c4);
+        drawVert.call(this, c1);
+        drawVert.call(this, c3);
+        drawVert.call(this, c4);
         for(var i = 0; i < 6; ++i) {
             this.faceBuffer.appendData(this.a_color, color);
-            this.faceBuffer.appendData(this.a_color, i / 6); // alpha
+            this.faceBuffer.appendData(this.a_color, 1);
         }
     };
 
     // Front, COLOR
     drawFace.call(this, cv[0], cv[1], cv[2], cv[3], new alpha_Color(1, 1, 0));
     // Left
-    //drawFace.call(this, cv[8], cv[9], cv[10], cv[11], new alpha_Color(1, 0, 1));
+    drawFace.call(this, cv[8], cv[9], cv[10], cv[11], new alpha_Color(1, 0, 1));
     // Right
-    //drawFace.call(this, cv[12], cv[13], cv[14], cv[15], new alpha_Color(0, 0, 1));
+    drawFace.call(this, cv[12], cv[13], cv[14], cv[15], new alpha_Color(0, 0, 1));
     // Top
-    //drawFace.call(this, cv[16], cv[17], cv[18], cv[19], new alpha_Color(1, 0, 0));
+    drawFace.call(this, cv[16], cv[17], cv[18], cv[19], new alpha_Color(1, 0, 0));
     // Bottom
-    //drawFace.call(this, cv[20], cv[21], cv[22], cv[23], new alpha_Color(0, 1, 0));
+    drawFace.call(this, cv[20], cv[21], cv[22], cv[23], new alpha_Color(0, 1, 0));
     // Back
-    //drawFace.call(this, cv[4], cv[5], cv[6], cv[7], new alpha_Color(0, 1, 1));
+    drawFace.call(this, cv[4], cv[5], cv[6], cv[7], new alpha_Color(0, 1, 1));
 };
 
 alpha_WeetPainter.prototype.Cube = function(m)
@@ -200,7 +198,7 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
         this.gl.uniformMatrix4fv(
             this.u_model,
             false,
-            m.toArray()
+            m.GetModelMatrix().toArray()
         );
         this.faceBuffer.renderPages();
     }, this);

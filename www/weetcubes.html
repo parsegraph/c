@@ -61,8 +61,15 @@ function alpha_WeetCubeWidget()
         surface = arguments[0];
     }
     this.surface = surface;
-    this.origin = new alpha_Vector();
-    this.rotation = 0;
+
+    this.camera = new alpha_Camera(surface);
+    this.camera.SetFovX(60);
+    this.camera.SetFarDistance(1000);
+    this.camera.SetNearDistance(.1);
+    this.camera.SetPosition(-1, -1, -550);
+
+    this.input = new alpha_Input(surface, this.camera);
+    this.input.SetMouseSensitivity(.4);
 
     this.surface.addPainter(this.paint, this);
     this.surface.addRenderer(this.render, this);
@@ -76,6 +83,9 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
     if(elapsed === undefined || Number.isNaN(elapsed)) {
         throw new Error("elapsed must be provided.");
     }
+
+    this.input.Update(elapsed);
+
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
     }
@@ -84,7 +94,7 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
     }
 
     var rotq = this.rotq;
-    var max = 1;
+    var max = 25;
 
     for(var i = 0; i < max; ++i) {
         for(var j = 0; j < max; ++j) {
@@ -93,18 +103,15 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
                     continue;
                 }
 
-                var m = new alpha_RMatrix4();
-                m.Translate(20*i, 20*j, 20*k);
-                m.Rotate(alpha_QuaternionFromAxisAndAngle(
-                    0, 1, 1, rotq*k/10
-                ));
-                m.Rotate(alpha_QuaternionFromAxisAndAngle(
-                    1, 0, 0, rotq*i/15
-                ));
-                m.Rotate(alpha_QuaternionFromAxisAndAngle(
-                    1, 0, 1, rotq*j/10
-                ));
-                this.cubePainter.Cube(m);
+                var m = new alpha_Physical(this.camera);
+
+                var c = new alpha_Physical(this.camera);
+                c.Rotate(rotq*k/10, 0, 1, 1);
+                c.Rotate(rotq*i/15, 1, 0, 0);
+                c.Rotate(rotq*j/10, 1, 0, 1);
+                c.SetPosition(10*i, 10*j, 10*k);
+                c.SetScale(5, 5, 5);
+                this.cubePainter.Cube(c);
             }
         }
 
@@ -113,62 +120,17 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
         if(rotq >= 360) {
             rotq = 0;
         }
-        //rotq = rotq + 0.01 * elapsed;
+        rotq = rotq + 0.1 * elapsed;
     }
 
     this.rotq = rotq;
 };
 
-alpha_WeetCubeWidget.prototype.setOrigin = function()
-{
-    this.origin.Set.apply(this.origin, arguments);
-};
-
 alpha_WeetCubeWidget.prototype.render = function()
 {
-    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    // Lookup the size the browser is displaying the canvas.
-    var displayWidth = this.surface.container().clientWidth;
-    var displayHeight = this.surface.container().clientHeight;
-
-    if(displayWidth == 0 || displayHeight == 0) {
-        //console.log("No projection available.");
-        return;
-    }
-
-    // Check if the canvas is not the same size.
-    if(
-        this.surface.canvas().width != displayWidth
-        || this.surface.canvas().height != displayHeight
-    ) {
-        // Make the canvas the same size
-        this.surface.canvas().width = displayWidth;
-        this.surface.canvas().height = displayHeight;
-
-        // Set the viewport to match
-        this.surface.gl().viewport(
-            0, 0, this.surface.canvas().width, this.surface.canvas().height
-        );
-    }
-
-    this.width = this.surface.canvas().width;
-    this.height = this.surface.canvas().height;
-
-    var gl = this.surface.gl();
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-
-    var projection = new alpha_RMatrix4(makePerspective(
-        Math.PI * 60 / 180,
-        this.width / this.height,
-        .1,
-        10000
-    ));
-    var view = new alpha_RMatrix4();
-    view.Rotate(alpha_QuaternionFromAxisAndAngle(1, 0, 1, this.rotation * Math.PI));
-    view.Translate(this.origin);
-    view.Inverse();
-    this.cubePainter.Draw(projection.Multiplied(view).Transpose());
+    var projection = this.camera.UpdateProjection();
+    var viewMatrix = this.camera.GetViewMatrix().Multiplied(projection);
+    this.cubePainter.Draw(viewMatrix);
 };
 
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -178,10 +140,17 @@ parsegraph_initialize();
 var surface = new parsegraph_Surface();
 document.body.appendChild(surface.container());
 
+surface.addRenderer(function() {
+    var gl = surface.gl();
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+});
+
 var widget = new alpha_WeetCubeWidget(surface);
 
 surface.addRenderer(function() {
-    surface.gl().clear(surface.gl().DEPTH_BUFFER_BIT);
+    var gl = surface.gl();
+    gl.clear(gl.DEPTH_BUFFER_BIT);
 });
 
 var graph = new parsegraph_Graph(surface);
@@ -210,30 +179,6 @@ rotSlider.setValue(0);
 
 graph.plot(caret);
 
-/*
-local startX, startY;
-widget:connect("mousePressed", function(button, x, y)
-	startX = x;
-	startY = y;
-	print(button);
-end);
-
-widget:connect("mouseMoved", function(x, y)
-	local deltaX = x - startX;
-	local deltaY = y - startY;
-	startX = x;
-	startY = y;
-	local cameraX, cameraY, cameraZ = widget:getCameraPosition();
-	cameraX = cameraX + (deltaX / 2);
-	cameraY = cameraY - (deltaY / 2)
-	widget:setCameraPosition(cameraX, cameraY, cameraZ);
-end);
-
-widget:connect("keyPressed", function(key)
-	print(key);
-end);
-*/
-
 // This flag is used to squelch rendering if that function
 // threw an exception and failed to complete.
 var speed=.6;
@@ -244,26 +189,12 @@ var tick = function(t) {
     var t = alpha_GetTime();
     surface.paint(t - start);
     start = t;
-    widget.setOrigin(
-        xSlider.value(),
-        ySlider.value(),
-        40 * zSlider.value()
-    );
-    widget.rotation = (Math.PI / 2 + rotSlider.value() * 2 * Math.PI);
     surface.render();
 
-/*var total = 0;
-local function Position(elapsed)
-	total = total + (elapsed*speed);
-	widget:setCameraRotation(0, 0, 0);
-end;
-Position(0);
-Undoer(Timing.Every(Position));
-*/
-
-    tickIntervalId = window.setTimeout(tick, 50);
-}; // Tick
-tickIntervalId = window.setTimeout(tick, 50);
+    // Reschedule.
+    tickIntervalId = requestAnimationFrame(tick)
+};
+tickIntervalId = requestAnimationFrame(tick);
 
 graph.scheduleRepaint();
 
