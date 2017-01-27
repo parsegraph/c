@@ -28,9 +28,6 @@ function alpha_GLWidget()
 
     this.camera = new alpha_Camera(this);
 
-    this.input = new alpha_Input(this);
-    this.input.SetMouseSensitivity(.4);
-
     // Set the field of view.
     this.camera.SetFovX(60);
     // this.camera.SetProperFOV(2,2);
@@ -42,6 +39,9 @@ function alpha_GLWidget()
     this.paintingDirty = true;
 
 //this.camera.PitchDown(40 * Math.PI / 180);
+
+    this.input = new alpha_Input(this, this.camera);
+    this.input.SetMouseSensitivity(.4);
 
     this._done = false;
 
@@ -205,64 +205,7 @@ alpha_GLWidget.prototype.paint = function()
 alpha_GLWidget.prototype.Tick = function(elapsed)
 {
     this.time += elapsed;
-
-    if(this.input.Get("Shift") > 0) {
-        elapsed = elapsed * 10;
-    }
-
-    if(this.input.Get("Shift") > 0) {
-        elapsed = elapsed / 10;
-    }
-
-    //console.log("LeftMouseButton: " + this.input.Get("LeftMouseButton"));
-    //console.log("MouseLeft: " + this.input.MouseLeft() * elapsed);
-    //console.log("MouseLeft: " + (this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed));
-    //console.log("LeftMouse: " + this.input.Get("LeftMouseButton"));
-    //console.log("TurnLeft: " + this.input.MouseLeft() * elapsed);
-    this.camera.TurnLeft(
-        this.input.Get("LeftMouseButton") * this.input.MouseLeft() * elapsed
-    );
-    this.camera.TurnRight(
-        this.input.Get("LeftMouseButton") * this.input.MouseRight() * elapsed
-    );
-    this.camera.PitchUp(
-        this.input.Get("LeftMouseButton") * this.input.MouseUp() * elapsed
-    );
-    this.camera.PitchDown(
-        this.input.Get("LeftMouseButton") * this.input.MouseDown() * elapsed
-    );
-    this.camera.MoveForward(this.input.MouseWheelDegreesUp() * elapsed);
-    this.camera.MoveBackward(this.input.MouseWheelDegreesDown() * elapsed);
-    this.camera.ZoomIn(this.input.Get("y"), elapsed);
-    this.camera.ZoomOut(this.input.Get("h"), elapsed);
-
-
-
-    this.camera.GetParent().MoveForward( this.input.Get("w") * elapsed );
-    this.camera.GetParent().MoveBackward( this.input.Get("s") * elapsed );
-    this.camera.GetParent().MoveLeft( this.input.Get("a") * elapsed );
-    this.camera.GetParent().MoveRight( this.input.Get("d") * elapsed );
-    this.camera.GetParent().MoveUp( this.input.Get(" ") * elapsed );
-    this.camera.GetParent().MoveDown( this.input.Get("Shift") * elapsed );
-
-
-    this.camera.GetParent().YawLeft( this.input.Get("j") * elapsed );
-    this.camera.GetParent().YawRight( this.input.Get("l") * elapsed );
-    this.camera.GetParent().PitchUp( this.input.Get("k") * elapsed );
-    this.camera.GetParent().PitchDown( this.input.Get("i") * elapsed );
-    this.camera.GetParent().RollLeft( this.input.Get("u") * elapsed );
-    this.camera.GetParent().RollRight(this.input.Get("o") * elapsed );
-
-
-    if(this.input.Get("RightMouseButton") > 0) {
-        if(!this._done) {
-            this.camera.AlignParentToMy(false, true);
-            this._done = true;
-        }
-    }
-    else {
-        this._done = false;
-    }
+    this.input.Update(elapsed);
 
     var ymin;
     for(var i = 0; i < this.swarm.length; ++i) {
@@ -285,8 +228,6 @@ alpha_GLWidget.prototype.Tick = function(elapsed)
     this.offsetPlatformPhysical.YawLeft(.1 * Math.PI / 180);
     //console.log(this.offsetPlatformPhysical.position.toString());
 
-    this.printOnce(this.input.Get("Enter"));
-    this.input.Update();
     //console.log("Cam: " + this.camera.GetOrientation());
 };
 
@@ -349,88 +290,6 @@ alpha_GLWidget.prototype.container = function()
     return this._container;
 };
 
-alpha_GLWidget.prototype.connect = function(eventName, callback, thisArg)
-{
-    var widget = this;
-    switch(eventName) {
-    case "keyPressed": {
-        return parsegraph_addEventListener(document, "keydown", function(event) {
-            //console.log(event.key);
-            callback.call(thisArg, event.key);
-        });
-        break;
-    }
-    case "keyReleased": {
-        return parsegraph_addEventListener(document, "keyup", function(event) {
-            callback.call(thisArg, event.key);
-        });
-        break;
-    }
-    case "mousePressed": {
-        return parsegraph_addEventListener(this.canvas(), "mousedown", function(event) {
-            callback.call(thisArg, event.button, event.clientX, event.clientY);
-        });
-        break;
-    }
-    case "mouseReleased": {
-        return [
-            parsegraph_addEventListener(this.canvas(), "mouseup", function(event) {
-                callback.call(thisArg, event.button, event.clientX, event.clientY);
-            }),
-            parsegraph_addEventListener(this.canvas(), "mouseout", function(event) {
-                callback.call(thisArg, event.button, event.clientX, event.clientY);
-            })
-        ];
-        break;
-    }
-    case "mouseMoved": {
-        return parsegraph_addEventListener(this.canvas(), "mousemove", function(event) {
-            callback.call(thisArg, event.clientX, event.clientY);
-        });
-        break;
-    }
-    case "mouseWheelMoved": {
-        var onWheel = function(event) {
-            event.preventDefault();
-            var wheel = normalizeWheel(event);
-            callback.call(thisArg, wheel);
-        };
-        parsegraph_addEventListener(widget.canvas(), "DOMMouseScroll", onWheel, false);
-        parsegraph_addEventListener(widget.canvas(), "mousewheel", onWheel, false);
-        break;
-    }
-    default: {
-        throw new Error("Unhandled eventName: " + eventName);
-    }
-    }
-};
-
-alpha_GLWidget.prototype.printOnce = function(bind)
-{
-    if(bind == 0) {
-        this._done = false;
-        return
-    }
-    if(this._done) {
-        return;
-    }
-    this._done = true;
-
-    this.playerAPhysical.SetScale(2,2,2);
-
-    // print(player)
-
-    // print(alpha_RMatrix4FromQuaternionAtVector(playerB.orientation, playerB.position ));
-
-    // print( playerB.GetPosition() )
-    // print( translation )
-    // print( player.Multiplied(rotation.Inverse()) ); -- works;
-    // print( player.Multiplied((cam.Multiplied(player)).Inverse()).Multiplied(rotation.Inverse()) );
-
-    // print( rotation * translation * (cam * player):Inverse() )
-    // print( player * cam )
-};
-
 /**
  * Render painted memory buffers.
  */
@@ -473,10 +332,3 @@ alpha_GLWidget.prototype.render = function()
 
     this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
 };
-
-var alpha_startTime = new Date();
-function alpha_GetTime()
-{
-    return (new Date().getTime() - alpha_startTime.getTime()) / 1000;
-};
-

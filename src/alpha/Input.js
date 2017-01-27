@@ -30,12 +30,13 @@
 	done = true;
 */
 
-function alpha_Input(glwidget)
+function alpha_Input(surface, camera)
 {
     this.SetMouseSensitivityX(.005);
     this.SetMouseSensitivityY(.005);
 
-    this.glwidget = glwidget;
+    this.surface = surface;
+    this.camera = camera;
     this.startX = 0;
     this.endX = 0;
     this.startY = 0;
@@ -44,16 +45,17 @@ function alpha_Input(glwidget)
     this.mouseWheelDown = 0;
     this.grabbed = null;
 
-    glwidget.connect("keyPressed", function(keyName) {
-        this[keyName] = 1;
+    parsegraph_addEventMethod(document, "keydown", function(event) {
+        this[event.key] = 1;
     }, this);
-
-    glwidget.connect("keyReleased", function(keyName) {
-        this[keyName] = null;
+    parsegraph_addEventMethod(document, "keyup", function(event) {
+        this[event.key] = null;
     }, this);
-
-    glwidget.connect("mousePressed", function(button, x,y) {
-        button = this.GetButtonName(button);
+    parsegraph_addEventMethod(surface.canvas(), "mousedown", function(event) {
+        var button, x, y;
+        button = event.button;
+        x = event.clientX;
+        y = event.clientY;
         this[button] = 1;
 
         // reset for a new drag
@@ -63,50 +65,48 @@ function alpha_Input(glwidget)
         this.endY = y;
     }, this);
 
-    glwidget.connect("mouseReleased", function(button, x,y) {
-        button = this.GetButtonName(button);
+    parsegraph_addEventMethod(surface.canvas(), "mouseup", function(event) {
+        var button, x, y;
+        button = event.button;
+        x = event.clientX;
+        y = event.clientY;
         this[button] = null;
+
         // new end point;
         this.endX = x;
         this.endY = y;
     }, this);
 
-    glwidget.connect("mouseMoved", function( x, y) {
+    parsegraph_addEventMethod(surface.canvas(), "mousemove", function(event) {
+        var x, y;
+        x = event.clientX;
+        y = event.clientY;
         this.endX = x;
         this.endY = y;
     }, this);
 
-    glwidget.connect("mouseWheelMoved", function(delta) {
-        if(delta > 0) {
-            this.mouseWheelUp = this.mouseWheelUp + delta;
+    var onWheel = function(event) {
+        event.preventDefault();
+        var wheel = normalizeWheel(event);
+
+        if(wheel > 0) {
+            this.mouseWheelUp = this.mouseWheelUp + wheel;
         }
-        else if(delta < 0) {
+        else if(wheel < 0) {
             // keeping it positive!
-            this.mouseWheelDown = this.mouseWheelDown - delta;
+            this.mouseWheelDown = this.mouseWheelDown - wheel;
         }
         else {
             // I have no idea how I got here
         }
-    }, this);
+    };
+    parsegraph_addEventListener(surface.canvas(), "DOMMouseScroll", onWheel, false);
+    parsegraph_addEventListener(surface.canvas(), "mousewheel", onWheel, false);
 };
 
 alpha_Input.prototype.Get = function(key)
 {
     return this[key] ? 1 : 0;
-};
-
-alpha_Input.prototype.GetButtonName = function(button)
-{
-    if(button == 0) {
-        return "LeftMouseButton";
-    }
-    if(button == 2) {
-        return "RightMouseButton";
-    }
-    if(button == 1) {
-        return "MiddleMouseButton";
-    }
-    return button;
 };
 
 alpha_Input.prototype.SetMouseSensitivityX = function(sensitivity)
@@ -206,45 +206,67 @@ alpha_Input.prototype.MouseWheelDegreesDown = function()
 /**
  * Sets the start to the end, and clears mousewheel totals.
  */
-alpha_Input.prototype.Update = function()
+alpha_Input.prototype.Update = function(elapsed)
 {
+    if(this.Get("Shift") > 0) {
+        elapsed = elapsed * 10;
+    }
+
+    if(this.Get("Shift") > 0) {
+        elapsed = elapsed / 10;
+    }
+
+    //console.log("LeftMouseButton: " + this.Get("LeftMouseButton"));
+    //console.log("MouseLeft: " + this.MouseLeft() * elapsed);
+    //console.log("MouseLeft: " + (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
+    //console.log("LeftMouse: " + this.Get("LeftMouseButton"));
+    //console.log("TurnLeft: " + this.MouseLeft() * elapsed);
+    this.camera.TurnLeft(
+        this.Get("LeftMouseButton") * this.MouseLeft() * elapsed
+    );
+    this.camera.TurnRight(
+        this.Get("LeftMouseButton") * this.MouseRight() * elapsed
+    );
+    this.camera.PitchUp(
+        this.Get("LeftMouseButton") * this.MouseUp() * elapsed
+    );
+    this.camera.PitchDown(
+        this.Get("LeftMouseButton") * this.MouseDown() * elapsed
+    );
+    this.camera.MoveForward(this.MouseWheelDegreesUp() * elapsed);
+    this.camera.MoveBackward(this.MouseWheelDegreesDown() * elapsed);
+    this.camera.ZoomIn(this.Get("y"), elapsed);
+    this.camera.ZoomOut(this.Get("h"), elapsed);
+
+
+
+    this.camera.GetParent().MoveForward( this.Get("w") * elapsed );
+    this.camera.GetParent().MoveBackward( this.Get("s") * elapsed );
+    this.camera.GetParent().MoveLeft( this.Get("a") * elapsed );
+    this.camera.GetParent().MoveRight( this.Get("d") * elapsed );
+    this.camera.GetParent().MoveUp( this.Get(" ") * elapsed );
+    this.camera.GetParent().MoveDown( this.Get("Shift") * elapsed );
+
+
+    this.camera.GetParent().YawLeft( this.Get("j") * elapsed );
+    this.camera.GetParent().YawRight( this.Get("l") * elapsed );
+    this.camera.GetParent().PitchUp( this.Get("k") * elapsed );
+    this.camera.GetParent().PitchDown( this.Get("i") * elapsed );
+    this.camera.GetParent().RollLeft( this.Get("u") * elapsed );
+    this.camera.GetParent().RollRight(this.Get("o") * elapsed );
+
+
+    if(this.Get("RightMouseButton") > 0) {
+        if(!this._done) {
+            this.camera.AlignParentToMy(false, true);
+            this._done = true;
+        }
+    }
+    else {
+        this._done = false;
+    }
     this.startX = this.endX;
     this.startY = this.endY;
     this.mouseWheelUp = 0;
     this.mouseWheelDown = 0;
-};
-
-alpha_Input.prototype.GrabMouse = function(bind)
-{
-    throw new Error("NYI");
-    if(bind == 0) {
-        return;
-    };
-    var glwidget = this.glwidget;
-    if(glwidget.mouseTracking) {
-        return;
-    }
-    glwidget.GrabMouse();
-    glwidget.SetCursor("none");
-    glwidget.mouseTracking = true;
-    // store where the cursor was grabbed
-    this.grabbed = Rainback_GetGlobalCursorPosition();
-};
-
-alpha_Input.prototype.ReleaseMouse = function(bind)
-{
-    throw new Error("NYI");
-    if(bind == 0) {
-        return;
-    }
-    var glwidget = this.glwidget;
-    if(!glwidget.mouseTracking) {
-        return;
-    }
-
-    glwidget.ReleaseMouse();
-    glwidget.mouseTracking = false;
-    glwidget.SetCursor("arrow");
-
-    Rainback_SetGlobalCursorPosition(this.grabbed);
 };

@@ -4,18 +4,6 @@
 // -- raytracing
 // -- TODO: figure out aiming for third person
 
-function alpha_toRadians(inDegrees)
-{
-    return inDegrees * Math.PI / 180;
-}
-alpha_ToRadians = alpha_toRadians;
-
-function alpha_toDegrees(inRadians)
-{
-    return inRadians * 180 / Math.PI;
-}
-alpha_ToDegrees = alpha_toDegrees;
-
 // ----------------------------------------------
 // ------------------- CAMERA  ------------------
 // ----------------------------------------------

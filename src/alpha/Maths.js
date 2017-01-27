@@ -20,6 +20,24 @@ function alpha_random(min, max)
     return min + Math.round(Math.random() * (max - min));
 };
 
+var alpha_startTime = new Date();
+function alpha_GetTime()
+{
+    return (new Date().getTime() - alpha_startTime.getTime()) / 1000;
+};
+
+function alpha_toRadians(inDegrees)
+{
+    return inDegrees * Math.PI / 180;
+}
+alpha_ToRadians = alpha_toRadians;
+
+function alpha_toDegrees(inRadians)
+{
+    return inRadians * 180 / Math.PI;
+}
+alpha_ToDegrees = alpha_toDegrees;
+
 //----------------------------------------------
 //----------------------------------------------
 //-----------      VECTORS     -----------------
