@@ -1,5 +1,6 @@
 alpha_WeetPainter_VertexShader =
 "uniform mat4 u_world;\n" +
+"uniform mat4 u_model;\n" +
 "\n" +
 "attribute vec4 a_position;\n" +
 "attribute vec4 a_color;\n" +
@@ -7,7 +8,7 @@ alpha_WeetPainter_VertexShader =
 "varying highp vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
-    "gl_Position = u_world * a_position;" +
+    "gl_Position = u_world * u_model * a_position;" +
     "contentColor = a_color;" +
 "}";
 
@@ -70,6 +71,11 @@ function alpha_WeetPainter(gl)
     this.u_world = this.gl.getUniformLocation(
         this.faceProgram, "u_world"
     );
+    this.u_model = this.gl.getUniformLocation(
+        this.faceProgram, "u_model"
+    );
+
+    this.cubes = [];
 };
 
 alpha_WeetPainter.prototype.Clear = function()
@@ -77,8 +83,14 @@ alpha_WeetPainter.prototype.Clear = function()
     this.faceBuffer.clear();
 };
 
-alpha_WeetPainter.prototype.Cube = function(m, cubeSize)
+alpha_WeetPainter.prototype.PaintCube = function()
 {
+    if(!this.faceBuffer.isEmpty()) {
+        // Already painted.
+        return;
+    }
+
+    var cubeSize = 1;
     var width = cubeSize;
     var length = cubeSize;
     var height = cubeSize;
@@ -122,7 +134,11 @@ alpha_WeetPainter.prototype.Cube = function(m, cubeSize)
 
     var drawFace = function(c1, c2, c3, c4, color) {
         var drawVert = function(v) {
-            this.faceBuffer.appendData(this.a_position, m.Transform(v));
+            var numAdded = this.faceBuffer.appendData(this.a_position, v);
+            if(3 != numAdded) {
+                throw new Error("Unexpected vertices added: " + numAdded);
+            }
+            this.faceBuffer.appendData(this.a_position, 1.0);
         };
 
         drawVert.call(this, c1);
@@ -151,12 +167,25 @@ alpha_WeetPainter.prototype.Cube = function(m, cubeSize)
     drawFace.call(this, cv[4], cv[5], cv[6], cv[7], new alpha_Color(0, 1, 1));
 };
 
+alpha_WeetPainter.prototype.Cube = function(m)
+{
+    this.cubes.push(m);
+};
+
+alpha_WeetPainter.prototype.Clear = function()
+{
+    this.faceBuffer.clear();
+    this.cubes.splice(0, this.cubes.length);
+};
+
 alpha_WeetPainter.prototype.Draw = function(viewMatrix)
 {
     if(!viewMatrix) {
         throw new Error("A viewMatrix must be provided");
     }
+
     // Render faces.
+    this.PaintCube();
     this.gl.useProgram(
         this.faceProgram
     );
@@ -165,5 +194,12 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
         false,
         viewMatrix.toArray()
     );
-    this.faceBuffer.renderPages();
+    this.cubes.forEach(function(m) {
+        this.gl.uniformMatrix4fv(
+            this.u_model,
+            false,
+            m.Transpose().toArray()
+        );
+        this.faceBuffer.renderPages();
+    }, this);
 };
