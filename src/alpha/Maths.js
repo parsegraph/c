@@ -370,6 +370,22 @@ function alpha_Quaternion()
 alpha_Quaternion_Tests = new parsegraph_TestSuite("alpha_Quaternion");
 parsegraph_AllTests.addTest(alpha_Quaternion_Tests);
 
+alpha_Quaternion_Tests.addTest("Does quaternion rotation really even work?", function(resultDom) {
+    var m = new alpha_RMatrix4();
+    var rotq = 90;
+    m.Rotate(alpha_QuaternionFromAxisAndAngle(
+        0, 1, 1, rotq
+    ));
+    /*m.Rotate(alpha_QuaternionFromAxisAndAngle(
+        1, 0, 0, rotq
+    ));
+    m.Rotate(alpha_QuaternionFromAxisAndAngle(
+        1, 0, 1, rotq
+    ));*/
+    var v = m.Transform(10, 0, 0);
+    return v.toString();
+});
+
 alpha_Quaternion.prototype.Clone = function()
 {
     return new alpha_Quaternion(this);
