@@ -94,7 +94,7 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
     }
 
     var rotq = this.rotq;
-    var max = 25;
+    var max = 15;
 
     for(var i = 0; i < max; ++i) {
         for(var j = 0; j < max; ++j) {
@@ -102,8 +102,6 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
                 if(k % 2 != 0 || j % 2 != 0 || i % 2 != 0) {
                     continue;
                 }
-
-                var m = new alpha_Physical(this.camera);
 
                 var c = new alpha_Physical(this.camera);
                 c.Rotate(rotq*k/10, 0, 1, 1);
