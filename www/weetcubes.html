@@ -153,32 +153,6 @@ surface.addRenderer(function() {
     gl.clear(gl.DEPTH_BUFFER_BIT);
 });
 
-var graph = new parsegraph_Graph(surface);
-GRAPH = graph;
-
-var caret = new parsegraph_Caret(graph, 'bud');
-caret.spawnMove('d', 'block', 'center');
-caret.label("X");
-caret.pull('d');
-var xSlider = caret.spawn('d', 'slider');
-xSlider.setValue(0);
-caret.spawnMove('f', 'block');
-caret.label("Y");
-var ySlider = caret.spawn('d', 'slider');
-ySlider.setValue(0);
-
-caret.spawnMove('f', 'block');
-caret.label("Z");
-var zSlider = caret.spawn('d', 'slider');
-zSlider.setValue(0);
-
-caret.spawnMove('f', 'block');
-caret.label("Rotation");
-var rotSlider = caret.spawn('d', 'slider');
-rotSlider.setValue(0);
-
-graph.plot(caret);
-
 // This flag is used to squelch rendering if that function
 // threw an exception and failed to complete.
 var speed=.6;
@@ -195,8 +169,6 @@ var tick = function(t) {
     tickIntervalId = requestAnimationFrame(tick)
 };
 tickIntervalId = requestAnimationFrame(tick);
-
-graph.scheduleRepaint();
 
 }); // DOMContentLoaded
 </script>
