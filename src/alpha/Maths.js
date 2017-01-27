@@ -566,7 +566,7 @@ function alpha_QuaternionFromAxisAndAngle()
 }
 
 /**
- * Sets this quaternion to <angle> radians around the given unit vector axis.
+ * Sets this quaternion to <angle> radians around the given unnormalized vector axis.
  *
  * q.FromAxisAndAngle(x, y, z, angle);
  */
