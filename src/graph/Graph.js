@@ -79,16 +79,14 @@ parsegraph_Graph.prototype.input = function()
     return this._input;
 };
 
-parsegraph_Graph.prototype.plot = function(caret, worldX, worldY)
+parsegraph_Graph.prototype.plot = function()
 {
-    if(worldX === undefined) {
-        worldX = 0;
+    if(arguments.length > 1) {
+        this._worldCarets.push([arguments[0], arguments[1], arguments[2]]);
     }
-    if(worldY === undefined) {
-        worldY = 0;
+    else {
+        this._worldCarets.push([arguments[0]]);
     }
-
-    this._worldCarets.push([caret, worldX, worldY]);
 };
 
 parsegraph_Graph.prototype.plotCarousel = function(worldX, worldY)
@@ -285,6 +283,10 @@ parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
         var caret = caretData[0];
         var caretX = caretData[1];
         var caretY = caretData[2];
+        if(caretData.length === 1) {
+            caretX = 0;
+            caretY = 0;
+        }
         var selectedNode = caret.nodeUnderCoords(x - caretX, y - caretY);
         if(selectedNode) {
             // Node located; no further search.
@@ -402,18 +404,12 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
     this._worldPaintingDirty = true;
-    this._surface.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
 {
     this._carouselPaintingDirty = true;
     this._surface.scheduleRepaint();
-};
-
-parsegraph_Graph.prototype.scheduleRender = function()
-{
-    this._surface.scheduleRender();
 };
 
 parsegraph_Graph.prototype.render = function()

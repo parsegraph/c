@@ -714,13 +714,13 @@ alpha_Camera.prototype.GetViewMatrix = function(requestor)
         //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
         //console.log("parent.viewMatrix:\n" + ancestors.toString());
         //console.log("modelMatrix * ancestors:\n" + this.GetModelMatrix().Multiplied(ancestors));
-        this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors).Inverse();
+        this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors);
         //console.log("this.viewMatrix:\n" + this.viewMatrix.toString());
         return this.viewMatrix;
     }
     else {
         // you could also do a dummy identity matrix as the ancestor
         // but why do extra math?
-        return this.GetModelMatrix().Inverse();
+        return this.GetModelMatrix().Inversed();
     }
 };

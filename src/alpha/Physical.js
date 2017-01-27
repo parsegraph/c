@@ -520,7 +520,7 @@ alpha_Physical.prototype.GetViewMatrix = function()
         return this.viewMatrix;
     }
     else {
-        return this.GetModelMatrix();
+        return this.GetModelMatrix().Inverse();
     }
 };
 

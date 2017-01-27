@@ -19,6 +19,7 @@ function parsegraph_Caret(graph, rootType)
 
 parsegraph_Caret.prototype.nodeUnderCoords = function(x, y, userScale)
 {
+    //console.log("nodeUnderCoords: " + x + ", " + y)
     if(userScale === undefined) {
         userScale = 1;
     }
@@ -32,26 +33,32 @@ parsegraph_Caret.prototype.nodeUnderCoords = function(x, y, userScale)
             x < userScale * node.absoluteX()
                 - userScale * node.absoluteScale() * node.size().width()/2
         ) {
+            //console.log("INB 1" + x + " against " + node.absoluteX());
             return false;
         }
         if(
             x > userScale * node.absoluteX()
                 + userScale * node.absoluteScale() * node.size().width()/2
         ) {
+            //console.log("INB 2");
             return false;
         }
         if(
             y < userScale * node.absoluteY()
                 - userScale * node.absoluteScale() * node.size().height()/2
         ) {
+            //console.log("INB 3");
             return false;
         }
         if(
             y > userScale * node.absoluteY()
                 + userScale * node.absoluteScale() * node.size().height()/2
         ) {
+            //console.log("INB 4");
             return false;
         }
+
+        //console.log("Within node body" + node);
         return true;
     };
 
@@ -210,7 +217,7 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
     newContent = parsegraph_readNodeType(newContent);
 
     // Spawn a node in the given direction.
-    this.node().spawnNode(inDirection, newContent);
+    var created = this.node().spawnNode(inDirection, newContent);
 
     // Use the given alignment mode.
     if(newAlignmentMode !== undefined) {
@@ -220,6 +227,8 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
             this.node().setNodeFit(parsegraph_NODE_FIT_EXACT);
         }
     }
+
+    return created;
 };
 
 parsegraph_Caret.prototype.erase = function(inDirection)
@@ -324,8 +333,9 @@ parsegraph_Caret.prototype.pop = function()
 
 parsegraph_Caret.prototype.spawnMove = function(inDirection, newContent, newAlignmentMode)
 {
-    this.spawn(inDirection, newContent, newAlignmentMode);
+    var created = this.spawn(inDirection, newContent, newAlignmentMode);
     this.move(inDirection);
+    return created;
 };
 
 parsegraph_Caret.prototype.content = function()

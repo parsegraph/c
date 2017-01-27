@@ -28,59 +28,6 @@ function parsegraph_Surface()
     this._renderers = [];
 };
 
-parsegraph_Surface.prototype.cancelRepaint = function()
-{
-    this._needsRepaint = false;
-};
-
-/**
- * Schedules a repaint. Painting causes the scene
- * graph to be rebuilt.
- */
-parsegraph_Surface.prototype.scheduleRepaint = function()
-{
-    if(!this.canProject()) {
-        throw new Error("Refusing to schedule a repaint for an unprojectable surface. Use canProject() handle, and parent this surface's container to fix.");
-    }
-    this.scheduleRender();
-    this._needsRepaint = true;
-};
-
-/**
- * Schedules a render. Rendering draws the scene graph.
- *
- * Rendering will cause repainting if needed.
- */
-parsegraph_Surface.prototype.scheduleRender = function()
-{
-    if(this._pendingRender != null) {
-        return;
-    }
-    var graph = this;
-    this._pendingRender = requestAnimationFrame(function() {
-        try {
-            graph._pendingRender = null;
-            if(graph._needsRepaint) {
-                graph.paint();
-                graph._needsRepaint = false;
-            }
-
-            graph.render();
-        } catch(ex) {
-            alert("Render: " + parsegraph_writeError(ex));
-            throw ex;
-        }
-    });
-};
-
-parsegraph_Surface.prototype.cancelRender = function()
-{
-    if(this._pendingRender != null) {
-        cancelAnimationFrame(this._pendingRender);
-        this._pendingRender = null;
-    }
-};
-
 parsegraph_Surface.prototype.canvas = function()
 {
     return this._canvas;
@@ -120,8 +67,9 @@ parsegraph_Surface.prototype.addRenderer = function(renderer, thisArg)
 
 parsegraph_Surface.prototype.paint = function()
 {
+    var args = arguments;
     this._painters.forEach(function(painter) {
-        painter[0].call(painter[1]);
+        painter[0].apply(painter[1], args);
     }, this);
 };
 

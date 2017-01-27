@@ -6,17 +6,16 @@ parsegraph_CLICK_DELAY_MILLIS = 500;
 function parsegraph_Camera(surface)
 {
     this._surface = surface;
+
     this._cameraX = 0;
     this._cameraY = 0;
     this._scale = 1;
+
     this._aspectRatio = 1;
 };
 
 parsegraph_Camera.prototype.setOrigin = function(x, y)
 {
-    if(Number.isNaN(x) || Number.isNaN(y)) {
-        throw new Error("Origin must not be NaN.");
-    }
     this._cameraX = x;
     this._cameraY = y;
 }
@@ -60,9 +59,6 @@ parsegraph_Camera.prototype.y = function()
 
 parsegraph_Camera.prototype.setScale = function(scale)
 {
-    if(isNaN(scale)) {
-        throw new Error("scale must not be NaN.");
-    }
     this._scale = scale;
 };
 
@@ -73,10 +69,11 @@ parsegraph_Camera.prototype.toString = function()
 
 parsegraph_Camera.prototype.adjustOrigin = function(x, y)
 {
-    this.setOrigin(
-        this._cameraX + x,
-        this._cameraY + y
-    );
+    if(Number.isNaN(x) || Number.isNaN(y)) {
+        throw new Error("Adjusted origin must not be null. (Given " + x + ", " + y + ")");
+    }
+    this._cameraX += x;
+    this._cameraY += y;
 }
 
 /**

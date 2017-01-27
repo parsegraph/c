@@ -152,27 +152,34 @@ parsegraph_PagingBuffer.prototype.appendData = function(attribIndex/*, ... */)
      */
     var pagingBuffer = this;
     var appendValue = function(value) {
+        var numAdded = 0;
         if(typeof value.forEach == "function") {
-            value.forEach(appendValue);
-            return;
+            value.forEach(function(x) {
+                numAdded += appendValue(x);
+            }, this);
+            return numAdded;
         }
         if(typeof value.length == "number") {
             for(var i = 0; i < value.length; ++i) {
-                appendValue(value[i]);
+                numAdded += appendValue(value[i]);
             }
-            return;
+            return numAdded;
         }
         if(Number.isNaN(value) || typeof value != "number") {
             throw new Error("Value is not a number: " + value);
         }
         pagingBuffer.getWorkingPage().buffers[attribIndex].push(value);
         pagingBuffer.getWorkingPage().needsUpdate = true;
+
+        return 1;
     };
 
     // Add each argument individually.
+    var cumulativeAdded = 0;
     for(var i = 1; i < arguments.length; ++i) {
-        appendValue(arguments[i]);
+        cumulativeAdded += appendValue(arguments[i]);
     }
+    return cumulativeAdded;
 };
 
 /**

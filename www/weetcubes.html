@@ -61,6 +61,8 @@ function alpha_WeetCubeWidget()
         surface = arguments[0];
     }
     this.surface = surface;
+    this.origin = new alpha_Vector();
+    this.rotation = 0;
 
     this.surface.addPainter(this.paint, this);
     this.surface.addRenderer(this.render, this);
@@ -69,8 +71,11 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
 }
 
-alpha_WeetCubeWidget.prototype.paint = function()
+alpha_WeetCubeWidget.prototype.paint = function(elapsed)
 {
+    if(elapsed === undefined || Number.isNaN(elapsed)) {
+        throw new Error("elapsed must be provided.");
+    }
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
     }
@@ -79,9 +84,8 @@ alpha_WeetCubeWidget.prototype.paint = function()
     }
 
     var rotq = this.rotq;
-    var max = 5;
+    var max = 1;
 
-    var cubeSize = 10;
     for(var i = 0; i < max; ++i) {
         for(var j = 0; j < max; ++j) {
             for(var k = 0; k < max; ++k) {
@@ -89,7 +93,8 @@ alpha_WeetCubeWidget.prototype.paint = function()
                     continue;
                 }
 
-                var m = new alpha_Matrix();
+                var m = new alpha_RMatrix4();
+                m.Translate(20*i, 20*j, 20*k);
                 m.Rotate(alpha_QuaternionFromAxisAndAngle(
                     0, 1, 1, rotq*k/10
                 ));
@@ -99,8 +104,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 m.Rotate(alpha_QuaternionFromAxisAndAngle(
                     1, 0, 1, rotq*j/10
                 ));
-                m.Translate(20*cubeSize*i, 20*cubeSize*j, 20*cubeSize*k);
-                this.cubePainter.Cube(m, cubeSize);
+                this.cubePainter.Cube(m);
             }
         }
 
@@ -109,10 +113,15 @@ alpha_WeetCubeWidget.prototype.paint = function()
         if(rotq >= 360) {
             rotq = 0;
         }
-        rotq = rotq + 0.1;
+        //rotq = rotq + 0.01 * elapsed;
     }
 
     this.rotq = rotq;
+};
+
+alpha_WeetCubeWidget.prototype.setOrigin = function()
+{
+    this.origin.Set.apply(this.origin, arguments);
 };
 
 alpha_WeetCubeWidget.prototype.render = function()
@@ -149,13 +158,17 @@ alpha_WeetCubeWidget.prototype.render = function()
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
 
-    var projection = new alpha_Matrix(makePerspective(
+    var projection = new alpha_RMatrix4(makePerspective(
         Math.PI * 60 / 180,
         this.width / this.height,
-        1,
-        100
+        .1,
+        10000
     ));
-    this.cubePainter.Draw(projection);
+    var view = new alpha_RMatrix4();
+    view.Rotate(alpha_QuaternionFromAxisAndAngle(1, 0, 1, this.rotation * Math.PI));
+    view.Translate(this.origin);
+    view.Inverse();
+    this.cubePainter.Draw(projection.Multiplied(view).Transpose());
 };
 
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -163,8 +176,39 @@ document.addEventListener("DOMContentLoaded", function(event) {
 parsegraph_initialize();
 
 var surface = new parsegraph_Surface();
+document.body.appendChild(surface.container());
 
 var widget = new alpha_WeetCubeWidget(surface);
+
+surface.addRenderer(function() {
+    surface.gl().clear(surface.gl().DEPTH_BUFFER_BIT);
+});
+
+var graph = new parsegraph_Graph(surface);
+GRAPH = graph;
+
+var caret = new parsegraph_Caret(graph, 'bud');
+caret.spawnMove('d', 'block', 'center');
+caret.label("X");
+caret.pull('d');
+var xSlider = caret.spawn('d', 'slider');
+xSlider.setValue(0);
+caret.spawnMove('f', 'block');
+caret.label("Y");
+var ySlider = caret.spawn('d', 'slider');
+ySlider.setValue(0);
+
+caret.spawnMove('f', 'block');
+caret.label("Z");
+var zSlider = caret.spawn('d', 'slider');
+zSlider.setValue(0);
+
+caret.spawnMove('f', 'block');
+caret.label("Rotation");
+var rotSlider = caret.spawn('d', 'slider');
+rotSlider.setValue(0);
+
+graph.plot(caret);
 
 /*
 local startX, startY;
@@ -194,9 +238,18 @@ end);
 // threw an exception and failed to complete.
 var speed=.6;
 //surface.camera.setCameraPosition(0, 0, 550);
+var start = alpha_GetTime();
 var tick = function(t) {
     // Set the render flag.
-    surface.paint();
+    var t = alpha_GetTime();
+    surface.paint(t - start);
+    start = t;
+    widget.setOrigin(
+        xSlider.value(),
+        ySlider.value(),
+        40 * zSlider.value()
+    );
+    widget.rotation = (Math.PI / 2 + rotSlider.value() * 2 * Math.PI);
     surface.render();
 
 /*var total = 0;
@@ -212,7 +265,7 @@ Undoer(Timing.Every(Position));
 }; // Tick
 tickIntervalId = window.setTimeout(tick, 50);
 
-document.body.appendChild(surface.container());
+graph.scheduleRepaint();
 
 }); // DOMContentLoaded
 </script>

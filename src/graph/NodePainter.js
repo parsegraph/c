@@ -424,8 +424,19 @@ parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userS
     }
 };
 
-parsegraph_NodePainter.prototype.drawCaret = function(caret, worldX, worldY, userScale)
+parsegraph_NodePainter.prototype.drawCaret = function()
 {
+    var caret, worldX, worldY, userScale;
+    caret = arguments[0];
+    if(arguments.length > 1) {
+        worldX = arguments[1];
+        worldY = arguments[2];
+        userScale = arguments[3];
+    }
+    else {
+        worldX = 0;
+        worldY = 0;
+    }
     if(userScale === undefined) {
         userScale = 1;
     }

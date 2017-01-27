@@ -55,10 +55,7 @@ body > div input {
 function init()
 {
     try {
-        parsegraph_initialize();
-
-        var server = new parsegraph_CommandClient("./server.fcgi");
-        parsegraph_addUserCommands(server);
+        parsegraph_initialize(true);
 
         var main = document.body;
 
@@ -67,9 +64,9 @@ function init()
         GRAPH = graph;
 
         var COUNT = 25
-        main.appendChild(surface.container());
+        main.appendChild(graph.container());
         //graph.plot(showCorporateStructure(graph));
-        //graph.plot(buildPrimesDemo(graph, COUNT));
+        graph.plot(buildPrimesDemo(graph, COUNT));
         //graph.plot(buildTextDemo(graph, COUNT, "繁"));
         //graph.plot(showMemoryBlocks(graph, COUNT));
         //graph.plot(showSpiral(graph));
@@ -83,7 +80,7 @@ function init()
         //graph.plot(showStatements(graph));
 
         // Then correct alignment here.
-        graph.plot(showProportionTest(graph, COUNT));
+        //graph.plot(showProportionTest(graph, COUNT));
 
         //graph.plot(showIPAddresses(graph));
 

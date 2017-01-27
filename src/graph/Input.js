@@ -23,6 +23,8 @@ function parsegraph_Input(graph, camera)
             makeInverse3x3(this._camera.worldMatrix()),
             clientX, clientY
         );
+        //console.log(clientX, clientY);
+        //console.log(mouseInWorld);
         var selectedNode = graph.nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
         if(!selectedNode) {
             return null;
@@ -82,9 +84,6 @@ function parsegraph_Input(graph, camera)
             mouseAdjustment[0] - mouseInWorld[0],
             mouseAdjustment[1] - mouseInWorld[1]
         );
-
-        // Redraw.
-        camera.graph().scheduleRender();
     };
 
     /**
@@ -178,9 +177,6 @@ function parsegraph_Input(graph, camera)
             );
             zoomTouchDistance = dist;
         }
-
-        // Redraw.
-        camera.graph().scheduleRender();
     });
 
     var selectedSlider = null;
@@ -316,9 +312,6 @@ function parsegraph_Input(graph, camera)
             deltaX / camera.scale(),
             deltaY / camera.scale()
         );
-
-        // Redraw.
-        camera.graph().scheduleRender();
     };
 
     parsegraph_addEventListener(graph.canvas(), "mousemove", function(event) {
@@ -345,6 +338,7 @@ function parsegraph_Input(graph, camera)
         focused = true;
         event.preventDefault();
         graph.canvas().focus();
+        //console.log("Repainting graph");
 
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
