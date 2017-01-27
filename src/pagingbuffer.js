@@ -20,6 +20,27 @@ function parsegraph_createPagingBuffer(gl, program)
     return new parsegraph_PagingBuffer(gl, program);
 }
 
+parsegraph_PagingBuffer.prototype.isEmpty = function()
+{
+    // Check each page's buffer, failing early if possible.
+    if(this._pages.length === 0) {
+        return true;
+    }
+    for(var i = 0; i < this._pages.length; ++i) {
+        var page = this._pages[i];
+        if(page.buffers.length === 0) {
+            return true;
+        }
+        for(var j = 0; j < page.buffers.length; ++j) {
+            var buffer = page.buffers[j];
+            if(buffer.length === 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 parsegraph_PagingBuffer.prototype.addPage = function()
 {
     // Create a new page.
