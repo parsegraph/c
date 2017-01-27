@@ -1536,3 +1536,47 @@ alpha_RMatrix4.prototype.toArray = function()
         this[12], this[13], this[14], this[15]
     ];
 };
+
+alpha_RMatrix4_Tests.addTest("Does the RMatrix4 actually return rows for rows?", function(resultDom) {
+    var m = new alpha_RMatrix4(
+        2, 3, 5, 7,
+        11, 13, 17, 19,
+        23, 29, 31, 37,
+        39, 41, 43, 47
+    );
+
+    if(m[0] !== 2 || m[1] !== 3 || m[2] !== 5 || m[3] !== 7) {
+        return "";
+    }
+
+    if(m[4] !== 11 || m[5] !== 13 || m[6] !== 17 || m[7] !== 19) {
+        return "";
+    }
+
+    if(m[8] !== 23 || m[9] !== 29 || m[10] !== 31 || m[11] !== 37) {
+        return "";
+    }
+
+    if(m[12] !== 39 || m[13] !== 41 || m[14] !== 43 || m[15] !== 47) {
+        return "";
+    }
+});
+
+alpha_RMatrix4_Tests.addTest("Does the perspective matrix work with alpha_RMatrix4?", function(resultDom) {
+    var width = 800;
+    var height = 600;
+    var m = new alpha_RMatrix4(makePerspective(
+        Math.PI / 3,
+        width / height,
+        .1,
+        150
+    ));
+    m.Transpose();
+
+    var v = new alpha_Vector(1, 2, 3);
+    var rv = m.Transform(v);
+
+    if(!rv.Equals(0, 1, 0)) {
+        return rv.toString();
+    }
+});
