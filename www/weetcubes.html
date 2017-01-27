@@ -103,6 +103,14 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
                     continue;
                 }
 
+                // XXX The physical translates, then rotates, whereas the original
+                // scene rotated first, then translated. Either the internal calculations
+                // for Physical need to be worked out here, or a new Physical that rotates
+                // before translating could be made.
+                // glRotate(rotq*k/10, 0, 1, 1);
+                // glRotate(rotq*i/15, 1, 0, 0);
+                // glRotate(rotq*j/10, 1, 0, 1);
+                // glTranslate(10*i, 10*j, 10*k);
                 var c = new alpha_Physical(this.camera);
                 c.Rotate(rotq*k/10, 0, 1, 1);
                 c.Rotate(rotq*i/15, 1, 0, 0);
