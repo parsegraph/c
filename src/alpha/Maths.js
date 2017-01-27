@@ -1353,10 +1353,16 @@ alpha_RMatrix4.prototype.FromVectorAroundQuaternionAtVector = function(vec1, qua
     return this;
 };
 
+alpha_RMatrix4.prototype.Inverse = function()
+{
+    var inv = this.Inversed();
+    return this.Set(inv);
+};
+
 /**
  * Returns a new matrix equal to the inverse of this matrix.
  */
-alpha_RMatrix4.prototype.Inverse = function()
+alpha_RMatrix4.prototype.Inversed = function()
 {
   var inv = new alpha_RMatrix4();
 
