@@ -74,6 +74,14 @@ function alpha_Physical(parent)
     this.SetParent(parent);
 }
 
+alpha_Physical.prototype.toJSON = function()
+{
+    return {
+        position:this.position.toJSON(),
+        orientation:this.orientation.toJSON(),
+    };
+};
+
 // Register the test suite.
 alpha_Physical_Tests = new parsegraph_TestSuite("alpha_Physical");
 parsegraph_AllTests.addTest(alpha_Physical_Tests);

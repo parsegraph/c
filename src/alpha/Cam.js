@@ -51,6 +51,21 @@ function alpha_Camera(surface)
     this.SetParent(this.GetInvisiblePhysical(this));
 }
 
+alpha_Camera.prototype.toJSON = function()
+{
+    return {
+        position: this.position.toJSON(),
+        orientation: this.orientation.toJSON()
+    };
+};
+
+alpha_Camera.prototype.restore = function(json)
+{
+    this.position.restore(json.position);
+    this.orientation.restore(json.orientation);
+    console.log(this.toJSON());
+};
+
 alpha_Camera_Tests = new parsegraph_TestSuite("alpha_Camera");
 parsegraph_AllTests.addTest(alpha_Camera_Tests);
 

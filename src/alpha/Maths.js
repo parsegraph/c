@@ -63,6 +63,23 @@ function alpha_Vector()
     }
 }
 
+alpha_Vector.prototype.toJSON = function()
+{
+    return [this[0], this[1], this[2]];
+};
+
+alpha_Vector.prototype.restore = function(json)
+{
+    if(Array.isArray(json)) {
+        this.Set.apply(this, json);
+    }
+    else {
+        this[0] = json.x;
+        this[1] = json.y;
+        this[2] = json.z;
+    }
+};
+
 alpha_Vector_Tests = new parsegraph_TestSuite("alpha_Vector");
 parsegraph_AllTests.addTest(alpha_Vector_Tests);
 
@@ -384,6 +401,24 @@ function alpha_Quaternion()
         this.Set.apply(this, arguments);
     }
 }
+
+alpha_Quaternion.prototype.toJSON = function()
+{
+    return [this[0], this[1], this[2], this[3]];
+};
+
+alpha_Quaternion.prototype.restore = function(json)
+{
+    if(Array.isArray(json)) {
+        this.Set.apply(this, json);
+    }
+    else {
+        this[0] = json.x;
+        this[1] = json.y;
+        this[2] = json.z;
+        this[3] = json.w;
+    }
+};
 
 alpha_Quaternion_Tests = new parsegraph_TestSuite("alpha_Quaternion");
 parsegraph_AllTests.addTest(alpha_Quaternion_Tests);
@@ -797,6 +832,16 @@ function alpha_RMatrix4()
     else {
         this.Set.apply(this, arguments);
     }
+};
+
+alpha_RMatrix4.prototype.restore = function(json)
+{
+    this.Set.apply(this, json);
+};
+
+alpha_RMatrix4.prototype.toJSON = function()
+{
+    return this.toArray();
 };
 
 alpha_RMatrix4_Tests = new parsegraph_TestSuite("alpha_RMatrix4");
