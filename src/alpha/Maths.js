@@ -949,9 +949,13 @@ alpha_RMatrix4.prototype.Transform = function()
         y = arguments[0][1];
         z = arguments[0][2];
         w = arguments[0][3];
-        if(w === undefined) {
-            w = 1.0;
-        }
+    }
+    else if(arguments.length === 2) {
+        // Vector, w
+        x = arguments[0][0];
+        y = arguments[0][1];
+        z = arguments[0][2];
+        w = arguments[1];
     }
     else {
         x = arguments[0];
