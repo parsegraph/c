@@ -32,6 +32,7 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
+	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \
 	src/graph/Color.js \
