@@ -170,23 +170,6 @@ var tick = function(t) {
 };
 tickIntervalId = requestAnimationFrame(tick);
 
-var STORED_CAMERA = "weetcubes_world_camera";
-if(localStorage.getItem(STORED_CAMERA) != null) {
-    try {
-        var storedCamera = JSON.parse(localStorage.getItem(STORED_CAMERA));
-        widget.camera.restore(storedCamera);
-    } catch(e) {
-        console.log("Failed to parse saved camera state.\n" + e);
-    }
-}
-
-surface.addRenderer(function() {
-    localStorage.setItem(
-        STORED_CAMERA,
-        JSON.stringify(widget.camera.GetInvisiblePhysical(widget.camera).toJSON())
-    );
-});
-
 }); // DOMContentLoaded
 </script>
 </head>
