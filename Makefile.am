@@ -17,7 +17,8 @@ parsegraph.pc: parsegraph.pc.head
 # Distribute the core Javascript library.
 pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-examples-$(PACKAGE_VERSION).js
+	parsegraph-examples-$(PACKAGE_VERSION).js \
+	esprima.js
 
 CLEANFILES = \
 	parsegraph-$(PACKAGE_VERSION).js \
