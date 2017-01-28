@@ -1,93 +1,71 @@
-function buildPrimesDemo(graph, COUNT)
+function parsegraph_PrimesWidget(graph)
 {
-    if(COUNT == undefined) {
-        COUNT = 50;
+    this.knownPrimes = [];
+    this.position = 2;
+
+    this.caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    this.caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+}
+
+function parsegraph_PrimesModulo(frequency)
+{
+    this.frequency = frequency;
+    this.target = 0;
+};
+
+parsegraph_PrimesModulo.prototype.calculate = function(number)
+{
+    while(number > this.target) {
+        this.target += this.frequency;
     }
-    COUNT = Math.min(COUNT, 100);
+    return this.target - number;
+};
 
-    parsegraph_HORIZONTAL_SEPARATION_PADDING = 1;
-    parsegraph_VERTICAL_SEPARATION_PADDING = 1;
-    parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
+parsegraph_PrimesModulo.prototype.value = function()
+{
+    return this.frequency;
+};
 
-    function makeModulo(frequency) {
-        var target = 0;
-
-        var object = {};
-
-        object.calculate = function(number) {
-            while(number > target) {
-                target += frequency;
-            }
-            return target - number;
-        };
-
-        object.value = function() {
-            return frequency;
-        };
-
-        return object;
-    };
-
-    var knownPrimes = [];
-    var candidate = 2;
-
-    var startTime = parsegraph_getTimeInMillis();
-
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
-    caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    var addBlock = function() {
-        caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-        caret.label(candidate);
-        caret.push();
+parsegraph_PrimesWidget.prototype.step = function(steps)
+{
+    // Check if any known prime is a multiple of the current position.
+    for(var j = 0; j < steps; ++j) {
+        this.caret.spawnMove('f', 'b');
+        this.caret.label(this.position);
+        this.caret.push();
         var isPrime = true;
-        for(var i = 0; i < knownPrimes.length; ++i) {
-            var prime = knownPrimes[i];
-            modulus = prime.calculate(candidate);
+        for(var i = 0; i < this.knownPrimes.length; ++i) {
+            var prime = this.knownPrimes[i];
+            modulus = prime.calculate(this.position);
             if(modulus == 0) {
                 // It's a multiple, so there's no chance for primality.
-                caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
+                this.caret.spawnMove('u', 'b');
                 isPrime = false;
             }
             else {
-                caret.spawnMove(parsegraph_UPWARD, parsegraph_SLOT);
+                this.caret.spawnMove('u', 's');
             }
         }
-
         if(isPrime) {
-            caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
-            caret.label(candidate);
-            // The candidate is prime, so output it and add it to the list.
-            knownPrimes.push(makeModulo(candidate));
+            // The position is prime, so output it and add it to the list.
+            this.caret.spawnMove('u', 'b');
+            this.caret.label(this.position);
+            this.knownPrimes.push(new parsegraph_PrimesModulo(this.position));
         }
+        this.caret.pop();
 
-        caret.pop();
-        ++candidate;
-    };
-
-    /*caret.push();
-    for(var i = 0; i < knownPrimes.length; ++i) {
-        caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
+        // Advance.
+        ++(this.position);
     }
-    caret.pop();*/
+};
 
-    //console.log(parsegraph_getTimeInMillis() - startTime);
+parsegraph_PrimesWidget.prototype.root = function()
+{
+    return this.caret.root();
+};
 
-    var scheduleAddBlock = function() {
-        if(knownPrimes.length > COUNT) {
-            // Completed.
-            return;
-        }
-        for(var i = 0; i < 10; ++i) {
-            addBlock();
-            if(knownPrimes.length > COUNT) {
-                // Completed.
-                break;
-            }
-        }
-        graph.scheduleRepaint();
-        window.setTimeout(scheduleAddBlock, 500);
-    };
-    scheduleAddBlock();
-
-    return caret;
+function buildPrimesDemo(graph, COUNT)
+{
+    var widget = new parsegraph_PrimesWidget(graph);
+    return widget.caret;
 }

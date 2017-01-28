@@ -107,6 +107,7 @@ parsegraph_EXAMPLE_FILES = \
 	src/examples/showSpiral.js \
 	src/examples/showCalendar.js \
 	src/examples/buildPrimesDemo.js \
+	src/examples/LinearWidget.js \
 	src/examples/buildTextDemo.js
 
 parsegraph-examples-$(PACKAGE_VERSION).js: $(parsegraph_EXAMPLE_FILES)
