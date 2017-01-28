@@ -78,13 +78,17 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
 }
 
-alpha_WeetCubeWidget.prototype.paint = function(elapsed)
+alpha_WeetCubeWidget.prototype.paint = function(elapsed, frozen)
 {
     if(elapsed === undefined || Number.isNaN(elapsed)) {
         throw new Error("elapsed must be provided.");
     }
 
     this.input.Update(elapsed);
+
+    if(frozen) {
+        elapsed = 0;
+    }
 
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
@@ -158,10 +162,11 @@ surface.addRenderer(function() {
 var speed=.6;
 //surface.camera.setCameraPosition(0, 0, 550);
 var start = alpha_GetTime();
+var frozen = false;
 var tick = function(t) {
     // Set the render flag.
     var t = alpha_GetTime();
-    surface.paint(t - start);
+    surface.paint(t - start, frozen);
     start = t;
     surface.render();
 
@@ -169,6 +174,12 @@ var tick = function(t) {
     tickIntervalId = requestAnimationFrame(tick)
 };
 tickIntervalId = requestAnimationFrame(tick);
+
+parsegraph_addEventListener(document, "keydown", function(event) {
+    if(event.key === "Escape") {
+        frozen = !frozen;
+    }
+});
 
 }); // DOMContentLoaded
 </script>
