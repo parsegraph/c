@@ -288,15 +288,17 @@ parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg)
 parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 {
     // Ensure the node can be spawned in the given direction.
-    if(spawnDirection == parsegraph_OUTWARD ||
-        spawnDirection == parsegraph_NULL_NODE_DIRECTION) {
-        throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
+    if(spawnDirection == parsegraph_OUTWARD) {
+        throw new Error("By rule, nodes cannot be spawned in the outward direction.");
+    }
+    if(spawnDirection == parsegraph_NULL_NODE_DIRECTION) {
+        throw new Error("Nodes cannot be spawned in the null node direction.");
     }
     if(spawnDirection == this.parentDirection()) {
-        throw parsegraph_createException(parsegraph_ALREADY_OCCUPIED);
+        throw new Error("Cannot spawn in a node in the parent's direction (" + parsegraph_nameNodeDirection(spawnDirection));
     }
     if(this.hasNode(spawnDirection)) {
-        throw parsegraph_createException(parsegraph_ALREADY_OCCUPIED);
+        throw new Error("Cannot spawn in a node in the already occupied " + parsegraph_nameNodeDirection(spawnDirection) + " direction. Parent is in the " + parsegraph_nameNodeDirection(this.parentDirection()) + " direction.");
     }
     if(this.type() == parsegraph_SLIDER) {
         throw new Error("Sliders cannot have child nodes.");
