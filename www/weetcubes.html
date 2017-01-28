@@ -94,7 +94,7 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
     }
 
     var rotq = this.rotq;
-    var max = 15;
+    var max = 25;
 
     for(var i = 0; i < max; ++i) {
         for(var j = 0; j < max; ++j) {
@@ -103,20 +103,13 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
                     continue;
                 }
 
-                // XXX The physical translates, then rotates, whereas the original
-                // scene rotated first, then translated. Either the internal calculations
-                // for Physical need to be worked out here, or a new Physical that rotates
-                // before translating could be made.
-                // glRotate(rotq*k/10, 0, 1, 1);
-                // glRotate(rotq*i/15, 1, 0, 0);
-                // glRotate(rotq*j/10, 1, 0, 1);
-                // glTranslate(10*i, 10*j, 10*k);
                 var c = new alpha_Physical(this.camera);
                 c.Rotate(rotq*k/10, 0, 1, 1);
                 c.Rotate(rotq*i/15, 1, 0, 0);
                 c.Rotate(rotq*j/10, 1, 0, 1);
-                c.SetPosition(10*i, 10*j, 10*k);
-                c.SetScale(5, 5, 5);
+                c.SetPosition(i, j, k);
+                c.SetScale(1, 1, 1);
+                c.modelMode = alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE;
                 this.cubePainter.Cube(c);
             }
         }
@@ -126,7 +119,7 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed)
         if(rotq >= 360) {
             rotq = 0;
         }
-        rotq = rotq + 0.1 * elapsed;
+        rotq = rotq + 0.01 * elapsed;
     }
 
     this.rotq = rotq;
@@ -153,6 +146,7 @@ surface.addRenderer(function() {
 });
 
 var widget = new alpha_WeetCubeWidget(surface);
+WIDGET = widget;
 
 surface.addRenderer(function() {
     var gl = surface.gl();

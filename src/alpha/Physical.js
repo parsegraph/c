@@ -57,11 +57,16 @@
 // XXX: for some reason I have to inverse quaterions for physical
 // not for the camera. I do not understand why.
 
+alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE = 1;
+alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE = 2;
+alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE = 3;
+
 /**
  * @constructor
  */
 function alpha_Physical(parent)
 {
+    this.modelMode = alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE;
     this.orientation = new alpha_Quaternion();
     this.position = new alpha_Vector();
     this.modelMatrix = new alpha_RMatrix4();
@@ -459,9 +464,23 @@ alpha_Physical.prototype.GetModelMatrix = function()
         // this.modelMatrix = rotate * translate * identity
         m.Identity();
 
-        m.Translate(this.position);
-        m.Rotate(this.orientation);
-        m.Scale(this.scale);
+        switch(this.modelMode) {
+        case alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE:
+            m.Translate(this.position);
+            m.Rotate(this.orientation);
+            m.Scale(this.scale);
+            break;
+        case alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE:
+            m.Scale(this.scale);
+            m.Rotate(this.orientation);
+            m.Translate(this.position);
+            break;
+        case alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE:
+            m.Rotate(this.orientation);
+            m.Translate(this.position);
+            m.Scale(this.scale);
+            break;
+        }
 
         this.modelDirty = false;
 
