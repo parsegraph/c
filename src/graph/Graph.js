@@ -409,7 +409,6 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
 {
     this._carouselPaintingDirty = true;
-    this._surface.scheduleRepaint();
 };
 
 parsegraph_Graph.prototype.render = function()
