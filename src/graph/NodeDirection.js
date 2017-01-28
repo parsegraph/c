@@ -240,3 +240,15 @@ function parsegraph_nodeDirectionSign(given)
     }
     return -1;
 }
+
+function parsegraph_alternateNodeDirection(given)
+{
+    switch(given) {
+    case parsegraph_DOWNWARD:
+        return parsegraph_FORWARD;
+    case parsegraph_FORWARD:
+        return parsegraph_DOWNWARD;
+    default:
+        throw new Error("NYI");
+    }
+}
