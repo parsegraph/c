@@ -14,6 +14,35 @@ function parsegraph_Camera(surface)
     this._aspectRatio = 1;
 };
 
+/**
+ * Zooms to the given point.
+ */
+parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
+{
+    // Get the current mouse position, in world space.
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.worldMatrix()),
+        x, y
+    );
+    //console.log("mouseInWorld=" + mouseInWorld[0] + ", " + mouseInWorld[1]);
+
+    // Adjust the scale.
+    this.setScale(this.scale() * scaleFactor);
+
+    // Get the new mouse position, in world space.
+    var mouseAdjustment = matrixTransform2D(
+        makeInverse3x3(this.worldMatrix()),
+        x, y
+    );
+    //console.log("mouseAdjustment=" + mouseAdjustment[0] + ", " + mouseAdjustment[1]);
+
+    // Adjust the origin by the movement of the fixed point.
+    this.adjustOrigin(
+        mouseAdjustment[0] - mouseInWorld[0],
+        mouseAdjustment[1] - mouseInWorld[1]
+    );
+};
+
 parsegraph_Camera.prototype.setOrigin = function(x, y)
 {
     this._cameraX = x;
