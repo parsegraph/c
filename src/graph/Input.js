@@ -34,7 +34,7 @@ function parsegraph_Input(graph, camera)
         if(selectedNode.type() == parsegraph_SLIDER) {
             selectedSlider = selectedNode;
             attachedMouseListener = sliderListener;
-            sliderListener(clientX, clientY);
+            sliderListener.call(this, clientX, clientY);
             return selectedNode;
         }
 
