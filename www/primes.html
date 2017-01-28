@@ -63,42 +63,58 @@ function init()
         var graph = new parsegraph_Graph(surface);
         GRAPH = graph;
 
+        var needsPaint = true;
+
         var COUNT = 25
         main.appendChild(graph.container());
-        //graph.plot(showCorporateStructure(graph));
-        graph.plot(buildPrimesDemo(graph, COUNT));
-        //graph.plot(buildTextDemo(graph, COUNT, "繁"));
-        //graph.plot(showMemoryBlocks(graph, COUNT));
-        //graph.plot(showSpiral(graph));
-        //graph.plot(showFunction(graph));
-        //graph.plot(showCalendar(graph));
-        //graph.plot(showUlam(graph, COUNT));
-        //graph.plot(createSliderDemo(graph));
 
-        // Look at alignment here first.
-        //graph.plot(showHardTest(graph, server));
-        //graph.plot(showStatements(graph));
+        var linear = new parsegraph_LinearWidget(graph);
+        graph.plot(linear.caret);
+        var primes = new parsegraph_PrimesWidget(graph);
+        graph.plot(primes.caret);
 
-        // Then correct alignment here.
-        //graph.plot(showProportionTest(graph, COUNT));
-
-        //graph.plot(showIPAddresses(graph));
-
-        if(localStorage.getItem("parsegraph_world_camera") != null) {
-            try {
-                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-                graph.camera().restore(parsegraph_world_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+        var bTimer = new parsegraph_TimeoutTimer();
+        bTimer.setDelay(750);
+        bTimer.setListener(function() {
+            primes.step(1);
+            graph.scheduleRepaint();
+            needsPaint = true;
+            renderTimer.schedule();
+            if(primes.position <= 120) {
+                bTimer.setDelay(500);
+                bTimer.schedule();
             }
-        }
-
-        // Schedule the repaint.
-        surface.scheduleRepaint();
-
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
         });
+        bTimer.schedule();
+
+        var aTimer = new parsegraph_TimeoutTimer();
+        aTimer.setDelay(250);
+        aTimer.setListener(function() {
+            linear.step(1);
+            graph.scheduleRepaint();
+            needsPaint = true;
+            renderTimer.schedule();
+            if(primes.position <= 120) {
+                aTimer.setDelay(500);
+                aTimer.schedule();
+            }
+        });
+        aTimer.schedule();
+
+        var renderTimer = new parsegraph_AnimationTimer();
+        renderTimer.setListener(function() {
+            if(needsPaint) {
+                surface.paint();
+                needsPaint = false;
+            }
+            surface.render();
+        });
+
+        graph.input().SetListener(function(affectedPaint) {
+            needsPaint = needsPaint || affectedPaint;
+            renderTimer.schedule();
+        });
+        renderTimer.schedule();
 
         var controls = document.createElement("div");
         controls.className = "controls";
@@ -121,7 +137,7 @@ function init()
                 return;
             }
 
-            graph.scheduleRender();
+            needsRender = true;
         });
 
         controls.appendChild(form.asDOM());

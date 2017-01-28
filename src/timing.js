@@ -78,7 +78,7 @@ parsegraph_TimeoutTimer.prototype.schedule = function()
         return;
     }
 
-    this.timerId = window.setTimeout(this.delay, this.fire);
+    this.timerId = window.setTimeout(this.fire, this.delay);
 };
 
 parsegraph_TimeoutTimer.prototype.setListener = function(listener, thisArg)

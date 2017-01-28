@@ -81,10 +81,6 @@ parsegraph_Surface.prototype.setBackground = function(color)
         );
     }
     this._backgroundColor = color;
-
-    // Make it simple to change the background color; do not require a
-    // separate call to scheduleRepaint.
-    this.scheduleRepaint();
 };
 
 /**
