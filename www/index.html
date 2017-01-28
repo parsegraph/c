@@ -68,15 +68,6 @@ function init()
 
         var COUNT = 25
         main.appendChild(surface.container());
-        //graph.plot(showCorporateStructure(graph));
-        //graph.plot(buildPrimesDemo(graph, COUNT));
-        //graph.plot(buildTextDemo(graph, COUNT, "繁"));
-        //graph.plot(showMemoryBlocks(graph, COUNT));
-        //graph.plot(showSpiral(graph));
-        //graph.plot(showFunction(graph));
-        //graph.plot(showCalendar(graph));
-        //graph.plot(showUlam(graph, COUNT));
-        //graph.plot(createSliderDemo(graph));
 
         // Look at alignment here first.
         //graph.plot(showHardTest(graph, server));
@@ -97,7 +88,20 @@ function init()
         }
 
         // Schedule the repaint.
-        surface.scheduleRepaint();
+        var needsPaint = true;
+        var renderTimer = new parsegraph_AnimationTimer();
+        renderTimer.setListener(function() {
+            if(needsPaint) {
+                surface.paint();
+                needsPaint = false;
+            }
+            surface.render();
+        });
+        graph.input().SetListener(function(affectedPaint) {
+            needsPaint = needsPaint || affectedPaint;
+            renderTimer.schedule();
+        });
+        renderTimer.schedule();
 
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
