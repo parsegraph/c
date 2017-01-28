@@ -47,6 +47,11 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
     }
 }
 
+parsegraph_Node.prototype.graph = function()
+{
+    return this._graph;
+};
+
 parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
 {
     if(!listener) {

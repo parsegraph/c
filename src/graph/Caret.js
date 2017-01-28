@@ -494,6 +494,11 @@ parsegraph_Caret.prototype.deselect = function()
     node.setSelected(false);
 };
 
+parsegraph_Caret.prototype.graph = function()
+{
+    return this.node().graph();
+};
+
 parsegraph_Caret.prototype.root = function()
 {
     return this._nodeRoot;

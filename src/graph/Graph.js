@@ -404,11 +404,22 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
     this._worldPaintingDirty = true;
+    if(this.onScheduleRepaint) {
+        this.onScheduleRepaint();
+    }
+};
+
+parsegraph_Graph.prototype.needsRepaint = function()
+{
+    return this._worldPaintingDirty;
 };
 
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
 {
     this._carouselPaintingDirty = true;
+    if(this.onScheduleRepaint) {
+        this.onScheduleRepaint();
+    }
 };
 
 parsegraph_Graph.prototype.render = function()
