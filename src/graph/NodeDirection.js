@@ -245,6 +245,7 @@ function parsegraph_alternateNodeDirection(given)
 {
     switch(given) {
     case parsegraph_DOWNWARD:
+    case parsegraph_INWARD:
         return parsegraph_FORWARD;
     case parsegraph_FORWARD:
         return parsegraph_DOWNWARD;
