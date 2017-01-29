@@ -11,10 +11,10 @@ function parsegraph_Caret(graph, rootType)
     this._nodes = [this._nodeRoot];
 
     // A mapping of nodes to their IDs.
-    this._namedNodes = {};
+    this._namedNodes = null;
 
     // A mapping of nodes to their saved names.
-    this._savedNodes = {};
+    this._savedNodes = null;
 };
 
 parsegraph_Caret.prototype.nodeUnderCoords = function(x, y, userScale)
@@ -268,6 +268,9 @@ parsegraph_Caret.prototype.push = function()
  */
 parsegraph_Caret.prototype.getNodeById = function(id)
 {
+    if(!this._namedNodes) {
+        return null;
+    }
     return this._namedNodes[id];
 }
 
@@ -276,6 +279,9 @@ parsegraph_Caret.prototype.getNodeById = function(id)
  */
 parsegraph_Caret.prototype.changedId = function(changedNode)
 {
+    if(!this._namedNodes) {
+        this._namedNodes = {};
+    }
     this._namedNodes[id] = changedNode;
 }
 
@@ -290,6 +296,9 @@ parsegraph_Caret.prototype.save = function(id)
     if(id === undefined) {
         id = parsegraph_generateID();
     }
+    if(!this._savedNodes) {
+        this._savedNodes = {};
+    }
     this._savedNodes[id] = this.node();
     return id;
 }
@@ -299,6 +308,9 @@ parsegraph_Caret.prototype.save = function(id)
  */
 parsegraph_Caret.prototype.clearSave = function(id)
 {
+    if(!this._savedNodes) {
+        return;
+    }
     if(id === undefined) {
         id = "";
     }
@@ -310,6 +322,9 @@ parsegraph_Caret.prototype.clearSave = function(id)
  */
 parsegraph_Caret.prototype.restore = function(id)
 {
+    if(!this._savedNodes) {
+        throw new Error("No saved nodes were found for the provided ID '" + id + "'");
+    }
     var loadedNode = this._savedNodes[id];
     if(loadedNode == null) {
         throw new Error("No node found for the provided ID '" + id + "'");
