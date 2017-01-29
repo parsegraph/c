@@ -539,10 +539,10 @@ parsegraph_Input.prototype.Update = function(elapsed)
     );
 
     var lastCoords = this.lastMouseCoords();
-    if(this.Get("z")) {
+    if(this.Get("x")) {
         cam.zoomToPoint(Math.pow(1.1, scaleSpeed * elapsed), lastCoords[0], lastCoords[1]);
     }
-    if(this.Get("x")) {
+    if(this.Get("z")) {
         cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * elapsed), lastCoords[0], lastCoords[1]);
     }
     this.Report(false);
