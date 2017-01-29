@@ -1,11 +1,21 @@
-function parsegraph_Caret(graph, rootType)
+function parsegraph_Caret()
 {
-    if(!rootType) {
-        rootType = parsegraph_SLOT;
+    if(arguments.length > 1) {
+        var graph, rootType;
+        graph = arguments[0];
+        rootType = arguments[1];
+        if(!rootType) {
+            rootType = parsegraph_SLOT;
+        }
+        // Create the root node.
+        rootType = parsegraph_readNodeType(rootType);
+        this._nodeRoot = new parsegraph_Node(graph, rootType);
     }
-    // Create the root node.
-    rootType = parsegraph_readNodeType(rootType);
-    this._nodeRoot = new parsegraph_Node(graph, rootType);
+    else {
+        // The root is provided.
+        var node = arguments[0];
+        this._nodeRoot = node;
+    }
 
     // Stack of nodes.
     this._nodes = [this._nodeRoot];
