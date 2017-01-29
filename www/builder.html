@@ -68,37 +68,25 @@ function init()
 
         var COUNT = 25
         main.appendChild(surface.container());
-
-        // Look at alignment here first.
-        //graph.plot(showHardTest(graph, server));
-        //graph.plot(showStatements(graph));
-
-        // Then correct alignment here.
-        graph.plot(showProportionTest(graph, COUNT));
-
-        //graph.plot(showIPAddresses(graph));
-
-        if(localStorage.getItem("parsegraph_world_camera") != null) {
-            try {
-                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-                graph.camera().restore(parsegraph_world_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-            }
-        }
+        graph.plot(showFlowchartTemplate(graph));
 
         // Schedule the repaint.
-        var needsPaint = true;
         var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
         renderTimer.setListener(function() {
-            if(needsPaint) {
+            var t = alpha_GetTime();
+            var elapsed = t - start;
+            start = t;
+            graph.input().Update(elapsed);
+            if(graph.needsRepaint()) {
                 surface.paint();
-                needsPaint = false;
             }
             surface.render();
         });
         graph.input().SetListener(function(affectedPaint) {
-            needsPaint = needsPaint || affectedPaint;
+            if(affectedPaint) {
+                graph.scheduleRepaint();
+            }
             renderTimer.schedule();
         });
         renderTimer.schedule();

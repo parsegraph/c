@@ -104,6 +104,7 @@ parsegraph_EXAMPLE_FILES = \
 	src/examples/showIPAddresses.js \
 	src/examples/showMemoryBlocks.js \
 	src/examples/showProportionTest.js \
+	src/examples/showFlowchartTemplate.js \
 	src/examples/showUlam.js \
 	src/examples/showSpiral.js \
 	src/examples/showCalendar.js \
