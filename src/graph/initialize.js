@@ -98,7 +98,7 @@ function parsegraph_initialize(mathMode) {
         maxLabelChars: 40,
         fontColor: new parsegraph_Color(0, 0, 0, 1),
         selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
-        fontSize: parsegraph_FONT_SIZE * (32/48),
+        fontSize: parsegraph_FONT_SIZE,
         letterWidth: .61,
         verticalSeparation: 9 * parsegraph_VERTICAL_SEPARATION_PADDING,
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
