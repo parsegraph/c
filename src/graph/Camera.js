@@ -54,7 +54,9 @@ parsegraph_Camera.prototype.toJSON = function()
     return {
         "cameraX":this._cameraX,
         "cameraY":this._cameraY,
-        "scale":this._scale
+        "scale":this._scale,
+        "width":this._width,
+        "height":this._height
     };
 };
 
