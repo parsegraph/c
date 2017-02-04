@@ -3,6 +3,12 @@ function parsegraph_createNode(graph, newType, fromNode, parentDirection)
     return new parsegraph_Node(graph, newType, fromNode, parentDirection);
 }
 
+/**
+ * Creates a new Node.
+ *
+ * parsegraph_Node(graph, newType) - no parent
+ * parsegraph_Node(graph, newType, parentNode, parentDirection)
+ */
 function parsegraph_Node(graph, newType, fromNode, parentDirection)
 {
     this._id = parsegraph_generateID("parsegraph_Node");
@@ -321,7 +327,7 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 
     // Parent it to ourselves.
 
-    // Allow alignements to be set before children are spawned.
+    // Allow alignments to be set before children are spawned.
     if(neighbor.alignmentMode() == parsegraph_NULL_NODE_ALIGNMENT) {
         neighbor.setAlignmentMode(parsegraph_DO_NOT_ALIGN);
     }
