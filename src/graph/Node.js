@@ -575,6 +575,7 @@ parsegraph_Node.prototype.type = function()
 parsegraph_Node.prototype.setType = function(newType)
 {
     this._type = newType;
+    this._style = parsegraph_style(this._type);
     this.layoutWasChanged(parsegraph_INWARD);
 };
 
