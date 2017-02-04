@@ -62,11 +62,17 @@ function parsegraph_TimeoutTimer()
     };
 };
 
+/**
+ * Sets the delay, in milliseconds.
+ */
 parsegraph_TimeoutTimer.prototype.setDelay = function()
 {
     this.delay = arguments[0];
 };
 
+/**
+ * Gets the delay, in milliseconds.
+ */
 parsegraph_TimeoutTimer.prototype.delay = function()
 {
     return this.delay;
@@ -118,11 +124,17 @@ function parsegraph_IntervalTimer()
     };
 };
 
+/**
+ * Sets the delay, in milliseconds.
+ */
 parsegraph_IntervalTimer.prototype.setDelay = function()
 {
     this.delay = arguments[0];
 };
 
+/**
+ * Gets the delay, in milliseconds.
+ */
 parsegraph_IntervalTimer.prototype.delay = function()
 {
     return this.delay;
