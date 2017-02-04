@@ -26,7 +26,7 @@ function parsegraph_Graph()
     this._camera = new parsegraph_Camera(this);
 
     // World-rendered carets.
-    this._worldCarets = [];
+    this._plotted = [];
 
     // The node currently under the cursor.
     this._nodeUnderCursor = null;
@@ -82,10 +82,10 @@ parsegraph_Graph.prototype.input = function()
 parsegraph_Graph.prototype.plot = function()
 {
     if(arguments.length > 1) {
-        this._worldCarets.push([arguments[0], arguments[1], arguments[2]]);
+        this._plotted.push([arguments[0], arguments[1], arguments[2]]);
     }
     else {
-        this._worldCarets.push([arguments[0]]);
+        this._plotted.push([arguments[0]]);
     }
 };
 
@@ -143,9 +143,9 @@ parsegraph_Graph.prototype.removeFromCarousel = function(caret)
 
 parsegraph_Graph.prototype.removePlot = function(caret)
 {
-    for(var i = 0; i < this._worldCarets.length; ++i) {
-        if(this._worldCarets[i][0] == caret) {
-            return this._worldCarets.splice(i, 1);
+    for(var i = 0; i < this._plotted.length; ++i) {
+        if(this._plotted[i][0] == caret) {
+            return this._plotted.splice(i, 1);
         }
     }
     return null;
@@ -278,8 +278,8 @@ parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
 parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
 {
     // Test if there is a node under the given coordinates.
-    for(var i = this._worldCarets.length - 1; i >= 0; --i) {
-        var caretData = this._worldCarets[i];
+    for(var i = this._plotted.length - 1; i >= 0; --i) {
+        var caretData = this._plotted[i];
         var caret = caretData[0];
         var caretX = caretData[1];
         var caretY = caretData[2];
@@ -317,7 +317,7 @@ parsegraph_Graph.prototype.paint = function()
         }
 
         this._worldNodePainter.setBackground(this.surface().backgroundColor());
-        this._worldCarets.forEach(function(caretData) {
+        this._plotted.forEach(function(caretData) {
             this._worldNodePainter.drawCaret.apply(this._worldNodePainter, caretData);
         }, this);
 
