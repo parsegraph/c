@@ -350,6 +350,20 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
     this._neighbors[givenDirection].erase();
 };
 
+parsegraph_Node.prototype.disconnectNode = function(inDirection)
+{
+    if(!this.hasNode(givenDirection)) {
+        return;
+    }
+    // Connect the node.
+    var neighbor = this._neighbors[inDirection];
+    var disconnected = neighbor.node();
+    neighbor.erase();
+    disconnected.setParent(null);
+    this.layoutWasChanged(inDirection);
+    return disconnected;
+};
+
 parsegraph_Node.prototype.scaleAt = function(direction)
 {
     return this.nodeAt(direction).scale();
@@ -917,6 +931,54 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
         return parsegraph_BUD_LEAF_SEPARATION * style.horizontalSeparation;
     }
     return style.horizontalSeparation;
+};
+
+parsegraph_Node.prototype.connectNode = function(inDirection, node)
+{
+    // Ensure the node can be connected in the given direction.
+    if(inDirection == parsegraph_OUTWARD) {
+        throw new Error("By rule, nodes cannot be spawned in the outward direction.");
+    }
+    if(inDirection == parsegraph_NULL_NODE_DIRECTION) {
+        throw new Error("Nodes cannot be spawned in the null node direction.");
+    }
+    if(inDirection == this.parentDirection()) {
+        throw new Error("Cannot connect a node in the parent's direction (" + parsegraph_nameNodeDirection(inDirection));
+    }
+    if(this.hasNode(inDirection)) {
+        throw new Error("Cannot connect a node in the already occupied " + parsegraph_nameNodeDirection(inDirection) + " direction.");
+    }
+    if(this.type() == parsegraph_SLIDER) {
+        throw new Error("Sliders cannot have child nodes.");
+    }
+    if(this.type() == parsegraph_SCENE && spawnDirection == parsegraph_INWARD) {
+        throw new Error("Scenes cannot have inward nodes.");
+    }
+    if(node.parentDirection() !== parsegraph_NULL_NODE_DIRECTION) {
+        throw new Error("Node to connect must not have a parent.");
+    }
+    if(node.hasNode(parsegraph_reverseNodeDirection(inDirection))) {
+        throw new Error("Node to connect must not have a node in the connecting direction.");
+    }
+
+    // Connect the node.
+    var neighbor = this._neighbors[inDirection];
+    neighbor.setNode(node);
+    node.setParent(this, parsegraph_reverseNodeDirection(inDirection));
+
+    if(neighbor.alignmentMode() == parsegraph_NULL_NODE_ALIGNMENT) {
+        neighbor.setAlignmentMode(parsegraph_DO_NOT_ALIGN);
+    }
+
+    this.layoutWasChanged(inDirection);
+
+    return node;
+};
+
+parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
+{
+    this._neighbors[parentDirection].setNode(fromNode);
+    this._parentDirection = parentDirection;
 };
 
 parsegraph_Node.prototype.isSelected = function()

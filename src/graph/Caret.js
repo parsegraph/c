@@ -241,6 +241,16 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
     return created;
 };
 
+/**
+ * Connects the provided node to the node at this caret's position.
+ */
+parsegraph_Caret.prototype.connect = function(inDirection, node)
+{
+    // Interpret the given direction and type for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+    this.node().connectNode(inDirection, node);
+};
+
 parsegraph_Caret.prototype.erase = function(inDirection)
 {
     inDirection = parsegraph_readNodeDirection(inDirection);
