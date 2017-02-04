@@ -57,7 +57,7 @@ function parsegraph_initialize(mathMode) {
      */
     parsegraph_LINE_THICKNESS = 12;
 
-    parsegraph_LINE_COLOR = parsegraph_createColor(.8, .8, .8, 1);
+    parsegraph_LINE_COLOR = parsegraph_createColor(.8, .8, .8, .6);
     parsegraph_SELECTED_LINE_COLOR = parsegraph_createColor(.8, .8, .8, 1);
 
     parsegraph_BUD_RADIUS = 8;
@@ -72,8 +72,8 @@ function parsegraph_initialize(mathMode) {
     // Configures graphs to appear grid-like; I call it 'math-mode'.
     if(mathMode) {
         parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
-        parsegraph_HORIZONTAL_SEPARATION_PADDING = 0;
-        parsegraph_VERTICAL_SEPARATION_PADDING = 0;
+        parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
+        parsegraph_VERTICAL_SEPARATION_PADDING = 2;
     }
 
     /**
@@ -130,8 +130,8 @@ function parsegraph_initialize(mathMode) {
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
         verticalPadding: .5*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(.8, .8, 1, 1),
-        backgroundColor: parsegraph_createColor(.75, .75, 1, 1),
+        borderColor: parsegraph_createColor(.6, 1, .6, 1),
+        backgroundColor: parsegraph_createColor(.75, 1, .75, 1),
         selectedBorderColor: parsegraph_createColor(.8, .8, 1, 1),
         selectedBackgroundColor: parsegraph_createColor(.75, .75, 1, 1),
         brightness: 0.75,
@@ -171,9 +171,9 @@ function parsegraph_initialize(mathMode) {
         minWidth: parsegraph_MIN_BLOCK_WIDTH,
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
-        verticalPadding: .5*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(.6, 1, .6, 1),
-        backgroundColor: parsegraph_createColor(.75, 1, .75, 1),
+        verticalPadding: 1*parsegraph_BUD_RADIUS,
+        borderColor: parsegraph_createColor(.8, .8, 1, .3),
+        backgroundColor: parsegraph_createColor(.75, .75, 1, .1),
         selectedBorderColor: parsegraph_createColor(.95, 1, .95, 1),
         selectedBackgroundColor: parsegraph_createColor(.9, 1, .9, 1),
         brightness: 0.75,
