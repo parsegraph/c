@@ -2,7 +2,7 @@ function showIPAddresses(graph)
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);
-    var MAX_DEPTH = 9;
+    var MAX_DEPTH = 13;
 
     var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
 
@@ -29,14 +29,19 @@ function showIPAddresses(graph)
                 caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
                 caret.pull('d');
                 caret.push();
+                caret.label(" ");
             }
             else {
                 caret.spawnMove('f', 'bud');
+                caret.label(" ");
             }
             if(showLevel(depth + 1, i)) {
                 caret.replace('u', 'block');
                 //caret.label('u', "Index=" + index + ", i=" + i + ", depth=" + depth + ", calc=" + calc);
                 caret.label(index);
+            }
+            else {
+                caret.label(" ");
             }
             caret.shrink();
             caret.move('u');

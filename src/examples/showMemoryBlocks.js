@@ -32,6 +32,7 @@ function showMemoryBlocks(graph, COUNT)
                     caret.spawnMove('u', 'slot');
                 }
             }
+
             r = Math.floor(Math.random() * 2);
             if(r % 2 == 0) {
                 caret.spawnMove('b', 'block');

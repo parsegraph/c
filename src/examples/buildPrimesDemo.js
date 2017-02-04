@@ -7,25 +7,6 @@ function parsegraph_PrimesWidget(graph)
     this.caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
 }
 
-function parsegraph_PrimesModulo(frequency)
-{
-    this.frequency = frequency;
-    this.target = 0;
-};
-
-parsegraph_PrimesModulo.prototype.calculate = function(number)
-{
-    while(number > this.target) {
-        this.target += this.frequency;
-    }
-    return this.target - number;
-};
-
-parsegraph_PrimesModulo.prototype.value = function()
-{
-    return this.frequency;
-};
-
 parsegraph_PrimesWidget.prototype.step = function(steps)
 {
     // Check if any known prime is a multiple of the current position.
@@ -63,6 +44,26 @@ parsegraph_PrimesWidget.prototype.root = function()
 {
     return this.caret.root();
 };
+
+function parsegraph_PrimesModulo(frequency)
+{
+    this.frequency = frequency;
+    this.target = 0;
+};
+
+parsegraph_PrimesModulo.prototype.calculate = function(number)
+{
+    while(number > this.target) {
+        this.target += this.frequency;
+    }
+    return this.target - number;
+};
+
+parsegraph_PrimesModulo.prototype.value = function()
+{
+    return this.frequency;
+};
+
 
 function buildPrimesDemo(graph, COUNT)
 {
