@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Memory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.parsegraph_Surface {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+}
+
+div {
+    text-align: center;
+    position: absolute;
+}
+
+.controls {
+    margin: auto;
+    position: absolute;
+    pointer-events: none;
+    width: 100%;
+}
+
+.controls > form button {
+    pointer-events: auto;
+}
+
+@media only screen and (max-width: 980px) {
+
+.controls {
+    display: none;
+}
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script src="parsegraph-examples-1.0.js"></script>
+<script>
+
+function init()
+{
+    try {
+        parsegraph_initialize();
+
+        var main = document.body;
+
+        var surface = new parsegraph_Surface();
+        var graph = new parsegraph_Graph(surface);
+        graph.plot(showMemoryBlocks(graph, 25));
+        GRAPH = graph;
+        main.appendChild(surface.container());
+
+        // Schedule the repaint.
+        var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
+        renderTimer.setListener(function() {
+            var t = alpha_GetTime();
+            var elapsed = t - start;
+            start = t;
+            graph.input().Update(elapsed);
+            if(graph.needsRepaint()) {
+                surface.paint();
+            }
+            surface.render();
+        });
+        graph.input().SetListener(function(affectedPaint) {
+            if(affectedPaint) {
+                graph.scheduleRepaint();
+            }
+            renderTimer.schedule();
+        });
+        renderTimer.schedule();
+
+        var controls = document.createElement("div");
+        controls.className = "controls";
+        main.appendChild(controls);
+        controls.style.bottom = ".5em";
+
+        var form = parsegraph_createForm();
+        form.button("resetOrigin", "Reset Camera");
+
+        form.addListener(function(sourceName, value) {
+            var defaultScale = .5;
+            if(sourceName == "resetOrigin") {
+                graph.camera().setOrigin(
+                    graph.gl().drawingBufferWidth / (2 * defaultScale),
+                    graph.gl().drawingBufferHeight / (2 * defaultScale)
+                );
+                graph.camera().setScale(defaultScale);
+            }
+            else {
+                return;
+            }
+
+            graph.scheduleRender();
+        });
+
+        controls.appendChild(form.asDOM());
+        main.appendChild(document.createElement("div"));
+    } catch(ex) {
+        alert("Init: " + parsegraph_writeError(ex));
+        throw ex;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init();
+});
+</script>
+</head>
+<body>
+</body>
+</html>
