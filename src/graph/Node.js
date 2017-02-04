@@ -997,3 +997,24 @@ parsegraph_Node.prototype.setSelected = function(selected)
 {
     this._selected = selected;
 };
+
+function parsegraph_labeledBud(graph, label)
+{
+    var node = new parsegraph_Node(graph, parsegraph_BUD);
+    node.setLabel(label);
+    return node;
+};
+
+function parsegraph_labeledSlot(graph, label)
+{
+    var node = new parsegraph_Node(graph, parsegraph_SLOT);
+    node.setLabel(label);
+    return node;
+};
+
+function parsegraph_labeledBlock(graph, label)
+{
+    var node = new parsegraph_Node(graph, parsegraph_BLOCK);
+    node.setLabel(label);
+    return node;
+};
