@@ -146,7 +146,7 @@ parsegraph_IntervalTimer.prototype.schedule = function()
         return;
     }
 
-    this.timerId = window.setInterval(this.delay, this.fire);
+    this.timerId = window.setInterval(this.fire, this.delay);
 };
 
 parsegraph_IntervalTimer.prototype.setListener = function(listener, thisArg)
