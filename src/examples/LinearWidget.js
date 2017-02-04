@@ -14,6 +14,7 @@ parsegraph_LinearWidget.prototype.step = function(steps)
         for(var i = 0; i < this.position; ++i) {
             this.caret.spawnMove('u', 'b');
         }
+        this.caret.label(1 + this.position);
         this.caret.pop();
 
         // Advance.
