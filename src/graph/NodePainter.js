@@ -424,6 +424,10 @@ parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userS
     }
 };
 
+/**
+ * drawCaret(caret, worldX, worldY, userScale)
+ * drawCaret(caret) means drawCaret(caret, 0, 0, 1)
+ */
 parsegraph_NodePainter.prototype.drawCaret = function()
 {
     var caret, worldX, worldY, userScale;
@@ -469,6 +473,9 @@ parsegraph_NodePainter.prototype.drawCaret = function()
     }
 }
 
+/**
+ * Paints a circle around the origin.
+ */
 parsegraph_NodePainter.prototype.drawOrigin = function()
 {
     this._originPainter.setBackgroundColor(
@@ -503,6 +510,9 @@ parsegraph_NodePainter.prototype.drawOrigin = function()
     );
 };
 
+/**
+ * Paints the given node's lines extending to its neighbors.
+ */
 parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, userScale)
 {
     var bodySize = node.size();
@@ -569,6 +579,9 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
     parsegraph_forEachCardinalNodeDirection(drawLine, this);
 };
 
+/**
+ * Paints the given node's extents.
+ */
 parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, userScale)
 {
     var painter = this._extentPainter;
@@ -669,6 +682,9 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
     paintForwardExtent();
 };
 
+/**
+ * Paints the block that comprises the given node.
+ */
 parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, worldY, userScale)
 {
     var style = node.blockStyle();
