@@ -403,6 +403,9 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
     // Render and draw the scene texture.
 };
 
+/**
+ * Draws a single node, and the lines extending from it.
+ */
 parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userScale)
 {
     if(this.isExtentRenderingEnabled()) {
@@ -412,12 +415,10 @@ parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userS
     switch(node.type()) {
     case parsegraph_SLIDER:
         return this.drawSlider(node, worldX, worldY, userScale);
-        break;
     case parsegraph_SCENE:
         this.paintLines(node, worldX, worldY, userScale);
         this.paintStyledBlock(node, worldX, worldY, userScale);
         return this.drawScene(node, worldX, worldY, userScale);
-        break;
     default:
         this.paintLines(node, worldX, worldY, userScale);
         this.paintStyledBlock(node, worldX, worldY, userScale);
@@ -471,7 +472,7 @@ parsegraph_NodePainter.prototype.drawCaret = function()
 
         this.drawNode(node, worldX, worldY, userScale);
     }
-}
+};
 
 /**
  * Paints a circle around the origin.
