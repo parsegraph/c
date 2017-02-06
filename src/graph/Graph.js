@@ -218,14 +218,23 @@ parsegraph_Graph.prototype.mouseOver = function(x, y)
     y = mouseInWorld[1];
 
     var selectedNode = this.nodeUnderCoords(x, y);
-    if(this._nodeUnderCursor && this._nodeUnderCursor != selectedNode) {
+    if(this._nodeUnderCursor === selectedNode) {
+        // The node under cursor is already the node under cursor, so don't
+        // do anything.
+        //console.log("Node was the same");
+        return false;
+    }
+
+    if(this._nodeUnderCursor && this._nodeUnderCursor !== selectedNode) {
+        //console.log("Node is changing, so repainting.");
         this._nodeUnderCursor.setSelected(false);
         this.scheduleRepaint();
     }
     this._nodeUnderCursor = selectedNode;
     if(!selectedNode) {
-        // No node found.
-        return null;
+        // No node was actually found.
+        //console.log("No node actually found.");
+        return false;
     }
 
     if(selectedNode.type() == parsegraph_SLIDER) {
@@ -237,7 +246,7 @@ parsegraph_Graph.prototype.mouseOver = function(x, y)
         this.scheduleRepaint();
     }
 
-    return selectedNode;
+    return true;
 };
 
 parsegraph_Graph.prototype.nodeUnderCursor = function()
