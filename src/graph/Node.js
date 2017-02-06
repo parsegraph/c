@@ -830,7 +830,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
     var style = this.blockStyle();
 
     if(this.label() !== undefined) {
-        // This reference to the painter seems to be an wart of the design.
+        // This reference to the painter seems to be a wart of the design.
         var textMetrics = this._graph.measureText(
             this.label(),
             style.fontSize,
