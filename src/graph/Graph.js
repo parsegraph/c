@@ -321,6 +321,55 @@ parsegraph_Graph.prototype.measureText = function()
     return painter.measureText.apply(painter, arguments);
 };
 
+/**
+ * drawCaret(caret, worldX, worldY, userScale)
+ * drawCaret(caret) means drawCaret(caret, 0, 0, 1)
+ */
+parsegraph_Graph.prototype.drawCaret = function()
+{
+    var caret, worldX, worldY, userScale;
+    caret = arguments[0];
+    if(arguments.length > 1) {
+        worldX = arguments[1];
+        worldY = arguments[2];
+        userScale = arguments[3];
+    }
+    else {
+        worldX = 0;
+        worldY = 0;
+    }
+    if(userScale === undefined) {
+        userScale = 1;
+    }
+    caret.root().commitLayoutIteratively();
+
+    var ordering = [caret.root()];
+
+    var addNode = function(node, direction) {
+        // Do not add the parent.
+        if(!node.isRoot() && node.parentDirection() == direction) {
+            return;
+        }
+        // Add the node to the ordering if it exists and needs a layout.
+        if(node.hasNode(direction)) {
+            var child = node.nodeAt(direction);
+            ordering.push(child);
+        }
+    };
+
+    // Build the node list.
+    for(var i = 0; i < ordering.length; ++i) {
+        var node = ordering[i];
+        addNode(node, parsegraph_INWARD);
+        addNode(node, parsegraph_DOWNWARD);
+        addNode(node, parsegraph_UPWARD);
+        addNode(node, parsegraph_BACKWARD);
+        addNode(node, parsegraph_FORWARD);
+
+        this._worldNodePainter.drawNode(node, worldX, worldY, userScale);
+    }
+};
+
 parsegraph_Graph.prototype.paint = function()
 {
     if(this._worldPaintingDirty) {
@@ -333,7 +382,7 @@ parsegraph_Graph.prototype.paint = function()
 
         this._worldNodePainter.setBackground(this.surface().backgroundColor());
         this._plotted.forEach(function(caretData) {
-            this._worldNodePainter.drawCaret.apply(this._worldNodePainter, caretData);
+            this.drawCaret.apply(this, caretData);
         }, this);
 
         // Paint the origin.
