@@ -207,9 +207,12 @@ parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
 
 /**
  * Receives a mouseover event at the given coordinates, in client space.
+ *
+ * Returns true if this event processing requires a graph repaint.
  */
 parsegraph_Graph.prototype.mouseOver = function(x, y)
 {
+    //console.log("mouseover: " + x + ", " + y);
     var mouseInWorld = matrixTransform2D(
         makeInverse3x3(this.camera().worldMatrix()),
         x, y
@@ -230,6 +233,7 @@ parsegraph_Graph.prototype.mouseOver = function(x, y)
         this._nodeUnderCursor.setSelected(false);
         this.scheduleRepaint();
     }
+
     this._nodeUnderCursor = selectedNode;
     if(!selectedNode) {
         // No node was actually found.
@@ -238,10 +242,12 @@ parsegraph_Graph.prototype.mouseOver = function(x, y)
     }
 
     if(selectedNode.type() == parsegraph_SLIDER) {
+        //console.log("Selecting slider and repainting");
         selectedNode.setSelected(true);
         this.scheduleRepaint();
     }
     else if(selectedNode.hasClickListener() && !selectedNode.isSelected()) {
+        //console.log("Selecting node and repainting");
         selectedNode.setSelected(true);
         this.scheduleRepaint();
     }
@@ -412,6 +418,7 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
 
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
+    //console.log(new Error("Scheduling repaint"));
     this._worldPaintingDirty = true;
     if(this.onScheduleRepaint) {
         this.onScheduleRepaint();

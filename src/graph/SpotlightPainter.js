@@ -80,7 +80,7 @@ function parsegraph_SpotlightPainter(gl)
 parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
     cx, cy, radius, color)
 {
-    //console.log(cx + ", " + cy + ", " + size);
+    //console.log(cx + ", " + cy + ", " + radius + " " + color.toString());
     // Append position data.
     this._spotlightBuffer.appendData(
         this.a_position,
