@@ -354,6 +354,7 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
         throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
     }
     this._neighbors[givenDirection].erase();
+    this.layoutWasChanged(givenDirection);
 };
 
 parsegraph_Node.prototype.disconnectNode = function(inDirection)
