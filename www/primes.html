@@ -67,9 +67,9 @@ function init()
         main.appendChild(graph.container());
 
         var linear = new parsegraph_LinearWidget(graph);
-        graph.plot(linear.caret);
+        graph.plot(linear.root());
         var primes = new parsegraph_PrimesWidget(graph);
-        graph.plot(primes.caret);
+        graph.plot(primes.root());
 
         var bTimer = new parsegraph_TimeoutTimer();
         bTimer.setDelay(750);
