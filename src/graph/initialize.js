@@ -188,6 +188,10 @@ function parsegraph_initialize(mathMode) {
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
+    if(mathMode) {
+        parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
+    }
+
     parsegraph_EXTENT_BORDER_COLOR = parsegraph_createColor(1, 1, 0, .2);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;
     parsegraph_EXTENT_BACKGROUND_COLOR = parsegraph_createColor(1, 0, 0, .1);
