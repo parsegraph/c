@@ -36,6 +36,11 @@ parsegraph_NodePainter.prototype.gl = function()
     return this._gl;
 };
 
+parsegraph_NodePainter.prototype.textPainter = function()
+{
+    return this._textPainter;
+};
+
 /**
  * Sets the background color to the given value. This supports a second
  * call that creates the color from the provided arguments.

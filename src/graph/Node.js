@@ -34,6 +34,8 @@ function parsegraph_Node(graph, newType, fromNode, parentDirection)
 
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
 
+    this._paintGroup = null;
+
     // Check if a parent node was provided.
     if(fromNode != null) {
         // A parent node was provided; this node is a child.
@@ -68,6 +70,60 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
             thisArg = this;
         }
         this._clickListener = [listener, thisArg];
+    }
+};
+
+parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
+{
+    this._paintGroup = paintGroup;
+};
+
+/**
+ * Returns the numeric paint group ID. Null until set by Graph during drawing.
+ */
+parsegraph_Node.prototype.paintGroup = function()
+{
+    return this._paintGroup;
+};
+
+/**
+ * Returns a painter's algorithm-friendly list of nodes that use the same paint
+ * group as the given node. The given node is included.
+ */
+function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
+{
+    var paintGroup = root.paintGroup();
+
+    // TODO Make this overwrite the current node, since it's no longer needed, and see
+    // if this increases performance.
+    var ordering = [root];
+    var addNode = function(node, direction) {
+        // Do not add the parent.
+        if(!node.isRoot() && node.parentDirection() == direction) {
+            return;
+        }
+
+        // Do not add nodes foreign to the given group.
+        if(node.paintGroup() !== paintGroup) {
+            return;
+        }
+
+        // Add the node to the ordering if it exists.
+        if(node.hasNode(direction)) {
+            var child = node.nodeAt(direction);
+            ordering.push(child);
+        }
+    };
+
+    for(var i = 0; i < ordering.length; ++i) {
+        var node = ordering[i];
+        addNode(node, parsegraph_INWARD);
+        addNode(node, parsegraph_DOWNWARD);
+        addNode(node, parsegraph_UPWARD);
+        addNode(node, parsegraph_BACKWARD);
+        addNode(node, parsegraph_FORWARD);
+
+        callback.call(callbackThisArg, node);
     }
 };
 
@@ -661,6 +717,10 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
         // Set the needs layout flag.
         node._layoutState = parsegraph_NEEDS_COMMIT;
 
+        if(node.paintGroup()) {
+            node.paintGroup().markDirty();
+        }
+
         // Recurse for the children of this node.
         notifyChild.call(node, parsegraph_DOWNWARD);
         notifyChild.call(node, parsegraph_UPWARD);
@@ -829,14 +889,14 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
     var bodySize = parsegraph_createSize();
 
     var style = this.blockStyle();
-
     if(this.label() !== undefined) {
-        // This reference to the painter seems to be a wart of the design.
-        var textMetrics = this._graph.measureText(
-            this.label(),
-            style.fontSize,
-            style.fontSize * style.letterWidth * style.maxLabelChars
-        );
+        if(!this.paintGroup()) {
+            throw new Error("Label size cannot be determined without a paint group.");
+        }
+        var textMetrics = this.paintGroup().measureText(this.label(), style);
+        if(!textMetrics) {
+            throw new Error("Label size cannot be determined without the painter first being assigned.");
+        }
         bodySize.setWidth(
             Math.max(style.minWidth, textMetrics[0])
         );

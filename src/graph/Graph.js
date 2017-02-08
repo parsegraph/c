@@ -43,9 +43,8 @@ function parsegraph_Graph()
 
     this._input = new parsegraph_Input(this, this._camera);
 
-    // GL painters; not created until needed.
-    this._worldNodePainter = null;
-    this._carouselNodePainter = null;
+    // GL painters are not created until needed.
+    this._carouselPaintGroups = [];
     this._fanPainter = null;
 };
 
@@ -82,11 +81,23 @@ parsegraph_Graph.prototype.input = function()
 parsegraph_Graph.prototype.plot = function()
 {
     if(arguments.length > 1) {
-        this._plotted.push([arguments[0], arguments[1], arguments[2]]);
+        this._plotted.push(new parsegraph_CaretGroup(
+            arguments[0], arguments[1], arguments[2]
+        ));
     }
     else {
-        this._plotted.push([arguments[0]]);
+        this._plotted.push(new parsegraph_CaretGroup(arguments[0], 0, 0, 1));
     }
+};
+
+parsegraph_Graph.prototype.removePlot = function(caret)
+{
+    for(var i = 0; i < this._plotted.length; ++i) {
+        if(this._plotted[i].caret() == caret) {
+            return this._plotted.splice(i, 1);
+        }
+    }
+    return null;
 };
 
 parsegraph_Graph.prototype.plotCarousel = function(worldX, worldY)
@@ -136,16 +147,6 @@ parsegraph_Graph.prototype.removeFromCarousel = function(caret)
                 this._selectedCarouselCaret = null;
             }
             return removed;
-        }
-    }
-    return null;
-};
-
-parsegraph_Graph.prototype.removePlot = function(caret)
-{
-    for(var i = 0; i < this._plotted.length; ++i) {
-        if(this._plotted[i][0] == caret) {
-            return this._plotted.splice(i, 1);
         }
     }
     return null;
@@ -294,140 +295,13 @@ parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
 {
     // Test if there is a node under the given coordinates.
     for(var i = this._plotted.length - 1; i >= 0; --i) {
-        var caretData = this._plotted[i];
-        var caret = caretData[0];
-        var caretX = caretData[1];
-        var caretY = caretData[2];
-        if(caretData.length === 1) {
-            caretX = 0;
-            caretY = 0;
-        }
-        var selectedNode = caret.nodeUnderCoords(x - caretX, y - caretY);
+        var selectedNode = this._plotted[i].nodeUnderCoords(x, y);
         if(selectedNode) {
             // Node located; no further search.
             return selectedNode;
         }
     }
     return null;
-};
-
-parsegraph_Graph.prototype.measureText = function()
-{
-    if(!this._worldNodePainter) {
-        throw new Error("measureText cannot be called without a node painter.");
-    }
-
-    var painter = this._worldNodePainter._textPainter;
-    return painter.measureText.apply(painter, arguments);
-};
-
-/**
- * drawCaret(caret, worldX, worldY, userScale)
- * drawCaret(caret) means drawCaret(caret, 0, 0, 1)
- */
-parsegraph_Graph.prototype.drawCaret = function()
-{
-    var caret, worldX, worldY, userScale;
-    caret = arguments[0];
-    if(arguments.length > 1) {
-        worldX = arguments[1];
-        worldY = arguments[2];
-        userScale = arguments[3];
-    }
-    else {
-        worldX = 0;
-        worldY = 0;
-    }
-    if(userScale === undefined) {
-        userScale = 1;
-    }
-    caret.root().commitLayoutIteratively();
-
-    var ordering = [caret.root()];
-
-    var addNode = function(node, direction) {
-        // Do not add the parent.
-        if(!node.isRoot() && node.parentDirection() == direction) {
-            return;
-        }
-        // Add the node to the ordering if it exists and needs a layout.
-        if(node.hasNode(direction)) {
-            var child = node.nodeAt(direction);
-            ordering.push(child);
-        }
-    };
-
-    // Build the node list.
-    for(var i = 0; i < ordering.length; ++i) {
-        var node = ordering[i];
-        addNode(node, parsegraph_INWARD);
-        addNode(node, parsegraph_DOWNWARD);
-        addNode(node, parsegraph_UPWARD);
-        addNode(node, parsegraph_BACKWARD);
-        addNode(node, parsegraph_FORWARD);
-
-        this._worldNodePainter.drawNode(node, worldX, worldY, userScale);
-    }
-};
-
-parsegraph_Graph.prototype.paint = function()
-{
-    if(this._worldPaintingDirty) {
-        if(!this._worldNodePainter) {
-            this._worldNodePainter = new parsegraph_NodePainter(this.gl());
-        }
-        else {
-            this._worldNodePainter.clear();
-        }
-
-        this._worldNodePainter.setBackground(this.surface().backgroundColor());
-        this._plotted.forEach(function(caretData) {
-            this.drawCaret.apply(this, caretData);
-        }, this);
-
-        // Paint the origin.
-        this._worldNodePainter.drawOrigin();
-
-        this._worldPaintingDirty = false;
-    }
-
-    if(this._carouselPaintingDirty && this._showCarousel) {
-        // Paint the carousel.
-        if(!this._carouselNodePainter) {
-            this._carouselNodePainter = new parsegraph_NodePainter(this.gl());
-        }
-        else {
-            this._carouselNodePainter.clear();
-        }
-        var i = 0;
-        this._carouselNodePainter.setBackground(this.surface().backgroundColor());
-        this.arrangeCarousel();
-        this._carouselCarets.forEach(function(caretData) {
-            this._carouselNodePainter.drawCaret(
-                caretData[0],
-                this._carouselCoords[0] + caretData[4],
-                this._carouselCoords[1] + caretData[5],
-                caretData[6]
-            );
-        }, this);
-        if(!this._fanPainter) {
-            this._fanPainter = new parsegraph_FanPainter(this.gl());
-        }
-        else {
-            this._fanPainter.clear();
-        }
-        var fanPadding = 1.2;
-        this._fanPainter.setAscendingRadius(fanPadding * this._carouselSize);
-        this._fanPainter.setDescendingRadius(fanPadding * 2 * this._carouselSize);
-        this._fanPainter.selectRad(
-            this._carouselCoords[0], this._carouselCoords[1],
-            0, Math.PI * 2,
-            parsegraph_createColor(1, 1, 1, 1),
-            parsegraph_createColor(.5, .5, .5, .4)
-        );
-
-        this._carouselPaintingDirty = false;
-    }
 };
 
 /**
@@ -487,23 +361,73 @@ parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
     }
 };
 
+parsegraph_Graph.prototype.paint = function()
+{
+    if(this._worldPaintingDirty) {
+        for(var i in this._plotted) {
+            var caretGroup = this._plotted[i];
+            caretGroup.paint(
+                this.gl(), this.surface().backgroundColor()
+            );
+        }
+        this._worldPaintingDirty = false;
+    }
+
+    if(this._carouselPaintingDirty && this._showCarousel) {
+        // Paint the carousel.
+        this.arrangeCarousel();
+        for(var i = 0; i < this._carouselPaintGroups.length; ++i) {
+            var group = this._carouselPaintGroups[i];
+            group.paint(this.gl(), this.surface().backgroundColor());
+        }
+
+        /*this._carouselCarets.forEach(function(caretData) {
+            this._carouselNodePainter.drawCaret(
+                caretData[0],
+                this._carouselCoords[0] + caretData[4],
+                this._carouselCoords[1] + caretData[5],
+                caretData[6]
+            );
+        }, this);*/
+
+        // Paint the background highlighting fan.
+        if(!this._fanPainter) {
+            this._fanPainter = new parsegraph_FanPainter(this.gl());
+        }
+        else {
+            this._fanPainter.clear();
+        }
+        var fanPadding = 1.2;
+        this._fanPainter.setAscendingRadius(fanPadding * this._carouselSize);
+        this._fanPainter.setDescendingRadius(fanPadding * 2 * this._carouselSize);
+        this._fanPainter.selectRad(
+            this._carouselCoords[0], this._carouselCoords[1],
+            0, Math.PI * 2,
+            parsegraph_createColor(1, 1, 1, 1),
+            parsegraph_createColor(.5, .5, .5, .4)
+        );
+
+        this._carouselPaintingDirty = false;
+    }
+};
+
 parsegraph_Graph.prototype.render = function()
 {
-    // Paint the world.
     var world = this.camera().project();
     if(this._showCarousel) {
         this._fanPainter.render(world);
     }
 
-    if(this._worldNodePainter) {
-        this._worldNodePainter.setBackground(this._backgroundColor);
-        this._worldNodePainter.render(world, this.camera().scale());
+    for(var i in this._plotted) {
+        var caretGroup = this._plotted[i];
+        caretGroup.render(world, scale);
     }
 
     // Render the carousel if requested.
     if(this._showCarousel) {
-        var gl = this.gl();
-        this._carouselNodePainter.setBackground(this._backgroundColor);
-        this._carouselNodePainter.render(world, 1);
+        for(var i = 0; i < this._carouselPaintGroups.length; ++i) {
+            var group = this._carouselPaintGroups[i];
+            group.painter.render(world, 1);
+        }
     }
 };
