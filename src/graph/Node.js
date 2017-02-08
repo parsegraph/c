@@ -813,7 +813,11 @@ parsegraph_Node.prototype.label = function()
 
 parsegraph_Node.prototype.setLabel = function(label)
 {
+    if(this._label == label) {
+        return;
+    }
     this._label = label;
+    this.layoutWasChanged();
 };
 
 parsegraph_Node.prototype.blockStyle = function()
@@ -823,8 +827,13 @@ parsegraph_Node.prototype.blockStyle = function()
 
 parsegraph_Node.prototype.setBlockStyle = function(style)
 {
+    if(this._style == style) {
+        // Ignore idempotent style changes.
+        return;
+    }
     console.log("Block style set");
     this._style = style;
+    this.layoutWasChanged();
 };
 
 parsegraph_Node.prototype.isSelectedAt = function(direction)
