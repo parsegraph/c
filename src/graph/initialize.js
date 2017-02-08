@@ -190,6 +190,7 @@ function parsegraph_initialize(mathMode) {
 
     if(mathMode) {
         parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
+        parsegraph_SLOT_STYLE.borderColor.setA(1);
     }
 
     parsegraph_EXTENT_BORDER_COLOR = parsegraph_createColor(1, 1, 0, .2);
