@@ -1,6 +1,6 @@
 function showFlowchartTemplate(graph)
 {
-    var caret = new parsegraph_Caret(graph, 'b');
+    var caret = new parsegraph_Caret('b');
 
     var clickChild = function() {
         // Spawn a reasonable child in an allowed direction.
@@ -87,5 +87,5 @@ function showFlowchartTemplate(graph)
         graph.scheduleRepaint();
     };
     caret.onClick(clickChild);
-    return caret;
+    return caret.root();
 };

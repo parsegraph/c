@@ -1,6 +1,6 @@
 function buildSelection(graph, COUNT)
 {
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.push();
 
     var d = parsegraph_FORWARD;
@@ -47,5 +47,5 @@ function buildSelection(graph, COUNT)
     };
     scheduleAddBlock();
 
-    return caret;
+    return caret.root();
 }

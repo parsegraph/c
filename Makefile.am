@@ -50,7 +50,6 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/initialize.js \
 	src/graph/log.js \
 	src/graph/PaintGroup.js \
-	src/graph/CaretGroup.js \
 	src/graph/Graph.js \
 	src/graph/parsegraph_Graph_Tests.js \
 	src/graph/Input.js \

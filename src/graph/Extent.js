@@ -1012,15 +1012,12 @@ parsegraph_Extent_Tests.addTest("parsegraph_Extent.combinedExtent", function(res
     }
 });
 
-parsegraph_checkExtentsEqual = function(graph, caret, direction, expected, resultDom)
+parsegraph_checkExtentsEqual = function(caret, direction, expected, resultDom)
 {
     if(caret.node().extentsAt(direction).equals(expected)) {
         return true;
     }
     if(resultDom) {
-        resultDom.appendChild(
-            graph._container
-        );
         resultDom.appendChild(
             expected.toDom(
                 "Expected " + parsegraph_nameNodeDirection(direction) + " extent"

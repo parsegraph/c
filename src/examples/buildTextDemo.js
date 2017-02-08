@@ -7,7 +7,7 @@ function buildTextDemo(graph, COUNT, text)
         text = "";
     }
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
@@ -46,5 +46,5 @@ function buildTextDemo(graph, COUNT, text)
     };
     //scheduleAddBlock();
 
-    return caret;
+    return caret.root();
 };

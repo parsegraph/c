@@ -1,203 +1,15 @@
-function parsegraph_Caret()
+function parsegraph_Caret(nodeRoot)
 {
-    if(arguments.length > 1) {
-        var graph, rootType;
-        graph = arguments[0];
-        rootType = arguments[1];
-        if(!rootType) {
-            rootType = parsegraph_SLOT;
-        }
-        // Create the root node.
-        rootType = parsegraph_readNodeType(rootType);
-        this._nodeRoot = new parsegraph_Node(graph, rootType);
+    if(typeof nodeRoot != "object") {
+        nodeRoot = new parsegraph_Node(parsegraph_readNodeType(nodeRoot));
     }
-    else {
-        // The root is provided.
-        var node = arguments[0];
-        this._nodeRoot = node;
-    }
+    this._nodeRoot = nodeRoot;
 
     // Stack of nodes.
     this._nodes = [this._nodeRoot];
 
-    // A mapping of nodes to their IDs.
-    this._namedNodes = null;
-
     // A mapping of nodes to their saved names.
     this._savedNodes = null;
-};
-
-parsegraph_Caret.prototype.nodeUnderCoords = function(x, y, userScale)
-{
-    //console.log("nodeUnderCoords: " + x + ", " + y)
-    if(userScale === undefined) {
-        userScale = 1;
-    }
-    this.root().commitLayoutIteratively();
-
-    /**
-     * Returns true if the coordinates are in the node.
-     */
-    var inNodeBody = function(node) {
-        if(
-            x < userScale * node.absoluteX()
-                - userScale * node.absoluteScale() * node.size().width()/2
-        ) {
-            //console.log("INB 1" + x + " against " + node.absoluteX());
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX()
-                + userScale * node.absoluteScale() * node.size().width()/2
-        ) {
-            //console.log("INB 2");
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY()
-                - userScale * node.absoluteScale() * node.size().height()/2
-        ) {
-            //console.log("INB 3");
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY()
-                + userScale * node.absoluteScale() * node.size().height()/2
-        ) {
-            //console.log("INB 4");
-            return false;
-        }
-
-        //console.log("Within node body" + node);
-        return true;
-    };
-
-    /**
-     * Returns true if the coordinates are in the node or its extent.
-     */
-    var inNodeExtents = function(node) {
-        if(
-            x < userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-        ) {
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-                + userScale * node.absoluteScale() * node.extentSize().width()
-        ) {
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-        ) {
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-                + userScale * node.absoluteScale() * node.extentSize().height()
-        ) {
-            return false;
-        }
-        return true;
-    };
-
-    var candidates = [this.root()];
-
-    var addCandidate = function(node, direction) {
-        if(direction !== undefined) {
-            if(!node.hasChildAt(direction)) {
-                return;
-            }
-            node = node.nodeAt(direction);
-        }
-        if(node == null) {
-            return;
-        }
-        candidates.push(node);
-    };
-
-    var FORCE_SELECT_PRIOR = {};
-    while(candidates.length > 0) {
-        var candidate = candidates[candidates.length - 1];
-
-        if(candidate === FORCE_SELECT_PRIOR) {
-            candidates.pop();
-            return candidates.pop();
-        }
-
-        if(inNodeBody(candidate)) {
-            //console.log("Click is in node body");
-            if(
-                candidate.hasNode(parsegraph_INWARD)
-            ) {
-                if(inNodeExtents(candidate.nodeAt(parsegraph_INWARD))) {
-                    //console.log("Testing inward node");
-                    candidates.push(FORCE_SELECT_PRIOR);
-                    candidates.push(candidate.nodeAt(parsegraph_INWARD));
-                    continue;
-                }
-                else {
-                    //console.log("Click not in inward extents");
-                }
-            }
-
-            // Found the node.
-            //console.log("Found node.");
-            return candidate;
-        }
-        // Not within this node, so remove it as a candidate.
-        candidates.pop();
-
-        // Test if the click is within any child.
-        if(!inNodeExtents(candidate)) {
-            // Nope, so continue the search.
-            continue;
-        }
-        //console.log("Click is in node extent");
-
-        // It is potentially within some child, so search the children.
-        if(Math.abs(y - userScale * candidate.absoluteY()) > Math.abs(x - userScale * candidate.absoluteX())) {
-            // Y extent is greater than X extent.
-            if(userScale * candidate.absoluteX() > x) {
-                addCandidate(candidate, parsegraph_BACKWARD);
-                addCandidate(candidate, parsegraph_FORWARD);
-            }
-            else {
-                addCandidate(candidate, parsegraph_FORWARD);
-                addCandidate(candidate, parsegraph_BACKWARD);
-            }
-            if(userScale * candidate.absoluteY() > y) {
-                addCandidate(candidate, parsegraph_UPWARD);
-                addCandidate(candidate, parsegraph_DOWNWARD);
-            }
-            else {
-                addCandidate(candidate, parsegraph_DOWNWARD);
-                addCandidate(candidate, parsegraph_UPWARD);
-            }
-        }
-        else {
-            // X extent is greater than Y extent.
-            if(userScale * candidate.absoluteY() > y) {
-                addCandidate(candidate, parsegraph_UPWARD);
-                addCandidate(candidate, parsegraph_DOWNWARD);
-            }
-            else {
-                addCandidate(candidate, parsegraph_DOWNWARD);
-                addCandidate(candidate, parsegraph_UPWARD);
-            }
-            if(userScale * candidate.absoluteX() > x) {
-                addCandidate(candidate, parsegraph_BACKWARD);
-                addCandidate(candidate, parsegraph_FORWARD);
-            }
-            else {
-                addCandidate(candidate, parsegraph_FORWARD);
-                addCandidate(candidate, parsegraph_BACKWARD);
-            }
-        }
-    }
-
-    //console.log("Found nothing.");
-    return null;
 };
 
 parsegraph_Caret.prototype.node = function()
@@ -242,13 +54,51 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
 };
 
 /**
- * Connects the provided node to the node at this caret's position.
+ * Connects the provided paint group to the node at this caret's position.
+ *
+ * caret.connect(inDirection, paintGroup)
  */
-parsegraph_Caret.prototype.connect = function(inDirection, node)
+parsegraph_Caret.prototype.connect = function(inDirection, paintGroup)
 {
-    // Interpret the given direction and type for ease-of-use.
+    // If it looks like a node, then use that.
+    if(typeof paintGroup.paintGroup === "function") {
+        if(!paintGroup.paintGroup()) {
+            // The given node has no paint group, so make one.
+            paintGroup = new parsegraph_PaintGroup(paintGroup);
+        }
+        else {
+            if(paintGroup != paintGroup.paintGroup().root()) {
+                throw new Error("The given node's paint group has a root that isn't the given node.");
+            }
+            paintGroup = paintGroup.paintGroup();
+        }
+    }
+
+    // Interpret the given direction for ease-of-use.
     inDirection = parsegraph_readNodeDirection(inDirection);
-    this.node().connectNode(inDirection, node);
+
+    this.node().connectNode(inDirection, paintGroup.root());
+    return paintGroup;
+};
+
+/**
+ * Introduces a new paint group at the node in the given direction.
+ *
+ * The paint group is returned.
+ */
+parsegraph_Caret.prototype.crease = function(inDirection)
+{
+    if(arguments.length === 0) {
+        return this.nodeParent().crease(parsegraph_reverseNodeDirection(
+            this.parentDirection()
+        ));
+    }
+
+    var node = this.node().nodeAt(inDirection);
+    if(!node.paintGroup()) {
+        node.setPaintGroup(new parsegraph_PaintGroup(node));
+    }
+    return node.paintGroup();
 };
 
 parsegraph_Caret.prototype.erase = function(inDirection)
@@ -282,28 +132,6 @@ parsegraph_Caret.prototype.push = function()
 {
     this._nodes.push(this.node());
 };
-
-/**
- * Retrieves the node named by ID.
- */
-parsegraph_Caret.prototype.getNodeById = function(id)
-{
-    if(!this._namedNodes) {
-        return null;
-    }
-    return this._namedNodes[id];
-}
-
-/**
- * Used to indicate that a node's ID has changed.
- */
-parsegraph_Caret.prototype.changedId = function(changedNode)
-{
-    if(!this._namedNodes) {
-        this._namedNodes = {};
-    }
-    this._namedNodes[id] = changedNode;
-}
 
 /**
  * Saves the current node using the given ID. If no value is given, an
@@ -534,6 +362,9 @@ parsegraph_Caret.prototype.graph = function()
     return this.node().graph();
 };
 
+/**
+ * Returns the initiall provided node.
+ */
 parsegraph_Caret.prototype.root = function()
 {
     return this._nodeRoot;

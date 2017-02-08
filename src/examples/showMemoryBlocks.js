@@ -1,6 +1,6 @@
-function showMemoryBlocks(graph, COUNT)
+function showMemoryBlocks(COUNT)
 {
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
 
     // Enter.
     caret.fitLoose();

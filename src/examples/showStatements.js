@@ -1,9 +1,9 @@
-function showStatements(graph)
+function showStatements()
 {
     var wordDir = parsegraph_FORWARD;
     var lineDir = parsegraph_DOWNWARD;
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.fitExact();
 
     caret.spawn(parsegraph_reverseNodeDirection(lineDir), parsegraph_BUD);
@@ -61,5 +61,5 @@ function showStatements(graph)
     statement("_container");
     nextLine();
 
-    return caret;
+    return caret.root();
 }

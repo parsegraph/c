@@ -1,9 +1,33 @@
+/**
+ * Graph painter.
+ */
 function parsegraph_PaintGroup(root)
 {
-    this._root = root;
+    this._root = arguments[0];
     this._dirty = true;
     this._nodes = 0;
     this._painter = null;
+    if(arguments.length > 1) {
+        this._worldX = arguments[1];
+        this._worldY = arguments[2];
+        this._userScale = arguments[3];
+    }
+};
+
+parsegraph_PaintGroup.prototype.setOrigin = function(x, y)
+{
+    this._worldX = x;
+    this._worldY = y;
+};
+
+parsegraph_PaintGroup.prototype.setScale = function(scale)
+{
+    this._scale = scale;
+};
+
+parsegraph_PaintGroup.prototype.root = function()
+{
+    return this._root;
 };
 
 parsegraph_PaintGroup.prototype.measureText = function(text, style)
@@ -16,6 +40,14 @@ parsegraph_PaintGroup.prototype.measureText = function(text, style)
         text,
         style.fontSize,
         style.fontSize * style.letterWidth * style.maxLabelChars
+    );
+};
+
+parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)
+{
+    return this._root.nodeUnderCoords(
+        x - this._worldX,
+        y - this._worldY
     );
 };
 
@@ -52,7 +84,7 @@ parsegraph_PaintGroup.prototype.painter = function()
     return this._painter;
 };
 
-parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, worldX, worldY, userScale)
+parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor)
 {
     if(!gl) {
         throw new Error("A WebGL context must be provided.");
@@ -65,16 +97,17 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, worldX, wo
         // Paint and render nodes marked for this group.
         this._painter.clear();
         this._painter.setBackground(backgroundColor);
+        this._root.commitLayoutIteratively();
         parsegraph_foreachPaintGroupNodes(this._root, function(node) {
-            this._painter.drawNode.call(this._painter, node, worldX, worldY, userScale);
+            this._painter.drawNode.call(this._painter, node, this._worldX, this._worldY, this._userScale);
         }, this);
         this._dirty = false;
     }
 };
 
-parsegraph_PaintGroup.prototype.render = function()
+parsegraph_PaintGroup.prototype.render = function(world, scale)
 {
-    return this._painter.render.apply(this._painter, arguments);
+    return this._painter.render(world, scale);
 };
 
 /**

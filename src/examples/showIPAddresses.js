@@ -1,10 +1,10 @@
-function showIPAddresses(graph)
+function showIPAddresses()
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);
     var MAX_DEPTH = 13;
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
     function showLevel(depth, index) {
         if(depth === undefined) {
@@ -53,5 +53,5 @@ function showIPAddresses(graph)
     };
     showLevel();
 
-    return caret;
+    return caret.root();
 }

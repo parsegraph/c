@@ -1,4 +1,4 @@
-function showSpiral(graph, COUNT)
+function showSpiral(COUNT)
 {
     if(COUNT === undefined) {
         COUNT = 25;
@@ -10,7 +10,7 @@ function showSpiral(graph, COUNT)
     var spawnDir = parsegraph_FORWARD;
     var spiralType = parsegraph_BUD;
 
-    var caret = new parsegraph_Caret(graph, spiralType);
+    var caret = new parsegraph_Caret(spiralType);
     caret.spawnMove(spawnDir, spiralType);
 
     caret.push();
@@ -22,5 +22,5 @@ function showSpiral(graph, COUNT)
     }
     caret.pop();
 
-    return caret;
+    return caret.root();
 }

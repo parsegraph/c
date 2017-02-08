@@ -1,9 +1,9 @@
-function parsegraph_PrimesWidget(graph)
+function parsegraph_PrimesWidget()
 {
     this.knownPrimes = [];
     this.position = 2;
 
-    this.caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    this.caret = new parsegraph_Caret(parsegraph_BLOCK);
     this.caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
 }
 
@@ -65,8 +65,8 @@ parsegraph_PrimesModulo.prototype.value = function()
 };
 
 
-function buildPrimesDemo(graph, COUNT)
+function buildPrimesDemo(COUNT)
 {
-    var widget = new parsegraph_PrimesWidget(graph);
-    return widget.caret;
+    var widget = new parsegraph_PrimesWidget();
+    return widget.root();
 }

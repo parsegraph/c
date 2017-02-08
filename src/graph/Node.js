@@ -1,19 +1,11 @@
-function parsegraph_createNode(graph, newType, fromNode, parentDirection)
-{
-    return new parsegraph_Node(graph, newType, fromNode, parentDirection);
-}
-
 /**
  * Creates a new Node.
  *
- * parsegraph_Node(graph, newType) - no parent
- * parsegraph_Node(graph, newType, parentNode, parentDirection)
+ * parsegraph_Node(newType) - no parent
+ * parsegraph_Node(newType, parentNode, parentDirection)
  */
-function parsegraph_Node(graph, newType, fromNode, parentDirection)
+function parsegraph_Node(newType, fromNode, parentDirection)
 {
-    this._id = parsegraph_generateID("parsegraph_Node");
-    this._graph = graph;
-
     this._neighbors = parsegraph_createNeighbors();
     this._clickListener = null;
 
@@ -73,58 +65,198 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
     }
 };
 
+parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
+{
+    //console.log("nodeUnderCoords: " + x + ", " + y)
+    if(userScale === undefined) {
+        userScale = 1;
+    }
+
+    /**
+     * Returns true if the coordinates are in the node.
+     */
+    var inNodeBody = function(node) {
+        if(
+            x < userScale * node.absoluteX()
+                - userScale * node.absoluteScale() * node.size().width()/2
+        ) {
+            //console.log("INB 1" + x + " against " + node.absoluteX());
+            return false;
+        }
+        if(
+            x > userScale * node.absoluteX()
+                + userScale * node.absoluteScale() * node.size().width()/2
+        ) {
+            //console.log("INB 2");
+            return false;
+        }
+        if(
+            y < userScale * node.absoluteY()
+                - userScale * node.absoluteScale() * node.size().height()/2
+        ) {
+            //console.log("INB 3");
+            return false;
+        }
+        if(
+            y > userScale * node.absoluteY()
+                + userScale * node.absoluteScale() * node.size().height()/2
+        ) {
+            //console.log("INB 4");
+            return false;
+        }
+
+        //console.log("Within node body" + node);
+        return true;
+    };
+
+    /**
+     * Returns true if the coordinates are in the node or its extent.
+     */
+    var inNodeExtents = function(node) {
+        if(
+            x < userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
+        ) {
+            return false;
+        }
+        if(
+            x > userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
+                + userScale * node.absoluteScale() * node.extentSize().width()
+        ) {
+            return false;
+        }
+        if(
+            y < userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
+        ) {
+            return false;
+        }
+        if(
+            y > userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
+                + userScale * node.absoluteScale() * node.extentSize().height()
+        ) {
+            return false;
+        }
+        return true;
+    };
+
+    var candidates = [this];
+
+    var addCandidate = function(node, direction) {
+        if(direction !== undefined) {
+            if(!node.hasChildAt(direction)) {
+                return;
+            }
+            node = node.nodeAt(direction);
+        }
+        if(node == null) {
+            return;
+        }
+        candidates.push(node);
+    };
+
+    var FORCE_SELECT_PRIOR = {};
+    while(candidates.length > 0) {
+        var candidate = candidates[candidates.length - 1];
+
+        if(candidate === FORCE_SELECT_PRIOR) {
+            candidates.pop();
+            return candidates.pop();
+        }
+
+        if(inNodeBody(candidate)) {
+            //console.log("Click is in node body");
+            if(
+                candidate.hasNode(parsegraph_INWARD)
+            ) {
+                if(inNodeExtents(candidate.nodeAt(parsegraph_INWARD))) {
+                    //console.log("Testing inward node");
+                    candidates.push(FORCE_SELECT_PRIOR);
+                    candidates.push(candidate.nodeAt(parsegraph_INWARD));
+                    continue;
+                }
+                else {
+                    //console.log("Click not in inward extents");
+                }
+            }
+
+            // Found the node.
+            //console.log("Found node.");
+            return candidate;
+        }
+        // Not within this node, so remove it as a candidate.
+        candidates.pop();
+
+        // Test if the click is within any child.
+        if(!inNodeExtents(candidate)) {
+            // Nope, so continue the search.
+            continue;
+        }
+        //console.log("Click is in node extent");
+
+        // It is potentially within some child, so search the children.
+        if(Math.abs(y - userScale * candidate.absoluteY()) > Math.abs(x - userScale * candidate.absoluteX())) {
+            // Y extent is greater than X extent.
+            if(userScale * candidate.absoluteX() > x) {
+                addCandidate(candidate, parsegraph_BACKWARD);
+                addCandidate(candidate, parsegraph_FORWARD);
+            }
+            else {
+                addCandidate(candidate, parsegraph_FORWARD);
+                addCandidate(candidate, parsegraph_BACKWARD);
+            }
+            if(userScale * candidate.absoluteY() > y) {
+                addCandidate(candidate, parsegraph_UPWARD);
+                addCandidate(candidate, parsegraph_DOWNWARD);
+            }
+            else {
+                addCandidate(candidate, parsegraph_DOWNWARD);
+                addCandidate(candidate, parsegraph_UPWARD);
+            }
+        }
+        else {
+            // X extent is greater than Y extent.
+            if(userScale * candidate.absoluteY() > y) {
+                addCandidate(candidate, parsegraph_UPWARD);
+                addCandidate(candidate, parsegraph_DOWNWARD);
+            }
+            else {
+                addCandidate(candidate, parsegraph_DOWNWARD);
+                addCandidate(candidate, parsegraph_UPWARD);
+            }
+            if(userScale * candidate.absoluteX() > x) {
+                addCandidate(candidate, parsegraph_BACKWARD);
+                addCandidate(candidate, parsegraph_FORWARD);
+            }
+            else {
+                addCandidate(candidate, parsegraph_FORWARD);
+                addCandidate(candidate, parsegraph_BACKWARD);
+            }
+        }
+    }
+
+    //console.log("Found nothing.");
+    return null;
+};
+
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 {
     this._paintGroup = paintGroup;
 };
 
 /**
- * Returns the numeric paint group ID. Null until set by Graph during drawing.
+ * Returns the node's paint group. If this node does not have a paint group, then
+ * the parent's is returned.
  */
 parsegraph_Node.prototype.paintGroup = function()
 {
-    return this._paintGroup;
-};
-
-/**
- * Returns a painter's algorithm-friendly list of nodes that use the same paint
- * group as the given node. The given node is included.
- */
-function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
-{
-    var paintGroup = root.paintGroup();
-
-    // TODO Make this overwrite the current node, since it's no longer needed, and see
-    // if this increases performance.
-    var ordering = [root];
-    var addNode = function(node, direction) {
-        // Do not add the parent.
-        if(!node.isRoot() && node.parentDirection() == direction) {
-            return;
+    var node = this;
+    while(!node.isRoot()) {
+        if(node._paintGroup) {
+            return node._paintGroup;
         }
-
-        // Do not add nodes foreign to the given group.
-        if(node.paintGroup() !== paintGroup) {
-            return;
-        }
-
-        // Add the node to the ordering if it exists.
-        if(node.hasNode(direction)) {
-            var child = node.nodeAt(direction);
-            ordering.push(child);
-        }
-    };
-
-    for(var i = 0; i < ordering.length; ++i) {
-        var node = ordering[i];
-        addNode(node, parsegraph_INWARD);
-        addNode(node, parsegraph_DOWNWARD);
-        addNode(node, parsegraph_UPWARD);
-        addNode(node, parsegraph_BACKWARD);
-        addNode(node, parsegraph_FORWARD);
-
-        callback.call(callbackThisArg, node);
+        node = node.parentNode();
     }
+
+    return node._paintGroup;
 };
 
 /**
@@ -180,23 +312,6 @@ parsegraph_Node.prototype.setScale = function(scale)
 }
 
 /**
- * Returns the ID set for this node.
- */
-parsegraph_Node.prototype.id = function()
-{
-    return this._id;
-};
-
-/**
- * Sets the ID for this node.
- */
-parsegraph_Node.prototype.setId = function(newId)
-{
-    this._id = newId;
-    this._graph.changedId(this);
-};
-
-/**
  * Returns whether this node is a root node.
  */
 parsegraph_Node.prototype.isRoot = function()
@@ -227,6 +342,8 @@ parsegraph_Node.prototype.nodeParent = function()
     }
     return this._neighbors[this.parentDirection()].node();
 };
+parsegraph_Node.prototype.parentNode = parsegraph_Node.prototype.nodeParent;
+parsegraph_Node.prototype.parent = parsegraph_Node.prototype.nodeParent;
 
 /**
  * Returns whether this node has a node in the given direction.
@@ -374,14 +491,11 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 
     // Looks good; create the node.
     var node = new parsegraph_Node(
-        this._graph,
         newType,
         this,
         parsegraph_reverseNodeDirection(spawnDirection)
     );
     neighbor.setNode(node);
-
-    // Parent it to ourselves.
 
     // Allow alignments to be set before children are spawned.
     if(neighbor.alignmentMode() == parsegraph_NULL_NODE_ALIGNMENT) {
@@ -392,6 +506,9 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 
     // Use the node fitting of the parent.
     node.setNodeFit(this.nodeFit());
+
+    // The child will use this node's paint group.
+    node.setPaintGroup(this.paintGroup());
 
     return node;
 };
@@ -1057,6 +1174,7 @@ parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
     this._neighbors[parentDirection].setNode(fromNode);
     this._parentDirection = parentDirection;
 };
+parsegraph_Node.prototype.setParentNode = parsegraph_Node.prototype.setParent;
 
 parsegraph_Node.prototype.isSelected = function()
 {
@@ -1068,23 +1186,23 @@ parsegraph_Node.prototype.setSelected = function(selected)
     this._selected = selected;
 };
 
-function parsegraph_labeledBud(graph, label)
+function parsegraph_labeledBud(label)
 {
-    var node = new parsegraph_Node(graph, parsegraph_BUD);
+    var node = new parsegraph_Node(parsegraph_BUD);
     node.setLabel(label);
     return node;
 };
 
-function parsegraph_labeledSlot(graph, label)
+function parsegraph_labeledSlot(label)
 {
-    var node = new parsegraph_Node(graph, parsegraph_SLOT);
+    var node = new parsegraph_Node(parsegraph_SLOT);
     node.setLabel(label);
     return node;
 };
 
-function parsegraph_labeledBlock(graph, label)
+function parsegraph_labeledBlock(label)
 {
-    var node = new parsegraph_Node(graph, parsegraph_BLOCK);
+    var node = new parsegraph_Node(parsegraph_BLOCK);
     node.setLabel(label);
     return node;
 };

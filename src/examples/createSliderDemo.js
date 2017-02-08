@@ -1,6 +1,6 @@
-function createSliderDemo(graph)
+function createSliderDemo()
 {
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.fitExact();
     caret.label("Slider");
     caret.spawnMove('d', 'slider');
@@ -9,5 +9,5 @@ function createSliderDemo(graph)
     caret.spawnMove('f', 'block');
     caret.label("Scene");
     caret.spawn('d', 'scene');
-    return caret;
+    return caret.root();
 }

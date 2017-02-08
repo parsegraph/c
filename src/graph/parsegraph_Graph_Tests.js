@@ -2,20 +2,18 @@ parsegraph_Graph_Tests = new parsegraph_TestSuite("parsegraph_Graph");
 parsegraph_AllTests.addTest(parsegraph_Graph_Tests);
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph", function() {
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_SLOT);
+    var caret = new parsegraph_Caret(parsegraph_SLOT);
     if(caret.node().type() !== parsegraph_SLOT) {
         return "Graph must use the provided type for its root.";
     }
-    caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    caret = new parsegraph_Caret(parsegraph_BUD);
     if(caret.node().type() !== parsegraph_BUD) {
         return "Graph must use the provided type for its root.";
     }
 });
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, 'b');
+    var caret = new parsegraph_Caret('b');
     if(
        caret.has(parsegraph_FORWARD) ||
        caret.has(parsegraph_BACKWARD) ||
@@ -50,8 +48,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
     // Spawn the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, 'b');
+    var caret = new parsegraph_Caret('b');
     caret.node().commitLayoutIteratively();
 
     // Run the comparison tests.
@@ -110,8 +107,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", function() {
     // Spawn the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.node().commitLayoutIteratively();
 
@@ -167,8 +163,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", function() {
     // Spawn the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.node().commitLayoutIteratively();
     caret.moveToRoot();
@@ -233,8 +228,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", fun
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with downward bud", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
     caret.node().commitLayoutIteratively();
     caret.moveToRoot();
@@ -292,8 +286,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with downward bud", fun
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
     caret.moveToRoot();
     caret.node().commitLayoutIteratively();
@@ -350,8 +343,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", fun
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two deep", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
 
     var depth = 2;
     caret.push();
@@ -435,8 +427,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward bud", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
     caret.moveToRoot();
     caret.node().commitLayoutIteratively();
@@ -502,8 +493,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward bud", funct
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward and downward buds", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -570,8 +560,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward and downwar
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward and backward buds", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.moveToRoot();
@@ -637,8 +626,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward and backwa
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Backward T layout", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -719,8 +707,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Backward T l
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Positive Direction Layout", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.node().commitLayoutIteratively();
@@ -800,8 +787,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Positive Direction Layout", f
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Negative Direction Layout", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
     caret.node().commitLayoutIteratively();
@@ -880,8 +866,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Negative Direction Layout", f
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis layout", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
@@ -970,8 +955,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis layout", function
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with shrunk bud", function(resultDom) {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.fitExact();
     caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     caret.shrink();
@@ -1097,8 +1081,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with shrunk bud", funct
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with 2-deep shrunk downward block", function(resultDom) {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.fitExact();
     caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
     caret.shrink();
@@ -1121,15 +1104,15 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with 2-deep shrunk downwa
         + parsegraph_SHRINK_SCALE * (parsegraph_style('b').minHeight + parsegraph_style('b').verticalPadding * 2 + parsegraph_style('b').borderThickness * 2)
     );
 
-    if(!parsegraph_checkExtentsEqual(graph, caret, parsegraph_DOWNWARD, downwardExtent, resultDom)) {
+    if(!parsegraph_checkExtentsEqual(caret, parsegraph_DOWNWARD, downwardExtent, resultDom)) {
+        // TODO Insert graph.
         return "Downward extent differs.";
     }
 });
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T layout", function() {
     // Build the graph.
-    var graph = new parsegraph_Graph();
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);

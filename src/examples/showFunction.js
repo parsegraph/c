@@ -1,11 +1,11 @@
-function showFunction(graph, COUNT)
+function showFunction(COUNT)
 {
     if(COUNT === undefined) {
         COUNT = 50;
     }
 
     // Enter.
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawnMove('f', 'bud');
 
     // HOIRZONTAL_STEPS is the number of times the function is evaluated
@@ -67,5 +67,5 @@ function showFunction(graph, COUNT)
         caret.spawnMove('f', 'bud');
     }
 
-    return caret;
+    return caret.root();
 }

@@ -68,7 +68,7 @@ function init()
 
         var COUNT = 25
         main.appendChild(surface.container());
-        graph.plot(showFlowchartTemplate(graph));
+        graph.plot(showFlowchartTemplate(graph), 0, 0, 1);
 
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();

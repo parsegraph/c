@@ -14,7 +14,7 @@ function showProportionTest(graph, COUNT)
 
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     var selectedNode;
 
     var commandStyle = parsegraph_copyStyle(parsegraph_BLOCK);
@@ -43,7 +43,7 @@ function showProportionTest(graph, COUNT)
 
             var i = 0;
             commands.forEach(function(command) {
-                var commandCaret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+                var commandCaret = new parsegraph_Caret(parsegraph_BLOCK);
 
                 commandCaret.node().setBlockStyle(commandStyle);
                 commandCaret.label(command);
@@ -53,7 +53,7 @@ function showProportionTest(graph, COUNT)
                     commandCaret.label(command);
                     commandCaret.move('u');
                 }
-                graph.addToCarousel(commandCaret, command, function() {
+                graph.addToCarousel(commandCaret.root(), command, function() {
                     console.log("Clicked " + command + commandCaret.root().isSelected());
                     graph.clearCarousel();
                     graph.hideCarousel();
@@ -67,7 +67,7 @@ function showProportionTest(graph, COUNT)
                 selectedNode.size().width(),
                 selectedNode.size().height()
             ));
-            graph.plotCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
+            graph.moveCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
             graph.scheduleCarouselRepaint();
         });
     };
@@ -103,5 +103,5 @@ function showProportionTest(graph, COUNT)
     caret.spawn('b', 'bud');
     caret.spawn('f', 'bud');
 
-    return caret;
+    return caret.root();
 }

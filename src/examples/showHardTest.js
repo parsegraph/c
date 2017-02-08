@@ -1,6 +1,6 @@
 function showHardTest(graph, server)
 {
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
     caret.replace('block');
 
@@ -64,5 +64,5 @@ function showHardTest(graph, server)
         graph.scheduleRepaint();
     }, this);
 
-    return caret;
+    return caret.root();
 }

@@ -1,4 +1,4 @@
-function showUlam(graph, COUNT)
+function showUlam(COUNT)
 {
     if(COUNT === undefined) {
         COUNT = 35;
@@ -72,7 +72,7 @@ function showUlam(graph, COUNT)
     var spawnDir = parsegraph_FORWARD;
     var spiralType = parsegraph_BLOCK;
 
-    var caret = new parsegraph_Caret(graph, spiralType);
+    var caret = new parsegraph_Caret(spiralType);
     caret.fitExact();
     caret.push();
 
@@ -118,5 +118,5 @@ function showUlam(graph, COUNT)
 
     caret.pop();
 
-    return caret;
+    return caret.root();
 }

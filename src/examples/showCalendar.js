@@ -1,4 +1,4 @@
-function showCalendar(graph, currentDate)
+function showCalendar(currentDate)
 {
     if(currentDate === undefined) {
         // Use today's date.
@@ -6,7 +6,7 @@ function showCalendar(graph, currentDate)
     }
 
     // Enter the graph.
-    var caret = new parsegraph_Caret(graph, parsegraph_BUD);
+    var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawnMove('f', 'bud');
     caret.push();
 
@@ -76,5 +76,5 @@ function showCalendar(graph, currentDate)
     }
     caret.pop();
 
-    return caret;
+    return caret.root();
 }

@@ -1,6 +1,6 @@
-function showCorporateStructure(graph)
+function showCorporateStructure()
 {
-    var caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.label("Shareholders");
 
     // Show the board
@@ -168,5 +168,5 @@ function showCorporateStructure(graph)
         caret.pop();
     });
 
-    return caret;
+    return caret.root();
 }

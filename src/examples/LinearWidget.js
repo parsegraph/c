@@ -1,7 +1,7 @@
-function parsegraph_LinearWidget(graph)
+function parsegraph_LinearWidget()
 {
     this.position = 0;
-    this.caret = new parsegraph_Caret(graph, parsegraph_BLOCK);
+    this.caret = new parsegraph_Caret(parsegraph_BLOCK);
 }
 
 parsegraph_LinearWidget.prototype.step = function(steps)
