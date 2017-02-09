@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 parsegraph_initialize();
 
 var surface = new parsegraph_Surface();
+var shaders = {};
 
 var frameElapsed = 0;
 surface.addRenderer(function() {
@@ -66,7 +67,10 @@ surface.addRenderer(function() {
 var widget;
 widget = new alpha_GLWidget(surface);
 
-var textPainter = new parsegraph_TextPainter(surface.gl());
+var glyphAtlas = new parsegraph_GlyphAtlas(
+    parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+);
+var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
 
 var textCamera = new parsegraph_Camera(surface);
 
