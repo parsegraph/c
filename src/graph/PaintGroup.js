@@ -18,11 +18,21 @@ parsegraph_PaintGroup.prototype.setOrigin = function(x, y)
 {
     this._worldX = x;
     this._worldY = y;
+
+    if(Number.isNaN(this._worldX)) {
+        throw new Error("WorldX must not be NaN.");
+    }
+    if(Number.isNaN(this._worldY)) {
+        throw new Error("WorldY must not be NaN.");
+    }
 };
 
 parsegraph_PaintGroup.prototype.setScale = function(scale)
 {
     this._scale = scale;
+    if(Number.isNaN(this._scale)) {
+        throw new Error("Scale must not be NaN.");
+    }
 };
 
 parsegraph_PaintGroup.prototype.root = function()
@@ -84,13 +94,13 @@ parsegraph_PaintGroup.prototype.painter = function()
     return this._painter;
 };
 
-parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor)
+parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders)
 {
     if(!gl) {
         throw new Error("A WebGL context must be provided.");
     }
     if(!this._painter) {
-        this._painter = new parsegraph_NodePainter(gl);
+        this._painter = new parsegraph_NodePainter(gl, glyphAtlas, shaders);
         this.markDirty();
     }
     if(this.isDirty()) {

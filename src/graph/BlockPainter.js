@@ -116,7 +116,7 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
     "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
 "}";
 
-function parsegraph_BlockPainter(gl)
+function parsegraph_BlockPainter(gl, shaders)
 {
     this._gl = gl;
     if(!this._gl || !this._gl.createProgram) {
@@ -124,37 +124,42 @@ function parsegraph_BlockPainter(gl)
     }
 
     // Compile the shader program.
-    this._blockProgram = this._gl.createProgram();
+    var shaderName = "parsegraph_BlockPainter";
+    if(!shaders[shaderName]) {
+        var program = gl.createProgram();
+        gl.attachShader(
+            program,
+            compileShader(
+                gl,
+                parsegraph_BlockPainter_VertexShader,
+                gl.VERTEX_SHADER
+            )
+        );
 
-    this._gl.attachShader(
-        this._blockProgram,
-        compileShader(
-            this._gl,
-            parsegraph_BlockPainter_VertexShader,
-            this._gl.VERTEX_SHADER
-        )
-    );
+        var fragProgram = parsegraph_BlockPainter_FragmentShader;
+        if(gl.getExtension("OES_standard_derivatives") != null) {
+            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
+        }
 
-    var fragProgram = parsegraph_BlockPainter_FragmentShader;
-    if(this._gl.getExtension("OES_standard_derivatives") != null) {
-        fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
+        gl.attachShader(
+            program,
+            compileShader(
+                gl,
+                fragProgram,
+                gl.FRAGMENT_SHADER
+            )
+        );
+
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(
+            program, gl.LINK_STATUS
+        )) {
+            throw new Error("'" + shaderName + "' shader program failed to link.");
+        }
+
+        shaders[shaderName] = program;
     }
-
-    this._gl.attachShader(
-        this._blockProgram,
-        compileShader(
-            this._gl,
-            fragProgram,
-            this._gl.FRAGMENT_SHADER
-        )
-    );
-
-    this._gl.linkProgram(this._blockProgram);
-    if(!this._gl.getProgramParameter(
-        this._blockProgram, this._gl.LINK_STATUS
-    )) {
-        throw new Error("BlockPainter program failed to link.");
-    }
+    this._blockProgram = shaders[shaderName];
 
     // Prepare attribute buffers.
     this._blockBuffer = parsegraph_createPagingBuffer(
@@ -183,11 +188,6 @@ function parsegraph_BlockPainter(gl)
     this._borderColor = parsegraph_createColor(
         parsegraph_createColor(1, 1, 1, 1)
     );
-};
-
-parsegraph_createBlockPainter = function(gl)
-{
-    return new parsegraph_BlockPainter(gl);
 };
 
 parsegraph_BlockPainter.prototype.borderColor = function()

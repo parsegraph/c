@@ -574,13 +574,13 @@ parsegraph_Node.prototype.lineLengthAt = function(direction)
 
 parsegraph_Node.prototype.extentsAt = function(atDirection)
 {
-    //this.commitLayout();
+    this.commitLayoutIteratively();
     return this._neighbors[atDirection].extent();
 };
 
 parsegraph_Node.prototype.extentOffsetAt = function(atDirection)
 {
-    //this.commitLayout();
+    this.commitLayoutIteratively();
     return this._neighbors[atDirection].extentOffset();
 };
 
@@ -948,7 +948,6 @@ parsegraph_Node.prototype.setBlockStyle = function(style)
         // Ignore idempotent style changes.
         return;
     }
-    console.log("Block style set");
     this._style = style;
     this.layoutWasChanged();
 };

@@ -20,32 +20,40 @@ function parsegraph_Graph()
     this._canvas = surface.canvas();
     this._container = surface.container();
 
-    this._worldPaintingDirty = true;
-    this._carouselPaintingDirty = true;
-
-    this._camera = new parsegraph_Camera(this);
+    this._glyphAtlas = new parsegraph_GlyphAtlas(
+        parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+    );
 
     // World-rendered graphs.
-    this._plotted = [];
-
-    // The node currently under the cursor.
-    this._nodeUnderCursor = null;
+    this._worldPaintingDirty = true;
+    this._worldPlots = [];
 
     // Carousel-rendered carets.
-    this._carouselCarets = [];
+    this._carouselPaintingDirty = true;
+    this._carouselPlots = [];
+    this._carouselCallbacks = [];
+
+    // Location of the carousel, in world coordinates.
     this._carouselCoords = [0, 0];
     this._carouselSize = 100;
+
     this._showCarousel = false;
-    this._selectedCarouselCaret = null;
+    this._selectedCarouselPlot = null;
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
 
+    this._camera = new parsegraph_Camera(this);
+
+    // The node currently under the cursor.
+    this._nodeUnderCursor = null;
+
     this._input = new parsegraph_Input(this, this._camera);
 
     // GL painters are not created until needed.
-    this._carouselPaintGroups = [];
     this._fanPainter = null;
+
+    this._shaders = {};
 };
 
 parsegraph_Graph.prototype.camera = function()
@@ -78,17 +86,27 @@ parsegraph_Graph.prototype.input = function()
     return this._input;
 };
 
+parsegraph_Graph.prototype.plot = function()
+{
+    return parsegraph_plot.apply(this._worldPlots, arguments);
+};
+
 /**
  * Plots the given paint group, or creates one if constructor
  * arguments are given.
  *
- * The paint group is returned.
+ * The paint group is returned. Passing a paint group directly is the
+ * preferred method. The position of the graph is the one used when
+ * rendering. The caller manages the position.
+ *
+ * parsegraph_plot.apply(plotList, arguments);
  *
  * plot(paintGroup)
+ * plot(node)
  * plot(root, worldX, worldY, userScale)
  */
-parsegraph_Graph.prototype.plot = function()
-{
+function parsegraph_plot() {
+    // Interpret the argument.
     var paintGroup;
     if(arguments.length > 1) {
         var rootNode = arguments[0];
@@ -112,16 +130,21 @@ parsegraph_Graph.prototype.plot = function()
     if(typeof paintGroup.paint !== "function") {
         throw new Error("Paint group is not a paint group: " + paintGroup);
     }
-    this._plotted.push(paintGroup);
+
+    // Insert.
+    this.push(paintGroup);
 
     return paintGroup;
 };
 
-parsegraph_Graph.prototype.removePlot = function(caret)
+/**
+ *
+ */
+parsegraph_Graph.prototype.removePlot = function(paintGroup)
 {
-    for(var i = 0; i < this._plotted.length; ++i) {
-        if(this._plotted[i].caret() == caret) {
-            return this._plotted.splice(i, 1);
+    for(var i in this._worldPlots) {
+        if(this._worldPlots[i] === paintGroup) {
+            return this._worldPlots.splice(i, 1);
         }
     }
     return null;
@@ -150,30 +173,35 @@ parsegraph_Graph.prototype.isCarouselShown = function()
 
 parsegraph_Graph.prototype.hideCarousel = function()
 {
-    this._selectedCarouselCaret = null;
+    this._selectedCarouselPlot = null;
     this._showCarousel = false;
 };
 
-parsegraph_Graph.prototype.addToCarousel = function(caret, label, callback, thisArg)
+/**
+ * Adds the given node to the carousel.
+ */
+parsegraph_Graph.prototype.addToCarousel = function(paintGroup, callback, thisArg)
 {
-    this._carouselCarets.push([caret, label, callback, thisArg, 0, 0]);
+    this._carouselCallbacks.push([callback, thisArg]);
+    return parsegraph_plot.call(this._carouselPlots, paintGroup);
 };
 
 parsegraph_Graph.prototype.clearCarousel = function()
 {
-    this._carouselCarets.splice(0, this._carouselCarets.length);
-    this._selectedCarouselCaret = null;
+    this._carouselPlots.splice(0, this._carouselPlots.length);
+    this._carouselCallbacks.splice(0, this._carouselCallbacks.length);
+    this._selectedCarouselPlot = null;
 };
 
 parsegraph_Graph.prototype.removeFromCarousel = function(caret)
 {
-    for(var i = 0; i < this._carouselCarets.length; ++i) {
-        if(this._carouselCarets[i][0] == caret) {
-            var removed = this._carouselCarets.splice(i, 1)[0];
-            if(this._selectedCarouselCaret == removed) {
-                this._selectedCarouselCaret = null;
+    for(var i in this._carouselPlots) {
+        if(this._carouselPlots[i] === paintGroup) {
+            var removed = this._carouselPlots.splice(i, 1);
+            this._carouselCallbacks.splice(i, 1);
+            if(this._selectedCarouselPlot === removed) {
+                this._selectedCarouselPlot = null;
             }
-            return removed;
         }
     }
     return null;
@@ -212,21 +240,22 @@ parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
         return false;
     }
 
-    var angleSpan = 2 * Math.PI / this._carouselCarets.length;
+    var angleSpan = 2 * Math.PI / this._carouselPlots.length;
     var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
     if(mouseAngle < 0) {
         // Upward half.
         mouseAngle = 2 * Math.PI + mouseAngle;
     }
 
-    var i = Math.floor(this._carouselCarets.length * (mouseAngle) / (2 * Math.PI));
+    var i = Math.floor(this._carouselPlots.length * (mouseAngle) / (2 * Math.PI));
 
-    // Click was within a carousel caret; notify listener.
+    // Click was within a carousel caret; invoke the listener.
     //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
-    var carouselCaretData = this._carouselCarets[i];
-    var callback = carouselCaretData[2];
-    var thisArg = carouselCaretData[3];
+    var carouselPlot = this._carouselPlots[i];
+    var callback = this._carouselCallbacks[i][0];
+    var thisArg = this._carouselCallbacks[i][1];
     callback.call(thisArg);
+
     this.mouseOver(x, y);
     this.scheduleRepaint();
 
@@ -304,9 +333,9 @@ parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
     x = mouseInWorld[0];
     y = mouseInWorld[1];
 
-    var angleSpan = 2 * Math.PI / this._carouselCarets.length;
+    var angleSpan = 2 * Math.PI / this._carouselPlots.length;
     var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-    //var i = Math.floor(this._carouselCarets.length * mouseAngle / (2 * Math.PI));
+    //var i = Math.floor(this._carouselPlots.length * mouseAngle / (2 * Math.PI));
     //console.log(i * angleSpan);
     if(this._fanPainter) {
         this._fanPainter.setSelectionAngle(mouseAngle);
@@ -321,8 +350,8 @@ parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
 parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
 {
     // Test if there is a node under the given coordinates.
-    for(var i = this._plotted.length - 1; i >= 0; --i) {
-        var selectedNode = this._plotted[i].nodeUnderCoords(x, y);
+    for(var i = this._worldPlots.length - 1; i >= 0; --i) {
+        var selectedNode = this._worldPlots[i].nodeUnderCoords(x, y);
         if(selectedNode) {
             // Node located; no further search.
             return selectedNode;
@@ -336,20 +365,23 @@ parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
  */
 parsegraph_Graph.prototype.arrangeCarousel = function()
 {
-    var angleSpan = this._carouselCarets.length / (2 * Math.PI);
+    var angleSpan = this._carouselPlots.length / (2 * Math.PI);
 
     var parsegraph_CAROUSEL_RADIUS = 250;
     var parsegraph_MAX_CAROUSEL_SIZE = 150;
 
-    this._carouselCarets.forEach(function(caretData, i) {
-        var root = caretData[0].root();
-        root.commitLayoutIteratively();
+    this._carouselPlots.forEach(function(paintGroup, i) {
+        var root = paintGroup.root();
 
-        var caretRad = angleSpan/2 + (i / this._carouselCarets.length) * (2 * Math.PI);
-        caretData[4] = parsegraph_CAROUSEL_RADIUS * Math.cos(caretRad);
-        caretData[5] = parsegraph_CAROUSEL_RADIUS * Math.sin(caretRad);
+        // Set the origin.
+        var caretRad = angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
+        paintGroup.setOrigin(
+            parsegraph_CAROUSEL_RADIUS * Math.cos(caretRad),
+            parsegraph_CAROUSEL_RADIUS * Math.sin(caretRad)
+        );
+
+        // Set the scale.
         var commandSize = root.extentSize();
-
         var xMax = parsegraph_MAX_CAROUSEL_SIZE;
         var yMax = parsegraph_MAX_CAROUSEL_SIZE;
         var xShrinkFactor = 1;
@@ -357,12 +389,10 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
         if(commandSize.width() > xMax) {
             xShrinkFactor = commandSize.width() / xMax;
         }
-
         if(commandSize.height() > yMax) {
             yShrinkFactor = commandSize.height() / yMax;
         }
-
-        caretData[6] = 1/Math.max(xShrinkFactor, yShrinkFactor);
+        paintGroup.setScale(1/Math.max(xShrinkFactor, yShrinkFactor));
     }, this);
 };
 
@@ -391,29 +421,24 @@ parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
 parsegraph_Graph.prototype.paint = function()
 {
     if(this._worldPaintingDirty) {
-        for(var i in this._plotted) {
-            var paintGroup = this._plotted[i];
-            paintGroup.paint(this.gl(), this.surface().backgroundColor());
+        for(var i in this._worldPlots) {
+            var paintGroup = this._worldPlots[i];
+            paintGroup.paint(
+                this.gl(), this.surface().backgroundColor(), this._glyphAtlas, this._shaders
+            );
         }
         this._worldPaintingDirty = false;
     }
 
     if(this._carouselPaintingDirty && this._showCarousel) {
         // Paint the carousel.
-        this.arrangeCarousel();
-        for(var i = 0; i < this._carouselPaintGroups.length; ++i) {
-            var group = this._carouselPaintGroups[i];
-            group.paint(this.gl(), this.surface().backgroundColor());
-        }
-
-        /*this._carouselCarets.forEach(function(caretData) {
-            this._carouselNodePainter.drawCaret(
-                caretData[0],
-                this._carouselCoords[0] + caretData[4],
-                this._carouselCoords[1] + caretData[5],
-                caretData[6]
+        for(var i in this._carouselPlots) {
+            var paintGroup = this._carouselPlots[i];
+            paintGroup.paint(
+                this.gl(), this.surface().backgroundColor(), this._glyphAtlas, this._shaders
             );
-        }, this);*/
+        }
+        this.arrangeCarousel();
 
         // Paint the background highlighting fan.
         if(!this._fanPainter) {
@@ -443,16 +468,16 @@ parsegraph_Graph.prototype.render = function()
         this._fanPainter.render(world);
     }
 
-    for(var i in this._plotted) {
-        var paintGroup = this._plotted[i];
+    for(var i in this._worldPlots) {
+        var paintGroup = this._worldPlots[i];
         paintGroup.render(world, this.camera().scale());
     }
 
     // Render the carousel if requested.
     if(this._showCarousel) {
-        for(var i = 0; i < this._carouselPaintGroups.length; ++i) {
-            var group = this._carouselPaintGroups[i];
-            group.painter.render(world, 1);
+        for(var i in this._carouselPlots) {
+            var paintGroup = this._carouselPlots[i];
+            paintGroup.render(world, 1);
         }
     }
 };

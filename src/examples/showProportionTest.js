@@ -53,7 +53,7 @@ function showProportionTest(graph, COUNT)
                     commandCaret.label(command);
                     commandCaret.move('u');
                 }
-                graph.addToCarousel(commandCaret.root(), command, function() {
+                graph.addToCarousel(commandCaret.root(), function() {
                     console.log("Clicked " + command + commandCaret.root().isSelected());
                     graph.clearCarousel();
                     graph.hideCarousel();

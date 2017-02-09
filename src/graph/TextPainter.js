@@ -53,53 +53,45 @@ parsegraph_TextPainter_FragmentShader =
     "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
 "}";
 
-function parsegraph_TextPainter(gl)
+function parsegraph_TextPainter(gl, glyphAtlas, shaders)
 {
     this._gl = gl;
 
     this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
     this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
 
-    this._glyphTexture = null;
-
-    // Always use an upscaled font.
-    this._glyphAtlas = new parsegraph_GlyphAtlas(
-        parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
-    );
+    this._glyphAtlas = glyphAtlas;
 
     // Compile the shader program.
-    this._textProgram = this._gl.createProgram();
+    var shaderName = "parsegraph_TextPainter";
+    if(!shaders[shaderName]) {
+        var program = gl.createProgram();
 
-    this._gl.attachShader(
-        this._textProgram,
-        compileShader(
-            this._gl,
-            parsegraph_TextPainter_VertexShader,
-            this._gl.VERTEX_SHADER
-        )
-    );
+        gl.attachShader(
+            program, compileShader(
+                gl, parsegraph_TextPainter_VertexShader, gl.VERTEX_SHADER
+            )
+        );
 
-    var fragProgram = parsegraph_TextPainter_FragmentShader;
-    if(!this._gl.getExtension("OES_standard_derivatives")) {
-        // TODO Don't just default with the good version.
-        throw new Error("OES_standard_derivatives is required for TextPainter.");
+        var fragProgram = parsegraph_TextPainter_FragmentShader;
+        if(!gl.getExtension("OES_standard_derivatives")) {
+            // TODO Don't just default with the good version.
+            throw new Error("OES_standard_derivatives is required for TextPainter.");
+        }
+        gl.attachShader(
+            program, compileShader(gl, fragProgram, gl.FRAGMENT_SHADER)
+        );
+
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(
+            program, gl.LINK_STATUS
+        )) {
+            throw new Error("'" + shaderName + "' shader program failed to link.");
+        }
+
+        shaders[shaderName] = program;
     }
-
-    this._gl.attachShader(
-        this._textProgram,
-        compileShader(
-            this._gl,
-            fragProgram,
-            this._gl.FRAGMENT_SHADER
-        )
-    );
-
-    this._gl.linkProgram(this._textProgram);
-    if(!this._gl.getProgramParameter(
-        this._textProgram, this._gl.LINK_STATUS
-    )) {
-        throw new Error("TextPainter program failed to link.");
-    }
+    this._textProgram = shaders[shaderName];
 
     // Prepare attribute buffers.
     this._textBuffer = parsegraph_createPagingBuffer(
@@ -332,31 +324,14 @@ parsegraph_TextPainter.prototype.render = function(world, scale)
 {
     var gl = this._gl;
 
-    if(this._glyphAtlas.needsUpdate()) {
-        this._glyphAtlas.update();
-        // Prepare texture.
-        if(!this._glyphTexture) {
-            this._glyphTexture = this._gl.createTexture();
-        }
-        gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphAtlas.canvas());
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        // Prevents t-coordinate wrapping (repeating).
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.generateMipmap(gl.TEXTURE_2D);
-    }
-
     // Load program.
     this._gl.useProgram(
         this._textProgram
     );
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+    this._glyphAtlas.bindTexture(gl);
     gl.uniform1i(this.u_glyphTexture, 0);
-
     gl.uniform1f(this.u_scale, scale);
     //console.log("u_scale: " + scale);
 

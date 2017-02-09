@@ -5,17 +5,17 @@
 parsegraph_Node.prototype.commitLayout = function()
 {
     // Do nothing if this node already has a layout committed.
-    if(this._layoutState == parsegraph_COMMITTED_LAYOUT) {
+    if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
         return false;
     }
 
     // Check for invalid layout states.
-    if(this._layoutState == parsegraph_NULL_LAYOUT_STATE) {
+    if(this._layoutState === parsegraph_NULL_LAYOUT_STATE) {
         throw parsegraph_createException(parsegraph_BAD_LAYOUT_STATE);
     }
 
     // Do not allow overlapping layout commits.
-    if(this._layoutState == parsegraph_IN_COMMIT) {
+    if(this._layoutState === parsegraph_IN_COMMIT) {
         throw parsegraph_createException(parsegraph_BAD_LAYOUT_STATE);
     }
 
@@ -929,14 +929,20 @@ var parsegraph_findConsecutiveLength = function(node, inDirection)
 
 parsegraph_Node.prototype.commitLayoutIteratively = function()
 {
+    // Avoid needless work if possible.
+    if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
+        return;
+    }
+
+    // Traverse the graph depth-first, committing each node's layout in turn.
     var startTime = parsegraph_getTimeInMillis();
     this.traverse(
         function(node) {
-            return node._layoutState == parsegraph_NEEDS_COMMIT;
+            return node._layoutState === parsegraph_NEEDS_COMMIT;
         },
         function(node) {
             if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
-                throw new Error("commitLayout timeout");
+                throw new Error("commitLayoutIteratively timeout");
             }
             node.commitLayout();
         }

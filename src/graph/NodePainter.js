@@ -4,7 +4,7 @@
  *
  * The constants used here are in Node_paint.js
  */
-function parsegraph_NodePainter(gl)
+function parsegraph_NodePainter(gl, glyphAtlas, shaders)
 {
     this._gl = gl;
     if(!this._gl || !this._gl.createProgram) {
@@ -13,21 +13,20 @@ function parsegraph_NodePainter(gl)
 
     this._backgroundColor = parsegraph_BACKGROUND_COLOR;
 
-    this._blockPainter = parsegraph_createBlockPainter(this._gl);
+    this._blockPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderBlocks = true;
 
-    this._originPainter = parsegraph_createBlockPainter(this._gl);
+    this._originPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderOrigin = false;
 
-    this._extentPainter = parsegraph_createBlockPainter(this._gl);
+    this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderExtents = false;
 
-    this._spotlightPainter = new parsegraph_SpotlightPainter(this._gl);
+    this._spotlightPainter = new parsegraph_SpotlightPainter(this._gl, shaders);
     this._renderSpotlights = true;
 
-    this._textPainter = parsegraph_createTextPainter(this._gl);
+    this._textPainter = new parsegraph_TextPainter(this._gl, glyphAtlas, shaders);
 
-    //this._textPainter._glyphAtlas.setAfterUpdate(this.scheduleRender, this);
     this._renderText = true;
 };
 

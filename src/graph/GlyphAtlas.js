@@ -15,6 +15,7 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._fontName = fontName;
     this._fillStyle = fillStyle;
     this.restoreProperties();
+    this._glyphTexture = null;
 
     this._glyphData = {};
 
@@ -61,15 +62,42 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
         return this.addGlyph(glyph);
     };
 
-    this.update = function() {
+    this.update = function(gl) {
         if(!this._needsUpdate) {
-            return false;
+            return;
         }
 
+        // Prepare texture.
+        if(!this._glyphTexture) {
+            this._glyphTexture = gl.createTexture();
+        }
+        gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // Prevents t-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+
         this._needsUpdate = false;
-        return true;
     };
 }
+
+parsegraph_GlyphAtlas.prototype.bindTexture = function(gl)
+{
+    this.update(gl);
+    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+};
+
+parsegraph_GlyphAtlas.prototype.imageData = function()
+{
+    return this._ctx.getImageData(0, 0, this.maxTextureWidth(), this.maxTextureWidth());
+};
+parsegraph_GlyphAtlas.prototype.getImageData = parsegraph_GlyphAtlas.prototype.imageData;
 
 parsegraph_GlyphAtlas.prototype.needsUpdate = function()
 {

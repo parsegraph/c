@@ -55,7 +55,8 @@ body > div input {
 
 function parsegraph_JavaScriptWidget(graph)
 {
-    this.caret = new parsegraph_Caret(graph, 'b');
+    this.graph = graph;
+    this.caret = new parsegraph_Caret('b');
     this.caret.label("Program");
 };
 
@@ -409,7 +410,7 @@ parsegraph_JavaScriptWidget.prototype.load = function(url)
 
         that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
 
-        car.graph().scheduleRepaint();
+        that.graph.scheduleRepaint();
     }
     var oReq = new XMLHttpRequest();
     oReq.addEventListener("load", buildTree);
@@ -433,7 +434,7 @@ function init()
         var widget = new parsegraph_JavaScriptWidget(graph);
         widget.load("GLWidget.js");
 
-        graph.plot(widget.caret);
+        graph.plot(widget.caret.root());
 
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
