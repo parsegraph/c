@@ -46,6 +46,9 @@ function alpha_Input(surface, camera)
     this.grabbed = null;
 
     parsegraph_addEventMethod(document, "keydown", function(event) {
+        if(event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
         this[event.key] = 1;
     }, this);
     parsegraph_addEventMethod(document, "keyup", function(event) {

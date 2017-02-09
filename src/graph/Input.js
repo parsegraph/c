@@ -436,6 +436,10 @@ function parsegraph_Input(graph, camera)
 
 
     parsegraph_addEventMethod(document, "keydown", function(event) {
+        if(event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
+
         var keyName = getproperkeyname(event);
         if(!focused && keyName != 'q') {
             //console.log("Key event, but unfocused.");
