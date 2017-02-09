@@ -412,6 +412,7 @@ parsegraph_Graph.prototype.needsRepaint = function()
 
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
 {
+    //console.log("Scheduling carousel repaint.");
     this._carouselPaintingDirty = true;
     if(this.onScheduleRepaint) {
         this.onScheduleRepaint();
@@ -432,6 +433,7 @@ parsegraph_Graph.prototype.paint = function()
 
     if(this._carouselPaintingDirty && this._showCarousel) {
         // Paint the carousel.
+        //console.log("Painting the carousel");
         for(var i in this._carouselPlots) {
             var paintGroup = this._carouselPlots[i];
             paintGroup.paint(
@@ -465,6 +467,7 @@ parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
     if(this._showCarousel) {
+        //console.log("Rendering the carousel");
         this._fanPainter.render(world);
     }
 

@@ -30,7 +30,7 @@ function showProportionTest(graph, COUNT)
      */
     var attachCommands = function() {
         caret.onClick(function() {
-            //console.log("OnClick" + this.id());
+            //console.log("OnClick!");
             if(graph.isCarouselShown() && selectedNode == this) {
                 graph.clearCarousel();
                 graph.hideCarousel();
@@ -54,7 +54,7 @@ function showProportionTest(graph, COUNT)
                     commandCaret.move('u');
                 }
                 graph.addToCarousel(commandCaret.root(), function() {
-                    console.log("Clicked " + command + commandCaret.root().isSelected());
+                    //console.log("Clicked " + command + commandCaret.root().isSelected());
                     graph.clearCarousel();
                     graph.hideCarousel();
                     graph.scheduleCarouselRepaint();
