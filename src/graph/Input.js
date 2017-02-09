@@ -496,10 +496,10 @@ function parsegraph_Input(graph, camera)
         }
     }, this);
 
-    parsegraph_addEventListener(graph.canvas(), "mouseup", removeMouseListener);
+    parsegraph_addEventMethod(graph.canvas(), "mouseup", removeMouseListener, this);
 
     // Ensure the mousemove listener is removed if we switch windows or change focus.
-    parsegraph_addEventListener(graph.canvas(), "mouseout", removeMouseListener);
+    parsegraph_addEventMethod(graph.canvas(), "mouseout", removeMouseListener, this);
 
     this.listener = null;
 };
