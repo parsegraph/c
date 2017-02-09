@@ -407,7 +407,7 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
 
 parsegraph_Graph.prototype.needsRepaint = function()
 {
-    return this._worldPaintingDirty;
+    return this._worldPaintingDirty || this._carouselPaintingDirty;
 };
 
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
@@ -466,7 +466,7 @@ parsegraph_Graph.prototype.paint = function()
 parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
-    if(this._showCarousel) {
+    if(this._showCarousel && !this._carouselPaintingDirty) {
         //console.log("Rendering the carousel");
         this._fanPainter.render(world);
     }
@@ -477,7 +477,7 @@ parsegraph_Graph.prototype.render = function()
     }
 
     // Render the carousel if requested.
-    if(this._showCarousel) {
+    if(this._showCarousel && !this._carouselPaintingDirty) {
         for(var i in this._carouselPlots) {
             var paintGroup = this._carouselPlots[i];
             paintGroup.render(
