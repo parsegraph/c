@@ -60,6 +60,9 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
     this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
     this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
 
+    if(!glyphAtlas) {
+        throw new Error("Glyph atlas must be provided");
+    }
     this._glyphAtlas = glyphAtlas;
 
     // Compile the shader program.
