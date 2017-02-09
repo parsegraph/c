@@ -159,7 +159,6 @@ function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
         addNode(node, parsegraph_UPWARD);
         addNode(node, parsegraph_BACKWARD);
         addNode(node, parsegraph_FORWARD);
-
         callback.call(callbackThisArg, node);
     }
 };
