@@ -410,8 +410,13 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
 /**
  * Draws a single node, and the lines extending from it.
  */
-parsegraph_NodePainter.prototype.drawNode = function(node, worldX, worldY, userScale)
+parsegraph_NodePainter.prototype.drawNode = function(node)
 {
+    if(arguments.length === 1) {
+        worldX = 0;
+        worldY = 0;
+        userScale = 1;
+    }
     if(this.isExtentRenderingEnabled()) {
         this.paintExtent(node, worldX, worldY, userScale);
     }

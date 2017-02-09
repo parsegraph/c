@@ -109,7 +109,7 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
         this._painter.setBackground(backgroundColor);
         this._root.commitLayoutIteratively();
         parsegraph_foreachPaintGroupNodes(this._root, function(node) {
-            this._painter.drawNode.call(this._painter, node, this._worldX, this._worldY, this._userScale);
+            this._painter.drawNode.call(this._painter, node);
         }, this);
         this._dirty = false;
     }
@@ -117,7 +117,10 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
 
 parsegraph_PaintGroup.prototype.render = function(world, scale)
 {
-    return this._painter.render(world, scale);
+    return this._painter.render(matrixMultiply3x3(
+        makeTranslation3x3(this._worldX, this._worldY),
+        world
+    ), scale * this._userScale);
 };
 
 /**

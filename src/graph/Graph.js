@@ -477,7 +477,13 @@ parsegraph_Graph.prototype.render = function()
     if(this._showCarousel) {
         for(var i in this._carouselPlots) {
             var paintGroup = this._carouselPlots[i];
-            paintGroup.render(world, 1);
+            paintGroup.render(
+                matrixMultiply3x3(makeTranslation3x3(
+                    this._carouselCoords[0], this._carouselCoords[1]
+                ),
+                world),
+                1
+            );
         }
     }
 };
