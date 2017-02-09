@@ -29,8 +29,8 @@ parsegraph_PaintGroup.prototype.setOrigin = function(x, y)
 
 parsegraph_PaintGroup.prototype.setScale = function(scale)
 {
-    this._scale = scale;
-    if(Number.isNaN(this._scale)) {
+    this._userScale = scale;
+    if(Number.isNaN(this._userScale)) {
         throw new Error("Scale must not be NaN.");
     }
 };
@@ -115,12 +115,15 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
     }
 };
 
-parsegraph_PaintGroup.prototype.render = function(world, scale)
+parsegraph_PaintGroup.prototype.render = function(world)
 {
-    return this._painter.render(matrixMultiply3x3(
-        makeTranslation3x3(this._worldX, this._worldY),
-        world
-    ), scale * this._userScale);
+    return this._painter.render(
+        matrixMultiply3x3(
+            makeScale3x3(this._userScale),
+            matrixMultiply3x3(makeTranslation3x3(this._worldX, this._worldY), world)
+        ),
+        this._userScale
+    );
 };
 
 /**

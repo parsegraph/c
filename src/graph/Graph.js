@@ -470,7 +470,7 @@ parsegraph_Graph.prototype.render = function()
 
     for(var i in this._worldPlots) {
         var paintGroup = this._worldPlots[i];
-        paintGroup.render(world, this.camera().scale());
+        paintGroup.render(world);
     }
 
     // Render the carousel if requested.
@@ -481,8 +481,7 @@ parsegraph_Graph.prototype.render = function()
                 matrixMultiply3x3(makeTranslation3x3(
                     this._carouselCoords[0], this._carouselCoords[1]
                 ),
-                world),
-                1
+                world)
             );
         }
     }

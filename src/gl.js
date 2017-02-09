@@ -273,6 +273,9 @@ function makeRotation3x3(angleInRadians) {
 }
 
 function makeScale3x3(sx, sy) {
+    if(arguments.length === 1) {
+        sy = sx;
+    }
     return [
         sx, 0, 0,
         0, sy, 0,
