@@ -32,9 +32,9 @@ function parsegraph_initialize(mathMode) {
 
     // Background
     parsegraph_BACKGROUND_COLOR = parsegraph_createColor(
-        //0, 47/255, 57/255, 1
+        0, 47/255, 57/255, 1
         //256/255, 255/255, 255/255, 1
-        45/255, 84/255, 127/255, 1
+        //45/255, 84/255, 127/255, 1
     );
 
     // Font
