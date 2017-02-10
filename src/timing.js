@@ -21,6 +21,7 @@ parsegraph_AnimationTimer.prototype.schedule = function()
         return;
     }
 
+    //console.log(new Error("Scheduling animation timer."));
     this.timerId = requestAnimationFrame(this.fire);
 };
 

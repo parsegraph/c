@@ -67,6 +67,7 @@ parsegraph_Surface.prototype.addRenderer = function(renderer, thisArg)
 
 parsegraph_Surface.prototype.paint = function()
 {
+    //console.log("Painting surface");
     var args = arguments;
     this._painters.forEach(function(painter) {
         painter[0].apply(painter[1], args);
@@ -109,6 +110,7 @@ parsegraph_Surface.prototype.canProject = function()
  */
 parsegraph_Surface.prototype.render = function()
 {
+    //console.log("Rendering surface");
     if(!this.canProject()) {
         throw new Error(
             "Refusing to render to an unprojectable surface. Use canProject() to handle, and parent this surface's container to fix."
