@@ -42,10 +42,6 @@ parsegraph_PaintGroup.prototype.root = function()
 
 parsegraph_PaintGroup.prototype.measureText = function(text, style)
 {
-    if(!this._painter) {
-        return null;
-    }
-
     var painter = this._painter.textPainter();
     painter.setFontSize(style.fontSize);
     painter.setWrapWidth(style.fontSize * style.letterWidth * style.maxLabelChars);
