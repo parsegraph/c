@@ -317,12 +317,12 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         if(node.isSelected()) {
             painter.setBorderColor(
                 style.selectedBorderColor.premultiply(
-                    this.backgroundColor()
+                    node.backdropColor()
                 )
             );
             painter.setBackgroundColor(
                 style.selectedBackgroundColor.premultiply(
-                    this.backgroundColor()
+                    node.backdropColor()
                 )
             );
 //            this._spotlightPainter.drawSpotlight(
@@ -340,12 +340,12 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         else {
             painter.setBorderColor(
                 style.borderColor.premultiply(
-                    this.backgroundColor()
+                    node.backdropColor()
                 )
             );
             painter.setBackgroundColor(
                 style.backgroundColor.premultiply(
-                    this.backgroundColor()
+                    node.backdropColor()
                 )
             );
         }
@@ -659,12 +659,12 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
     if(node.isSelected()) {
         painter.setBorderColor(
             style.selectedBorderColor.premultiply(
-                this.backgroundColor()
+                node.backdropColor()
             )
         );
         painter.setBackgroundColor(
             style.selectedBackgroundColor.premultiply(
-                this.backgroundColor()
+                node.backdropColor()
             )
         );
 
@@ -687,12 +687,12 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
     } else {
         painter.setBorderColor(
             style.borderColor.premultiply(
-                this.backgroundColor()
+                node.backdropColor()
             )
         );
         painter.setBackgroundColor(
             style.backgroundColor.premultiply(
-                this.backgroundColor()
+                node.backdropColor()
             )
         );
     }

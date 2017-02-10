@@ -52,6 +52,26 @@ parsegraph_Node.prototype.graph = function()
     return this._graph;
 };
 
+/**
+ * Returns the color that should be used as the background color for inward nodes.
+ */
+parsegraph_Node.prototype.backdropColor = function()
+{
+    var node = this;
+    while(true) {
+        if(node.isRoot()) {
+            return parsegraph_BACKGROUND_COLOR;
+        }
+        if(node.parentDirection() === parsegraph_OUTWARD) {
+            if(node.isSelected()) {
+                return node.parentNode().blockStyle().backgroundColor;
+            }
+            return node.parentNode().blockStyle().selectedBackgroundColor;
+        }
+        node = node.parentNode();
+    }
+};
+
 parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
 {
     if(!listener) {
