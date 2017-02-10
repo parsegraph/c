@@ -121,7 +121,7 @@ function parsegraph_Input(graph, camera)
                     (touch.clientX - touchRecord.x) / camera.scale(),
                     (touch.clientY - touchRecord.y) / camera.scale()
                 );
-                this.Dispatch(false);
+                this.Dispatch(false, "touchmove");
             }
             touchRecord.x = touch.clientX;
             touchRecord.y = touch.clientY;
@@ -150,7 +150,7 @@ function parsegraph_Input(graph, camera)
                 zoomCenter[0],
                 zoomCenter[1]
             );
-            this.Dispatch(false);
+            this.Dispatch(false, "touchzoom");
             zoomTouchDistance = dist;
         }
     });
@@ -183,7 +183,7 @@ function parsegraph_Input(graph, camera)
                 selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
             }
         }
-        this.Dispatch(true);
+        this.Dispatch(true, "slider");
         lastMouseX = mouseX;
         lastMouseY = mouseY;
 
@@ -214,7 +214,7 @@ function parsegraph_Input(graph, camera)
 
             if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
-                this.Dispatch(true);
+                this.Dispatch(true, "touchstart");
                 touchstartTime = null;
                 return;
             }
@@ -234,7 +234,7 @@ function parsegraph_Input(graph, camera)
                     2
                 )
             );
-            this.Dispatch(false);
+            this.Dispatch(false, "touchzoomstart");
         }
     }, true);
 
@@ -297,7 +297,7 @@ function parsegraph_Input(graph, camera)
             lastMouseX = event.clientX;
             lastMouseY = event.clientY;
 
-            this.Dispatch(graph.mouseOverCarousel(event.clientX, event.clientY));
+            this.Dispatch(graph.mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel");
             return;
         }
 
@@ -307,7 +307,7 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
-        this.Dispatch(graph.mouseOver(event.clientX, event.clientY));
+        this.Dispatch(graph.mouseOver(event.clientX, event.clientY), "mousemove world");
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
     }, this);
@@ -326,14 +326,14 @@ function parsegraph_Input(graph, camera)
             graph.clickCarousel(event.clientX, event.clientY, true);
             // Carousel was hidden.
             if(!graph.isCarouselShown()) {
-                this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY));
+                this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "mouseover after carousel hide");
             }
             return;
         }
 
         if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
             // A significant node was clicked.
-            this.Dispatch(true);
+            this.Dispatch(true, "mousedown node");
             mousedownTime = null;
             return;
         }
@@ -341,7 +341,7 @@ function parsegraph_Input(graph, camera)
         // Dragging on the canvas.
         attachedMouseListener = mouseDragListener;
         //console.log("Repainting graph");
-        this.Dispatch(false);
+        this.Dispatch(false, "mousedown canvas");
 
         //console.log("Setting mousedown time");
         mousedownTime = Date.now();
@@ -384,7 +384,7 @@ function parsegraph_Input(graph, camera)
 
                 // Carousel was hidden.
                 if(!graph.isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY));
+                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "mouseup");
                 }
                 return;
             }
@@ -462,7 +462,7 @@ function parsegraph_Input(graph, camera)
 
                 // Carousel was hidden.
                 if(!graph.isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY));
+                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "q");
                 }
                 return;
             }
@@ -493,7 +493,7 @@ function parsegraph_Input(graph, camera)
 
                 // Carousel was hidden.
                 if(!graph.isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY));
+                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "q carousel");
                 }
             }
             break;
