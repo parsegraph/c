@@ -111,7 +111,7 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     }
 
     if(this._renderText) {
-        this._textPainter.render(world, scale);
+        this._textPainter.render(world);
     }
 };
 
@@ -369,11 +369,13 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     }
 
     var fontScale = .7;
-    var textMetrics = this._textPainter.measureText(
-        node.label(),
-        fontScale * style.fontSize * userScale * node.absoluteScale(),
+    this._textPainter.setFontSize(
+        fontScale * style.fontSize * userScale * node.absoluteScale()
+    );
+    this._textPainter.setWrapWidth(
         style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
+    var textMetrics = this._textPainter.measureText(node.label());
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
@@ -385,14 +387,17 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     if(value == null) {
         value = 0.5;
     }
-    this._textPainter.drawText(
-        node.label(),
+    this._textPainter.setPosition(
         worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2,
-        worldY + node.absoluteY() - textMetrics[1]/2,
-        fontScale * style.fontSize * userScale * node.absoluteScale(),
-        fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale(),
-        userScale * node.absoluteScale()
+        worldY + node.absoluteY() - textMetrics[1]/2
     );
+    this._textPainter.setFontSize(
+        fontScale * style.fontSize * userScale * node.absoluteScale()
+    );
+    this._textPainter.setWrapWidth(
+        fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
+    );
+    this._textPainter.drawText(node.label());
 };
 
 parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
@@ -705,15 +710,20 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         return;
     }
 
-    var textMetrics = this._textPainter.measureText(
-        node.label(),
-        style.fontSize * userScale * node.absoluteScale(),
+    this._textPainter.setFontSize(style.fontSize * userScale * node.absoluteScale());
+    this._textPainter.setWrapWidth(
         style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
+    var textMetrics = this._textPainter.measureText(node.label());
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
+    );
+
+    this._textPainter.setFontSize(style.fontSize * userScale * node.absoluteScale());
+    this._textPainter.setWrapWidth(
+        style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale()
     );
 
     if(node.hasNode(parsegraph_INWARD)) {
@@ -724,35 +734,26 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
 
         if(node.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
-            this._textPainter.drawText(
-                node.label(),
+            this._textPainter.setPosition(
                 worldX + userScale * node.absoluteX() - textMetrics[0]/2,
-                worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2,
-                style.fontSize * userScale * node.absoluteScale(),
-                style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale(),
-                userScale * node.absoluteScale()
+                worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2
             );
+            this._textPainter.drawText(node.label());
         }
         else {
             // Align horizontal.
-            this._textPainter.drawText(
-                node.label(),
+            this._textPainter.setPosition(
                 worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2,
-                worldY + userScale * node.absoluteY() - textMetrics[1]/2,
-                style.fontSize * userScale * node.absoluteScale(),
-                style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale(),
-                userScale * node.absoluteScale()
+                worldY + userScale * node.absoluteY() - textMetrics[1]/2
             );
+            this._textPainter.drawText(node.label());
         }
     }
     else {
-        this._textPainter.drawText(
-            node.label(),
+        this._textPainter.setPosition(
             worldX + userScale * node.absoluteX() - textMetrics[0]/2,
-            worldY + userScale * node.absoluteY() - textMetrics[1]/2,
-            style.fontSize * userScale * node.absoluteScale(),
-            style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale(),
-            userScale * node.absoluteScale()
+            worldY + userScale * node.absoluteY() - textMetrics[1]/2
         );
+        this._textPainter.drawText(node.label());
     }
 };

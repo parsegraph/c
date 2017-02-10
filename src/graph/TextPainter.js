@@ -1,56 +1,40 @@
-// TODO SetFont, which would recreate GlyphAtlas
 // TODO Test lots of glyphs; set a limit if one can be found to exist
-// XXX TextPainter // "#extension GL_OES_standard_derivatives : enable\n" +
-
-//    measureText(text, fontSize, [wrapWidth])
-//    drawText(text, x, y, fontSize, [wrapWidthj, [scale])
+// TODO Add caret
+// TODO Add runs of selected text
 
 parsegraph_TextPainter_VertexShader =
 "uniform mat3 u_world;\n" +
-"uniform float u_scale;\n" +
 "" +
 "attribute vec2 a_position;" +
 "attribute vec4 a_color;" +
+"attribute vec4 a_backgroundColor;" +
 "attribute vec2 a_texCoord;" +
-"attribute float a_scale;" +
 "" +
 "varying highp vec2 texCoord;" +
 "varying highp vec4 fragmentColor;" +
-"varying highp float scale;" +
+"varying highp vec4 backgroundColor;" +
 "" +
 "void main() {" +
     "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
    "fragmentColor = a_color;" +
+   "backgroundColor = a_backgroundColor;" +
    "texCoord = a_texCoord;" +
-   "scale = a_scale * u_scale;" +
 "}";
 
 parsegraph_TextPainter_FragmentShader =
-"#extension GL_OES_standard_derivatives : enable\n" +
-"\n" +
 "uniform sampler2D u_glyphTexture;\n" +
 "varying highp vec4 fragmentColor;\n" +
+"varying highp vec4 backgroundColor;" +
 "varying highp vec2 texCoord;\n" +
-"varying highp float scale;\n" +
-"\n" +
-"highp float aastep(highp float threshold, highp float value)\n" +
-"{\n" +
-    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
-    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
-"}\n" +
 "\n" +
 "void main() {\n" +
-    "highp float dist = texture2D(u_glyphTexture, texCoord.st).r;" +
-    "highp float edgeDistance = 0.5;" +
-    "highp float opacity = aastep(edgeDistance, dist);" +
-    "opacity = dist;\n" +
-    /*"highp float edgeWidth = 1.0/(scale * 64.0);" +
-    "highp float opacity = smoothstep(" +
-        "edgeDistance - edgeWidth, " +
-        "edgeDistance + edgeWidth, " +
-        "dist" +
-    ");" +*/
-    "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
+    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).r;" +
+    "if(backgroundColor.a == 0.0) {" +
+        "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
+    "}" +
+    "else {" +
+        "gl_FragColor = mix(backgroundColor, fragmentColor, opacity);" +
+    "}" +
 "}";
 
 function parsegraph_TextPainter(gl, glyphAtlas, shaders)
@@ -59,6 +43,9 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
 
     this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
     this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
+
+    this._x = 0;
+    this._y = 0;
 
     if(!glyphAtlas) {
         throw new Error("Glyph atlas must be provided");
@@ -77,10 +64,6 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
         );
 
         var fragProgram = parsegraph_TextPainter_FragmentShader;
-        if(!gl.getExtension("OES_standard_derivatives")) {
-            // TODO Don't just default with the good version.
-            throw new Error("OES_standard_derivatives is required for TextPainter.");
-        }
         gl.attachShader(
             program, compileShader(gl, fragProgram, gl.FRAGMENT_SHADER)
         );
@@ -102,8 +85,8 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
     );
     this.a_position = this._textBuffer.defineAttrib("a_position", 2);
     this.a_color = this._textBuffer.defineAttrib("a_color", 4);
+    this.a_backgroundColor = this._textBuffer.defineAttrib("a_backgroundColor", 4);
     this.a_texCoord = this._textBuffer.defineAttrib("a_texCoord", 2);
-    this.a_scale = this._textBuffer.defineAttrib("a_scale", 1);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -112,12 +95,9 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
     this.u_glyphTexture = this._gl.getUniformLocation(
         this._textProgram, "u_glyphTexture"
     );
-    this.u_scale = this._gl.getUniformLocation(
-        this._textProgram, "u_scale"
-    );
 
-    // Setup initial uniform values.
     this._color = parsegraph_createColor(1, 1, 1, 1);
+    this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
 };
 
 parsegraph_createTextPainter = function(gl, size)
@@ -135,6 +115,16 @@ parsegraph_TextPainter.prototype.setColor = function()
     }
 };
 
+parsegraph_TextPainter.prototype.setBackgroundColor = function()
+{
+    if(arguments.length > 1) {
+        this._backgroundColor = parsegraph_createColor.apply(null, arguments);
+    }
+    else {
+        this._backgroundColor = arguments[0];
+    }
+};
+
 parsegraph_TextPainter.prototype.setWrapWidth = function(wrapWidth)
 {
     this._wrapWidth = wrapWidth;
@@ -145,20 +135,20 @@ parsegraph_TextPainter.prototype.wrapWidth = function()
     return this._wrapWidth;
 };
 
-parsegraph_TextPainter.prototype.measureText = function(text, fontSize, wrapWidth)
+parsegraph_TextPainter.prototype.wrapWidth = function()
+{
+    return this._wrapWidth;
+};
+
+parsegraph_TextPainter.prototype.measureText = function(text)
 {
     var x = 0;
     var y = 0;
     var i = 0;
 
-    if(fontSize === undefined) {
-        fontSize = this.fontSize();
-    }
-    if(wrapWidth === undefined) {
-        wrapWidth = this.wrapWidth();
-    }
-
-    var fontScale = fontSize / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
+    var fontSize = this.fontSize();
+    var wrapWidth = this.wrapWidth();
+    var fontScale = this.fontScale();
     var glyphData;
 
     var maxLineWidth = 0;
@@ -203,119 +193,202 @@ parsegraph_TextPainter.prototype.fontSize = function()
     return this._fontSize;
 };
 
-/**
- * Draws the given text with the given font size at the provided location.
- * Text is drawn forwards and downwards from the given position.
- *
- * The wrapWidth causes wrapping.
- *
- * The scale provided is the camera's scale, given for antialiasing. Defaults
- * to 1.0.
- */
-parsegraph_TextPainter.prototype.drawText = function(text, x, y, fontSize, wrapWidth, scale)
+parsegraph_TextPainter.prototype.fontScale = function()
 {
-    if(scale === undefined) {
-        scale = 1.0;
-    }
-    if(fontSize === undefined) {
-        fontSize = this.fontSize();
-    }
-    if(wrapWidth === undefined) {
-        wrapWidth = this.wrapWidth();
-    }
-    var fontScale = fontSize / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
+    return this.fontSize() / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
+};
 
-    var originX = x;
+parsegraph_TextPainter.prototype.drawText = function(text)
+{
     var i = 0;
-
-    var addedGlyphs = false;
     while(true) {
         var letter = fixedCharAt(text, i);
-        if(letter === null) {
-            break;
+        if(!letter) {
+            return;
         }
-
-        var glyphData = this._glyphAtlas.getGlyph(letter);
-
-        // Note if we've just started using this glyph, since we'll need
-        // to schedule a glyph atlas update to get the high-resolution
-        // version.
-        if(!glyphData.painted) {
-            addedGlyphs = true;
-        }
-        glyphData.painted = true;
-
-        if(wrapWidth !== undefined && (x + glyphData.width * fontScale) > (originX + wrapWidth)) {
-            x = originX;
-            y += glyphData.height * fontScale;
-        //}
-        //else {
-            //console.log(x, originX, originX + wrapWidth);
-        }
-
-        //console.log(letter + x + ", " + y + "(" + glyphData.width + "x" + glyphData.height + ")");
-
-        // Append position data.
-        this._textBuffer.appendData(
-            this.a_position,
-            [
-                x, y,
-                x + glyphData.width * fontScale, y,
-                x + glyphData.width * fontScale, y + glyphData.height * fontScale,
-
-                x, y,
-                x + glyphData.width * fontScale, y + glyphData.height * fontScale,
-                x, y + glyphData.height * fontScale
-            ]
-        );
-
-        // Append color data.
-        for(var k = 0; k < 3 * 2; ++k) {
-            this._textBuffer.appendData(
-                this.a_color,
-                this._color.r(),
-                this._color.g(),
-                this._color.b(),
-                this._color.a()
-            );
-        }
-
-        // Append color data.
-        for(var k = 0; k < 3 * 2; ++k) {
-            this._textBuffer.appendData(
-                this.a_scale,
-                scale
-            );
-        }
-        //console.log("a_scale: " + scale);
-
-        // Append texture coordinate data.
-        this._textBuffer.appendData(
-            this.a_texCoord,
-            [
-                glyphData.x / this._glyphAtlas.canvas().width,
-                glyphData.y / this._glyphAtlas.canvas().height,
-
-                (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-                glyphData.y / this._glyphAtlas.canvas().height,
-
-                (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-                (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
-
-                glyphData.x / this._glyphAtlas.canvas().width,
-                glyphData.y / this._glyphAtlas.canvas().height,
-
-                (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-                (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
-
-                glyphData.x / this._glyphAtlas.canvas().width,
-                (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height
-            ]
-        );
-
-        ++i;
-        x += glyphData.width * fontScale;
+        this.drawGlyph(letter);
+        i += letter.length;
     }
+};
+
+parsegraph_TextPainter.prototype.drawGlyph = function(letter)
+{
+    var glyphData = this._glyphAtlas.getGlyph(letter);
+    glyphData.painted = true;
+
+    // Change lines if needed.
+    var fontScale = this.fontScale();
+    if(this.wrapWidth() && (this._lineAdvance + glyphData.width * fontScale) > this.wrapWidth()) {
+        this.nextLine();
+    }
+
+    // Append position data.
+    var x = this.letterX();
+    var y = this.letterY();
+    this._textBuffer.appendData(
+        this.a_position,
+        [
+            x, y,
+            x + glyphData.width * fontScale, y,
+            x + glyphData.width * fontScale, y + glyphData.height * fontScale,
+
+            x, y,
+            x + glyphData.width * fontScale, y + glyphData.height * fontScale,
+            x, y + glyphData.height * fontScale
+        ]
+    );
+
+    // Append color data.
+    for(var k = 0; k < 3 * 2; ++k) {
+        this._textBuffer.appendData(
+            this.a_color,
+            this._color.r(),
+            this._color.g(),
+            this._color.b(),
+            this._color.a()
+        );
+    }
+    for(var k = 0; k < 3 * 2; ++k) {
+        this._textBuffer.appendData(
+            this.a_backgroundColor,
+            this._backgroundColor.r(),
+            this._backgroundColor.g(),
+            this._backgroundColor.b(),
+            this._backgroundColor.a()
+        );
+    }
+
+    // Append texture coordinate data.
+    this._textBuffer.appendData(
+        this.a_texCoord,
+        [
+            glyphData.x / this._glyphAtlas.canvas().width,
+            glyphData.y / this._glyphAtlas.canvas().height,
+
+            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
+            glyphData.y / this._glyphAtlas.canvas().height,
+
+            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
+            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
+
+            glyphData.x / this._glyphAtlas.canvas().width,
+            glyphData.y / this._glyphAtlas.canvas().height,
+
+            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
+            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
+
+            glyphData.x / this._glyphAtlas.canvas().width,
+            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height
+        ]
+    );
+
+    // Add the letter's width to the line advance.
+    this._lineAdvance += glyphData.width * fontScale;
+    this._lineHeight = Math.max(glyphData.height * fontScale, this._lineHeight);
+
+    return glyphData.width * fontScale;
+};
+
+/**
+ * Resets the painter to the given paragraph position, in world coordinates.
+ */
+parsegraph_TextPainter.prototype.setPosition = function(x, y)
+{
+    this._paragraphX = x;
+    this._paragraphY = y;
+
+    this._lineAdvance = 0;
+    this._paragraphAdvance = 0;
+    this._lineHeight = 0;
+};
+
+/**
+ * Returns the trailing horizontal edge of the current letter position.
+ */
+parsegraph_TextPainter.prototype.letterX = function()
+{
+    return this._paragraphX + this._lineAdvance;
+};
+
+/**
+ * Returns the trailing vertical edge of the current letter position.
+ */
+parsegraph_TextPainter.prototype.letterY = function()
+{
+    return this._paragraphY + this._paragraphAdvance;
+};
+
+/**
+ * Returns the trailing edge of the currently rendered paragraph.
+ */
+parsegraph_TextPainter.prototype.paragraphX = function()
+{
+    return this._paragraphX;
+};
+
+/**
+ * Returns the top edge of the currently rendered paragraph.
+ */
+parsegraph_TextPainter.prototype.paragraphY = function()
+{
+    return this._paragraphY;
+};
+
+/**
+ * Sets the line position to the beginning of the paragraph backward edge, at the
+ * top of the next line.
+ */
+parsegraph_TextPainter.prototype.nextLine = function()
+{
+    this._lineAdvance = 0;
+
+    // If there was no line height, then default to the glyph atlas's default height.
+    if(this._lineHeight === 0) {
+        this._lineHeight += this.glyphAtlas().letterHeight() * this.fontScale();
+    }
+
+    this._paragraphAdvance += this.lineHeight();
+    this._lineHeight = 0;
+};
+
+/**
+ * Sets the paragraph position to the bottom of the current paragraph.
+ */
+parsegraph_TextPainter.prototype.nextParagraph = function()
+{
+    this._paragraphAdvance = 0;
+    this._paragraphY += this._paragraphAdvance;
+};
+
+/**
+ * Returns the line height using the current font size, in world coordinates.
+ */
+parsegraph_TextPainter.prototype.lineHeight = function()
+{
+    return this._lineHeight;
+};
+
+/**
+ * Returns the current X position of this painter. The painter's X position will be advanced
+ * using drawGlyph calls.
+ *
+ * The letter is drawn with its top-"backward" corner being at the given X position, in world
+ * coordinates.
+ */
+parsegraph_TextPainter.prototype.x = function()
+{
+    return this._x;
+};
+
+/**
+ * Returns the current Y position of this painter.
+ *
+ * The letter is drawn with its top-"backward" corner being at the given Y position, in world
+ * coordinates.
+ */
+parsegraph_TextPainter.prototype.y = function()
+{
+    return this._y;
 };
 
 parsegraph_TextPainter.prototype.clear = function()
@@ -323,7 +396,7 @@ parsegraph_TextPainter.prototype.clear = function()
     this._textBuffer.clear();
 };
 
-parsegraph_TextPainter.prototype.render = function(world, scale)
+parsegraph_TextPainter.prototype.render = function(world)
 {
     var gl = this._gl;
 
@@ -335,8 +408,6 @@ parsegraph_TextPainter.prototype.render = function(world, scale)
     gl.activeTexture(gl.TEXTURE0);
     this._glyphAtlas.bindTexture(gl);
     gl.uniform1i(this.u_glyphTexture, 0);
-    gl.uniform1f(this.u_scale, scale);
-    //console.log("u_scale: " + scale);
 
     // Render text.
     gl.uniformMatrix3fv(

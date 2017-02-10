@@ -46,11 +46,10 @@ parsegraph_PaintGroup.prototype.measureText = function(text, style)
         return null;
     }
 
-    return this._painter.textPainter().measureText(
-        text,
-        style.fontSize,
-        style.fontSize * style.letterWidth * style.maxLabelChars
-    );
+    var painter = this._painter.textPainter();
+    painter.setFontSize(style.fontSize);
+    painter.setWrapWidth(style.fontSize * style.letterWidth * style.maxLabelChars);
+    return painter.measureText(text);
 };
 
 parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)
