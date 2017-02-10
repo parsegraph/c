@@ -72,7 +72,6 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
             this._glyphTexture = gl.createTexture();
         }
         gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
         gl.texImage2D(
             gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
         );
