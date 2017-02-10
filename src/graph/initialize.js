@@ -172,7 +172,7 @@ function parsegraph_initialize(mathMode) {
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
         verticalPadding: 1*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(.8, .8, 1, 2),
+        borderColor: parsegraph_createColor(1, 1, 1, 1),
         backgroundColor: parsegraph_createColor(.75, .75, 1, 1),
         selectedBorderColor: parsegraph_createColor(.95, 1, .95, 1),
         selectedBackgroundColor: parsegraph_createColor(.9, 1, .9, 1),
