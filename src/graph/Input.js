@@ -544,10 +544,16 @@ parsegraph_Input.prototype.Update = function(elapsed)
 
     var lastCoords = this.lastMouseCoords();
     if(this.Get("x")) {
-        cam.zoomToPoint(Math.pow(1.1, scaleSpeed * elapsed), lastCoords[0], lastCoords[1]);
+        cam.zoomToPoint(Math.pow(1.1, scaleSpeed * elapsed),
+            this._graph.gl().drawingBufferWidth / 2,
+            this._graph.gl().drawingBufferHeight / 2
+        );
     }
     if(this.Get("z")) {
-        cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * elapsed), lastCoords[0], lastCoords[1]);
+        cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * elapsed),
+            this._graph.gl().drawingBufferWidth / 2,
+            this._graph.gl().drawingBufferHeight / 2
+        );
     }
     this.Dispatch(false);
 };
