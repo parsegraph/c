@@ -50,7 +50,7 @@ function parsegraph_initialize(mathMode) {
     /**
      * Base font size.
      */
-    parsegraph_FONT_SIZE = 48;
+    parsegraph_FONT_SIZE = 72;
 
     /**
      * The thickness (diameter) of the line.
@@ -62,7 +62,7 @@ function parsegraph_initialize(mathMode) {
 
     parsegraph_BUD_RADIUS = 8;
 
-    parsegraph_MIN_BLOCK_HEIGHT = parsegraph_BUD_RADIUS*9;
+    parsegraph_MIN_BLOCK_HEIGHT = parsegraph_BUD_RADIUS*12;
     parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*15;
 
     // Inter-node spacing
@@ -81,7 +81,7 @@ function parsegraph_initialize(mathMode) {
      */
     parsegraph_BUD_LEAF_SEPARATION = 4.2;
 
-    parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION = parsegraph_BUD_RADIUS*3;
+    parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION = parsegraph_BUD_RADIUS*4.5;
 
     parsegraph_BUD_STYLE = {
         minWidth: parsegraph_BUD_RADIUS*3,
@@ -100,7 +100,7 @@ function parsegraph_initialize(mathMode) {
         selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
         fontSize: parsegraph_FONT_SIZE,
         letterWidth: .61,
-        verticalSeparation: 9 * parsegraph_VERTICAL_SEPARATION_PADDING,
+        verticalSeparation: 10.5 * parsegraph_VERTICAL_SEPARATION_PADDING,
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
@@ -171,7 +171,7 @@ function parsegraph_initialize(mathMode) {
         minWidth: parsegraph_MIN_BLOCK_WIDTH,
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
-        verticalPadding: 1*parsegraph_BUD_RADIUS,
+        verticalPadding: .5*parsegraph_BUD_RADIUS,
         borderColor: parsegraph_createColor(1, 1, 1, 1),
         backgroundColor: parsegraph_createColor(.75, .75, 1, 1),
         selectedBorderColor: parsegraph_createColor(.95, 1, .95, 1),
