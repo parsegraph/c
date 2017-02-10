@@ -537,10 +537,12 @@ parsegraph_Input.prototype.Update = function(elapsed)
         cam.setScale(defaultScale);
     }
 
-    cam.adjustOrigin(
-        elapsed * (this.Get("ArrowLeft") * xSpeed + this.Get("ArrowRight") * -xSpeed),
-        elapsed * (this.Get("ArrowUp") * ySpeed + this.Get("ArrowDown") * -ySpeed)
-    );
+    if(this.Get("ArrowLeft") || this.Get("ArrowRight") || this.Get("ArrowUp") || this.Get("ArrowDown")) {
+        cam.adjustOrigin(
+            elapsed * (this.Get("ArrowLeft") * xSpeed + this.Get("ArrowRight") * -xSpeed),
+            elapsed * (this.Get("ArrowUp") * ySpeed + this.Get("ArrowDown") * -ySpeed)
+        );
+    }
 
     var lastCoords = this.lastMouseCoords();
     if(this.Get("x")) {
