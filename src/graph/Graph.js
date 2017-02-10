@@ -407,7 +407,7 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
 
 parsegraph_Graph.prototype.needsRepaint = function()
 {
-    return this._worldPaintingDirty || this._carouselPaintingDirty;
+    return this._worldPaintingDirty || (this._showCarousel && this._carouselPaintingDirty);
 };
 
 parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
