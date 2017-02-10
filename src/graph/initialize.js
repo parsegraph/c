@@ -45,7 +45,7 @@ function parsegraph_initialize(mathMode) {
     /**
      * The scale at which shrunk nodes are shrunk.
      */
-    parsegraph_SHRINK_SCALE = .75;
+    parsegraph_SHRINK_SCALE = .85;
 
     /**
      * Base font size.
