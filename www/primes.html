@@ -71,6 +71,14 @@ function init()
         var primes = new parsegraph_PrimesWidget(graph);
         graph.plot(primes.root());
 
+        var defaultScale = .25;
+        graph.camera().project();
+        graph.camera().setOrigin(
+            graph.gl().drawingBufferWidth / (2 * defaultScale),
+            graph.gl().drawingBufferHeight / (2 * defaultScale)
+        );
+        graph.camera().setScale(defaultScale);
+
         var bTimer = new parsegraph_TimeoutTimer();
         bTimer.setDelay(750);
         bTimer.setListener(function() {
@@ -127,7 +135,6 @@ function init()
         form.button("resetOrigin", "Reset Camera");
 
         form.addListener(function(sourceName, value) {
-            var defaultScale = .5;
             if(sourceName == "resetOrigin") {
                 graph.camera().setOrigin(
                     graph.gl().drawingBufferWidth / (2 * defaultScale),
