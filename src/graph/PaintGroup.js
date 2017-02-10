@@ -52,6 +52,14 @@ parsegraph_PaintGroup.prototype.measureText = function(text, style)
     return painter.measureText(text);
 };
 
+parsegraph_PaintGroup.prototype.worldToTextCaret = function(label, fontSize, wrapWidth, paragraphX, paragraphY)
+{
+    var painter = this._painter.textPainter();
+    painter.setFontSize(fontSize);
+    painter.setWrapWidth(wrapWidth);
+    return painter.findCaretPos(label, paragraphX, paragraphY);
+};
+
 parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)
 {
     return this._root.nodeUnderCoords(

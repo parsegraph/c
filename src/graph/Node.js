@@ -12,6 +12,9 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._type = newType;
     this._style = parsegraph_style(this._type);
     this._label = undefined;
+    this._labelX = undefined;
+    this._labelY = undefined;
+
     this._value = null;
 
     this._layoutState = parsegraph_NEEDS_COMMIT;
@@ -255,6 +258,42 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 
     //console.log("Found nothing.");
     return null;
+};
+
+/**
+ * Given a click in world (absolute) coordinates, return the index into this node's label.
+ *
+ * If this node's label === undefined, then null is returned. Otherwise, a value between
+ * [0, this.label().length()] is returned. Zero indicates a position before the first
+ * character, just as this.label().length() indicates a position past the end.
+ *
+ * World coordinates are clamped to the boundaries of the node.
+ */
+parsegraph_Node.prototype.clickToCaret = function(worldX, worldY)
+{
+    if(this.label() === undefined) {
+        return null;
+    }
+
+    var labelPosition = this.getLabelPosition();
+    var style = this.blockStyle();
+    var caretPos = this.paintGroup().worldToTextCaret(
+        this.label(),
+        style.fontSize * this.absoluteScale(),
+        style.maxLabelChars * style.fontSize * style.letterWidth * this.absoluteScale(),
+        worldX - labelPosition[0],
+        worldY - labelPosition[1]
+    );
+};
+
+parsegraph_Node.prototype.getLabelSize = function()
+{
+    return this.paintGroup().measureText(this.label(), this.blockStyle());
+};
+
+parsegraph_Node.prototype.getLabelPosition = function()
+{
+    return [this._labelX, this._labelY];
 };
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)

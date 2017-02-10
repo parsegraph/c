@@ -387,16 +387,15 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     if(value == null) {
         value = 0.5;
     }
-    this._textPainter.setPosition(
-        worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2,
-        worldY + node.absoluteY() - textMetrics[1]/2
-    );
     this._textPainter.setFontSize(
         fontScale * style.fontSize * userScale * node.absoluteScale()
     );
     this._textPainter.setWrapWidth(
         fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
     );
+    node._labelX = worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
+    node._labelY = worldY + node.absoluteY() - textMetrics[1]/2;
+    this._textPainter.setPosition(node._labelX, node._labelY);
     this._textPainter.drawText(node.label());
 };
 
@@ -734,26 +733,23 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
 
         if(node.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
-            this._textPainter.setPosition(
-                worldX + userScale * node.absoluteX() - textMetrics[0]/2,
-                worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2
-            );
+            node._labelX = worldX + userScale * node.absoluteX() - textMetrics[0]/2;
+            node._labelY = worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2;
+            this._textPainter.setPosition(node._labelX, node._labelY);
             this._textPainter.drawText(node.label());
         }
         else {
             // Align horizontal.
-            this._textPainter.setPosition(
-                worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2,
-                worldY + userScale * node.absoluteY() - textMetrics[1]/2
-            );
+            node._labelX = worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2;
+            node._labelY = worldY + userScale * node.absoluteY() - textMetrics[1]/2;
+            this._textPainter.setPosition(node._labelX, node._labelY);
             this._textPainter.drawText(node.label());
         }
     }
     else {
-        this._textPainter.setPosition(
-            worldX + userScale * node.absoluteX() - textMetrics[0]/2,
-            worldY + userScale * node.absoluteY() - textMetrics[1]/2
-        );
+        node._labelX = worldX + userScale * node.absoluteX() - textMetrics[0]/2,
+        node._labelY = worldY + userScale * node.absoluteY() - textMetrics[1]/2
+        this._textPainter.setPosition(node._labelX, node._labelY);
         this._textPainter.drawText(node.label());
     }
 };

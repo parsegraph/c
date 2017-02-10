@@ -135,9 +135,74 @@ parsegraph_TextPainter.prototype.wrapWidth = function()
     return this._wrapWidth;
 };
 
-parsegraph_TextPainter.prototype.wrapWidth = function()
+parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, paragraphY)
 {
-    return this._wrapWidth;
+    var x = 0;
+    var y = 0;
+    var i = 0;
+
+    var fontSize = this.fontSize();
+    var wrapWidth = this.wrapWidth();
+    var fontScale = this.fontScale();
+    var glyphData;
+
+    // Clamp the world coordinates to the boundaries of the text.
+    var labelSize = this.measureText(text);
+    paragraphX = Math.max(0, paragraphX);
+    paragraphY = Math.max(0, paragraphY);
+    paragraphX = Math.min(labelSize[0], paragraphX);
+    paragraphY = Math.min(labelSize[1], paragraphY);
+
+    var maxLineWidth = 0;
+    var startTime = parsegraph_getTimeInMillis();
+    //console.log(paragraphX + ", " + paragraphY);
+    while(true) {
+        if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
+            throw new Error("TextPainter.measureText timeout");
+        }
+        var letter = fixedCharAt(text, i);
+        //console.log(letter);
+        if(letter === null) {
+            // Reached the end of the string.
+            maxLineWidth = Math.max(maxLineWidth, x);
+            if(glyphData) {
+                y += glyphData.height * fontScale;
+            }
+            break;
+        }
+
+        var glyphData = this._glyphAtlas.getGlyph(letter);
+        //console.log(x + " Glyph width: " + (glyphData.width * fontScale));
+
+        // Check for wrapping.
+        if(wrapWidth !== undefined && (x + glyphData.width * fontScale) > wrapWidth) {
+            //console.log("Need to wrap");
+            if(paragraphY >= y && paragraphY <= y + glyphData.height * fontScale && paragraphX >= x) {
+                // It's past the end of line, so that's actually the previous character.
+                --i;
+                break;
+            }
+
+            maxLineWidth = Math.max(maxLineWidth, x);
+            x = 0;
+            y += this._glyphAtlas.letterHeight() * fontScale;
+            //console.log("Break: " + i);
+        }
+
+        if(
+            paragraphX >= x && paragraphY >= y
+            && paragraphX <= x + glyphData.width * fontScale
+            && paragraphY <= y + glyphData.height * fontScale
+        ) {
+            // Within this letter!
+            break;
+        }
+
+        i += letter.length;
+        x += glyphData.width * fontScale;
+    }
+
+    return i;
 };
 
 parsegraph_TextPainter.prototype.measureText = function(text)
@@ -176,7 +241,7 @@ parsegraph_TextPainter.prototype.measureText = function(text)
             y += glyphData.height;
         }
 
-        ++i;
+        i += letter.length;
         x += glyphData.width;
     }
 
