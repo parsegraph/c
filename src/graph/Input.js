@@ -528,6 +528,8 @@ parsegraph_Input.prototype.Update = function(elapsed)
     var ySpeed = 1000 / cam.scale();
     var scaleSpeed = 20;
 
+    var inputChangedScene = false;
+
     if(this.Get("Escape") && this._graph.surface()._gl) {
         var defaultScale = .5;
         cam.setOrigin(
@@ -535,6 +537,7 @@ parsegraph_Input.prototype.Update = function(elapsed)
             this._graph.gl().drawingBufferHeight / (2 * defaultScale)
         );
         cam.setScale(defaultScale);
+        inputChangedScene = true;
     }
 
     if(this.Get("ArrowLeft") || this.Get("ArrowRight") || this.Get("ArrowUp") || this.Get("ArrowDown")) {
@@ -542,6 +545,7 @@ parsegraph_Input.prototype.Update = function(elapsed)
             elapsed * (this.Get("ArrowLeft") * xSpeed + this.Get("ArrowRight") * -xSpeed),
             elapsed * (this.Get("ArrowUp") * ySpeed + this.Get("ArrowDown") * -ySpeed)
         );
+        inputChangedScene = true;
     }
 
     var lastCoords = this.lastMouseCoords();
@@ -550,14 +554,18 @@ parsegraph_Input.prototype.Update = function(elapsed)
             this._graph.gl().drawingBufferWidth / 2,
             this._graph.gl().drawingBufferHeight / 2
         );
+        inputChangedScene = true;
     }
     if(this.Get("z")) {
         cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * elapsed),
             this._graph.gl().drawingBufferWidth / 2,
             this._graph.gl().drawingBufferHeight / 2
         );
+        inputChangedScene = true;
     }
     this.Dispatch(false);
+
+    return inputChangedScene;
 };
 
 parsegraph_Input.prototype.Get = function(key)
