@@ -4,4 +4,6 @@ TARGET=${*:-$HOME/public_html/parsegraph}
 
 mkdir -p $TARGET
 
-watch -n1 "make && make install && /bin/cp -vuf *.js www/* $TARGET"
+while inotifywait -e modify -q -r src www; do
+    make && make install && /bin/cp -vuf *.js www/* $TARGET
+done
