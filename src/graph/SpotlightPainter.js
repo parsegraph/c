@@ -31,37 +31,46 @@ parsegraph_SpotlightPainter_FragmentShader =
     "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);" +
 "}";
 
-function parsegraph_SpotlightPainter(gl)
+function parsegraph_SpotlightPainter(gl, shaders)
 {
     this._gl = gl;
+    if(!this._gl || !this._gl.createProgram) {
+        throw new Error("A GL interface must be given");
+    }
 
     // Compile the shader program.
-    this._program = this._gl.createProgram();
+    var shaderName = "parsegraph_SpotlightPainter";
+    if(!shaders[shaderName]) {
+        var program = gl.createProgram();
 
-    this._gl.attachShader(
-        this._program,
-        compileShader(
-            this._gl,
-            parsegraph_SpotlightPainter_VertexShader,
-            this._gl.VERTEX_SHADER
-        )
-    );
+        gl.attachShader(
+            program,
+            compileShader(
+                gl,
+                parsegraph_SpotlightPainter_VertexShader,
+                gl.VERTEX_SHADER
+            )
+        );
 
-    this._gl.attachShader(
-        this._program,
-        compileShader(
-            this._gl,
-            parsegraph_SpotlightPainter_FragmentShader,
-            this._gl.FRAGMENT_SHADER
-        )
-    );
+        gl.attachShader(
+            program,
+            compileShader(
+                gl,
+                parsegraph_SpotlightPainter_FragmentShader,
+                gl.FRAGMENT_SHADER
+            )
+        );
 
-    this._gl.linkProgram(this._program);
-    if(!this._gl.getProgramParameter(
-        this._program, this._gl.LINK_STATUS
-    )) {
-        throw new Error("SpotlightPainter program failed to link.");
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(
+            program, gl.LINK_STATUS
+        )) {
+            throw new Error("SpotlightPainter program failed to link.");
+        }
+
+        shaders[shaderName] = program;
     }
+    this._program = shaders[shaderName];
 
     // Prepare attribute buffers.
     this._spotlightBuffer = parsegraph_createPagingBuffer(

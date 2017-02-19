@@ -63,13 +63,10 @@ function init()
         var graph = new parsegraph_Graph(surface);
         GRAPH = graph;
 
-        var COUNT = 25
+        var COUNT = 100;
         main.appendChild(graph.container());
 
-        //var linear = new parsegraph_LinearWidget(graph);
-        //graph.plot(linear.root());
-        var primes = new parsegraph_PrimesWidget(graph);
-        graph.plot(primes.root());
+        graph.plot(showUlam(COUNT));
 
         var defaultScale = .25;
         graph.camera().project();
@@ -79,39 +76,11 @@ function init()
         );
         graph.camera().setScale(defaultScale);
 
-        var bTimer = new parsegraph_TimeoutTimer();
-        bTimer.setDelay(10);
-        bTimer.setListener(function() {
-            primes.step(1);
-            graph.scheduleRepaint();
-            renderTimer.schedule();
-            if(primes.position <= 1000) {
-                bTimer.setDelay(50);
-                bTimer.schedule();
-            }
-        });
-        bTimer.schedule();
-
-        /*
-        var aTimer = new parsegraph_TimeoutTimer();
-        aTimer.setDelay(250);
-        aTimer.setListener(function() {
-            linear.step(1);
-            graph.scheduleRepaint();
-            renderTimer.schedule();
-            if(primes.position <= 120) {
-                aTimer.setDelay(500);
-                aTimer.schedule();
-            }
-        });
-        aTimer.schedule();
-        */
-
         var renderTimer = new parsegraph_AnimationTimer();
         renderTimer.setListener(function() {
             graph.input().Update(new Date());
             if(graph.needsRepaint()) {
-                surface.paint(10);
+                surface.paint(50);
             }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
@@ -126,44 +95,6 @@ function init()
             renderTimer.schedule();
         });
         renderTimer.schedule();
-
-        var glyphAtlas = new parsegraph_GlyphAtlas(
-            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
-        );
-        var shaders = {};
-        var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
-
-surface.addRenderer(function() {
-    var gl = surface.gl();
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-
-    gl.enable(gl.BLEND);
-    gl.blendFunc(
-        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
-    );
-    textPainter.clear();
-    textPainter.setColor(1, 1, 1);
-
-    textPainter.setFontSize(20);
-
-    var drawMultiline = function(x, y, text) {
-        var lines = text.split("\n");
-        for(var i = 0; i < lines.length; ++i) {
-            var line = lines[i];
-            textPainter.drawText(line, x, y + (1 + i) * textPainter.fontSize());
-        }
-    };
-
-    var t = "";
-    t += "position=" + primes.position + "\n";
-    //drawMultiline(8, 4, t);
-    var world = textCamera.project();
-    textPainter.render(world);
-});
-
-        var textCamera = new parsegraph_Camera(surface);
 
         var controls = document.createElement("div");
         controls.className = "controls";

@@ -21,10 +21,14 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
             if(modulus == 0) {
                 // It's a multiple, so there's no chance for primality.
                 this.caret.spawnMove('u', 'b');
+                this.caret.label(prime.frequency);
                 isPrime = false;
             }
             else {
                 this.caret.spawnMove('u', 's');
+            }
+            if(i === 0) {
+                this.caret.crease();
             }
         }
         if(isPrime) {

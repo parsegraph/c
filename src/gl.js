@@ -2,7 +2,8 @@
  * Returns a list of 2-D vertex coordinates that will create
  * a rectangle, centered at the specified position.
  */
-function parsegraph_generateRectangleVertices(x, y, w, h) {
+function parsegraph_generateRectangleVertices(x, y, w, h)
+{
     return [
         x - w / 2, y - h / 2,
         x + w / 2, y - h / 2,
@@ -10,11 +11,11 @@ function parsegraph_generateRectangleVertices(x, y, w, h) {
 
         x - w / 2, y - h / 2,
         x + w / 2, y + h / 2,
-        x - w / 2, y + h / 2,
+        x - w / 2, y + h / 2
     ];
 }
 
-function getVerts(width,length,height)
+function getVerts(width, length, height)
 {
     return [
         // Front
@@ -55,7 +56,8 @@ function getVerts(width,length,height)
     ];
 }
 
-function parsegraph_generateRectangleTexcoords() {
+function parsegraph_generateRectangleTexcoords()
+{
     return [
         0, 0,
         1, 0,

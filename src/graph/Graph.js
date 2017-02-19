@@ -54,6 +54,8 @@ function parsegraph_Graph()
     this._fanPainter = null;
 
     this._shaders = {};
+
+    this._previousWorldPaintState = null;
 };
 
 parsegraph_Graph.prototype.camera = function()
@@ -101,49 +103,30 @@ parsegraph_Graph.prototype.plot = function()
  *
  * parsegraph_plot.apply(plotList, arguments);
  *
- * plot(paintGroup)
  * plot(node)
  * plot(root, worldX, worldY, userScale)
  */
-function parsegraph_plot() {
-    // Interpret the argument.
-    var paintGroup;
+function parsegraph_plot(node, worldX, worldY, userScale) {
+    if(!node.localPaintGroup()) {
+        node.setPaintGroup(new parsegraph_PaintGroup(node));
+    }
     if(arguments.length > 1) {
-        var rootNode = arguments[0];
-        paintGroup = new parsegraph_PaintGroup(
-            arguments[0],
-            arguments[1],
-            arguments[2],
-            arguments[3]
-        );
-        rootNode.setPaintGroup(paintGroup);
+        node.localPaintGroup().setOrigin(worldX, worldY);
+        node.localPaintGroup().setScale(userScale);
     }
-    else {
-        paintGroup = arguments[0];
-        if(typeof paintGroup.paintGroup === "function") {
-            if(!paintGroup.paintGroup()) {
-                paintGroup.setPaintGroup(new parsegraph_PaintGroup(paintGroup, 0, 0, 1));
-            }
-            paintGroup = paintGroup.paintGroup();
-        }
-    }
-    if(typeof paintGroup.paint !== "function") {
-        throw new Error("Paint group is not a paint group: " + paintGroup);
-    }
-
-    // Insert.
-    this.push(paintGroup);
-
-    return paintGroup;
+    this.push(node);
 };
 
 /**
  *
  */
-parsegraph_Graph.prototype.removePlot = function(paintGroup)
+parsegraph_Graph.prototype.removePlot = function(plot)
 {
     for(var i in this._worldPlots) {
-        if(this._worldPlots[i] === paintGroup) {
+        if(this._worldPlots[i] === plot) {
+            if(this._previousWorldPaintState) {
+                this._previousWorldPaintState = null;
+            }
             return this._worldPlots.splice(i, 1);
         }
     }
@@ -396,10 +379,18 @@ parsegraph_Graph.prototype.arrangeCarousel = function()
     }, this);
 };
 
+/**
+ * Schedules a repaint. The onScheduleRepaint callback is responsible for making this
+ * happen.
+ *
+ * The previous world paint state is cleared if this is called; this can be used to reset
+ * a paint in progress.
+ */
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
     //console.log(new Error("Scheduling repaint"));
     this._worldPaintingDirty = true;
+    this._previousWorldPaintState = null;
     if(this.onScheduleRepaint) {
         this.onScheduleRepaint();
     }
@@ -419,17 +410,23 @@ parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
     }
 };
 
-parsegraph_Graph.prototype.paint = function()
+/**
+ * Paints the graph up to the given time, in milliseconds.
+ *
+ * Returns true if the graph completed painting.
+ */
+parsegraph_Graph.prototype.paint = function(timeout)
 {
-    if(this._worldPaintingDirty) {
-        for(var i in this._worldPlots) {
-            var paintGroup = this._worldPlots[i];
-            paintGroup.paint(
-                this.gl(), this.surface().backgroundColor(), this._glyphAtlas, this._shaders
-            );
+    var t = new Date().getTime();
+    var pastTime = function() {
+        return timeout !== undefined && (new Date().getTime() - t > timeout);
+    };
+    var timeRemaining = function() {
+        if(timeout === undefined) {
+            return timeout;
         }
-        this._worldPaintingDirty = false;
-    }
+        return Math.max(0, timeout - (new Date().getTime() - t));
+    };
 
     if(this._carouselPaintingDirty && this._showCarousel) {
         // Paint the carousel.
@@ -437,7 +434,10 @@ parsegraph_Graph.prototype.paint = function()
         for(var i in this._carouselPlots) {
             var paintGroup = this._carouselPlots[i];
             paintGroup.paint(
-                this.gl(), this.surface().backgroundColor(), this._glyphAtlas, this._shaders
+                this.gl(),
+                this.surface().backgroundColor(),
+                this._glyphAtlas,
+                this._shaders
             );
         }
         this.arrangeCarousel();
@@ -461,6 +461,52 @@ parsegraph_Graph.prototype.paint = function()
 
         this._carouselPaintingDirty = false;
     }
+
+    if(pastTime()) {
+        return false;
+    }
+
+    if(this._worldPaintingDirty) {
+        // Restore the last state.
+        var i = 0;
+        var savedState;
+        if(this._previousWorldPaintState !== null) {
+            savedState = this._previousWorldPaintState;
+            this._previousWorldPaintState = null;
+            i = savedState;
+        }
+
+        while(i < this._worldPlots.length) {
+            if(pastTime()) {
+                this.previousWorldPaintState = i;
+                return false;
+            }
+            var plot = this._worldPlots[i];
+            var paintGroup = plot.localPaintGroup();
+            if(!paintGroup) {
+                throw new Error("Plot no longer has a paint group?!");
+            }
+            parsegraph_PAINTING_GLYPH_ATLAS = this._glyphAtlas;
+            var paintCompleted = paintGroup.paint(
+                this.gl(),
+                this.surface().backgroundColor(),
+                this._glyphAtlas,
+                this._shaders,
+                timeRemaining()
+            );
+            parsegraph_PAINTING_GLYPH_ATLAS = null;
+
+            if(!paintCompleted) {
+                this._previousWorldPaintState = i;
+                return false;
+            }
+
+            ++i;
+        }
+        this._worldPaintingDirty = false;
+    }
+
+    return true;
 };
 
 parsegraph_Graph.prototype.render = function()
@@ -472,8 +518,12 @@ parsegraph_Graph.prototype.render = function()
     }
 
     for(var i in this._worldPlots) {
-        var paintGroup = this._worldPlots[i];
-        paintGroup.render(world);
+        var plot = this._worldPlots[i];
+        var paintGroup = plot.localPaintGroup();
+        if(!paintGroup) {
+            throw new Error("Plot no longer has a paint group?!");
+        }
+        paintGroup.renderIteratively(world);
     }
 
     // Render the carousel if requested.

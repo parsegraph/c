@@ -71,6 +71,7 @@ function parsegraph_initialize(mathMode) {
 
     // Configures graphs to appear grid-like; I call it 'math-mode'.
     if(mathMode) {
+        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*30;
         parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
         parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
         parsegraph_VERTICAL_SEPARATION_PADDING = 2;
@@ -146,6 +147,11 @@ function parsegraph_initialize(mathMode) {
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
+    if(mathMode) {
+        parsegraph_BLOCK_STYLE.horizontalPadding = 2*parsegraph_BUD_RADIUS;
+        parsegraph_BLOCK_STYLE.verticalPadding = .5*parsegraph_BUD_RADIUS;
+    }
+
     parsegraph_SCENE_STYLE = {
         minWidth: parsegraph_MIN_BLOCK_WIDTH,
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
@@ -189,7 +195,12 @@ function parsegraph_initialize(mathMode) {
     };
 
     if(mathMode) {
-        parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
+        parsegraph_SLOT_STYLE.horizontalPadding = 2*parsegraph_BUD_RADIUS;
+        parsegraph_SLOT_STYLE.verticalPadding = .5*parsegraph_BUD_RADIUS;
+    }
+
+    if(mathMode) {
+        //parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
         parsegraph_SLOT_STYLE.borderColor.setA(1);
     }
 

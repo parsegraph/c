@@ -94,6 +94,7 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
 "{\n" +
     "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
     "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
+    //"return step(threshold, value);\n" +
 "}\n" +
 "\n" +
 "void main() {\n" +
@@ -110,6 +111,127 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
     // Using 'OpenGL insights' antialias implementation
     "highp float inBorder = 1.0 - aastep(borderRoundedness, d);\n" +
     "highp float inContent = 1.0 - aastep(borderRoundedness - borderThickness, d);\n" +
+
+    // Map the two calculated indicators to their colors.
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
+    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+"}";
+
+// Derived from https://thebookofshaders.com/07/
+parsegraph_BlockPainter_SquareFragmentShader =
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"varying highp vec4 borderColor;\n" +
+"varying highp float borderRoundedness;\n" +
+"varying highp vec2 texCoord;\n" +
+"varying highp float borderThickness;\n" +
+"varying highp float aspectRatio;\n" +
+"varying highp float scale;\n" +
+"\n" +
+"void main() {\n" +
+    "highp vec2 st = texCoord;\n" +
+    "st = st * 2.0 - 1.0;" +
+    "\n" +
+    // Adjust for the aspect ratio.
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+    "\n"+
+    "st.x = abs(st.x);" +
+    "st.y = abs(st.y);" +
+    "if(st.y < 1.0 - borderThickness && st.x < 1.0 - borderThickness) {" +
+        "gl_FragColor = contentColor;" +
+    "} else {" +
+        "gl_FragColor = borderColor;" +
+    "}" +
+"}";
+
+// Derived from https://thebookofshaders.com/07/
+parsegraph_BlockPainter_ShadyFragmentShader =
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"varying highp vec4 borderColor;\n" +
+"varying highp float borderRoundedness;\n" +
+"varying highp vec2 texCoord;\n" +
+"varying highp float borderThickness;\n" +
+"varying highp float aspectRatio;\n" +
+"varying highp float scale;\n" +
+"\n" +
+// Plot a line on Y using a value between 0.0-1.0
+"float plot(vec2 st, float pct) {" +
+  "return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);" +
+"}" +
+"\n" +
+"void main() {\n" +
+    "highp vec2 st = texCoord;\n" +
+    "st = st * 2.0 - 1.0;" +
+    "\n" +
+    // Adjust for the aspect ratio.
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+    "\n"+
+    "gl_FragColor = vec4(vec3(0.5 - (0.3 * st.y)), 1.0);" +
+"}";
+
+// Derived from https://thebookofshaders.com/07/
+parsegraph_BlockPainter_ParenthesisFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n" +
+"\n" +
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"varying highp vec4 borderColor;\n" +
+"varying highp float borderRoundedness;\n" +
+"varying highp vec2 texCoord;\n" +
+"varying highp float borderThickness;\n" +
+"varying highp float aspectRatio;\n" +
+"varying highp float scale;\n" +
+"\n" +
+// Plot a line on Y using a value between 0.0-1.0
+"float plot(vec2 st, float pct) {" +
+  "return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);" +
+"}" +
+"\n" +
+"highp float aastep(float threshold, float value)\n" +
+"{\n" +
+    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
+    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
+    //"return step(threshold, value);\n" +
+"}\n" +
+"\n" +
+"void main() {\n" +
+    "highp vec2 st = texCoord;\n" +
+    "st = st * 2.0 - 1.0;" +
+    "\n" +
+    // Adjust for the aspect ratio.
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+
+    "highp float inBorder = 0.0;\n" +
+    "highp float inContent = 0.0;\n" +
+
+    "if(st.x > 1.0 - borderThickness) {" +
+        "st.x = (1.0 - st.x) / borderThickness;" +
+        // If the Y position is under the border curve.
+        "if(abs(st.y) < sin(st.x * 3.14159/2.0)) { " +
+            // Set it thereof.
+            "inBorder = 1.0;" +
+        "} else {" +
+            // Y position is greater than the curve, so mark it empty.
+        "}" +
+    "} else if(abs(st.y) < 1.0 - borderThickness) {" +
+        "inBorder = 1.0;" +
+        "inContent = 1.0;" +
+    "} else {" +
+        "inBorder = 1.0;" +
+    "}" +
 
     // Map the two calculated indicators to their colors.
     "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
@@ -137,9 +259,15 @@ function parsegraph_BlockPainter(gl, shaders)
         );
 
         var fragProgram = parsegraph_BlockPainter_FragmentShader;
-        if(gl.getExtension("OES_standard_derivatives") != null) {
+        // OES_standard_derivatives looks worse on FF.
+        if(
+        navigator.userAgent.indexOf("Firefox") == -1 &&
+        gl.getExtension("OES_standard_derivatives") != null) {
             fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
         }
+
+        // For development.
+        //fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
 
         gl.attachShader(
             program,

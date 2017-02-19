@@ -8,9 +8,11 @@
 function showProportionTest(graph, COUNT)
 {
     if(COUNT === undefined) {
-        COUNT = 10;
+        COUNT = 30;
     }
     COUNT = Math.min(COUNT, 100);
+    COUNT = 200;
+    console.log("PROP");
 
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 
@@ -83,6 +85,9 @@ function showProportionTest(graph, COUNT)
             caret.spawnMove(dir, 'bud');
             for(var j = 0; j < COUNT - i - 1; ++j) {
                 caret.spawnMove('d', 'bud');
+                if(j === 0) {
+                    caret.crease();
+                }
             }
             caret.spawnMove('d', 'slot');
             caret.label(COUNT - i);

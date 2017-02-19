@@ -105,6 +105,9 @@ function showUlam(COUNT)
         for(var j = 1; j <= i - 1; ++j) {
             //caret.pull(spawnDir);
             caret.spawnMove(spawnDir, nextType());
+            if(j === 1) {
+                caret.crease();
+            }
             caret.label(total - count + 1);
         }
         spawnDir = parsegraph_turnRight(spawnDir);
@@ -112,6 +115,9 @@ function showUlam(COUNT)
         for(var j=1; j <= i-1; ++j) {
             //caret.pull(spawnDir);
             caret.spawnMove(spawnDir, nextType());
+            if(j === 1) {
+                caret.crease();
+            }
             caret.label(total - count + 1);
         }
     }

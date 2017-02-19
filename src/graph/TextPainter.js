@@ -207,45 +207,10 @@ parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, parag
 
 parsegraph_TextPainter.prototype.measureText = function(text)
 {
-    var x = 0;
-    var y = 0;
-    var i = 0;
-
-    var fontSize = this.fontSize();
-    var wrapWidth = this.wrapWidth();
-    var fontScale = this.fontScale();
-    var glyphData;
-
-    var maxLineWidth = 0;
-    var startTime = parsegraph_getTimeInMillis();
-    while(true) {
-        if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
-            throw new Error("TextPainter.measureText timeout");
-        }
-        var letter = fixedCharAt(text, i);
-        if(letter === null) {
-            // Reached the end of the string.
-            maxLineWidth = Math.max(maxLineWidth, x);
-            if(glyphData) {
-                y += glyphData.height;
-            }
-            break;
-        }
-
-        var glyphData = this._glyphAtlas.getGlyph(letter);
-
-        // Check for wrapping.
-        if(wrapWidth !== undefined && (x + glyphData.width) > wrapWidth / fontScale) {
-            maxLineWidth = Math.max(maxLineWidth, x);
-            x = 0;
-            y += glyphData.height;
-        }
-
-        i += letter.length;
-        x += glyphData.width;
-    }
-
-    return [maxLineWidth * fontScale, y * fontScale];
+    var textMetrics = this._glyphAtlas.measureText(text, this.wrapWidth() / this.fontScale());
+    textMetrics[0] *= this.fontScale();
+    textMetrics[1] *= this.fontScale();
+    return textMetrics;
 };
 
 parsegraph_TextPainter.prototype.setFontSize = function(fontSize)
@@ -260,7 +225,7 @@ parsegraph_TextPainter.prototype.fontSize = function()
 
 parsegraph_TextPainter.prototype.fontScale = function()
 {
-    return this.fontSize() / parsegraph_TextPainter_UPSCALED_FONT_SIZE;
+    return this.fontSize() / this._glyphAtlas.fontSize();
 };
 
 parsegraph_TextPainter.prototype.drawText = function(text)

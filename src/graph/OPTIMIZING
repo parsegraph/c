@@ -1,0 +1,42 @@
+So there's the layoutWasChanged event, which corresponds to the need for
+commitLayout, protecting extents.
+
+And there's the positionWasChanged event, which correponds to the need for
+commitAbsolutePosition, protecting position.
+
+MERGING PAINT GROUPS
+
+invalidate = function(id)
+{
+    this._paintGroups[id].invalidated = true;
+};
+
+/**
+Each paint group requires its own paint call. So to optimize this is to
+minimize the number of paint groups, which is done by invalidating both groups
+and making them be in the same paint group. During the next repaint, the merged
+paint group will be regenerated.
+
+The invalidation of the group places it upon the regeneration list. During the
+repaint, this list is iterated, where each group's nodes are drawn into its
+buffers. This could be done separately from rendering, or painting and
+rendering could be interweaved using a single render.
+*/
+render = function(world, scale)
+{
+    for(var i = 0; i < this._paintGroups.length; ++i) {
+        var group = this._paintGroups[i];
+        var painter = group.painter;
+
+        if(group.invalidated) {
+            painter.clear();
+            for(var j in group.nodes) {
+                painter.drawNode.call(painter, group.nodes[j]);
+            }
+            group.invalidated = false;
+        }
+
+        painter.render(world, scale);
+    }
+};
+

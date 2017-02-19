@@ -54,31 +54,18 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newContent, newAlignmen
 };
 
 /**
- * Connects the provided paint group to the node at this caret's position.
+ * Connects the provided node to the node at this caret's position.
  *
- * caret.connect(inDirection, paintGroup)
+ * caret.connect(inDirection, node)
  */
-parsegraph_Caret.prototype.connect = function(inDirection, paintGroup)
+parsegraph_Caret.prototype.connect = function(inDirection, node)
 {
-    // If it looks like a node, then use that.
-    if(typeof paintGroup.paintGroup === "function") {
-        if(!paintGroup.paintGroup()) {
-            // The given node has no paint group, so make one.
-            paintGroup = new parsegraph_PaintGroup(paintGroup);
-        }
-        else {
-            if(paintGroup != paintGroup.paintGroup().root()) {
-                throw new Error("The given node's paint group has a root that isn't the given node.");
-            }
-            paintGroup = paintGroup.paintGroup();
-        }
-    }
-
     // Interpret the given direction for ease-of-use.
     inDirection = parsegraph_readNodeDirection(inDirection);
 
-    this.node().connectNode(inDirection, paintGroup.root());
-    return paintGroup;
+    this.node().connectNode(inDirection, node);
+
+    return node;
 };
 
 /**
@@ -88,17 +75,23 @@ parsegraph_Caret.prototype.connect = function(inDirection, paintGroup)
  */
 parsegraph_Caret.prototype.crease = function(inDirection)
 {
+    // Interpret the given direction for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+
+    var node;
     if(arguments.length === 0) {
-        return this.nodeParent().crease(parsegraph_reverseNodeDirection(
-            this.parentDirection()
-        ));
+        node = this.node();
+    }
+    else {
+        node = this.node().nodeAt(inDirection);
     }
 
-    var node = this.node().nodeAt(inDirection);
-    if(!node.paintGroup()) {
+    // Create a new paint group for the connection.
+    if(!node.localPaintGroup()) {
         node.setPaintGroup(new parsegraph_PaintGroup(node));
     }
-    return node.paintGroup();
+
+    return node.localPaintGroup();
 };
 
 parsegraph_Caret.prototype.erase = function(inDirection)

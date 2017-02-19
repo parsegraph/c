@@ -61,6 +61,10 @@ parsegraph_Node.prototype.graph = function()
 parsegraph_Node.prototype.backdropColor = function()
 {
     var node = this;
+    if(node.isSelected()) {
+        return node.blockStyle().backgroundColor;
+    }
+    return node.blockStyle().selectedBackgroundColor;
     while(true) {
         if(node.isRoot()) {
             return parsegraph_BACKGROUND_COLOR;
@@ -286,11 +290,6 @@ parsegraph_Node.prototype.clickToCaret = function(worldX, worldY)
     );
 };
 
-parsegraph_Node.prototype.getLabelSize = function()
-{
-    return this.paintGroup().measureText(this.label(), this.blockStyle());
-};
-
 parsegraph_Node.prototype.getLabelPosition = function()
 {
     return [this._labelX, this._labelY];
@@ -298,24 +297,85 @@ parsegraph_Node.prototype.getLabelPosition = function()
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 {
+    if(!this._paintGroup) {
+        this._paintGroup = paintGroup;
+
+        // Parent this paint group to this node, since it now has a paint group.
+        if(paintGroup && !this.isRoot()) {
+            var parentsPaintGroup = this.parentNode().findPaintGroup();
+            if(parentsPaintGroup) {
+                parentsPaintGroup._childPaintGroups.push(paintGroup);
+                paintGroup.setParent(parentsPaintGroup);
+            }
+        }
+
+        // Find the child paint groups and add them to this paint group.
+        parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
+            paintGroup._childPaintGroups.push(childPaintGroup);
+            childPaintGroup.setParent(paintGroup);
+        });
+
+        return;
+    }
+
+    // This node has an existing paint group.
+
+    // Remove the paint group's entry in the parent.
+    if(!this.isRoot()) {
+        var parentsPaintGroup = this.parentNode().findPaintGroup();
+        for(var i in parentsPaintGroup._childPaintGroups) {
+            var childGroup = parentsPaintGroup._childPaintGroups[i];
+            if(childGroup !== this._paintGroup) {
+                // Some other child that's not us, so just continue.
+                continue;
+            }
+
+            // This child is our current paint group, so replace it with the new.
+            if(paintGroup) {
+                parentsPaintGroup._childPaintGroups[i] = paintGroup;
+            }
+            else {
+                // The new group is no group.
+                parentsPaintGroup._childPaintGroups.splice(i, 1);
+            }
+        }
+    }
+
+    // Copy the current paint group's children, if present.
+    if(paintGroup) {
+        var childGroups = paintGroup._childPaintGroups;
+        childGroups.push.apply(childGroups, this._paintGroup._childPaintGroups);
+    }
+    else {
+        parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
+            paintGroup.addChild(childPaintGroup);
+        });
+    }
+
+    this._paintGroup.clear();
     this._paintGroup = paintGroup;
-};
+}
 
 /**
  * Returns the node's paint group. If this node does not have a paint group, then
  * the parent's is returned.
  */
-parsegraph_Node.prototype.paintGroup = function()
+parsegraph_Node.prototype.findPaintGroup = function()
 {
     var node = this;
     while(!node.isRoot()) {
-        if(node._paintGroup) {
+        if(node._paintGroup && node._paintGroup.isEnabled()) {
             return node._paintGroup;
         }
         node = node.parentNode();
     }
 
     return node._paintGroup;
+};
+
+parsegraph_Node.prototype.localPaintGroup = function()
+{
+    return this._paintGroup;
 };
 
 /**
@@ -565,9 +625,6 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 
     // Use the node fitting of the parent.
     node.setNodeFit(this.nodeFit());
-
-    // The child will use this node's paint group.
-    node.setPaintGroup(this.paintGroup());
 
     return node;
 };
@@ -893,8 +950,8 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
         // Set the needs layout flag.
         node._layoutState = parsegraph_NEEDS_COMMIT;
 
-        if(node.paintGroup()) {
-            node.paintGroup().markDirty();
+        if(node.findPaintGroup()) {
+            node.findPaintGroup().markDirty();
         }
 
         // Recurse for the children of this node.
@@ -1074,13 +1131,16 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
 
     var style = this.blockStyle();
     if(this.label() !== undefined) {
-        if(!this.paintGroup()) {
-            throw new Error("Label size cannot be determined without a paint group.");
-        }
-        var textMetrics = this.paintGroup().measureText(this.label(), style);
-        if(!textMetrics) {
-            throw new Error("Label size cannot be determined without the painter first being assigned.");
-        }
+        // XXX This should somehow not be global, but it's an ugly wart.
+        var textMetrics = parsegraph_PAINTING_GLYPH_ATLAS.measureText(
+            this.label(),
+            parsegraph_PAINTING_GLYPH_ATLAS.fontSize()
+                * style.letterWidth
+                * style.maxLabelChars
+        );
+        textMetrics[0] *= style.fontSize / parsegraph_PAINTING_GLYPH_ATLAS.fontSize();
+        textMetrics[1] *= style.fontSize / parsegraph_PAINTING_GLYPH_ATLAS.fontSize();
+
         bodySize.setWidth(
             Math.max(style.minWidth, textMetrics[0])
         );

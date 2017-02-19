@@ -115,16 +115,6 @@ parsegraph_GlyphAtlas.prototype.font = function()
     return this._fontSize + "px " + this._fontName;
 };
 
-parsegraph_GlyphAtlas.prototype.upscaledFont = function()
-{
-    return (this.upscaledFactor() * this._fontSize) + "px " + this._fontName;
-};
-
-parsegraph_GlyphAtlas.prototype.upscaledFactor = function()
-{
-    return 2;
-};
-
 parsegraph_GlyphAtlas.prototype.canvas = function()
 {
     return this._canvas;
@@ -153,4 +143,44 @@ parsegraph_GlyphAtlas.prototype.fontSize = function()
 parsegraph_GlyphAtlas.prototype.fontName = function()
 {
     return this._fontName;
+};
+
+parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
+{
+    var x = 0;
+    var y = 0;
+    var i = 0;
+
+    var glyphData;
+
+    var maxLineWidth = 0;
+    var startTime = parsegraph_getTimeInMillis();
+    while(true) {
+        if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
+            throw new Error("TextPainter.measureText timeout");
+        }
+        var letter = fixedCharAt(text, i);
+        if(letter === null) {
+            // Reached the end of the string.
+            maxLineWidth = Math.max(maxLineWidth, x);
+            if(glyphData) {
+                y += glyphData.height;
+            }
+            break;
+        }
+
+        var glyphData = this.getGlyph(letter);
+
+        // Check for wrapping.
+        if(wrapWidth !== undefined && (x + glyphData.width) > wrapWidth) {
+            maxLineWidth = Math.max(maxLineWidth, x);
+            x = 0;
+            y += glyphData.height;
+        }
+
+        i += letter.length;
+        x += glyphData.width;
+    }
+
+    return [maxLineWidth, y];
 };

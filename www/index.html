@@ -89,16 +89,15 @@ function init()
 
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
-        var start = alpha_GetTime();
         renderTimer.setListener(function() {
-            var t = alpha_GetTime();
-            var elapsed = t - start;
-            start = t;
-            graph.input().Update(elapsed);
+            graph.input().Update(new Date());
             if(graph.needsRepaint()) {
-                surface.paint();
+                surface.paint(50);
             }
             surface.render();
+            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                renderTimer.schedule();
+            }
         });
         graph.input().SetListener(function(affectedPaint) {
             if(affectedPaint) {

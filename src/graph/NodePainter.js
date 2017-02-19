@@ -375,7 +375,6 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     this._textPainter.setWrapWidth(
         style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
-    var textMetrics = this._textPainter.measureText(node.label());
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
@@ -393,6 +392,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     this._textPainter.setWrapWidth(
         fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
     );
+
+    var textMetrics = this._textPainter.measureText(node.label());
     node._labelX = worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
     node._labelY = worldY + node.absoluteY() - textMetrics[1]/2;
     this._textPainter.setPosition(node._labelX, node._labelY);
@@ -709,21 +710,18 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         return;
     }
 
-    this._textPainter.setFontSize(style.fontSize * userScale * node.absoluteScale());
+    this._textPainter.setFontSize(
+        style.fontSize * userScale * node.absoluteScale()
+    );
     this._textPainter.setWrapWidth(
         style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
     );
-    var textMetrics = this._textPainter.measureText(node.label());
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
     );
-
-    this._textPainter.setFontSize(style.fontSize * userScale * node.absoluteScale());
-    this._textPainter.setWrapWidth(
-        style.fontSize * style.letterWidth * style.maxLabelChars * userScale * node.absoluteScale()
-    );
+    var textMetrics = this._textPainter.measureText(node.label());
 
     if(node.hasNode(parsegraph_INWARD)) {
         var nestedNode = node.nodeAt(parsegraph_INWARD);
