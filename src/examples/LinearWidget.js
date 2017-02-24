@@ -1,7 +1,8 @@
 function parsegraph_LinearWidget()
 {
-    this.position = 0;
+    this.position = 2;
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
+    this.caret.label("1");
 }
 
 parsegraph_LinearWidget.prototype.step = function(steps)
@@ -9,12 +10,12 @@ parsegraph_LinearWidget.prototype.step = function(steps)
     // Check if any known prime is a multiple of the current position.
     for(var j = 0; j < steps; ++j) {
         this.caret.spawnMove('f', 'b');
-        //this.caret.label(this.position);
+        this.caret.label(this.position);
         this.caret.push();
-        for(var i = 0; i < this.position; ++i) {
+        for(var i = 0; i < this.position - 1; ++i) {
             this.caret.spawnMove('u', 'b');
         }
-        this.caret.label(1 + this.position);
+        this.caret.label(this.position);
         this.caret.pop();
 
         // Advance.

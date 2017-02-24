@@ -4,7 +4,7 @@ function parsegraph_PrimesWidget()
     this.position = 2;
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
-    this.caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+    this.caret.label("1");
 }
 
 parsegraph_PrimesWidget.prototype.step = function(steps)
