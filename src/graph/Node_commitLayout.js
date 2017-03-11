@@ -321,16 +321,16 @@ parsegraph_Node.prototype.commitLayout = function()
             break;
         case parsegraph_FORWARD:
             // Forward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, separation, -alignment);
-            combineExtent.call(this, parsegraph_UPWARD, separation, alignment);
+            combineExtent.call(this, parsegraph_DOWNWARD, separation, alignment);
+            combineExtent.call(this, parsegraph_UPWARD, separation, -alignment);
 
             combineExtent.call(this, parsegraph_FORWARD, alignment, separation);
             combineExtent.call(this, parsegraph_BACKWARD, alignment, -separation);
             break;
         case parsegraph_BACKWARD:
             // Backward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, -separation, -alignment);
-            combineExtent.call(this, parsegraph_UPWARD, -separation, alignment);
+            combineExtent.call(this, parsegraph_DOWNWARD, -separation, alignment);
+            combineExtent.call(this, parsegraph_UPWARD, -separation, -alignment);
 
             combineExtent.call(this, parsegraph_FORWARD, alignment, -separation);
             combineExtent.call(this, parsegraph_BACKWARD, alignment, separation);
