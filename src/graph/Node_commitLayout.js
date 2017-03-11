@@ -168,19 +168,21 @@ parsegraph_Node.prototype.commitLayout = function()
      * The child's position is in this node's space.
      */
     var positionChild = function(childDirection, alignment, separation) {
+        // Validate arguments.
         if(separation < 0) {
             throw new Error("separation must always be positive.");
         }
         if(!parsegraph_isCardinalDirection(childDirection)) {
             throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
         }
-
         var child = this.nodeAt(childDirection);
         var reversedDirection = parsegraph_reverseNodeDirection(childDirection)
 
+        // Save alignment parameters.
         this._neighbors[childDirection].setAlignmentOffset(alignment);
         this._neighbors[childDirection].setSeparation(separation);
 
+        // Determine the line length.
         var lineLength;
         var extentSize;
         if(this.nodeAlignmentMode(childDirection) === parsegraph_DO_NOT_ALIGN) {
@@ -199,7 +201,9 @@ parsegraph_Node.prototype.commitLayout = function()
         }
         lineLength = separation - this.scaleAt(childDirection) * extentSize;
         this._neighbors[childDirection].setLineLength(lineLength);
+        //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
 
+        // Set the position.
         var dirSign = parsegraph_nodeDirectionSign(childDirection);
         if(parsegraph_isVerticalNodeDirection(childDirection)) {
             // The child is positioned vertically.
@@ -208,7 +212,6 @@ parsegraph_Node.prototype.commitLayout = function()
         else {
             this.setPosAt(childDirection, dirSign * separation, alignment);
         }
-
         /*console.log(
             parsegraph_nameNodeDirection(childDirection) + " " +
             parsegraph_nameNodeType(child.type()) + "'s position set to (" +
@@ -290,7 +293,8 @@ parsegraph_Node.prototype.commitLayout = function()
             );
             thisNeighbors[direction].extent().forEach(function(l, s, i) {
                 console.log(i + ". length=" + l + ", size=" + s);
-            });*/
+            });
+            */
 
             // Assert the extent offset is positive.
             if(thisNeighbors[direction].extentOffset() < 0) {
@@ -360,45 +364,39 @@ parsegraph_Node.prototype.commitLayout = function()
         var reversed = parsegraph_reverseNodeDirection(direction);
         var childExtent = child.extentsAt(reversed);
 
-        // Separate the child from this node. This means adding the alignment
-        // and adjusting by the difference in extent offsets.
+        // Separate the child from this node.
         var separationFromChild = thisNeighbors[direction].extent().separation(
             childExtent,
-                thisNeighbors[direction].extentOffset()
+            thisNeighbors[direction].extentOffset()
                 + alignment
                 - this.scaleAt(direction) * child.extentOffsetAt(reversed),
             allowAxisOverlap,
             this.scaleAt(direction),
             parsegraph_LINE_THICKNESS / 2
         );
-        //console.log("Calculated unpadded separation of " + separationFromChild + ".");
+        console.log("Calculated unpadded separation of " + separationFromChild + ".");
 
         // Add padding and ensure the child is not separated less than
         // it would be if the node was not offset by alignment.
         if(
-            parsegraph_getNodeDirectionAxis(direction)
-                == parsegraph_VERTICAL_AXIS
+            parsegraph_getNodeDirectionAxis(direction) == parsegraph_VERTICAL_AXIS
         ) {
             separationFromChild = Math.max(
                 separationFromChild,
-                this.scaleAt(direction) * (child.size().height() / 2)
-                + this.size().height() / 2
+                this.scaleAt(direction) * (child.size().height() / 2) + this.size().height() / 2
             );
             separationFromChild
-                += this.verticalSeparation(direction)
-                * this.scaleAt(direction);
+                += this.verticalSeparation(direction) * this.scaleAt(direction);
         }
         else {
             separationFromChild = Math.max(
                 separationFromChild,
-                this.scaleAt(direction) * (child.size().width() / 2)
-                + this.size().width() / 2
+                this.scaleAt(direction) * (child.size().width() / 2) + this.size().width() / 2
             );
             separationFromChild
-                += this.horizontalSeparation(direction)
-                * this.scaleAt(direction);
+                += this.horizontalSeparation(direction) * this.scaleAt(direction);
         }
-        //console.log("Calculated padded separation of " + separationFromChild + ".");
+        console.log("Calculated padded separation of " + separationFromChild + ".");
 
         // Set the node's position.
         positionChild.call(
@@ -489,7 +487,7 @@ parsegraph_Node.prototype.commitLayout = function()
             );
         separationBetweenChildren *= this.scaleAt(firstDirection);
 
-        //console.log("Separation between children=" + separationBetweenChildren);
+        console.log("Separation between children=" + separationBetweenChildren);
 
         var separationFromSecond = thisNeighbors[secondDirection].extent()
 
