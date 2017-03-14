@@ -38,7 +38,6 @@ parsegraph_SCRIPT_FILES = \
 	src/CommandClient.js \
 	src/DepthTraversal.js \
 	src/graph/Color.js \
-	src/graph/DirectionData.js \
 	src/graph/Exception.js \
 	src/graph/Extent.js \
 	src/graph/NodeAlignment.js \
@@ -64,7 +63,6 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Caret.js \
 	src/graph/LayoutPreference.js \
 	src/graph/LayoutState.js \
-	src/graph/Neighbors.js \
 	src/graph/Node.js \
 	src/graph/Surface.js \
 	src/alpha/Maths.js \

@@ -489,7 +489,7 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
         }
         var directionData = node._neighbors[direction];
         // Do not draw lines unless there is a node.
-        if(!directionData.hasNode()) {
+        if(!directionData.node) {
             return;
         }
 
@@ -512,11 +512,11 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
         }
 
         var parentScale = userScale * node.absoluteScale();
-        var scale = userScale * directionData.node().absoluteScale();
+        var scale = userScale * directionData.node.absoluteScale();
 
         if(parsegraph_isVerticalNodeDirection(direction)) {
             var length = parsegraph_nodeDirectionSign(direction)
-                * parentScale * (directionData.lineLength() + parsegraph_LINE_THICKNESS / 2);
+                * parentScale * (directionData.lineLength + parsegraph_LINE_THICKNESS / 2);
             var thickness = parsegraph_LINE_THICKNESS * scale;
             painter.drawBlock(
                 worldX + node.absoluteX(),
@@ -530,7 +530,7 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
         else {
             // Horizontal line.
             var length = parsegraph_nodeDirectionSign(direction)
-                * parentScale * (directionData.lineLength() + parsegraph_LINE_THICKNESS / 2);
+                * parentScale * (directionData.lineLength + parsegraph_LINE_THICKNESS / 2);
             var thickness = parsegraph_LINE_THICKNESS * scale;
             painter.drawBlock(
                 worldX + node.absoluteX() + length / 2,

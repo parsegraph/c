@@ -6,7 +6,6 @@
  */
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
-    this._neighbors = parsegraph_createNeighbors();
     this._clickListener = null;
 
     this._type = newType;
@@ -16,8 +15,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._labelY = undefined;
 
     this._value = null;
-
-    this._layoutState = parsegraph_NEEDS_COMMIT;
 
     this._scale = 1.0;
 
@@ -32,6 +29,23 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._paintGroup = null;
 
     // Check if a parent node was provided.
+    this._neighbors = [];
+    for(var i = parsegraph_FORWARD; i <= parsegraph_OUTWARD; ++i) {
+        this._neighbors.push({
+            direction: i,
+            extent: new parsegraph_Extent(),
+            extentOffset: 0,
+            alignmentMode: parsegraph_NULL_NODE_ALIGNMENT,
+            alignmentOffset: 0,
+            separation: 0,
+            lineLength: 0,
+            xPos: 0,
+            yPos: 0,
+            layoutState: parsegraph_NEEDS_COMMIT,
+            node: null
+        });
+    }
+
     if(fromNode != null) {
         // A parent node was provided; this node is a child.
         if(!parsegraph_isNodeDirection(parentDirection) ||
@@ -41,7 +55,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
         }
         this._layoutPreference = parsegraph_PREFER_PERPENDICULAR_AXIS;
         this._parentDirection = parentDirection;
-        this._neighbors[parentDirection].setNode(fromNode);
+        this._neighbors[parentDirection].node = fromNode;
     }
     else {
         // No parent was provided; this node is a root.
@@ -459,7 +473,7 @@ parsegraph_Node.prototype.nodeParent = function()
     if(this.isRoot()) {
         throw parsegraph_createException(parsegraph_NODE_IS_ROOT);
     }
-    return this._neighbors[this.parentDirection()].node();
+    return this._neighbors[this.parentDirection()].node;
 };
 parsegraph_Node.prototype.parentNode = parsegraph_Node.prototype.nodeParent;
 parsegraph_Node.prototype.parent = parsegraph_Node.prototype.nodeParent;
@@ -474,7 +488,7 @@ parsegraph_Node.prototype.hasNode = function(atDirection)
     if(atDirection == parsegraph_NULL_NODE_DIRECTION) {
         return false;
     }
-    return this._neighbors[atDirection].hasNode();
+    return this._neighbors[atDirection].node;
 };
 
 /**
@@ -535,7 +549,7 @@ parsegraph_Node.prototype.hasAnyNodes = function()
 
 parsegraph_Node.prototype.nodeAt = function(atDirection)
 {
-    return this._neighbors[atDirection].node();
+    return this._neighbors[atDirection].node;
 };
 
 /**
@@ -614,11 +628,11 @@ parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
         this,
         parsegraph_reverseNodeDirection(spawnDirection)
     );
-    neighbor.setNode(node);
+    neighbor.node = node;
 
     // Allow alignments to be set before children are spawned.
-    if(neighbor.alignmentMode() == parsegraph_NULL_NODE_ALIGNMENT) {
-        neighbor.setAlignmentMode(parsegraph_DO_NOT_ALIGN);
+    if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
+        neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
     }
 
     this.layoutWasChanged(spawnDirection);
@@ -642,7 +656,7 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
     if(!this.isRoot() && givenDirection == this.parentDirection()) {
         throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
     }
-    this._neighbors[givenDirection].erase();
+    this._neighbors[givenDirection].node = null;
     this.layoutWasChanged(givenDirection);
 };
 
@@ -653,8 +667,8 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     }
     // Connect the node.
     var neighbor = this._neighbors[inDirection];
-    var disconnected = neighbor.node();
-    neighbor.erase();
+    var disconnected = neighbor.node;
+    neighbor.node = null;
     disconnected.setParent(null);
     this.layoutWasChanged(inDirection);
     return disconnected;
@@ -671,7 +685,7 @@ parsegraph_Node.prototype.x = function()
         return 0;
     }
     //this.nodeParent().commitLayout();
-    return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].x();
+    return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].xPos;
 };
 
 parsegraph_Node.prototype.y = function()
@@ -680,24 +694,24 @@ parsegraph_Node.prototype.y = function()
         return 0;
     }
     //this.nodeParent().commitLayout();
-    return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].y();
+    return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].yPos;
 };
 
 parsegraph_Node.prototype.lineLengthAt = function(direction)
 {
-    return this._neighbors[direction].lineLength();
+    return this._neighbors[direction].lineLength;
 };
 
 parsegraph_Node.prototype.extentsAt = function(atDirection)
 {
     this.commitLayoutIteratively();
-    return this._neighbors[atDirection].extent();
+    return this._neighbors[atDirection].extent;
 };
 
 parsegraph_Node.prototype.extentOffsetAt = function(atDirection)
 {
     this.commitLayoutIteratively();
-    return this._neighbors[atDirection].extentOffset();
+    return this._neighbors[atDirection].extentOffset;
 };
 
 parsegraph_Node.prototype.extentSize = function()
@@ -800,12 +814,11 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
 
 parsegraph_Node.prototype.eachChild = function(visitor, visitorThisArg)
 {
-    this._neighbors.forEach(
-        function(neighbor, direction) {
-            if(!neighbor.hasNode() || direction == this.parentDirection()) {
+    this._neighbors.forEach(function(neighbor, direction) {
+            if(!neighbor.node || direction == this.parentDirection()) {
                 return;
             }
-            visitor.call(visitorThisArg, neighbor.node(), direction);
+            visitor.call(visitorThisArg, neighbor.node, direction);
         },
         this
     );
@@ -843,18 +856,19 @@ parsegraph_Node.prototype.setLayoutPreference = function(given)
 
 parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignmentMode)
 {
-    this._neighbors[inDirection].setAlignmentMode(newAlignmentMode);
+    this._neighbors[inDirection].alignmentMode = newAlignmentMode;
     this.layoutWasChanged(inDirection);
 };
 
 parsegraph_Node.prototype.nodeAlignmentMode = function(inDirection)
 {
-    return this._neighbors[inDirection].alignmentMode();
+    return this._neighbors[inDirection].alignmentMode;
 };
 
 parsegraph_Node.prototype.setPosAt = function(inDirection, x, y)
 {
-    this._neighbors[inDirection].setPos(x, y);
+    this._neighbors[inDirection].xPos = x;
+    this._neighbors[inDirection].yPos = y;
 };
 
 parsegraph_Node.prototype.type = function()
@@ -912,7 +926,7 @@ parsegraph_Node.prototype.separationAt = function(inDirection) {
         throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
     }
 
-    return this._neighbors[inDirection].separation();
+    return this._neighbors[inDirection].separation;
 };
 
 /**
@@ -1031,11 +1045,10 @@ parsegraph_Node.prototype.destroy = function()
     this._layoutState = parsegraph_NULL_LAYOUT_STATE;
     this._neighbors.forEach(function(neighbor, direction) {
         // Clear all children.
-        if(this.parentDirection() !== direction) {
-            neighbor.clear();
+        if(this.parentDirection !== direction) {
+            neighbor.node = null;
         }
     }, this);
-    this._neighbors = [];
     this._scale = 1.0;
 };
 
@@ -1275,11 +1288,11 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
 
     // Connect the node.
     var neighbor = this._neighbors[inDirection];
-    neighbor.setNode(node);
+    neighbor.node = node;
     node.setParent(this, parsegraph_reverseNodeDirection(inDirection));
 
-    if(neighbor.alignmentMode() == parsegraph_NULL_NODE_ALIGNMENT) {
-        neighbor.setAlignmentMode(parsegraph_DO_NOT_ALIGN);
+    if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
+        neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
     }
 
     this.layoutWasChanged(inDirection);
@@ -1289,7 +1302,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
 
 parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
 {
-    this._neighbors[parentDirection].setNode(fromNode);
+    this._neighbors[parentDirection].node = fromNode;
     this._parentDirection = parentDirection;
 };
 parsegraph_Node.prototype.setParentNode = parsegraph_Node.prototype.setParent;
@@ -1332,28 +1345,22 @@ parsegraph_Node.prototype.commitLayout = function()
     this._absoluteXPos = null;
     this._absoluteYPos = null;
 
-    // Create a neighbors structure to use for storing
-    // values. This doesn't replace what the node already
-    // has.
-    var thisNeighbors = parsegraph_createNeighbors();
-
     var initExtent = function(
         inDirection,
         length,
         size,
         offset)
     {
-        thisNeighbors[inDirection].extent().appendLS(
-            length,
-            size
-        );
-        thisNeighbors[inDirection].setExtentOffset(offset);
+        this._neighbors[inDirection].extent.clear();
+        this._neighbors[inDirection].extent.appendLS(length, size);
+        this._neighbors[inDirection].extentOffset = offset;
     };
 
     var bodySize = this.size();
 
     // This node's horizontal bottom, used with downward nodes.
-    initExtent(
+    initExtent.call(
+        this,
         parsegraph_DOWNWARD,
         // Length:
         bodySize.width(),
@@ -1364,7 +1371,8 @@ parsegraph_Node.prototype.commitLayout = function()
     );
 
     // This node's horizontal top, used with upward nodes.
-    initExtent(
+    initExtent.call(
+        this,
         parsegraph_UPWARD,
         // Length:
         bodySize.width(),
@@ -1375,7 +1383,8 @@ parsegraph_Node.prototype.commitLayout = function()
     );
 
     // This node's vertical back, used with backward nodes.
-    initExtent(
+    initExtent.call(
+        this,
         parsegraph_BACKWARD,
         // Length:
         bodySize.height(),
@@ -1386,7 +1395,8 @@ parsegraph_Node.prototype.commitLayout = function()
     );
 
     // This node's vertical front, used with forward nodes.
-    initExtent(
+    initExtent.call(
+        this,
         parsegraph_FORWARD,
         // Length:
         bodySize.height(),
@@ -1414,7 +1424,7 @@ parsegraph_Node.prototype.commitLayout = function()
 
         var rv;
 
-        var alignmentMode = this._neighbors[childDirection].alignmentMode();
+        var alignmentMode = this._neighbors[childDirection].alignmentMode;
         switch(alignmentMode) {
         case parsegraph_NULL_NODE_ALIGNMENT:
             throw parsegraph_createException(parsegraph_BAD_NODE_ALIGNMENT);
@@ -1485,8 +1495,8 @@ parsegraph_Node.prototype.commitLayout = function()
         var reversedDirection = parsegraph_reverseNodeDirection(childDirection)
 
         // Save alignment parameters.
-        this._neighbors[childDirection].setAlignmentOffset(alignment);
-        this._neighbors[childDirection].setSeparation(separation);
+        this._neighbors[childDirection].alignmentOffset = alignment;
+        this._neighbors[childDirection].separation = separation;
 
         // Determine the line length.
         var lineLength;
@@ -1501,12 +1511,12 @@ parsegraph_Node.prototype.commitLayout = function()
         }
         else {
             extentSize = child.extentsAt(reversedDirection).sizeAt(
-                this._neighbors[childDirection].node().extentOffsetAt(reversedDirection) -
+                this._neighbors[childDirection].node.extentOffsetAt(reversedDirection) -
                 alignment / this.scaleAt(childDirection)
             );
         }
         lineLength = separation - this.scaleAt(childDirection) * extentSize;
-        this._neighbors[childDirection].setLineLength(lineLength);
+        this._neighbors[childDirection].lineLength = lineLength;
         //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
 
         // Set the position.
@@ -1521,7 +1531,7 @@ parsegraph_Node.prototype.commitLayout = function()
         /*console.log(
             parsegraph_nameNodeDirection(childDirection) + " " +
             parsegraph_nameNodeType(child.type()) + "'s position set to (" +
-            this._neighbors[childDirection].x() + ", " + this._neighbors[childDirection].y() + ")"
+            this._neighbors[childDirection].xPos + ", " + this._neighbors[childDirection].yPos + ")"
         );*/
     };
 
@@ -1560,7 +1570,7 @@ parsegraph_Node.prototype.commitLayout = function()
                 sizeAdjustment + ")"
             );*/
             // Calculate the new offset to this node's center.
-            var lengthOffset = thisNeighbors[direction].extentOffset()
+            var lengthOffset = this._neighbors[direction].extentOffset
                 + lengthAdjustment
                 - this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
@@ -1568,7 +1578,7 @@ parsegraph_Node.prototype.commitLayout = function()
             //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
             //console.log("Length offset: " + lengthOffset);
             //console.log("Size adjustment: " + sizeAdjustment);
-            thisNeighbors[direction].extent().combineExtent(
+            this._neighbors[direction].extent.combineExtent(
                 child.extentsAt(direction),
                 lengthOffset,
                 sizeAdjustment,
@@ -1579,31 +1589,29 @@ parsegraph_Node.prototype.commitLayout = function()
                 this.nodeAlignmentMode(childDirection) == parsegraph_DO_NOT_ALIGN
                 && this.nodeFit() == parsegraph_NODE_FIT_LOOSE
             ) {
-                thisNeighbors[direction].extent().simplify();
+                this._neighbors[direction].extent.simplify();
             }
 
             // Adjust the length offset to remain positive.
             if(lengthOffset < 0) {
                 //console.log("Adjusting negative extent offset.");
-                thisNeighbors[direction].setExtentOffset(
-                    thisNeighbors[direction].extentOffset() +
-                    Math.abs(lengthOffset)
-                );
+                this._neighbors[direction].extentOffset =
+                    this._neighbors[direction].extentOffset + Math.abs(lengthOffset);
             }
 
             /*console.log(
                 "New "
                 + parsegraph_nameNodeDirection(direction)
                 + " extent offset = "
-                + thisNeighbors[direction].extentOffset()
+                + this._neighbors[direction].extentOffset
             );
-            thisNeighbors[direction].extent().forEach(function(l, s, i) {
+            this._neighbors[direction].extent.forEach(function(l, s, i) {
                 console.log(i + ". length=" + l + ", size=" + s);
             });
             */
 
             // Assert the extent offset is positive.
-            if(thisNeighbors[direction].extentOffset() < 0) {
+            if(this._neighbors[direction].extentOffset < 0) {
                 throw new Error("Extent offset must not be negative.");
             }
         };
@@ -1671,9 +1679,9 @@ parsegraph_Node.prototype.commitLayout = function()
         var childExtent = child.extentsAt(reversed);
 
         // Separate the child from this node.
-        var separationFromChild = thisNeighbors[direction].extent().separation(
+        var separationFromChild = this._neighbors[direction].extent.separation(
             childExtent,
-            thisNeighbors[direction].extentOffset()
+            this._neighbors[direction].extentOffset
                 + alignment
                 - this.scaleAt(direction) * child.extentOffsetAt(reversed),
             allowAxisOverlap,
@@ -1795,16 +1803,16 @@ parsegraph_Node.prototype.commitLayout = function()
 
         //console.log("Separation between children=" + separationBetweenChildren);
 
-        var separationFromSecond = thisNeighbors[secondDirection].extent()
+        var separationFromSecond = this._neighbors[secondDirection].extent;
 
         /*console.log(
             "This " +
             parsegraph_nameNodeDirection(firstDirection) +
             " extent (offset to center=" +
-            thisNeighbors[firstDirection].extentOffset() +
+            this._neighbors[firstDirection].extentOffset +
             ")"
         );
-        thisNeighbors[firstDirection].extent().forEach(
+        this._neighbors[firstDirection].extent.forEach(
             function(length, size, i) {
                 console.log(i + ". l=" + length + ", s=" + size);
             }
@@ -1828,8 +1836,8 @@ parsegraph_Node.prototype.commitLayout = function()
             "FirstNodeAlignment=" + firstNodeAlignment
         );
         console.log(
-            "thisNeighbors[firstDirection].extentOffset()=" +
-                thisNeighbors[firstDirection].extentOffset()
+            "this._neighbors[firstDirection].extentOffset=" +
+                this._neighbors[firstDirection].extentOffset
         );
         console.log(
             "firstNode.extentOffsetAt(secondDirection)=" + firstNode.extentOffsetAt(secondDirection)
@@ -1837,10 +1845,10 @@ parsegraph_Node.prototype.commitLayout = function()
 
         // Allow some overlap if we have both first-axis sides, but
         // nothing ahead on the second axis.
-        var separationFromFirst = thisNeighbors[firstDirection].extent()
+        var separationFromFirst = this._neighbors[firstDirection].extent
             .separation(
                 firstNode.extentsAt(secondDirection),
-                thisNeighbors[firstDirection].extentOffset()
+                this._neighbors[firstDirection].extentOffset
                 + firstNodeAlignment
                 - this.scaleAt(firstDirection) * firstNode.extentOffsetAt(secondDirection),
                 allowAxisOverlap,
@@ -1848,10 +1856,10 @@ parsegraph_Node.prototype.commitLayout = function()
                 parsegraph_LINE_THICKNESS / 2
             );
 
-        var separationFromSecond = thisNeighbors[secondDirection].extent()
+        var separationFromSecond = this._neighbors[secondDirection].extent
             .separation(
                 secondNode.extentsAt(firstDirection),
-                thisNeighbors[secondDirection].extentOffset()
+                this._neighbors[secondDirection].extentOffset
                 + secondNodeAlignment
                 - this.scaleAt(secondDirection) * secondNode.extentOffsetAt(firstDirection),
                 allowAxisOverlap,
@@ -2070,13 +2078,13 @@ parsegraph_Node.prototype.commitLayout = function()
         var perpAxis = parsegraph_getPerpendicularAxis(given);
         var dirSign = parsegraph_nodeDirectionSign(given);
 
-        var positiveOffset = thisNeighbors[
+        var positiveOffset = this._neighbors[
             parsegraph_getPositiveNodeDirection(perpAxis)
-        ].extentOffset();
+        ].extentOffset;
 
-        var negativeOffset = thisNeighbors[
+        var negativeOffset = this._neighbors[
             parsegraph_getNegativeNodeDirection(perpAxis)
-        ].extentOffset();
+        ].extentOffset;
 
         if(dirSign < 0) {
             positiveOffset -= this.sizeIn(given) + this.lineLengthAt(given);
@@ -2084,37 +2092,24 @@ parsegraph_Node.prototype.commitLayout = function()
         }
 
         // Append the line-shaped bound.
-        thisNeighbors[
+        this._neighbors[
             parsegraph_getPositiveNodeDirection(perpAxis)
-        ].extent().combineBound(
+        ].extent.combineBound(
             positiveOffset,
             this.lineLengthAt(given),
             this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
         );
-        thisNeighbors[
+        this._neighbors[
             parsegraph_getNegativeNodeDirection(perpAxis)
-        ].extent().combineBound(
+        ].extent.combineBound(
             negativeOffset,
             this.lineLengthAt(given),
             this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
         );
     };
 
-    var syncDirection = function(given)
-    {
-        this._neighbors[given].extent().copyFrom(thisNeighbors[given].extent());
-        this._neighbors[given].setExtentOffset(thisNeighbors[given].extentOffset());
-
-        /*_neighbors[given].extent().dump(
-            QString("Resulting %1 extent, with extent offset of %2")
-                .arg(parsegraph::nameNodeDirection(given))
-                .arg(_neighbors[given].extentOffset)
-        );*/
-    };
-
     // Set our extents, combined with non-point neighbors.
     parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
-    parsegraph_forEachCardinalNodeDirection(syncDirection, this);
 
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
