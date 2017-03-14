@@ -1218,3 +1218,31 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T la
     }
 });
 
+parsegraph_Graph_Tests.addTest("parsegraph_Graph", function() {
+    var car = new parsegraph_Caret('b');
+    car.spawnMove('d', 'bu');
+    car.align('f', 'c');
+    car.spawnMove('f', 'bu');
+    car.spawnMove('d', 'bu');
+
+    car.root().commitLayoutIteratively();
+    var sep = car.root().separationAt(parsegraph_DOWNWARD);
+
+    console.log("Bud size: " + (parsegraph_style('bu').horizontalPadding * 2 +
+        parsegraph_style('bu').borderThickness * 2 +
+        parsegraph_style('bu').minWidth));
+    console.log("Vertical separation: " + car.root().verticalSeparation(parsegraph_DOWNWARD));
+    console.log("Block size: " + (parsegraph_style('b').horizontalPadding * 2 +
+        parsegraph_style('b').borderThickness * 2 +
+        parsegraph_style('b').minWidth));
+    console.log(sep);
+    return sep - (
+        (parsegraph_style('b').horizontalPadding +
+        parsegraph_style('b').borderThickness +
+        parsegraph_style('b').minWidth / 2) +
+        car.root().verticalSeparation(parsegraph_DOWNWARD) +
+        (parsegraph_style('bu').horizontalPadding +
+        parsegraph_style('bu').borderThickness +
+        parsegraph_style('bu').minWidth / 2)
+    );
+});

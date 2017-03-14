@@ -273,7 +273,9 @@ parsegraph_Caret.prototype.shrink = function()
     if(arguments.length > 0) {
         node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
     }
-    node.setScale(parsegraph_SHRINK_SCALE);
+    if(node) {
+        node.setScale(parsegraph_SHRINK_SCALE);
+    }
 };
 
 parsegraph_Caret.prototype.grow = function()
@@ -282,7 +284,9 @@ parsegraph_Caret.prototype.grow = function()
     if(arguments.length > 0) {
         node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
     }
-    node.setScale(1.0);
+    if(node) {
+        node.setScale(1.0);
+    }
 };
 
 parsegraph_Caret.prototype.fitExact = function()

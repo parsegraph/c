@@ -1,4 +1,4 @@
-function showUlam(COUNT)
+function showUlam(graph, COUNT)
 {
     if(COUNT === undefined) {
         COUNT = 35;

@@ -179,6 +179,47 @@ parsegraph_BlockPainter_ShadyFragmentShader =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
+parsegraph_BlockPainter_AngleFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n" +
+"\n" +
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"varying highp vec4 borderColor;\n" +
+"varying highp float borderRoundedness;\n" +
+"varying highp vec2 texCoord;\n" +
+// borderThickness is in [0, 1] terms.
+"varying highp float borderThickness;\n" +
+"varying highp float aspectRatio;\n" +
+"varying highp float scale;\n" +
+"\n" +
+"void main() {\n" +
+    // Adjust for the aspect ratio.
+    "highp vec2 st = texCoord;\n" +
+    "st = st * 2.0 - 1.0;" +
+    "st.x = abs(st.x);" +
+    "st.y = abs(st.y);" +
+
+    // 1.0 if st is inside the X-axis border.
+    "highp float t = borderThickness;" +
+    "highp float insideYContent = 1.0 - step(1.0 - t, st.y);" +
+    "highp float insideXBorder = step(1.0 - t, st.x);" +
+
+    // y = y1 + m(x - x1)
+    "highp float insideBorderAngle = 1.0 - step((st.x - 1.0)/-t, st.y);" +
+    "highp float insideContentAngle = 1.0 - step((st.x - 1.0)/-t - aspectRatio, st.y);" +
+
+    "highp float inBorder = step(1.0, insideBorderAngle);\n" +
+    "highp float inContent = step(1.0, insideContentAngle * insideYContent);\n" +
+
+    // Map the two calculated indicators to their colors.
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
+    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
+"}";
+
+// Derived from https://thebookofshaders.com/07/
 parsegraph_BlockPainter_ParenthesisFragmentShader =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "\n" +
@@ -194,48 +235,59 @@ parsegraph_BlockPainter_ParenthesisFragmentShader =
 "varying highp float aspectRatio;\n" +
 "varying highp float scale;\n" +
 "\n" +
-// Plot a line on Y using a value between 0.0-1.0
-"float plot(vec2 st, float pct) {" +
-  "return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);" +
-"}" +
-"\n" +
-"highp float aastep(float threshold, float value)\n" +
-"{\n" +
-    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
-    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
-    //"return step(threshold, value);\n" +
-"}\n" +
-"\n" +
 "void main() {\n" +
     "highp vec2 st = texCoord;\n" +
     "st = st * 2.0 - 1.0;" +
-    "\n" +
     // Adjust for the aspect ratio.
     "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
     "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+    "st.x = abs(st.x);" +
+    "st.y = abs(st.y);" +
 
-    "highp float inBorder = 0.0;\n" +
-    "highp float inContent = 0.0;\n" +
+    // 1.0 if st is inside the X-axis border.
+    "highp float t = borderThickness;" +
+    "highp float insideYContent = step(1.0 - t, st.y);" +
+    "highp float insideXBorder = step(1.0 - t, st.x/(1.0 - t/2.0));" +
 
-    "if(st.x > 1.0 - borderThickness) {" +
-        "st.x = (1.0 - st.x) / borderThickness;" +
-        // If the Y position is under the border curve.
-        "if(abs(st.y) < sin(st.x * 3.14159/2.0)) { " +
-            // Set it thereof.
-            "inBorder = 1.0;" +
-        "} else {" +
-            // Y position is greater than the curve, so mark it empty.
-        "}" +
-    "} else if(abs(st.y) < 1.0 - borderThickness) {" +
-        "inBorder = 1.0;" +
-        "inContent = 1.0;" +
-    "} else {" +
-        "inBorder = 1.0;" +
-    "}" +
+    "highp float inBorder = step(1.0, 1.0 - insideXBorder + 1.0 - step(1.0, length(vec2((st.x - (1.0 - t))/t, st.y/(1.0 + 2.0*t)))));" +
+    "highp float inContent = step(1.0, 1.0 - step(1.0 - t, st.x)*(1.0 - insideYContent) + 1.0 - step(1.0 - t, length(vec2((st.x/(1.0 - t) - (1.0 - t))/t, st.y/(1.0 + 3.0*t)))));" +
 
     // Map the two calculated indicators to their colors.
     "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
     "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+"}";
+
+// Derived from https://thebookofshaders.com/07/
+parsegraph_BlockPainter_CurlyFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n" +
+"\n" +
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"varying highp vec4 borderColor;\n" +
+"varying highp float borderRoundedness;\n" +
+"varying highp vec2 texCoord;\n" +
+// borderThickness is in [0, 1] terms.
+"varying highp float borderThickness;\n" +
+"varying highp float aspectRatio;\n" +
+"varying highp float scale;\n" +
+"\n" +
+"void main() {\n" +
+    // Adjust for the aspect ratio.
+    "highp vec2 st = texCoord;\n" +
+    "st = st * 2.0 - 1.0;" +
+    "st.x = abs(st.x);" +
+    "st.y = abs(st.y);" +
+
+    "highp float t = borderThickness;" +
+    "highp float inBorder = step(st.y, smoothstep(0.0, t, 1.0 - st.x));" +
+    "highp float inContent = step(1.0, step(st.y, (1.0-t)*smoothstep(0.0, t, 1.0 - (st.x + t*aspectRatio))));" +
+
+    // Map the two calculated indicators to their colors.
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
+    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
 "}";
 
 function parsegraph_BlockPainter(gl, shaders)
@@ -267,7 +319,11 @@ function parsegraph_BlockPainter(gl, shaders)
         }
 
         // For development.
-        //fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
+   //     gl.getExtension("OES_standard_derivatives");
+  //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
+ //       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
+//        fragProgram = parsegraph_BlockPainter_SquareFragmentShader;
+//        fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
 
         gl.attachShader(
             program,

@@ -6,6 +6,54 @@ function parsegraph_datesEqual(a, b)
     return a.getDate() == b.getDate() && a.getMonth() == b.getMonth() && a.getFullYear() == b.getFullYear();
 }
 
+function parsegraph_dateGreater(a, b)
+{
+    if(a == undefined) {
+        return false;
+    }
+    if(b == undefined) {
+        return true;
+    }
+
+    if(a.getFullYear() <= b.getFullYear()) {
+        if(a.getFullYear() !== b.getFullYear()) {
+            // a.getFullYear() < b.getFullYear()
+            return false;
+        }
+        // a.getFullYear() === b.getFullYear()
+        if(a.getMonth() <= b.getMonth()) {
+            if(a.getMonth() !== b.getMonth()) {
+                // a.getMonth() < b.getMonth()
+                return false;
+            }
+            // a.getMonth() === b.getMonth()
+            return a.getDate() > b.getDate();
+        }
+        // a.getMonth() > b.getMonth()
+        return true;
+    }
+    // a.getFullYear() > b.getFullYear()
+    return true;
+}
+
+parsegraph_Date_Tests = new parsegraph_TestSuite("parsegraph_Date");
+parsegraph_AllTests.addTest(parsegraph_Date_Tests);
+
+parsegraph_Date_Tests.addTest("parsegraph_dateGreater", function(dom) {
+    if(parsegraph_dateGreater(
+        new Date(2016, 0, 1),
+        new Date(2017, 0, 1)
+    )) {
+        return "2016 is showing as greater than 2017?!";
+    }
+    if(!parsegraph_dateGreater(
+        new Date(2018, 0, 1),
+        new Date(2017, 0, 1)
+    )) {
+        return "2018 is showing as less than 2017?!";
+    }
+});
+
 function parsegraph_getListOfDays()
 {
     return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

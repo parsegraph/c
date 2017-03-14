@@ -1,4 +1,4 @@
-function showCorporateStructure()
+function showCorporateStructure(graph)
 {
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.label("Shareholders");

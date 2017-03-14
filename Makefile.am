@@ -36,6 +36,7 @@ parsegraph_SCRIPT_FILES = \
 	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \
+	src/DepthTraversal.js \
 	src/graph/Color.js \
 	src/graph/DirectionData.js \
 	src/graph/Exception.js \

@@ -573,7 +573,8 @@ parsegraph_Input.prototype.Update = function(t)
     this._updateRepeatedly = false;
 
     if(this.Get(parsegraph_RESET_CAMERA_KEY) && this._graph.surface()._gl) {
-        var defaultScale = .5;
+        //var defaultScale = .5;
+        var defaultScale = 1;
         cam.setOrigin(
             this._graph.gl().drawingBufferWidth / (2 * defaultScale),
             this._graph.gl().drawingBufferHeight / (2 * defaultScale)

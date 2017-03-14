@@ -586,7 +586,6 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
             rect.setX(rect.x() + length);
         });
     };
-    paintDownwardExtent();
 
     var paintUpwardExtent = function() {
         var extent = node.extentsAt(parsegraph_UPWARD);
@@ -606,7 +605,6 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
             rect.setX(rect.x() + length);
         });
     };
-    paintUpwardExtent();
 
     var paintBackwardExtent = function() {
         var extent = node.extentsAt(parsegraph_BACKWARD);
@@ -626,7 +624,6 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
             rect.setY(rect.y() + length);
         });
     };
-    paintBackwardExtent();
 
     var paintForwardExtent = function() {
         var extent = node.extentsAt(parsegraph_FORWARD);
@@ -645,6 +642,10 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
             rect.setY(rect.y() + length);
         });
     };
+
+    paintDownwardExtent();
+    paintUpwardExtent();
+    paintBackwardExtent();
     paintForwardExtent();
 };
 

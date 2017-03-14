@@ -890,7 +890,7 @@ parsegraph_Node.prototype.typeAt = function(direction)
  *
  * Throws NO_NODE_FOUND if no node is in the given direction.
  *
- * This commits the layout.
+ * @see #commitLayout()
  */
 parsegraph_Node.prototype.separationAt = function(inDirection) {
     //this.commitLayout();

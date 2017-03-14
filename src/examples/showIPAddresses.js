@@ -1,8 +1,8 @@
-function showIPAddresses()
+function showIPAddresses(graph)
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);
-    var MAX_DEPTH = 13;
+    var MAX_DEPTH = 10;
 
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
@@ -27,6 +27,7 @@ function showIPAddresses()
         for(var i = 0; i < COUNT; ++i) {
             if(i === 0) {
                 caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
+                caret.crease();
                 caret.pull('d');
                 caret.push();
                 caret.label(" ");

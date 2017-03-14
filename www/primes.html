@@ -66,8 +66,8 @@ function init()
         var COUNT = 25
         main.appendChild(graph.container());
 
-        //var linear = new parsegraph_LinearWidget(graph);
-        //graph.plot(linear.root());
+        var linear = new parsegraph_LinearWidget(graph);
+        graph.plot(linear.root());
         var primes = new parsegraph_PrimesWidget(graph);
         graph.plot(primes.root());
 
@@ -79,14 +79,17 @@ function init()
         );
         graph.camera().setScale(defaultScale);
 
+        var MAX_PRIME = 1000;
+        var LOOPING_DELAY = 50;
+
         var bTimer = new parsegraph_TimeoutTimer();
         bTimer.setDelay(10);
         bTimer.setListener(function() {
             primes.step(1);
             graph.scheduleRepaint();
             renderTimer.schedule();
-            if(primes.position <= 1000) {
-                bTimer.setDelay(50);
+            if(primes.position <= MAX_PRIME) {
+                bTimer.setDelay(LOOPING_DELAY);
                 bTimer.schedule();
             }
         });
@@ -94,13 +97,13 @@ function init()
 
         /*
         var aTimer = new parsegraph_TimeoutTimer();
-        aTimer.setDelay(250);
+        aTimer.setDelay(10);
         aTimer.setListener(function() {
             linear.step(1);
             graph.scheduleRepaint();
             renderTimer.schedule();
-            if(primes.position <= 120) {
-                aTimer.setDelay(500);
+            if(primes.position <= MAX_PRIME) {
+                aTimer.setDelay(LOOPING_DELAY);
                 aTimer.schedule();
             }
         });

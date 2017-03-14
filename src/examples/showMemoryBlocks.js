@@ -1,4 +1,4 @@
-function showMemoryBlocks(COUNT)
+function showMemoryBlocks(graph, COUNT)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
@@ -66,5 +66,5 @@ function showMemoryBlocks(COUNT)
         }
     }
 
-    return caret;
+    return caret.root();
 }

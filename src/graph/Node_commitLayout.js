@@ -374,7 +374,7 @@ parsegraph_Node.prototype.commitLayout = function()
             this.scaleAt(direction),
             parsegraph_LINE_THICKNESS / 2
         );
-        console.log("Calculated unpadded separation of " + separationFromChild + ".");
+        //console.log("Calculated unpadded separation of " + separationFromChild + ".");
 
         // Add padding and ensure the child is not separated less than
         // it would be if the node was not offset by alignment.
@@ -396,7 +396,7 @@ parsegraph_Node.prototype.commitLayout = function()
             separationFromChild
                 += this.horizontalSeparation(direction) * this.scaleAt(direction);
         }
-        console.log("Calculated padded separation of " + separationFromChild + ".");
+        //console.log("Calculated padded separation of " + separationFromChild + ".");
 
         // Set the node's position.
         positionChild.call(
@@ -487,7 +487,7 @@ parsegraph_Node.prototype.commitLayout = function()
             );
         separationBetweenChildren *= this.scaleAt(firstDirection);
 
-        console.log("Separation between children=" + separationBetweenChildren);
+        //console.log("Separation between children=" + separationBetweenChildren);
 
         var separationFromSecond = thisNeighbors[secondDirection].extent()
 
