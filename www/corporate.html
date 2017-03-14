@@ -65,6 +65,15 @@ function init()
         GRAPH = graph;
         main.appendChild(surface.container());
 
+        if(localStorage.getItem("parsegraph_corporate_camera") != null) {
+            try {
+                var parsegraph_corporate_camera = JSON.parse(localStorage.getItem("parsegraph_corporate_camera"));
+                graph.camera().restore(parsegraph_corporate_camera);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
+        }
+
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
         renderTimer.setListener(function() {
@@ -84,6 +93,10 @@ function init()
             renderTimer.schedule();
         });
         renderTimer.schedule();
+
+        surface.addRenderer(function() {
+            localStorage.setItem("parsegraph_corporate_camera", JSON.stringify(graph.camera().toJSON()));
+        });
 
         var controls = document.createElement("div");
         controls.className = "controls";
