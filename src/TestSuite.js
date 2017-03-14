@@ -80,6 +80,21 @@ parsegraph_Test.prototype.run = function(listener, listenerThisArg, resultDom)
 
     return new parsegraph_TestResult(testStatus, testResult, this);
 };
+parsegraph_Test.prototype.Run = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.runTest = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.runTests = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.runAllTests = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.runAllTests = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.runalltests = parsegraph_Test.prototype.run;
+parsegraph_Test.prototype.start = parsegraph_Test.prototype.run;
+
+parsegraph_Test.prototype.test = function() {
+    if(arguments.length > 0) {
+        return this.addTest.apply(this, arguments);
+    }
+    return this.run();
+};
+parsegraph_Test.prototype.Test = parsegraph_Test.prototype.test;
 
 /**
  * Status is either "Successful", "Failed", or "Crashed"
@@ -161,6 +176,9 @@ parsegraph_TestSuite.prototype.addTest = function(testName, runner, runnerThisAr
     this._tests.push(test);
     return test;
 };
+parsegraph_TestSuite.prototype.AddTest = parsegraph_TestSuite.prototype.addTest;
+parsegraph_TestSuite.prototype.Add = parsegraph_TestSuite.prototype.addTest;
+parsegraph_TestSuite.prototype.add = parsegraph_TestSuite.prototype.addTest;
 
 function parsegraph_TestSuiteResult()
 {
