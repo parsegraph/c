@@ -10,9 +10,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._type = newType;
     this._style = parsegraph_style(this._type);
-    this._label = undefined;
-    this._labelX = undefined;
-    this._labelY = undefined;
+    this._label = new parsegraph_Label();
 
     this._value = null;
 
@@ -306,7 +304,7 @@ parsegraph_Node.prototype.clickToCaret = function(worldX, worldY)
 
 parsegraph_Node.prototype.getLabelPosition = function()
 {
-    return [this._labelX, this._labelY];
+    return this._label.getPosition();
 };
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
@@ -1054,16 +1052,14 @@ parsegraph_Node.prototype.destroy = function()
 
 parsegraph_Node.prototype.label = function()
 {
-    return this._label;
+    return this._label.text();
 };
 
-parsegraph_Node.prototype.setLabel = function(label)
+parsegraph_Node.prototype.setLabel = function(text)
 {
-    if(this._label == label) {
-        return;
+    if(this._label.setText(text)) {
+        this.layoutWasChanged();
     }
-    this._label = label;
-    this.layoutWasChanged();
 };
 
 parsegraph_Node.prototype.blockStyle = function()
