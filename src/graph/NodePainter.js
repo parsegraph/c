@@ -1,9 +1,3 @@
-/**
- * Constructs a parsegraph. Use parsegraph.container() to place it
- * in the DOM.
- *
- * The constants used here are in Node_paint.js
- */
 function parsegraph_NodePainter(gl, glyphAtlas, shaders)
 {
     this._gl = gl;
