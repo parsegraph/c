@@ -60,7 +60,6 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/TextPainter.js \
 	src/graph/LinePainter.js \
 	src/graph/FanPainter.js \
-	src/graph/Node_commitLayout.js \
 	src/graph/NodePainter.js \
 	src/graph/Caret.js \
 	src/graph/LayoutPreference.js \
