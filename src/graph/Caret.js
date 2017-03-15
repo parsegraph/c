@@ -10,6 +10,23 @@ function parsegraph_Caret(nodeRoot)
 
     // A mapping of nodes to their saved names.
     this._savedNodes = null;
+
+    this._glyphAtlas = null;
+};
+
+parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
+{
+    this._glyphAtlas = glyphAtlas;
+};
+
+parsegraph_Caret.prototype.glyphAtlas = function()
+{
+    if(!this._glyphAtlas) {
+        this._glyphAtlas = new parsegraph_GlyphAtlas(
+            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+        );
+    }
+    return this._glyphAtlas;
 };
 
 parsegraph_Caret.prototype.node = function()
@@ -315,7 +332,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
         node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
         text = arguments[1];
     }
-    node.setLabel(text);
+    node.setLabel(text, this.glyphAtlas());
 };
 
 parsegraph_Caret.prototype.select = function()

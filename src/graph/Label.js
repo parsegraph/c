@@ -1,5 +1,6 @@
-function parsegraph_Label()
+function parsegraph_Label(glyphAtlas)
 {
+    this._glyphAtlas = glyphAtlas;
     this._text = undefined;
     this._labelX = undefined;
     this._labelY = undefined;

@@ -1061,10 +1061,10 @@ parsegraph_Node.prototype.label = function()
     return this._label.text();
 };
 
-parsegraph_Node.prototype.setLabel = function(text)
+parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
 {
     if(!this.label()) {
-        this._label = new parsegraph_Label();
+        this._label = new parsegraph_Label(glyphAtlas);
     }
     if(this._label.setText(text)) {
         this.layoutWasChanged();

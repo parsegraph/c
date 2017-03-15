@@ -42,7 +42,7 @@ function parsegraph_TextPainter(gl, glyphAtlas, shaders)
     this._gl = gl;
 
     this._fontSize = parsegraph_TextPainter_RENDERED_FONT_SIZE;
-    this._wrapWidth = parsegraph_TextPainter_WRAP_WIDTH;
+    this._wrapWidth = null;
 
     this._x = 0;
     this._y = 0;
@@ -175,8 +175,16 @@ parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, parag
         //console.log(x + " Glyph width: " + (glyphData.width * fontScale));
 
         // Check for wrapping.
-        if(wrapWidth !== undefined && (x + glyphData.width * fontScale) > wrapWidth) {
-            //console.log("Need to wrap");
+        //console.log("Need to wrap");
+        var shouldWrap = false;
+        if(wrapWidth) {
+            shouldWrap = (x + glyphData.width * fontScale) > wrapWidth;
+        }
+        else {
+            shouldWrap = this._glyphAtlas.isNewline(letter);
+        }
+
+        if(shouldWrap) {
             if(paragraphY >= y && paragraphY <= y + glyphData.height * fontScale && paragraphX >= x) {
                 // It's past the end of line, so that's actually the previous character.
                 --i;
@@ -207,7 +215,13 @@ parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, parag
 
 parsegraph_TextPainter.prototype.measureText = function(text)
 {
-    var textMetrics = this._glyphAtlas.measureText(text, this.wrapWidth() / this.fontScale());
+    var textMetrics;
+    if(this.wrapWidth()) {
+        textMetrics = this._glyphAtlas.measureText(text, this.wrapWidth() / this.fontScale());
+    }
+    else {
+        textMetrics = this._glyphAtlas.measureText(text);
+    }
     textMetrics[0] *= this.fontScale();
     textMetrics[1] *= this.fontScale();
     return textMetrics;
@@ -248,7 +262,12 @@ parsegraph_TextPainter.prototype.drawGlyph = function(letter)
 
     // Change lines if needed.
     var fontScale = this.fontScale();
-    if(this.wrapWidth() && (this._lineAdvance + glyphData.width * fontScale) > this.wrapWidth()) {
+    if(this.wrapWidth()) {
+        if(this._lineAdvance + glyphData.width * fontScale > this.wrapWidth()) {
+            this.nextLine();
+        }
+    }
+    else if(this._glyphAtlas.isNewline(letter)) {
         this.nextLine();
     }
 

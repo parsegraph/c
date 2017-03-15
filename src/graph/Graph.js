@@ -20,9 +20,7 @@ function parsegraph_Graph()
     this._canvas = surface.canvas();
     this._container = surface.container();
 
-    this._glyphAtlas = new parsegraph_GlyphAtlas(
-        parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
-    );
+    this._glyphAtlas = null;
 
     // World-rendered graphs.
     this._worldPaintingDirty = true;
@@ -410,6 +408,21 @@ parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
     }
 };
 
+parsegraph_Graph.prototype.glyphAtlas = function()
+{
+    if(!this._glyphAtlas) {
+        this._glyphAtlas = new parsegraph_GlyphAtlas(
+            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+        );
+    }
+    return this._glyphAtlas;
+}
+
+parsegraph_Graph.prototype.setGlyphAtlas = function(glyphAtlas)
+{
+    this._glyphAtlas = glyphAtlas;
+}
+
 /**
  * Paints the graph up to the given time, in milliseconds.
  *
@@ -436,7 +449,7 @@ parsegraph_Graph.prototype.paint = function(timeout)
             paintGroup.paint(
                 this.gl(),
                 this.surface().backgroundColor(),
-                this._glyphAtlas,
+                this.glyphAtlas(),
                 this._shaders
             );
         }
@@ -486,11 +499,11 @@ parsegraph_Graph.prototype.paint = function(timeout)
             if(!paintGroup) {
                 throw new Error("Plot no longer has a paint group?!");
             }
-            parsegraph_PAINTING_GLYPH_ATLAS = this._glyphAtlas;
+            parsegraph_PAINTING_GLYPH_ATLAS = this.glyphAtlas();
             var paintCompleted = paintGroup.paint(
                 this.gl(),
                 this.surface().backgroundColor(),
-                this._glyphAtlas,
+                this.glyphAtlas(),
                 this._shaders,
                 timeRemaining()
             );

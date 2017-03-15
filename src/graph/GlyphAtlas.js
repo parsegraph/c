@@ -178,7 +178,7 @@ parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
 
         // Check for wrapping.
         var shouldWrap = false;
-        if(wrapWidth !== undefined) {
+        if(wrapWidth) {
             shouldWrap = (x + glyphData.width) > wrapWidth;
         }
         else {
