@@ -66,6 +66,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/LayoutState.js \
 	src/graph/Node.js \
 	src/graph/Surface.js \
+	src/graph/CameraBoxPainter.js \
 	src/alpha/Maths.js \
 	src/alpha/Physical.js \
 	src/alpha/Input.js \

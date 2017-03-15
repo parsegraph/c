@@ -53,6 +53,86 @@ body > div input {
 <script src="esprima.js"></script>
 <script>
 
+function parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg) {
+    if(!eventFunc) {
+        throw new Error("An eventFunc must be provided");
+    }
+    var opened = false;
+
+    var timer = new parsegraph_IntervalTimer();
+    timer.setDelay(100);
+
+    timer.setListener(function() {
+        if(!opened) {
+            return;
+        }
+        //console.log("Sending camera");
+        ws.send(JSON.stringify(camera.toJSON()));
+        timer.cancel();
+    });
+
+    this.update = function() {
+        if(!opened) {
+            return;
+        }
+        timer.schedule();
+    };
+
+    ws.onopen = function() {
+        //console.log("Connection opened");
+        opened = true;
+        timer.schedule();
+    };
+
+    var state = "begin";
+    var composed = "";
+    ws.onmessage = function(event) {
+        var msg = event.data;
+        //console.log(msg);
+        while(msg.length > 0) {
+            if(state === "begin") {
+                // Ensure the message begins as we expect.
+                if(msg.charAt(0) != '{') {
+                    ws.close();
+                    throw new Error("Invalid start received");
+                }
+                state = "collecting";
+            }
+            if(state === "collecting") {
+                var eol = msg.indexOf('}');
+                if(eol != -1) {
+                    // Message contains an end.
+                    composed += msg.slice(0, eol + 1);
+                    //console.log(composed);
+                    eventFunc.call(
+                        eventFuncThisArg,
+                        JSON.parse(composed)
+                    );
+
+                    // Process the remaining message.
+                    msg = msg.slice(eol + 1);
+                    state = "begin";
+                    composed = "";
+                }
+                else {
+                    // Message continues.
+                    composed += msg;
+                    msg = "";
+                }
+            }
+        }
+    };
+
+    ws.onclose = function() {
+        opened = false;
+        timer.cancel();
+    };
+
+    this.opened = function() {
+        return opened;
+    };
+};
+
 function parsegraph_JavaScriptWidget(graph)
 {
     this.graph = graph;
@@ -164,32 +244,55 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
         car.spawnMove(inDir, 's');
         car.label('this');
         break;
+    case 'BreakStatement':
+        car.spawnMove(inDir, 'b');
+        car.label('break');
+        break;
     case 'EmptyStatement':
         car.spawnMove(inDir, 'bu');
         car.label(';');
         break;
-/*    case 'BlockStatement':
-        this.buildBody(child, inDir, parsegraph_DOWNWARD);
+    case 'WhileStatement':
+        car.spawnMove(inDir, 'b');
+        car.label('while');
+        car.push();
+        this.buildChild(child.test, 'f');
+        car.pop();
+        if(child.body) {
+            car.spawnMove('d', 'bu');
+            this.buildChild(child.body, 'f', 'f');
+        }
+        break;
+    case 'BlockStatement':
+        this.buildBody(child, inDir, parsegraph_turnRight(inDir));
         break;
     case 'ForStatement':
         car.spawnMove(inDir, 'b');
         car.label('for');
 
         car.push();
-        car.spawnMove('i', 'bu');
-        car.label("init");
-        this.buildChild(child.init, 'd');
+        car.pull('f');
+        car.align('f', 'c');
         car.spawnMove('f', 'bu');
-        car.label('test');
-        this.buildChild(child.test, 'd');
-        car.spawnMove('f', 'bu');
-        car.label('update');
-        this.buildChild(child.update, 'd');
+
+        car.push();
+        this.buildChild(child.init, 'f');
+        car.pop();
+        car.pull('f');
+
+        car.spawnMove('d', 'bu');
+
+        car.push();
+        this.buildChild(child.test, 'f');
+        car.pop();
+
+        car.spawnMove('d', 'bu');
+        this.buildChild(child.update, 'f');
         car.pop();
 
         this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
         break;
-    case 'ArrayExpression':
+/*    case 'ArrayExpression':
         car.spawnMove(inDir, 'b');
 
         for(var i = 0; i < child.elements.length; ++i) {
@@ -214,9 +317,12 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
         }
         this.buildChild(child.argument, inDir);
         break;
+*/
     case "CallExpression":
         car.spawnMove(inDir, 'b');
+        car.push();
         this.buildChild(child.callee, 'i');
+        car.pop();
         if(inDir === parsegraph_INWARD) {
             inDir = parsegraph_FORWARD;
         }
@@ -227,16 +333,19 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
         for(var i = 0; i < child.arguments.length; ++i) {
             var arg = child.arguments[i];
             if(i === 0) {
-                car.spawnMove('i', 'bu');
                 car.shrink();
-                this.buildChild(arg, 'd');
+                this.buildChild(arg, 'i');
             }
             else {
+                this.buildChild(arg, 'f');
+            }
+            if(i < child.arguments.length - 1) {
                 car.spawnMove('f', 'bu');
-                this.buildChild(arg, 'd');
+                car.label(',');
             }
         }
         break;
+    /*
     case 'NewExpression':
         car.spawnMove(inDir, 'b');
         car.label('new');
@@ -306,6 +415,7 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
         car.label(child.kind);
         for(var i = 0; i < child.declarations.length; ++i) {
             var decl = child.declarations[i];
+            car.push();
             switch(decl.type) {
             case "VariableDeclarator":
                 this.buildChild(decl.id, 'i');
@@ -313,8 +423,15 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
             default:
                 throw new Error("NYI");
             }
+            car.pop();
 
-            // TODO Handle VariableDeclarator.init
+            if(decl.init) {
+                car.push();
+                car.spawnMove('f', 'bu');
+                car.label('=');
+                this.buildChild(decl.init, 'f');
+                car.pop();
+            }
         }
         break;
     case "FunctionExpression":
@@ -408,7 +525,7 @@ parsegraph_JavaScriptWidget.prototype.load = function(url)
         car.label(ast.sourceType);
         car.move('o');
 
-        that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
+        that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_FORWARD);
 
         that.graph.scheduleRepaint();
     }
@@ -432,34 +549,8 @@ function init()
         GRAPH = graph;
 
         var widget = new parsegraph_JavaScriptWidget(graph);
-        widget.load("GLWidget.js");
-
+        widget.load("primes.js");
         graph.plot(widget.caret.root());
-
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        var start = alpha_GetTime();
-        renderTimer.setListener(function() {
-            var t = alpha_GetTime();
-            var elapsed = t - start;
-            start = t;
-            graph.input().Update(elapsed);
-            if(graph.needsRepaint()) {
-                surface.paint();
-            }
-            surface.render();
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
-            renderTimer.schedule();
-        });
-        renderTimer.schedule();
-
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {
@@ -470,31 +561,46 @@ function init()
             }
         }
 
+        var cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
+            "ws://localhost/camera/", "parsegraph-camera-protocol"
+        ), graph.camera(),
+            function(obj) {
+                graph.setCamera("dafrito", obj);
+            }
+        );
+
+        // Schedule the repaint.
+        var renderTimer = new parsegraph_AnimationTimer();
+        renderTimer.setListener(function() {
+            graph.input().Update(new Date());
+            if(graph.needsRepaint()) {
+                surface.paint(50);
+            }
+            surface.render();
+            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                if(graph.input().UpdateRepeatedly()) {
+                    cameraProtocol.update();
+                }
+                renderTimer.schedule();
+            }
+        });
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+            if(affectedPaint) {
+                graph.scheduleRepaint();
+            }
+            renderTimer.schedule();
+            if(inputAffectedCamera) {
+                cameraProtocol.update();
+            }
+        });
+        renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
+
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
         });
-
-        // Create and add form controls.
-        var controls = document.createElement("div");
-        controls.className = "controls";
-        main.appendChild(controls);
-        controls.style.bottom = ".5em";
-        var form = parsegraph_createForm();
-        form.button("resetOrigin", "Reset Camera");
-        form.addListener(function(sourceName, value) {
-            var defaultScale = .5;
-            if(sourceName == "resetOrigin") {
-                graph.camera().setOrigin(
-                    graph.gl().drawingBufferWidth / (2 * defaultScale),
-                    graph.gl().drawingBufferHeight / (2 * defaultScale)
-                );
-                graph.camera().setScale(defaultScale);
-            }
-            else {
-                return;
-            }
-        });
-        controls.appendChild(form.asDOM());
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

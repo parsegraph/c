@@ -395,14 +395,14 @@ parsegraph_BlockPainter.prototype.setBackgroundColor = function(backgroundColor)
 };
 
 parsegraph_BlockPainter.prototype.drawBlock = function(
-    cx, cy, size, borderRoundedness, borderThickness, scale)
+    cx, cy, width, height, borderRoundedness, borderThickness, scale)
 {
-    //console.log(cx + ", " + cy + ", " + size);
+    //console.log(cx + ", " + cy + ", " + width + ", " + height);
     // Append position data.
     this._blockBuffer.appendData(
         this.a_position,
         parsegraph_generateRectangleVertices(
-            cx, cy, size.width(), size.height()
+            cx, cy, width, height
         )
     );
 
@@ -432,31 +432,31 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
         );
 
         // Append border radius data.
-        if(size.height() < size.width()) {
+        if(height < width) {
             this._blockBuffer.appendData(
                 this.a_borderRoundedness,
-                scale * borderRoundedness / size.height()
+                scale * borderRoundedness / height
             );
             this._blockBuffer.appendData(
                 this.a_borderThickness,
-                scale * borderThickness / size.height()
+                scale * borderThickness / height
             );
         }
         else {
-            // size.height() > size.width()
+            // height > width
             this._blockBuffer.appendData(
                 this.a_borderRoundedness,
-                scale * borderRoundedness / size.width()
+                scale * borderRoundedness / width
             );
             this._blockBuffer.appendData(
                 this.a_borderThickness,
-                scale * borderThickness / size.width()
+                scale * borderThickness / width
             );
         }
 
         this._blockBuffer.appendData(
             this.a_aspectRatio,
-            size.height() / size.width()
+            height / width
         );
 
         this._blockBuffer.appendData(

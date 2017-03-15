@@ -232,7 +232,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         var cx = x1 + (x2 - x1) / 2;
         var cy = y1 + (y2 - y1) / 2;
 
-        var size = 0;
+        var size;
         if(x1 == x2) {
             // Vertical line.
             size = new parsegraph_Size(
@@ -266,7 +266,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         painter.drawBlock(
             worldX + node.absoluteX() + cx,
             worldY + node.absoluteY() + cy,
-            size,
+            size.width(),
+            size.height(),
             0,
             0,
             userScale * node.absoluteScale()
@@ -348,10 +349,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         painter.drawBlock(
             worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
             worldY + node.absoluteY(),
-            parsegraph_createSize(
-                userScale * node.absoluteSize().height()/1.5,
-                userScale * node.absoluteSize().height()/1.5
-            ),
+            userScale * node.absoluteSize().height()/1.5,
+            userScale * node.absoluteSize().height()/1.5,
             style.borderRoundness/1.5,
             style.borderThickness/1.5,
             userScale * node.absoluteScale()
@@ -453,21 +452,24 @@ parsegraph_NodePainter.prototype.drawOrigin = function()
 
     this._originPainter.drawBlock(
         0, 0,
-        parsegraph_createSize(originSize, originSize),
+        originSize,
+        originSize,
         1,
         originBorderSize,
         1
     );
     this._originPainter.drawBlock(
         0, 0,
-        parsegraph_createSize(originSize * 10, originSize * 10),
+        originSize * 10,
+        originSize * 10,
         1,
         originBorderSize,
         1
     );
     this._originPainter.drawBlock(
         0, 0,
-        parsegraph_createSize(originSize * 100, originSize * 100),
+        originSize * 100,
+        originSize * 100,
         1,
         originBorderSize,
         1
@@ -519,7 +521,8 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
             painter.drawBlock(
                 worldX + node.absoluteX(),
                 worldY + node.absoluteY() + length / 2,
-                new parsegraph_Size(thickness, Math.abs(length)),
+                thickness,
+                Math.abs(length),
                 0,
                 0,
                 scale
@@ -533,7 +536,8 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
             painter.drawBlock(
                 worldX + node.absoluteX() + length / 2,
                 worldY + node.absoluteY(),
-                new parsegraph_Size(Math.abs(length), thickness),
+                Math.abs(length),
+                thickness,
                 0,
                 0,
                 scale
@@ -560,7 +564,8 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
         painter.drawBlock(
             worldX + rect.x() + rect.width() / 2,
             worldY + rect.y() + rect.height() / 2,
-            rect,
+            rect.width(),
+            rect.height(),
             parsegraph_EXTENT_BORDER_ROUNDEDNESS,
             parsegraph_EXTENT_BORDER_THICKNESS,
             userScale * node.absoluteScale()
@@ -696,10 +701,12 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         );
     }
 
+    var size = node.absoluteSize().scaled(userScale);
     painter.drawBlock(
         worldX + userScale * node.absoluteX(),
         worldY + userScale * node.absoluteY(),
-        node.absoluteSize().scaled(userScale),
+        size.width(),
+        size.height(),
         style.borderRoundness,
         style.borderThickness,
         node.absoluteScale() * userScale

@@ -264,7 +264,7 @@ parsegraph_Caret.prototype.align = function(inDirection, newAlignmentMode)
 parsegraph_Caret.prototype.pull = function(given)
 {
     given = parsegraph_readNodeDirection(given);
-    if(this.node().isRoot()) {
+    if(this.node().isRoot() || this.node().parentDirection() === parsegraph_OUTWARD) {
         if(parsegraph_isVerticalNodeDirection(given)) {
             this.node().setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
         }

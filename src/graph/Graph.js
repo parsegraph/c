@@ -38,6 +38,12 @@ function parsegraph_Graph()
     this._showCarousel = false;
     this._selectedCarouselPlot = null;
 
+    // Camera boxes.
+    this._showCameraBoxes = true;
+    this._cameraBoxDirty = true;
+    this._cameraBoxes = {};
+    this._cameraBoxPainter = null;
+
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
 
@@ -243,6 +249,20 @@ parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
     return true;
 };
 
+parsegraph_Graph.prototype.setCamera = function(name, camera)
+{
+    this._cameraBoxes[name] = camera;
+    this._cameraBoxDirty = true;
+    this.scheduleRepaint();
+};
+
+parsegraph_Graph.prototype.removeCamera = function(name)
+{
+    delete this._cameraBoxes[name];
+    this._cameraBoxDirty = true;
+    this.scheduleRepaint();
+};
+
 /**
  * Receives a mouseover event at the given coordinates, in client space.
  *
@@ -442,6 +462,31 @@ parsegraph_Graph.prototype.paint = function(timeout)
         return Math.max(0, timeout - (new Date().getTime() - t));
     };
 
+    if(this._showCameraBoxes && this._cameraBoxDirty) {
+        if(!this._cameraBoxPainter) {
+            this._cameraBoxPainter = new parsegraph_CameraBoxPainter(
+                this.gl(), this.glyphAtlas(), this._shaders
+            );
+        }
+        else {
+            this._cameraBoxPainter.clear();
+        }
+        var rect = new parsegraph_Rect();
+        for(var name in this._cameraBoxes) {
+            var cameraBox = this._cameraBoxes[name];
+            var hw = cameraBox.width/cameraBox.scale;
+            var hh = cameraBox.height/cameraBox.scale;
+            rect.setX(-cameraBox.cameraX + hw/2);
+            rect.setY(-cameraBox.cameraY + hh/2);
+            rect.setWidth(cameraBox.width/cameraBox.scale);
+            rect.setHeight(cameraBox.height/cameraBox.scale);
+            console.log(name);
+            this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale);
+            console.log("Drawing box");
+        }
+        this._cameraBoxDirty = false;
+    }
+
     if(this._carouselPaintingDirty && this._showCarousel) {
         // Paint the carousel.
         //console.log("Painting the carousel");
@@ -551,5 +596,14 @@ parsegraph_Graph.prototype.render = function()
                 world)
             );
         }
+    }
+
+    if(this._showCameraBoxes && !this._cameraBoxDirty) {
+        var gl = this.gl();
+        gl.enable(gl.BLEND);
+        gl.blendFunc(
+            gl.SRC_ALPHA, gl.DST_ALPHA
+        );
+        this._cameraBoxPainter.render(world);
     }
 };
