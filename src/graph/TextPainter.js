@@ -393,7 +393,7 @@ parsegraph_TextPainter.prototype.nextLine = function()
 
     // If there was no line height, then default to the glyph atlas's default height.
     if(this._lineHeight === 0) {
-        this._lineHeight += this.glyphAtlas().letterHeight() * this.fontScale();
+        this._lineHeight += this._glyphAtlas.letterHeight() * this.fontScale();
     }
 
     this._paragraphAdvance += this.lineHeight();
