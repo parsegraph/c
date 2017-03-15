@@ -76,8 +76,6 @@ function showProportionTest(graph, COUNT)
     // Attach the commands to the root.
     attachCommands();
 
-    caret.fitExact();
-
     for(var i = 0; i < COUNT; ++i) {
         var spawnRow = function(dir) {
             caret.push();
