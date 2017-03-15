@@ -1588,8 +1588,35 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                 var e = this._neighbors[direction].extent;
                 var bv = child.extentsAt(direction).boundingValues();
                 var scale = this.scaleAt(childDirection);
-                e.setBoundLengthAt(0, Math.max(e.boundLengthAt(0), bv[0] + lengthOffset/scale));
-                e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
+                if(lengthOffset === 0) {
+                    //console.log("lengthOffset == 0");
+                    e.setBoundLengthAt(0, Math.max(e.boundLengthAt(0), bv[0]*scale + lengthOffset));
+                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
+                }
+                else if(lengthOffset < 0) {
+                    //console.log("lengthOffset < 0");
+                    e.setBoundLengthAt(0, Math.max(
+                        e.boundLengthAt(0) + lengthOffset,
+                        bv[0]*scale
+                    ));
+                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
+                }
+                else {
+                    //console.log("lengthOffset > 0");
+                    e.setBoundLengthAt(
+                        0, Math.max(e.boundLengthAt(0), lengthOffset + bv[0]*scale)
+                    );
+                    e.setBoundSizeAt(
+                        0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment)
+                    );
+                }
+                /*e.combineExtent(
+                    child.extentsAt(direction),
+                    lengthOffset,
+                    sizeAdjustment,
+                    this.scaleAt(childDirection)
+                );
+                e.simplify();*/
             }
             else {
                 this._neighbors[direction].extent.combineExtent(
@@ -2117,7 +2144,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
     };
 
     // Set our extents, combined with non-point neighbors.
-    parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
+    //parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
 
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
