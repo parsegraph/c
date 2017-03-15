@@ -169,4 +169,3 @@ parsegraph_IntervalTimer.prototype.cancel = function()
         this.timerId = null;
     }
 };
-
