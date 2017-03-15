@@ -358,7 +358,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         );
     }
 
-    if(node.label() === undefined) {
+    if(!node.label()) {
         return;
     }
 
@@ -701,7 +701,7 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
         node.absoluteScale() * userScale
     );
 
-    if(node.label() === undefined) {
+    if(!node.label()) {
         return;
     }
 
