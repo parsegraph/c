@@ -19,6 +19,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
+    this._layoutState = parsegraph_NEEDS_COMMIT;
 
     this._selected = false;
 
@@ -39,7 +40,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
             lineLength: 0,
             xPos: 0,
             yPos: 0,
-            layoutState: parsegraph_NEEDS_COMMIT,
             node: null
         });
     }
