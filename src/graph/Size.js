@@ -1,52 +1,69 @@
-function parsegraph_Size(width, height)
+function parsegraph_Size()
 {
-    this._width = width;
-    this._height = height;
+    if(arguments.length > 0) {
+        this[0] = arguments[0];
+        this[1] = arguments[1];
+    }
+    else {
+        this[0] = 0;
+        this[1] = 0;
+    }
+    this.length = 2;
 }
 
-function parsegraph_createSize(width, height)
+function parsegraph_createSize()
 {
-    return new parsegraph_Size(width, height);
+    var s = new parsegraph_Size();
+    if(arguments.length > 1) {
+        s[0] = arguments[0];
+        s[1] = arguments[1];
+    }
+    else if(arguments.length > 0) {
+        s[0] = arguments[0];
+        s[1] = arguments[0];
+    }
+    return s;
 }
 
-function parsegraph_Size(width, height)
+parsegraph_Size.prototype.clear = function()
 {
-    this._width = width;
-    this._height = height;
-}
+    this[0] = 0;
+    this[1] = 0;
+};
+parsegraph_Size.prototype.reset = parsegraph_Size.prototype.clear;
 
 parsegraph_Size.prototype.scale = function(factor)
 {
-    this._width *= factor;
-    this._height *= factor;
+    this[0] *= factor;
+    this[1] *= factor;
 };
 
 parsegraph_Size.prototype.scaled = function(factor)
 {
     return new parsegraph_Size(
-        this._width * factor,
-        this._height * factor
+        this[0] * factor,
+        this[1] * factor
     );
 };
 
 parsegraph_Size.prototype.width = function()
 {
-    return this._width;
+    return this[0];
 };
 
 parsegraph_Size.prototype.setWidth = function(width)
 {
-    this._width = width;
+    this[0] = width;
 };
 
 parsegraph_Size.prototype.height = function()
 {
-    return this._height;
+    return this[1];
 };
 
 parsegraph_Size.prototype.setHeight = function(height)
 {
-    this._height = height;
+    this[1] = height;
 };
 
 parsegraph_Size.prototype.toString = function()
