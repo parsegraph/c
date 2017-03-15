@@ -19,6 +19,9 @@ function parsegraph_nameNodeType(given)
 
 function parsegraph_readNodeType(given)
 {
+    if(typeof(given) === "object") {
+        return given;
+    }
     if(typeof(given) === "number") {
         return given;
     }
@@ -50,4 +53,3 @@ function parsegraph_readNodeType(given)
     console.log("Unknown node type: " + given);
     return parsegraph_NULL_NODE_TYPE;
 }
-

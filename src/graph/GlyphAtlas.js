@@ -145,6 +145,11 @@ parsegraph_GlyphAtlas.prototype.fontName = function()
     return this._fontName;
 };
 
+parsegraph_GlyphAtlas.prototype.isNewline = function(c)
+{
+    return c === '\n';
+};
+
 parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
 {
     var x = 0;
@@ -172,7 +177,15 @@ parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
         var glyphData = this.getGlyph(letter);
 
         // Check for wrapping.
-        if(wrapWidth !== undefined && (x + glyphData.width) > wrapWidth) {
+        var shouldWrap = false;
+        if(wrapWidth !== undefined) {
+            shouldWrap = (x + glyphData.width) > wrapWidth;
+        }
+        else {
+            shouldWrap = this.isNewline(letter);
+        }
+
+        if(shouldWrap) {
             maxLineWidth = Math.max(maxLineWidth, x);
             x = 0;
             y += glyphData.height;

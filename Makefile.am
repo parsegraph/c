@@ -85,7 +85,8 @@ parsegraph_SCRIPT_FILES = \
 	src/timeline/HSlicePainter.js \
 	src/timeline/VSlicePainter.js \
 	src/timeline/HSunrisePainter.js \
-	src/timeline/VSunrisePainter.js
+	src/timeline/VSunrisePainter.js \
+	src/graph/refactor.js
 
 parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
 	rm -f $@

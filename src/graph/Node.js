@@ -10,7 +10,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._type = newType;
     this._style = parsegraph_style(this._type);
-    this._label = new parsegraph_Label();
+    this._label = null;
 
     this._value = null;
 
@@ -287,7 +287,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
  */
 parsegraph_Node.prototype.clickToCaret = function(worldX, worldY)
 {
-    if(this.label() === undefined) {
+    if(!this.label()) {
         return null;
     }
 
@@ -304,7 +304,10 @@ parsegraph_Node.prototype.clickToCaret = function(worldX, worldY)
 
 parsegraph_Node.prototype.getLabelPosition = function()
 {
-    return this._label.getPosition();
+    if(this.label()) {
+        return this._label.getPosition();
+    }
+    return null;
 };
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
@@ -1052,11 +1055,17 @@ parsegraph_Node.prototype.destroy = function()
 
 parsegraph_Node.prototype.label = function()
 {
+    if(!this._label) {
+        return null;
+    }
     return this._label.text();
 };
 
 parsegraph_Node.prototype.setLabel = function(text)
 {
+    if(!this.label()) {
+        this._label = new parsegraph_Label();
+    }
     if(this._label.setText(text)) {
         this.layoutWasChanged();
     }
@@ -1136,30 +1145,15 @@ parsegraph_Node.prototype.absoluteSize = function()
 parsegraph_Node.prototype.sizeWithoutPadding = function()
 {
     // Find the size of this node's drawing area.
-    var bodySize = parsegraph_createSize();
-
+    var bodySize;
     var style = this.blockStyle();
-    if(this.label() !== undefined) {
-        // XXX This should somehow not be global, but it's an ugly wart.
-        var textMetrics = parsegraph_PAINTING_GLYPH_ATLAS.measureText(
-            this.label(),
-            parsegraph_PAINTING_GLYPH_ATLAS.fontSize()
-                * style.letterWidth
-                * style.maxLabelChars
-        );
-        textMetrics[0] *= style.fontSize / parsegraph_PAINTING_GLYPH_ATLAS.fontSize();
-        textMetrics[1] *= style.fontSize / parsegraph_PAINTING_GLYPH_ATLAS.fontSize();
-
-        bodySize.setWidth(
-            Math.max(style.minWidth, textMetrics[0])
-        );
-        bodySize.setHeight(
-            Math.max(style.minHeight, textMetrics[1])
-        );
+    if(this.label()) {
+        console.log("ZZZ");
+        bodySize = this._label.size(style);
     }
     else {
-        bodySize.setWidth(style.minWidth);
-        bodySize.setHeight(style.minHeight);
+        console.log("MIN WIDTH");
+        bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
     }
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
@@ -1171,7 +1165,8 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
                 Math.max(bodySize.width(), nestedSize.width() * nestedNode.scale())
             );
 
-            if(this.label() !== undefined) {
+            if(this.label()) {
+                // Allow for the content's size.
                 bodySize.setHeight(
                     bodySize.height()
                     + this.verticalPadding()
@@ -1187,7 +1182,8 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
         }
         else {
             // Align horizontal.
-            if(this.label() !== undefined) {
+            if(this.label()) {
+                // Allow for the content's size.
                 bodySize.setWidth(
                     bodySize.width()
                     + this.horizontalPadding()

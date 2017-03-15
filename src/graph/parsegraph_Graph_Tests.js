@@ -48,6 +48,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
     // Spawn the graph.
+    console.log("TRIV");
     var caret = new parsegraph_Caret('b');
     caret.node().commitLayoutIteratively();
 
@@ -62,6 +63,9 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
         console.log(caret.node().blockStyle().minHeight / 2);
         console.log(caret.node().blockStyle().borderThickness);
         console.log(caret.node().blockStyle().verticalPadding);
+        console.log(caret.node().blockStyle().minHeight / 2 +
+        caret.node().blockStyle().borderThickness +
+        caret.node().blockStyle().verticalPadding);
         return "Forward extent offset for block must match.";
     }
 

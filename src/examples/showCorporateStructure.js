@@ -61,6 +61,7 @@ function showCorporateStructure(graph)
     ].forEach(function(executive, i) {
         if(i == 0) {
             caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+            caret.crease();
             caret.shrink();
         }
         else {
@@ -109,6 +110,7 @@ function showCorporateStructure(graph)
         caret.spawnMove('d', 'block');
         caret.label(sector);
         caret.spawnMove('i', 's', 'v');
+        caret.crease();
         caret.shrink();
 
         caret.spawnMove('i', 'block');
@@ -128,6 +130,7 @@ function showCorporateStructure(graph)
         ].forEach(function(region, j) {
             if(j == 0) {
                 caret.spawnMove('d', 'bud');
+                caret.crease();
                 caret.shrink();
             }
             else {
@@ -148,6 +151,7 @@ function showCorporateStructure(graph)
             ].forEach(function(division, k) {
                 if(k == 0) {
                     caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+                    caret.crease();
                     caret.shrink();
                 }
                 else {
