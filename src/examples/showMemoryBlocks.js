@@ -11,6 +11,7 @@ function showMemoryBlocks(graph, COUNT)
     var NUM_COLUMNS = COUNT;
     for(var i = 0; i < NUM_COLUMNS; ++i) {
         caret.push();
+        caret.crease();
 
         // Build the column
         var COLUMN_LENGTH = NUM_COLUMNS;
