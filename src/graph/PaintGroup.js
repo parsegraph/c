@@ -13,7 +13,8 @@ function parsegraph_PaintGroup(root)
 
     this._previousPaintState = {
         i: 0,
-        ordering: [this]
+        ordering: [this],
+        commitLayoutFunc: null
     };
 
     if(arguments.length > 1) {
@@ -83,6 +84,9 @@ parsegraph_PaintGroup.prototype.setParent = function(paintGroup)
 parsegraph_PaintGroup.prototype.markDirty = function()
 {
     this._dirty = true;
+    this._previousPaintState.commitLayoutFunc = null;
+    this._previousPaintState.i = 0;
+    this._previousPaintState.ordering = [this];
 };
 
 parsegraph_PaintGroup.prototype.isDirty = function()
