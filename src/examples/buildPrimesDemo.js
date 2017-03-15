@@ -1,9 +1,10 @@
-function parsegraph_PrimesWidget()
+function parsegraph_PrimesWidget(graph)
 {
     this.knownPrimes = [];
     this.position = 2;
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
+    this.caret.setGlyphAtlas(graph.glyphAtlas());
     this.caret.label("1");
 }
 
