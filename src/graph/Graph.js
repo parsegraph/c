@@ -430,6 +430,7 @@ parsegraph_Graph.prototype.setGlyphAtlas = function(glyphAtlas)
  */
 parsegraph_Graph.prototype.paint = function(timeout)
 {
+    //console.log("Painting Graph, timeout=" + timeout);
     var t = new Date().getTime();
     var pastTime = function() {
         return timeout !== undefined && (new Date().getTime() - t > timeout);

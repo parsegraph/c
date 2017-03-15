@@ -11,7 +11,10 @@ function parsegraph_PaintGroup(root)
     // Manipulated by node.
     this._childPaintGroups = [];
 
-    this._previousPaintState = null;
+    this._previousPaintState = {
+        i: 0,
+        ordering: [this]
+    };
 
     if(arguments.length > 1) {
         this._worldX = arguments[1];
@@ -128,47 +131,32 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
     };
 
     // Load saved state.
-    var i;
-    var ordering;
-    var savedState;
-    if(this._previousPaintState !== null) {
-        // This run continues using a previously run state.
-        //console.log("CONTINUED");
-        savedState = this._previousPaintState;
-        if(typeof savedState === "object") {
-            i = savedState.i;
-            ordering = savedState.ordering;
-        }
-        else {
-            i = 0;
-            ordering = [this];
-        }
-    }
-    else {
-        // This run start from the beginning.
-        i = 0;
-        ordering = [this];
-        savedState = "commitLayoutIteratively";
-        //console.log("BEGINNING");
-    }
-    this._previousPaintState = null;
+    var savedState = this._previousPaintState;
+    var i = savedState.i;
+    var ordering = savedState.ordering;
 
-    if(savedState === "commitLayoutIteratively") {
-        //console.log("CLAYOUT");
-        this._root.commitLayoutIteratively();
+    var cont;
+    if(savedState.commitLayoutFunc) {
+        cont = savedState.commitLayoutFunc();
     }
-    else {
-        //console.log("SKIPPED CLAYOUT");
+    else if(i === 0) {
+        cont = this._root.commitLayoutIteratively(timeout);
     }
 
+    if(cont) {
+        // Timed out during commitLayout
+        savedState.commitLayoutFunc = cont;
+        return false;
+    }
+    else {
+        // Committed all layout
+        savedState.commitLayoutFunc = null;
+    }
 
     // Continue painting.
     while(i < ordering.length) {
         if(pastTime()) {
-            this._previousPaintState = {
-                i:i,
-                ordering:ordering
-            };
+            savedState.i = i;
             this._dirty = true;
             return false;
         }
@@ -191,6 +179,9 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
         ordering.push.apply(ordering, paintGroup._childPaintGroups);
         ++i;
     }
+
+    savedState.i = 0;
+    savedState.ordering = [];
 
     return true;
 };

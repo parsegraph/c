@@ -557,7 +557,7 @@ parsegraph_Node.prototype.nodeAt = function(atDirection)
  * Iterates over this node and its children, calling actionFunc whenever
  * filterFunc is true.
  */
-parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg)
+parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg, timeout)
 {
     // First, exit immediately if this node doesn't pass the given filter.
     if(!filterFunc.call(thisArg, this)) {
@@ -591,11 +591,27 @@ parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg)
     }
 
     // Execute the action on allowed nodes.
-    for(var i = ordering.length - 1; i >= 0; --i) {
-        actionFunc.call(thisArg, ordering[i]);
+    var i = ordering.length - 1;
+    var loop = function() {
+        var t = new Date().getTime();
+        var pastTime = function() {
+            return timeout !== undefined && (new Date().getTime() - t > timeout);
+        };
+
+        while(true) {
+            if(i < 0) {
+                // Indicate completion.
+                return null;
+            }
+            actionFunc.call(thisArg, ordering[i]);
+            --i;
+            if(pastTime()) {
+                return loop;
+            }
+        }
     }
 
-    return ordering;
+    return loop();
 };
 
 parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
@@ -2216,7 +2232,7 @@ var parsegraph_findConsecutiveLength = function(node, inDirection)
     return total;
 };
 
-parsegraph_Node.prototype.commitLayoutIteratively = function()
+parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
 {
     // Avoid needless work if possible.
     if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
@@ -2225,16 +2241,15 @@ parsegraph_Node.prototype.commitLayoutIteratively = function()
 
     // Traverse the graph depth-first, committing each node's layout in turn.
     var startTime = parsegraph_getTimeInMillis();
-    this.traverse(
+    return this.traverse(
         function(node) {
             return node._layoutState === parsegraph_NEEDS_COMMIT;
         },
         function(node) {
-            if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
-                throw new Error("commitLayoutIteratively timeout");
-            }
             node.commitLayout();
-        }
+        },
+        this,
+        timeout
     );
 };
 
