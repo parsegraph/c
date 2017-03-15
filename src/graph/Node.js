@@ -1148,11 +1148,9 @@ parsegraph_Node.prototype.sizeWithoutPadding = function()
     var bodySize;
     var style = this.blockStyle();
     if(this.label()) {
-        console.log("ZZZ");
         bodySize = this._label.size(style);
     }
     else {
-        console.log("MIN WIDTH");
         bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
     }
     if(this.hasNode(parsegraph_INWARD)) {
