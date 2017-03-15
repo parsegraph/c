@@ -2253,23 +2253,23 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     );
 };
 
-function parsegraph_labeledBud(label)
+function parsegraph_labeledBud(label, glyphAtlas)
 {
     var node = new parsegraph_Node(parsegraph_BUD);
-    node.setLabel(label);
+    node.setLabel(label, glyphAtlas);
     return node;
 };
 
-function parsegraph_labeledSlot(label)
+function parsegraph_labeledSlot(label, glyphAtlas)
 {
     var node = new parsegraph_Node(parsegraph_SLOT);
-    node.setLabel(label);
+    node.setLabel(label, glyphAtlas);
     return node;
 };
 
-function parsegraph_labeledBlock(label)
+function parsegraph_labeledBlock(label, glyphAtlas)
 {
     var node = new parsegraph_Node(parsegraph_BLOCK);
-    node.setLabel(label);
+    node.setLabel(label, glyphAtlas);
     return node;
 };
