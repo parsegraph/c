@@ -609,7 +609,7 @@ parsegraph_Input.prototype.Update = function(t)
         );
         inputChangedScene = true;
     }
-    this.Dispatch(false, "update", inputChangedScene);
+    //this.Dispatch(false, "update", inputChangedScene);
 
     return inputChangedScene;
 };
