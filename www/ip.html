@@ -65,6 +65,15 @@ function init()
         GRAPH = graph;
         main.appendChild(surface.container());
 
+        if(localStorage.getItem("parsegraph_ip_camera") != null) {
+            try {
+                var parsegraph_ip_camera = JSON.parse(localStorage.getItem("parsegraph_ip_camera"));
+                graph.camera().restore(parsegraph_ip_camera);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
+        }
+
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
         renderTimer.setListener(function() {
@@ -85,32 +94,9 @@ function init()
         });
         renderTimer.schedule();
 
-        var controls = document.createElement("div");
-        controls.className = "controls";
-        main.appendChild(controls);
-        controls.style.bottom = ".5em";
-
-        var form = parsegraph_createForm();
-        form.button("resetOrigin", "Reset Camera");
-
-        form.addListener(function(sourceName, value) {
-            var defaultScale = .5;
-            if(sourceName == "resetOrigin") {
-                graph.camera().setOrigin(
-                    graph.gl().drawingBufferWidth / (2 * defaultScale),
-                    graph.gl().drawingBufferHeight / (2 * defaultScale)
-                );
-                graph.camera().setScale(defaultScale);
-            }
-            else {
-                return;
-            }
-
-            graph.scheduleRender();
+        surface.addRenderer(function() {
+            localStorage.setItem("parsegraph_ip_camera", JSON.stringify(graph.camera().toJSON()));
         });
-
-        controls.appendChild(form.asDOM());
-        main.appendChild(document.createElement("div"));
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

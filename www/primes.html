@@ -135,6 +135,7 @@ function init()
         );
         var shaders = {};
         var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
+        var textCamera = new parsegraph_Camera(surface);
 
 surface.addRenderer(function() {
     var gl = surface.gl();
@@ -165,32 +166,6 @@ surface.addRenderer(function() {
     var world = textCamera.project();
     textPainter.render(world);
 });
-
-        var textCamera = new parsegraph_Camera(surface);
-
-        var controls = document.createElement("div");
-        controls.className = "controls";
-        main.appendChild(controls);
-        controls.style.bottom = ".5em";
-
-        var form = parsegraph_createForm();
-        form.button("resetOrigin", "Reset Camera");
-
-        form.addListener(function(sourceName, value) {
-            if(sourceName == "resetOrigin") {
-                graph.camera().setOrigin(
-                    graph.gl().drawingBufferWidth / (2 * defaultScale),
-                    graph.gl().drawingBufferHeight / (2 * defaultScale)
-                );
-                graph.camera().setScale(defaultScale);
-            }
-            else {
-                return;
-            }
-        });
-
-        controls.appendChild(form.asDOM());
-        main.appendChild(document.createElement("div"));
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
