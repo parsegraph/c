@@ -248,16 +248,6 @@ parsegraph_Extent.prototype.combineExtent = function(
     this.copyFrom(result);
 }
 
-parsegraph_Extent.prototype.scale = function(factor)
-{
-    this.forEach(function(length, size, i) {
-        this.setBoundLengthAt(i, length * factor);
-        if(!isNaN(this.boundSizeAt(i))) {
-            this.setBoundSizeAt(i, size * factor);
-        }
-    }, this);
-};
-
 parsegraph_Extent.prototype.combinedExtent = function(
     given,
     lengthAdjustment,
@@ -452,6 +442,16 @@ parsegraph_Extent.prototype.combinedExtent = function(
 
     return result;
 }
+
+parsegraph_Extent.prototype.scale = function(factor)
+{
+    this.forEach(function(length, size, i) {
+        this.setBoundLengthAt(i, length * factor);
+        if(!isNaN(this.boundSizeAt(i))) {
+            this.setBoundSizeAt(i, size * factor);
+        }
+    }, this);
+};
 
 /**
  * Returns the minimum value that guarantees no overlap between the two extents.
