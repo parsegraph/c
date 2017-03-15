@@ -1581,18 +1581,23 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
             //console.log("Length offset: " + lengthOffset);
             //console.log("Size adjustment: " + sizeAdjustment);
-            this._neighbors[direction].extent.combineExtent(
-                child.extentsAt(direction),
-                lengthOffset,
-                sizeAdjustment,
-                this.scaleAt(childDirection)
-            );
-
             if(
                 this.nodeAlignmentMode(childDirection) == parsegraph_DO_NOT_ALIGN
                 && this.nodeFit() == parsegraph_NODE_FIT_LOOSE
             ) {
-                this._neighbors[direction].extent.simplify();
+                var e = this._neighbors[direction].extent;
+                var bv = child.extentsAt(direction).boundingValues();
+                var scale = this.scaleAt(childDirection);
+                e.setBoundLengthAt(0, Math.max(e.boundLengthAt(0), bv[0] + lengthOffset/scale));
+                e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
+            }
+            else {
+                this._neighbors[direction].extent.combineExtent(
+                    child.extentsAt(direction),
+                    lengthOffset,
+                    sizeAdjustment,
+                    this.scaleAt(childDirection)
+                );
             }
 
             // Adjust the length offset to remain positive.
