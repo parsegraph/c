@@ -366,9 +366,11 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     this._textPainter.setFontSize(
         fontScale * style.fontSize * userScale * node.absoluteScale()
     );
-    this._textPainter.setWrapWidth(
-        style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
-    );
+    if(style.maxLabelChars) {
+        this._textPainter.setWrapWidth(
+            style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
+        );
+    }
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
@@ -383,9 +385,11 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     this._textPainter.setFontSize(
         fontScale * style.fontSize * userScale * node.absoluteScale()
     );
-    this._textPainter.setWrapWidth(
-        fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
-    );
+    if(style.maxLabelChars) {
+        this._textPainter.setWrapWidth(
+            fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
+        );
+    }
 
     var textMetrics = this._textPainter.measureText(node.label());
     node._labelX = worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
@@ -708,9 +712,11 @@ parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, world
     this._textPainter.setFontSize(
         style.fontSize * userScale * node.absoluteScale()
     );
-    this._textPainter.setWrapWidth(
-        style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
-    );
+    if(style.maxLabelChars) {
+        this._textPainter.setWrapWidth(
+            style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
+        );
+    }
     this._textPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
