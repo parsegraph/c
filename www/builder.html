@@ -98,6 +98,9 @@ function init()
             renderTimer.schedule();
         });
         renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
 
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_builder_camera", JSON.stringify(graph.camera().toJSON()));
