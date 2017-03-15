@@ -1583,10 +1583,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
             //console.log("Length offset: " + lengthOffset);
             //console.log("Size adjustment: " + sizeAdjustment);
-            if(
-                this.nodeAlignmentMode(childDirection) == parsegraph_DO_NOT_ALIGN
-                && this.nodeFit() == parsegraph_NODE_FIT_LOOSE
-            ) {
+            if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
                 var e = this._neighbors[direction].extent;
                 var bv = child.extentsAt(direction).boundingValues();
                 var scale = this.scaleAt(childDirection);
@@ -1598,7 +1595,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                 else if(lengthOffset < 0) {
                     //console.log("lengthOffset < 0");
                     e.setBoundLengthAt(0, Math.max(
-                        e.boundLengthAt(0) + lengthOffset,
+                        e.boundLengthAt(0) + Math.abs(lengthOffset),
                         bv[0]*scale
                     ));
                     e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
@@ -2128,25 +2125,27 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             negativeOffset -= this.sizeIn(given) + this.lineLengthAt(given);
         }
 
-        // Append the line-shaped bound.
-        this._neighbors[
-            parsegraph_getPositiveNodeDirection(perpAxis)
-        ].extent.combineBound(
-            positiveOffset,
-            this.lineLengthAt(given),
-            this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
-        );
-        this._neighbors[
-            parsegraph_getNegativeNodeDirection(perpAxis)
-        ].extent.combineBound(
-            negativeOffset,
-            this.lineLengthAt(given),
-            this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
-        );
+        if(this.nodeFit() == parsegraph_NODE_FIT_EXACT) {
+            // Append the line-shaped bound.
+            this._neighbors[
+                parsegraph_getPositiveNodeDirection(perpAxis)
+            ].extent.combineBound(
+                positiveOffset,
+                this.lineLengthAt(given),
+                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
+            );
+            this._neighbors[
+                parsegraph_getNegativeNodeDirection(perpAxis)
+            ].extent.combineBound(
+                negativeOffset,
+                this.lineLengthAt(given),
+                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
+            );
+        }
     };
 
     // Set our extents, combined with non-point neighbors.
-    //parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
+    parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
 
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
