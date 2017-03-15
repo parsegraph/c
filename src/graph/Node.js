@@ -4,8 +4,10 @@
  * parsegraph_Node(newType) - no parent
  * parsegraph_Node(newType, parentNode, parentDirection)
  */
+parsegraph_Node_COUNT = 0;
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
+    this._id = parsegraph_Node_COUNT++;
     this._clickListener = null;
 
     this._type = newType;

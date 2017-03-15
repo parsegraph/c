@@ -1,8 +1,11 @@
 /**
  * Graph painter.
  */
+parsegraph_PaintGroup_COUNT = 0;
 function parsegraph_PaintGroup(root)
 {
+    this._id = parsegraph_PaintGroup_COUNT++;
+
     this._root = arguments[0];
     this._dirty = true;
     this._painter = null;
