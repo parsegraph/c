@@ -110,31 +110,6 @@ function init()
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
         });
-
-        var controls = document.createElement("div");
-        controls.className = "controls";
-        main.appendChild(controls);
-        controls.style.bottom = ".5em";
-
-        var form = parsegraph_createForm();
-        form.button("resetOrigin", "Reset Camera");
-
-        form.addListener(function(sourceName, value) {
-            var defaultScale = .5;
-            if(sourceName == "resetOrigin") {
-                graph.camera().setOrigin(
-                    graph.gl().drawingBufferWidth / (2 * defaultScale),
-                    graph.gl().drawingBufferHeight / (2 * defaultScale)
-                );
-                graph.camera().setScale(defaultScale);
-            }
-            else {
-                return;
-            }
-        });
-
-        controls.appendChild(form.asDOM());
-        main.appendChild(document.createElement("div"));
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

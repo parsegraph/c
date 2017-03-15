@@ -70,18 +70,26 @@ function init()
         main.appendChild(surface.container());
         graph.plot(showFlowchartTemplate(graph), 0, 0, 1);
 
+        if(localStorage.getItem("parsegraph_builder_camera") != null) {
+            try {
+                var parsegraph_builder_camera = JSON.parse(localStorage.getItem("parsegraph_builder_camera"));
+                graph.camera().restore(parsegraph_builder_camera);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
+        }
+
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
-        var start = alpha_GetTime();
         renderTimer.setListener(function() {
-            var t = alpha_GetTime();
-            var elapsed = t - start;
-            start = t;
-            graph.input().Update(elapsed);
+            graph.input().Update(new Date());
             if(graph.needsRepaint()) {
-                surface.paint();
+                surface.paint(50);
             }
             surface.render();
+            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                renderTimer.schedule();
+            }
         });
         graph.input().SetListener(function(affectedPaint) {
             if(affectedPaint) {
@@ -92,35 +100,8 @@ function init()
         renderTimer.schedule();
 
         surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+            localStorage.setItem("parsegraph_builder_camera", JSON.stringify(graph.camera().toJSON()));
         });
-
-        var controls = document.createElement("div");
-        controls.className = "controls";
-        main.appendChild(controls);
-        controls.style.bottom = ".5em";
-
-        var form = parsegraph_createForm();
-        form.button("resetOrigin", "Reset Camera");
-
-        form.addListener(function(sourceName, value) {
-            var defaultScale = .5;
-            if(sourceName == "resetOrigin") {
-                graph.camera().setOrigin(
-                    graph.gl().drawingBufferWidth / (2 * defaultScale),
-                    graph.gl().drawingBufferHeight / (2 * defaultScale)
-                );
-                graph.camera().setScale(defaultScale);
-            }
-            else {
-                return;
-            }
-
-            graph.scheduleRender();
-        });
-
-        controls.appendChild(form.asDOM());
-        main.appendChild(document.createElement("div"));
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
