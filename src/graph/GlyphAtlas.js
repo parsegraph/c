@@ -150,13 +150,21 @@ parsegraph_GlyphAtlas.prototype.isNewline = function(c)
     return c === '\n';
 };
 
-parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
+parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth, out)
 {
     var x = 0;
     var y = 0;
     var i = 0;
 
     var glyphData;
+
+    // Allow a new size to be created.
+    if(!out) {
+        out = new parsegraph_Size();
+    }
+    else {
+        out.reset();
+    }
 
     var maxLineWidth = 0;
     var startTime = parsegraph_getTimeInMillis();
@@ -195,5 +203,7 @@ parsegraph_GlyphAtlas.prototype.measureText = function(text, wrapWidth)
         x += glyphData.width;
     }
 
-    return [maxLineWidth, y];
+    out[0] = maxLineWidth;
+    out[1] = y;
+    return out;
 };

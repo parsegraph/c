@@ -115,30 +115,31 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
      * Returns true if the coordinates are in the node.
      */
     var inNodeBody = function(node) {
+        var s = node.size();
         if(
             x < userScale * node.absoluteX()
-                - userScale * node.absoluteScale() * node.size().width()/2
+                - userScale * node.absoluteScale() * s.width()/2
         ) {
             //console.log("INB 1" + x + " against " + node.absoluteX());
             return false;
         }
         if(
             x > userScale * node.absoluteX()
-                + userScale * node.absoluteScale() * node.size().width()/2
+                + userScale * node.absoluteScale() * s.width()/2
         ) {
             //console.log("INB 2");
             return false;
         }
         if(
             y < userScale * node.absoluteY()
-                - userScale * node.absoluteScale() * node.size().height()/2
+                - userScale * node.absoluteScale() * s.height()/2
         ) {
             //console.log("INB 3");
             return false;
         }
         if(
             y > userScale * node.absoluteY()
-                + userScale * node.absoluteScale() * node.size().height()/2
+                + userScale * node.absoluteScale() * s.height()/2
         ) {
             //console.log("INB 4");
             return false;
@@ -701,7 +702,6 @@ parsegraph_Node.prototype.x = function()
     if(this.isRoot()) {
         return 0;
     }
-    //this.nodeParent().commitLayout();
     return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].xPos;
 };
 
@@ -710,7 +710,6 @@ parsegraph_Node.prototype.y = function()
     if(this.isRoot()) {
         return 0;
     }
-    //this.nodeParent().commitLayout();
     return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].yPos;
 };
 
@@ -721,13 +720,11 @@ parsegraph_Node.prototype.lineLengthAt = function(direction)
 
 parsegraph_Node.prototype.extentsAt = function(atDirection)
 {
-    this.commitLayoutIteratively();
     return this._neighbors[atDirection].extent;
 };
 
 parsegraph_Node.prototype.extentOffsetAt = function(atDirection)
 {
-    this.commitLayoutIteratively();
     return this._neighbors[atDirection].extentOffset;
 };
 
@@ -785,8 +782,6 @@ parsegraph_Node.prototype.dumpExtentBoundingRect = function()
 
 parsegraph_Node.prototype.commitAbsolutePos = function()
 {
-    //this.commitLayout();
-
     if(this._absoluteXPos !== null) {
         // No need for an update, so just return.
         return;
@@ -924,8 +919,6 @@ parsegraph_Node.prototype.typeAt = function(direction)
  * @see #commitLayout()
  */
 parsegraph_Node.prototype.separationAt = function(inDirection) {
-    //this.commitLayout();
-
     // Exclude some directions that cannot be calculated.
     if(!parsegraph_isCardinalDirection(inDirection)) {
         throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
@@ -1136,18 +1129,17 @@ parsegraph_Node.prototype.borderThickness = function()
     return this.blockStyle().borderThickness;
 };
 
-parsegraph_Node.prototype.size = function()
+parsegraph_Node.prototype.size = function(bodySize)
 {
-    var bodySize = this.sizeWithoutPadding();
-    return parsegraph_createSize(
-        bodySize.width() + 2 * this.horizontalPadding() + 2 * this.borderThickness(),
-        bodySize.height() + 2 * this.verticalPadding() + 2 * this.borderThickness()
-    );
+    bodySize = this.sizeWithoutPadding(bodySize);
+    bodySize[0] = bodySize.width() + 2 * this.horizontalPadding() + 2 * this.borderThickness();
+    bodySize[1] = bodySize.height() + 2 * this.verticalPadding() + 2 * this.borderThickness();
+    return bodySize;
 };
 
-parsegraph_Node.prototype.absoluteSize = function()
+parsegraph_Node.prototype.absoluteSize = function(bodySize)
 {
-    return this.size().scaled(this.absoluteScale());
+    return this.size(bodySize).scaled(this.absoluteScale());
 };
 
 /**
@@ -1158,16 +1150,21 @@ parsegraph_Node.prototype.absoluteSize = function()
  *
  * Consequently, since these types work like blocks, there is no special code for them here.
  */
-parsegraph_Node.prototype.sizeWithoutPadding = function()
+parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
 {
     // Find the size of this node's drawing area.
-    var bodySize;
     var style = this.blockStyle();
     if(this.label()) {
-        bodySize = this._label.size(style);
+        bodySize = this._label.size(style, bodySize);
+        bodySize[0] = Math.max(style.minWidth, bodySize[0]);
+        bodySize[1] = Math.max(style.minHeight, bodySize[1]);
+    }
+    else if(!bodySize) {
+        bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
     }
     else {
-        bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
+        bodySize[0] = style.minWidth;
+        bodySize[1] = style.minHeight;
     }
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
@@ -1327,7 +1324,7 @@ parsegraph_Node.prototype.setSelected = function(selected)
  * Sets the position, calculates extents, and
  * clears the needs commit flag.
  */
-parsegraph_Node.prototype.commitLayout = function()
+parsegraph_Node.prototype.commitLayout = function(bodySize)
 {
     // Do nothing if this node already has a layout committed.
     if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
@@ -1362,7 +1359,7 @@ parsegraph_Node.prototype.commitLayout = function()
         this._neighbors[inDirection].extentOffset = offset;
     };
 
-    var bodySize = this.size();
+    bodySize = this.size(bodySize);
 
     // This node's horizontal bottom, used with downward nodes.
     initExtent.call(
@@ -1703,7 +1700,7 @@ parsegraph_Node.prototype.commitLayout = function()
         ) {
             separationFromChild = Math.max(
                 separationFromChild,
-                this.scaleAt(direction) * (child.size().height() / 2) + this.size().height() / 2
+                this.scaleAt(direction) * (child.size().height() / 2) + bodySize.height() / 2
             );
             separationFromChild
                 += this.verticalSeparation(direction) * this.scaleAt(direction);
@@ -1711,7 +1708,7 @@ parsegraph_Node.prototype.commitLayout = function()
         else {
             separationFromChild = Math.max(
                 separationFromChild,
-                this.scaleAt(direction) * (child.size().width() / 2) + this.size().width() / 2
+                this.scaleAt(direction) * (child.size().width() / 2) + bodySize.width() / 2
             );
             separationFromChild
                 += this.horizontalSeparation(direction) * this.scaleAt(direction);
@@ -1921,7 +1918,7 @@ parsegraph_Node.prototype.commitLayout = function()
             separationFromFirst = Math.max(
                 separationFromFirst,
                 this.scaleAt(firstDirection) * (firstNode.size().height() / 2)
-                + this.size().height() / 2
+                + bodySize.height() / 2
             );
             separationFromFirst
                 += this.verticalSeparation(firstDirection)
@@ -1930,7 +1927,7 @@ parsegraph_Node.prototype.commitLayout = function()
             separationFromSecond = Math.max(
                 separationFromSecond,
                 this.scaleAt(secondDirection) * (secondNode.size().height() / 2)
-                + this.size().height() / 2
+                + bodySize.height() / 2
             );
             separationFromSecond
                 += this.verticalSeparation(secondDirection)
@@ -1940,7 +1937,7 @@ parsegraph_Node.prototype.commitLayout = function()
             separationFromFirst = Math.max(
                 separationFromFirst,
                 this.scaleAt(firstDirection) * (firstNode.size().width() / 2)
-                + this.size().width() / 2
+                + bodySize.width() / 2
             );
             separationFromFirst
                 += this.horizontalSeparation(firstDirection)
@@ -1949,7 +1946,7 @@ parsegraph_Node.prototype.commitLayout = function()
             separationFromSecond = Math.max(
                 separationFromSecond,
                 this.scaleAt(secondDirection) * (secondNode.size().width() / 2)
-                + this.size().width() / 2
+                + bodySize.width() / 2
             );
             separationFromSecond
                 += this.horizontalSeparation(secondDirection)
@@ -2240,13 +2237,14 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     }
 
     // Traverse the graph depth-first, committing each node's layout in turn.
+    var bodySize = new parsegraph_Size();
     var startTime = parsegraph_getTimeInMillis();
     return this.traverse(
         function(node) {
             return node._layoutState === parsegraph_NEEDS_COMMIT;
         },
         function(node) {
-            node.commitLayout();
+            node.commitLayout(bodySize);
         },
         this,
         timeout

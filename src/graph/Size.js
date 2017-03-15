@@ -1,5 +1,7 @@
+parsegraph_Size_COUNT = 0;
 function parsegraph_Size()
 {
+    this.id = parsegraph_Size_COUNT++;
     if(arguments.length > 0) {
         this[0] = arguments[0];
         this[1] = arguments[1];
