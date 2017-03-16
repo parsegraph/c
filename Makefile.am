@@ -51,7 +51,10 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/initialize.js \
 	src/graph/log.js \
 	src/graph/PaintGroup.js \
+	src/graph/Carousel.js \
+	src/graph/CameraBox.js \
 	src/graph/Graph.js \
+	src/graph/World.js \
 	src/graph/parsegraph_Graph_Tests.js \
 	src/graph/Input.js \
 	src/graph/BlockPainter.js \

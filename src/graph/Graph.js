@@ -20,29 +20,14 @@ function parsegraph_Graph()
     this._canvas = surface.canvas();
     this._container = surface.container();
 
-    this._glyphAtlas = null;
-
     // World-rendered graphs.
     this._worldPaintingDirty = true;
     this._worldPlots = [];
 
-    // Carousel-rendered carets.
-    this._carouselPaintingDirty = true;
-    this._carouselPlots = [];
-    this._carouselCallbacks = [];
+    this._glyphAtlas = null;
 
-    // Location of the carousel, in world coordinates.
-    this._carouselCoords = [0, 0];
-    this._carouselSize = 100;
-
-    this._showCarousel = false;
-    this._selectedCarouselPlot = null;
-
-    // Camera boxes.
-    this._showCameraBoxes = true;
-    this._cameraBoxDirty = true;
-    this._cameraBoxes = {};
-    this._cameraBoxPainter = null;
+    this._carousel = new parsegraph_Carousel(this);
+    this._cameraBox = new parsegraph_CameraBox(this);
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
@@ -60,6 +45,16 @@ function parsegraph_Graph()
     this._shaders = {};
 
     this._previousWorldPaintState = null;
+};
+
+parsegraph_Graph.prototype.cameraBox = function()
+{
+    return this._cameraBox;
+};
+
+parsegraph_Graph.prototype.carousel = function()
+{
+    return this._carousel;
 };
 
 parsegraph_Graph.prototype.camera = function()
@@ -137,132 +132,6 @@ parsegraph_Graph.prototype.removePlot = function(plot)
     return null;
 };
 
-parsegraph_Graph.prototype.moveCarousel = function(worldX, worldY)
-{
-    this._carouselCoords[0] = worldX;
-    this._carouselCoords[1] = worldY;
-};
-
-parsegraph_Graph.prototype.setCarouselSize = function(size)
-{
-    this._carouselSize = size;
-};
-
-parsegraph_Graph.prototype.showCarousel = function()
-{
-    this._showCarousel = true;
-};
-
-parsegraph_Graph.prototype.isCarouselShown = function()
-{
-    return this._showCarousel;
-};
-
-parsegraph_Graph.prototype.hideCarousel = function()
-{
-    this._selectedCarouselPlot = null;
-    this._showCarousel = false;
-};
-
-/**
- * Adds the given node to the carousel.
- */
-parsegraph_Graph.prototype.addToCarousel = function(paintGroup, callback, thisArg)
-{
-    this._carouselCallbacks.push([callback, thisArg]);
-    return parsegraph_plot.call(this._carouselPlots, paintGroup);
-};
-
-parsegraph_Graph.prototype.clearCarousel = function()
-{
-    this._carouselPlots.splice(0, this._carouselPlots.length);
-    this._carouselCallbacks.splice(0, this._carouselCallbacks.length);
-    this._selectedCarouselPlot = null;
-};
-
-parsegraph_Graph.prototype.removeFromCarousel = function(caret)
-{
-    for(var i in this._carouselPlots) {
-        if(this._carouselPlots[i] === paintGroup) {
-            var removed = this._carouselPlots.splice(i, 1);
-            this._carouselCallbacks.splice(i, 1);
-            if(this._selectedCarouselPlot === removed) {
-                this._selectedCarouselPlot = null;
-            }
-        }
-    }
-    return null;
-};
-
-/**
- * Receives a click event on the carousel, in client coordinates.
- */
-parsegraph_Graph.prototype.clickCarousel = function(x, y, asDown)
-{
-    if(!this.isCarouselShown()) {
-        return false;
-    }
-
-    // Transform client coords to world coords.
-    var mouseInWorld = matrixTransform2D(
-        makeInverse3x3(this.camera().worldMatrix()),
-        x, y
-    );
-    x = mouseInWorld[0];
-    y = mouseInWorld[1];
-
-    if(Math.sqrt(
-        Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
-        Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
-    ) < this._carouselSize * .75
-    ) {
-        if(asDown) {
-            // Down events within the inner region are treated as 'cancel.'
-            this.hideCarousel();
-            this.scheduleRepaint();
-            return true;
-        }
-
-        // Up events within the inner region are ignored.
-        return false;
-    }
-
-    var angleSpan = 2 * Math.PI / this._carouselPlots.length;
-    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-    if(mouseAngle < 0) {
-        // Upward half.
-        mouseAngle = 2 * Math.PI + mouseAngle;
-    }
-
-    var i = Math.floor(this._carouselPlots.length * (mouseAngle) / (2 * Math.PI));
-
-    // Click was within a carousel caret; invoke the listener.
-    //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
-    var carouselPlot = this._carouselPlots[i];
-    var callback = this._carouselCallbacks[i][0];
-    var thisArg = this._carouselCallbacks[i][1];
-    callback.call(thisArg);
-
-    this.mouseOver(x, y);
-    this.scheduleRepaint();
-
-    return true;
-};
-
-parsegraph_Graph.prototype.setCamera = function(name, camera)
-{
-    this._cameraBoxes[name] = camera;
-    this._cameraBoxDirty = true;
-    this.scheduleRepaint();
-};
-
-parsegraph_Graph.prototype.removeCamera = function(name)
-{
-    delete this._cameraBoxes[name];
-    this._cameraBoxDirty = true;
-    this.scheduleRepaint();
-};
-
 /**
  * Receives a mouseover event at the given coordinates, in client space.
  *
@@ -319,33 +188,6 @@ parsegraph_Graph.prototype.nodeUnderCursor = function()
 };
 
 /**
- * Receives a mouseover event on the carousel, in client coordinates.
- */
-parsegraph_Graph.prototype.mouseOverCarousel = function(x, y)
-{
-    if(!this.isCarouselShown()) {
-        return false;
-    }
-
-    var mouseInWorld = matrixTransform2D(
-        makeInverse3x3(this.camera().worldMatrix()),
-        x, y
-    );
-    x = mouseInWorld[0];
-    y = mouseInWorld[1];
-
-    var angleSpan = 2 * Math.PI / this._carouselPlots.length;
-    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-    //var i = Math.floor(this._carouselPlots.length * mouseAngle / (2 * Math.PI));
-    //console.log(i * angleSpan);
-    if(this._fanPainter) {
-        this._fanPainter.setSelectionAngle(mouseAngle);
-    }
-    this.scheduleCarouselRepaint();
-    return true;
-};
-
-/**
  * Tests whether the given position, in world space, is within a node.
  */
 parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
@@ -359,42 +201,6 @@ parsegraph_Graph.prototype.nodeUnderCoords = function(x, y)
         }
     }
     return null;
-};
-
-/**
- * Arranges each carousel caret in a spiral.
- */
-parsegraph_Graph.prototype.arrangeCarousel = function()
-{
-    var angleSpan = this._carouselPlots.length / (2 * Math.PI);
-
-    var parsegraph_CAROUSEL_RADIUS = 250;
-    var parsegraph_MAX_CAROUSEL_SIZE = 150;
-
-    this._carouselPlots.forEach(function(paintGroup, i) {
-        var root = paintGroup.root();
-
-        // Set the origin.
-        var caretRad = angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
-        paintGroup.setOrigin(
-            parsegraph_CAROUSEL_RADIUS * Math.cos(caretRad),
-            parsegraph_CAROUSEL_RADIUS * Math.sin(caretRad)
-        );
-
-        // Set the scale.
-        var commandSize = root.extentSize();
-        var xMax = parsegraph_MAX_CAROUSEL_SIZE;
-        var yMax = parsegraph_MAX_CAROUSEL_SIZE;
-        var xShrinkFactor = 1;
-        var yShrinkFactor = 1;
-        if(commandSize.width() > xMax) {
-            xShrinkFactor = commandSize.width() / xMax;
-        }
-        if(commandSize.height() > yMax) {
-            yShrinkFactor = commandSize.height() / yMax;
-        }
-        paintGroup.setScale(1/Math.max(xShrinkFactor, yShrinkFactor));
-    }, this);
 };
 
 /**
@@ -417,15 +223,6 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
 parsegraph_Graph.prototype.needsRepaint = function()
 {
     return this._worldPaintingDirty || (this._showCarousel && this._carouselPaintingDirty);
-};
-
-parsegraph_Graph.prototype.scheduleCarouselRepaint = function()
-{
-    //console.log("Scheduling carousel repaint.");
-    this._carouselPaintingDirty = true;
-    if(this.onScheduleRepaint) {
-        this.onScheduleRepaint();
-    }
 };
 
 parsegraph_Graph.prototype.glyphAtlas = function()
@@ -462,64 +259,10 @@ parsegraph_Graph.prototype.paint = function(timeout)
         return Math.max(0, timeout - (new Date().getTime() - t));
     };
 
-    if(this._showCameraBoxes && this._cameraBoxDirty) {
-        if(!this._cameraBoxPainter) {
-            this._cameraBoxPainter = new parsegraph_CameraBoxPainter(
-                this.gl(), this.glyphAtlas(), this._shaders
-            );
-        }
-        else {
-            this._cameraBoxPainter.clear();
-        }
-        var rect = new parsegraph_Rect();
-        for(var name in this._cameraBoxes) {
-            var cameraBox = this._cameraBoxes[name];
-            var hw = cameraBox.width/cameraBox.scale;
-            var hh = cameraBox.height/cameraBox.scale;
-            rect.setX(-cameraBox.cameraX + hw/2);
-            rect.setY(-cameraBox.cameraY + hh/2);
-            rect.setWidth(cameraBox.width/cameraBox.scale);
-            rect.setHeight(cameraBox.height/cameraBox.scale);
-            console.log(name);
-            this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale);
-            console.log("Drawing box");
-        }
-        this._cameraBoxDirty = false;
-    }
-
-    if(this._carouselPaintingDirty && this._showCarousel) {
-        // Paint the carousel.
-        //console.log("Painting the carousel");
-        for(var i in this._carouselPlots) {
-            var paintGroup = this._carouselPlots[i];
-            paintGroup.paint(
-                this.gl(),
-                this.surface().backgroundColor(),
-                this.glyphAtlas(),
-                this._shaders
-            );
-        }
-        this.arrangeCarousel();
-
-        // Paint the background highlighting fan.
-        if(!this._fanPainter) {
-            this._fanPainter = new parsegraph_FanPainter(this.gl());
-        }
-        else {
-            this._fanPainter.clear();
-        }
-        var fanPadding = 1.2;
-        this._fanPainter.setAscendingRadius(fanPadding * this._carouselSize);
-        this._fanPainter.setDescendingRadius(fanPadding * 2 * this._carouselSize);
-        this._fanPainter.selectRad(
-            this._carouselCoords[0], this._carouselCoords[1],
-            0, Math.PI * 2,
-            parsegraph_createColor(1, 1, 1, 1),
-            parsegraph_createColor(.5, .5, .5, .4)
-        );
-
-        this._carouselPaintingDirty = false;
-    }
+    this._cameraBox.prepare(this.gl(), this.glyphAtlas(), this._shaders);
+    this._cameraBox.paint();
+    this._carousel.prepare(this.gl(), this.glyphAtlas(), this._shaders);
+    this._carousel.paint();
 
     if(pastTime()) {
         return false;
@@ -571,11 +314,6 @@ parsegraph_Graph.prototype.paint = function(timeout)
 parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
-    if(this._showCarousel && !this._carouselPaintingDirty) {
-        //console.log("Rendering the carousel");
-        this._fanPainter.render(world);
-    }
-
     for(var i in this._worldPlots) {
         var plot = this._worldPlots[i];
         var paintGroup = plot.localPaintGroup();
@@ -585,25 +323,6 @@ parsegraph_Graph.prototype.render = function()
         paintGroup.renderIteratively(world);
     }
 
-    // Render the carousel if requested.
-    if(this._showCarousel && !this._carouselPaintingDirty) {
-        for(var i in this._carouselPlots) {
-            var paintGroup = this._carouselPlots[i];
-            paintGroup.render(
-                matrixMultiply3x3(makeTranslation3x3(
-                    this._carouselCoords[0], this._carouselCoords[1]
-                ),
-                world)
-            );
-        }
-    }
-
-    if(this._showCameraBoxes && !this._cameraBoxDirty) {
-        var gl = this.gl();
-        gl.enable(gl.BLEND);
-        gl.blendFunc(
-            gl.SRC_ALPHA, gl.DST_ALPHA
-        );
-        this._cameraBoxPainter.render(world);
-    }
+    this._carousel.render(world);
+    this._cameraBox.render(world);
 };

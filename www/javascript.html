@@ -550,7 +550,7 @@ function init()
 
         var widget = new parsegraph_JavaScriptWidget(graph);
         widget.load("primes.js");
-        graph.plot(widget.caret.root());
+        graph.world().plot(widget.caret.root());
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {
@@ -565,7 +565,7 @@ function init()
             "ws://localhost/camera/", "parsegraph-camera-protocol"
         ), graph.camera(),
             function(obj) {
-                graph.setCamera("dafrito", obj);
+                graph.cameraBox().setCamera("dafrito", obj);
             }
         );
 
