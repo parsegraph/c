@@ -2,9 +2,32 @@ function parsegraph_Label(glyphAtlas)
 {
     this._glyphAtlas = glyphAtlas;
     this._text = undefined;
-    this._labelX = undefined;
-    this._labelY = undefined;
 }
+
+/**
+ * Given a click in world (absolute) coordinates, return the index into this node's label.
+ *
+ * If this node's label === undefined, then null is returned. Otherwise, a value between
+ * [0, this.label().length()] is returned. Zero indicates a position before the first
+ * character, just as this.label().length() indicates a position past the end.
+ *
+ * World coordinates are clamped to the boundaries of the node.
+ */
+parsegraph_Label.prototype.clickToCaret = function(worldX, worldY, scale, style, paintGroup)
+{
+    if(!this.text()) {
+        return null;
+    }
+
+    var caretPos = paintGroup.worldToTextCaret(
+        this.text(),
+        style.fontSize * scale,
+        null,
+        worldX,
+        worldY
+    );
+    return caretPos;
+};
 
 parsegraph_Label.prototype.size = function(style, bodySize)
 {
@@ -20,11 +43,6 @@ parsegraph_Label.prototype.size = function(style, bodySize)
     bodySize[0] = Math.max(style.minWidth, bodySize[0]);
     bodySize[1] = Math.max(style.minHeight, bodySize[1]);
     return bodySize;
-};
-
-parsegraph_Label.prototype.getPosition = function()
-{
-    return [this._labelX, this._labelY];
 };
 
 parsegraph_Label.prototype.setText = function(text)
