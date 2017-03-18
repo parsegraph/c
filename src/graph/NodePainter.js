@@ -428,11 +428,11 @@ parsegraph_NodePainter.prototype.drawNode = function(node)
         return this.drawSlider(node, worldX, worldY, userScale);
     case parsegraph_SCENE:
         this.paintLines(node, worldX, worldY, userScale);
-        this.paintStyledBlock(node, worldX, worldY, userScale);
+        this.paintBlock(node, worldX, worldY, userScale);
         return this.drawScene(node, worldX, worldY, userScale);
     default:
         this.paintLines(node, worldX, worldY, userScale);
-        this.paintStyledBlock(node, worldX, worldY, userScale);
+        this.paintBlock(node, worldX, worldY, userScale);
     }
 };
 
@@ -655,7 +655,7 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
 /**
  * Paints the block that comprises the given node.
  */
-parsegraph_NodePainter.prototype.paintStyledBlock = function(node, worldX, worldY, userScale)
+parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, userScale)
 {
     var style = node.blockStyle();
     var painter = this._blockPainter;
