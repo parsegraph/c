@@ -211,15 +211,6 @@ parsegraph_Caret.prototype.spawnMove = function(inDirection, newContent, newAlig
     return created;
 };
 
-parsegraph_Caret.prototype.content = function()
-{
-    var node = this.node();
-    if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
-    }
-    return node.content();
-};
-
 /**
  * Change the type of the specified node.
  *
