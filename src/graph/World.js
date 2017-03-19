@@ -9,14 +9,22 @@ function parsegraph_World(graph)
 
     this._previousWorldPaintState = null;
 
-    this._camera = new parsegraph_Camera(graph);
+    this._camera = null;
 
     this._graph = graph;
 }
 
 parsegraph_World.prototype.camera = function()
 {
+    if(!this._camera) {
+        this._camera = new parsegraph_Camera(this._graph);
+    }
     return this._camera;
+};
+
+parsegraph_World.prototype.setCamera = function(camera)
+{
+    this._camera = camera;
 };
 
 parsegraph_World.prototype.plot = function()
@@ -71,6 +79,10 @@ parsegraph_World.prototype.removePlot = function(plot)
  */
 parsegraph_World.prototype.mouseOver = function(x, y)
 {
+    if(!this._camera) {
+        // Never rendered.
+        return;
+    }
     //console.log("mouseover: " + x + ", " + y);
     var mouseInWorld = matrixTransform2D(
         makeInverse3x3(this.camera().worldMatrix()),

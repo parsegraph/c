@@ -8,28 +8,24 @@ parsegraph_Node_COUNT = 0;
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
     this._id = parsegraph_Node_COUNT++;
-    this._clickListener = null;
 
+    this._paintGroup = null;
+    this._clickListener = null;
     this._type = newType;
     this._style = parsegraph_style(this._type);
     this._label = null;
-
     this._value = null;
+    this._selected = false;
+    this._scene = null;
 
     this._scale = 1.0;
-
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
-    this._layoutState = parsegraph_NEEDS_COMMIT;
-
-    this._selected = false;
-
-    this._nodeFit = parsegraph_NODE_FIT_LOOSE;
-
-    this._paintGroup = null;
 
     // Check if a parent node was provided.
+    this._layoutState = parsegraph_NEEDS_COMMIT;
+    this._nodeFit = parsegraph_NODE_FIT_LOOSE;
     this._neighbors = [];
     for(var i = parsegraph_FORWARD; i <= parsegraph_OUTWARD; ++i) {
         this._neighbors.push({
@@ -709,6 +705,17 @@ parsegraph_Node.prototype.setValue = function(newValue)
     this._value = newValue;
 };
 
+parsegraph_Node.prototype.scene = function()
+{
+    return this._scene;
+};
+
+parsegraph_Node.prototype.setScene = function(scene)
+{
+    this._scene = scene;
+    this.layoutWasChanged(parsegraph_INWARD);
+};
+
 parsegraph_Node.prototype.typeAt = function(direction)
 {
     return this.nodeAt(direction).type();
@@ -744,7 +751,6 @@ parsegraph_Node.prototype.setBlockStyle = function(style)
         return;
     }
     this._style = style;
-    this.layoutWasChanged();
 };
 
 parsegraph_Node.prototype.isSelectedAt = function(direction)

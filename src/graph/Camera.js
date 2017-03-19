@@ -169,12 +169,11 @@ parsegraph_Camera.prototype.project = function()
         // Make the canvas the same size
         this.surface().canvas().width = displayWidth;
         this.surface().canvas().height = displayHeight;
-
-        // Set the viewport to match
-        this.surface().gl().viewport(
-            0, 0, this.surface().canvas().width, this.surface().canvas().height
-        );
     }
+    // Set the viewport to match
+    this.surface().gl().viewport(
+        0, 0, this.surface().canvas().width, this.surface().canvas().height
+        );
 
     this._aspectRatio = this.surface().canvas().width / this.surface().canvas().height;
     this._width = this.surface().canvas().width;

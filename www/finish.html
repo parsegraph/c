@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>JavaScript - Parsegraph</title>
+<title>Parsegraph.com</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -52,150 +52,6 @@ body > div input {
 <script src="parsegraph-examples-1.0.js"></script>
 <script src="esprima.js"></script>
 <script>
-
-function parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg) {
-    if(!eventFunc) {
-        throw new Error("An eventFunc must be provided");
-    }
-    var opened = false;
-
-    var timer = new parsegraph_IntervalTimer();
-    timer.setDelay(50);
-
-    timer.setListener(function() {
-        if(!opened) {
-            return;
-        }
-        //console.log("Sending camera");
-        ws.send(JSON.stringify(camera.toJSON()));
-        timer.cancel();
-    });
-
-    this.update = function() {
-        if(!opened) {
-            return;
-        }
-        timer.schedule();
-    };
-
-    ws.onopen = function() {
-        //console.log("Connection opened");
-        opened = true;
-        timer.schedule();
-    };
-
-    var state = "begin";
-    var composed = "";
-    ws.onmessage = function(event) {
-        var msg = event.data;
-        //console.log(msg);
-        while(msg.length > 0) {
-            if(state === "begin") {
-                // Ensure the message begins as we expect.
-                if(msg.charAt(0) != '{') {
-                    ws.close();
-                    throw new Error("Invalid start received");
-                }
-                state = "collecting";
-            }
-            if(state === "collecting") {
-                var eol = msg.indexOf('}');
-                if(eol != -1) {
-                    // Message contains an end.
-                    composed += msg.slice(0, eol + 1);
-                    //console.log(composed);
-                    eventFunc.call(
-                        eventFuncThisArg,
-                        JSON.parse(composed)
-                    );
-
-                    // Process the remaining message.
-                    msg = msg.slice(eol + 1);
-                    state = "begin";
-                    composed = "";
-                }
-                else {
-                    // Message continues.
-                    composed += msg;
-                    msg = "";
-                }
-            }
-        }
-    };
-
-    ws.onclose = function() {
-        opened = false;
-        timer.cancel();
-    };
-
-    this.opened = function() {
-        return opened;
-    };
-};
-
-function parsegraph_ChatProtocol(ws, eventFunc, eventFuncThisArg) {
-    if(!eventFunc) {
-        throw new Error("An eventFunc must be provided");
-    }
-    var opened = false;
-
-    this.send = function(text) {
-        //console.log("Sending", text);
-        ws.send(JSON.stringify({data:text}));
-    };
-
-    ws.onopen = function() {
-        //console.log("Connection opened");
-        opened = true;
-    };
-
-    var state = "begin";
-    var composed = "";
-    ws.onmessage = function(event) {
-        var msg = event.data;
-        //console.log(msg);
-        while(msg.length > 0) {
-            if(state === "begin") {
-                // Ensure the message begins as we expect.
-                if(msg.charAt(0) != '{') {
-                    ws.close();
-                    throw new Error("Invalid start received");
-                }
-                state = "collecting";
-            }
-            if(state === "collecting") {
-                var eol = msg.indexOf('}');
-                if(eol != -1) {
-                    // Message contains an end.
-                    composed += msg.slice(0, eol + 1);
-                    //console.log(composed);
-                    eventFunc.call(
-                        eventFuncThisArg,
-                        JSON.parse(composed)
-                    );
-
-                    // Process the remaining message.
-                    msg = msg.slice(eol + 1);
-                    state = "begin";
-                    composed = "";
-                }
-                else {
-                    // Message continues.
-                    composed += msg;
-                    msg = "";
-                }
-            }
-        }
-    };
-
-    ws.onclose = function() {
-        opened = false;
-    };
-
-    this.opened = function() {
-        return opened;
-    };
-};
 
 function parsegraph_JavaScriptWidget(graph)
 {
@@ -599,79 +455,151 @@ parsegraph_JavaScriptWidget.prototype.load = function(url)
     oReq.send();
 };
 
-function init()
+var sceneNode;
+function createLoginGraph(surface, graph)
+{
+    var nbs = parsegraph_copyStyle(parsegraph_BLOCK);
+    nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+    nbs.borderColor = new parsegraph_Color(.5, .5, .5, 1);
+    nbs.minWidth = parsegraph_BUD_RADIUS * 80;
+
+    var bbs = parsegraph_copyStyle(parsegraph_BLOCK);
+    bbs.backgroundColor = new parsegraph_Color(1, 1, .5, 1);
+    bbs.borderColor = new parsegraph_Color(.5, .5, 0, 1);
+
+    var car = new parsegraph_Caret(parsegraph_BUD);
+
+
+    car.push();
+    car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+
+    car.push();
+    car.spawnMove(parsegraph_BACKWARD, parsegraph_BUD);
+    for(var i = 0; i < 5; ++i) {
+        car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+        car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
+    }
+    car.pop();
+
+    car.push();
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    for(var i = 0; i < 5; ++i) {
+        car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+        car.spawn(parsegraph_BACKWARD, parsegraph_BLOCK);
+    }
+    car.pop();
+    car.pop();
+
+    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.push();
+    car.label('Parsegraph.com');
+    car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
+    car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
+    car.label('Username');
+    car.move(parsegraph_FORWARD);
+    car.pull('b');
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+    var tf = car.node();
+    tf.setClickListener = function() {
+        var l = tf.label();
+        alert(l);
+    };
+    car.node().setBlockStyle(nbs);
+    car.move(parsegraph_BACKWARD);
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
+    car.label('Password');
+    car.move(parsegraph_FORWARD);
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+    car.node().setBlockStyle(nbs);
+    car.move(parsegraph_BACKWARD);
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+    car.node().setBlockStyle(bbs);
+    car.label('Log in');
+    car.pop();
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SCENE);
+    car.node().setScene(new alpha_GLWidget(surface));
+    sceneNode = car.node();
+    sceneNode.layoutWasChanged();
+
+    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
+    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
+
+    var widget = new parsegraph_JavaScriptWidget(graph);
+    widget.load("primes.js");
+    car.connect(parsegraph_DOWNWARD, widget.caret.root());
+    car.crease(parsegraph_DOWNWARD);
+    car.pull(parsegraph_DOWNWARD);
+
+    car.move(parsegraph_FORWARD);
+    car.connect(parsegraph_DOWNWARD, showCorporateStructure(graph));
+    car.crease(parsegraph_DOWNWARD);
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+
+    return car.root();
+}
+
+function init(main)
 {
     try {
         parsegraph_initialize();
-        var main = document.body;
-
-        // Create the surface.
         var surface = new parsegraph_Surface();
-        main.appendChild(surface.container());
-
         var graph = new parsegraph_Graph(surface);
-        GRAPH = graph;
+        main.appendChild(surface.container());
+        graph.world().plot(createLoginGraph(surface, graph));
 
-        var widget = new parsegraph_JavaScriptWidget(graph);
-        widget.load("primes.js");
-        graph.world().plot(widget.caret.root());
-
-        if(localStorage.getItem("parsegraph_world_camera") != null) {
+        var cameraName = "parsegraph_camera";
+        if(localStorage.getItem(cameraName) != null) {
             try {
-                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-                graph.camera().restore(parsegraph_world_camera);
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
             } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                console.log(
+                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
+                );
             }
         }
 
-        var cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
-            "ws://localhost/camera/", "parsegraph-camera-protocol"
-        ), graph.camera(),
-            function(obj) {
-                graph.cameraBox().setCamera("dafrito", obj);
-            }
-        );
-
-        var chatProtocol = new parsegraph_ChatProtocol(new WebSocket(
-            "ws://localhost/chat/", "parsegraph-chat-protocol"
-        ), function(obj) {
-            //console.log("Message received: ", obj);
-        });
-
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
         renderTimer.setListener(function() {
             graph.input().Update(new Date());
+            var t = alpha_GetTime();
+            sceneNode.scene().Tick(t - start);
+            sceneNode.layoutWasChanged();
+            graph.scheduleRepaint();
+            start = t;
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                if(graph.input().UpdateRepeatedly()) {
-                    cameraProtocol.update();
-                }
                 renderTimer.schedule();
             }
         });
-        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+        graph.input().SetListener(function(affectedPaint) {
             if(affectedPaint) {
                 graph.scheduleRepaint();
             }
-            // Contrive a message to send over chat.
-            chatProtocol.send(eventSource);
             renderTimer.schedule();
-            if(inputAffectedCamera) {
-                cameraProtocol.update();
-            }
         });
         renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
 
         surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+            localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
         });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
@@ -680,7 +608,7 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    init(document.body);
 });
 </script>
 </head>

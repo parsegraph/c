@@ -67,7 +67,10 @@ surface.addRenderer(function() {
 var widget;
 widget = new alpha_GLWidget(surface);
 
-var glyphAtlas = new parsegraph_GlyphAtlas(
+surface.addPainter(widget.paint, widget);
+surface.addRenderer(widget.render, widget);
+
+/*var glyphAtlas = new parsegraph_GlyphAtlas(
     parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
 );
 var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
@@ -106,6 +109,7 @@ surface.addRenderer(function() {
     var world = textCamera.project();
     textPainter.render(world);
 });
+*/
 
 // This flag is used to squelch rendering if that function
 // threw an exception and failed to complete.

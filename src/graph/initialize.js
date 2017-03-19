@@ -153,12 +153,12 @@ function parsegraph_initialize(mathMode) {
     }
 
     parsegraph_SCENE_STYLE = {
-        minWidth: parsegraph_MIN_BLOCK_WIDTH,
-        minHeight: parsegraph_MIN_BLOCK_HEIGHT,
-        horizontalPadding: 3*parsegraph_BUD_RADIUS,
-        verticalPadding: .5*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(.8, .8, 1, 1),
-        backgroundColor: parsegraph_createColor(.75, .75, 1, .2),
+        minWidth: 2048,
+        minHeight: 1024,
+        horizontalPadding: 0,
+        verticalPadding: 0,
+        borderColor: parsegraph_createColor(.4, .4, .4, 1),
+        backgroundColor: parsegraph_createColor(.5, .5, .5, 1),
         selectedBorderColor: parsegraph_createColor(.9, .9, 1, 1),
         selectedBackgroundColor: parsegraph_createColor(.8, .8, 1, 1),
         brightness: 0.75,

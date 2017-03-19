@@ -178,7 +178,7 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
                 paintGroup._painter.clear();
             }
             parsegraph_foreachPaintGroupNodes(paintGroup.root(), function(node) {
-                paintGroup._painter.drawNode(node);
+                paintGroup._painter.drawNode(node, shaders);
             }, paintGroup);
         }
         paintGroup._dirty = false;

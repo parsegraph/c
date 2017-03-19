@@ -69,7 +69,13 @@ function parsegraph_Input(graph, camera)
         }
 
         // Check if the selected node has a click listener.
+        if(selectedNode.hasClickListener()) {
+            console.log("Selected Node has click listener", selectedNode);
+            selectedNode.click();
+            return selectedNode;
+        }
         if(selectedNode.label()) {
+            console.log("Selected Node has label", selectedNode);
             var c = selectedNode._label.clickToCaret(mouseInWorld[0], mouseInWorld[1],
                 selectedNode.absoluteScale(),
                 selectedNode.blockStyle(),
@@ -77,12 +83,9 @@ function parsegraph_Input(graph, camera)
             );
             return selectedNode;
         }
-        if(selectedNode.hasClickListener()) {
-            selectedNode.click();
-            return selectedNode;
-        }
 
         // A node was clicked, but nothing to be done.
+        console.log("Selected Node has nothing", selectedNode);
         return null;
     };
 

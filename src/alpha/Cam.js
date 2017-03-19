@@ -245,33 +245,42 @@ alpha_Camera.prototype.GetNearDistance = function()
 
 alpha_Camera.prototype.UpdateProjection = function()
 {
-    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    // Lookup the size the browser is displaying the canvas.
-    var displayWidth = this.surface.container().clientWidth;
-    var displayHeight = this.surface.container().clientHeight;
+    if(arguments.length === 0) {
+        // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+        // Lookup the size the browser is displaying the canvas.
+        var displayWidth = this.surface.container().clientWidth;
+        var displayHeight = this.surface.container().clientHeight;
 
-    if(displayWidth == 0 || displayHeight == 0) {
-        //console.log("No projection available.");
-        return;
+        if(displayWidth == 0 || displayHeight == 0) {
+            //console.log("No projection available.");
+            return;
+        }
+
+        // Check if the canvas is not the same size.
+        if(
+            this.surface.canvas().width != displayWidth
+            || this.surface.canvas().height != displayHeight
+        ) {
+            // Make the canvas the same size
+            this.surface.canvas().width = displayWidth;
+            this.surface.canvas().height = displayHeight;
+
+            // Set the viewport to match
+            this.surface.gl().viewport(
+                0, 0, this.surface.canvas().width, this.surface.canvas().height
+            );
+        }
+
+        this.width = this.surface.canvas().width;
+        this.height = this.surface.canvas().height;
     }
-
-    // Check if the canvas is not the same size.
-    if(
-        this.surface.canvas().width != displayWidth
-        || this.surface.canvas().height != displayHeight
-    ) {
-        // Make the canvas the same size
-        this.surface.canvas().width = displayWidth;
-        this.surface.canvas().height = displayHeight;
-
-        // Set the viewport to match
+    else {
+        this.width = arguments[0];
+        this.height = arguments[1];
         this.surface.gl().viewport(
-            0, 0, this.surface.canvas().width, this.surface.canvas().height
+            0, 0, this.width, this.height
         );
     }
-
-    this.width = this.surface.canvas().width;
-    this.height = this.surface.canvas().height;
 
     this.projectionMatrix.Set(makePerspective(
         this.GetFovX() / this.zoomFactor,

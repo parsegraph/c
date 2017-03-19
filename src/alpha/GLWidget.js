@@ -9,6 +9,8 @@ function alpha_GLWidget()
     var surface;
     if(arguments.length == 0) {
         surface = new parsegraph_Surface();
+        this._surface.addPainter(this.paint, this);
+        this._surface.addRenderer(this.render, this);
     }
     else {
         surface = arguments[0];
@@ -20,9 +22,6 @@ function alpha_GLWidget()
 
     this._canvas = surface._canvas;
     this._container = surface._container;
-
-    this._surface.addPainter(this.paint, this);
-    this._surface.addRenderer(this.render, this);
 
     this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
 
@@ -295,7 +294,13 @@ alpha_GLWidget.prototype.container = function()
  */
 alpha_GLWidget.prototype.render = function()
 {
-    var projection = this.camera.UpdateProjection();
+    var projection;
+    if(arguments.length > 0) {
+        projection = this.camera.UpdateProjection(arguments[0], arguments[1]);
+    }
+    else {
+        projection = this.camera.UpdateProjection();
+    }
 
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 
@@ -303,7 +308,7 @@ alpha_GLWidget.prototype.render = function()
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
-    //this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
     //console.log("this.camera.GetViewMatrix() * projection:\n" + viewMatrix.toString());
     //console.log(this.camera.GetViewMatrix().toString());
@@ -325,7 +330,7 @@ alpha_GLWidget.prototype.render = function()
     this.evPlatformCluster.Draw(platformMatrix);
 
 
-    //this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
 
 
     this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));

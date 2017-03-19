@@ -70,13 +70,11 @@ function init()
         main.appendChild(surface.container());
 
         // Look at alignment here first.
-        //graph.plot(showHardTest(graph, server));
-        //graph.plot(showStatements(graph));
+        //graph.world().plot(showHardTest(graph, server));
+        //graph.world().plot(showStatements(graph));
 
         // Then correct alignment here.
-        graph.plot(showProportionTest(graph, COUNT), 0, 0, 1);
-
-        //graph.plot(showIPAddresses(graph));
+        graph.world().plot(showProportionTest(graph, COUNT), 0, 0, 1);
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {

@@ -125,6 +125,10 @@ parsegraph_Graph.prototype.setGlyphAtlas = function(glyphAtlas)
 parsegraph_Graph.prototype.paint = function(timeout)
 {
     //console.log("Painting Graph, timeout=" + timeout);
+    this._shaders.gl = this.gl();
+    this._shaders.glyphAtlas = this.glyphAtlas();
+    this._shaders.timeout = timeout;
+
     this._cameraBox.prepare(this.gl(), this.glyphAtlas(), this._shaders);
     this._cameraBox.paint();
     this._carousel.prepare(this.gl(), this.glyphAtlas(), this._shaders);

@@ -31,16 +31,17 @@ function showProportionTest(graph, COUNT)
      */
     var attachCommands = function() {
         caret.onClick(function() {
+            var carousel = graph.carousel();
             //console.log("OnClick!");
-            if(graph.isCarouselShown() && selectedNode == this) {
-                graph.clearCarousel();
-                graph.hideCarousel();
-                graph.scheduleCarouselRepaint();
+            if(carousel().isCarouselShown() && selectedNode == this) {
+                carousel.clearCarousel();
+                carousel.hideCarousel();
+                carousel.scheduleCarouselRepaint();
                 selectedNode = null;
                 return;
             }
             selectedNode = this;
-            graph.clearCarousel();
+            carousel.clearCarousel();
 
             var i = 0;
             commands.forEach(function(command) {
@@ -54,22 +55,22 @@ function showProportionTest(graph, COUNT)
                     commandCaret.label(command);
                     commandCaret.move('u');
                 }
-                graph.addToCarousel(commandCaret.root(), function() {
+                carousel.addToCarousel(commandCaret.root(), function() {
                     //console.log("Clicked " + command + commandCaret.root().isSelected());
-                    graph.clearCarousel();
-                    graph.hideCarousel();
-                    graph.scheduleCarouselRepaint();
+                    carousel.clearCarousel();
+                    carousel.hideCarousel();
+                    carousel.scheduleCarouselRepaint();
                     selectedNode = null;
                 }, this);
             }, this);
 
-            graph.showCarousel();
-            graph.setCarouselSize(Math.max(
+            carousel.showCarousel();
+            carousel.setCarouselSize(Math.max(
                 selectedNode.size().width(),
                 selectedNode.size().height()
             ));
-            graph.moveCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
-            graph.scheduleCarouselRepaint();
+            carousel.moveCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
+            carousel.scheduleCarouselRepaint();
         });
     };
 

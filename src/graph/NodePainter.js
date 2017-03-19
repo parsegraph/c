@@ -22,6 +22,8 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._textPainter = new parsegraph_TextPainter(this._gl, glyphAtlas, shaders);
 
     this._renderText = true;
+
+    this._textures = [];
 };
 
 parsegraph_NodePainter.prototype.gl = function()
@@ -107,6 +109,10 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     if(this._renderText) {
         this._textPainter.render(world);
     }
+
+    this._textures.forEach(function(t) {
+        t.render(world);
+    });
 };
 
 parsegraph_NodePainter.prototype.enableExtentRendering = function()
@@ -221,6 +227,13 @@ parsegraph_NodePainter.prototype.clear = function()
     this._extentPainter.clear();
     this._originPainter.clear();
     this._textPainter.clear();
+
+    var gl = this._gl;
+    this._textures.forEach(function(t) {
+        t.clear();
+        gl.deleteTexture(t._texture);
+    });
+    this._textures = [];
 };
 
 parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, userScale)
@@ -397,28 +410,87 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     this._textPainter.drawText(node.label());
 };
 
-parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY)
+parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY, userScale, shaders)
 {
+    if(!node.scene()) {
+        return;
+    }
+
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
-    var sceneSize = node.sizeWithoutPadding().scaled(userScale * node.absoluteScale());
+    var sceneSize = node.sizeWithoutPadding();
     var sceneX = worldX + node.absoluteX();
     var sceneY = worldY + node.absoluteY();
 
     // Render and draw the scene texture.
+    var gl = shaders.gl;
+    if(!shaders.framebuffer) {
+        var framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+
+        shaders.framebuffer = framebuffer;
+
+        // Thanks to http://learningwebgl.com/blog/?p=1786
+        var t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, sceneSize.width(), sceneSize.height(), 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        var renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, sceneSize.width(), sceneSize.height());
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+        shaders.framebufferTexture = t;
+        shaders.framebufferRenderBuffer = renderbuffer;
+
+    }
+    else {
+        gl.bindTexture(gl.TEXTURE_2D, shaders.framebufferTexture);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, shaders.framebufferRenderBuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, shaders.framebuffer);
+
+        this._textures.forEach(function(t) {
+            gl.deleteTexture(t._texture);
+            t.clear();
+        });
+        this._textures = [];
+    }
+
+    var gl = this.gl();
+    gl.clearColor(parsegraph_BACKGROUND_COLOR.r(),
+    parsegraph_BACKGROUND_COLOR.g(),
+    parsegraph_BACKGROUND_COLOR.b(),
+    parsegraph_BACKGROUND_COLOR.a());
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.disable(gl.BLEND);
+
+    var s = node.scene();
+    s.paint();
+    s.render(sceneSize.width(), sceneSize.height());
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    var p = new parsegraph_TexturePainter(
+        gl, shaders.framebufferTexture, sceneSize.width(), sceneSize.height(), shaders
+    );
+    p.drawWholeTexture(sceneX - sceneSize.width()/2, sceneY - sceneSize.height()/2, sceneSize.width(), sceneSize.height(), userScale * node.absoluteScale());
+    this._textures.push(p);
 };
 
 /**
  * Draws a single node, and the lines extending from it.
  */
-parsegraph_NodePainter.prototype.drawNode = function(node)
+parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
 {
-    if(arguments.length === 1) {
-        worldX = 0;
-        worldY = 0;
-        userScale = 1;
-    }
+    var worldX = 0;
+    var worldY = 0;
+    var userScale = 1;
     if(this.isExtentRenderingEnabled()) {
         this.paintExtent(node, worldX, worldY, userScale);
     }
@@ -429,7 +501,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node)
     case parsegraph_SCENE:
         this.paintLines(node, worldX, worldY, userScale);
         this.paintBlock(node, worldX, worldY, userScale);
-        return this.drawScene(node, worldX, worldY, userScale);
+        return this.drawScene(node, worldX, worldY, userScale, shaders);
     default:
         this.paintLines(node, worldX, worldY, userScale);
         this.paintBlock(node, worldX, worldY, userScale);

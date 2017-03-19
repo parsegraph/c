@@ -3,7 +3,7 @@ function parsegraph_CameraBoxPainter(gl, glyphAtlas, shaders)
     this._blockPainter = new parsegraph_BlockPainter(gl, shaders);
     this._textPainter = new parsegraph_TextPainter(gl, glyphAtlas, shaders);
 
-    this._borderColor = new parsegraph_Color(1, 1, 1, 0.2);
+    this._borderColor = new parsegraph_Color(1, 1, 1, 0.1);
     this._backgroundColor = new parsegraph_Color(1, 1, 1, 0.1);
     this._textColor = new parsegraph_Color(1, 1, 1, 1);
     this._fontSize = 24;
