@@ -833,7 +833,6 @@ function parsegraph_createExtent(copy)
 }
 
 parsegraph_Extent_Tests = new parsegraph_TestSuite("parsegraph_Extent");
-parsegraph_AllTests.addTest(parsegraph_Extent_Tests);
 
 parsegraph_Extent_Tests.addTest("parsegraph_Extent.simplify", function() {
     var extent = new parsegraph_Extent();

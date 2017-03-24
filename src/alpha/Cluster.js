@@ -26,7 +26,6 @@ function alpha_Cluster(widget)
 };
 
 alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");
-parsegraph_AllTests.addTest(alpha_Cluster_Tests);
 
 alpha_Cluster_Tests.addTest("alpha_Cluster", function(resultDom) {
     var widget = new alpha_GLWidget();

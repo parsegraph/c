@@ -113,7 +113,6 @@ function parsegraph_createColor(r, g, b, a)
 }
 
 parsegraph_Color_Tests = new parsegraph_TestSuite("parsegraph_Color");
-parsegraph_AllTests.addTest(parsegraph_Color_Tests);
 
 parsegraph_Color_Tests.addTest("parsegraph_Color.simplify", function() {
 });

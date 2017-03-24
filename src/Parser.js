@@ -383,7 +383,6 @@ function parsegraph_parse(str, callback, thisArg)
 }
 
 parsegraph_Parser_Tests = new parsegraph_TestSuite("parsegraph_Parser");
-parsegraph_AllTests.addTest(parsegraph_Parser_Tests);
 
 parsegraph_Parser_Tests.addTest("parsegraph_Parser", function(resultDom) {
     var assertEquals = function(given, expected) {

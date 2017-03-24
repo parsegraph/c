@@ -30,6 +30,11 @@ function parsegraph_Input(graph, camera)
 
     this._updateRepeatedly = false;
 
+    this._caretPainter = null;
+    this._caretPos = [];
+    this._caretColor = new parsegraph_Color(0, 0, 0, 1);
+    this._focusedNode = null;
+
     this.lastMouseCoords = function() {
         return [lastMouseX, lastMouseY];
     };
@@ -75,12 +80,7 @@ function parsegraph_Input(graph, camera)
             return selectedNode;
         }
         if(selectedNode.label()) {
-            console.log("Selected Node has label", selectedNode);
-            var c = selectedNode._label.clickToCaret(mouseInWorld[0], mouseInWorld[1],
-                selectedNode.absoluteScale(),
-                selectedNode.blockStyle(),
-                selectedNode.findPaintGroup()
-            );
+            this.clickLabel(mouseInWorld[0], mouseInWorld[1], selectedNode);
             return selectedNode;
         }
 
@@ -480,6 +480,48 @@ function parsegraph_Input(graph, camera)
         }
 
         var keyName = getproperkeyname(event);
+        if(this._focusedNode && focused) {
+            if(event.key.length === 0) {
+                return;
+            }
+
+            switch(event.key) {
+            case "Shift":
+                break;
+            case "ArrowLeft":
+                if(!this.moveCaretBackward()) {
+                    // Left the field.
+                }
+                break;
+            case "ArrowRight":
+                if(!this.moveCaretForward()) {
+
+                }
+                break;
+            case "ArrowDown":
+                if(!this.moveCaretDown()) {
+
+                }
+            case "ArrowUp":
+                if(!this.moveCaretUp()) {
+
+                }
+                break;
+            case "Backspace":
+                if(!this.backspaceCaret()) {
+
+                }
+                break;
+            case "F5":
+                break;
+            default:
+                this._focusedNode._label.setText(this._focusedNode._label.text() + event.key);
+                this._focusedNode.layoutWasChanged();
+                graph.scheduleRepaint();
+            }
+            return;
+        }
+
         if(this.keydowns[keyName]) {
             // Already processed.
             //console.log("Key event, but already processed.");
@@ -640,6 +682,79 @@ parsegraph_Input.prototype.Elapsed = function(key, t)
     this.keydowns[key] = t;
     return elapsed;
 };
+
+parsegraph_Input.prototype.paint = function()
+{
+    if(!this._caretPainter) {
+        this._caretPainter = new parsegraph_BlockPainter(this._graph.gl(), this._graph.shaders());
+    }
+
+    if(typeof this._caretPos[0] !== "number") {
+        return;
+    }
+    this._caretPainter.clear();
+    this._caretPainter.setBorderColor(this._caretColor);
+    this._caretPainter.setBackgroundColor(this._caretColor);
+
+    var cw = 4;//this._caretPos[2]*.2;
+    this._caretPainter.drawBlock(
+        this._caretPos[0] + cw/2,
+        this._caretPos[1] + this._caretPos[3]/2,
+        cw,
+        this._caretPos[3],
+        0.01,
+        0.02,
+        1
+    );
+};
+
+parsegraph_Input.prototype.moveCaretDown = function(world)
+{
+    console.log("Moving caret down");
+}
+
+parsegraph_Input.prototype.moveCaretUp = function(world)
+{
+    console.log("Moving caret up");
+}
+
+parsegraph_Input.prototype.moveCaretBackward = function(world)
+{
+    var i = this._caretPos[4];
+    console.log("Moving caret backward", i - 1);
+}
+
+parsegraph_Input.prototype.moveCaretForward = function()
+{
+    console.log("Moving caret forward");
+}
+
+parsegraph_Input.prototype.backspaceCaret = function()
+{
+    console.log("Backspace caret");
+}
+
+parsegraph_Input.prototype.render = function(world)
+{
+    var gl = this._graph.gl();
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.BLEND);
+    this._caretPainter.render(world);
+}
+
+parsegraph_Input.prototype.clickLabel = function(worldX, worldY, selectedNode)
+{
+    selectedNode._label.clickToCaret(
+        worldX, worldY,
+        selectedNode.absoluteScale(),
+        selectedNode.blockStyle(),
+        selectedNode.findPaintGroup(),
+        this._caretPos
+    );
+    this._focusedNode = selectedNode;
+    this._graph.scheduleRepaint();
+}
 
 parsegraph_Input.prototype.Dispatch = function()
 {

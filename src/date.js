@@ -37,7 +37,6 @@ function parsegraph_dateGreater(a, b)
 }
 
 parsegraph_Date_Tests = new parsegraph_TestSuite("parsegraph_Date");
-parsegraph_AllTests.addTest(parsegraph_Date_Tests);
 
 parsegraph_Date_Tests.addTest("parsegraph_dateGreater", function(dom) {
     if(parsegraph_dateGreater(

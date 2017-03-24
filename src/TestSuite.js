@@ -127,9 +127,18 @@ parsegraph_TestResult.prototype.test = function()
 };
 
 /**
- * A collection of tests, able to be run and recorded.
+ * The TestSuite that contains all other test suites.
  */
-function parsegraph_TestSuite(name)
+var parsegraph_AllTests;
+
+/**
+ * A collection of tests, able to be run and recorded.
+ *
+ * A TestSuite called parsegraph_AllTests is created that contains all
+ * created TestSuites, because they are added in the constructor. dontAutoadd disables
+ * this behavior for the created TestSuite.
+ */
+function parsegraph_TestSuite(name, dontAutoadd)
 {
     if(name === undefined) {
         this._name = "Test";
@@ -139,6 +148,10 @@ function parsegraph_TestSuite(name)
     }
 
     this._tests = [];
+
+    if(!dontAutoadd && parsegraph_AllTests) {
+        parsegraph_AllTests.addTest(this);
+    }
 };
 
 parsegraph_TestSuite.prototype.name = function()
@@ -372,4 +385,4 @@ parsegraph_TestListener.prototype.TestFinished = function()
 {
 };
 
-parsegraph_AllTests = new parsegraph_TestSuite();
+parsegraph_AllTests = new parsegraph_TestSuite("parsegraph");

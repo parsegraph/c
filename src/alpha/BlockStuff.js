@@ -50,7 +50,6 @@ alpha_Color.prototype.asRGB = function() {
 };
 
 alpha_Color_Tests = new parsegraph_TestSuite("alpha_Color");
-parsegraph_AllTests.addTest(alpha_Color_Tests);
 
 alpha_Color_Tests.addTest("alpha_Color.<constructor>", function(resultDom) {
     var v = new alpha_Color(.1, .2, .3);
@@ -234,7 +233,6 @@ function alpha_Skin()
 };
 
 alpha_Skin_Tests = new parsegraph_TestSuite("alpha_Skin");
-parsegraph_AllTests.addTest(alpha_Skin_Tests);
 
 alpha_Skin_Tests.addTest("alpha_Skin.<constructor>", function(resultDom) {
     var green = new alpha_Color(0, 1, 0);
@@ -447,7 +445,6 @@ alpha_BlockTypes.prototype.Get = function()
 };
 
 alpha_BlockTypes_Tests = new parsegraph_TestSuite("alpha_BlockTypes");
-parsegraph_AllTests.addTest(alpha_BlockTypes_Tests);
 
 alpha_BlockTypes_Tests.addTest("alpha_BlockTypes", function(resultDom) {
     var types = new alpha_BlockTypes();

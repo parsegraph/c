@@ -89,11 +89,11 @@ alpha_Physical.prototype.toJSON = function()
 
 // Register the test suite.
 alpha_Physical_Tests = new parsegraph_TestSuite("alpha_Physical");
-parsegraph_AllTests.addTest(alpha_Physical_Tests);
 
 alpha_Physical_Tests.addTest("alpha_Physical", function(resultDom) {
     var surface = new alpha_GLWidget();
-    var orb = new alpha_Physical();
+    var cam = new alpha_Camera(surface);
+    var p = new alpha_Physical(cam);
 });
 
 //-----------------------------------
@@ -415,7 +415,7 @@ alpha_Physical.prototype.IsGoodLineageFor = function(prospectiveChild)
 alpha_Physical.prototype.SetParent = function(parent)
 {
     if(!parent) {
-        throw new Error(" A Physical must have a parent. Set it to the camera for a default");
+        throw new Error("A Physical must have a parent. Set it to the camera for a default");
     }
 
     if(!parent.IsGoodLineageFor(this)) {

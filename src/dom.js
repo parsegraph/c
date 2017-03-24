@@ -47,7 +47,6 @@ function fixedCharAt(str, idx)
 }
 
 parsegraph_Browser_Tests = new parsegraph_TestSuite("Browser");
-parsegraph_AllTests.addTest(parsegraph_Browser_Tests);
 
 parsegraph_Browser_Tests.addTest("arguments referenced from other closures", function() {
 

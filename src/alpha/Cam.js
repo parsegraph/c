@@ -67,7 +67,6 @@ alpha_Camera.prototype.restore = function(json)
 };
 
 alpha_Camera_Tests = new parsegraph_TestSuite("alpha_Camera");
-parsegraph_AllTests.addTest(alpha_Camera_Tests);
 
 alpha_Camera_Tests.addTest("alpha_Camera", function(resultDom) {
     var surface = new parsegraph_Surface();

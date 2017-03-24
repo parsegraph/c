@@ -1,6 +1,5 @@
 {
     var ts = new parsegraph_TestSuite("refactor");
-    parsegraph_AllTests.addTest(ts);
 
     ts.AddTest("", function() {
         var car = new parsegraph_Caret('s');

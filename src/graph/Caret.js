@@ -1,3 +1,6 @@
+/**
+ * High-level Node graph builder.
+ */
 function parsegraph_Caret(nodeRoot)
 {
     if(typeof nodeRoot != "object") {
@@ -11,22 +14,24 @@ function parsegraph_Caret(nodeRoot)
     // A mapping of nodes to their saved names.
     this._savedNodes = null;
 
-    this._glyphAtlas = null;
+    this._labels = [];
 };
+
+parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
+parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
+    var car = new parsegraph_Caret('s');
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    car = new parsegraph_Caret(n);
+});
 
 parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
 {
-    this._glyphAtlas = glyphAtlas;
+    return this.node().label().setGlyphAtlas(glyphAtlas);
 };
 
 parsegraph_Caret.prototype.glyphAtlas = function()
 {
-    if(!this._glyphAtlas) {
-        this._glyphAtlas = new parsegraph_GlyphAtlas(
-            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
-        );
-    }
-    return this._glyphAtlas;
+    return this.node().label().glyphAtlas();
 };
 
 parsegraph_Caret.prototype.node = function()
@@ -127,6 +132,24 @@ parsegraph_Caret.prototype.onClick = function(clickListener, thisArg)
 {
     this.node().setClickListener(clickListener, thisArg);
 };
+
+/**
+ * Sets the click listener on the current node.
+ *
+ * caret.spawnMove('f', 'b');
+ * caret.onKey(this.handle, this);
+ */
+parsegraph_Caret.prototype.onKey = function(clickListener, thisArg)
+{
+    this.node().setKeyListener(clickListener, thisArg);
+};
+
+parsegraph_Caret_Tests.addTest("parsegraph_Caret.onKey", function() {
+    var car = new parsegraph_Caret();
+    car.onKey(function() {
+        console.log("Key pressed");
+    });
+});
 
 parsegraph_Caret.prototype.move = function(toDirection)
 {
@@ -315,15 +338,41 @@ parsegraph_Caret.prototype.fitLoose = function()
     node.setNodeFit(parsegraph_NODE_FIT_LOOSE);
 };
 
+/**
+ * car.label(text);
+ * car.label(text, glyphAtlas);
+ * car.label(inDirection, text);
+ * car.label(inDirection, text, glyphAtlas);
+ */
 parsegraph_Caret.prototype.label = function(/* ... */)
 {
-    var node = this.node();
-    var text = arguments[0];
-    if(arguments.length > 1) {
+    var node, text, glyphAtlas;
+    switch(arguments.length) {
+    case 1:
+        node = this.node();
+        text = arguments[0];
+        break;
+    case 2:
+        if(typeof arguments[1] === "object") {
+            node = this.node();
+            text = arguments[0];
+            glyphAtlas = arguments[1];
+        }
+        else {
+            node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+            text = arguments[1];
+            glyphAtlas = parsegraph_defaultGlyphAtlas();
+            //console.log(typeof arguments[0]);
+            //console.log(typeof arguments[1]);
+        }
+        break;
+    case 3:
         node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
         text = arguments[1];
+        glyphAtlas = arguments[2];
+        break;
     }
-    node.setLabel(text, this.glyphAtlas());
+    node.setLabel(text, glyphAtlas);
 };
 
 parsegraph_Caret.prototype.select = function()

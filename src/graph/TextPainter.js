@@ -135,8 +135,15 @@ parsegraph_TextPainter.prototype.wrapWidth = function()
     return this._wrapWidth;
 };
 
-parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, paragraphY)
+parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, paragraphY, foundPos)
 {
+    if(!foundPos) {
+        foundPos = [];
+    }
+    foundPos[0] = null;
+    foundPos[1] = null;
+    foundPos[2] = null;
+
     var x = 0;
     var y = 0;
     var i = 0;
@@ -203,6 +210,11 @@ parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, parag
             && paragraphY <= y + glyphData.height * fontScale
         ) {
             // Within this letter!
+            foundPos[0] = x;
+            foundPos[1] = y;
+            foundPos[2] = glyphData.width * fontScale;
+            foundPos[3] = glyphData.height * fontScale;
+            foundPos[4] = i;
             break;
         }
 
@@ -210,21 +222,160 @@ parsegraph_TextPainter.prototype.findCaretPos = function(text, paragraphX, parag
         x += glyphData.width * fontScale;
     }
 
-    return i;
+    return foundPos;
 };
 
-parsegraph_TextPainter.prototype.measureText = function(text)
+parsegraph_TextPainter.prototype.indexToCaret = function(text, paragraphX, paragraphY, foundPos)
 {
-    var textMetrics;
+    if(!foundPos) {
+        foundPos = [];
+    }
+    foundPos[0] = null;
+    foundPos[1] = null;
+    foundPos[2] = null;
+
+    var x = 0;
+    var y = 0;
+    var i = 0;
+
+    var fontSize = this.fontSize();
+    var wrapWidth = this.wrapWidth();
+    var fontScale = this.fontScale();
+    var glyphData;
+
+    // Clamp the world coordinates to the boundaries of the text.
+    var labelSize = this.measureText(text);
+    paragraphX = Math.max(0, paragraphX);
+    paragraphY = Math.max(0, paragraphY);
+    paragraphX = Math.min(labelSize[0], paragraphX);
+    paragraphY = Math.min(labelSize[1], paragraphY);
+
+    var maxLineWidth = 0;
+    var startTime = parsegraph_getTimeInMillis();
+    //console.log(paragraphX + ", " + paragraphY);
+    while(true) {
+        if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
+            throw new Error("TextPainter.measureText timeout");
+        }
+        var letter = fixedCharAt(text, i);
+        //console.log(letter);
+        if(letter === null) {
+            // Reached the end of the string.
+            maxLineWidth = Math.max(maxLineWidth, x);
+            if(glyphData) {
+                y += glyphData.height * fontScale;
+            }
+            break;
+        }
+
+        var glyphData = this._glyphAtlas.getGlyph(letter);
+        //console.log(x + " Glyph width: " + (glyphData.width * fontScale));
+
+        // Check for wrapping.
+        //console.log("Need to wrap");
+        var shouldWrap = false;
+        if(wrapWidth) {
+            shouldWrap = (x + glyphData.width * fontScale) > wrapWidth;
+        }
+        else {
+            shouldWrap = this._glyphAtlas.isNewline(letter);
+        }
+
+        if(shouldWrap) {
+            if(paragraphY >= y && paragraphY <= y + glyphData.height * fontScale && paragraphX >= x) {
+                // It's past the end of line, so that's actually the previous character.
+                --i;
+                break;
+            }
+
+            maxLineWidth = Math.max(maxLineWidth, x);
+            x = 0;
+            y += this._glyphAtlas.letterHeight() * fontScale;
+            //console.log("Break: " + i);
+        }
+
+        if(
+            paragraphX >= x && paragraphY >= y
+            && paragraphX <= x + glyphData.width * fontScale
+            && paragraphY <= y + glyphData.height * fontScale
+        ) {
+            // Within this letter!
+            foundPos[0] = x;
+            foundPos[1] = y;
+            foundPos[2] = glyphData.width * fontScale;
+            foundPos[3] = glyphData.height * fontScale;
+            foundPos[4] = i;
+            break;
+        }
+
+        i += letter.length;
+        x += glyphData.width * fontScale;
+    }
+
+    return foundPos;
+};
+
+parsegraph_TextPainter.prototype.measureText = function(text, outPos)
+{
+    var wrapWidth;
     if(this.wrapWidth()) {
-        textMetrics = this._glyphAtlas.measureText(text, this.wrapWidth() / this.fontScale());
+        wrapWidth = this.wrapWidth() / this.fontScale();
     }
     else {
-        textMetrics = this._glyphAtlas.measureText(text);
+        wrapWidth = null;
     }
-    textMetrics[0] *= this.fontScale();
-    textMetrics[1] *= this.fontScale();
-    return textMetrics;
+    var x = 0;
+    var y = 0;
+    var i = 0;
+
+    var glyphData;
+
+    // Allow a new size to be created.
+    if(!outPos) {
+        outPos = new parsegraph_Size();
+    }
+
+    var atlas = this.glyphAtlas();
+    var maxLineWidth = 0;
+    var startTime = parsegraph_getTimeInMillis();
+    while(true) {
+        if(parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
+            throw new Error("TextPainter.measureText timeout");
+        }
+        var letter = fixedCharAt(text, i);
+        if(letter === null) {
+            // Reached the end of the string.
+            maxLineWidth = Math.max(maxLineWidth, x);
+            if(glyphData) {
+                y += glyphData.height;
+            }
+            break;
+        }
+
+        var glyphData = atlas.getGlyph(letter);
+
+        // Check for wrapping.
+        var shouldWrap = false;
+        if(wrapWidth) {
+            shouldWrap = (x + glyphData.width) > wrapWidth;
+        }
+        else {
+            shouldWrap = atlas.isNewline(letter);
+        }
+
+        if(shouldWrap) {
+            maxLineWidth = Math.max(maxLineWidth, x);
+            x = 0;
+            y += glyphData.height;
+        }
+
+        i += letter.length;
+        x += glyphData.width;
+    }
+
+    outPos[0] = maxLineWidth * this.fontScale();
+    outPos[1] = y * this.fontScale();
+    return outPos;
 };
 
 parsegraph_TextPainter.prototype.setFontSize = function(fontSize)

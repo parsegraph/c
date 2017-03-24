@@ -63,12 +63,20 @@ parsegraph_PaintGroup.prototype.root = function()
     return this._root;
 };
 
-parsegraph_PaintGroup.prototype.worldToTextCaret = function(label, fontSize, wrapWidth, paragraphX, paragraphY)
+parsegraph_PaintGroup.prototype.worldToTextCaret = function(label, fontSize, wrapWidth, paragraphX, paragraphY, outPos)
 {
     var painter = this._painter.textPainter();
     painter.setFontSize(fontSize);
     painter.setWrapWidth(wrapWidth);
-    return painter.findCaretPos(label, paragraphX, paragraphY);
+    return painter.findCaretPos(label, paragraphX, paragraphY, outPos);
+};
+
+parsegraph_PaintGroup.prototype.indexToCaret = function(label, fontSize, wrapWidth, paragraphX, paragraphY, outPos)
+{
+    var painter = this._painter.textPainter();
+    painter.setFontSize(fontSize);
+    painter.setWrapWidth(wrapWidth);
+    return painter.findCaretPos(label, paragraphX, paragraphY, outPos);
 };
 
 parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)

@@ -483,5 +483,5 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         world
     );
     this._gl.uniform1f(this.u_scale, scale);
-    this._blockBuffer.renderPages();
+    return this._blockBuffer.renderPages();
 };

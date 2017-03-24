@@ -73,7 +73,6 @@ function alpha_FacePainter(gl)
 };
 
 alpha_FacePainter_Tests = new parsegraph_TestSuite("alpha_FacePainter");
-parsegraph_AllTests.addTest(alpha_FacePainter_Tests);
 
 alpha_FacePainter_Tests.addTest("alpha_FacePainter", function(resultDom) {
     var widget = new alpha_GLWidget();

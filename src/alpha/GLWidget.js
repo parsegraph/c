@@ -9,8 +9,8 @@ function alpha_GLWidget()
     var surface;
     if(arguments.length == 0) {
         surface = new parsegraph_Surface();
-        this._surface.addPainter(this.paint, this);
-        this._surface.addRenderer(this.render, this);
+        surface.addPainter(this.paint, this);
+        surface.addRenderer(this.render, this);
     }
     else {
         surface = arguments[0];

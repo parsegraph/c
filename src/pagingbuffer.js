@@ -211,6 +211,8 @@ parsegraph_PagingBuffer.prototype.clear = function()
  */
 parsegraph_PagingBuffer.prototype.renderPages = function()
 {
+    var count = 0;
+
     // Enable used vertex attributes.
     this._attribs.forEach(function(attrib) {
         if(attrib.location == -1) {
@@ -270,6 +272,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
         if(numIndices > 0) {
             //console.log("Drawing " + numIndices + " indices");
             this._gl.drawArrays(this._gl.TRIANGLES, 0, numIndices);
+            count += numIndices/3;
         }
 
         page.needsUpdate = false;
@@ -282,4 +285,6 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
         }
         this._gl.disableVertexAttribArray(attrib.location);
     }, this);
+
+    return count;
 };

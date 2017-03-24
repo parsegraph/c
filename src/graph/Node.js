@@ -10,6 +10,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._id = parsegraph_Node_COUNT++;
 
     this._paintGroup = null;
+    this._keyListener = null;
     this._clickListener = null;
     this._type = newType;
     this._style = parsegraph_style(this._type);
@@ -59,6 +60,8 @@ function parsegraph_Node(newType, fromNode, parentDirection)
         this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
     }
 }
+
+parsegraph_Node_Tests = new parsegraph_TestSuite("parsegraph_Node");
 
 parsegraph_Node.prototype.x = function()
 {
@@ -294,8 +297,14 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
     }
 };
 
+parsegraph_Node_Tests.addTest("parsegraph_Node.setClickListener", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.setClickListener(function() {
+    });
+});
+
 /**
- * Returns whether this Node has a command handler.
+ * Returns whether this Node has a click listener.
  */
 parsegraph_Node.prototype.hasClickListener = function()
 {
@@ -314,6 +323,48 @@ parsegraph_Node.prototype.click = function()
         return;
     }
     return this._clickListener[0].apply(this._clickListener[1], arguments);
+};
+
+parsegraph_Node.prototype.setKeyListener = function(listener, thisArg)
+{
+    if(!listener) {
+        this._keyListener = null;
+    }
+    else {
+        if(!thisArg) {
+            thisArg = this;
+        }
+        this._keyListener = [listener, thisArg];
+    }
+};
+
+parsegraph_Node_Tests.addTest("parsegraph_Node.setKeyListener", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.setKeyListener(function() {
+    });
+});
+
+/**
+ * Returns whether this Node has a listener to respond to key
+ * events.
+ */
+parsegraph_Node.prototype.hasKeyListener = function()
+{
+    return this._keyListener != null;
+};
+
+/**
+ * Invokes the key listener on this node.
+ *
+ * Does nothing if no key listener is present.
+ */
+parsegraph_Node.prototype.key = function()
+{
+    // Invoke the key listener.
+    if(!this.hasKeyListener()) {
+        return;
+    }
+    return this._keyListener[0].apply(this._keyListener[1], arguments);
 };
 
 parsegraph_Node.prototype.nodeFit = function()
@@ -734,10 +785,14 @@ parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
     if(!this.label()) {
         this._label = new parsegraph_Label(glyphAtlas);
     }
-    if(this._label.setText(text)) {
-        this.layoutWasChanged();
-    }
+    this._label.setText(text);
+    this.layoutWasChanged();
 };
+
+parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.setLabel("No time");
+});
 
 parsegraph_Node.prototype.blockStyle = function()
 {

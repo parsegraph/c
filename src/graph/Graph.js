@@ -35,6 +35,12 @@ function parsegraph_Graph()
 
     this._shaders = {};
 };
+parsegraph_Graph_Tests = new parsegraph_TestSuite("parsegraph_Graph");
+
+parsegraph_Graph.prototype.shaders = function()
+{
+    return this._shaders;
+};
 
 parsegraph_Graph.prototype.cameraBox = function()
 {
@@ -117,6 +123,11 @@ parsegraph_Graph.prototype.setGlyphAtlas = function(glyphAtlas)
     this._glyphAtlas = glyphAtlas;
 }
 
+parsegraph_Graph.prototype.plot = function()
+{
+    return this.world().plot.apply(this.world(), arguments);
+}
+
 /**
  * Paints the graph up to the given time, in milliseconds.
  *
@@ -133,7 +144,10 @@ parsegraph_Graph.prototype.paint = function(timeout)
     this._cameraBox.paint();
     this._carousel.prepare(this.gl(), this.glyphAtlas(), this._shaders);
     this._carousel.paint();
-    return this._world.paint(timeout);
+    var rv = this._world.paint(timeout);
+
+    this._input.paint();
+    return rv;
 };
 
 parsegraph_Graph.prototype.render = function()
@@ -142,4 +156,5 @@ parsegraph_Graph.prototype.render = function()
     this._world.render(world);
     this._carousel.render(world);
     this._cameraBox.render(world);
+    this._input.render(world);
 };

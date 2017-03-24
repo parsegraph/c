@@ -56,7 +56,6 @@ parsegraph_DepthTraversal.prototype.visit = function(visitor, visitorThisArg)
 };
 
 parsegraph_DepthTraversal_Tests = new parsegraph_TestSuite("parsegraph_DepthTraversal");
-parsegraph_AllTests.addTest(parsegraph_DepthTraversal_Tests);
 
 parsegraph_DepthTraversal_Tests.addTest("parsegraph_DepthTraversal", function() {
     var dom = document.createElement("html");

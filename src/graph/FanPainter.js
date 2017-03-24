@@ -104,7 +104,6 @@ function parsegraph_FanPainter(gl)
 };
 
 parsegraph_FanPainter_Tests = new parsegraph_TestSuite("parsegraph_FanPainter");
-parsegraph_AllTests.addTest(parsegraph_FanPainter_Tests);
 
 parsegraph_FanPainter_Tests.addTest("parsegraph_FanPainter", function(resultDom) {
     var surface = new parsegraph_Surface();

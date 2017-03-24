@@ -1,3 +1,10 @@
+function parsegraph_defaultGlyphAtlas()
+{
+    return new parsegraph_GlyphAtlas(
+        parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+    );
+}
+
 function parsegraph_initialize(mathMode) {
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
