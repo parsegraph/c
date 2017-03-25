@@ -26,16 +26,80 @@ parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
     car.label("No time");
 });
 
-function parsegraph_Line(label, text, linePos)
+function parsegraph_Line(label, text)
 {
     this._label = label;
-    this._text = text;
-    this._linePos = linePos;
+    this._glyphs = [];
+    this._width = 0;
+    this._height = 0;
+    this.addText(text);
 }
 
-parsegraph_Line.prototype.text = function()
+parsegraph_Line_Tests = new parsegraph_TestSuite("parsegraph_Line");
+
+parsegraph_Line_Tests.addTest("new parsegraph_Line", function() {
+    var atlas = new parsegraph_GlyphAtlas();
+    var label = new parsegraph_Label(atlas);
+    var l = new parsegraph_Line(label);
+    var f = 0;
+    try {
+        var l = new parsegraph_Line(null);
+        f = 2;
+    }
+    catch(ex) {
+        f = 3;
+    }
+    if(f !== 3) {
+        return "Failed to recognize null label";
+    }
+});
+
+parsegraph_Line.prototype.isEmpty = function()
 {
-    return this._text;
+    return this._width === 0;
+}
+
+parsegraph_Line.prototype.glyphAtlas = function()
+{
+    return this._label.glyphAtlas();
+}
+
+parsegraph_Line.prototype.addText = function(text)
+{
+    var i = 0;
+    var atlas = this.glyphAtlas();
+    if(!atlas) {
+        throw new Error("Line cannot add text without the label having a GlyphAtlas.");
+    }
+    var checkTimeout = parsegraph_timeout("parsegraph_Line.addText");
+    while(true) {
+        checkTimeout();
+
+        // Retrieve letter.
+        var letter = fixedCharAt(text, i);
+
+        // Test for completion.
+        if(letter === null) {
+            return;
+        }
+
+        var glyphData = atlas.getGlyph(letter);
+        this._glyphs.push(glyphData);
+
+        // Increment.
+        this._height = Math.max(this._height, glyphData.height);
+        this._width += glyphData.width;
+        i += letter.length;
+    }
+};
+
+parsegraph_Line.prototype.getText = function()
+{
+    var t = "";
+    this._glyphs.forEach(function(glyphData) {
+        t += glyphData.letter;
+    });
+    return t;
 }
 
 parsegraph_Line.prototype.linePos = function()
@@ -48,16 +112,57 @@ parsegraph_Line.prototype.label = function()
     return this._label;
 }
 
+parsegraph_Line.prototype.width = function()
+{
+    return this._width;
+}
+
+parsegraph_Line.prototype.height = function()
+{
+    return this._height;
+}
+
 function parsegraph_Label(glyphAtlas)
 {
+    if(!glyphAtlas) {
+        throw new Error("Label requires a GlyphAtlas.");
+    }
     this._glyphAtlas = glyphAtlas;
     this._wrapWidth = null;
-    this.setText("");
+    this._lines = [];
 }
+
+parsegraph_Label.prototype.glyphAtlas = function()
+{
+    return this._glyphAtlas;
+}
+
+parsegraph_Label.prototype.isEmpty = function()
+{
+    for(var i = 0; i < this._lines.length; ++i) {
+        var l = this._lines[i];
+        if(!l.isEmpty()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+parsegraph_Label_Tests.addTest("isEmpty", function() {
+    var atlas = parsegraph_defaultGlyphAtlas();
+    var l = new parsegraph_Label(atlas);
+    if(!l.isEmpty()) {
+        return "New label must begin as empty.";
+    }
+    l.setText("No time");
+    if(l.isEmpty()) {
+        return "Label with text must test as non-empty.";
+    }
+});
 
 parsegraph_Label.prototype.drawGlyph = function(letter, worldX, worldY)
 {
-    var glyphData = this._glyphAtlas.getGlyph(letter);
+    var glyphData = this.glyphAtlas().getGlyph(letter);
     glyphData.painted = true;
 
     // Change lines if needed.
@@ -331,8 +436,8 @@ parsegraph_Label.prototype.forEach = function(func, funcThisArg)
 parsegraph_Label.prototype.getText = function()
 {
     var t = "";
-    this.forEach(function(l) {
-        t += l.text() + '\n';
+    this._lines.forEach(function(l) {
+        t += l.getText() + '\n';
     });
     return t;
 }

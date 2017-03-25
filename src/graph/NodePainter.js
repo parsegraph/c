@@ -784,7 +784,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
         node.absoluteScale() * userScale
     );
 
-    if(!node.label()) {
+    if(!node._label || node._label.isEmpty()) {
         return;
     }
 

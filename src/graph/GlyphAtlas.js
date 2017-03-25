@@ -36,6 +36,7 @@ parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
     }
 
     var glyphData = {
+        letter: letter,
         x: this._x,
         y: this._y,
         width: letter.width,

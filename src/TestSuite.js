@@ -318,6 +318,7 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
                 );
                 resultLine.appendChild(document.createElement("br"));
                 resultLine.appendChild(document.createElement("pre"));
+                console.log(result.testResult().stack);
                 resultLine.lastChild.innerHTML = result.testResult().stack.replace(
                     /[\r\n]+/g, "<br/>"
                 );

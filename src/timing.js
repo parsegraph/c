@@ -1,3 +1,33 @@
+function parsegraph_timeout(name, timeoutMs)
+{
+    if(arguments.length === 1) {
+        if(typeof arguments[0] === "number") {
+            name = null;
+            timeoutMs = arguments[0];
+        }
+        else {
+            timeoutMs = parsegraph_TIMEOUT;
+        }
+    }
+    else if(arguments.length === 0) {
+        name = null;
+        timeoutMs = parsegraph_TIMEOUT;
+    }
+    var startTime = parsegraph_getTimeInMillis();
+    return function() {
+        if(parsegraph_getTimeInMillis() - startTime <= timeoutMs) {
+            // Not timed out yet.
+            return;
+        }
+
+        // Report the timeout.
+        if(name) {
+            throw new Error("Timeout '" + name + "' after " + timeoutMs + "msecs exceeded.");
+        }
+        throw new Error("Timeout after " + timeoutMs + "msecs exceeded.");
+    };
+}
+
 function parsegraph_AnimationTimer()
 {
     this.timerId = null;

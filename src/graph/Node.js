@@ -791,7 +791,8 @@ parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
 
 parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
     var n = new parsegraph_Node(parsegraph_BLOCK);
-    n.setLabel("No time");
+    var atlas = parsegraph_defaultGlyphAtlas();
+    n.setLabel("No time", atlas);
 });
 
 parsegraph_Node.prototype.blockStyle = function()
