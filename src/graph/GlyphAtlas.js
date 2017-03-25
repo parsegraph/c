@@ -4,8 +4,10 @@
  *
  * http://webglfundamentals.org/webgl/lessons/webgl-text-glyphs.html
  */
+parsegraph_GlyphAtlas_COUNT = 0;
 function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
 {
+    this._id = parsegraph_GlyphAtlas_COUNT++;
     this._canvas = document.createElement("canvas");
     this._canvas.width = this.maxTextureWidth();
     this._canvas.height = this.maxTextureWidth();
@@ -23,6 +25,11 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._padding = this.fontSize() / 4;
     this._x = this._padding;
     this._y = this._padding;
+}
+
+parsegraph_GlyphAtlas.prototype.toString = function()
+{
+    return "[GlyphAtlas " + this._id + "]";
 }
 
 parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)

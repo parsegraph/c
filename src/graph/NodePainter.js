@@ -375,14 +375,9 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     }
 
     var fontScale = .7;
-    this._glyphPainter.setFontSize(
-        fontScale * style.fontSize * userScale * node.absoluteScale()
-    );
-    if(style.maxLabelChars) {
-        this._glyphPainter.setWrapWidth(
-            style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
-        );
-    }
+//    this._glyphPainter.setFontSize(
+//        fontScale * style.fontSize * userScale * node.absoluteScale()
+//    );
     this._glyphPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
@@ -394,9 +389,9 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     if(value == null) {
         value = 0.5;
     }
-    this._glyphPainter.setFontSize(
-        fontScale * style.fontSize * userScale * node.absoluteScale()
-    );
+    //this._glyphPainter.setFontSize(
+//        fontScale * style.fontSize * userScale * node.absoluteScale()
+//    );
     if(style.maxLabelChars) {
         this._glyphPainter.setWrapWidth(
             fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
@@ -787,51 +782,35 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     );
 
     // Draw the label.
-    if(!node._label || node._label.isEmpty()) {
+    var label = node._label;
+    if(!label || label.isEmpty()) {
         return;
     }
-
-    this._glyphPainter.setFontSize(
-        style.fontSize * userScale * node.absoluteScale()
-    );
-    if(style.maxLabelChars) {
-        this._glyphPainter.setWrapWidth(
-            style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
-        );
-    }
+    var fontScale = (style.fontSize * userScale * node.absoluteScale()) / label.fontSize();
+    var labelX, labelY;
     this._glyphPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
     );
-    var textMetrics = this._glyphPainter.measureText(node.label());
-
     if(node.hasNode(parsegraph_INWARD)) {
         var nestedNode = node.nodeAt(parsegraph_INWARD);
         var nestedSize = nestedNode.extentSize();
-
         var nodeSize = node.sizeWithoutPadding();
-
         if(node.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
-            node._label[0] = worldX + userScale * node.absoluteX() - textMetrics[0]/2;
-            node._label[1] = worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2;
-            this._glyphPainter.setPosition(node._label[0], node._label[1]);
-            this._glyphPainter.drawText(node.label());
-            node._label.paint(this._glyphPainter);
+            labelX = worldX + userScale * node.absoluteX() - fontScale * label.width()/2;
+            labelY = worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2;
         }
         else {
             // Align horizontal.
-            node._label[0] = worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2;
-            node._label[1] = worldY + userScale * node.absoluteY() - textMetrics[1]/2;
-            this._glyphPainter.setPosition(node._label[0], node._label[1]);
-            this._glyphPainter.drawText(node.label());
+            labelX = worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2;
+            labelY = worldY + userScale * node.absoluteY() - fontScale * label.height()/2;
         }
     }
     else {
-        node._label[0] = worldX + userScale * node.absoluteX() - textMetrics[0]/2,
-        node._label[1] = worldY + userScale * node.absoluteY() - textMetrics[1]/2
-        this._glyphPainter.setPosition(node._label[0], node._label[1]);
-        this._glyphPainter.drawText(node.label());
+        labelX = worldX + userScale * node.absoluteX() - fontScale * label.width()/2;
+        labelY = worldY + userScale * node.absoluteY() - fontScale * label.height()/2;
     }
+    label.paint(this._glyphPainter, labelX, labelY, fontScale);
 };

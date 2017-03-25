@@ -1,8 +1,12 @@
+parsegraph_GLYPH_ATLAS = null
 function parsegraph_defaultGlyphAtlas()
 {
-    return new parsegraph_GlyphAtlas(
-        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-    );
+    if(!parsegraph_GLYPH_ATLAS) {
+        parsegraph_GLYPH_ATLAS = new parsegraph_GlyphAtlas(
+            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
+        );
+    }
+    return parsegraph_GLYPH_ATLAS;
 }
 
 function parsegraph_initialize(mathMode) {

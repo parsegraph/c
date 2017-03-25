@@ -41,8 +41,6 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
 {
     this._gl = gl;
 
-    this._fontSize = parsegraph_RENDERED_FONT_SIZE;
-
     if(!glyphAtlas) {
         throw new Error("Glyph atlas must be provided");
     }
@@ -115,27 +113,22 @@ parsegraph_GlyphPainter.prototype.setBackgroundColor = function()
     }
 };
 
-parsegraph_GlyphPainter.prototype.setFontSize = function(fontSize)
-{
-    this._fontSize = fontSize;
-};
-
 parsegraph_GlyphPainter.prototype.fontSize = function()
 {
-    return this._fontSize;
+    return this._glyphAtlas.fontSize();
 };
 
-parsegraph_GlyphPainter.prototype.fontScale = function()
+parsegraph_GlyphPainter.prototype.glyphAtlas = function()
 {
-    return this.fontSize() / this._glyphAtlas.fontSize();
+    return this._glyphAtlas;
 };
 
-parsegraph_GlyphPainter.prototype.drawGlyph = function(letter, worldX, worldY)
+parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
-    var glyphData = this._glyphAtlas.getGlyph(letter);
+    if(typeof glyphData === "string") {
+        glyphData = this._glyphAtlas.getGlyph(glyphData);
+    }
     glyphData.painted = true;
-
-    var fontScale = this.fontScale();
 
     // Select the correct buffer.
     var page = this._textBuffers[glyphData.texture];
@@ -201,12 +194,6 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(letter, worldX, worldY)
             (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height
         ]
     );
-
-    // Add the letter's width to the line advance.
-    this._lineAdvance += glyphData.width * fontScale;
-    this._lineHeight = Math.max(glyphData.height * fontScale, this._lineHeight);
-
-    return glyphData.width * fontScale;
 };
 
 parsegraph_GlyphPainter.prototype.clear = function()

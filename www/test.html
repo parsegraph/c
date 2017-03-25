@@ -89,7 +89,7 @@ function createScriptGraph(url)
     xhr.open("GET", url);
     xhr.addEventListener("load", function() {
         var ln = 0;
-        xhr.responseText.slice(0, 10000).split(/\n/).forEach(function(l) {
+        xhr.responseText.slice(0, 100).split(/\n/).forEach(function(l) {
             if(ln % 100) {
                 car.crease();
             }

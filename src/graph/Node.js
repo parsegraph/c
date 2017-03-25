@@ -1089,9 +1089,11 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     // Find the size of this node's drawing area.
     var style = this.blockStyle();
     if(this.label()) {
-        bodySize = this._label.size(bodySize);
-        bodySize[0] *= style.fontSize / this._label.glyphAtlas().fontSize();
-        bodySize[1] *= style.fontSize / this._label.glyphAtlas().fontSize();
+        if(!bodySize) {
+            bodySize = new parsegraph_Size();
+        }
+        bodySize[0] = this._label.width() * (style.fontSize / this._label.glyphAtlas().fontSize());
+        bodySize[1] = this._label.height() * (style.fontSize / this._label.glyphAtlas().fontSize());
         bodySize[0] = Math.max(style.minWidth, bodySize[0]);
         bodySize[1] = Math.max(style.minHeight, bodySize[1]);
     }
