@@ -732,6 +732,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
+    // Set colors and draw the spotlight if selected.
     if(node.isSelected()) {
         painter.setBorderColor(
             style.selectedBorderColor.premultiply(
@@ -773,6 +774,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
         );
     }
 
+    // Draw the block.
     var size = node.absoluteSize().scaled(userScale);
     painter.drawBlock(
         worldX + userScale * node.absoluteX(),
@@ -784,6 +786,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
         node.absoluteScale() * userScale
     );
 
+    // Draw the label.
     if(!node._label || node._label.isEmpty()) {
         return;
     }
