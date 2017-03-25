@@ -1,7 +1,7 @@
 function parsegraph_defaultGlyphAtlas()
 {
     return new parsegraph_GlyphAtlas(
-        parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
     );
 }
 
@@ -47,9 +47,9 @@ function parsegraph_initialize(mathMode) {
     );
 
     // Font
-    parsegraph_TextPainter_UPSCALED_FONT_SIZE = 144;
-    parsegraph_TextPainter_RENDERED_FONT_SIZE = parsegraph_TextPainter_UPSCALED_FONT_SIZE/4;
-    parsegraph_TextPainter_WRAP_WIDTH = 80 * parsegraph_TextPainter_RENDERED_FONT_SIZE;
+    parsegraph_UPSCALED_FONT_SIZE = 144;
+    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
+    parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
 
     /**
      * The scale at which shrunk nodes are shrunk.

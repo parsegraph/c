@@ -131,10 +131,10 @@ function init()
         renderTimer.schedule();
 
         var glyphAtlas = new parsegraph_GlyphAtlas(
-            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
         );
         var shaders = {};
-        var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
+        var glyphPainter = new parsegraph_GlyphPainter(surface.gl(), glyphAtlas, shaders);
         var textCamera = new parsegraph_Camera(surface);
 
 surface.addRenderer(function() {
@@ -147,16 +147,16 @@ surface.addRenderer(function() {
     gl.blendFunc(
         gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
     );
-    textPainter.clear();
-    textPainter.setColor(1, 1, 1);
+    glyphPainter.clear();
+    glyphPainter.setColor(1, 1, 1);
 
-    textPainter.setFontSize(20);
+    glyphPainter.setFontSize(20);
 
     var drawMultiline = function(x, y, text) {
         var lines = text.split("\n");
         for(var i = 0; i < lines.length; ++i) {
             var line = lines[i];
-            textPainter.drawText(line, x, y + (1 + i) * textPainter.fontSize());
+            glyphPainter.drawText(line, x, y + (1 + i) * glyphPainter.fontSize());
         }
     };
 
@@ -164,7 +164,7 @@ surface.addRenderer(function() {
     t += "position=" + primes.position + "\n";
     //drawMultiline(8, 4, t);
     var world = textCamera.project();
-    textPainter.render(world);
+    glyphPainter.render(world);
 });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));

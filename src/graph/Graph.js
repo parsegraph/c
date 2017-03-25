@@ -112,7 +112,7 @@ parsegraph_Graph.prototype.glyphAtlas = function()
 {
     if(!this._glyphAtlas) {
         this._glyphAtlas = new parsegraph_GlyphAtlas(
-            parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
         );
     }
     return this._glyphAtlas;

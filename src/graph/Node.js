@@ -845,8 +845,8 @@ parsegraph_Node.prototype.borderThickness = function()
 parsegraph_Node.prototype.size = function(bodySize)
 {
     bodySize = this.sizeWithoutPadding(bodySize);
-    bodySize[0] = bodySize.width() + 2 * this.horizontalPadding() + 2 * this.borderThickness();
-    bodySize[1] = bodySize.height() + 2 * this.verticalPadding() + 2 * this.borderThickness();
+    bodySize[0] += 2 * this.horizontalPadding() + 2 * this.borderThickness();
+    bodySize[1] += 2 * this.verticalPadding() + 2 * this.borderThickness();
     return bodySize;
 };
 
@@ -1088,7 +1088,9 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     // Find the size of this node's drawing area.
     var style = this.blockStyle();
     if(this.label()) {
-        bodySize = this._label.size(style, bodySize);
+        bodySize = this._label.size(bodySize);
+        bodySize[0] *= style.fontSize / this._label.glyphAtlas().fontSize();
+        bodySize[1] *= style.fontSize / this._label.glyphAtlas().fontSize();
         bodySize[0] = Math.max(style.minWidth, bodySize[0]);
         bodySize[1] = Math.max(style.minHeight, bodySize[1]);
     }

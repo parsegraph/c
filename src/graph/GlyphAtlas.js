@@ -39,7 +39,8 @@ parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
         x: this._x,
         y: this._y,
         width: letter.width,
-        height: this.letterHeight()
+        height: this.letterHeight(),
+        texture: 0
     };
     this._glyphData[glyph] = glyphData;
 
@@ -105,7 +106,7 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
 
 parsegraph_GlyphAtlas.prototype.clear = function()
 {
-    if(this._gl) {
+    if(!this._gl) {
         return;
     }
     this._gl.deleteTexture(this._glyphTexture);

@@ -71,9 +71,9 @@ surface.addPainter(widget.paint, widget);
 surface.addRenderer(widget.render, widget);
 
 /*var glyphAtlas = new parsegraph_GlyphAtlas(
-    parsegraph_TextPainter_UPSCALED_FONT_SIZE, "sans-serif", "white"
+    parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
 );
-var textPainter = new parsegraph_TextPainter(surface.gl(), glyphAtlas, shaders);
+var glyphPainter = new parsegraph_GlyphPainter(surface.gl(), glyphAtlas, shaders);
 
 var textCamera = new parsegraph_Camera(surface);
 
@@ -87,18 +87,18 @@ surface.addRenderer(function() {
     gl.blendFunc(
         gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
     );
-    textPainter.clear();
-    textPainter.setColor(1, 1, 1);
+    glyphPainter.clear();
+    glyphPainter.setColor(1, 1, 1);
 
-    textPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
-    textPainter.setColor(1, .5, .5);
-    textPainter.setFontSize(20);
+    glyphPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
+    glyphPainter.setColor(1, .5, .5);
+    glyphPainter.setFontSize(20);
 
     var drawMultiline = function(x, y, text) {
         var lines = text.split("\n");
         for(var i = 0; i < lines.length; ++i) {
             var line = lines[i];
-            textPainter.drawText(line, x, y + (1 + i) * textPainter.fontSize());
+            glyphPainter.drawText(line, x, y + (1 + i) * glyphPainter.fontSize());
         }
     };
 
@@ -107,7 +107,7 @@ surface.addRenderer(function() {
     t += "orientation=" + widget.camera.orientation.toString();
     drawMultiline(8, 4, t);
     var world = textCamera.project();
-    textPainter.render(world);
+    glyphPainter.render(world);
 });
 */
 

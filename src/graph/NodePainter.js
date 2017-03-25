@@ -19,7 +19,7 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._spotlightPainter = new parsegraph_SpotlightPainter(this._gl, shaders);
     this._renderSpotlights = true;
 
-    this._textPainter = new parsegraph_TextPainter(this._gl, glyphAtlas, shaders);
+    this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
     this._renderText = true;
 
@@ -31,9 +31,9 @@ parsegraph_NodePainter.prototype.gl = function()
     return this._gl;
 };
 
-parsegraph_NodePainter.prototype.textPainter = function()
+parsegraph_NodePainter.prototype.glyphPainter = function()
 {
-    return this._textPainter;
+    return this._glyphPainter;
 };
 
 /**
@@ -107,7 +107,7 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     }
 
     if(this._renderText) {
-        this._textPainter.render(world);
+        this._glyphPainter.render(world);
     }
 
     this._textures.forEach(function(t) {
@@ -226,7 +226,7 @@ parsegraph_NodePainter.prototype.clear = function()
     this._spotlightPainter.clear();
     this._extentPainter.clear();
     this._originPainter.clear();
-    this._textPainter.clear();
+    this._glyphPainter.clear();
 
     var gl = this._gl;
     this._textures.forEach(function(t) {
@@ -375,15 +375,15 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     }
 
     var fontScale = .7;
-    this._textPainter.setFontSize(
+    this._glyphPainter.setFontSize(
         fontScale * style.fontSize * userScale * node.absoluteScale()
     );
     if(style.maxLabelChars) {
-        this._textPainter.setWrapWidth(
+        this._glyphPainter.setWrapWidth(
             style.maxLabelChars * fontScale * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
         );
     }
-    this._textPainter.setColor(
+    this._glyphPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
@@ -394,20 +394,20 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     if(value == null) {
         value = 0.5;
     }
-    this._textPainter.setFontSize(
+    this._glyphPainter.setFontSize(
         fontScale * style.fontSize * userScale * node.absoluteScale()
     );
     if(style.maxLabelChars) {
-        this._textPainter.setWrapWidth(
+        this._glyphPainter.setWrapWidth(
             fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
         );
     }
 
-    var textMetrics = this._textPainter.measureText(node.label());
+    var textMetrics = this._glyphPainter.measureText(node.label());
     node._label[0] = worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
     node._label[1] = worldY + node.absoluteY() - textMetrics[1]/2;
-    this._textPainter.setPosition(node._label[0], node._label[1]);
-    this._textPainter.drawText(node.label());
+    this._glyphPainter.setPosition(node._label[0], node._label[1]);
+    this._glyphPainter.drawText(node.label());
 };
 
 parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY, userScale, shaders)
@@ -788,20 +788,20 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
         return;
     }
 
-    this._textPainter.setFontSize(
+    this._glyphPainter.setFontSize(
         style.fontSize * userScale * node.absoluteScale()
     );
     if(style.maxLabelChars) {
-        this._textPainter.setWrapWidth(
+        this._glyphPainter.setWrapWidth(
             style.maxLabelChars * style.fontSize * style.letterWidth * userScale * node.absoluteScale()
         );
     }
-    this._textPainter.setColor(
+    this._glyphPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
     );
-    var textMetrics = this._textPainter.measureText(node.label());
+    var textMetrics = this._glyphPainter.measureText(node.label());
 
     if(node.hasNode(parsegraph_INWARD)) {
         var nestedNode = node.nodeAt(parsegraph_INWARD);
@@ -813,22 +813,22 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
             // Align vertical.
             node._label[0] = worldX + userScale * node.absoluteX() - textMetrics[0]/2;
             node._label[1] = worldY + userScale * node.absoluteY() - userScale * node.absoluteScale() * nodeSize.height()/2;
-            this._textPainter.setPosition(node._label[0], node._label[1]);
-            this._textPainter.drawText(node.label());
-            node._label.paint(this._textPainter);
+            this._glyphPainter.setPosition(node._label[0], node._label[1]);
+            this._glyphPainter.drawText(node.label());
+            node._label.paint(this._glyphPainter);
         }
         else {
             // Align horizontal.
             node._label[0] = worldX + userScale * node.absoluteX() - userScale * node.absoluteScale() * nodeSize.width()/2;
             node._label[1] = worldY + userScale * node.absoluteY() - textMetrics[1]/2;
-            this._textPainter.setPosition(node._label[0], node._label[1]);
-            this._textPainter.drawText(node.label());
+            this._glyphPainter.setPosition(node._label[0], node._label[1]);
+            this._glyphPainter.drawText(node.label());
         }
     }
     else {
         node._label[0] = worldX + userScale * node.absoluteX() - textMetrics[0]/2,
         node._label[1] = worldY + userScale * node.absoluteY() - textMetrics[1]/2
-        this._textPainter.setPosition(node._label[0], node._label[1]);
-        this._textPainter.drawText(node.label());
+        this._glyphPainter.setPosition(node._label[0], node._label[1]);
+        this._glyphPainter.drawText(node.label());
     }
 };

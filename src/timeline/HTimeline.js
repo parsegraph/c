@@ -25,9 +25,9 @@ function parsegraph_HTimeline()
     this._minuteGridPainter = new parsegraph_HSlicePainter(this._gl);
     this._selfSlicePainter = new parsegraph_HSlicePainter(this._gl);
 
-    this._textPainter = parsegraph_createTextPainter(this._gl);
+    this._glyphPainter = parsegraph_createGlyphPainter(this._gl);
 
-    this._textPainter._glyphAtlas.setAfterUpdate(this.scheduleRender, this);
+    this._glyphPainter._glyphAtlas.setAfterUpdate(this.scheduleRender, this);
     this._renderText = true;
 
     this._camera = new parsegraph_Camera(this);
@@ -87,7 +87,7 @@ parsegraph_HTimeline.prototype.paint = function()
 {
 	//console.log("Painting");
 
-    this._textPainter.clear();
+    this._glyphPainter.clear();
 
     var DAYS_RENDERED = 365;
 
@@ -227,7 +227,7 @@ parsegraph_HTimeline.prototype.render = function()
     );
 
     if(this._renderText) {
-        this._textPainter.render(world, this.camera().scale());
+        this._glyphPainter.render(world, this.camera().scale());
     }
 };
 
