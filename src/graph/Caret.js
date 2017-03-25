@@ -3,6 +3,9 @@
  */
 function parsegraph_Caret(nodeRoot)
 {
+    if(arguments.length === 0) {
+        nodeRoot = new parsegraph_Node(parsegraph_DEFAULT_NODE_TYPE);
+    }
     if(typeof nodeRoot != "object") {
         nodeRoot = new parsegraph_Node(parsegraph_readNodeType(nodeRoot));
     }
@@ -22,12 +25,21 @@ parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
     var car = new parsegraph_Caret('s');
     var n = new parsegraph_Node(parsegraph_BLOCK);
     car = new parsegraph_Caret(n);
+    car = new parsegraph_Caret();
+    if(car.node().type() !== parsegraph_DEFAULT_NODE_TYPE) {
+        console.log(parsegraph_DEFAULT_NODE_TYPE);
+        return car.node().type() + " is not the default.";
+    }
 });
 
 parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
 {
     return this.node().label().setGlyphAtlas(glyphAtlas);
 };
+
+parsegraph_Caret_Tests.addTest("setGlyphAtlas", function() {
+    var car = new parsegraph_Caret('b');
+});
 
 parsegraph_Caret.prototype.glyphAtlas = function()
 {
@@ -351,6 +363,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
     case 1:
         node = this.node();
         text = arguments[0];
+        glyphAtlas = parsegraph_defaultGlyphAtlas();
         break;
     case 2:
         if(typeof arguments[1] === "object") {

@@ -47,6 +47,15 @@ parsegraph_Surface.prototype.gl = function()
     return this._gl;
 };
 
+parsegraph_Surface.prototype.resize = function(w, h)
+{
+    this.container().style.width = typeof w === "number" ? (w + "px") : w;
+    if(arguments.length === 1) {
+        h = w;
+    }
+    this.container().style.height = typeof h === "number" ? (h + "px") : h;
+};
+
 /**
  * Returns the container that holds the canvas for this graph.
  */

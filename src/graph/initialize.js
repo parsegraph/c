@@ -31,6 +31,8 @@ function parsegraph_initialize(mathMode) {
     parsegraph_SLIDER = 13;
     parsegraph_SCENE = 14;
 
+    parsegraph_DEFAULT_NODE_TYPE = parsegraph_BLOCK;
+
     parsegraph_NULL_NODE_FIT = 14;
     parsegraph_NODE_FIT_EXACT = 15;
     parsegraph_NODE_FIT_LOOSE = 16;

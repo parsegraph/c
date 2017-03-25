@@ -26,72 +26,61 @@ parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
     car.label("No time");
 });
 
-function parsegraph_Line(label, text, start, pos)
+function parsegraph_Line(label, text, linePos)
 {
     this._label = label;
     this._text = text;
-    this._start = start;
-    this._length = length;
+    this._linePos = linePos;
+}
+
+parsegraph_Line.prototype.text = function()
+{
+    return this._text;
+}
+
+parsegraph_Line.prototype.linePos = function()
+{
+    return this._linePos;
+}
+
+parsegraph_Line.prototype.label = function()
+{
+    return this._label;
 }
 
 function parsegraph_Label(glyphAtlas)
 {
     this._glyphAtlas = glyphAtlas;
-    this._currentLine = 0;
-    this._currentPos = 0;
-    this._lines = [new parsegraph_Line(this)];
+    this.setText("");
 }
 
-parsegraph_Label.prototype.moveCaret = function(di)
+parsegraph_Label.prototype.forEach = function(func, funcThisArg)
 {
-
+    if(!funcThisArg) {
+        funcThisArg = this;
+    }
+    this._lines.forEach(func, funcThisArg);
 }
 
 parsegraph_Label.prototype.getText = function()
 {
     var t = "";
+    this.forEach(function(l) {
+        t += l.text() + '\n';
+    });
+    return t;
 }
 parsegraph_Label.prototype.text = parsegraph_Label.prototype.getText;
 
 parsegraph_Label.prototype.setText = function(text)
 {
+    this._lines = [];
+    this._currentLine = 0;
+    this._currentPos = 0;
+    text.split(/\n/).forEach(function(l) {
+        this._lines.push(new parsegraph_Line(this, l));
+    }, this);
 }
-
-/**
- * Appends the given text to the current line.
- *
- * @see #newLine
- */
-parsegraph_Label.prototype.insertText = function(text)
-{
-    var l = this._lines[this._currentLine];
-    this._lines[this._currentLine] = l + text;
-    return l;
-}
-
-/**
- *
- */
-parsegraph_Label.prototype.newLine = function()
-{
-    this._currentLine++;
-    if(this._currentLine > this._lines.length) {
-        this._lines.push(new parsegraph_Line());
-    }
-}
-
-parsegraph_Label.prototype.setCaret = function(textPos)
-{
-
-}
-
-parsegraph_Label.prototype.getCaret = function()
-{
-    var ln = this._lineNumbers[this._currentLine];
-    return ln + this._currentPos;
-}
-
-
 
 /**
  * Given a click in world (absolute) coordinates, return the index into this node's label.
@@ -129,7 +118,12 @@ parsegraph_Label.prototype.size = function(style, bodySize)
     else {
         bodySize.reset();
     }
-    this._glyphAtlas.measureText(this.text(), null, bodySize);
+    if(!this._glyphAtlas) {
+        throw new Error("No glyph atlas provided");
+    }
+    this._glyphAtlas.measureText(
+        this.text(), null, bodySize
+    );
     bodySize[0] *= style.fontSize / this._glyphAtlas.fontSize();
     bodySize[1] *= style.fontSize / this._glyphAtlas.fontSize();
     bodySize[0] = Math.max(style.minWidth, bodySize[0]);

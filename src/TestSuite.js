@@ -325,6 +325,9 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
             }
 
             resultLine.appendChild(result.testResult().resultList());
+            if(result.testStatus() === "Successful") {
+                resultLine.style.display = "none";
+            }
 
             testResults.testFinished(result);
             notify("TestFinished", result);
@@ -365,6 +368,10 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
                 resultLine.appendChild(document.createElement("br"));
                 resultLine.appendChild(document.createTextNode(result.testResult()));
             }
+
+            if(result.testStatus() === "Successful") {
+                resultLine.style.display = "none";
+            }
         }
     }, this);
 
@@ -386,3 +393,8 @@ parsegraph_TestListener.prototype.TestFinished = function()
 };
 
 parsegraph_AllTests = new parsegraph_TestSuite("parsegraph");
+
+parsegraph_TestSuite_Tests = new parsegraph_TestSuite();
+parsegraph_TestSuite_Tests.addTest(function() {
+    var ts = new parsegraph_TestSuite("Default", false);
+});

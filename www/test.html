@@ -51,13 +51,97 @@ body > div input {
 <script src="parsegraph-1.0.js"></script>
 <script>
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
+function createScriptTextarea(url)
+{
+    var ta = document.createElement("textarea");
+    ta.style.width = "400px";
+    ta.style.height = "400px";
+    try {
+        if(ta.spellcheck) {
+            ta.spellcheck = false;
+        }
+    }
+    catch(ex) {
+        // Pass
+    }
 
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.addEventListener("load", function() {
+        ta.appendChild(document.createTextNode(xhr.responseText));
+        TA = ta;
+    });
+    xhr.send();
+
+    return ta;
+}
+
+function createScriptGraph(url)
+{
+    var surface = new parsegraph_Surface();
+    var graph = new parsegraph_Graph(surface);
+    surface.resize(400, "50vh");
+
+    var car = new parsegraph_Caret('bu');
+    graph.plot(car);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.addEventListener("load", function() {
+        var ln = 0;
+        xhr.responseText.slice(0, 10000).split(/\n/).forEach(function(l) {
+            if(ln % 100) {
+                car.crease();
+            }
+            car.spawnMove('f', 'b');
+            car.label(l);
+            car.move('b');
+            car.spawnMove('d', 'bu');
+            graph.scheduleRepaint();
+            ++ln;
+        });
+    });
+    xhr.send();
+
+    // Schedule the repaint.
+    var renderTimer = new parsegraph_AnimationTimer();
+    renderTimer.setListener(function() {
+        graph.input().Update(new Date());
+        if(graph.needsRepaint()) {
+            surface.paint(50);
+        }
+        surface.render();
+        if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+            renderTimer.schedule();
+        }
+    });
+    graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+        if(affectedPaint) {
+            graph.scheduleRepaint();
+        }
+        renderTimer.schedule();
+        if(inputAffectedCamera) {
+            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+        }
+    });
+    renderTimer.schedule();
+    graph.onScheduleRepaint = function() {
+        renderTimer.schedule();
+    };
+
+    return surface.container();
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
     var main = document.body;
+
+    parsegraph_initialize();
 
     var result = parsegraph_AllTests.run();
     result.connect(main);
+
+    var ta = createScriptGraph("parsegraph-1.0.js");
+    main.appendChild(ta);
 });
 </script>
 </head>

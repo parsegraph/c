@@ -20,71 +20,97 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._glyphData = {};
 
     // Atlas working position.
-    var padding = this.fontSize() / 4;
-    var x = padding;
-    var y = padding;
-
-    this.addGlyph = function(glyph) {
-        var letter = this._ctx.measureText(glyph);
-
-        if(x + letter.width + padding > this.maxTextureWidth()) {
-            // Move to the next row.
-            x = padding;
-            y += this.letterHeight() + padding;
-        }
-
-        var glyphData = {
-            x: x,
-            y: y,
-            width: letter.width,
-            height: this.letterHeight()
-        };
-        this._glyphData[glyph] = glyphData;
-
-        this._ctx.fillText(
-            glyph,
-            glyphData.x,
-            glyphData.y + this.fontBaseline()
-        );
-
-        // Advance to the next letter.
-        x += letter.width + padding;
-        this._needsUpdate = true;
-
-        return glyphData;
-    };
-
-    this.getGlyph = function(glyph) {
-        var glyphData = this._glyphData[glyph];
-        if(glyphData !== undefined) {
-            return glyphData;
-        }
-        return this.addGlyph(glyph);
-    };
-
-    this.update = function(gl) {
-        if(!this._needsUpdate) {
-            return;
-        }
-
-        // Prepare texture.
-        if(!this._glyphTexture) {
-            this._glyphTexture = gl.createTexture();
-        }
-        gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
-        gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        // Prevents t-coordinate wrapping (repeating).
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.generateMipmap(gl.TEXTURE_2D);
-
-        this._needsUpdate = false;
-    };
+    this._padding = this.fontSize() / 4;
+    this._x = this._padding;
+    this._y = this._padding;
 }
+
+parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
+{
+    var letter = this._ctx.measureText(glyph);
+
+    if(this._x + letter.width + this._padding > this.maxTextureWidth()) {
+        // Move to the next row.
+        this._x = this._padding;
+        this._y += this.letterHeight() + this._padding;
+    }
+
+    var glyphData = {
+        x: this._x,
+        y: this._y,
+        width: letter.width,
+        height: this.letterHeight()
+    };
+    this._glyphData[glyph] = glyphData;
+
+    this._ctx.fillText(
+        glyph,
+        glyphData.x,
+        glyphData.y + this.fontBaseline()
+    );
+
+    // Advance to the next letter.
+    this._x += letter.width + this._padding;
+    this._needsUpdate = true;
+
+    return glyphData;
+};
+
+parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
+{
+    var glyphData = this._glyphData[glyph];
+    if(glyphData !== undefined) {
+        return glyphData;
+    }
+    return this.addGlyph(glyph);
+};
+
+/**
+ * Updates the given WebGL instance with this texture.
+ *
+ * ga.update(); // Updates the standard GL instance.
+ * ga.update(gl); // Updates the given GL instance and clears old one.
+ */
+parsegraph_GlyphAtlas.prototype.update = function(gl)
+{
+    if(arguments.length === 0) {
+        gl = this._gl;
+    }
+    if(!this._needsUpdate && this._gl === gl) {
+        return;
+    }
+    if(this._gl !== gl) {
+        this.clear();
+    }
+
+    // Create texture.
+    if(!this._glyphTexture) {
+        this._glyphTexture = gl.createTexture();
+    }
+
+    // Draw from 2D canvas.
+    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
+    gl.texImage2D(
+        gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // Prevents t-coordinate wrapping (repeating).
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    this._needsUpdate = false;
+};
+
+parsegraph_GlyphAtlas.prototype.clear = function()
+{
+    if(this._gl) {
+        return;
+    }
+    this._gl.deleteTexture(this._glyphTexture);
+    this._glyphTexture = null;
+};
 
 parsegraph_GlyphAtlas.prototype.bindTexture = function(gl)
 {

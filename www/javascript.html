@@ -663,16 +663,13 @@ function init()
             renderTimer.schedule();
             if(inputAffectedCamera) {
                 cameraProtocol.update();
+                localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
             }
         });
         renderTimer.schedule();
         graph.onScheduleRepaint = function() {
             renderTimer.schedule();
         };
-
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
-        });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

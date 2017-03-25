@@ -14,6 +14,8 @@ function parsegraph_World(graph)
     this._graph = graph;
 }
 
+parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
+
 parsegraph_World.prototype.camera = function()
 {
     if(!this._camera) {
@@ -27,10 +29,6 @@ parsegraph_World.prototype.setCamera = function(camera)
     this._camera = camera;
 };
 
-parsegraph_World.prototype.plot = function()
-{
-    return parsegraph_plot.apply(this._worldPlots, arguments);
-};
 
 /**
  * Plots the given paint group, or creates one if constructor
@@ -40,12 +38,18 @@ parsegraph_World.prototype.plot = function()
  * preferred method. The position of the graph is the one used when
  * rendering. The caller manages the position.
  *
- * parsegraph_plot.apply(plotList, arguments);
- *
  * plot(node)
  * plot(root, worldX, worldY, userScale)
  */
-function parsegraph_plot(node, worldX, worldY, userScale) {
+parsegraph_World.prototype.plot = function(node, worldX, worldY, userScale)
+{
+    if(!node) {
+        throw new Error("Node must not be null");
+    }
+    if(!node.localPaintGroup && node.root) {
+        // Passed a Caret.
+        node = node.root();
+    }
     if(!node.localPaintGroup()) {
         node.setPaintGroup(new parsegraph_PaintGroup(node));
     }
@@ -53,8 +57,42 @@ function parsegraph_plot(node, worldX, worldY, userScale) {
         node.localPaintGroup().setOrigin(worldX, worldY);
         node.localPaintGroup().setScale(userScale);
     }
-    this.push(node);
+    this._worldPlots.push(node);
 };
+
+parsegraph_World_Tests.addTest("parsegraph_World.plot", function() {
+    var w = new parsegraph_World();
+
+    var f = 0;
+    try {
+        f = 1;
+        w.plot(null, 0, 0, 1);
+        f = 2;
+    }
+    catch(ex) {
+        f = 3;
+    }
+    if(f != 3) {
+        return "parsegraph_plot must fail with null node";
+    }
+});
+
+parsegraph_World_Tests.addTest("world.plot with caret", function() {
+    var w = new parsegraph_World();
+    var car = new parsegraph_Caret('b');
+    var f = 0;
+    try {
+        f = 1;
+        w.plot(car, 0, 0, 1);
+        f = 2;
+    }
+    catch(ex) {
+        f = ex;
+    }
+    if(f != 2) {
+        return "parsegraph_plot must handle being passed a Caret: " + f;
+    }
+});
 
 /**
  *
