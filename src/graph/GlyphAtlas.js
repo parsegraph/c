@@ -1,3 +1,11 @@
+parsegraph_GlyphPage_COUNT = 0;
+function parsegraph_GlyphPage()
+{
+    this._id = parsegraph_GlyphPage_COUNT++;
+    this._glyphTexture = null;
+    this._queued = [];
+}
+
 /**
  * TODO Allow a max texture width of 1024, by paging the texture.
  * TODO Allow glyph texture data to be downloaded rather than generated.
