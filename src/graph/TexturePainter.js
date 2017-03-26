@@ -70,6 +70,8 @@ function parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
 
     this._color = parsegraph_createColor(1, 1, 1, 1);
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
+
+    this._buffer.addPage();
 };
 
 parsegraph_TexturePainter.prototype.texture = function()
@@ -132,6 +134,7 @@ parsegraph_TexturePainter.prototype.drawTexture = function(
 parsegraph_TexturePainter.prototype.clear = function()
 {
     this._buffer.clear();
+    this._buffer.addPage();
 };
 
 parsegraph_TexturePainter.prototype.render = function(world)

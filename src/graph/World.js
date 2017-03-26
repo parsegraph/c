@@ -260,6 +260,6 @@ parsegraph_World.prototype.render = function(world)
         if(!paintGroup) {
             throw new Error("Plot no longer has a paint group?!");
         }
-        paintGroup.renderIteratively(world);
+        paintGroup.renderIteratively(world, this.camera());
     }
 };

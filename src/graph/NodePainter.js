@@ -26,6 +26,11 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._textures = [];
 };
 
+parsegraph_NodePainter.prototype.bounds = function()
+{
+    return this._blockPainter.bounds();
+};
+
 parsegraph_NodePainter.prototype.gl = function()
 {
     return this._gl;

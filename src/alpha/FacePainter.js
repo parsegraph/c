@@ -70,6 +70,8 @@ function alpha_FacePainter(gl)
     this.u_world = this.gl.getUniformLocation(
         this.faceProgram, "u_world"
     );
+
+    this.faceBuffer.addPage();
 };
 
 alpha_FacePainter_Tests = new parsegraph_TestSuite("alpha_FacePainter");
@@ -82,6 +84,7 @@ alpha_FacePainter_Tests.addTest("alpha_FacePainter", function(resultDom) {
 alpha_FacePainter.prototype.Clear = function()
 {
     this.faceBuffer.clear();
+    this.faceBuffer.addPage();
 };
 
 alpha_FacePainter.prototype.Quad = function(v1, v2, v3, v4, c1, c2, c3, c4)

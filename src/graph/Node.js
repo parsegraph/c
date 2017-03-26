@@ -701,23 +701,25 @@ parsegraph_Node.prototype.extentOffsetAt = function(atDirection)
     return this._neighbors[atDirection].extentOffset;
 };
 
-parsegraph_Node.prototype.extentSize = function()
+parsegraph_Node.prototype.extentSize = function(outPos)
 {
-    var rv = new parsegraph_Size();
+    if(!outPos) {
+        outPos = new parsegraph_Size();
+    }
 
     // We can just use the length to determine the full size.
 
     // The horizontal extents have length in the vertical direction.
-    rv.setHeight(
+    outPos.setHeight(
         this.extentsAt(parsegraph_FORWARD).boundingValues()[0]
     );
 
     // The vertical extents have length in the vertical direction.
-    rv.setWidth(
+    outPos.setWidth(
         this.extentsAt(parsegraph_DOWNWARD).boundingValues()[0]
     );
 
-    return rv;
+    return outPos;
 };
 
 parsegraph_Node.prototype.setLayoutPreference = function(given)

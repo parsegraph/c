@@ -150,6 +150,8 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
     else {
         // Committed all layout
         savedState.commitLayoutFunc = null;
+        savedState.skippedAny = false;
+
     }
 
     // Continue painting.
@@ -159,7 +161,9 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
             this._dirty = true;
             return false;
         }
+
         var paintGroup = ordering[i];
+        //console.log("Painting " + paintGroup);
         if(paintGroup.isEnabled() && paintGroup.isDirty()) {
             // Paint and render nodes marked for the current group.
             if(!paintGroup._painter) {
@@ -174,23 +178,27 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
             }, paintGroup);
         }
         paintGroup._dirty = false;
-
         ordering.push.apply(ordering, paintGroup._childPaintGroups);
         ++i;
     }
 
     savedState.i = 0;
     savedState.ordering = [];
-
-    return true;
+    this._dirty = false;
+    return this._dirty;
 };
 
-parsegraph_PaintGroup.prototype.renderIteratively = function(world)
+parsegraph_PaintGroup.prototype.toString = function()
+{
+    return "[parsegraph_PaintGroup " + this._id + "]";
+}
+
+parsegraph_PaintGroup.prototype.renderIteratively = function(world, camera)
 {
     this.enable();
 
     this.traverseBreadth(function(paintGroup) {
-        paintGroup.render(world);
+        paintGroup.render(world, camera);
     }, this);
 };
 
@@ -206,7 +214,7 @@ parsegraph_PaintGroup.prototype.traverseBreadth = function(callback, callbackThi
     }
 };
 
-parsegraph_PaintGroup.prototype.render = function(world)
+parsegraph_PaintGroup.prototype.render = function(world, camera)
 {
     if(!this.isEnabled()) {
         return;
@@ -215,7 +223,24 @@ parsegraph_PaintGroup.prototype.render = function(world)
         return;
     }
 
+    // Do not render paint groups that cannot be seen.
+    var s = this._painter.bounds();
+    if(camera && !parsegraph_containsAny(
+        -camera.x() + camera.width()/(camera.scale()*2),
+        -camera.y() + camera.height()/(camera.scale()*2),
+        camera.width() / camera.scale(),
+        camera.height() / camera.scale(),
+        s.x(),
+        s.y(),
+        s.width(),
+        s.height()
+    )) {
+        //console.log(this);
+        return;
+    }
+
     //console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
+    //console.log("Rendering", this, this._painter.bounds());
 
     this._painter.render(
         matrixMultiply3x3(

@@ -2,10 +2,9 @@ function showIPAddresses(graph)
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);
-    var MAX_DEPTH = 10;
+    var MAX_DEPTH = 12;
 
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
-    caret.setGlyphAtlas(graph.glyphAtlas());
 
     function showLevel(depth, index) {
         if(depth === undefined) {

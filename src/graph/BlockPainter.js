@@ -1,6 +1,5 @@
 parsegraph_BlockPainter_VertexShader =
 "uniform mat3 u_world;\n" +
-"uniform float u_scale;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
 "attribute vec2 a_texCoord;\n" +
@@ -9,7 +8,6 @@ parsegraph_BlockPainter_VertexShader =
 "attribute float a_borderRoundedness;\n" +
 "attribute float a_borderThickness;\n" +
 "attribute float a_aspectRatio;\n" +
-"attribute float a_scale;\n" +
 "\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
@@ -17,7 +15,6 @@ parsegraph_BlockPainter_VertexShader =
 "varying highp vec4 borderColor;\n" +
 "varying highp vec4 contentColor;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
@@ -27,7 +24,6 @@ parsegraph_BlockPainter_VertexShader =
     "texCoord = a_texCoord;" +
     "borderThickness = a_borderThickness;" +
     "aspectRatio = a_aspectRatio;" +
-    "scale = a_scale * u_scale;" +
 "}";
 
 // Derived from https://thebookofshaders.com/07/
@@ -42,7 +38,6 @@ parsegraph_BlockPainter_FragmentShader =
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     "highp vec2 st = texCoord;\n" +
@@ -88,7 +83,6 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "highp float aastep(float threshold, float value)\n" +
 "{\n" +
@@ -129,7 +123,6 @@ parsegraph_BlockPainter_SquareFragmentShader =
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     "highp vec2 st = texCoord;\n" +
@@ -160,7 +153,6 @@ parsegraph_BlockPainter_ShadyFragmentShader =
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 // Plot a line on Y using a value between 0.0-1.0
 "float plot(vec2 st, float pct) {" +
@@ -193,7 +185,6 @@ parsegraph_BlockPainter_AngleFragmentShader =
 // borderThickness is in [0, 1] terms.
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     // Adjust for the aspect ratio.
@@ -233,7 +224,6 @@ parsegraph_BlockPainter_ParenthesisFragmentShader =
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     "highp vec2 st = texCoord;\n" +
@@ -272,7 +262,6 @@ parsegraph_BlockPainter_CurlyFragmentShader =
 // borderThickness is in [0, 1] terms.
 "varying highp float borderThickness;\n" +
 "varying highp float aspectRatio;\n" +
-"varying highp float scale;\n" +
 "\n" +
 "void main() {\n" +
     // Adjust for the aspect ratio.
@@ -356,14 +345,10 @@ function parsegraph_BlockPainter(gl, shaders)
     this.a_borderRoundedness = this._blockBuffer.defineAttrib("a_borderRoundedness", 1);
     this.a_borderThickness = this._blockBuffer.defineAttrib("a_borderThickness", 1);
     this.a_aspectRatio = this._blockBuffer.defineAttrib("a_aspectRatio", 1);
-    this.a_scale = this._blockBuffer.defineAttrib("a_scale", 1);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
         this._blockProgram, "u_world"
-    );
-    this.u_scale = this._gl.getUniformLocation(
-        this._blockProgram, "u_scale"
     );
 
     // Setup initial uniform values.
@@ -372,6 +357,14 @@ function parsegraph_BlockPainter(gl, shaders)
     this._borderColor = parsegraph_createColor(
         parsegraph_createColor(1, 1, 1, 1)
     );
+
+    this._blockBuffer.addPage();
+    this._bounds = null;
+};
+
+parsegraph_BlockPainter.prototype.bounds = function()
+{
+    return this._bounds;
 };
 
 parsegraph_BlockPainter.prototype.borderColor = function()
@@ -395,8 +388,15 @@ parsegraph_BlockPainter.prototype.setBackgroundColor = function(backgroundColor)
 };
 
 parsegraph_BlockPainter.prototype.drawBlock = function(
-    cx, cy, width, height, borderRoundedness, borderThickness, scale)
+    cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
 {
+    if(!this._bounds) {
+        this._bounds = new parsegraph_Rect(cx, cy, width, height);
+    }
+    else {
+        this._bounds.include(cx, cy, width, height);
+    }
+
     //console.log(cx + ", " + cy + ", " + width + ", " + height);
     // Append position data.
     this._blockBuffer.appendData(
@@ -435,22 +435,22 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
         if(height < width) {
             this._blockBuffer.appendData(
                 this.a_borderRoundedness,
-                scale * borderRoundedness / height
+                borderScale * borderRoundedness / height
             );
             this._blockBuffer.appendData(
                 this.a_borderThickness,
-                scale * borderThickness / height
+                borderScale * borderThickness / height
             );
         }
         else {
             // height > width
             this._blockBuffer.appendData(
                 this.a_borderRoundedness,
-                scale * borderRoundedness / width
+                borderScale * borderRoundedness / width
             );
             this._blockBuffer.appendData(
                 this.a_borderThickness,
-                scale * borderThickness / width
+                borderScale * borderThickness / width
             );
         }
 
@@ -458,20 +458,17 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
             this.a_aspectRatio,
             height / width
         );
-
-        this._blockBuffer.appendData(
-            this.a_scale,
-            scale
-        );
     }
 };
 
 parsegraph_BlockPainter.prototype.clear = function()
 {
     this._blockBuffer.clear();
+    this._blockBuffer.addPage();
+    this._bounds = null;
 };
 
-parsegraph_BlockPainter.prototype.render = function(world, scale)
+parsegraph_BlockPainter.prototype.render = function(world)
 {
     // Render blocks.
     this._gl.useProgram(
@@ -482,6 +479,5 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         false,
         world
     );
-    this._gl.uniform1f(this.u_scale, scale);
     return this._blockBuffer.renderPages();
 };

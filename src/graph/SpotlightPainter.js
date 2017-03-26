@@ -84,6 +84,8 @@ function parsegraph_SpotlightPainter(gl, shaders)
     this.u_world = this._gl.getUniformLocation(
         this._program, "u_world"
     );
+
+    this._spotlightBuffer.addPage();
 };
 
 parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
@@ -119,6 +121,7 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
 parsegraph_SpotlightPainter.prototype.clear = function()
 {
     this._spotlightBuffer.clear();
+    this._spotlightBuffer.addPage();
 };
 
 parsegraph_SpotlightPainter.prototype.render = function(world, scale)

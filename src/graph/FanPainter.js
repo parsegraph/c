@@ -101,6 +101,8 @@ function parsegraph_FanPainter(gl)
     this.u_time = this._gl.getUniformLocation(
         this.fanProgram, "u_time"
     );
+
+    this._fanBuffer.addPage();
 };
 
 parsegraph_FanPainter_Tests = new parsegraph_TestSuite("parsegraph_FanPainter");
@@ -188,6 +190,7 @@ parsegraph_FanPainter.prototype.setSelectionAngle = function(selectionAngle)
 parsegraph_FanPainter.prototype.clear = function()
 {
     this._fanBuffer.clear();
+    this._fanBuffer.addPage();
 };
 
 parsegraph_FanPainter.prototype.render = function(viewMatrix)

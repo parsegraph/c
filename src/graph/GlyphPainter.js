@@ -209,6 +209,7 @@ parsegraph_GlyphPainter.prototype.clear = function()
 parsegraph_GlyphPainter.prototype.render = function(world)
 {
     var gl = this._gl;
+    this.glyphAtlas().update(gl);
 
     // Load program.
     this._gl.useProgram(

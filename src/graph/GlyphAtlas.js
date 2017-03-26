@@ -40,8 +40,12 @@ parsegraph_GlyphAtlas.prototype.toString = function()
     return "[GlyphAtlas " + this._id + "]";
 }
 
-parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
+parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
 {
+    var glyphData = this._glyphData[glyph];
+    if(glyphData !== undefined) {
+        return glyphData;
+    }
     var letter = this._ctx.measureText(glyph);
 
     if(this._x + letter.width + this._padding > this.maxTextureWidth()) {
@@ -49,13 +53,11 @@ parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
         this._x = this._padding;
         this._y += this.letterHeight() + this._padding;
     }
-    var createdPage = false;
-    if(this._y + letter.height + this._padding > this.maxTextureWidth()) {
+    if(this._y + this.letterHeight() + this._padding > this.maxTextureWidth()) {
         // Move to the next page.
         this._glyphPages.push(new parsegraph_GlyphPage());
         this._x = this._padding;
         this._y = this._padding;
-        createdPage = true;
     }
     var glyphPage = this._glyphPages[this._glyphPages.length - 1];
 
@@ -70,16 +72,10 @@ parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
     this._glyphData[glyph] = glyphData;
     glyphPage._queued.push(glyphData);
 
-    return createdPage;
-};
+    this._x += glyphData.width + this._padding;
+    this._needsUpdate = true;
 
-parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
-{
-    var glyphData = this._glyphData[glyph];
-    if(glyphData !== undefined) {
-        return glyphData;
-    }
-    return this.addGlyph(glyph);
+    return glyphData;
 };
 
 parsegraph_GlyphAtlas.prototype.hasGlyph = function(glyph)
@@ -109,9 +105,8 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
     this._needsUpdate = false;
     this._gl = gl;
 
-    this._ctx.clearRect(0, 0, this.maxTextureWidth(), this.maxTextureWidth());
-
     this._glyphPages.forEach(function(page) {
+        this._ctx.clearRect(0, 0, this.maxTextureWidth(), this.maxTextureWidth());
         page._queued.forEach(function(glyphData) {
             this._ctx.fillText(
                 glyphData.letter,
@@ -119,7 +114,6 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
                 glyphData.y + this.fontBaseline()
             );
         }, this);
-        page._queued = [];
 
         // Create texture.
         if(!page._glyphTexture) {
@@ -145,8 +139,11 @@ parsegraph_GlyphAtlas.prototype.clear = function()
     if(!this._gl) {
         return;
     }
-    this._gl.deleteTexture(this._glyphTexture);
-    this._glyphTexture = null;
+    this._glyphPages.forEach(function(page) {
+        if(page._glyphTexture) {
+            this._gl.deleteTexture(page._glyphTexture);
+        }
+    }, this);
 };
 
 parsegraph_GlyphAtlas.prototype.imageData = function()

@@ -14,6 +14,145 @@ function parsegraph_Camera(surface)
     this._aspectRatio = 1;
 };
 
+parsegraph_Camera_Tests = new parsegraph_TestSuite("parsegraph_Camera");
+
+function parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+{
+    var viewHalfWidth = viewWidth / 2;
+    var viewHalfHeight = viewHeight / 2;
+    var halfWidth = width / 2;
+    var halfHeight = height / 2;
+
+    if(cx + halfWidth > viewportX + viewHalfWidth) {
+        return false;
+    }
+    if(cx - halfWidth < viewportX - viewHalfWidth) {
+        return false;
+    }
+    if(cy + halfHeight > viewportY + viewHalfHeight) {
+        return false;
+    }
+    if(cy - halfHeight < viewportY - viewHalfHeight) {
+        return false;
+    }
+    return true;
+}
+
+parsegraph_Camera_Tests.addTest("containsAll", function() {
+    if(!parsegraph_containsAll(
+        0, 0, 800, 600,
+        0, 0, 400, 200
+    )) {
+        return "Small box in viewport";
+    }
+
+    if(parsegraph_containsAll(
+        0, 0, 800, 600,
+        0, 0, 900, 200
+    )) {
+        return "Taller box in viewport";
+    }
+
+    if(parsegraph_containsAll(
+        0, 0, 800, 600,
+        0, 0, 400, 1000
+    )) {
+        return "Wider box in viewport";
+    }
+
+    if(parsegraph_containsAll(
+        0, 0, 800, 600,
+        0, 0, 1000, 1000
+    )) {
+        return "Larger box in viewport";
+    }
+
+    if(parsegraph_containsAll(
+        0, 0, 800, 600,
+        600, 0, 400, 200
+    )) {
+        return "Small box on edge of viewport";
+    }
+});
+
+function parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+{
+    var viewHalfWidth = viewWidth / 2;
+    var viewHalfHeight = viewHeight / 2;
+    var halfWidth = width / 2;
+    var halfHeight = height / 2;
+
+    function dump() {
+        console.log("viewportX=" + viewportX);
+        console.log("viewportY=" + viewportY);
+        console.log("viewWidth=" + viewWidth);
+        console.log("viewHeight=" + viewHeight);
+        console.log("cx=" + cx);
+        console.log("cy=" + cy);
+        console.log("width=" + width);
+        console.log("height=" + height);
+    };
+
+    if(cx - halfWidth > viewportX + viewHalfWidth) {
+        //console.log(1);
+        //dump();
+        return false;
+    }
+    if(cx + halfWidth < viewportX - viewHalfWidth) {
+        //console.log(2);
+        //dump();
+        return false;
+    }
+    if(cy - halfHeight > viewportY + viewHalfHeight) {
+        //console.log("Viewport min is greater than given's max");
+        //dump();
+        return false;
+    }
+    if(cy + halfHeight < viewportY - viewHalfHeight) {
+        //console.log("Viewport does not contain any: given vmax is less than viewport's vmin");
+        //dump();
+        return false;
+    }
+    return true;
+}
+
+parsegraph_Camera_Tests.addTest("containsAny", function() {
+    if(!parsegraph_containsAny(
+        0, 0, 800, 600,
+        0, 0, 400, 200
+    )) {
+        return "Small box in viewport";
+    }
+
+    if(!parsegraph_containsAny(
+        0, 0, 800, 600,
+        0, 0, 900, 200
+    )) {
+        return "Taller box in viewport";
+    }
+
+    if(!parsegraph_containsAny(
+        0, 0, 800, 600,
+        0, 0, 400, 1000
+    )) {
+        return "Wider box in viewport";
+    }
+
+    if(!parsegraph_containsAny(
+        0, 0, 800, 600,
+        0, 0, 1000, 1000
+    )) {
+        return "Larger box in viewport";
+    }
+
+    if(!parsegraph_containsAny(
+        0, 0, 800, 600,
+        600, 0, 400, 200
+    )) {
+        return "Small box on edge of viewport";
+    }
+});
+
 /**
  * Zooms to the given point.
  */

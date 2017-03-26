@@ -34,7 +34,7 @@ parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
 
 parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
 {
-    return this.node().label().setGlyphAtlas(glyphAtlas);
+    return this.node()._label.setGlyphAtlas(glyphAtlas);
 };
 
 parsegraph_Caret_Tests.addTest("setGlyphAtlas", function() {

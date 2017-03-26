@@ -234,6 +234,9 @@ parsegraph_Label.prototype.text = parsegraph_Label.prototype.getText;
 
 parsegraph_Label.prototype.setText = function(text)
 {
+    if(typeof text !== "string") {
+        text = "" + text;
+    }
     this._lines = [];
     this._currentLine = 0;
     this._currentPos = 0;
@@ -320,7 +323,6 @@ parsegraph_Label.prototype.click = function(x, y)
             curY += line.height();
             continue;
         }
-        //console.log(y <= curY + line.height());
         // Switch the caret line.
         this._caretLine = i;
 
@@ -330,8 +332,6 @@ parsegraph_Label.prototype.click = function(x, y)
         }
         for(var j = 0; j < line._glyphs.length; ++j) {
             var glyphData = line._glyphs[j];
-            console.log("x="+x);
-            console.log("curX="+curX);
             if(x > curX + glyphData.width) {
                 curX += glyphData.width;
                 continue;

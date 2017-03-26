@@ -134,38 +134,7 @@ function init()
             parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
         );
         var shaders = {};
-        var glyphPainter = new parsegraph_GlyphPainter(surface.gl(), glyphAtlas, shaders);
         var textCamera = new parsegraph_Camera(surface);
-
-surface.addRenderer(function() {
-    var gl = surface.gl();
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-
-    gl.enable(gl.BLEND);
-    gl.blendFunc(
-        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
-    );
-    glyphPainter.clear();
-    glyphPainter.setColor(1, 1, 1);
-
-    glyphPainter.setFontSize(20);
-
-    var drawMultiline = function(x, y, text) {
-        var lines = text.split("\n");
-        for(var i = 0; i < lines.length; ++i) {
-            var line = lines[i];
-            glyphPainter.drawText(line, x, y + (1 + i) * glyphPainter.fontSize());
-        }
-    };
-
-    var t = "";
-    t += "position=" + primes.position + "\n";
-    //drawMultiline(8, 4, t);
-    var world = textCamera.project();
-    glyphPainter.render(world);
-});
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

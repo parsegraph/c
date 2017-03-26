@@ -3,7 +3,7 @@ function showUlam(graph, COUNT)
     if(COUNT === undefined) {
         COUNT = 35;
     }
-    COUNT = Math.min(100, COUNT);
+    //COUNT = Math.min(100, COUNT);
 
     var ROWS = COUNT;
 
