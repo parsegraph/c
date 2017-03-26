@@ -157,7 +157,7 @@ parsegraph_PagingBuffer.prototype.addPage = function(renderFunc, renderFuncThisA
 parsegraph_PagingBuffer.prototype.getWorkingPage = function()
 {
     if(this._pages.length === 0) {
-        this.addPage();
+        throw new Error("Refusing to create a new page; call addPage()");
     }
     return this._pages[this._pages.length - 1];
 };

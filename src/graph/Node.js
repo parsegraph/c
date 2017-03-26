@@ -15,6 +15,9 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._type = newType;
     this._style = parsegraph_style(this._type);
     this._label = null;
+    this._labelX = null;
+    this._labelY = null;
+
     this._value = null;
     this._selected = false;
     this._scene = null;

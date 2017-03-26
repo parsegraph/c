@@ -812,5 +812,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
         labelX = worldX + userScale * node.absoluteX() - fontScale * label.width()/2;
         labelY = worldY + userScale * node.absoluteY() - fontScale * label.height()/2;
     }
+    node._labelX = labelX;
+    node._labelY = labelY;
     label.paint(this._glyphPainter, labelX, labelY, fontScale);
 };

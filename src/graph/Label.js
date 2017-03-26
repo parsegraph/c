@@ -28,11 +28,16 @@ parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
 
 function parsegraph_Line(label, text)
 {
+    if(!label) {
+        throw new Error("Label must not be null");
+    }
     this._label = label;
     this._glyphs = [];
     this._width = 0;
     this._height = 0;
-    this.addText(text);
+    if(arguments.length > 1) {
+        this.appendText(text);
+    }
 }
 
 parsegraph_Line_Tests = new parsegraph_TestSuite("parsegraph_Line");
@@ -64,14 +69,22 @@ parsegraph_Line.prototype.glyphAtlas = function()
     return this._label.glyphAtlas();
 }
 
-parsegraph_Line.prototype.addText = function(text)
+parsegraph_Line.prototype.remove = function(pos, count)
+{
+    var removed = this._glyphs.splice(pos, count);
+    removed.forEach(function(glyphData) {
+        this._width -= glyphData.width;
+    }, this);
+}
+
+parsegraph_Line.prototype.appendText = function(text)
 {
     var i = 0;
     var atlas = this.glyphAtlas();
     if(!atlas) {
         throw new Error("Line cannot add text without the label having a GlyphAtlas.");
     }
-    var checkTimeout = parsegraph_timeout("parsegraph_Line.addText");
+    var checkTimeout = parsegraph_timeout("parsegraph_Line.appendText");
     while(true) {
         checkTimeout();
 
@@ -93,6 +106,39 @@ parsegraph_Line.prototype.addText = function(text)
     }
 };
 
+parsegraph_Line.prototype.insertText = function(pos, text)
+{
+    var i = 0;
+    var atlas = this.glyphAtlas();
+    if(!atlas) {
+        throw new Error("Line cannot add text without the label having a GlyphAtlas.");
+    }
+    var checkTimeout = parsegraph_timeout("parsegraph_Line.insertText");
+
+    var spliced = [pos, 0];
+    while(true) {
+        checkTimeout();
+
+        // Retrieve letter.
+        var letter = fixedCharAt(text, i);
+
+        // Test for completion.
+        if(letter === null) {
+            break;
+        }
+
+        var glyphData = atlas.getGlyph(letter);
+        spliced.push(glyphData);
+
+        // Increment.
+        this._height = Math.max(this._height, glyphData.height);
+        this._width += glyphData.width;
+        i += letter.length;
+    }
+
+    this._glyphs.splice.apply(this._glyphs, spliced);
+};
+
 parsegraph_Line.prototype.getText = function()
 {
     var t = "";
@@ -101,6 +147,7 @@ parsegraph_Line.prototype.getText = function()
     });
     return t;
 }
+parsegraph_Line.prototype.text = parsegraph_Line.prototype.getText;
 
 parsegraph_Line.prototype.linePos = function()
 {
@@ -135,6 +182,8 @@ function parsegraph_Label(glyphAtlas)
     this._glyphAtlas = glyphAtlas;
     this._wrapWidth = null;
     this._lines = [];
+    this._caretLine = 0;
+    this._caretPos = 0;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()
@@ -198,32 +247,175 @@ parsegraph_Label.prototype.setText = function(text)
     }, this);
 }
 
-/**
- * Given a click in world (absolute) coordinates, return the index into this node's label.
- *
- * If this node's label === undefined, then null is returned. Otherwise, a value between
- * [0, this.label().length()] is returned. Zero indicates a position before the first
- * character, just as this.label().length() indicates a position past the end.
- *
- * World coordinates are clamped to the boundaries of the node.
- */
-parsegraph_Label.prototype.clickToCaret = function(worldX, worldY, scale, style, paintGroup, caretPos)
+parsegraph_Label.prototype.key = function(key)
 {
-    if(!this.text()) {
-        return null;
-    }
+    switch(key) {
+    case "Ctrl":
+    case "Alt":
+    case "Shift":
+        break;
+    case "ArrowLeft":
+        if(!this.moveCaretBackward()) {
+            // Left the field.
+        }
+        break;
+    case "ArrowRight":
+        if(!this.moveCaretForward()) {
 
-    paintGroup.worldToTextCaret(
-        this.text(),
-        style.fontSize * scale,
-        null,
-        worldX - this[0],
-        worldY - this[1],
-        caretPos
-    );
-    caretPos[0] += this[0];
-    caretPos[1] += this[1];
-    return caretPos;
+        }
+        break;
+    case "ArrowDown":
+        if(!this.moveCaretDown()) {
+
+        }
+    case "ArrowUp":
+        if(!this.moveCaretUp()) {
+
+        }
+        break;
+    case "Backspace":
+        var line = this._lines[this._caretLine];
+        line.remove(this._caretPos, 1);
+        this._caretPos--;
+        if(this._caretPos < 0) {
+            this._caretLine--;
+            this._caretPos = this._lines[this._caretLine]._glyphs.length
+        }
+        return true;
+    case "F5":
+        break;
+    default:
+        // Insert some character.
+        //this.setText(this._labelNode._label.text() + event.key);
+
+        while(this._caretLine > this._lines.length) {
+            this._lines.push(new parsegraph_Line(this));
+        }
+        var insertLine = this._lines[this._caretLine];
+        var insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
+        if(insertPos === insertLine._glyphs.length) {
+            insertLine.appendText(event.key);
+        }
+        else {
+            insertLine.insertText(insertPos, event.key);
+        }
+        this._caretPos++;
+        return true;
+    }
+    return false;
+}
+
+parsegraph_Label.prototype.click = function(x, y)
+{
+    if(y < 0 && x < 0) {
+        this._caretLine = 0;
+        this._caretPos = 0;
+    }
+    var curX = 0;
+    var curY = 0;
+    for(var i = 0; i < this._lines.length; ++i) {
+        var line = this._lines[i];
+        if(y > curY + line.height() && i != this._lines.length - 1) {
+            // Some "next" line.
+            curY += line.height();
+            continue;
+        }
+        //console.log(y <= curY + line.height());
+        // Switch the caret line.
+        this._caretLine = i;
+
+        if(x < 0) {
+            this._caretPos = 0;
+            return;
+        }
+        for(var j = 0; j < line._glyphs.length; ++j) {
+            var glyphData = line._glyphs[j];
+            console.log("x="+x);
+            console.log("curX="+curX);
+            if(x > curX + glyphData.width) {
+                curX += glyphData.width;
+                continue;
+            }
+
+            this._caretPos = j;
+            return;
+        }
+
+        this._caretPos = line._glyphs.length;
+        return;
+    }
+    throw new Error("click fall-through that should not be reached");
+};
+
+parsegraph_Label_Tests.addTest("Click before beginning", function() {
+    var atlas = parsegraph_defaultGlyphAtlas();
+    var l = new parsegraph_Label(atlas);
+    l.setText("No time");
+    l.click(-5, -5);
+
+    if(l.caretLine() != 0) {
+        return "caretLine";
+    }
+    if(l.caretPos() != 0) {
+        return "caretPos";
+    }
+});
+
+parsegraph_Label_Tests.addTest("Click on second character", function() {
+    var atlas = parsegraph_defaultGlyphAtlas();
+    var l = new parsegraph_Label(atlas);
+    l.setText("No time");
+    l.click(atlas.getGlyph('N').width + 1, 0);
+
+    if(l.caretLine() != 0) {
+        return "caretLine";
+    }
+    if(l.caretPos() != 1) {
+        return "l.caretPos()=" + l.caretPos();
+    }
+});
+
+parsegraph_Label_Tests.addTest("Click on second line", function() {
+    var atlas = parsegraph_defaultGlyphAtlas();
+    var l = new parsegraph_Label(atlas);
+    l.setText("No time\nLol");
+    l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + 1);
+
+    if(l.caretLine() != 1) {
+        return "caretLine";
+    }
+    if(l.caretPos() != 1) {
+        return "l.caretPos()=" + l.caretPos();
+    }
+});
+
+parsegraph_Label_Tests.addTest("Click past end", function() {
+    var atlas = parsegraph_defaultGlyphAtlas();
+    var l = new parsegraph_Label(atlas);
+    l.setText("No time\nLol");
+    l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + l.lineAt(1).height() + 1);
+
+    if(l.caretLine() != 1) {
+        return "caretLine";
+    }
+    if(l.caretPos() != 1) {
+        return "l.caretPos()=" + l.caretPos();
+    }
+});
+
+parsegraph_Label.prototype.lineAt = function(n)
+{
+    return this._lines[n];
+};
+
+parsegraph_Label.prototype.caretLine = function()
+{
+    return this._caretLine;
+};
+
+parsegraph_Label.prototype.caretPos = function()
+{
+    return this._caretPos;
 };
 
 parsegraph_Label.prototype.fontSize = function()
@@ -259,5 +451,6 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
             x += glyphData.width * fontScale;
         });
         y += l.height() * fontScale;
+        x = 0;
     });
 }

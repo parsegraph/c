@@ -131,10 +131,14 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     glyphData.painted = true;
 
     // Select the correct buffer.
-    var page = this._textBuffers[glyphData.texture];
+    var page = this._textBuffers[glyphData.glyphPage._id];
     if(!page) {
-        this._textBuffers[glyphData.texture] = this._textBuffer.addPage();
-        page = this._textBuffers[glyphData.texture];
+        this._textBuffers[glyphData.glyphPage._id] = this._textBuffer.addPage(function(gl, numIndices) {
+            gl.bindTexture(gl.TEXTURE_2D, glyphData.glyphPage._glyphTexture);
+            gl.uniform1i(this.u_glyphTexture, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, numIndices);
+        }, this);
+        page = this._textBuffers[glyphData.glyphPage._id];
     }
 
     // Append position data.
@@ -198,6 +202,7 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
 
 parsegraph_GlyphPainter.prototype.clear = function()
 {
+    this._textBuffers = {};
     this._textBuffer.clear();
 };
 
@@ -211,8 +216,6 @@ parsegraph_GlyphPainter.prototype.render = function(world)
     );
 
     gl.activeTexture(gl.TEXTURE0);
-    this._glyphAtlas.bindTexture(gl);
-    gl.uniform1i(this.u_glyphTexture, 0);
 
     // Render text.
     gl.uniformMatrix3fv(

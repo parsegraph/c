@@ -24,7 +24,8 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._fontName = fontName;
     this._fillStyle = fillStyle;
     this.restoreProperties();
-    this._glyphTexture = null;
+
+    this._glyphPages = [new parsegraph_GlyphPage()];
 
     this._glyphData = {};
 
@@ -48,28 +49,28 @@ parsegraph_GlyphAtlas.prototype.addGlyph = function(glyph)
         this._x = this._padding;
         this._y += this.letterHeight() + this._padding;
     }
+    var createdPage = false;
+    if(this._y + letter.height + this._padding > this.maxTextureWidth()) {
+        // Move to the next page.
+        this._glyphPages.push(new parsegraph_GlyphPage());
+        this._x = this._padding;
+        this._y = this._padding;
+        createdPage = true;
+    }
+    var glyphPage = this._glyphPages[this._glyphPages.length - 1];
 
     var glyphData = {
-        letter: letter,
+        letter: glyph,
         x: this._x,
         y: this._y,
         width: letter.width,
         height: this.letterHeight(),
-        texture: 0
+        glyphPage: glyphPage
     };
     this._glyphData[glyph] = glyphData;
+    glyphPage._queued.push(glyphData);
 
-    this._ctx.fillText(
-        glyph,
-        glyphData.x,
-        glyphData.y + this.fontBaseline()
-    );
-
-    // Advance to the next letter.
-    this._x += letter.width + this._padding;
-    this._needsUpdate = true;
-
-    return glyphData;
+    return createdPage;
 };
 
 parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
@@ -79,6 +80,12 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
         return glyphData;
     }
     return this.addGlyph(glyph);
+};
+
+parsegraph_GlyphAtlas.prototype.hasGlyph = function(glyph)
+{
+    var glyphData = this._glyphData[glyph];
+    return glyphData !== undefined;
 };
 
 /**
@@ -99,24 +106,38 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
         this.clear();
     }
 
-    // Create texture.
-    if(!this._glyphTexture) {
-        this._glyphTexture = gl.createTexture();
-    }
-
-    // Draw from 2D canvas.
-    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
-    gl.texImage2D(
-        gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
-    );
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // Prevents t-coordinate wrapping (repeating).
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.generateMipmap(gl.TEXTURE_2D);
     this._needsUpdate = false;
     this._gl = gl;
+
+    this._ctx.clearRect(0, 0, this.maxTextureWidth(), this.maxTextureWidth());
+
+    this._glyphPages.forEach(function(page) {
+        page._queued.forEach(function(glyphData) {
+            this._ctx.fillText(
+                glyphData.letter,
+                glyphData.x,
+                glyphData.y + this.fontBaseline()
+            );
+        }, this);
+        page._queued = [];
+
+        // Create texture.
+        if(!page._glyphTexture) {
+            page._glyphTexture = gl.createTexture();
+        }
+
+        // Draw from 2D canvas.
+        gl.bindTexture(gl.TEXTURE_2D, page._glyphTexture);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._canvas
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // Prevents t-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }, this);
 };
 
 parsegraph_GlyphAtlas.prototype.clear = function()
@@ -126,12 +147,6 @@ parsegraph_GlyphAtlas.prototype.clear = function()
     }
     this._gl.deleteTexture(this._glyphTexture);
     this._glyphTexture = null;
-};
-
-parsegraph_GlyphAtlas.prototype.bindTexture = function(gl)
-{
-    this.update(gl);
-    gl.bindTexture(gl.TEXTURE_2D, this._glyphTexture);
 };
 
 parsegraph_GlyphAtlas.prototype.imageData = function()

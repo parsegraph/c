@@ -81,8 +81,17 @@ function parsegraph_Input(graph, camera)
         }
 
         // Check if the label was clicked.
-        if(selectedNode.label()) {
-            this.clickLabel(mouseInWorld[0], mouseInWorld[1], selectedNode);
+        console.log("Clicked");
+        if(selectedNode._label && !Number.isNaN(selectedNode._labelX)) {
+            console.log("Clicked");
+            selectedNode._label.click(
+                (mouseInWorld[0] - selectedNode._labelX) / selectedNode.absoluteScale(),
+                (mouseInWorld[1] - selectedNode._labelY) / selectedNode.absoluteScale()
+            );
+            console.log(selectedNode._label.caretLine());
+            console.log(selectedNode._label.caretPos());
+            this._labelNode = selectedNode;
+            this._graph.scheduleRepaint();
             return selectedNode;
         }
 
@@ -482,45 +491,15 @@ function parsegraph_Input(graph, camera)
         }
 
         var keyName = getproperkeyname(event);
-        if(this._focusedNode && focused) {
+        if(this._labelNode && focused) {
             if(event.key.length === 0) {
                 return;
             }
-
-            switch(event.key) {
-            case "Shift":
-                break;
-            case "ArrowLeft":
-                if(!this.moveCaretBackward()) {
-                    // Left the field.
-                }
-                break;
-            case "ArrowRight":
-                if(!this.moveCaretForward()) {
-
-                }
-                break;
-            case "ArrowDown":
-                if(!this.moveCaretDown()) {
-
-                }
-            case "ArrowUp":
-                if(!this.moveCaretUp()) {
-
-                }
-                break;
-            case "Backspace":
-                if(!this.backspaceCaret()) {
-
-                }
-                break;
-            case "F5":
-                break;
-            default:
-                this._focusedNode._label.setText(this._focusedNode._label.text() + event.key);
-                this._focusedNode.layoutWasChanged();
-                graph.scheduleRepaint();
+            if(this._labelNode._label.key(event.key)) {
+                console.log("LAYOUT CHANGED");
+                this._labelNode.layoutWasChanged();
             }
+            this._graph.scheduleRepaint();
             return;
         }
 
@@ -743,19 +722,6 @@ parsegraph_Input.prototype.render = function(world)
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.BLEND);
     this._caretPainter.render(world);
-}
-
-parsegraph_Input.prototype.clickLabel = function(worldX, worldY, selectedNode)
-{
-    selectedNode._label.clickToCaret(
-        worldX, worldY,
-        selectedNode.absoluteScale(),
-        selectedNode.blockStyle(),
-        selectedNode.findPaintGroup(),
-        this._caretPos
-    );
-    this._focusedNode = selectedNode;
-    this._graph.scheduleRepaint();
 }
 
 parsegraph_Input.prototype.Dispatch = function()
