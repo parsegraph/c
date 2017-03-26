@@ -11,7 +11,6 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._canvas = document.createElement("canvas");
     this._canvas.width = this.maxTextureWidth();
     this._canvas.height = this.maxTextureWidth();
-    this._distanceCanvas = document.createElement("canvas");
     this._ctx = this._canvas.getContext("2d");
     this._fontSize = fontSizePixels;
     this._fontName = fontName;
@@ -108,8 +107,8 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
     // Prevents t-coordinate wrapping (repeating).
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.generateMipmap(gl.TEXTURE_2D);
-
     this._needsUpdate = false;
+    this._gl = gl;
 };
 
 parsegraph_GlyphAtlas.prototype.clear = function()
@@ -157,7 +156,7 @@ parsegraph_GlyphAtlas.prototype.canvas = function()
 
 parsegraph_GlyphAtlas.prototype.maxTextureWidth = function()
 {
-    return 2048;
+    return 1024;
 };
 
 parsegraph_GlyphAtlas.prototype.letterHeight = function()

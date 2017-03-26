@@ -110,6 +110,7 @@ function createScriptGraph(url)
         if(graph.needsRepaint()) {
             surface.paint(50);
         }
+        console.log("Rendering");
         surface.render();
         if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
             renderTimer.schedule();

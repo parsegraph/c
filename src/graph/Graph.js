@@ -105,7 +105,7 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
 
 parsegraph_Graph.prototype.needsRepaint = function()
 {
-    return this._world.needsRepaint() || this._carousel.needsRepaint() || this._cameraBox.needsRepaint();
+    return this._world.needsRepaint() || (this._carousel.isCarouselShown() && this._carousel.needsRepaint()) || this._cameraBox.needsRepaint();
 };
 
 parsegraph_Graph.prototype.glyphAtlas = function()

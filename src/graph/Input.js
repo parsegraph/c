@@ -79,6 +79,8 @@ function parsegraph_Input(graph, camera)
             selectedNode.click();
             return selectedNode;
         }
+
+        // Check if the label was clicked.
         if(selectedNode.label()) {
             this.clickLabel(mouseInWorld[0], mouseInWorld[1], selectedNode);
             return selectedNode;
