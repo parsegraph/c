@@ -140,6 +140,11 @@ function parsegraph_ChatProtocol(ws, eventFunc, eventFuncThisArg) {
     var opened = false;
 
     this.send = function(text) {
+        // Closed socket appears often as server down.
+        if(ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+            //console.log("WebSocket closing, ignoring: " + text);
+            return;
+        }
         //console.log("Sending", text);
         ws.send(JSON.stringify({data:text}));
     };
