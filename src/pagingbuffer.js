@@ -25,11 +25,11 @@ function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)
 
 parsegraph_BufferPage.prototype.isEmpty = function()
 {
-    if(page.buffers.length === 0) {
+    if(this.buffers.length === 0) {
         return true;
     }
-    for(var j = 0; j < page.buffers.length; ++j) {
-        var buffer = page.buffers[j];
+    for(var j = 0; j < this.buffers.length; ++j) {
+        var buffer = this.buffers[j];
         if(buffer.length === 0) {
             return true;
         }
