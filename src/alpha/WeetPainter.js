@@ -76,6 +76,8 @@ function alpha_WeetPainter(gl)
     );
 
     this.cubes = [];
+
+    this.faceBuffer.addPage();
 };
 
 alpha_WeetPainter.prototype.Clear = function()
@@ -174,8 +176,9 @@ alpha_WeetPainter.prototype.Cube = function(m)
 
 alpha_WeetPainter.prototype.Clear = function()
 {
-    this.faceBuffer.clear();
     this.cubes.splice(0, this.cubes.length);
+    this.faceBuffer.clear();
+    this.faceBuffer.addPage();
 };
 
 alpha_WeetPainter.prototype.Draw = function(viewMatrix)
