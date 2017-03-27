@@ -37,22 +37,6 @@ parsegraph_BufferPage.prototype.isEmpty = function()
     return false;
 }
 
-parsegraph_BufferPage.prototype.appendRGB = function(attribIndex, color)
-{
-    if(typeof color.r == "function") {
-        return this.appendData(attribIndex, color.r(), color.g(), color.b());
-    }
-    return this.appendData(attribIndex, color.r, color.g, color.b);
-};
-
-parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color)
-{
-    if(typeof color.r == "function") {
-        return this.appendData(attribIndex, color.r(), color.g(), color.b(), color.a());
-    }
-    return this.appendData(attribIndex, color.r, color.g, color.b, color.a);
-};
-
 /**
  * appendData(attribIndex, value1, value2, ...);
  * appendData(attribIndex, valueArray);
@@ -103,6 +87,22 @@ parsegraph_BufferPage.prototype.appendData = function(attribIndex/*, ... */)
         cumulativeAdded += appendValue.call(this, arguments[i]);
     }
     return cumulativeAdded;
+};
+
+parsegraph_BufferPage.prototype.appendRGB = function(attribIndex, color)
+{
+    if(typeof color.r == "function") {
+        return this.appendData(attribIndex, color.r(), color.g(), color.b());
+    }
+    return this.appendData(attribIndex, color.r, color.g, color.b);
+};
+
+parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color)
+{
+    if(typeof color.r == "function") {
+        return this.appendData(attribIndex, color.r(), color.g(), color.b(), color.a());
+    }
+    return this.appendData(attribIndex, color.r, color.g, color.b, color.a);
 };
 
 /**
