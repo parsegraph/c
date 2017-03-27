@@ -141,5 +141,5 @@ parsegraph_Rect_Tests.addTest("include", function() {
     if(r.vMax() !== new parsegraph_Rect(0, 400, 200, 200).vMax()) {
         return "vMax failed to adjust";
     }
-    console.log(r);
+    //console.log(r);
 });

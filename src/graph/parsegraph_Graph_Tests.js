@@ -47,7 +47,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
     // Spawn the graph.
-    console.log("TRIV");
+    //console.log("TRIV");
     var caret = new parsegraph_Caret('b');
     caret.node().commitLayoutIteratively();
 
@@ -1231,14 +1231,14 @@ parsegraph_Graph_Tests.addTest("Centrally aligned back-and-forth", function() {
     car.root().commitLayoutIteratively();
     var sep = car.root().separationAt(parsegraph_DOWNWARD);
 
-    console.log("Bud size: " + (parsegraph_style('bu').horizontalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minWidth));
-    console.log("Vertical separation: " + car.root().verticalSeparation(parsegraph_DOWNWARD));
-    console.log("Block size: " + (parsegraph_style('b').horizontalPadding * 2 +
-        parsegraph_style('b').borderThickness * 2 +
-        parsegraph_style('b').minWidth));
-    console.log(sep);
+    //console.log("Bud size: " + (parsegraph_style('bu').horizontalPadding * 2 +
+        //parsegraph_style('bu').borderThickness * 2 +
+        //parsegraph_style('bu').minWidth));
+    //console.log("Vertical separation: " + car.root().verticalSeparation(parsegraph_DOWNWARD));
+    //console.log("Block size: " + (parsegraph_style('b').horizontalPadding * 2 +
+        //parsegraph_style('b').borderThickness * 2 +
+        //parsegraph_style('b').minWidth));
+    //console.log(sep);
     /*return sep - (
         (parsegraph_style('b').horizontalPadding +
         parsegraph_style('b').borderThickness +

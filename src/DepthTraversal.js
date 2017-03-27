@@ -74,7 +74,7 @@ parsegraph_DepthTraversal_Tests.addTest("parsegraph_DepthTraversal", function() 
         }
         ++i;
         traversal.visit(function(node, levelState) {
-            console.log(node, levelState);
+            //console.log(node, levelState);
             return "LEVEL";
         });
     }
