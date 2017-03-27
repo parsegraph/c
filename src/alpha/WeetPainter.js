@@ -63,15 +63,13 @@ function alpha_WeetPainter(gl)
     this.faceBuffer = parsegraph_createPagingBuffer(
         this.gl, this.faceProgram
     );
-    this.a_position = this.faceBuffer.defineAttrib("a_position", 4);
-    this.a_color = this.faceBuffer.defineAttrib("a_color", 4);
+    this.a_position = this.faceBuffer.defineAttrib("a_position", 4, this.gl.STREAM_DRAW);
+    this.a_color = this.faceBuffer.defineAttrib("a_color", 4, this.gl.STREAM_DRAW);
 
     // Cache program locations.
     this.u_world = this.gl.getUniformLocation(
         this.faceProgram, "u_world"
     );
-
-    this.cubes = [];
 
     this.faceBuffer.addPage();
 };
@@ -81,7 +79,6 @@ alpha_WeetPainter.prototype.Clear = function()
     this.faceBuffer.clear();
 };
 
-alpha_WeetPainter.prototype.PaintCube = function(m)
 {
     var cubeSize = 1;
     var width = cubeSize;
@@ -124,7 +121,20 @@ alpha_WeetPainter.prototype.PaintCube = function(m)
         [-width, length,-height], // v3
         [ width, length,-height] //v2
     ];
+    alpha_CUBE_VERTICES = cv;
 
+    alpha_CUBE_COLORS = [
+        new alpha_Color(1, 1, 0),
+        new alpha_Color(1, 0, 1),
+        new alpha_Color(0, 0, 1),
+        new alpha_Color(1, 0, 0),
+        new alpha_Color(0, 1, 0),
+        new alpha_Color(0, 1, 1)
+    ];
+}
+
+alpha_WeetPainter.prototype.Cube = function(m)
+{
     var drawFace = function(c1, c2, c3, c4, color) {
         var drawVert = function(v) {
             var vt = m.Transform(v[0], v[1], v[2], 0);
@@ -146,28 +156,24 @@ alpha_WeetPainter.prototype.PaintCube = function(m)
         }
     };
 
+    var cv = alpha_CUBE_VERTICES;
+    var cc = alpha_CUBE_COLORS;
     // Front, COLOR
-    drawFace.call(this, cv[0], cv[1], cv[2], cv[3], new alpha_Color(1, 1, 0));
-    // Left
-    drawFace.call(this, cv[8], cv[9], cv[10], cv[11], new alpha_Color(1, 0, 1));
-    // Right
-    drawFace.call(this, cv[12], cv[13], cv[14], cv[15], new alpha_Color(0, 0, 1));
-    // Top
-    drawFace.call(this, cv[16], cv[17], cv[18], cv[19], new alpha_Color(1, 0, 0));
-    // Bottom
-    drawFace.call(this, cv[20], cv[21], cv[22], cv[23], new alpha_Color(0, 1, 0));
+    drawFace.call(this, cv[0], cv[1], cv[2], cv[3], cc[0]);
     // Back
-    drawFace.call(this, cv[4], cv[5], cv[6], cv[7], new alpha_Color(0, 1, 1));
-};
-
-alpha_WeetPainter.prototype.Cube = function(m)
-{
-    this.cubes.push(m);
+    drawFace.call(this, cv[4], cv[5], cv[6], cv[7], cc[5]);
+    // Left
+    drawFace.call(this, cv[8], cv[9], cv[10], cv[11], cc[1]);
+    // Right
+    drawFace.call(this, cv[12], cv[13], cv[14], cv[15], cc[2]);
+    // Top
+    drawFace.call(this, cv[16], cv[17], cv[18], cv[19], cc[3]);
+    // Bottom
+    drawFace.call(this, cv[20], cv[21], cv[22], cv[23], cc[4]);
 };
 
 alpha_WeetPainter.prototype.Clear = function()
 {
-    this.cubes.splice(0, this.cubes.length);
     this.faceBuffer.clear();
     this.faceBuffer.addPage();
 };
@@ -179,11 +185,6 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
     }
 
     // Render faces.
-    this.faceBuffer.clear();
-    this.faceBuffer.addPage();
-    this.cubes.forEach(function(m) {
-        this.PaintCube(m);
-    }, this);
     this.gl.useProgram(
         this.faceProgram
     );

@@ -33,6 +33,8 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
+	src/ArrayList.js \
+	src/Float32List.js \
 	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \
