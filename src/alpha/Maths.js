@@ -928,36 +928,45 @@ alpha_RMatrix4.prototype.Clone = function()
     return new alpha_RMatrix4(this);
 };
 
-alpha_RMatrix4.prototype.Multiply = function(other)
 {
-    if(typeof other == "number") {
-        // Multiply by the scalar value.
+    var r1 = new alpha_Quaternion();
+    var r2 = new alpha_Quaternion();
+    var r3 = new alpha_Quaternion();
+    var r4 = new alpha_Quaternion();
+    var c1 = new alpha_Quaternion();
+    var c2 = new alpha_Quaternion();
+    var c3 = new alpha_Quaternion();
+    var c4 = new alpha_Quaternion();
+    alpha_RMatrix4.prototype.Multiply = function(other)
+    {
+        if(typeof other == "number") {
+            // Multiply by the scalar value.
+            return this.Set(
+                s*this[0], s*this[1], s*this[2], s*this[3],
+                s*this[4], s*this[5], s*this[6], s*this[7],
+                s*this[8], s*this[9], s*this[10], s*this[11],
+                s*this[12], s*this[13], s*this[14], s*this[15]
+            );
+        }
+
+        // using quaternions for a Vector4
+        r1.Set(this[0], this[1], this[2], this[3]);
+        r2.Set(this[4], this[5], this[6], this[7]);
+        r3.Set(this[8], this[9], this[10], this[11]);
+        r4.Set(this[12], this[13], this[14], this[15]);
+        c1.Set(other[0], other[4], other[8], other[12]);
+        c2.Set(other[1], other[5], other[9], other[13]);
+        c3.Set(other[2], other[6], other[10], other[14]);
+        c4.Set(other[3], other[7], other[11], other[15]);
+
+        var dot = alpha_Quaternion.DotProduct;
         return this.Set(
-            s*this[0], s*this[1], s*this[2], s*this[3],
-            s*this[4], s*this[5], s*this[6], s*this[7],
-            s*this[8], s*this[9], s*this[10], s*this[11],
-            s*this[12], s*this[13], s*this[14], s*this[15]
+            r1.DotProduct(c1), r1.DotProduct(c2), r1.DotProduct(c3), r1.DotProduct(c4),
+            r2.DotProduct(c1), r2.DotProduct(c2), r2.DotProduct(c3), r2.DotProduct(c4),
+            r3.DotProduct(c1), r3.DotProduct(c2), r3.DotProduct(c3), r3.DotProduct(c4),
+            r4.DotProduct(c1), r4.DotProduct(c2), r4.DotProduct(c3), r4.DotProduct(c4)
         );
     }
-
-    // using quaternions for a Vector4
-    var r1 = new alpha_Quaternion(this[0], this[1], this[2], this[3]);
-    var r2 = new alpha_Quaternion(this[4], this[5], this[6], this[7]);
-    var r3 = new alpha_Quaternion(this[8], this[9], this[10], this[11]);
-    var r4 = new alpha_Quaternion(this[12], this[13], this[14], this[15]);
-
-    var c1 = new alpha_Quaternion(other[0], other[4], other[8], other[12]);
-    var c2 = new alpha_Quaternion(other[1], other[5], other[9], other[13]);
-    var c3 = new alpha_Quaternion(other[2], other[6], other[10], other[14]);
-    var c4 = new alpha_Quaternion(other[3], other[7], other[11], other[15]);
-
-    var dot = alpha_Quaternion.DotProduct;
-    return this.Set(
-        r1.DotProduct(c1), r1.DotProduct(c2), r1.DotProduct(c3), r1.DotProduct(c4),
-        r2.DotProduct(c1), r2.DotProduct(c2), r2.DotProduct(c3), r2.DotProduct(c4),
-        r3.DotProduct(c1), r3.DotProduct(c2), r3.DotProduct(c3), r3.DotProduct(c4),
-        r4.DotProduct(c1), r4.DotProduct(c2), r4.DotProduct(c3), r4.DotProduct(c4)
-    );
 }
 
 alpha_RMatrix4_Tests.addTest("alpha_RMatrix4.Multiply", function(resultDom) {
@@ -1066,7 +1075,12 @@ alpha_RMatrix4.prototype.Multiplied = function()
 
 alpha_RMatrix4.prototype.Identity = function()
 {
-    return this.Set(new alpha_RMatrix4());
+    return this.Set(
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,0,0,1
+    );
 };
 
 alpha_RMatrix4.prototype.Scale = function()
@@ -1183,6 +1197,19 @@ alpha_RMatrix4_Tests.addTest("alpha_RMatrix4.Rotate", function(resultDom) {
     }
 });
 
+alpha_RMatrix4_scratch = null;
+
+function alpha_getScratchMatrix()
+{
+    if(!alpha_RMatrix4_scratch) {
+        alpha_RMatrix4_scratch = new alpha_RMatrix4();
+    }
+    else {
+        alpha_RMatrix4_scratch.Identity();
+    }
+    return alpha_RMatrix4_scratch;
+}
+
 alpha_RMatrix4.prototype.Rotate = function()
 {
     // Retrieve arguments.
@@ -1204,7 +1231,7 @@ alpha_RMatrix4.prototype.Rotate = function()
     }
 
     // Create the matrix.
-    var r = new alpha_RMatrix4();
+    var r = alpha_getScratchMatrix();
     var x2 = x * x;
     var y2 = y * y;
     var z2 = z * z;

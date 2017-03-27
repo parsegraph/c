@@ -90,23 +90,24 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed, frozen)
         return;
     }
 
+    var rotq = this.rotq;
+    var max = 30;
+
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
+        this.cubePainter.Init(max * max * max);
     }
     else {
         this.cubePainter.Clear();
     }
 
-    var rotq = this.rotq;
-    var max = 15;
-
+    var c = new alpha_Physical(this.camera);
     for(var i = 0; i < max; ++i) {
         for(var j = 0; j < max; ++j) {
             for(var k = 0; k < max; ++k) {
                 if(k % 2 != 0 || j % 2 != 0 || i % 2 != 0) {
                     continue;
                 }
-                var c = new alpha_Physical(this.camera);
                 c.modelMode = alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE;
                 c.SetScale(1, 1, 1);
                 c.orientation.Set(0, 0, 0, 1);

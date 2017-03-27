@@ -60,18 +60,13 @@ function alpha_WeetPainter(gl)
     }
 
     // Prepare attribute buffers.
-    this.faceBuffer = parsegraph_createPagingBuffer(
-        this.gl, this.faceProgram
-    );
-    this.a_position = this.faceBuffer.defineAttrib("a_position", 4, this.gl.STREAM_DRAW);
-    this.a_color = this.faceBuffer.defineAttrib("a_color", 4, this.gl.STREAM_DRAW);
+    this.a_position = this.gl.getAttribLocation(this.faceProgram, "a_position");
+    this.a_color = this.gl.getAttribLocation(this.faceProgram, "a_color");
 
     // Cache program locations.
     this.u_world = this.gl.getUniformLocation(
         this.faceProgram, "u_world"
     );
-
-    this.faceBuffer.addPage();
 };
 
 alpha_WeetPainter.prototype.Clear = function()
@@ -133,15 +128,44 @@ alpha_WeetPainter.prototype.Clear = function()
     ];
 }
 
+alpha_WeetPainter.prototype.Init = function(numCubes)
+{
+    this._posBuffer = this.gl.createBuffer();
+    this._colorBuffer = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._colorBuffer);
+    this._data = new Float32Array(numCubes * 6 * 6 * 4);
+    this._dataX = 0;
+
+    var colorData = this._data;
+    var x = 0;
+    for(var i = 0; i < numCubes; ++i) {
+        // Cube
+        for(var j = 0; j < 6; ++j) {
+            // Face
+            var col = alpha_CUBE_COLORS[j];
+            for(var k = 0; k < 6; ++k) {
+                // Vertex
+                colorData[x++] = col[0];
+                colorData[x++] = col[1];
+                colorData[x++] = col[2];
+                colorData[x++] = 1.0;
+            }
+        }
+    }
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, colorData, this.gl.STATIC_DRAW);
+}
+
 alpha_WeetPainter.prototype.Cube = function(m)
 {
+    if(!this._data) {
+        throw new Error("Init must be called first");
+    }
     var drawFace = function(c1, c2, c3, c4, color) {
         var drawVert = function(v) {
-            var vt = m.Transform(v[0], v[1], v[2], 0);
-            var numAdded = this.faceBuffer.appendData(this.a_position, vt[0] + m[12], vt[1] + m[13], vt[2] + m[14], 1.0);
-            if(4 != numAdded) {
-                throw new Error("Unexpected vertices added: " + numAdded);
-            }
+            this._data[this._dataX++] = (m[0] * v[0] + m[1] * v[1] + m[2] * v[2]) + m[12];
+            this._data[this._dataX++] = (m[4] * v[0] + m[5] * v[1] + m[6] * v[2]) + m[13];
+            this._data[this._dataX++] = (m[8] * v[0] + m[9] * v[1] + m[10] * v[2]) + m[14];
+            this._data[this._dataX++] = 1.0;
         };
 
         drawVert.call(this, c1);
@@ -150,10 +174,6 @@ alpha_WeetPainter.prototype.Cube = function(m)
         drawVert.call(this, c1);
         drawVert.call(this, c3);
         drawVert.call(this, c4);
-        for(var i = 0; i < 6; ++i) {
-            this.faceBuffer.appendData(this.a_color, color);
-            this.faceBuffer.appendData(this.a_color, 1);
-        }
     };
 
     var cv = alpha_CUBE_VERTICES;
@@ -174,8 +194,10 @@ alpha_WeetPainter.prototype.Cube = function(m)
 
 alpha_WeetPainter.prototype.Clear = function()
 {
-    this.faceBuffer.clear();
-    this.faceBuffer.addPage();
+    if(!this._data) {
+        return;
+    }
+    this._dataX = 0;
 };
 
 alpha_WeetPainter.prototype.Draw = function(viewMatrix)
@@ -185,13 +207,31 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
     }
 
     // Render faces.
-    this.gl.useProgram(
+    var gl = this.gl;
+    gl.useProgram(
         this.faceProgram
     );
-    this.gl.uniformMatrix4fv(
+    gl.uniformMatrix4fv(
         this.u_world,
         false,
         viewMatrix.toArray()
     );
-    this.faceBuffer.renderPages();
+
+    gl.enableVertexAttribArray(this.a_position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._posBuffer);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        this._data,
+        gl.STREAM_DRAW
+    );
+    gl.vertexAttribPointer(this.a_position, 4, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(this.a_color);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
+    gl.vertexAttribPointer(this.a_color, 4, gl.FLOAT, false, 0, 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, this._data.length / 12);
+
+    gl.disableVertexAttribArray(this.a_position);
+    gl.disableVertexAttribArray(this.a_color);
 };
