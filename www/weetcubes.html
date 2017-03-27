@@ -114,7 +114,7 @@ alpha_WeetCubeWidget.prototype.paint = function(elapsed, frozen)
                 c.SetPosition(i, j, k);
                 c.SetScale(1, 1, 1);
                 c.modelMode = alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE;
-                this.cubePainter.Cube(c);
+                this.cubePainter.Cube(c.GetModelMatrix());
             }
         }
 
