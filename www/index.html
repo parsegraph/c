@@ -74,14 +74,7 @@ function init()
         //graph.world().plot(showStatements(graph));
 
         // Then correct alignment here.
-        //graph.world().plot(showProportionTest(graph, COUNT), 0, 0, 1);
-
-        var car = new parsegraph_Caret(parsegraph_BLOCK);
-        car.label("No time");
-        graph.world().plot(car.root());
-
-        car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-        car.label("Boop");
+        graph.world().plot(showProportionTest(graph, COUNT), 0, 0, 1);
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {

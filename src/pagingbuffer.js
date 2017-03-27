@@ -18,7 +18,7 @@ function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)
 
     // Add a buffer entry for each vertex attribute.
     pagingBuffer._attribs.forEach(function() {
-        this.buffers.push(new parsegraph_Float32List());
+        this.buffers.push([]);
         this.glBuffers.push(null);
     }, this);
 }
@@ -30,7 +30,7 @@ parsegraph_BufferPage.prototype.isEmpty = function()
     }
     for(var j = 0; j < this.buffers.length; ++j) {
         var buffer = this.buffers[j];
-        if(buffer.length() === 0) {
+        if(buffer.length === 0) {
             return true;
         }
     }
@@ -176,7 +176,7 @@ parsegraph_PagingBuffer.prototype.defineAttrib = function(name, numComponents, d
     }
     // Add a new buffer entry for this new attribute.
     this._pages.forEach(function(page) {
-        page.buffers.push(new parsegraph_Float32List());
+        page.buffers.push([]);
         page.glBuffers.push(null);
     });
 
@@ -226,7 +226,7 @@ parsegraph_PagingBuffer.prototype.clear = function()
                 //this._gl.deleteBuffer(page.glBuffers[attribIndex]);
                 //page.glBuffers[attribIndex] = null;
             //}
-            page.buffers[attribIndex].clear();
+            page.buffers[attribIndex] = [];
         }, this);
         page.needsUpdate = true;
     }, this);
@@ -273,7 +273,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
             if(page.needsUpdate) {
                 this._gl.bufferData(
                     this._gl.ARRAY_BUFFER,
-                    bufferData.data,
+                    new Float32Array(bufferData),
                     attrib.drawMode
                 );
             }
@@ -288,7 +288,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
                 0
             );
 
-            var thisNumIndices = bufferData.length() / attrib.numComponents;
+            var thisNumIndices = bufferData.length / attrib.numComponents;
             if(Math.round(thisNumIndices) != thisNumIndices) {
                 throw new Error("Odd number of indices for attrib " + attrib.name + ". Wanted " + Math.round(thisNumIndices) + ", but got " + thisNumIndices);
             }

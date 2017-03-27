@@ -236,7 +236,7 @@ parsegraph_NodePainter.prototype.clear = function()
     var gl = this._gl;
     this._textures.forEach(function(t) {
         t.clear();
-        gl.deleteTexture(t._texture);
+        //gl.deleteTexture(t._texture);
     });
     this._textures = [];
 };
@@ -454,7 +454,7 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY, user
         gl.bindFramebuffer(gl.FRAMEBUFFER, shaders.framebuffer);
 
         this._textures.forEach(function(t) {
-            gl.deleteTexture(t._texture);
+            //gl.deleteTexture(t._texture);
             t.clear();
         });
         this._textures = [];
