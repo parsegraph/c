@@ -788,7 +788,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
 
     // Draw the label.
     var label = node._label;
-    if(!label || label.isEmpty()) {
+    if(!label) {
         return;
     }
     var fontScale = (style.fontSize * userScale * node.absoluteScale()) / label.fontSize();
@@ -819,5 +819,6 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     }
     node._labelX = labelX;
     node._labelY = labelY;
+    node._labelScale = fontScale;
     label.paint(this._glyphPainter, labelX, labelY, fontScale);
 };

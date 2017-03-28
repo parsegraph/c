@@ -35,6 +35,7 @@ parsegraph_SCRIPT_FILES = \
 	src/gl.js \
 	src/ArrayList.js \
 	src/Float32List.js \
+	src/examples/alpha_WeetCubeWidget.js \
 	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \

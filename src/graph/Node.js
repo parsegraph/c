@@ -19,6 +19,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._labelY = null;
 
     this._value = null;
+    this._editable = false;
     this._selected = false;
     this._scene = null;
 
@@ -787,7 +788,7 @@ parsegraph_Node.prototype.label = function()
 
 parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
 {
-    if(!this.label()) {
+    if(!this._label) {
         this._label = new parsegraph_Label(glyphAtlas);
     }
     this._label.setText(text);
@@ -1093,7 +1094,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
 {
     // Find the size of this node's drawing area.
     var style = this.blockStyle();
-    if(this.label()) {
+    if(this._label && !this._label.isEmpty()) {
         if(!bodySize) {
             bodySize = new parsegraph_Size();
         }

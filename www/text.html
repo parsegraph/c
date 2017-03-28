@@ -55,6 +55,10 @@ body > div input {
 function createTextDemo() {
     var car = new parsegraph_Caret('b');
     car.label("Click to type text here.");
+    for(var i = 0; i < 0; ++i) {
+        car.label("Click to type text here.");
+        car.spawnMove('d', 'b');
+    }
     return car.root();
 }
 

@@ -34,7 +34,7 @@ function parsegraph_Line(label, text)
     this._label = label;
     this._glyphs = [];
     this._width = 0;
-    this._height = 0;
+    this._height = this.glyphAtlas().letterHeight();
     if(arguments.length > 1) {
         this.appendText(text);
     }
@@ -169,6 +169,15 @@ parsegraph_Line.prototype.height = function()
     return this._height;
 }
 
+parsegraph_Line.prototype.posAt = function(limit)
+{
+    var w = 0;
+    for(var i = 0; i < limit && i < this._glyphs.length; ++i) {
+        w += this._glyphs[i].width;
+    }
+    return w;
+}
+
 parsegraph_Line.prototype.glyphs = function()
 {
     return this._glyphs;
@@ -184,6 +193,7 @@ function parsegraph_Label(glyphAtlas)
     this._lines = [];
     this._caretLine = 0;
     this._caretPos = 0;
+    this._editable = false;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()
@@ -250,6 +260,72 @@ parsegraph_Label.prototype.setText = function(text)
     }, this);
 }
 
+parsegraph_Label.prototype.moveCaretDown = function(world)
+{
+    console.log("Moving caret down");
+}
+
+parsegraph_Label.prototype.moveCaretUp = function(world)
+{
+    console.log("Moving caret up");
+}
+
+parsegraph_Label.prototype.moveCaretBackward = function(world)
+{
+    if(this._caretPos === 0) {
+        if(this._caretLine <= 0) {
+            return false;
+        }
+        this._caretLine--;
+        this.caretPos = this._lines[this._caretLine]._glyphs.length;
+        return false;
+    }
+    this._caretPos--;
+    return false;
+}
+
+parsegraph_Label.prototype.moveCaretForward = function()
+{
+    if(this._caretPos == this._lines[this._caretLine]._glyphs.length) {
+        if(this._caretLine === this._lines.length - 1) {
+            // At the end.
+            return false;
+        }
+        this._caretLine++;
+        this._caretPos = 0;
+        return false;
+    }
+    this._caretPos++;
+    return false;
+}
+
+parsegraph_Label.prototype.backspaceCaret = function()
+{
+    var line = this._lines[this._caretLine];
+    if(this._caretPos === 0) {
+        if(this._caretLine === 0) {
+            return false;
+        }
+        this._caretLine--;
+        this._caretPos = this._lines[this._caretLine]._glyphs.length;
+    }
+    this._caretPos--;
+    line.remove(this._caretPos, 1);
+    this._width = null;
+    return true;
+}
+
+parsegraph_Label.prototype.deleteCaret = function()
+{
+    var line = this._lines[this._caretLine];
+    if(this._caretPos > line._glyphs.length - 1) {
+        return false;
+    }
+    line.remove(this._caretPos, 1);
+    this._width = null;
+    return true;
+}
+
 parsegraph_Label.prototype.key = function(key)
 {
     switch(key) {
@@ -259,37 +335,52 @@ parsegraph_Label.prototype.key = function(key)
         break;
     case "ArrowLeft":
         if(!this.moveCaretBackward()) {
-            // Left the field.
+            // The caret left the field.
         }
         break;
     case "ArrowRight":
-        if(!this.moveCaretForward()) {
-
-        }
+        return this.moveCaretForward();
         break;
     case "ArrowDown":
-        if(!this.moveCaretDown()) {
-
-        }
+        return this.moveCaretDown();
     case "ArrowUp":
-        if(!this.moveCaretUp()) {
-
-        }
+        return this.moveCaretUp();
+    case "Delete":
+        return this.deleteCaret();
+        break;
+    case "Escape":
+        break;
+    case "PageUp":
+    case "PageDown":
+    case "Home":
+    case "End":
+    case "CapsLock":
+    case "ScrollLock":
+    case "NumLock":
+    case "Insert":
+    case "Break":
+    case "Insert":
+    case "Enter":
+    case "Tab":
         break;
     case "Backspace":
-        var line = this._lines[this._caretLine];
-        line.remove(this._caretPos, 1);
-        this._caretPos--;
-        if(this._caretPos < 0) {
-            this._caretLine--;
-            this._caretPos = this._lines[this._caretLine]._glyphs.length
-        }
-        return true;
+        return this.backspaceCaret();
+    case "F1":
+    case "F2":
+    case "F3":
+    case "F4":
     case "F5":
+    case "F6":
+    case "F7":
+    case "F8":
+    case "F9":
+    case "F10":
+    case "F11":
+    case "F12":
         break;
     default:
         // Insert some character.
-        //this.setText(this._labelNode._label.text() + event.key);
+        //this.setText(this._labelNode._label.text() + key);
 
         while(this._caretLine > this._lines.length) {
             this._lines.push(new parsegraph_Line(this));
@@ -297,16 +388,31 @@ parsegraph_Label.prototype.key = function(key)
         var insertLine = this._lines[this._caretLine];
         var insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
         if(insertPos === insertLine._glyphs.length) {
-            insertLine.appendText(event.key);
+            insertLine.appendText(key);
         }
         else {
-            insertLine.insertText(insertPos, event.key);
+            insertLine.insertText(insertPos, key);
         }
-        this._caretPos++;
+
+        if(this._width !== null) {
+            this._width = Math.max(insertLine.width(), this._width);
+            this._height = Math.max(this._height, insertLine.height());
+        }
+        this._caretPos += key.length;
         return true;
     }
     return false;
 }
+
+parsegraph_Label.prototype.editable = function()
+{
+    return this._editable;
+};
+
+parsegraph_Label.prototype.setEditable = function(editable)
+{
+    this._editable = editable;
+};
 
 parsegraph_Label.prototype.click = function(x, y)
 {
@@ -336,8 +442,13 @@ parsegraph_Label.prototype.click = function(x, y)
                 curX += glyphData.width;
                 continue;
             }
+            if(x > curX + glyphData.width/2) {
+                curX += glyphData.width;
+                continue;
+            }
 
             this._caretPos = j;
+            //console.log("CaretPos=" + this._caretPos);
             return;
         }
 
@@ -418,6 +529,30 @@ parsegraph_Label.prototype.caretPos = function()
     return this._caretPos;
 };
 
+parsegraph_Label.prototype.getCaretRect = function(outRect)
+{
+    if(!outRect) {
+        outRect = new parsegraph_Rect();
+    }
+    var y = 0;
+    for(var i = 0; i < this._caretLine; ++i) {
+        y += this._lines[i].height();
+    }
+    var line = this._lines[this._caretLine];
+    var x = line.posAt(this._caretPos);
+    var cw = 5;
+    outRect.setX(x + cw/2);
+    outRect.setWidth(cw);
+    outRect.setY(y + line.height()/2);
+    outRect.setHeight(line.height());
+    return outRect;
+};
+
+parsegraph_Label.prototype.glyphPos = function()
+{
+    return this._caretPos;
+};
+
 parsegraph_Label.prototype.fontSize = function()
 {
     return this._glyphAtlas.fontSize();
@@ -430,6 +565,12 @@ parsegraph_Label.prototype.glyphAtlas = function()
 
 parsegraph_Label.prototype.width = function()
 {
+    if(this._width === null) {
+        this._width = 0;
+        this._lines.forEach(function(l) {
+            this._width = Math.max(this._width, l.width());
+        }, this);
+    }
     return this._width;
 };
 

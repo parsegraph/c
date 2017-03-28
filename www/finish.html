@@ -508,6 +508,8 @@ function createLoginGraph(surface, graph)
         alert(l);
     };
     car.node().setBlockStyle(nbs);
+    car.label("");
+    car.node()._label.setEditable(true);
     car.move(parsegraph_BACKWARD);
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -516,6 +518,8 @@ function createLoginGraph(surface, graph)
     car.move(parsegraph_FORWARD);
     car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
     car.node().setBlockStyle(nbs);
+    car.label("");
+    car.node()._label.setEditable(true);
     car.move(parsegraph_BACKWARD);
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -529,7 +533,7 @@ function createLoginGraph(surface, graph)
     car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_SCENE);
-    car.node().setScene(new alpha_GLWidget(surface));
+    car.node().setScene(new alpha_WeetCubeWidget(surface));
     sceneNode = car.node();
     sceneNode.layoutWasChanged();
 

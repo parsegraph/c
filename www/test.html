@@ -87,9 +87,9 @@ function createScriptGraph(url)
 
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url);
-/*    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function() {
         var ln = 0;
-        xhr.responseText.slice(0, 10000).split(/\n/).forEach(function(l) {
+        xhr.responseText.split(/\n/).forEach(function(l) {
             if(ln % 100) {
                 car.crease();
             }
@@ -101,7 +101,6 @@ function createScriptGraph(url)
             ++ln;
         });
     });
-    */
     xhr.send();
 
     // Schedule the repaint.
