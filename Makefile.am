@@ -103,6 +103,7 @@ parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
 	chmod 0444 $@
 
 parsegraph_EXAMPLE_FILES = \
+	src/examples/parsegraph_JavaScriptWidget.js \
 	src/examples/createSliderDemo.js \
 	src/examples/showCorporateStructure.js \
 	src/examples/showHardTest.js \
