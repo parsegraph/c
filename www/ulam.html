@@ -88,11 +88,23 @@ function init()
             }
         });
 
-        graph.input().SetListener(function(affectedPaint) {
+        if(localStorage.getItem("parsegraph_ulam_camera") != null) {
+            try {
+                var parsegraph_ulam_camera = JSON.parse(localStorage.getItem("parsegraph_ulam_camera"));
+                graph.camera().restore(parsegraph_ulam_camera);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
+        }
+
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
             if(affectedPaint) {
                 graph.scheduleRepaint();
             }
             renderTimer.schedule();
+            if(inputAffectedCamera) {
+                localStorage.setItem("parsegraph_ulam_camera", JSON.stringify(graph.camera().toJSON()));
+            }
         });
         renderTimer.schedule();
     } catch(ex) {
