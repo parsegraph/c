@@ -22,6 +22,9 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
     this._elapsed = 0;
     this._frozen = false;
+    this._xMax = 25;
+    this._yMax = 25;
+    this._zMax = 25;
 }
 
 alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen)
@@ -35,25 +38,63 @@ alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen)
     this._frozen = frozen;
 }
 
+alpha_WeetCubeWidget.prototype.setMax = function(max)
+{
+    this._xMax = max;
+    this._yMax = max;
+    this._zMax = max;
+    if(this.cubePainter) {
+        this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
+    }
+}
+
+alpha_WeetCubeWidget.prototype.setXMax = function(xMax)
+{
+    this._xMax = xMax;
+    if(this.cubePainter) {
+        this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
+    }
+};
+
+alpha_WeetCubeWidget.prototype.setYMax = function(yMax)
+{
+    this._yMax = yMax;
+    if(this.cubePainter) {
+        this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
+    }
+};
+
+alpha_WeetCubeWidget.prototype.setZMax = function(zMax)
+{
+    this._zMax = zMax;
+    if(this.cubePainter) {
+        this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
+    }
+};
+
+alpha_WeetCubeWidget.prototype.setRotq = function(rotq)
+{
+    this.rotq = rotq;
+};
+
 alpha_WeetCubeWidget.prototype.paint = function()
 {
     var elapsed = this._elapsed;
     var frozen = this._frozen;
     var rotq = this.rotq;
-    var max = 30;
 
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
-        this.cubePainter.Init(max * max * max);
+        this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
     }
     else if(!frozen && elapsed > 0) {
         this.cubePainter.Clear();
     }
 
     var c = new alpha_Physical(this.camera);
-    for(var i = 0; i < max; ++i) {
-        for(var j = 0; j < max; ++j) {
-            for(var k = 0; k < max; ++k) {
+    for(var i = 0; i < this._xMax; ++i) {
+        for(var j = 0; j < this._yMax; ++j) {
+            for(var k = 0; k < this._zMax; ++k) {
                 if(k % 2 != 0 || j % 2 != 0 || i % 2 != 0) {
                     continue;
                 }
@@ -80,7 +121,16 @@ alpha_WeetCubeWidget.prototype.paint = function()
     }
 
     this.rotq = rotq;
+    if(this._listener) {
+        this._listener.call(this._listenerThisArg);
+    }
 };
+
+alpha_WeetCubeWidget.prototype.setUpdateListener = function(listener, listenerThisArg)
+{
+    this._listener = listener;
+    this._listenerThisArg = listenerThisArg || this;
+}
 
 alpha_WeetCubeWidget.prototype.render = function()
 {

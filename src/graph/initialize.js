@@ -119,8 +119,8 @@ function parsegraph_initialize(mathMode) {
     };
 
     parsegraph_SLIDER_STYLE = {
-        minWidth: parsegraph_BUD_RADIUS*24,
-        minHeight: parsegraph_BUD_RADIUS*3,
+        minWidth: 2*parsegraph_BUD_RADIUS*24,
+        minHeight: 2*parsegraph_BUD_RADIUS*3,
         horizontalPadding: parsegraph_BUD_RADIUS/2,
         verticalPadding: parsegraph_BUD_RADIUS/2,
         borderColor: parsegraph_createColor(.9, .6, .6, 1),

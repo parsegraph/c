@@ -28,6 +28,7 @@ alpha_WeetPainter_FragmentShader =
 function alpha_WeetPainter(gl)
 {
     this.gl = gl;
+    this._numCubes = null;
     if(!this.gl || !this.gl.createProgram) {
         throw new Error("FacePainter must be given a GL interface");
     }
@@ -130,12 +131,16 @@ alpha_WeetPainter.prototype.Clear = function()
 
 alpha_WeetPainter.prototype.Init = function(numCubes)
 {
-    this._posBuffer = this.gl.createBuffer();
-    this._colorBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._colorBuffer);
+    if(!this._posBuffer) {
+        this._posBuffer = this.gl.createBuffer();
+    }
     this._data = new Float32Array(numCubes * 6 * 6 * 4);
     this._dataX = 0;
 
+    if(!this._colorBuffer) {
+        this._colorBuffer = this.gl.createBuffer();
+    }
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._colorBuffer);
     var colorData = this._data;
     var x = 0;
     for(var i = 0; i < numCubes; ++i) {
@@ -153,6 +158,7 @@ alpha_WeetPainter.prototype.Init = function(numCubes)
         }
     }
     this.gl.bufferData(this.gl.ARRAY_BUFFER, colorData, this.gl.STATIC_DRAW);
+    this._numCubes = numCubes;
 }
 
 alpha_WeetPainter.prototype.Cube = function(m)
