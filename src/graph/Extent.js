@@ -707,7 +707,7 @@ parsegraph_Extent.prototype.compact = function()
     return created;
 }
 
-parsegraph_Extent.prototype.boundingValues = function()
+parsegraph_Extent.prototype.boundingValues = function(outVal)
 {
     var totalLength = 0;
     var minSize = NaN;
@@ -732,7 +732,13 @@ parsegraph_Extent.prototype.boundingValues = function()
         }
     }
 
-    return [totalLength, minSize, maxSize];
+    if(!outVal) {
+        outVal = [null, null, null];
+    }
+    outVal[0] = totalLength;
+    outVal[1] = minSize;
+    outVal[2] = maxSize;
+    return outVal;
 };
 
 parsegraph_Extent.prototype.equals = function(other)

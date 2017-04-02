@@ -84,6 +84,8 @@ function createScriptGraph(url)
 
     var car = new parsegraph_Caret('bu');
     graph.plot(car);
+    console.log("createScriptGraph");
+    GRAPH = graph;
 
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url);

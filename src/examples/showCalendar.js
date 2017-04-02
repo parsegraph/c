@@ -1,4 +1,4 @@
-function showCalendar(currentDate)
+function showCalendar(startYear, endYear, currentDate)
 {
     var createYear = function(year) {
         var caret = new parsegraph_Caret(parsegraph_BUD);
@@ -80,7 +80,7 @@ function showCalendar(currentDate)
     // Enter the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawnMove('f', 'bud');
-    for(var year = 1948; year <= 2018; ++year) {
+    for(var year = startYear; year <= endYear; ++year) {
         caret.connect('d', createYear(year));
         caret.crease('d');
         caret.spawnMove('f', 's');

@@ -69,7 +69,7 @@ function init()
         var COUNT = 25
         main.appendChild(surface.container());
 
-        graph.plot(showCalendar(new Date(1980, 10, 1)));
+        graph.plot(showCalendar(1987, 1987+40, new Date()));
 
         if(localStorage.getItem("parsegraph_world_camera") != null) {
             try {
@@ -99,6 +99,9 @@ function init()
             renderTimer.schedule();
         });
         renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
 
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));

@@ -53,39 +53,57 @@ body > div input {
 <script src="esprima.js"></script>
 <script>
 
-var sceneNode;
-function createLoginGraph(surface, graph)
+function createStyles(surface, graph)
 {
-    var nbs = parsegraph_copyStyle(parsegraph_BLOCK);
-    nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
-    nbs.borderColor = new parsegraph_Color(.5, .5, .5, 1);
-    nbs.minWidth = parsegraph_BUD_RADIUS * 80;
+nbs = parsegraph_copyStyle(parsegraph_BLOCK);
+nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+nbs.borderColor = new parsegraph_Color(.5, .5, .5, 1);
+nbs.minWidth = parsegraph_BUD_RADIUS * 80;
 
-    var bbs = parsegraph_copyStyle(parsegraph_BLOCK);
-    bbs.backgroundColor = new parsegraph_Color(1, 1, .5, 1);
-    bbs.borderColor = new parsegraph_Color(.5, .5, 0, 1);
+bbs = parsegraph_copyStyle(parsegraph_BLOCK);
+bbs.backgroundColor = new parsegraph_Color(1, 1, .5, 1);
+bbs.borderColor = new parsegraph_Color(.5, .5, 0, 1);
+}
 
+function createChatGraph(surface, graph)
+{
     var car = new parsegraph_Caret(parsegraph_BUD);
 
-
-    car.push();
-    car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+    var m = 25;
 
     car.push();
     car.spawnMove(parsegraph_BACKWARD, parsegraph_BUD);
-    for(var i = 0; i < 5; ++i) {
+    for(var i = 0; i < m; ++i) {
         car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
         car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
+        if(i === 0) {
+            car.move(parsegraph_FORWARD);
+            car.node().setBlockStyle(nbs);
+            car.label("");
+            car.node()._label.setEditable(true);
+            car.move(parsegraph_BACKWARD);
+        }
     }
     car.pop();
 
     car.push();
     car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    for(var i = 0; i < 5; ++i) {
+    for(var i = 0; i < m; ++i) {
         car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
         car.spawn(parsegraph_BACKWARD, parsegraph_BLOCK);
     }
     car.pop();
+
+    return car.root();
+}
+
+var sceneNode;
+function createLoginGraph(surface, graph)
+{
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.push();
+    var n = createChatGraph(surface, graph);
+    car.connect(parsegraph_UPWARD, n);
     car.pop();
 
     car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
@@ -124,6 +142,10 @@ function createLoginGraph(surface, graph)
     car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
     car.node().setBlockStyle(bbs);
     car.label('Log in');
+
+    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+    car.node().setBlockStyle(bbs);
+    car.label('Create user');
     car.pop();
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -131,24 +153,65 @@ function createLoginGraph(surface, graph)
     car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_SCENE);
-    car.node().setScene(new alpha_WeetCubeWidget(surface));
+    var scene = new alpha_WeetCubeWidget(surface);
+    car.node().setScene(scene);
     sceneNode = car.node();
     sceneNode.layoutWasChanged();
 
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
+    var n = createWeetcubesModel(surface, graph, scene);
+    car.connect(parsegraph_DOWNWARD, n);
+    car.align(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+
+    return car.root();
+}
+
+function createWeetcubesModel(surface, graph, scene)
+{
+    var car = new parsegraph_Caret(parsegraph_BUD);
     car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
-    var widget = new parsegraph_JavaScriptWidget(graph);
-    widget.load("primes.js");
-    car.connect(parsegraph_DOWNWARD, widget.caret.root());
-    car.crease(parsegraph_DOWNWARD);
     car.pull(parsegraph_DOWNWARD);
 
+    car.move(parsegraph_BACKWARD);
+    car.label("x");
+    var s = new parsegraph_Node(parsegraph_SLIDER);
+    car.connect(parsegraph_DOWNWARD, s);
+    s.setClickListener(function() {
+        sceneNode.scene().setXMax(Math.max(2, this.value() * 25));
+    }, s);
+    s.setValue(scene._xMax / 25);
+
     car.move(parsegraph_FORWARD);
-    car.connect(parsegraph_DOWNWARD, showCorporateStructure(graph));
-    car.crease(parsegraph_DOWNWARD);
+    car.label("y");
+    var s = new parsegraph_Node(parsegraph_SLIDER);
+    car.connect(parsegraph_DOWNWARD, s);
+    s.setClickListener(function() {
+        sceneNode.scene().setYMax(Math.max(2, this.value() * 25));
+    }, s);
+    s.setValue(scene._yMax / 25);
+
+    car.move(parsegraph_FORWARD);
+    car.label("z");
+    var s = new parsegraph_Node(parsegraph_SLIDER);
+    car.connect(parsegraph_DOWNWARD, s);
+    s.setClickListener(function() {
+        sceneNode.scene().setZMax(Math.max(2, this.value() * 25));
+    }, s);
+    s.setValue(scene._zMax / 25);
+
     car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    car.label("rotq");
+    var s = new parsegraph_Node(parsegraph_SLIDER);
+    car.connect(parsegraph_DOWNWARD, s);
+    s.setClickListener(function() {
+        sceneNode.scene().setRotq(this.value() * 360);
+    }, s);
+    s.setValue(scene.rotq / 360);
+
+    sceneNode.scene().setUpdateListener(function() {
+        s.setValue(sceneNode.scene().rotq / 360);
+    });
 
     return car.root();
 }
@@ -159,6 +222,7 @@ function init(main)
         parsegraph_initialize();
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
+        createStyles(surface, graph);
         main.appendChild(surface.container());
         graph.world().plot(createLoginGraph(surface, graph));
 

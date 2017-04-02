@@ -19,7 +19,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._labelY = null;
 
     this._value = null;
-    this._editable = false;
     this._selected = false;
     this._scene = null;
 
@@ -615,7 +614,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     if(this.type() == parsegraph_SLIDER) {
         throw new Error("Sliders cannot have child nodes.");
     }
-    if(this.type() == parsegraph_SCENE && spawnDirection == parsegraph_INWARD) {
+    if(this.type() == parsegraph_SCENE && inDirection == parsegraph_INWARD) {
         throw new Error("Scenes cannot have inward nodes.");
     }
     if(node.parentDirection() !== parsegraph_NULL_NODE_DIRECTION) {

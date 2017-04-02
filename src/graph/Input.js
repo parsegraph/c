@@ -1,16 +1,18 @@
 var parsegraph_RESET_CAMERA_KEY = "Escape";
 var parsegraph_CLICK_KEY = "q";
 
-var parsegraph_MOVE_UP_KEY = "ArrowUp";
-var parsegraph_MOVE_DOWN_KEY = "ArrowDown";
-var parsegraph_MOVE_LEFT_KEY = "ArrowLeft";
-var parsegraph_MOVE_RIGHT_KEY = "ArrowRight";
+var parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
+var parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
+var parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
+var parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
 var parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
+var parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
+var parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
-//var parsegraph_MOVE_UP_KEY = "w";
-//var parsegraph_MOVE_DOWN_KEY = "s";
-//var parsegraph_MOVE_LEFT_KEY = "a";
-//var parsegraph_MOVE_RIGHT_KEY = "d";
+//var parsegraph_MOVE_UPWARD_KEY = "w";
+//var parsegraph_MOVE_DOWNWARD_KEY = "s";
+//var parsegraph_MOVE_BACKWARD_KEY = "a";
+//var parsegraph_MOVE_FORWARD_KEY = "d";
 
 var parsegraph_ZOOM_IN_KEY = "Shift";
 var parsegraph_ZOOM_OUT_KEY = " ";
@@ -35,6 +37,10 @@ function parsegraph_Input(graph, camera)
     this._caretPos = [];
     this._caretColor = parsegraph_CARET_COLOR;
     this._focusedNode = null;
+    this._focusedLabel = false;
+
+    this._spotlightPainter = null;
+    this._spotlightColor = parsegraph_FOCUSED_SPOTLIGHT_COLOR;
 
     this.lastMouseCoords = function() {
         return [lastMouseX, lastMouseY];
@@ -83,7 +89,7 @@ function parsegraph_Input(graph, camera)
 
         // Check if the label was clicked.
         //console.log("Clicked");
-        if(selectedNode._label && !Number.isNaN(selectedNode._labelX)) {
+        if(selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable()) {
             //console.log("Clicked");
             selectedNode._label.click(
                 (mouseInWorld[0] - selectedNode._labelX) / selectedNode._labelScale,
@@ -91,14 +97,20 @@ function parsegraph_Input(graph, camera)
             );
             //console.log(selectedNode._label.caretLine());
             //console.log(selectedNode._label.caretPos());
+            this._focusedLabel = true;
             this._focusedNode = selectedNode;
             this._graph.scheduleRepaint();
             return selectedNode;
         }
-        this._focusedNode = selectedNode;
+        if(selectedNode) {
+            console.log("Setting focusedNode to ", selectedNode);
+            this._focusedNode = selectedNode;
+            this._focusedLabel = false;
+            this._graph.scheduleRepaint();
+            console.log("Selected Node has nothing", selectedNode);
+            return selectedNode;
+        }
 
-        // A node was clicked, but nothing to be done.
-        console.log("Selected Node has nothing", selectedNode);
         return null;
     };
 
@@ -233,6 +245,9 @@ function parsegraph_Input(graph, camera)
                 //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
                 selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
             }
+        }
+        if(selectedSlider.hasClickListener()) {
+            selectedSlider.click();
         }
         this.Dispatch(true, "slider");
         lastMouseX = mouseX;
@@ -390,8 +405,10 @@ function parsegraph_Input(graph, camera)
             return;
         }
 
+        this._focusedLabel = false;
         this._focusedNode = null;
         this._caretPainter.clear();
+        this._spotlightPainter.clear();
 
         // Dragging on the canvas.
         attachedMouseListener = mouseDragListener;
@@ -490,7 +507,7 @@ function parsegraph_Input(graph, camera)
     };
 
     parsegraph_addEventMethod(document, "keydown", function(event) {
-        if(event.ctrlKey || event.altKey || event.metaKey) {
+        if(event.altKey || event.metaKey) {
             //console.log("Key event had ignored modifiers");
             return;
         }
@@ -500,12 +517,124 @@ function parsegraph_Input(graph, camera)
             if(event.key.length === 0) {
                 return;
             }
-            if(this._focusedNode._label.key(event.key)) {
-                //console.log("LAYOUT CHANGED");
-                this._focusedNode.layoutWasChanged();
+            if(this._focusedNode._label) {
+                if(event.ctrlKey) {
+                    if(this._focusedNode._label.ctrlKey(event.key)) {
+                        //console.log("LAYOUT CHANGED");
+                        this._focusedNode.layoutWasChanged();
+                        this._graph.scheduleRepaint();
+                        return;
+                    }
+                }
+                else if(this._focusedNode._label.key(event.key)) {
+                    //console.log("LAYOUT CHANGED");
+                    this._focusedNode.layoutWasChanged();
+                    this._graph.scheduleRepaint();
+                    return;
+                }
             }
-            this._graph.scheduleRepaint();
-            return;
+            // Didn't move the caret, so interpret it as a key move
+            // on the node itself.
+            var node = this._focusedNode;
+            var skipHorizontalInward = event.ctrlKey;
+            var skipVerticalInward = event.ctrlKey;
+            while(true) {
+                switch(event.key) {
+                case parsegraph_RESET_CAMERA_KEY:
+                    this._focusedNode = null;
+                    this._focusedLabel = false;
+                    break;
+                case parsegraph_MOVE_BACKWARD_KEY:
+                    var neighbor = node.nodeAt(parsegraph_BACKWARD);
+                    if(neighbor) {
+                        this._focusedNode = neighbor;
+                        this._focusedLabel = true;
+                        this._graph.scheduleRepaint();
+                        return;
+                    }
+                    neighbor = node.nodeAt(parsegraph_OUTWARD);
+                    if(neighbor) {
+                        this._focusedNode = neighbor;
+                        this._focusedLabel = true;
+                        this._graph.scheduleRepaint();
+                        return;
+                    }
+                    break;
+                case parsegraph_MOVE_FORWARD_KEY:
+                    if(
+                        node.hasNode(parsegraph_INWARD) &&
+                        node.nodeAlignmentMode(parsegraph_INWARD) != parsegraph_ALIGN_VERTICAL &&
+                        !skipHorizontalInward
+                    ) {
+                        this._focusedNode = node.nodeAt(parsegraph_INWARD);
+                        this._focusedLabel = true;
+                        this._graph.scheduleRepaint();
+                        return;
+                    }
+                    console.log("ArrowRight");
+                    var neighbor = node.nodeAt(parsegraph_FORWARD);
+                    if(neighbor) {
+                        this._focusedNode = neighbor;
+                        this._focusedLabel = !event.ctrlKey;
+                        this._graph.scheduleRepaint();
+                        return;
+                    }
+                    neighbor = node.nodeAt(parsegraph_OUTWARD);
+                    if(neighbor) {
+                        console.log("Going outward");
+                        skipHorizontalInward = true;
+                        node = neighbor;
+                        continue;
+                    }
+                    // Search up the parents hoping that an inward node can be escaped.
+                    while(true) {
+                        if(node.isRoot()) {
+                            // The focused node is not within an inward node.
+                            return;
+                        }
+                        var pdir = node.parentDirection();
+                        node = node.nodeAt(pdir);
+                        if(pdir === parsegraph_OUTWARD) {
+                            // Found the outward node to escape.
+                            skipHorizontalInward = true;
+                            break;
+                        }
+                    }
+                    // Continue traversing using the found node.
+                    continue;
+                case parsegraph_MOVE_DOWNWARD_KEY:
+                    neighbor = node.nodeAt(parsegraph_DOWNWARD);
+                    if(neighbor) {
+                        this._focusedNode = neighbor;
+                        this._graph.scheduleRepaint();
+                        this._focusedLabel = true;
+                        return;
+                    }
+                    break;
+                case parsegraph_MOVE_UPWARD_KEY:
+                    neighbor = node.nodeAt(parsegraph_UPWARD);
+                    if(neighbor) {
+                        this._focusedNode = neighbor;
+                        this._graph.scheduleRepaint();
+                        this._focusedLabel = true;
+                        return;
+                    }
+                    break;
+                case "Backspace":
+                    break;
+                default:
+                    return;
+                }
+                break;
+            }
+
+            if(this._focusedNode) {
+                return;
+            }
+            if(event.key === parsegraph_RESET_CAMERA_KEY) {
+                this._graph.scheduleRepaint();
+                return;
+            }
         }
 
         if(this.keydowns[keyName]) {
@@ -533,11 +662,11 @@ function parsegraph_Input(graph, camera)
             // fall through
         case parsegraph_ZOOM_IN_KEY:
         case parsegraph_ZOOM_OUT_KEY:
+        case parsegraph_MOVE_DOWNWARD_KEY:
+        case parsegraph_MOVE_UPWARD_KEY:
+        case parsegraph_MOVE_BACKWARD_KEY:
+        case parsegraph_MOVE_FORWARD_KEY:
         case parsegraph_RESET_CAMERA_KEY:
-        case parsegraph_MOVE_DOWN_KEY:
-        case parsegraph_MOVE_UP_KEY:
-        case parsegraph_MOVE_LEFT_KEY:
-        case parsegraph_MOVE_RIGHT_KEY:
             this.Dispatch(false, "keydown", true);
             break;
         }
@@ -566,11 +695,11 @@ function parsegraph_Input(graph, camera)
         case parsegraph_ZOOM_IN_KEY:
         case parsegraph_ZOOM_OUT_KEY:
         case parsegraph_RESET_CAMERA_KEY:
-        case parsegraph_MOVE_DOWN_KEY:
-        case parsegraph_MOVE_UP_KEY:
-        case parsegraph_MOVE_LEFT_KEY:
-        case parsegraph_MOVE_RIGHT_KEY:
-            this.Dispatch(false, "keydown", true);
+        case parsegraph_MOVE_DOWNWARD_KEY:
+        case parsegraph_MOVE_UPWARD_KEY:
+        case parsegraph_MOVE_BACKWARD_KEY:
+        case parsegraph_MOVE_FORWARD_KEY:
+            this.Dispatch(false, "keyup", true);
             break;
         }
     }, this);
@@ -614,20 +743,24 @@ parsegraph_Input.prototype.Update = function(t)
     if(this.Get(parsegraph_RESET_CAMERA_KEY) && this._graph.surface()._gl) {
         //var defaultScale = .5;
         var defaultScale = 1;
-        cam.setOrigin(
-            this._graph.gl().drawingBufferWidth / (2 * defaultScale),
-            this._graph.gl().drawingBufferHeight / (2 * defaultScale)
-        );
-        cam.setScale(defaultScale);
+        var x = this._graph.gl().drawingBufferWidth / 2;
+        var y = this._graph.gl().drawingBufferHeight / 2;
+        if(cam.x() === x && cam.y() === y) {
+            cam.setScale(defaultScale);
+        }
+        else {
+            x = this._graph.gl().drawingBufferWidth / (2 * defaultScale);
+            y = this._graph.gl().drawingBufferHeight / (2 * defaultScale);
+            cam.setOrigin(x, y);
+        }
         inputChangedScene = true;
     }
 
-    if(this.Get(parsegraph_MOVE_LEFT_KEY) || this.Get(parsegraph_MOVE_RIGHT_KEY) || this.Get(parsegraph_MOVE_UP_KEY) || this.Get(parsegraph_MOVE_DOWN_KEY)) {
+    if(this.Get(parsegraph_MOVE_BACKWARD_KEY) || this.Get(parsegraph_MOVE_FORWARD_KEY) || this.Get(parsegraph_MOVE_UPWARD_KEY) || this.Get(parsegraph_MOVE_DOWNWARD_KEY)) {
         this._updateRepeatedly = true;
-        cam.adjustOrigin(
-            (this.Elapsed(parsegraph_MOVE_LEFT_KEY, t) * xSpeed + this.Elapsed(parsegraph_MOVE_RIGHT_KEY, t) * -xSpeed),
-            (this.Elapsed(parsegraph_MOVE_UP_KEY, t) * ySpeed + this.Elapsed(parsegraph_MOVE_DOWN_KEY, t) * -ySpeed)
-        );
+        var x = cam._cameraX + (this.Elapsed(parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed + this.Elapsed(parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed);
+        var y = cam._cameraY + (this.Elapsed(parsegraph_MOVE_UPWARD_KEY, t) * ySpeed + this.Elapsed(parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed);
+        cam.setOrigin(x, y);
         inputChangedScene = true;
     }
 
@@ -649,6 +782,16 @@ parsegraph_Input.prototype.Update = function(t)
         inputChangedScene = true;
     }
     //this.Dispatch(false, "update", inputChangedScene);
+
+    var x = cam._cameraX;
+    var y = cam._cameraY;
+    var r = this._graph.world().boundingRect();
+    x = Math.max(x, r.x() - r.width()/2);
+    x = Math.min(x, r.x() + r.width()/2);
+    y = Math.max(y, r.y() - r.height()/2);
+    y = Math.min(y, r.y() + r.height()/2);
+    console.log("BR", x, y, r);
+    cam.setOrigin(x, y);
 
     return inputChangedScene;
 };
@@ -674,16 +817,35 @@ parsegraph_Input.prototype.paint = function()
     if(!this._caretPainter) {
         this._caretPainter = new parsegraph_BlockPainter(this._graph.gl(), this._graph.shaders());
     }
+    if(!this._spotlightPainter) {
+        this._spotlightPainter = new parsegraph_SpotlightPainter(
+            this._graph.gl(), this._graph.shaders()
+        );
+    }
 
     this._caretPainter.clear();
     this._caretPainter.setBorderColor(this._caretColor);
     this._caretPainter.setBackgroundColor(this._caretColor);
 
+    this._spotlightPainter.clear();
+
     if(!this._focusedNode) {
         return;
     }
+
     var label = this._focusedNode._label;
-    if(!label) {
+    if(!label || !this._focusedLabel) {
+        var s = this._focusedNode.absoluteSize();
+        var srad = Math.min(
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE * s.width() * this._focusedNode.absoluteScale(),
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE * s.height() * this._focusedNode.absoluteScale()
+        );
+        this._spotlightPainter.drawSpotlight(
+            this._focusedNode.absoluteX(),
+            this._focusedNode.absoluteY(),
+            srad,
+            this._spotlightColor
+        );
         return;
     }
 
@@ -699,6 +861,16 @@ parsegraph_Input.prototype.paint = function()
     );
 };
 
+parsegraph_Input.prototype.focusedNode = function()
+{
+    return this._focusedNode;
+}
+
+parsegraph_Input.prototype.focusedLabel = function()
+{
+    return this._focusedLabel;
+}
+
 parsegraph_Input.prototype.render = function(world)
 {
     var gl = this._graph.gl();
@@ -706,6 +878,8 @@ parsegraph_Input.prototype.render = function(world)
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.BLEND);
     this._caretPainter.render(world);
+    gl.enable(gl.BLEND);
+    this._spotlightPainter.render(world);
 }
 
 parsegraph_Input.prototype.Dispatch = function()

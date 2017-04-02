@@ -63,7 +63,7 @@ function init()
         var graph = new parsegraph_Graph(surface);
         GRAPH = graph;
 
-        var COUNT = 50;
+        var COUNT = 100;
         main.appendChild(graph.container());
 
         graph.plot(showUlam(graph, COUNT));
@@ -82,6 +82,7 @@ function init()
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
+            console.log("Rendering");
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
                 renderTimer.schedule();
@@ -107,6 +108,9 @@ function init()
             }
         });
         renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

@@ -164,6 +164,89 @@ parsegraph_World.prototype.mouseOver = function(x, y)
     return true;
 };
 
+parsegraph_World.prototype.boundingRect = function(outRect)
+{
+    if(!outRect) {
+        outRect = new parsegraph_Rect();
+    }
+    this._worldPlots.forEach(function(plot) {
+        plot.commitLayoutIteratively();
+
+        // Get plot extent data.
+        var nx = plot.localPaintGroup()._worldX;
+        var ny = plot.localPaintGroup()._worldY;
+
+        var boundingValues = [0, 0, 0];
+        plot.extentsAt(parsegraph_FORWARD).boundingValues(boundingValues);
+        var h = boundingValues[0];
+        plot.extentsAt(parsegraph_DOWNWARD).boundingValues(boundingValues);
+        var w = boundingValues[0];
+
+        var be = nx - plot.extentOffsetAt(parsegraph_FORWARD);
+        var ue = ny - plot.extentOffsetAt(parsegraph_DOWNWARD);
+        var fe = be + w;
+        var de = ue + h;
+
+        // Get rect values.
+        var w = fe + be;
+        var h = de + ue;
+
+        // Calculate center by averaging axis extremes.
+        var cx = be + w/2;
+        var cy = ue + h/2;
+
+        // Get current bounding rect.
+        var inx = outRect._x;
+        var iny = outRect._y;
+        var inw = outRect._width;
+        var inh = outRect._height;
+
+        var outw;
+        var outh;
+        var outx;
+        var outy;
+
+        if(!inw || !inh || !inx || !iny) {
+            outw = w;
+            outh = h;
+            outx = cx;
+            outy = cy;
+        }
+        else {
+            // Combine rect extents.
+            var hmin = Math.min(inx - inw/2, cx - w/2);
+            var hmax = Math.max(inx + inw/2, cx + w/2);
+            var vmin = Math.min(iny - inh/2, cy - h/2);
+            var vmax = Math.max(iny + inh/2, cy + h/2);
+
+            // Calculate width and center.
+            outw = hmax - hmin;
+            outh = vmax - vmin;
+            outx = hmin + outw/2;
+            outy = vmin + outh/2;
+        }
+
+        // Store results.
+        outRect._x = outx;
+        outRect._y = outy;
+        outRect._width = outw;
+        outRect._height = outh;
+    });
+
+    return outRect;
+};
+
+parsegraph_World_Tests.addTest("boundingRect", function() {
+    var w = new parsegraph_World();
+    var car = new parsegraph_Caret('b');
+    w.plot(car);
+    var r = w.boundingRect();
+    console.log(r);
+    if(Number.isNaN(r.width())) {
+        return "Width must not be NaN";
+    }
+});
+
 parsegraph_World.prototype.scheduleRepaint = function()
 {
     //console.log(new Error("Scheduling repaint"));

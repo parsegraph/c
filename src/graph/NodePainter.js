@@ -16,9 +16,6 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderExtents = false;
 
-    this._spotlightPainter = new parsegraph_SpotlightPainter(this._gl, shaders);
-    this._renderSpotlights = true;
-
     this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
     this._renderText = true;
@@ -93,9 +90,6 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     this._gl.blendFunc(
         this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
     );
-    if(this._renderSpotlights) {
-        this._spotlightPainter.render(world);
-    }
     if(this._renderBlocks) {
         this._blockPainter.render(world, scale);
     }
@@ -165,21 +159,6 @@ parsegraph_NodePainter.prototype.isBlockRenderingEnabled = function()
     return this._renderBlocks;
 };
 
-parsegraph_NodePainter.prototype.enableSpotlightRendering = function()
-{
-    this._renderSpotlights = true;
-};
-
-parsegraph_NodePainter.prototype.disableSpotlightRendering = function()
-{
-    this._renderSpotlights = false;
-};
-
-parsegraph_NodePainter.prototype.isSpotlightRenderingEnabled = function()
-{
-    return this._renderSpotlights;
-};
-
 parsegraph_NodePainter.prototype.enableLineRendering = function()
 {
     this._renderLines = true;
@@ -228,7 +207,6 @@ parsegraph_NodePainter.prototype.isSceneRenderingEnabled = function()
 parsegraph_NodePainter.prototype.clear = function()
 {
     this._blockPainter.clear();
-    this._spotlightPainter.clear();
     this._extentPainter.clear();
     this._originPainter.clear();
     this._glyphPainter.clear();
@@ -338,17 +316,6 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
                     node.backdropColor()
                 )
             );
-//            this._spotlightPainter.drawSpotlight(
-//                worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
-//                worldY + node.absoluteY(),
-//                2 * style.brightness * userScale * node.absoluteSize().height(),
-//                new parsegraph_Color(
-//                    style.selectedBorderColor.r(),
-//                    style.selectedBorderColor.g(),
-//                    style.selectedBorderColor.b(),
-//                    1
-//                )
-//            );
         }
         else {
             painter.setBorderColor(
@@ -734,7 +701,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
-    // Set colors and draw the spotlight if selected.
+    // Set colors if selected.
     if(node.isSelected()) {
         painter.setBorderColor(
             style.selectedBorderColor.premultiply(
@@ -745,23 +712,6 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
             style.selectedBackgroundColor.premultiply(
                 node.backdropColor()
             )
-        );
-
-        this._spotlightPainter.drawSpotlight(
-            worldX + userScale * node.absoluteX(),
-            worldY + userScale * node.absoluteY(),
-            2 * style.brightness * Math.max(
-                userScale * node.absoluteSize().width(),
-                userScale * node.absoluteSize().height()
-            ),
-            new parsegraph_Color(
-                style.selectedBorderColor.r(),
-                style.selectedBorderColor.g(),
-                style.selectedBorderColor.b(),
-                1
-            )
-            //
-            //new parsegraph_Color(0, 0, 0, .5)
         );
     } else {
         painter.setBorderColor(

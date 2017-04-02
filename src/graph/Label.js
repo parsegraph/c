@@ -193,7 +193,7 @@ function parsegraph_Label(glyphAtlas)
     this._lines = [];
     this._caretLine = 0;
     this._caretPos = 0;
-    this._editable = false;
+    this._editable = true;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()
@@ -278,10 +278,10 @@ parsegraph_Label.prototype.moveCaretBackward = function(world)
         }
         this._caretLine--;
         this.caretPos = this._lines[this._caretLine]._glyphs.length;
-        return false;
+        return true;
     }
     this._caretPos--;
-    return false;
+    return true;
 }
 
 parsegraph_Label.prototype.moveCaretForward = function()
@@ -293,10 +293,10 @@ parsegraph_Label.prototype.moveCaretForward = function()
         }
         this._caretLine++;
         this._caretPos = 0;
-        return false;
+        return true;
     }
     this._caretPos++;
-    return false;
+    return true;
 }
 
 parsegraph_Label.prototype.backspaceCaret = function()
@@ -304,10 +304,12 @@ parsegraph_Label.prototype.backspaceCaret = function()
     var line = this._lines[this._caretLine];
     if(this._caretPos === 0) {
         if(this._caretLine === 0) {
+            // Can't backspace anymore.
             return false;
         }
         this._caretLine--;
         this._caretPos = this._lines[this._caretLine]._glyphs.length;
+        return true;
     }
     this._caretPos--;
     line.remove(this._caretPos, 1);
@@ -326,28 +328,66 @@ parsegraph_Label.prototype.deleteCaret = function()
     return true;
 }
 
+parsegraph_Label.prototype.ctrlKey = function(key)
+{
+    switch(key) {
+    case "Control":
+    case "Alt":
+    case "Shift":
+    case "ArrowLeft":
+    case "ArrowRight":
+    case "ArrowDown":
+    case "ArrowUp":
+    case "Delete":
+    case "Escape":
+    case "PageUp":
+    case "PageDown":
+    case "Home":
+    case "End":
+    case "CapsLock":
+    case "ScrollLock":
+    case "NumLock":
+    case "Insert":
+    case "Break":
+    case "Insert":
+    case "Enter":
+    case "Tab":
+    case "Backspace":
+    case "F1":
+    case "F2":
+    case "F3":
+    case "F4":
+    case "F5":
+    case "F6":
+    case "F7":
+    case "F8":
+    case "F9":
+    case "F10":
+    case "F11":
+    case "F12":
+    default:
+        break;
+    }
+    return false;
+}
+
 parsegraph_Label.prototype.key = function(key)
 {
     switch(key) {
-    case "Ctrl":
+    case "Control":
     case "Alt":
     case "Shift":
         break;
     case "ArrowLeft":
-        if(!this.moveCaretBackward()) {
-            // The caret left the field.
-        }
-        break;
+        return this.moveCaretBackward();
     case "ArrowRight":
         return this.moveCaretForward();
-        break;
     case "ArrowDown":
         return this.moveCaretDown();
     case "ArrowUp":
         return this.moveCaretUp();
     case "Delete":
         return this.deleteCaret();
-        break;
     case "Escape":
         break;
     case "PageUp":

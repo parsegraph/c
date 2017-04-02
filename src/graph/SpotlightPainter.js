@@ -118,6 +118,35 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
     }
 };
 
+parsegraph_SpotlightPainter.prototype.drawRectSpotlight = function(
+    cx, cy, w, h, color)
+{
+    // Append position data.
+    this._spotlightBuffer.appendData(
+        this.a_position,
+        parsegraph_generateRectangleVertices(
+            cx, cy, w, h
+        )
+    );
+
+    // Append texture coordinate data.
+    this._spotlightBuffer.appendData(
+        this.a_texCoord,
+        parsegraph_generateRectangleTexcoords()
+    );
+
+    // Append color data.
+    for(var k = 0; k < 3 * 2; ++k) {
+        this._spotlightBuffer.appendData(
+            this.a_color,
+            color.r(),
+            color.g(),
+            color.b(),
+            color.a()
+        );
+    }
+};
+
 parsegraph_SpotlightPainter.prototype.clear = function()
 {
     this._spotlightBuffer.clear();

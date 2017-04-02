@@ -310,9 +310,9 @@ function parsegraph_BlockPainter(gl, shaders)
         // For development.
    //     gl.getExtension("OES_standard_derivatives");
   //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
- //       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
+//       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
 //        fragProgram = parsegraph_BlockPainter_SquareFragmentShader;
-//        fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
+//fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
 
         gl.attachShader(
             program,
