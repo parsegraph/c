@@ -49,7 +49,7 @@ body > div input {
 }
 </style>
 <script src="parsegraph-1.0.js"></script>
-<script src="parsegraph-examples-1.0.js"></script>
+<script src="parsegraph-widgets-1.0.js"></script>
 <script>
 
 function init()
@@ -66,8 +66,8 @@ function init()
         var COUNT = 25
         main.appendChild(graph.container());
 
-        var linear = new parsegraph_LinearWidget(graph);
-        graph.plot(linear.root());
+        //var linear = new parsegraph_LinearWidget(graph);
+        //graph.plot(linear.root());
         var primes = new parsegraph_PrimesWidget(graph);
         graph.plot(primes.root());
 
@@ -129,12 +129,6 @@ function init()
             renderTimer.schedule();
         });
         renderTimer.schedule();
-
-        var glyphAtlas = new parsegraph_GlyphAtlas(
-            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-        );
-        var shaders = {};
-        var textCamera = new parsegraph_Camera(surface);
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

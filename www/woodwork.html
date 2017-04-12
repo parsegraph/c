@@ -49,7 +49,7 @@ body > div input {
 }
 </style>
 <script src="parsegraph-1.0.js"></script>
-<script src="parsegraph-widgets-1.0.js"></script>
+<script src="parsegraph-examples-1.0.js"></script>
 <script src="esprima.js"></script>
 <script>
 
@@ -263,9 +263,6 @@ function init(main)
             renderTimer.schedule();
         });
         renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
 
         surface.addRenderer(function() {
             localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));

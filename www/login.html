@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Memory Piers - Parsegraph</title>
+<title>Login - Parsegraph</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -50,34 +50,50 @@ body > div input {
 </style>
 <script src="parsegraph-1.0.js"></script>
 <script src="parsegraph-widgets-1.0.js"></script>
+<script src="esprima.js"></script>
 <script>
 
-function init()
+function init(main)
 {
     try {
         parsegraph_initialize();
-
-        var main = document.body;
-
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
-        graph.plot(showMemoryBlocks(graph, 200));
-        GRAPH = graph;
         main.appendChild(surface.container());
+        var widget = new parsegraph_LoginWidget(surface, graph);
+        graph.world().plot(widget.root());
 
-        if(localStorage.getItem("parsegraph_piers_camera") != null) {
+        var profile;
+
+        widget.setLoginListener(function(res, userLogin, node) {
+            console.log(userLogin, node);
+
+            if(!profile) {
+                profile = new parsegraph_ProfileWidget(graph);
+                profile.load(userLogin.username);
+                node.connectNode(parsegraph_DOWNWARD, profile.node());
+            }
+        });
+
+        var cameraName = "parsegraph_camera";
+        if(localStorage.getItem(cameraName) != null) {
             try {
-                var parsegraph_piers_camera = JSON.parse(localStorage.getItem("parsegraph_piers_camera"));
-                graph.camera().restore(parsegraph_piers_camera);
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
             } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                console.log(
+                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
+                );
             }
         }
 
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
         renderTimer.setListener(function() {
             graph.input().Update(new Date());
+            var t = alpha_GetTime();
+            start = t;
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
@@ -98,7 +114,7 @@ function init()
         };
 
         surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_piers_camera", JSON.stringify(graph.camera().toJSON()));
+            localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
         });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
@@ -107,7 +123,7 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    init(document.body);
 });
 </script>
 </head>

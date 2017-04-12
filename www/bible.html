@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Memory Piers - Parsegraph</title>
+<title>King James - The Bible</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -56,21 +56,24 @@ function init()
 {
     try {
         parsegraph_initialize();
-
         var main = document.body;
 
+        // Create the surface.
         var surface = new parsegraph_Surface();
-        var graph = new parsegraph_Graph(surface);
-        graph.plot(showMemoryBlocks(graph, 200));
-        GRAPH = graph;
         main.appendChild(surface.container());
 
-        if(localStorage.getItem("parsegraph_piers_camera") != null) {
+        var graph = new parsegraph_Graph(surface);
+        GRAPH = graph;
+
+        graph.world().plot(widget.caret.root());
+
+        var cameraName = "parsegraph_bible_camera";
+        if(localStorage.getItem(cameraName) != null) {
             try {
-                var parsegraph_piers_camera = JSON.parse(localStorage.getItem("parsegraph_piers_camera"));
-                graph.camera().restore(parsegraph_piers_camera);
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
             } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                console.log("Failed to parse saved camera state for " + cameraName + ".\n" + parsegraph_writeError(e));
             }
         }
 
@@ -83,23 +86,25 @@ function init()
             }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                if(graph.input().UpdateRepeatedly()) {
+                    cameraProtocol.update();
+                }
                 renderTimer.schedule();
             }
         });
-        graph.input().SetListener(function(affectedPaint) {
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
             if(affectedPaint) {
                 graph.scheduleRepaint();
             }
             renderTimer.schedule();
+            if(inputAffectedCamera) {
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            }
         });
         renderTimer.schedule();
         graph.onScheduleRepaint = function() {
             renderTimer.schedule();
         };
-
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_piers_camera", JSON.stringify(graph.camera().toJSON()));
-        });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

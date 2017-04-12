@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chat - Parsegraph</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.parsegraph_Surface {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+}
+
+div {
+    text-align: center;
+    position: absolute;
+}
+
+.controls {
+    margin: auto;
+    position: absolute;
+    pointer-events: none;
+    width: 100%;
+}
+
+.controls > form button {
+    pointer-events: auto;
+}
+
+@media only screen and (max-width: 980px) {
+
+.controls {
+    display: none;
+}
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script src="parsegraph-widgets-1.0.js"></script>
+<script src="esprima.js"></script>
+<script>
+
+function parsegraph_ChatWidget(graph)
+{
+    this._graph = graph;
+
+    this._commands = [];
+
+    this._root = new parsegraph_Node(parsegraph_BLOCK);
+    this._root.setLabel("parsegraph_Chat", graph.glyphAtlas());
+    this._root._label.setEditable(false);
+
+    var b = this._root.spawnNode(parsegraph_UPWARD, parsegraph_BUD);
+    var a = b.spawnNode(parsegraph_BACKWARD, parsegraph_BUD);
+    var c = b.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+
+    var fieldn = a.spawnNode(parsegraph_UPWARD, parsegraph_BUD);
+
+    var nbs = parsegraph_copyStyle(parsegraph_BLOCK);
+    nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+    nbs.borderColor = new parsegraph_Color(.5, .5, .5, 1);
+    nbs.minWidth = parsegraph_BUD_RADIUS * 80;
+    var field = fieldn.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+    field.setBlockStyle(nbs);
+    field.setLabel("", graph.glyphAtlas());
+    field.setKeyListener(function(key) {
+        if(key !== "Enter") {
+            return;
+        }
+
+        var newn = new parsegraph_Node(parsegraph_BUD);
+        var newfield = newn.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+        newfield.setLabel(field._label.getText(), graph.glyphAtlas());
+
+        var disc = fieldn.disconnectNode(parsegraph_UPWARD);
+        fieldn.connectNode(parsegraph_UPWARD, newn);
+        if(disc) {
+            newn.connectNode(parsegraph_UPWARD, disc);
+        }
+
+        field._label.setText("");
+        this._graph.scheduleRepaint();
+    }, this);
+
+    /*this._root.setKeyListener(function(key) {
+        console.log(key);
+        var bud = new parsegraph_Node(parsegraph_BUD);
+        var field = bud.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+        field.setLabel(this._commands.length, graph.glyphAtlas());
+
+        var c = this.commandNode();
+        this._commands.push(bud);
+        if(!c) {
+            this._root.connectNode(parsegraph_DOWNWARD, bud);
+        }
+        else {
+            var disc = this._root.disconnectNode(parsegraph_DOWNWARD);
+            this._root.connectNode(parsegraph_DOWNWARD, bud);
+            bud.connectNode(parsegraph_DOWNWARD, disc);
+        }
+        this._graph.scheduleRepaint();
+    }, this);
+    */
+}
+
+parsegraph_ChatWidget.prototype.root = function()
+{
+    return this._root;
+}
+
+function init()
+{
+    try {
+        parsegraph_initialize();
+        var main = document.body;
+
+        // Create the surface.
+        var surface = new parsegraph_Surface();
+        main.appendChild(surface.container());
+
+        var graph = new parsegraph_Graph(surface);
+        GRAPH = graph;
+
+        var widget = new parsegraph_ChatWidget(graph);
+        graph.world().plot(widget.root());
+
+        var cameraName = "parsegraph_chat_camera";
+        if(localStorage.getItem(cameraName) != null) {
+            try {
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
+            } catch(e) {
+                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            }
+        }
+
+        // Schedule the repaint.
+        var renderTimer = new parsegraph_AnimationTimer();
+        renderTimer.setListener(function() {
+            graph.input().Update(new Date());
+            if(graph.needsRepaint()) {
+                surface.paint(50);
+            }
+            surface.render();
+            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                renderTimer.schedule();
+            }
+        });
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+            if(affectedPaint) {
+                graph.scheduleRepaint();
+            }
+            renderTimer.schedule();
+            if(inputAffectedCamera) {
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            }
+        });
+        renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
+    } catch(ex) {
+        alert("Init: " + parsegraph_writeError(ex));
+        throw ex;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init();
+});
+</script>
+</head>
+<body>
+</body>
+</html>

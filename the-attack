@@ -1,0 +1,194 @@
+Alpha
+Bible
+Graph builder
+Calendar
+Chat
+Corporate
+Finish
+IP
+JavaScript
+Login
+Multislot
+Memory Piers
+Primes
+Proportion
+Terminal
+Test
+Text
+Ulam
+Weetcubes
+Woodwork
+
+I think a widget should handle both UI controller and network logic, only
+because I can't write XMLHttpRequests from scratch (sure there are other
+reasons).
+
+https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+
+    var oReq = new XMLHttpRequest();
+    oReq.onload = function(e) {
+      var arraybuffer = oReq.response; // not responseText
+      /* ... */
+    }
+    oReq.open("GET", url);
+    oReq.responseType = "arraybuffer";
+    oReq.send();
+
+Removing network logic does make sense, though. But that means network logic
+lives in the model, since it makes less sense to have it living in the views.
+
+Model then reports connectivity and availability to the controller, which then
+feeds that same information to the view.
+
+To the controller, networked models appear the same as locally-available
+models.
+
+Models then represent both the living state of an API session. API methods are
+also directly available as functions. Client objects represent the living
+model.
+
+This nightmare will end.
+
+The C push is the native front. Here, the work is simply porting everything,
+plus the structure of the native C clients, which is based on eglkms.c.
+
+Supporting right-to-left text is a key concern within the graph system, as well
+as ensuring that FORWARD and BACKWARD can be translated for right-to-left
+graphs.
+
+The higher-level websites are divided between parsegraph.com and rainback.com.
+
+rainback.com is aspirational, so perhaps just parsegraph.com for now:
+
+Plus the corporate system, which is an idea. corporate.html.
+
+And climate change the application. climate.html?
+
+And MENAstan the application. menastan.html?
+
+So then we have these many HTML5 applications.
+
+---
+
+Why do I insist then that login is not done? Because parsegraph.com does not
+let me log in. Once I can log in, then all applications should recognize me
+like finish.html will.
+
+But some like primes.html don't make sense to have chat? Is it better that all
+applications/pages provide the same minimum behavior, or is it better that
+features are only provided where needed?
+
+Work areas should have lots of support. Production areas should not show
+support. So perhaps that means that login enables support, and production is
+'not logged in.' Cookie implies login; login implies support.
+
+---
+
+This nightmare, this nightmare.
+
+---
+
+Administration then interacts with these different pages one-by-one,
+provisioning any needs that arise from each application's users.
+
+What is the minimum for a community to form? At least chat and camera to
+provide a static model. For dynamic (real-time editable) models, new modules
+must provide that behavior too.
+
+The HTML application provides a view of its own script model, which lets
+editors change how the application works.
+
+---
+
+Let the current applications become the suite of 'original' Parsegraph
+applications.
+
+The idea is to allow forking and remixing, so then it should be possible to
+copy the application entirely, edit the contents of that application, export
+the application, and deploy the application.
+
+parsegraph.com/chat
+parsegraph.com/chat.html
+
+parsegraph.com/user <-- parsegraph_user_html, parsegraph_user_json
+parsegraph.com/user.html <-- Parsegraph HTML5 application
+
+parsegraph.com/primes
+parsegraph.com/primes.html
+
+---
+
+http://unicode.org/reports/tr9/ for right-to-left
+
+---
+
+parsegraph.com/application
+parsegraph.com/application.html
+
+parsegraph.com/application/primes // Edits the source for parsegraph.com/primes.html
+
+---
+
+Locked, the key, order.
+
+---
+
+Black, the nightmare is greatest here.
+
+---
+
+So the application module allows creation and editing of arbitrary Parsegraph
+applications, beyond whatever exact file exists. Why is this important? Because
+creating new applications can be done from the browser, and viewed in the same.
+
+parsegraph.com/application allows creation of applications without
+self-dependence. It thus uses text/html and HTML forms as a fallback.
+
+Self-hosting remains incompletely solved because there does not exist a
+mechanism to create C Apache modules in the same form that applications are
+created.
+
+parsegraph.com/httpd_module
+parsegraph.com/httpd_module.html
+
+parsegraph.com/mod_parsegraph_user_html.so <-- Exporter/downloader (therefore mod_*.so goes to mod_parsegraph_httpd_module)
+parsegraph.com/mod_parsegraph_login_html.html <-- Parsegraph application
+
+parsegraph.com/httpd_config (mod_parsegraph_httpd_config)
+parsegraph.com/httpd_config.html
+
+parsegraph.com/httpd.conf <-- Edits the server configuration (mod_parsegraph_httpd_config)
+
+---
+
+The work is nearly here.
+
+---
+
+Blackwind, the nightmare, the night.
+
+---
+
+    1. Self-hosting from the browser.
+        /application
+            mod_parsegraph_application_html
+            mod_parsegraph_application_json
+        /application.html
+    2. Native-hosting from Linux commandline.
+        main.c etc.
+    3. Bidirectional text.
+        http://unicode.org/reports/tr9/ for right-to-left
+    4. Github hosting, administrivia.
+
+---
+
+Is there anything else?
+
+---
+
+So one realization: The initial focus is not on login or JavaScript per se, but
+this application module, which drives the overall creation process.
+
+---
+
+parsegraph_LoginWidget sets the session cookie.

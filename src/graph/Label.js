@@ -236,7 +236,10 @@ parsegraph_Label.prototype.getText = function()
 {
     var t = "";
     this._lines.forEach(function(l) {
-        t += l.getText() + '\n';
+        if(t.length > 0) {
+            t += '\n';
+        }
+        t += l.getText();
     });
     return t;
 }

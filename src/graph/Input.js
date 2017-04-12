@@ -511,27 +511,36 @@ function parsegraph_Input(graph, camera)
             //console.log("Key event had ignored modifiers");
             return;
         }
+        if(event.ctrlKey && event.shiftKey) {
+            return;
+        }
 
         var keyName = getproperkeyname(event);
         if(this._focusedNode && focused) {
             if(event.key.length === 0) {
                 return;
             }
-            if(this._focusedNode._label) {
-                if(event.ctrlKey) {
-                    if(this._focusedNode._label.ctrlKey(event.key)) {
-                        //console.log("LAYOUT CHANGED");
-                        this._focusedNode.layoutWasChanged();
-                        this._graph.scheduleRepaint();
-                        return;
-                    }
-                }
-                else if(this._focusedNode._label.key(event.key)) {
+            if(this._focusedNode._label && event.ctrlKey) {
+                if(this._focusedNode._label.ctrlKey(event.key)) {
                     //console.log("LAYOUT CHANGED");
                     this._focusedNode.layoutWasChanged();
                     this._graph.scheduleRepaint();
                     return;
                 }
+            }
+            else if(this._focusedNode.hasKeyListener() &&
+                this._focusedNode.key(event.key)
+            ) {
+                //console.log("LAYOUT CHANGED");
+                this._focusedNode.layoutWasChanged();
+                this._graph.scheduleRepaint();
+                return;
+            }
+            else if(this._focusedNode._label && this._focusedNode._label.key(event.key)) {
+                //console.log("LAYOUT CHANGED");
+                this._focusedNode.layoutWasChanged();
+                this._graph.scheduleRepaint();
+                return;
             }
             // Didn't move the caret, so interpret it as a key move
             // on the node itself.
@@ -622,6 +631,27 @@ function parsegraph_Input(graph, camera)
                     break;
                 case "Backspace":
                     break;
+                case "Tab":
+                    var toNode = event.shiftKey ?
+                        this._focusedNode._prevTabNode :
+                        this._focusedNode._nextTabNode;
+                    if(toNode) {
+                        this._focusedNode = toNode;
+                        this._graph.scheduleRepaint();
+                        event.preventDefault();
+                        break;
+                    }
+                    // Fall through otherwise.
+                case "Enter":
+                    if(this._focusedNode.hasKeyListener()) {
+                        if(this._focusedNode.key("Enter")) {
+                            // Node handled it.
+                            event.preventDefault();
+                            break;
+                        }
+                        // Nothing handled it.
+                    }
+                    // Fall through.
                 default:
                     return;
                 }
@@ -790,8 +820,8 @@ parsegraph_Input.prototype.Update = function(t)
     x = Math.min(x, r.x() + r.width()/2);
     y = Math.max(y, r.y() - r.height()/2);
     y = Math.min(y, r.y() + r.height()/2);
-    console.log("BR", x, y, r);
-    cam.setOrigin(x, y);
+    //console.log("BR", x, y, r);
+    //cam.setOrigin(x, y);
 
     return inputChangedScene;
 };
@@ -864,6 +894,11 @@ parsegraph_Input.prototype.paint = function()
 parsegraph_Input.prototype.focusedNode = function()
 {
     return this._focusedNode;
+}
+
+parsegraph_Input.prototype.setFocusedNode = function(focusedNode)
+{
+    this._focusedNode = focusedNode;
 }
 
 parsegraph_Input.prototype.focusedLabel = function()

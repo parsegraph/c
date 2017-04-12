@@ -20,10 +20,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._value = null;
     this._selected = false;
-
-    this._prevTabNode = null;
-    this._nextTabNode = null;
-
     this._scene = null;
 
     this._scale = 1.0;
@@ -65,20 +61,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
         // No parent was provided; this node is a root.
         this._layoutPreference = parsegraph_PREFER_HORIZONTAL_AXIS;
         this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
-    }
-}
-
-function parsegraph_chainTab(a, b, swappedOut)
-{
-    if(swappedOut) {
-        swappedOut[0] = a ? a._nextTabNode : null;
-        swappedOut[1] = b ? b._prevTabNode : null;
-    }
-    if(a) {
-        a._nextTabNode = b;
-    }
-    if(b) {
-        b._prevTabNode = a;
     }
 }
 
@@ -675,7 +657,7 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
 
 parsegraph_Node.prototype.disconnectNode = function(inDirection)
 {
-    if(!this.hasNode(inDirection)) {
+    if(!this.hasNode(givenDirection)) {
         return;
     }
     // Connect the node.
@@ -881,14 +863,6 @@ parsegraph_Node.prototype.absoluteSize = function(bodySize)
 
 parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
 {
-    if(arguments.length === 0 || !fromNode) {
-        // Clearing the parent.
-        if(this._parentDirection !== parsegraph_NULL_NODE_DIRECTION) {
-            this._neighbors[this._parentDirection].node = null;
-            this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
-        }
-        return;
-    }
     this._neighbors[parentDirection].node = fromNode;
     this._parentDirection = parentDirection;
 };

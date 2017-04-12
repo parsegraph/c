@@ -1,6 +1,11 @@
 # TODO Allow tests to be excluded for production uses.
 
 ACLOCAL_AMFLAGS = -I m4
+SUBDIRS = src
+
+run: src/parsegraph
+	cd src/.libs; ./parsegraph
+.PHONY: run
 
 dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js
 
@@ -17,12 +22,12 @@ parsegraph.pc: parsegraph.pc.head
 # Distribute the core Javascript library.
 pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-examples-$(PACKAGE_VERSION).js \
+	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js
 
 CLEANFILES = \
 	parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-examples-$(PACKAGE_VERSION).js
+	parsegraph-widgets-$(PACKAGE_VERSION).js
 
 parsegraph_SCRIPT_FILES = \
 	src/TestSuite.js \
@@ -35,7 +40,7 @@ parsegraph_SCRIPT_FILES = \
 	src/gl.js \
 	src/ArrayList.js \
 	src/Float32List.js \
-	src/examples/alpha_WeetCubeWidget.js \
+	src/widgets/alpha_WeetCubeWidget.js \
 	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \
@@ -102,26 +107,30 @@ parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
 	echo "/* Generated `date` */" >>$@
 	chmod 0444 $@
 
-parsegraph_EXAMPLE_FILES = \
-	src/examples/parsegraph_JavaScriptWidget.js \
-	src/examples/createSliderDemo.js \
-	src/examples/showCorporateStructure.js \
-	src/examples/showHardTest.js \
-	src/examples/showStatements.js \
-	src/examples/buildSelection.js \
-	src/examples/showFunction.js \
-	src/examples/showIPAddresses.js \
-	src/examples/showMemoryBlocks.js \
-	src/examples/showProportionTest.js \
-	src/examples/showFlowchartTemplate.js \
-	src/examples/showUlam.js \
-	src/examples/showSpiral.js \
-	src/examples/showCalendar.js \
-	src/examples/buildPrimesDemo.js \
-	src/examples/LinearWidget.js \
-	src/examples/buildTextDemo.js
+parsegraph_WIDGET_FILES = \
+	src/widgets/parsegraph_JavaScriptWidget.js \
+	src/widgets/parsegraph_CameraProtocol.js \
+	src/widgets/parsegraph_ChatProtocol.js \
+	src/widgets/parsegraph_LoginWidget.js \
+	src/widgets/parsegraph_ProfileWidget.js \
+	src/widgets/createSliderDemo.js \
+	src/widgets/showCorporateStructure.js \
+	src/widgets/showHardTest.js \
+	src/widgets/showStatements.js \
+	src/widgets/buildSelection.js \
+	src/widgets/showFunction.js \
+	src/widgets/showIPAddresses.js \
+	src/widgets/showMemoryBlocks.js \
+	src/widgets/showProportionTest.js \
+	src/widgets/showFlowchartTemplate.js \
+	src/widgets/showUlam.js \
+	src/widgets/showSpiral.js \
+	src/widgets/showCalendar.js \
+	src/widgets/buildPrimesDemo.js \
+	src/widgets/LinearWidget.js \
+	src/widgets/buildTextDemo.js
 
-parsegraph-examples-$(PACKAGE_VERSION).js: $(parsegraph_EXAMPLE_FILES)
+parsegraph-widgets-$(PACKAGE_VERSION).js: $(parsegraph_WIDGET_FILES)
 	rm -f $@
 	cat $^ >$@
 	echo >>$@
