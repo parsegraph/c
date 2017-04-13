@@ -68,9 +68,7 @@ parsegraph_CameraBox.prototype.paint = function()
             rect.setY(-cameraBox.cameraY + hh/2);
             rect.setWidth(cameraBox.width/cameraBox.scale);
             rect.setHeight(cameraBox.height/cameraBox.scale);
-            console.log(name);
             this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale);
-            console.log("Drawing box");
         }
         this._cameraBoxDirty = false;
     }

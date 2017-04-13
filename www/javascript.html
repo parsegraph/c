@@ -70,10 +70,11 @@ function init()
         widget.load("Node.js");
         graph.world().plot(widget.caret.root());
 
-        if(localStorage.getItem("parsegraph_world_camera") != null) {
+        var cameraName = "parsegraph_javascript_camera";
+        if(localStorage.getItem(cameraName) != null) {
             try {
-                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-                graph.camera().restore(parsegraph_world_camera);
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
             } catch(e) {
                 console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
             }
@@ -117,7 +118,7 @@ function init()
             renderTimer.schedule();
             if(inputAffectedCamera) {
                 cameraProtocol.update();
-                localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
             }
         });
         renderTimer.schedule();

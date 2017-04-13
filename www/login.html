@@ -64,6 +64,7 @@ function init(main)
         graph.world().plot(widget.root());
 
         var profile;
+        var cameraProtocol;
 
         widget.setLoginListener(function(res, userLogin, node) {
             console.log(userLogin, node);
@@ -73,9 +74,20 @@ function init(main)
                 profile.load(userLogin.username);
                 node.connectNode(parsegraph_DOWNWARD, profile.node());
             }
+
+            if(!cameraProtocol) {
+                cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
+                    "ws://localhost/camera/", "parsegraph-camera-protocol"
+                ), graph.camera(),
+                    function(obj) {
+                        console.log(obj);
+                        graph.cameraBox().setCamera(userLogin.username, obj);
+                    }
+                );
+            }
         });
 
-        var cameraName = "parsegraph_camera";
+        var cameraName = "parsegraph_login_camera";
         if(localStorage.getItem(cameraName) != null) {
             try {
                 var cameraData = JSON.parse(localStorage.getItem(cameraName));
@@ -99,23 +111,28 @@ function init(main)
             }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                if(cameraProtocol && graph.input().UpdateRepeatedly()) {
+                    cameraProtocol.update();
+                }
                 renderTimer.schedule();
             }
         });
-        graph.input().SetListener(function(affectedPaint) {
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
             if(affectedPaint) {
                 graph.scheduleRepaint();
             }
             renderTimer.schedule();
+            if(inputAffectedCamera) {
+                if(cameraProtocol) {
+                    cameraProtocol.update();
+                }
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            }
         });
         renderTimer.schedule();
         graph.onScheduleRepaint = function() {
             renderTimer.schedule();
         };
-
-        surface.addRenderer(function() {
-            localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
-        });
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
