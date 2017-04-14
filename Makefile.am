@@ -3,6 +3,11 @@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src
 
+VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
+
+checkvalgrind:
+	cd src; $(VALGRIND) .libs/lt-runtest
+
 run: src/parsegraph
 	cd src/.libs; ./parsegraph
 .PHONY: run
