@@ -108,7 +108,7 @@ int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int cap
                 sizeof(struct parsegraph_ExtentBound) * (extent->numBounds - frontBounds)
             );
             memcpy(
-                extent->bounds, oldBounds,
+                &extent->bounds[extent->numBounds - frontBounds], oldBounds,
                 sizeof(struct parsegraph_ExtentBound) * frontBounds
             );
         }
@@ -118,7 +118,6 @@ int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int cap
                 extent->bounds, &oldBounds[extent->start],
                 sizeof(struct parsegraph_ExtentBound) * oldNumBounds
             );
-            extent->start = 0;
         }
 
         if(!extent->pool) {

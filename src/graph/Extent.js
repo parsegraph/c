@@ -21,11 +21,10 @@ function parsegraph_Extent(copy)
     else {
         // Create a new, empty bounds array.
         this._numBounds = 0;
-        this._bounds = new Float32Array(
-            parsegraph_DEFAULT_EXTENT_BOUNDS *
-            parsegraph_NUM_EXTENT_BOUND_COMPONENTS
-        );
+        this._bounds = null;
     }
+
+    this._start = 0;
 }
 
 /**
@@ -66,20 +65,60 @@ parsegraph_Extent.prototype.hasBounds = function() {
 };
 
 parsegraph_Extent.prototype.boundLengthAt = function(index) {
-    return this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * index];
+    return this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity())];
 };
 
 parsegraph_Extent.prototype.boundSizeAt = function(index) {
-    return this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * index + 1];
+    return this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity()) + 1];
 };
 
 parsegraph_Extent.prototype.setBoundLengthAt = function(index, length) {
-    this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * index] = length;
+    this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity())] = length;
 };
 
 parsegraph_Extent.prototype.setBoundSizeAt = function(index, size) {
-    this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * index + 1] = size;
+    this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity()) + 1] = size;
 };
+
+parsegraph_Extent.prototype.realloc = function(capacity)
+{
+    if(capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
+        capacity  = parsegraph_DEFAULT_EXTENT_BOUNDS;
+    }
+    var oldBounds = this._bounds;
+    var oldCap = this.boundCapacity();
+    if(oldCap >= capacity) {
+        // TODO This could shrink.
+        throw new Error("Cannot shrink Extent capacity");
+    }
+    var oldNumBounds = this._numBounds;
+
+    // Change the capacity.
+    this._bounds = new Float32Array(parsegraph_NUM_EXTENT_BOUND_COMPONENTS * capacity);
+
+    if(oldBounds) {
+        if(this._start + oldNumBounds > oldCap) {
+            var frontBounds = (this._start + oldNumBounds) - oldCap;
+            // TODO See if this can be copied more efficiently, and if that matters.
+            for(var i = 0; i < parsegraph_NUM_EXTENT_BOUND_COMPONENTS * (this._numBounds - frontBounds); ++i) {
+                this._bounds[i] = oldBounds[this._start + i];
+            }
+            for(var i = 0; i < parsegraph_NUM_EXTENT_BOUND_COMPONENTS * (this._numBounds - frontBounds); ++i) {
+                this._bounds[(this._numBounds - frontBounds) + i] = oldBounds[i];
+            }
+        }
+        else {
+            // Can do it in a single copy.
+            for(var i = 0; i < parsegraph_NUM_EXTENT_BOUND_COMPONENTS * this._numBounds; ++i) {
+                this._bounds[i] = oldBounds[this._start + i];
+            }
+        }
+    }
+
+    this._start = 0;
+
+    return 0;
+}
 
 parsegraph_Extent.prototype.prependLS = function(length, size) {
     if(length == 0) {
@@ -94,12 +133,21 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
         throw new Error(str);
     }
 
-    // Add a single entry at the front.
-    var oldBounds = this._bounds;
-    this._bounds = new Float32Array(
-        this._bounds.length + 1 * parsegraph_NUM_EXTENT_BOUND_COMPONENTS
-    );
-    this._bounds.set(oldBounds, 1 * parsegraph_NUM_EXTENT_BOUND_COMPONENTS);
+    if(this.boundCapacity() == this.numBounds()) {
+        // Completely full, so expand.
+        var newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
+        if(this.boundCapacity() > 0) {
+            newCap = 2 * this.boundCapacity();
+        }
+        this.realloc(newCap);
+    }
+
+    if(this._start == 0) {
+        this._start = parsegraph_NUM_EXTENT_BOUND_COMPONENTS * (this.boundCapacity() - 1);
+    }
+    else {
+        --(this._start);
+    }
 
     ++(this._numBounds);
     this.setBoundLengthAt(0, length);
@@ -142,9 +190,11 @@ parsegraph_Extent.prototype.appendLS = function(length, size)
 
     if(this.boundCapacity() == this.numBounds()) {
         // Completely full, so expand.
-        var oldBounds = this._bounds;
-        this._bounds = new Float32Array(this._bounds.length * 2);
-        this._bounds.set(oldBounds);
+        var newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
+        if(this.boundCapacity() > 0) {
+            newCap = 2 * this.boundCapacity();
+        }
+        this.realloc(newCap);
     }
 
     ++(this._numBounds);

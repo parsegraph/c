@@ -200,7 +200,27 @@ void test_Extent_prependLS()
 void test_Extent_realloc()
 {
     struct parsegraph_Extent* extent = parsegraph_Extent_new(pool);
-    parsegraph_Extent_boundCapacity(extent);
+    parsegraph_Extent_appendLS(extent, 1, 2);
+    parsegraph_Extent_appendLS(extent, 2, 3);
+    parsegraph_Extent_appendLS(extent, 3, 4);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(4, parsegraph_Extent_boundCapacity(extent), "Capacity is what's expected");
+    parsegraph_Extent_prependLS(extent, .5, 1);
+
+    parsegraph_Extent_appendLS(extent, 4, 5);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(8, parsegraph_Extent_boundCapacity(extent), "Capacity is what's expected");
+
+    TEST_ASSERT_EQUAL_FLOAT(.5, parsegraph_Extent_boundLengthAt(extent, 0));
+    TEST_ASSERT_EQUAL_FLOAT(1, parsegraph_Extent_boundLengthAt(extent, 1));
+    TEST_ASSERT_EQUAL_FLOAT(2, parsegraph_Extent_boundLengthAt(extent, 2));
+    TEST_ASSERT_EQUAL_FLOAT(3, parsegraph_Extent_boundLengthAt(extent, 3));
+    TEST_ASSERT_EQUAL_FLOAT(4, parsegraph_Extent_boundLengthAt(extent, 4));
+
+    TEST_ASSERT_EQUAL_FLOAT(1, parsegraph_Extent_boundSizeAt(extent, 0));
+    TEST_ASSERT_EQUAL_FLOAT(2, parsegraph_Extent_boundSizeAt(extent, 1));
+    TEST_ASSERT_EQUAL_FLOAT(3, parsegraph_Extent_boundSizeAt(extent, 2));
+    TEST_ASSERT_EQUAL_FLOAT(4, parsegraph_Extent_boundSizeAt(extent, 3));
+    TEST_ASSERT_EQUAL_FLOAT(5, parsegraph_Extent_boundSizeAt(extent, 4));
 }
 
 void test_Extent_adjustSize()
