@@ -62,7 +62,7 @@ parsegraph_Extent.prototype.numBounds = function() {
 };
 
 parsegraph_Extent.prototype.hasBounds = function() {
-    return this.numBounds() == 0;
+    return this.numBounds() > 0;
 };
 
 parsegraph_Extent.prototype.boundLengthAt = function(index) {
@@ -108,6 +108,9 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
 
 parsegraph_Extent.prototype.boundCapacity = function()
 {
+    if(!this._bounds) {
+        return 0;
+    }
     return this._bounds.length / parsegraph_NUM_EXTENT_BOUND_COMPONENTS;
 };
 
@@ -374,11 +377,8 @@ parsegraph_Extent.prototype.combinedExtent = function(
         else if(!isNaN(thisSize)) {
             newSize = thisSize;
         }
-        else if(!isNaN(givenSize)) {
-            newSize = givenSize;
-        }
         else {
-            newSize = NaN;
+            newSize = givenSize;
         }
 
         result.appendLS(
@@ -671,40 +671,6 @@ parsegraph_Extent.prototype.separation = function(
     }
 
     return extentSeparation;
-}
-
-parsegraph_Extent.prototype.compact = function()
-{
-    var created = new parsegraph_Extent();
-    if(this.hasBounds()) {
-        // Not even one element.
-        return created;
-    }
-
-    var lastSize = this.boundSizeAt(iter);
-    var lastLength = this.boundLengthAt(iter);
-    created.appendLS(lastLength, lastSize);
-
-    for(var iter = 1; iter != this.numBounds(); ++iter) {
-        if(this.boundLengthAt(iter) == 0) {
-            // Remove empty bound.
-            continue;
-        }
-        var size = this.boundSizeAt(iter);
-        if((isNaN(lastSize) && isNaN(size)) || (lastSize === size)) {
-            // Same size, so merge the lengths.
-            created.setBoundLengthAt(
-                created.numBounds() - 1,
-                created.boundLengthAt(iter - 1) + this.boundLengthAt(iter)
-            );
-        }
-        else {
-            // Go to the next element.
-            lastSize = this.boundSizeAt(iter);
-        }
-    }
-
-    return created;
 }
 
 parsegraph_Extent.prototype.boundingValues = function(outVal)
