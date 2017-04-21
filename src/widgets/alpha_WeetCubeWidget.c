@@ -27,7 +27,7 @@ struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(apr_pool_t* pool)
     widget->rotq = 0.0;
     widget->_elapsed = 0.0;
     widget->_frozen = 0;
-    int amt = 25;
+    int amt = 2;
     widget->_xMax = amt;
     widget->_yMax = amt;
     widget->_zMax = amt;

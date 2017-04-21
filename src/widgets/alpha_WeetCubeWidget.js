@@ -21,9 +21,10 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
     this._elapsed = 0;
     this._frozen = false;
-    this._xMax = 25;
-    this._yMax = 25;
-    this._zMax = 25;
+    var amt = 2;
+    this._xMax = amt;
+    this._yMax = amt;
+    this._zMax = amt;
 
     this.camera.SetPosition(-1, -1, this._zMax * -3.5);
 }
