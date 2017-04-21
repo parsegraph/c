@@ -26,6 +26,7 @@
 // TODO Add cairo/pango/harfbuzz for text rendering in GlyphAtlas
 
 #include <stdio.h>
+#include <apr_pools.h>
 #include <stdlib.h>
 #define EGL_EGLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
@@ -42,9 +43,16 @@
 #include <string.h>
 #include <time.h>
 #include <cairo.h>
+#include "alpha/WeetPainter.h"
+#include "widgets/alpha_WeetCubeWidget.h"
+#include "alpha/Maths.h"
+
+static apr_pool_t* pool;
+
 #ifdef GL_OES_EGL_image
 static PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES_func;
 #endif
+
 struct kms {
    drmModeConnector *connector;
    drmModeEncoder *encoder;
@@ -99,30 +107,31 @@ setup_kms(int fd, struct kms *kms)
    kms->mode = connector->modes[0];
    return EGL_TRUE;
 }
+
+static struct alpha_WeetCubeWidget* widget = 0;
+
 static void
 render_stuff(int width, int height)
 {
-   glViewport(0, 0, (GLint) width, (GLint) height);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0, width, 0, height, 1.0, -1.0);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   glClearColor(0, 47.0/255, 57.0/255, 1);
-   glClear(GL_COLOR_BUFFER_BIT);
-   glColor3f(1.0, 1.0, 0.1);
-   //glColor3f(0.75f, 0.75, 1);
-   //glColor3f(0.75f, 0.75, 1);
-   //glColor3f(0.75f, 1, 0.75);
-   glRectf(x, y, x + rsize, y + rsize);
-   glFlush();
-   if (x <= 0 || x >= width - rsize)
-     xstep *= -1;
-   if (y <= 0 || y >= height - rsize)
-     ystep *= -1;
-   x += xstep;
-   y += ystep;
+    if(!widget) {
+        widget = alpha_WeetCubeWidget_new(pool);
+        alpha_WeetCubeWidget_paint(widget);
+    }
+    glViewport(0, 0, (GLint) width, (GLint) height);
+    glClearColor(0, 47.0/255, 57.0/255, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    alpha_WeetCubeWidget_render(widget, width, height);
+    glFlush();
+    if(x <= 0 || x >= width - rsize) {
+        xstep *= -1;
+    }
+    if(y <= 0 || y >= height - rsize) {
+        ystep *= -1;
+    }
+    x += xstep;
+    y += ystep;
 }
+
 static const char device_name[] = "/dev/dri/card0";
 static void
 page_flip_handler(int fd, unsigned int frame,
@@ -136,7 +145,7 @@ void quit_handler(int signum)
   printf("Quitting!\n");
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char * const *argv)
 {
    EGLDisplay dpy;
    EGLContext ctx;
@@ -151,6 +160,20 @@ int main(int argc, char *argv[])
    struct gbm_bo *bo[2];
    drmModeCrtcPtr saved_crtc;
    time_t start, end;
+
+    // Initialize the APR.
+    apr_status_t rv;
+    rv = apr_app_initialize(&argc, &argv, NULL);
+    if(rv != APR_SUCCESS) {
+        fprintf(stderr, "Failed initializing APR. APR status of %d.\n", rv);
+        return -1;
+    }
+    rv = apr_pool_create(&pool, NULL);
+    if(rv != APR_SUCCESS) {
+        fprintf(stderr, "Failed creating memory pool. APR status of %d.\n", rv);
+        return -1;
+    }
+
    signal (SIGINT, quit_handler);
    fd = open(device_name, O_RDWR);
    if (fd < 0) {
@@ -189,10 +212,51 @@ dpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_MESA, gbm, NULL);
       ret = -1;
       goto egl_terminate;
    }
-   eglBindAPI(EGL_OPENGL_API);
-   ctx = eglCreateContext(dpy, NULL, EGL_NO_CONTEXT, NULL);
+    const EGLint context_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE
+    };
+    EGLConfig config;
+    const EGLint config_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_ALPHA_SIZE, 0,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+   eglBindAPI(EGL_OPENGL_ES_API);
+    EGLint n;
+    if(!eglChooseConfig(dpy, config_attribs, &config, 1, &n)) {
+      ret = -1;
+      goto egl_terminate;
+    }
+   ctx = eglCreateContext(dpy, 0, EGL_NO_CONTEXT, context_attribs);
    if (ctx == NULL) {
-      fprintf(stderr, "failed to create context\n");
+	   const char* ename = 0;
+	   switch(eglGetError()) {
+		   case EGL_SUCCESS: ename = "EGL_SUCCESS"; break;
+		   case EGL_NOT_INITIALIZED: ename = "EGL_NOT_INITIALIZED"; break;
+		   case EGL_BAD_ACCESS: ename = "EGL_BAD_ACCESS"; break;
+		   case EGL_BAD_ALLOC: ename = "EGL_BAD_ALLOC"; break;
+		   case EGL_BAD_ATTRIBUTE: ename = "EGL_BAD_ATTRIBUTE"; break;
+		   case EGL_BAD_CONTEXT: ename = "EGL_BAD_CONTEXT"; break;
+		   case EGL_BAD_CONFIG: ename = "EGL_BAD_CONFIG"; break;
+		   case EGL_BAD_CURRENT_SURFACE: ename = "EGL_BAD_CURRENT_SURFACE"; break;
+		   case EGL_BAD_DISPLAY: ename = "EGL_BAD_DISPLAY"; break;
+		   case EGL_BAD_SURFACE: ename = "EGL_BAD_SURFACE"; break;
+		   case EGL_BAD_MATCH: ename = "EGL_BAD_MATCH"; break;
+		   case EGL_BAD_PARAMETER: ename = "EGL_BAD_PARAMETER"; break;
+		   case EGL_BAD_NATIVE_PIXMAP: ename = "EGL_BAD_NATIVE_PIXMAP"; break;
+		   case EGL_BAD_NATIVE_WINDOW: ename = "EGL_BAD_NATIVE_WINDOW"; break;
+		   case EGL_CONTEXT_LOST: ename = "EGL_CONTEXT_LOST"; break;
+	   }
+	   if(ename) {
+	      fprintf(stderr, "failed to create context: %s\n", ename);
+	   }
+	   else {
+	      fprintf(stderr, "failed to create context: %d\n", eglGetError());
+	   }
       ret = -1;
       goto egl_terminate;
    }
@@ -311,5 +375,11 @@ egl_terminate:
    eglTerminate(dpy);
 close_fd:
    close(fd);
+
+    // Destroy the pool for cleanliness.
+    apr_pool_destroy(pool);
+    pool = NULL;
+
+    apr_terminate();
    return ret;
 }

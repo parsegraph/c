@@ -6,11 +6,15 @@ SUBDIRS = src
 VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
 
 checkvalgrind:
-	cd src; $(VALGRIND) .libs/lt-runtest
+	cd src; $(VALGRIND) .libs/lt-parsegraph
 
 run: src/parsegraph
-	cd src/.libs; ./parsegraph
+	$<
 .PHONY: run
+
+debug:
+	cd src; gdb .libs/lt-parsegraph
+.PHONY: debug
 
 dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js
 

@@ -1,10 +1,9 @@
 #include "../unity.h"
+#include "../testpool.h"
 #include <stdio.h>
 #include <httpd.h>
 
 #include <graph/Extent.h>
-
-static apr_pool_t* pool = NULL;
 
 void test_Extent_numBounds()
 {
@@ -420,23 +419,8 @@ void test_Extent_equals()
     TEST_ASSERT_EQUAL_INT(0, parsegraph_Extent_equals(given, extent));
 }
 
-int main(int argc, const char* const* argv)
+void test_Extent()
 {
-    UNITY_BEGIN();
-
-    // Initialize the APR.
-    apr_status_t rv;
-    rv = apr_app_initialize(&argc, &argv, NULL);
-    if(rv != APR_SUCCESS) {
-        fprintf(stderr, "Failed initializing APR. APR status of %d.\n", rv);
-        return -1;
-    }
-    rv = apr_pool_create(&pool, NULL);
-    if(rv != APR_SUCCESS) {
-        fprintf(stderr, "Failed creating memory pool. APR status of %d.\n", rv);
-        return -1;
-    }
-
     // Run the tests.
     RUN_TEST(test_Extent_numBounds);
     RUN_TEST(test_Extent_simplify);
@@ -457,12 +441,4 @@ int main(int argc, const char* const* argv)
     RUN_TEST(test_Extent_separation);
     RUN_TEST(test_Extent_boundingValues);
     RUN_TEST(test_Extent_equals);
-
-    // Destroy the pool for cleanliness.
-    apr_pool_destroy(pool);
-    pool = NULL;
-
-    apr_terminate();
-
-    return UNITY_END();
 }

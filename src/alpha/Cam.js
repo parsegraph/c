@@ -462,6 +462,7 @@ alpha_Camera.prototype.AlignParentToMy = function(x, y)
 // send as x,y,z or vector
 alpha_Camera.prototype.SetPosition = function(x, y, z)
 {
+    //console.log(new Error("Setting position to " + x + " " + y + " " + z));
     if(y == undefined) {
         y = x[1];
         z = x[2];
@@ -485,7 +486,7 @@ alpha_Camera.prototype.GetPosition = function()
 
 alpha_Camera.prototype.ChangePosition = function(x, y, z)
 {
-    if(y == undefined) {
+    if(y === undefined) {
         y = x[1];
         z = x[2];
         x = x[0];
@@ -550,13 +551,13 @@ alpha_Camera.prototype.Warp = function(distance)
     }
 
     // add it to our current position to get our new position
-    var cz = z + distance;
+    /*var cz = z + distance;
     if(cz < 0) {
         distance = -z;
     }
     if(cz > this.maxRange) {
         distance = this.maxRange - z;
-    }
+    }*/
 
     this.ChangePosition(0, 0, distance);
 }
@@ -630,7 +631,9 @@ alpha_Camera.prototype.GetInvisiblePhysical = function(parent)
     var p = new alpha_Physical(this);
     p.SetPosition(position);
     p.SetOrientation(orientation);
-    p.SetParent(parent);
+    if(this.parent) {
+        p.SetParent(this.parent);
+    }
     return p;
 }
 
@@ -696,7 +699,11 @@ alpha_Camera.prototype.GetModelMatrix = function()
         var p = this.position;
         var o = this.offset;
         var r = this.orientation;
+        //console.log("position=", p.toString());
+        //console.log("offset=", o.toString());
+        //console.log("orientation=", r.toString());
         this.modelMatrix.FromVectorAroundQuaternionAtVector(p, r, o); // oh yea;
+        console.log("modelMat=", this.modelMatrix.toString());
         this.modelDirty = false;
     }
     return this.modelMatrix;
@@ -720,6 +727,7 @@ alpha_Camera.prototype.GetViewMatrix = function(requestor)
         requestor = this;
     }
 
+    //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
     if(parent && parent != requestor) {
         var ancestors = parent.GetViewMatrix(requestor);
         //console.log("this.modelMatrix:\n" + this.GetModelMatrix());

@@ -1,3 +1,6 @@
+# Coredumps
+vgcore.*
+
 # Build artifacts
 parsegraph-1.0.js
 parsegraph-widgets-1.0.js

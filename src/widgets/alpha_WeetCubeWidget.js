@@ -13,7 +13,6 @@ function alpha_WeetCubeWidget()
     this.camera.SetFovX(60);
     this.camera.SetFarDistance(1000);
     this.camera.SetNearDistance(.1);
-    this.camera.SetPosition(-1, -1, -550);
 
     this.input = new alpha_Input(surface, this.camera);
     this.input.SetMouseSensitivity(.4);
@@ -25,6 +24,8 @@ function alpha_WeetCubeWidget()
     this._xMax = 25;
     this._yMax = 25;
     this._zMax = 25;
+
+    this.camera.SetPosition(-1, -1, this._zMax * -3.5);
 }
 
 alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen)
@@ -147,6 +148,9 @@ alpha_WeetCubeWidget.prototype.render = function()
         projection = this.camera.UpdateProjection();
     }
     var viewMatrix = this.camera.GetViewMatrix().Multiplied(projection);
+    //console.log("CameraViewMatrix is" + this.camera.GetViewMatrix().toString());
+    console.log("viewMatrix is " + viewMatrix.toString());
     this.cubePainter.Draw(viewMatrix);
     gl.clear(gl.DEPTH_BUFFER_BIT);
 };
+

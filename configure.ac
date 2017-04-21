@@ -36,6 +36,13 @@ PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm],
     [AC_MSG_ERROR([parsegraph requires a bunch of low-level C graphics libraries.])]
 )
 
+AC_PROG_CXX
+
+PKG_CHECK_MODULES(parsegraph_cxx, [Qt5Core Qt5Gui],
+    [],
+    [AC_MSG_ERROR([parsegraph for C++ requires Qt.])]
+)
+
 # Generate files.
 AC_CONFIG_FILES([
     Makefile

@@ -1,3 +1,5 @@
 runtest
+runtest_pagingbuffer
 parsegraph
+cxx_parsegraph
 graph/.dirstamp

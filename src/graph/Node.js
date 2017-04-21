@@ -17,6 +17,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._label = null;
     this._labelX = null;
     this._labelY = null;
+    this._rightToLeft = parsegraph_RIGHT_TO_LEFT;
 
     this._value = null;
     this._selected = false;
@@ -84,6 +85,12 @@ function parsegraph_chainTab(a, b, swappedOut)
 
 parsegraph_Node_Tests = new parsegraph_TestSuite("parsegraph_Node");
 
+parsegraph_Node_Tests.AddTest("Right-to-left test", function() {
+    var node = new parsegraph_Node(parsegraph_BUD);
+
+    node.setRightToLeft(true);
+});
+
 parsegraph_Node.prototype.x = function()
 {
     if(this.isRoot()) {
@@ -118,6 +125,24 @@ parsegraph_Node.prototype.setScale = function(scale)
     this._scale = scale;
     this.layoutWasChanged(parsegraph_INWARD);
 }
+
+/**
+ * This sets whether the node's forward and backward nodes will be
+ * reversed.
+ *
+ * If rightToLeft() == true, parsegraph_FORWARD goes to the left.
+ * If rightToLeft() == false, parsegraph_FORWARD goes to the right.
+ */
+parsegraph_Node.prototype.setRightToLeft = function(val)
+{
+    this._rightToLeft = !!val;
+    this.layoutWasChanged(parsegraph_INWARD);
+};
+
+parsegraph_Node.prototype.rightToLeft = function()
+{
+    return this._rightToLeft;
+};
 
 parsegraph_Node.prototype.commitAbsolutePos = function()
 {

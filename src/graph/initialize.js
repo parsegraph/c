@@ -13,6 +13,9 @@ function parsegraph_initialize(mathMode) {
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
 
+    // Whether Node's forward and backward are switched.
+    parsegraph_RIGHT_TO_LEFT = false;
+
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;
     parsegraph_FORWARD = 0;
@@ -44,7 +47,7 @@ function parsegraph_initialize(mathMode) {
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
     // Background
-    parsegraph_BACKGROUND_COLOR = parsegraph_createColor(
+    parsegraph_BACKGROUND_COLOR = new parsegraph_Color(
         0, 47/255, 57/255, 1
         //256/255, 255/255, 255/255, 1
         //45/255, 84/255, 127/255, 1
@@ -70,8 +73,8 @@ function parsegraph_initialize(mathMode) {
      */
     parsegraph_LINE_THICKNESS = 12;
 
-    parsegraph_LINE_COLOR = parsegraph_createColor(.8, .8, .8, .6);
-    parsegraph_SELECTED_LINE_COLOR = parsegraph_createColor(.8, .8, .8, 1);
+    parsegraph_LINE_COLOR = new parsegraph_Color(.8, .8, .8, .6);
+    parsegraph_SELECTED_LINE_COLOR = new parsegraph_Color(.8, .8, .8, 1);
 
     parsegraph_BUD_RADIUS = 8;
 
@@ -102,10 +105,10 @@ function parsegraph_initialize(mathMode) {
         minHeight: parsegraph_BUD_RADIUS*3,
         horizontalPadding: parsegraph_BUD_RADIUS/2,
         verticalPadding: parsegraph_BUD_RADIUS/2,
-        borderColor: parsegraph_createColor(.8, .8, .5, 1),
-        backgroundColor: parsegraph_createColor(1, 1, .1, 1),
-        selectedBorderColor: parsegraph_createColor(1, 1, 0, 1),
-        selectedBackgroundColor: parsegraph_createColor(1, 1, .7, 1),
+        borderColor: new parsegraph_Color(.8, .8, .5, 1),
+        backgroundColor: new parsegraph_Color(1, 1, .1, 1),
+        selectedBorderColor: new parsegraph_Color(1, 1, 0, 1),
+        selectedBackgroundColor: new parsegraph_Color(1, 1, .7, 1),
         brightness: 1.5,
         borderRoundness: parsegraph_BUD_RADIUS*8,
         borderThickness: parsegraph_BUD_RADIUS*2,
@@ -123,10 +126,10 @@ function parsegraph_initialize(mathMode) {
         minHeight: 2*parsegraph_BUD_RADIUS*3,
         horizontalPadding: parsegraph_BUD_RADIUS/2,
         verticalPadding: parsegraph_BUD_RADIUS/2,
-        borderColor: parsegraph_createColor(.9, .6, .6, 1),
-        backgroundColor: parsegraph_createColor(1, .4, .4, 1),
-        selectedBorderColor: parsegraph_createColor(1, .7, .7, 1),
-        selectedBackgroundColor: parsegraph_createColor(1, .5, .5, 1),
+        borderColor: new parsegraph_Color(.9, .6, .6, 1),
+        backgroundColor: new parsegraph_Color(1, .4, .4, 1),
+        selectedBorderColor: new parsegraph_Color(1, .7, .7, 1),
+        selectedBackgroundColor: new parsegraph_Color(1, .5, .5, 1),
         brightness: 0.5,
         borderRoundness: parsegraph_BUD_RADIUS*8,
         borderThickness: parsegraph_BUD_RADIUS*2,
@@ -144,10 +147,10 @@ function parsegraph_initialize(mathMode) {
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
         verticalPadding: .5*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(.6, 1, .6, 1),
-        backgroundColor: parsegraph_createColor(.75, 1, .75, 1),
-        selectedBorderColor: parsegraph_createColor(.8, .8, 1, 1),
-        selectedBackgroundColor: parsegraph_createColor(.75, .75, 1, 1),
+        borderColor: new parsegraph_Color(.6, 1, .6, 1),
+        backgroundColor: new parsegraph_Color(.75, 1, .75, 1),
+        selectedBorderColor: new parsegraph_Color(.8, .8, 1, 1),
+        selectedBackgroundColor: new parsegraph_Color(.75, .75, 1, 1),
         brightness: 0.75,
         borderRoundness: parsegraph_BUD_RADIUS*3,
         borderThickness: parsegraph_BUD_RADIUS*2,
@@ -170,10 +173,10 @@ function parsegraph_initialize(mathMode) {
         minHeight: 1024,
         horizontalPadding: 0,
         verticalPadding: 0,
-        borderColor: parsegraph_createColor(.4, .4, .4, 1),
-        backgroundColor: parsegraph_createColor(.5, .5, .5, 1),
-        selectedBorderColor: parsegraph_createColor(.9, .9, 1, 1),
-        selectedBackgroundColor: parsegraph_createColor(.8, .8, 1, 1),
+        borderColor: new parsegraph_Color(.4, .4, .4, 1),
+        backgroundColor: new parsegraph_Color(.5, .5, .5, 1),
+        selectedBorderColor: new parsegraph_Color(.9, .9, 1, 1),
+        selectedBackgroundColor: new parsegraph_Color(.8, .8, 1, 1),
         brightness: 0.75,
         borderRoundness: parsegraph_BUD_RADIUS*3,
         borderThickness: parsegraph_BUD_RADIUS*1,
@@ -191,16 +194,16 @@ function parsegraph_initialize(mathMode) {
         minHeight: parsegraph_MIN_BLOCK_HEIGHT,
         horizontalPadding: 3*parsegraph_BUD_RADIUS,
         verticalPadding: .5*parsegraph_BUD_RADIUS,
-        borderColor: parsegraph_createColor(1, 1, 1, 1),
-        backgroundColor: parsegraph_createColor(.75, .75, 1, 1),
-        selectedBorderColor: parsegraph_createColor(.95, 1, .95, 1),
-        selectedBackgroundColor: parsegraph_createColor(.9, 1, .9, 1),
+        borderColor: new parsegraph_Color(1, 1, 1, 1),
+        backgroundColor: new parsegraph_Color(.75, .75, 1, 1),
+        selectedBorderColor: new parsegraph_Color(.95, 1, .95, 1),
+        selectedBackgroundColor: new parsegraph_Color(.9, 1, .9, 1),
         brightness: 0.75,
         borderRoundness: parsegraph_BUD_RADIUS*3,
         borderThickness: parsegraph_BUD_RADIUS*2,
         maxLabelChars: null,
-        fontColor: parsegraph_createColor(0, 0, 0, 1),
-        selectedFontColor: parsegraph_createColor(0, 0, 0, 1),
+        fontColor: new parsegraph_Color(0, 0, 0, 1),
+        selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
         fontSize: parsegraph_FONT_SIZE,
         letterWidth: .61,
         verticalSeparation: 6 * parsegraph_VERTICAL_SEPARATION_PADDING,
@@ -217,9 +220,9 @@ function parsegraph_initialize(mathMode) {
         parsegraph_SLOT_STYLE.borderColor.setA(1);
     }
 
-    parsegraph_EXTENT_BORDER_COLOR = parsegraph_createColor(1, 1, 0, .2);
+    parsegraph_EXTENT_BORDER_COLOR = new parsegraph_Color(1, 1, 0, .2);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;
-    parsegraph_EXTENT_BACKGROUND_COLOR = parsegraph_createColor(1, 0, 0, .1);
+    parsegraph_EXTENT_BACKGROUND_COLOR = new parsegraph_Color(1, 0, 0, .1);
 
     parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;

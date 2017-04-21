@@ -4,7 +4,7 @@ alpha_WeetPainter_VertexShader =
 "attribute vec4 a_position;\n" +
 "attribute vec4 a_color;\n" +
 "\n" +
-"varying highp vec4 contentColor;\n" +
+"varying vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
     "gl_Position = u_world * a_position;" +
@@ -16,7 +16,7 @@ alpha_WeetPainter_FragmentShader =
 "precision mediump float;\n" +
 "#endif\n" +
 "" +
-"varying highp vec4 contentColor;\n" +
+"varying vec4 contentColor;\n" +
 "\n" +
 "void main() {\n" +
     "gl_FragColor = contentColor;" +
@@ -68,11 +68,6 @@ function alpha_WeetPainter(gl)
     this.u_world = this.gl.getUniformLocation(
         this.faceProgram, "u_world"
     );
-};
-
-alpha_WeetPainter.prototype.Clear = function()
-{
-    this.faceBuffer.clear();
 };
 
 {
@@ -168,10 +163,14 @@ alpha_WeetPainter.prototype.Cube = function(m)
     }
     var drawFace = function(c1, c2, c3, c4, color) {
         var drawVert = function(v) {
-            this._data[this._dataX++] = (m[0] * v[0] + m[1] * v[1] + m[2] * v[2]) + m[12];
-            this._data[this._dataX++] = (m[4] * v[0] + m[5] * v[1] + m[6] * v[2]) + m[13];
-            this._data[this._dataX++] = (m[8] * v[0] + m[9] * v[1] + m[10] * v[2]) + m[14];
+            var x = (m[0] * v[0] + m[1] * v[1] + m[2] * v[2]) + m[12];
+            var y = (m[4] * v[0] + m[5] * v[1] + m[6] * v[2]) + m[13];
+            var z = (m[8] * v[0] + m[9] * v[1] + m[10] * v[2]) + m[14];
+            this._data[this._dataX++] = x;
+            this._data[this._dataX++] = y;
+            this._data[this._dataX++] = z;
             this._data[this._dataX++] = 1.0;
+            //console.log("(" + x + ", " + y + ", " + z+ ")");
         };
 
         drawVert.call(this, c1);

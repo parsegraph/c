@@ -290,10 +290,6 @@ alpha_Vector.prototype.Set = function()
 
 alpha_Vector.prototype.Normalize = function()
 {
-    var x = this[0];
-    var y = this[1];
-    var z = this[2];
-
     var magnitude = this.Magnitude();
     if(magnitude != 0) {
         this.Divide(magnitude);
@@ -587,13 +583,13 @@ alpha_Quaternion.prototype.Inverse = function()
 
 alpha_Quaternion.prototype.ToAxisAndAngle = function()
 {
+    if(w > 1) {
+        this.Normalize();
+    }
     var w = this[3];
     var x = this[0];
     var y = this[1];
     var z = this[2];
-    if(w > 1) {
-        this.Normalize();
-    }
 
     var angle = 2 * Math.acos(w);
     var s = Math.sqrt(1 - w*w);
@@ -1426,7 +1422,7 @@ function alpha_RMatrix4FromVectorAroundQuaternionAtVector()
 alpha_RMatrix4.prototype.FromVectorAroundQuaternionAtVector = function(vec1, quat, vec2)
 {
     // rotation * translation;
-    this.FromQuaternionAtVector(quat, vec2);
+    this.FromQuaternionAtVector(vec2, quat);
 
     // set our critical rows and columns
     var r4 = new alpha_Quaternion(vec1[0], vec1[1], vec1[2], 1);

@@ -60,6 +60,5 @@ function parsegraph_readNodeAlignment(given)
         }
     }
 
-    return parsegraph_NULL_NODE_DIRECTION;
+    return parsegraph_NULL_NODE_ALIGNMENT;
 }
-
