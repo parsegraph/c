@@ -14,7 +14,7 @@ function parsegraph_readNodeDirection(given)
             return parsegraph_BACKWARD;
             break;
         case 'u':
-        case 'u':
+        case 'U':
             return parsegraph_UPWARD;
             break;
         case 'd':
@@ -104,14 +104,14 @@ function parsegraph_turnRight(given)
 function parsegraph_turnPositive(direction)
 {
     return parsegraph_getPositiveNodeDirection(
-        parsegraph_getPerpendicularAxis(given)
+        parsegraph_getPerpendicularAxis(direction)
     );
 }
 
 function parsegraph_turnNegative(direction)
 {
     return parsegraph_reverseNodeDirection(
-        parsegraph_turnPositive(given)
+        parsegraph_turnPositive(direction)
     );
 }
 
@@ -167,7 +167,7 @@ function parsegraph_isVerticalNodeDirection(given)
 
 function parsegraph_isHorizontalNodeDirection(given)
 {
-    return parsegraph_getNodeDirectionAxis(given) === parsegraph_HOIRZONTAL_AXIS;
+    return parsegraph_getNodeDirectionAxis(given) === parsegraph_HORIZONTAL_AXIS;
 }
 
 function parsegraph_getPerpendicularAxis(axisOrDirection)

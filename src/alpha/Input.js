@@ -30,6 +30,7 @@
 	done = true;
 */
 
+
 function alpha_Input(surface, camera)
 {
     this.SetMouseSensitivityX(.005);
@@ -49,10 +50,10 @@ function alpha_Input(surface, camera)
         if(event.ctrlKey || event.altKey || event.metaKey) {
             return;
         }
-        this[event.key] = 1;
+        this[event.key.toLowerCase()] = 1;
     }, this);
     parsegraph_addEventMethod(document, "keyup", function(event) {
-        this[event.key] = null;
+        this[event.key.toLowerCase()] = null;
     }, this);
     parsegraph_addEventMethod(surface.canvas(), "mousedown", function(event) {
         var button, x, y;
@@ -117,7 +118,7 @@ alpha_Input.prototype.SetMouseSensitivityX = function(sensitivity)
     this.mouseSensitivityX = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityX = function(sensitivity)
+alpha_Input.prototype.GetMouseSensitivityX = function()
 {
     return this.mouseSensitivityX;
 };
@@ -127,7 +128,7 @@ alpha_Input.prototype.SetMouseSensitivityY = function(sensitivity)
     this.mouseSensitivityY = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityY = function(sensitivity)
+alpha_Input.prototype.GetMouseSensitivityY = function()
 {
     return this.mouseSensitivityY;
 };
@@ -211,6 +212,7 @@ alpha_Input.prototype.MouseWheelDegreesDown = function()
  */
 alpha_Input.prototype.Update = function(elapsed)
 {
+    //console.log("Updating with elapsed: " + elapsed);
     if(this.Get("Shift") > 0) {
         elapsed = elapsed * 10;
     }

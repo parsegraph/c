@@ -3,7 +3,7 @@
 
 #include <apr_pools.h>
 #include "../alpha/WeetPainter.h"
-//#include "../alpha/Input.h"
+#include "../alpha/Input.h"
 #include "../alpha/Cam.h"
 
 struct alpha_WeetCubeWidget {
@@ -17,7 +17,7 @@ struct alpha_WeetCubeWidget {
     int _zMax;
     //void* surface;
     struct alpha_Camera* camera;
-    //void* input;
+    alpha_Input* input;
 
     void(*_listener)(void*);
     void* _listenerThisArg;

@@ -1,8 +1,10 @@
 #include "Physical.h"
+#include "Cam.h"
 #include "Maths.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "../graph/log.h"
 
 struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, int parentIsPhysical, void* parent)
 {
@@ -143,7 +145,7 @@ void alpha_Physical_SetPosition(struct alpha_Physical* phys, float x, float y, f
     alpha_Vector_Set(phys->position, x, y, z);
     phys->modelDirty = 1;
     if(isnan(phys->position[0])) {
-        fprintf(stderr, "Position became NaN.");
+        parsegraph_log("Position became NaN.");
     }
 }
 
@@ -152,7 +154,7 @@ void alpha_Physical_CopyPosition(struct alpha_Physical* phys, float* src)
     alpha_Vector_Copy(phys->position, src);
     phys->modelDirty = 1;
     if(isnan(phys->position[0])) {
-        fprintf(stderr, "Position became NaN.");
+        parsegraph_log("Position became NaN.");
     }
 }
 
@@ -166,16 +168,18 @@ void alpha_Physical_ChangeEachPosition(struct alpha_Physical* phys, float x, flo
     alpha_Vector_AddEach(phys->position, x, y, z);
     phys->modelDirty = 1;
     if(isnan(phys->position[0])) {
-        fprintf(stderr, "Position became NaN!");
+        parsegraph_log("Position became NaN!");
     }
 }
 
 void alpha_Physical_ChangePosition(struct alpha_Physical* phys, float* val)
 {
+    //parsegraph_log("Changed position from (%f, %f, %f) ", phys->position[0], phys->position[1], phys->position[2]);
     alpha_Vector_Add(phys->position, val);
+    //parsegraph_log("Changed position to (%f, %f, %f)\n", phys->position[0], phys->position[1], phys->position[2]);
     phys->modelDirty = 1;
     if(isnan(phys->position[0])) {
-        fprintf(stderr, "Position became NaN!");
+        parsegraph_log("Position became NaN!\n");
     }
 }
 
@@ -191,12 +195,13 @@ void alpha_Physical_WarpEach(struct alpha_Physical* phys, float x, float y, floa
     }
 
     // Quaternions don't work correctly if they aren't normalized
-    alpha_Quaternion_Normalize(phys->orientation);
+    //alpha_Quaternion_Normalize(phys->orientation);
 
     // get our new position; if we started at 0,0,0
     float* d = alpha_Quaternion_RotatedVectorEach(phys->orientation, phys->pool, x, y, z);
 
     // add it to our current position to get our new position
+    //parsegraph_log("Warping vec (%f, %f, %f)\n", d[0], d[1], d[2]);
     alpha_Physical_ChangePosition(phys, d);
 }
 
@@ -300,13 +305,13 @@ void alpha_Physical_MoveRight(alpha_Physical* phys, float elapsed)
 void alpha_Physical_MoveUp(alpha_Physical* phys, float elapsed)
 {
     float distance = elapsed * phys->speed[1];
-    alpha_Physical_AddVelocity(phys, 0, distance, 0);
+    alpha_Physical_AddVelocity(phys, 0, -distance, 0);
 };
 
 void alpha_Physical_MoveDown(alpha_Physical* phys, float elapsed)
 {
     float distance = elapsed * phys->speed[1];
-    alpha_Physical_AddVelocity(phys, 0, -distance, 0);
+    alpha_Physical_AddVelocity(phys, 0, distance, 0);
 };
 
 // calculates our new position using our current velocity
@@ -355,13 +360,13 @@ int alpha_Physical_IsGoodLineageFor(alpha_Physical* phys, alpha_Physical* prospe
 void alpha_Physical_SetParent(alpha_Physical* phys, int parentIsPhysical, void* parent)
 {
     if(!parent) {
-        fprintf(stderr, "A Physical must have a parent. Set it to the camera for a default");
+        parsegraph_log("A Physical must have a parent. Set it to the camera for a default");
 	exit(-1);
         return;
     }
 
     if(parentIsPhysical && !alpha_Physical_IsGoodLineageFor(parent, phys)) {
-        fprintf(stderr, "Setting this is a parent would result in a lineage that never reaches the camera" );
+        parsegraph_log("Setting this is a parent would result in a lineage that never reaches the camera" );
     }
     phys->parentIsPhysical = parentIsPhysical;
     phys->parent = parent;
@@ -496,7 +501,7 @@ float* alpha_Physical_GetViewMatrix(alpha_Physical* phys, void* requestor)
             // It's a camera.
             phys->viewMatrix = alpha_RMatrix4_Multiplied(phys->pool,
                 alpha_Physical_GetModelMatrix(phys),
-                alpha_Physical_GetViewMatrix(phys->parent, requestor)
+                alpha_Camera_GetViewMatrix(phys->parent, requestor)
             );
         }
         return phys->viewMatrix;

@@ -12,6 +12,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._paintGroup = null;
     this._keyListener = null;
     this._clickListener = null;
+    this._clickListenerThisArg = null;
     this._type = newType;
     this._style = parsegraph_style(this._type);
     this._label = null;
@@ -339,7 +340,8 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
         if(!thisArg) {
             thisArg = this;
         }
-        this._clickListener = [listener, thisArg];
+        this._clickListener = listener;
+        this._clickListenerThisArg = thisArg;
     }
 };
 
@@ -368,7 +370,7 @@ parsegraph_Node.prototype.click = function()
     if(!this.hasClickListener()) {
         return;
     }
-    return this._clickListener[0].apply(this._clickListener[1], arguments);
+    return this._clickListener.apply(this._clickListenerThisArg, arguments);
 };
 
 parsegraph_Node.prototype.setKeyListener = function(listener, thisArg)
@@ -961,7 +963,7 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
 
 parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 {
-    //console.log("nodeUnderCoords: " + x + ", " + y)
+    console.log("nodeUnderCoords: " + x + ", " + y)
     if(userScale === undefined) {
         userScale = 1;
     }
@@ -975,28 +977,32 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             x < userScale * node.absoluteX()
                 - userScale * node.absoluteScale() * s.width()/2
         ) {
-            //console.log("INB 1" + x + " against " + node.absoluteX());
+            console.log("Given coords are outside this node's body. " +
+            "(Horizontal minimum exceeds X-coord)");
             return false;
         }
         if(
             x > userScale * node.absoluteX()
                 + userScale * node.absoluteScale() * s.width()/2
         ) {
-            //console.log("INB 2");
+            console.log("Given coords are outside this node's body. " +
+            "(X-coord exceeds horizontal maximum)");
             return false;
         }
         if(
             y < userScale * node.absoluteY()
                 - userScale * node.absoluteScale() * s.height()/2
         ) {
-            //console.log("INB 3");
+            console.log("Given coords are outside this node's body. " +
+            "(Vertical minimum exceeds Y-coord)");
             return false;
         }
         if(
             y > userScale * node.absoluteY()
                 + userScale * node.absoluteScale() * s.height()/2
         ) {
-            //console.log("INB 4");
+            console.log("Given coords are outside this node's body. " +
+            "(Y-coord exceeds vertical maximum)");
             return false;
         }
 
@@ -1030,6 +1036,8 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         ) {
             return false;
         }
+
+        //console.log("Within node extent" + node);
         return true;
     };
 
@@ -1074,7 +1082,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             }
 
             // Found the node.
-            //console.log("Found node.");
+            console.log("Found node.");
             return candidate;
         }
         // Not within this node, so remove it as a candidate.
@@ -1083,6 +1091,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         // Test if the click is within any child.
         if(!inNodeExtents(candidate)) {
             // Nope, so continue the search.
+            console.log("Click is not in node extents.");
             continue;
         }
         //console.log("Click is in node extent");
@@ -1128,7 +1137,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         }
     }
 
-    //console.log("Found nothing.");
+    console.log("Found nothing.");
     return null;
 };
 
@@ -2328,14 +2337,14 @@ parsegraph_Node.prototype.canonicalLayoutPreference = function()
 
 parsegraph_Node.prototype.destroy = function()
 {
-    this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
-    this._layoutState = parsegraph_NULL_LAYOUT_STATE;
     this._neighbors.forEach(function(neighbor, direction) {
         // Clear all children.
-        if(this.parentDirection !== direction) {
+        if(this._parentDirection !== direction) {
             neighbor.node = null;
         }
     }, this);
+    this._layoutState = parsegraph_NULL_LAYOUT_STATE;
+    this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
     this._scale = 1.0;
 };
 

@@ -53,11 +53,6 @@ parsegraph_Rect.prototype.setWidth = function(width)
     this._width = width;
 };
 
-parsegraph_Rect.prototype.setHeight = function(height)
-{
-    this._height = height;
-};
-
 parsegraph_Rect.prototype.toString = function()
 {
     return "[Rect " + this.x() + ", " + this.y() + ", " + this.width() + ", " + this.height() + "]";

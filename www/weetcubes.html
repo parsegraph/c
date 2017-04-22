@@ -64,10 +64,6 @@ WIDGET = widget;
 surface.addPainter(widget.paint, widget);
 surface.addRenderer(widget.render, widget);
 
-// This flag is used to squelch rendering if that function
-// threw an exception and failed to complete.
-var speed=.6;
-//surface.camera.setCameraPosition(0, 0, 550);
 var start = alpha_GetTime();
 var frozen = false;
 var tick = function(t) {
@@ -75,7 +71,7 @@ var tick = function(t) {
     var t = alpha_GetTime();
     var elapsed = t - start;
     widget.Tick(elapsed, frozen);
-    if(!frozen) {
+    if(!frozen || !widget.cubePainter) {
         surface.paint(elapsed, frozen);
     }
     start = t;

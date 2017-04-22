@@ -31,7 +31,7 @@ PKG_CHECK_MODULES(openssl, [openssl],
     [AC_MSG_ERROR([openssl is required])]
 )
 
-PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm],
+PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm libudev libinput libevdev ncurses],
     [],
     [AC_MSG_ERROR([parsegraph requires a bunch of low-level C graphics libraries.])]
 )

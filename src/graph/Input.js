@@ -69,8 +69,11 @@ function parsegraph_Input(graph, camera)
         //console.log(mouseInWorld);
         var selectedNode = graph.world().nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
         if(!selectedNode) {
+            //console.log("No node found under coords:", mouseInWorld);
             return null;
         }
+
+        console.log("Node found for coords:", mouseInWorld, selectedNode);
 
         // Check if the selected node was a slider.
         if(selectedNode.type() == parsegraph_SLIDER) {
@@ -82,7 +85,7 @@ function parsegraph_Input(graph, camera)
 
         // Check if the selected node has a click listener.
         if(selectedNode.hasClickListener()) {
-            console.log("Selected Node has click listener", selectedNode);
+            //console.log("Selected Node has click listener", selectedNode);
             selectedNode.click();
             return selectedNode;
         }
@@ -400,6 +403,7 @@ function parsegraph_Input(graph, camera)
 
         if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
             // A significant node was clicked.
+            console.log("Node clicked.");
             this.Dispatch(true, "mousedown node");
             mousedownTime = null;
             return;

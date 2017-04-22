@@ -1,20 +1,19 @@
+PROG = cxx_parsegraph
 run:
-	./cxx__parsegraph
+	./$(PROG)
 .PHONY: run
 
-VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
+VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes
 
 valgrind:
-	$(VALGRIND) .libs/lt-cxx_parsegraph
+	$(VALGRIND) .libs/lt-$(PROG)
 .PHONY: valgrind
 
 lib_LTLIBRARIES = libparsegraph.la
 libparsegraph_la_CFLAGS = -Wall @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
-libparsegraph_la_LDFLAGS = -lm @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ -shared
+libparsegraph_la_LDFLAGS = -lm @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@
 
 nobase_include_HEADERS = \
-	graph/Exception.h \
-	graph/Status.h \
 	graph/LayoutPreference.h \
 	graph/LayoutState.h \
 	graph/NodeAlignment.h \
@@ -54,8 +53,6 @@ nobase_include_HEADERS = \
 	gl.h
 
 libparsegraph_la_SOURCES = \
-	graph/Exception.c \
-	graph/Status.c \
 	graph/GlyphAtlas.c \
 	graph/LayoutPreference.c \
 	graph/LayoutState.c \
@@ -71,7 +68,6 @@ libparsegraph_la_SOURCES = \
 	graph/NodeDirection.c \
 	graph/Camera.c \
 	graph/Surface.c \
-	graph/Node.c \
 	graph/Caret.c \
 	graph/Color.c \
 	graph/Graph.c \
@@ -93,6 +89,8 @@ libparsegraph_la_SOURCES = \
 	alpha/CubeMan.c \
 	widgets/alpha_WeetCubeWidget.c \
 	gl.c
+
+#graph/Node.c
 
 bin_PROGRAMS = parsegraph cxx_parsegraph
 

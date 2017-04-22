@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>JavaScript - Parsegraph</title>
+<title>Login - Parsegraph</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -53,57 +53,87 @@ body > div input {
 <script src="esprima.js"></script>
 <script>
 
-function init()
+function parsegraph_WebAudioWidget(graph)
+{
+    this._graph = graph;
+    this._containerNode = null;
+    this._ctx = new AudioContext();
+}
+
+parsegraph_WebAudioWidget.prototype.load = function(username)
+{
+};
+
+parsegraph_WebAudioWidget.prototype.node = function()
+{
+    if(!this._containerNode) {
+        this._containerNode = new parsegraph_Node(parsegraph_SLOT);
+        this._containerNode.setClickListener(function() {
+            alert("CLICKED");
+        }, this);
+    }
+    return this._containerNode;
+}
+
+function init(main)
 {
     try {
         parsegraph_initialize();
-        var main = document.body;
-
-        // Create the surface.
         var surface = new parsegraph_Surface();
-        main.appendChild(surface.container());
-
         var graph = new parsegraph_Graph(surface);
-        GRAPH = graph;
+        main.appendChild(surface.container());
+        var widget = new parsegraph_LoginWidget(surface, graph);
+        graph.world().plot(widget.root());
 
-        var widget = new parsegraph_JavaScriptWidget(graph);
-        widget.load("parsegraph-1.0.js");
-        graph.world().plot(widget.caret.root());
+        var audioWidget;
+        var cameraProtocol;
 
-        var cameraName = "parsegraph_javascript_camera";
+        widget.setLoginListener(function(res, userLogin, node) {
+            console.log(userLogin, node);
+
+            if(!audioWidget) {
+                audioWidget = new parsegraph_WebAudioWidget(graph);
+                audioWidget.load(userLogin.username);
+                node.connectNode(parsegraph_DOWNWARD, audioWidget.node());
+            }
+
+            if(!cameraProtocol) {
+                cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
+                    "ws://localhost/camera/", "parsegraph-camera-protocol"
+                ), graph.camera(),
+                    function(obj) {
+                        console.log(obj);
+                        graph.cameraBox().setCamera(userLogin.username, obj);
+                    }
+                );
+            }
+        });
+
+        var cameraName = "parsegraph_login_camera";
         if(localStorage.getItem(cameraName) != null) {
             try {
                 var cameraData = JSON.parse(localStorage.getItem(cameraName));
                 graph.camera().restore(cameraData);
             } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                console.log(
+                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
+                );
             }
         }
 
-        var cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
-            "ws://localhost/camera/", "parsegraph-camera-protocol"
-        ), graph.camera(),
-            function(obj) {
-                graph.cameraBox().setCamera("dafrito", obj);
-            }
-        );
-
-        var chatProtocol = new parsegraph_ChatProtocol(new WebSocket(
-            "ws://localhost/chat/", "parsegraph-chat-protocol"
-        ), function(obj) {
-            //console.log("Message received: ", obj);
-        });
-
         // Schedule the repaint.
         var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
         renderTimer.setListener(function() {
             graph.input().Update(new Date());
+            var t = alpha_GetTime();
+            start = t;
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                if(graph.input().UpdateRepeatedly()) {
+                if(cameraProtocol && graph.input().UpdateRepeatedly()) {
                     cameraProtocol.update();
                 }
                 renderTimer.schedule();
@@ -113,11 +143,11 @@ function init()
             if(affectedPaint) {
                 graph.scheduleRepaint();
             }
-            // Contrive a message to send over chat.
-            chatProtocol.send(eventSource);
             renderTimer.schedule();
             if(inputAffectedCamera) {
-                cameraProtocol.update();
+                if(cameraProtocol) {
+                    cameraProtocol.update();
+                }
                 localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
             }
         });
@@ -132,7 +162,7 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    init(document.body);
 });
 </script>
 </head>

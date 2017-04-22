@@ -80,6 +80,9 @@ int parsegraph_Extent_boundCapacity(struct parsegraph_Extent* extent)
 
 int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int capacity)
 {
+    if(capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
+        capacity  = parsegraph_DEFAULT_EXTENT_BOUNDS;
+    }
     struct parsegraph_ExtentBound* oldBounds = extent->bounds;
     unsigned int oldCap = extent->capacity;
     if(oldCap >= capacity) {
@@ -717,25 +720,37 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
 
 void parsegraph_Extent_boundingValues(struct parsegraph_Extent* extent, float* totalLength, float* minSize, float* maxSize)
 {
-    *totalLength = 0;
-    *minSize = NAN;
-    *maxSize = NAN;
+    if(totalLength) {
+        *totalLength = 0;
+    }   
+    if(minSize) {
+        *minSize = NAN;
+    }
+    if(maxSize) {
+        *maxSize = NAN;
+    }
 
     for(unsigned int iter = 0; iter != parsegraph_Extent_numBounds(extent); ++iter) {
-        *totalLength = (*totalLength + parsegraph_Extent_boundLengthAt(extent, iter));
-        float size = parsegraph_Extent_boundSizeAt(extent, iter);
-        if(isnan(*minSize)) {
-            *minSize = size;
+        if(totalLength) {
+            *totalLength = (*totalLength + parsegraph_Extent_boundLengthAt(extent, iter));
         }
-        else if(!isnan(size)) {
-            *minSize = fminf(*minSize, size);
+        float size = parsegraph_Extent_boundSizeAt(extent, iter);
+        if(minSize) {
+            if(isnan(*minSize)) {
+                *minSize = size;
+            }
+            else if(!isnan(size)) {
+                *minSize = fminf(*minSize, size);
+            }
         }
 
-        if(isnan(*maxSize)) {
-            *maxSize = size;
-        }
-        else if(!isnan(size)) {
-            *maxSize = fmaxf(*maxSize, size);
+        if(maxSize) {
+            if(isnan(*maxSize)) {
+                *maxSize = size;
+            }
+            else if(!isnan(size)) {
+                *maxSize = fmaxf(*maxSize, size);
+            }
         }
     }
 }

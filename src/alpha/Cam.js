@@ -703,7 +703,7 @@ alpha_Camera.prototype.GetModelMatrix = function()
         //console.log("offset=", o.toString());
         //console.log("orientation=", r.toString());
         this.modelMatrix.FromVectorAroundQuaternionAtVector(p, r, o); // oh yea;
-        console.log("modelMat=", this.modelMatrix.toString());
+        //console.log("modelMat=", this.modelMatrix.toString());
         this.modelDirty = false;
     }
     return this.modelMatrix;

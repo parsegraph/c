@@ -189,7 +189,7 @@ alpha_Color.prototype.toString = function()
 //--------------------------------------------
 //--------------------------------------------
 // the skin object is simply an ordered list of colors
-// one for each vertex of each face of a face
+// one for each vertex of each face of a shape.
 // a skin can only be applied to a shape with
 // the same number of vertices
 // you create a skin by passing it a nested table of colors
@@ -377,7 +377,7 @@ function alpha_Shape()
 //----------- BlockTypes  --------------------
 //--------------------------------------------
 //--------------------------------------------
-// Blocktype is where you combine a Shape with A Skin
+// Blocktype is where you combine a Shape(pos vec) with A Skin(color vec)
 // var stone = new alpha_BlockType("stone", "cube", Stone, graySkin)
 // BlockType automatically loads created BlockTypes into the BlockIDs table
 // it is some sort of hybrid object / masterlist

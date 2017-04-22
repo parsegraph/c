@@ -1018,10 +1018,10 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with shrunk bud", funct
     );
 
     if(!caret.node().extentsAt(parsegraph_DOWNWARD).equals(downwardExtent)) {
-        graph._nodePainter.enableExtentRendering();
-        resultDom.appendChild(
-            graph._container
-        );
+        //graph._nodePainter.enableExtentRendering();
+        //resultDom.appendChild(
+            //graph._container
+        //);
         resultDom.appendChild(
             downwardExtent.toDom("Expected downward extent")
         );

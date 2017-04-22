@@ -128,12 +128,12 @@ static float alpha_CUBE_VERTICES[] = {
 };
 
 static float alpha_CUBE_COLORS[] = {
-    1, 1, 0,
-    1, 0, 1,
-    0, 0, 1,
-    1, 0, 0,
-    0, 1, 0,
-    0, 1, 1
+    1, 1, 0, // 0
+    0, 1, 1, // 5
+    1, 0, 1, // 1
+    0, 0, 1, // 2
+    1, 0, 0, // 3
+    0, 1, 0 // 4
 };
 
 void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numCubes)
@@ -162,7 +162,7 @@ void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numC
         painter->_posData = malloc(byteCount);
         painter->_colorData = malloc(byteCount);
     }
-    //fprintf(stderr, "Data is %d bytes large\n", byteCount);
+    //fprintf(stderr, "Data is %d floats large\n", floatCount);
 
     painter->_dataX = 0;
 
@@ -175,7 +175,7 @@ void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numC
         // Cube
         for(unsigned int j = 0; j < 6; ++j) {
             // Face
-            float* col = &alpha_CUBE_COLORS[j];
+            float* col = &alpha_CUBE_COLORS[3*j];
             for(unsigned int k = 0; k < 6; ++k) {
                 // Vertex
                 painter->_colorData[x++] = col[0];
@@ -185,7 +185,7 @@ void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numC
             }
         }
     }
-    //fprintf(stderr, "colors rendered = %d\n", (int)(numCubes * 6 * 6));
+    //fprintf(stderr, "color floats rendered = %d\n", sizeof(float)*x);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float)*x, painter->_colorData, GL_STATIC_DRAW);
     painter->_numCubes = numCubes;
 }
@@ -221,13 +221,12 @@ int alpha_WeetPainter_Cube(struct alpha_WeetPainter* painter, float* m)
         0, 1, 2, 0, 2, 3
     };
 
-    //fprintf(stderr, "Populating cube\n");
     for(int faceNum = 0; faceNum < 6; ++faceNum) {
         float* cf[4];
-        cf[0] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 4]];
-        cf[1] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 4 + 1]];
-        cf[2] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 4 + 2]];
-        cf[3] = &alpha_CUBE_COLORS[3 * idx[faceNum * 4 + 3]];
+        cf[0] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 5]];
+        cf[1] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 5 + 1]];
+        cf[2] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 5 + 2]];
+        cf[3] = &alpha_CUBE_VERTICES[3 * idx[faceNum * 5 + 3]];
         //int cc = idx[faceNum * 6 + 4];
 
         for(int vertexNum = 0; vertexNum < 6; ++vertexNum) {
@@ -243,6 +242,7 @@ int alpha_WeetPainter_Cube(struct alpha_WeetPainter* painter, float* m)
 	 //);
         }
     }
+    //fprintf(stderr, "Populating cube with %d \n", painter->_dataX);
 
     return 0;
 }
@@ -256,6 +256,8 @@ void alpha_WeetPainter_Draw(struct alpha_WeetPainter* painter, float* viewMatrix
 
     // Render faces.
     glUseProgram(painter->faceProgram);
+    //glDisable(GL_CULL_FACE);
+    //glDisable(GL_DEPTH_TEST);
 
     glUniformMatrix4fv(painter->u_world, 1, GL_FALSE, viewMatrix);
 
@@ -266,60 +268,18 @@ void alpha_WeetPainter_Draw(struct alpha_WeetPainter* painter, float* viewMatrix
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, painter->_posBuffer);
+    //fprintf(stderr, "dataX * sizeof(float)= %d\n", sizeof(float)*painter->_dataX);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float)*painter->_dataX, painter->_posData, GL_STREAM_DRAW);
     glVertexAttribPointer(painter->a_position, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(painter->a_position);
 
+    glBindBuffer(GL_ARRAY_BUFFER, painter->_colorBuffer);
     glVertexAttribPointer(painter->a_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(painter->a_color);
 
-    //fprintf(stderr, "num rendered = %d", (int)(painter->_dataX/12));
-    glDrawArrays(GL_TRIANGLES, 0, (int)(painter->_dataX/12));
+    //fprintf(stderr, "num rendered = %d\n", (int)(painter->_dataX/4));
+    glDrawArrays(GL_TRIANGLES, 0, painter->_dataX/4);
 
-    glDisableVertexAttribArray(painter->a_position);
-    glDisableVertexAttribArray(painter->a_color);
-}
-
-void alpha_WeetPainter_DrawTest(struct alpha_WeetPainter* painter, float* viewMatrix)
-{
-    if(!viewMatrix) {
-        fprintf(stderr, "A viewMatrix must be provided");
-        return;
-    }
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-
-    // Render faces.
-    glUseProgram(painter->faceProgram);
-
-    alpha_RMatrix4_SetIdentity(viewMatrix);
-    glUniformMatrix4fv(painter->u_world, 1, GL_FALSE, viewMatrix);
-
-    glBindBuffer(GL_ARRAY_BUFFER, painter->_posBuffer);
-    if(!painter->_posData) {
-        fprintf(stderr, "Position data is falsy!");
-        exit(-1);
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, painter->_posBuffer);
-    float copPosData[] = {
-        -1, 1, 0, 1,
-         1, 1, 0, 1,
-        -1, -1, 0, 1,
-         1, 1, 0, 1,
-         1, -1, 0, 1,
-        -1, -1, 0, 1,
-    };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*6, copPosData, GL_STREAM_DRAW);
-    glVertexAttribPointer(painter->a_position, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(painter->a_position);
-
-    glVertexAttribPointer(painter->a_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(painter->a_color);
-
-    //fprintf(stderr, "num rendered = %d", (int)(painter->_dataX/12));
-    glDrawArrays(GL_TRIANGLES, 0, 2);
     glDisableVertexAttribArray(painter->a_position);
     glDisableVertexAttribArray(painter->a_color);
 }

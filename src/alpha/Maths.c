@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <apr_time.h>
 #include <stdio.h>
+#include "../graph/log.h"
 
 float alpha_FUZZINESS = 1e-10;
 
@@ -24,7 +25,7 @@ long int alpha_random(long int min, long int max)
 };
 
 apr_time_t alpha_startTime = 0;
-apr_time_t alpha_GetTime()
+float alpha_GetTime()
 {
     if(alpha_startTime == 0) {
         alpha_startTime = apr_time_now();
@@ -922,7 +923,7 @@ float* alpha_RMatrix4_Inversed(apr_pool_t* pool, float* m)
 
     float det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
     if(det == 0) {
-      fprintf(stderr, "Determinate in Matrix.Inverse cannot be 0");
+      parsegraph_log("Determinate in Matrix.Inverse cannot be 0");
       alpha_RMatrix4_destroy(pool, inv);
       return 0;
     }
@@ -1091,7 +1092,7 @@ float* alpha_RMatrix4FromVectorAroundQuaternionAtVector(apr_pool_t* pool, float*
 
 void alpha_dumpMatrix(const char* prefix, float* m)
 {
-    fprintf(stderr, "%s[\n%f %f %f %f,\n%f %f %f %f,\n%f %f %f %f,\n%f %f %f %f]\n", 
+    parsegraph_log("%s[\n%f %f %f %f,\n%f %f %f %f,\n%f %f %f %f,\n%f %f %f %f]\n", 
 		    prefix,
 		    m[0], m[1], m[2], m[3],
 		    m[4], m[5], m[6], m[7],

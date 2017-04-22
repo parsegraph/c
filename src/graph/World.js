@@ -2,7 +2,7 @@ function parsegraph_World(graph)
 {
     // World-rendered graphs.
     this._worldPaintingDirty = true;
-    this._worldPlots = [];
+    this._worldRoots = [];
 
     // The node currently under the cursor.
     this._nodeUnderCursor = null;
@@ -57,7 +57,7 @@ parsegraph_World.prototype.plot = function(node, worldX, worldY, userScale)
         node.localPaintGroup().setOrigin(worldX, worldY);
         node.localPaintGroup().setScale(userScale);
     }
-    this._worldPlots.push(node);
+    this._worldRoots.push(node);
 };
 
 parsegraph_World_Tests.addTest("parsegraph_World.plot", function() {
@@ -99,12 +99,12 @@ parsegraph_World_Tests.addTest("world.plot with caret", function() {
  */
 parsegraph_World.prototype.removePlot = function(plot)
 {
-    for(var i in this._worldPlots) {
-        if(this._worldPlots[i] === plot) {
+    for(var i in this._worldRoots) {
+        if(this._worldRoots[i] === plot) {
             if(this._previousWorldPaintState) {
                 this._previousWorldPaintState = null;
             }
-            return this._worldPlots.splice(i, 1);
+            return this._worldRoots.splice(i, 1);
         }
     }
     return null;
@@ -169,7 +169,7 @@ parsegraph_World.prototype.boundingRect = function(outRect)
     if(!outRect) {
         outRect = new parsegraph_Rect();
     }
-    this._worldPlots.forEach(function(plot) {
+    this._worldRoots.forEach(function(plot) {
         plot.commitLayoutIteratively();
 
         // Get plot extent data.
@@ -265,8 +265,8 @@ parsegraph_World.prototype.nodeUnderCursor = function()
 parsegraph_World.prototype.nodeUnderCoords = function(x, y)
 {
     // Test if there is a node under the given coordinates.
-    for(var i = this._worldPlots.length - 1; i >= 0; --i) {
-        var selectedNode = this._worldPlots[i].nodeUnderCoords(x, y);
+    for(var i = this._worldRoots.length - 1; i >= 0; --i) {
+        var selectedNode = this._worldRoots[i].nodeUnderCoords(x, y);
         if(selectedNode) {
             // Node located; no further search.
             return selectedNode;
@@ -304,12 +304,12 @@ parsegraph_World.prototype.paint = function(timeout)
             i = savedState;
         }
 
-        while(i < this._worldPlots.length) {
+        while(i < this._worldRoots.length) {
             if(pastTime()) {
                 this.previousWorldPaintState = i;
                 return false;
             }
-            var plot = this._worldPlots[i];
+            var plot = this._worldRoots[i];
             var paintGroup = plot.localPaintGroup();
             if(!paintGroup) {
                 throw new Error("Plot no longer has a paint group?!");
@@ -337,8 +337,8 @@ parsegraph_World.prototype.paint = function(timeout)
 
 parsegraph_World.prototype.render = function(world)
 {
-    for(var i in this._worldPlots) {
-        var plot = this._worldPlots[i];
+    for(var i in this._worldRoots) {
+        var plot = this._worldRoots[i];
         var paintGroup = plot.localPaintGroup();
         if(!paintGroup) {
             throw new Error("Plot no longer has a paint group?!");

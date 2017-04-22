@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "alpha/Maths.h"
 #include <math.h>
+#include "graph/log.h"
 
 // The following methods were copied from webglfundamentals.org:
 
@@ -35,7 +36,7 @@ GLuint compileShader(const char* shaderSource, GLint shaderLen, GLenum shaderTyp
     GLchar shaderLog[4096];
     GLsizei logLen;
     glGetShaderInfoLog(shader, 4096, &logLen, shaderLog);
-    fprintf(stderr, "Could not compile shader: %s", shaderLog);
+    parsegraph_log("Could not compile shader: %s", shaderLog);
   }
  
   return shader;
@@ -164,7 +165,7 @@ GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
       GLchar programLog[4096];
       GLsizei logLen;
       glGetProgramInfoLog(program, 4096, &logLen, programLog);
-      fprintf(stderr, "Program failed to link:  %s", programLog);
+      parsegraph_log("Program failed to link:  %s", programLog);
   }
  
   return program;
@@ -761,7 +762,7 @@ void alpha_dumpError(GLenum err)
     case GL_INVALID_OPERATION: fname = "GL_INVALID_OPERATION"; break;
     case GL_NO_ERROR: fname = "GL_NO_ERROR"; break;
     }
-    fprintf(stderr, "%s\n", fname);
+    parsegraph_log("%s\n", fname);
 }
 
 void alpha_dumpLastError()

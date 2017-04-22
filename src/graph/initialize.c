@@ -1,5 +1,6 @@
 #include "initialize.h"
 #include "Color.h"
+#include "Node.h"
 
 struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS = 0;
 float parsegraph_MIN_BLOCK_HEIGHT;
@@ -18,26 +19,6 @@ int parsegraph_WRAP_WIDTH;
 float parsegraph_TOUCH_SENSITIVITY;
 float parsegraph_MOUSE_SENSITIVITY;
 int parsegraph_RIGHT_TO_LEFT;
-int parsegraph_NULL_NODE_DIRECTION;
-int parsegraph_FORWARD;
-int parsegraph_BACKWARD;
-int parsegraph_DOWNWARD;
-int parsegraph_UPWARD;
-int parsegraph_INWARD;
-int parsegraph_OUTWARD;
-int parsegraph_NULL_AXIS;
-int parsegraph_HORIZONTAL_AXIS;
-int parsegraph_VERTICAL_AXIS;
-int parsegraph_NULL_NODE_TYPE;
-int parsegraph_BUD;
-int parsegraph_SLOT;
-int parsegraph_BLOCK;
-int parsegraph_SLIDER;
-int parsegraph_SCENE;
-int parsegraph_DEFAULT_NODE_TYPE;
-int parsegraph_NULL_NODE_FIT;
-int parsegraph_NODE_FIT_EXACT;
-int parsegraph_NODE_FIT_LOOSE;
 float parsegraph_MAX_PRESS_RELEASE_DELAY;
 int parsegraph_UPSCALED_FONT_SIZE;
 int parsegraph_RENDERED_FONT_SIZE;
@@ -71,34 +52,6 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = 0;
-
-    // Node Direction
-    parsegraph_NULL_NODE_DIRECTION = -1;
-    parsegraph_FORWARD = 0;
-    parsegraph_BACKWARD = 1;
-    parsegraph_DOWNWARD = 2;
-    parsegraph_UPWARD = 3;
-    parsegraph_INWARD = 4;
-    parsegraph_OUTWARD = 5;
-
-    // Node Axis
-    parsegraph_NULL_AXIS = 6;
-    parsegraph_HORIZONTAL_AXIS = 7;
-    parsegraph_VERTICAL_AXIS = 8;
-
-    // Node Type
-    parsegraph_NULL_NODE_TYPE = 9;
-    parsegraph_BUD = 10;
-    parsegraph_SLOT = 11;
-    parsegraph_BLOCK = 12;
-    parsegraph_SLIDER = 13;
-    parsegraph_SCENE = 14;
-
-    parsegraph_DEFAULT_NODE_TYPE = parsegraph_BLOCK;
-
-    parsegraph_NULL_NODE_FIT = 14;
-    parsegraph_NODE_FIT_EXACT = 15;
-    parsegraph_NODE_FIT_LOOSE = 16;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
@@ -273,5 +226,47 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 
     parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;
+}
 
+parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int type)
+{
+    parsegraph_Style* style;
+    if(pool) {
+        style = apr_palloc(pool, sizeof(*style));
+    }
+    else {
+        style = malloc(sizeof(*style));
+    }
+    parsegraph_Style* copiedStyle = parsegraph_style(type);
+    memcpy(style, copiedStyle, sizeof(*style));
+    return style;
+}
+
+parsegraph_Style* parsegraph_style(int type)
+{
+    switch(type) {
+    case parsegraph_BUD:
+    {
+        return parsegraph_BUD_STYLE;
+    }
+    case parsegraph_SLOT:
+    {
+        return parsegraph_SLOT_STYLE;
+    }
+    case parsegraph_BLOCK:
+    {
+        return parsegraph_BLOCK_STYLE;
+    }
+    case parsegraph_SLIDER:
+    {
+        return parsegraph_SLIDER_STYLE;
+    }
+    case parsegraph_SCENE:
+    {
+        return parsegraph_SCENE_STYLE;
+    }
+    case parsegraph_NULL_NODE_TYPE:
+    default:
+        return 0;
+    }
 }

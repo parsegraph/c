@@ -25,11 +25,12 @@ struct parsegraph_Style {
     float verticalSeparation;
     float horizontalSeparation;
 };
+typedef struct parsegraph_Style parsegraph_Style;
 
 extern struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS;
 extern struct parsegraph_GlyphAtlas* parsegraph_defaultGlyphAtlas();
-struct parsegraph_Style* parsegraph_copyStyle(int nodeType);
-void parsegraph_style(int nodeType);
+parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int nodeType);
+parsegraph_Style* parsegraph_style(int nodeType);
 void parsegraph_initialize(apr_pool_t* pool, int mathMode);
 
 extern float parsegraph_TOUCH_SENSITIVITY;
@@ -37,34 +38,6 @@ extern float parsegraph_MOUSE_SENSITIVITY;
 
 // Whether Node's forward and backward are switched.
 extern int parsegraph_RIGHT_TO_LEFT;
-
-// Node Direction
-extern int parsegraph_NULL_NODE_DIRECTION;
-extern int parsegraph_FORWARD;
-extern int parsegraph_BACKWARD;
-extern int parsegraph_DOWNWARD;
-extern int parsegraph_UPWARD;
-extern int parsegraph_INWARD;
-extern int parsegraph_OUTWARD;
-
-// Node Axis
-extern int parsegraph_NULL_AXIS;
-extern int parsegraph_HORIZONTAL_AXIS;
-extern int parsegraph_VERTICAL_AXIS;
-
-// Node Type
-extern int parsegraph_NULL_NODE_TYPE;
-extern int parsegraph_BUD;
-extern int parsegraph_SLOT;
-extern int parsegraph_BLOCK;
-extern int parsegraph_SLIDER;
-extern int parsegraph_SCENE;
-
-extern int parsegraph_DEFAULT_NODE_TYPE;
-
-extern int parsegraph_NULL_NODE_FIT;
-extern int parsegraph_NODE_FIT_EXACT;
-extern int parsegraph_NODE_FIT_LOOSE;
 
 extern float parsegraph_MAX_PRESS_RELEASE_DELAY;
 

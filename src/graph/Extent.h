@@ -15,6 +15,7 @@ struct parsegraph_Extent {
     unsigned int capacity;
     struct parsegraph_ExtentBound* bounds;
 };
+typedef struct parsegraph_Extent parsegraph_Extent;
 
 extern unsigned int parsegraph_DEFAULT_EXTENT_BOUNDS;
 

@@ -14,6 +14,34 @@ void test_alpha_Color_Set()
     TEST_ASSERT_EQUAL_FLOAT_MESSAGE(.3, v[2], "Blue is .3");
 }
 
+void test_alpha_Face_new()
+{
+    alpha_Face* face = alpha_Face_new(pool);
+    alpha_Face_destroy(face);
+}
+
+void test_alpha_Face_new()
+{
+
+}
+
+void test_alpha_Skin_new()
+{
+    alpha_Skin* skin = alpha_Skin_new(pool);
+    alpha_Face_destroy(skin);
+}
+
+void test_alpha_Skin_addFace()
+{
+    alpha_Skin* skin = alpha_Skin_new();
+    alpha_Skin_addFace(skin, );
+    alpha_Face_destroy(skin);
+}
+
+void test_alpha_Skin_removeAt()
+{
+}
+
 void test_alpha_Color_SetAll()
 {
     float v[3];

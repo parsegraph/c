@@ -258,8 +258,8 @@ float* alpha_Camera_UpdateProjection(struct alpha_Camera* cam, int renderWidth, 
     glViewport(0, 0, cam->width, cam->height);
 
     alpha_RMatrix4_Copy(cam->projectionMatrix, makePerspective(cam->pool,
-        alpha_Camera_GetFovX(cam) / cam->zoomFactor,
-        cam->width / cam->height,
+        (float)alpha_Camera_GetFovX(cam) / (float)cam->zoomFactor,
+        (float)cam->width / (float)cam->height,
         cam->nearDistance,
         cam->farDistance
     ));
@@ -692,7 +692,6 @@ int alpha_Camera_GetParentIsPhysical(alpha_Camera* cam)
 
 float* alpha_Camera_GetViewMatrix(alpha_Camera* cam, void* requestor)
 {
-    void* parent = cam->parent;
     if(requestor) {
         // the camera is always loaded first(properly)
         // therefore if something other than the camera asks for camera info
@@ -704,22 +703,28 @@ float* alpha_Camera_GetViewMatrix(alpha_Camera* cam, void* requestor)
     }
 
 	//alpha_dumpMatrix("modelMatrix:", alpha_Camera_GetModelMatrix(cam));
-    if(parent && cam->parentIsPhysical && parent != requestor) {
-        float* ancestors = alpha_Physical_GetViewMatrix(parent, requestor);
+    void* parent = cam->parent;
+    if(parent && parent != requestor) {
+        float* ancestors;
+        if(cam->parentIsPhysical) {
+            ancestors = alpha_Physical_GetViewMatrix(parent, requestor);
+        }
+        else {
+            ancestors = alpha_Camera_GetViewMatrix(parent, requestor);
+        }
         //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
         //console.log("parent.viewMatrix:\n" + ancestors.toString());
         //console.log("modelMatrix * ancestors:\n" + this.GetModelMatrix().Multiplied(ancestors));
         cam->viewMatrix = alpha_RMatrix4_Multiplied(cam->pool, alpha_Camera_GetModelMatrix(cam), ancestors);
-        //console.log("this.viewMatrix:\n" + this.viewMatrix.toString());
+        //alpha_dumpMatrix("this.viewMatrix:", cam->viewMatrix);
         return cam->viewMatrix;
     }
     else {
         // you could also do a dummy identity matrix as the ancestor
         // but why do extra math?
-	//
-	return alpha_RMatrix4_Inversed(cam->pool, alpha_Camera_GetModelMatrix(cam));
+        return alpha_RMatrix4_Inversed(cam->pool, alpha_Camera_GetModelMatrix(cam));
     }
-};
+}
 
 float* alpha_Camera_GetModelMatrix(alpha_Camera* cam)
 {

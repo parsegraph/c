@@ -257,6 +257,7 @@ alpha_Physical.prototype.Warp = function()
     var d = this.orientation.RotatedVector(x, y, z);
 
     // add it to our current position to get our new position
+    //console.log("Warping vec" + d);
     this.ChangePosition(d);
 };
 

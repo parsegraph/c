@@ -72,4 +72,3 @@ parsegraph_Size.prototype.toString = function()
 {
     return "[w=" + this.width() + ", h=" + this.height() + "]";
 };
-

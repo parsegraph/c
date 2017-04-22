@@ -115,12 +115,12 @@ function alpha_WeetPainter(gl)
     alpha_CUBE_VERTICES = cv;
 
     alpha_CUBE_COLORS = [
-        new alpha_Color(1, 1, 0),
-        new alpha_Color(1, 0, 1),
-        new alpha_Color(0, 0, 1),
-        new alpha_Color(1, 0, 0),
-        new alpha_Color(0, 1, 0),
-        new alpha_Color(0, 1, 1)
+        new alpha_Color(1, 1, 0), // 0
+        new alpha_Color(0, 1, 1), // 5
+        new alpha_Color(1, 0, 1), // 1
+        new alpha_Color(0, 0, 1), // 2
+        new alpha_Color(1, 0, 0), // 3
+        new alpha_Color(0, 1, 0) // 4
     ];
 }
 
@@ -130,6 +130,7 @@ alpha_WeetPainter.prototype.Init = function(numCubes)
         this._posBuffer = this.gl.createBuffer();
     }
     this._data = new Float32Array(numCubes * 6 * 6 * 4);
+    //console.log("Data is " + this._data.length + " floats large");
     this._dataX = 0;
 
     if(!this._colorBuffer) {
@@ -152,6 +153,7 @@ alpha_WeetPainter.prototype.Init = function(numCubes)
             }
         }
     }
+    //console.log("color floats rendered = " + 4*x);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, colorData, this.gl.STATIC_DRAW);
     this._numCubes = numCubes;
 }
@@ -213,6 +215,7 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
 
     // Render faces.
     var gl = this.gl;
+    //gl.disable(gl.CULL_FACE);
     gl.useProgram(
         this.faceProgram
     );
@@ -222,20 +225,22 @@ alpha_WeetPainter.prototype.Draw = function(viewMatrix)
         viewMatrix.toArray()
     );
 
-    gl.enableVertexAttribArray(this.a_position);
     gl.bindBuffer(gl.ARRAY_BUFFER, this._posBuffer);
+    //console.log("dataX * sizeof(float = " + 4*this._dataX);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         this._data,
         gl.STREAM_DRAW
     );
     gl.vertexAttribPointer(this.a_position, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.a_position);
 
     gl.enableVertexAttribArray(this.a_color);
     gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
     gl.vertexAttribPointer(this.a_color, 4, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, this._data.length / 12);
+    //console.log("num rendered = " + (this._dataX / 4));
+    gl.drawArrays(gl.TRIANGLES, 0, this._dataX/4);
 
     gl.disableVertexAttribArray(this.a_position);
     gl.disableVertexAttribArray(this.a_color);

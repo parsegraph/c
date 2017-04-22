@@ -77,6 +77,8 @@ function parsegraph_ProfileWidget(graph)
     this._saveTimer = new parsegraph_TimeoutTimer();
     this._saveTimer.setDelay(0);
     this._saveTimer.setListener(this.onSave, this);
+
+    this._containerNode = null;
 }
 
 parsegraph_ProfileWidget.prototype.node = function()

@@ -48,27 +48,108 @@ extern "C" {
 #include "alpha/WeetPainter.h"
 #include "widgets/alpha_WeetCubeWidget.h"
 #include "alpha/Maths.h"
+#include <apr_strings.h>
 
 }
 
+#include <QTime>
 #include <QGuiApplication>
 #include <QOpenGLWindow>
+#include <QKeyEvent>
+#include <QTouchEvent>
+#include <QMouseEvent>
 
 static apr_pool_t* pool;
 
 class MainWindow : public QOpenGLWindow {
+
+static const char* keyToName(int key) {
+    switch(key) {
+    case Qt::Key_Escape: return "Escape";
+    case Qt::Key_Tab: return "Tab";
+    case Qt::Key_Return: return "Return";
+    case Qt::Key_Left: return "Left";
+    case Qt::Key_Shift: return "Shift";
+    case Qt::Key_Space: return " ";
+    }
+    return 0;
+}
+
+protected:
+
+
+virtual void keyPressEvent(QKeyEvent* ev) {
+    const char* kname = keyToName(ev->key());
+    if(!kname) {
+        QByteArray kval = ev->text().toLower().toUtf8();
+        kname = apr_pstrdup(pool, kval.constData());
+    }
+
+    if(alpha_Input_Get(widget->input, kname)) {
+        // Already pressed, ignore it.
+        return;
+    }
+
+    //fprintf(stderr, "Pressed %s\n", kname);
+    if(ev->key() == Qt::Key_Escape) {
+        frozen = !frozen;
+    }
+    else {
+        alpha_Input_keydown(widget->input, kname,
+            ev->modifiers() & Qt::ControlModifier,
+            ev->modifiers() & Qt::AltModifier,
+            ev->modifiers() & Qt::MetaModifier
+        );
+    }
+}
+
+virtual void keyReleaseEvent(QKeyEvent* ev) {
+    const char* kname = keyToName(ev->key());
+    if(!kname) {
+        QByteArray kval = ev->text().toLower().toUtf8();
+        kname = apr_pstrdup(pool, kval.constData());
+    }
+
+    if(!alpha_Input_Get(widget->input, kname)) {
+        // Already released, ignore it.
+        return;
+    }
+    //fprintf(stderr, "Releasing %s\n", kname);
+    alpha_Input_keyup(widget->input, kname);
+}
+
+virtual void mouseMoveEvent(QMouseEvent* ev) {
+}
+
+virtual void mousePressEvent(QMouseEvent* ev) {
+}
+
+virtual void mouseReleaseEvent(QMouseEvent* ev) {
+}
+
+virtual void touchEvent(QTouchEvent* ev) {
+}
+
+virtual void wheelEvent(QTouchEvent* ev) {
+}
+
 public:
 
 MainWindow(QOpenGLContext* shareContext) :
     QOpenGLWindow(shareContext)
 {
+    connect(this, &MainWindow::frameSwapped, [this]() {
+        update();
+    });
 }
 
-
+QTime frameElapsedTime;
 struct alpha_WeetCubeWidget* widget = 0;
 GLint w;
 GLint h;
+int frozen = 0;
 virtual void initializeGL() {
+    frameElapsedTime.start();
 }
 virtual void resizeGL(int w, int h) {
     this->w = w;
@@ -77,6 +158,10 @@ virtual void resizeGL(int w, int h) {
 virtual void paintGL() {
     if(!widget) {
         widget = alpha_WeetCubeWidget_new(pool);
+        alpha_WeetCubeWidget_paint(widget);
+    }
+    alpha_WeetCubeWidget_Tick(widget, ((float)frameElapsedTime.restart())/1000.0, frozen);
+    if(!frozen){
         alpha_WeetCubeWidget_paint(widget);
     }
     glViewport(0, 0, this->w, this->h);
@@ -105,9 +190,10 @@ int main(int argc, char**argv)
     QGuiApplication app(argc, argv);
 
     QSurfaceFormat format;
-    format.setSamples(16);
+    format.setSamples(4);
     format.setMajorVersion(4);
     format.setMinorVersion(4);
+    format.setDepthBufferSize(24);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setRenderableType(QSurfaceFormat::OpenGLES);
 

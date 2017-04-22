@@ -57,5 +57,19 @@ float* alpha_Physical_GetWorldPositionByViewMatrix(alpha_Physical* phys);
 float* alpha_Physical_GetWorldPosition(alpha_Physical* phys, void* requestor);
 float* alpha_Physical_GetWorldOrientation(alpha_Physical* phys, void* requestor);
 int alpha_Physical_GetParentIsPhysical(alpha_Physical* phys);
+void alpha_Physical_MoveForward(alpha_Physical* phys, float elapsed);
+void alpha_Physical_MoveBackward(alpha_Physical* phys, float elapsed);
+void alpha_Physical_MoveLeft(alpha_Physical* phys, float elapsed);
+void alpha_Physical_MoveRight(alpha_Physical* phys, float elapsed);
+void alpha_Physical_MoveDown(alpha_Physical* phys, float elapsed);
+void alpha_Physical_MoveUp(alpha_Physical* phys, float elapsed);
+void alpha_Physical_ApplyVelocity(alpha_Physical* phys);
+int alpha_Physical_IsGoodLineageFor(alpha_Physical* phys, alpha_Physical* prospectiveChild);
+void alpha_Physical_YawLeft(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_YawRight(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_PitchUp(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_PitchDown(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_RollLeft(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_RollRight(struct alpha_Physical* phys, float elapsed);
 
 #endif // alpha_Physical_INCLUDED

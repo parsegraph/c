@@ -3,6 +3,7 @@
 
 #include <apr_pools.h>
 #include <stdarg.h>
+#include <apr_time.h>
 
 extern float alpha_FUZZINESS;
 extern float alpha_RMatrix4_Identity[];
@@ -90,5 +91,6 @@ void alpha_RMatrix4_FromVectorAroundQuaternion(float* m, float* vector, float* q
 float* alpha_RMatrix4FromVectorAroundQuaternionAtVector(apr_pool_t* pool, float* vec1, float* quat, float* vec2);
 void alpha_RMatrix4_FromVectorAroundQuaternionAtVector(float* m, float* vec1, float* quat, float* vec2);
 void alpha_dumpMatrix(const char* prefix, float* m);
+float alpha_GetTime();
 
 #endif // alpha_Maths_INCLUDED
