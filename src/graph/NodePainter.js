@@ -14,7 +14,7 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._renderOrigin = false;
 
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
-    this._renderExtents = true;
+    this._renderExtents = false;
 
     this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
@@ -460,7 +460,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
     var worldX = 0;
     var worldY = 0;
     var userScale = 1;
-    if(node.isRoot() && this.isExtentRenderingEnabled()) {
+    if(this.isExtentRenderingEnabled()) {
         this.paintExtent(node, worldX, worldY, userScale);
     }
 
