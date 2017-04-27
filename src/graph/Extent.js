@@ -91,14 +91,13 @@ parsegraph_Extent.prototype.realloc = function(capacity)
         // TODO This could shrink.
         throw new Error("Cannot shrink Extent capacity");
     }
-    var oldNumBounds = this._numBounds;
 
     // Change the capacity.
     this._bounds = new Float32Array(parsegraph_NUM_EXTENT_BOUND_COMPONENTS * capacity);
 
     if(oldBounds) {
-        if(this._start + oldNumBounds > oldCap) {
-            var frontBounds = (this._start + oldNumBounds) - oldCap;
+        if(this._start + this._numBounds > oldCap) {
+            var frontBounds = (this._start + this._numBounds) - oldCap;
             // TODO See if this can be copied more efficiently, and if that matters.
             for(var i = 0; i < parsegraph_NUM_EXTENT_BOUND_COMPONENTS * (this._numBounds - frontBounds); ++i) {
                 this._bounds[i] = oldBounds[this._start + i];
@@ -113,6 +112,7 @@ parsegraph_Extent.prototype.realloc = function(capacity)
                 this._bounds[i] = oldBounds[this._start + i];
             }
         }
+        //console.log(oldBounds, "to", this._bounds);
     }
 
     this._start = 0;
@@ -143,7 +143,7 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
     }
 
     if(this._start == 0) {
-        this._start = parsegraph_NUM_EXTENT_BOUND_COMPONENTS * (this.boundCapacity() - 1);
+        this._start = this.boundCapacity() - 1;
     }
     else {
         --(this._start);
