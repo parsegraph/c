@@ -240,9 +240,13 @@ alpha_Input.prototype.Update = function(elapsed)
     );
     this.camera.MoveForward(this.MouseWheelDegreesUp() * elapsed);
     this.camera.MoveBackward(this.MouseWheelDegreesDown() * elapsed);
-    this.camera.ZoomIn(this.Get("y"), elapsed);
-    this.camera.ZoomOut(this.Get("h"), elapsed);
+    //this.camera.ZoomIn(this.Get("y"), elapsed);
+    //this.camera.ZoomOut(this.Get("h"), elapsed);
 
+    this.camera.GetParent().MoveForward( 100*this.Get("t") * elapsed );
+    this.camera.GetParent().MoveBackward( 100*this.Get("g") * elapsed );
+    this.camera.GetParent().MoveLeft( 100*this.Get("f") * elapsed );
+    this.camera.GetParent().MoveRight( 100*this.Get("h") * elapsed );
 
 
     this.camera.GetParent().MoveForward( this.Get("w") * elapsed );

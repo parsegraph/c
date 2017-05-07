@@ -106,47 +106,10 @@ function createLoginGraph(surface, graph)
     car.connect(parsegraph_UPWARD, n);
     car.pop();
 
-    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
-
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
-    car.push();
-    car.label('Parsegraph.com');
-    car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
-    car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
-    car.label('Username');
-    car.move(parsegraph_FORWARD);
-    car.pull('b');
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    var tf = car.node();
-    tf.setClickListener = function() {
-        var l = tf.label();
-        alert(l);
-    };
-    car.node().setBlockStyle(nbs);
-    car.label("");
-    car.node()._label.setEditable(true);
-    car.move(parsegraph_BACKWARD);
-
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
-    car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
-    car.label('Password');
-    car.move(parsegraph_FORWARD);
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    car.node().setBlockStyle(nbs);
-    car.label("");
-    car.node()._label.setEditable(true);
-    car.move(parsegraph_BACKWARD);
-
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    car.node().setBlockStyle(bbs);
-    car.label('Log in');
-
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-    car.node().setBlockStyle(bbs);
-    car.label('Create user');
-    car.pop();
+    var widget = new parsegraph_LoginWidget(surface, graph);
+    car.connect(parsegraph_DOWNWARD, widget.root());
+    widget.authenticate();
+    car.move(parsegraph_DOWNWARD);
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
     car.spawn(parsegraph_BACKWARD, parsegraph_BUD);

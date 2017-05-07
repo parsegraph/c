@@ -4,6 +4,7 @@
 #include <GL/gl.h>
 #include "../gl.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 struct alpha_Camera* alpha_Camera_new(apr_pool_t* pool)
 {
@@ -51,6 +52,19 @@ struct alpha_Camera* alpha_Camera_new(apr_pool_t* pool)
     cam->parent = 0;
     alpha_Camera_SetParent(cam, 1, alpha_Camera_GetInvisiblePhysical(cam));
     return cam;
+}
+
+void alpha_Camera_destroy(alpha_Camera* cam)
+{
+    if(!cam->pool) {
+        alpha_Vector_destroy(0, cam->offset);
+        alpha_Vector_destroy(0, cam->position);
+        alpha_Quaternion_destroy(0, cam->orientation);
+        alpha_RMatrix4_destroy(0, cam->modelMatrix);
+        alpha_RMatrix4_destroy(0, cam->viewMatrix);
+        alpha_RMatrix4_destroy(0, cam->projectionMatrix);
+        free(cam);
+    }
 }
 
 float* alpha_Camera_GetOrientation(alpha_Camera* cam)

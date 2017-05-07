@@ -13,6 +13,8 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._keyListener = null;
     this._clickListener = null;
     this._clickListenerThisArg = null;
+    this._changeListener = null;
+    this._changeListenerThisArg = null;
     this._type = newType;
     this._style = parsegraph_style(this._type);
     this._label = null;
@@ -76,12 +78,29 @@ function parsegraph_chainTab(a, b, swappedOut)
         swappedOut[0] = a ? a._nextTabNode : null;
         swappedOut[1] = b ? b._prevTabNode : null;
     }
+    //console.log(a, b);
     if(a) {
         a._nextTabNode = b;
     }
     if(b) {
         b._prevTabNode = a;
     }
+}
+
+function parsegraph_chainAllTabs()
+{
+    if(arguments.length < 2) {
+        return;
+    }
+    var firstNode = arguments[0];
+    var lastNode = arguments[arguments.length - 1];
+
+    for(var i = 0; i <= arguments.length - 2; ++i) {
+        parsegraph_chainTab(
+            arguments[i], arguments[i + 1]
+        );
+    }
+    parsegraph_chainTab(lastNode, firstNode);
 }
 
 parsegraph_Node_Tests = new parsegraph_TestSuite("parsegraph_Node");
@@ -345,6 +364,20 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
     }
 };
 
+parsegraph_Node.prototype.setChangeListener = function(listener, thisArg)
+{
+    if(!listener) {
+        this._changeListener = null;
+    }
+    else {
+        if(!thisArg) {
+            thisArg = this;
+        }
+        this._changeListener = listener;
+        this._changeListenerThisArg = thisArg;
+    }
+};
+
 parsegraph_Node_Tests.addTest("parsegraph_Node.setClickListener", function() {
     var n = new parsegraph_Node(parsegraph_BLOCK);
     n.setClickListener(function() {
@@ -357,6 +390,23 @@ parsegraph_Node_Tests.addTest("parsegraph_Node.setClickListener", function() {
 parsegraph_Node.prototype.hasClickListener = function()
 {
     return this._clickListener != null;
+};
+
+/**
+ * Returns whether this Node has a click listener.
+ */
+parsegraph_Node.prototype.hasChangeListener = function()
+{
+    return this._changeListener != null;
+};
+
+parsegraph_Node.prototype.valueChanged = function()
+{
+    // Invoke the listener.
+    if(!this.hasChangeListener()) {
+        return;
+    }
+    return this._changeListener.apply(this._changeListenerThisArg, arguments);
 };
 
 /**
@@ -801,9 +851,15 @@ parsegraph_Node.prototype.value = function()
     return this._value;
 };
 
-parsegraph_Node.prototype.setValue = function(newValue)
+parsegraph_Node.prototype.setValue = function(newValue, report)
 {
+    if(this._value === newValue) {
+        return;
+    }
     this._value = newValue;
+    if(arguments.length === 1 || report) {
+        this.valueChanged();
+    }
 };
 
 parsegraph_Node.prototype.scene = function()
@@ -828,6 +884,14 @@ parsegraph_Node.prototype.label = function()
         return null;
     }
     return this._label.text();
+};
+
+parsegraph_Node.prototype.realLabel = function()
+{
+    if(!this._label) {
+        return null;
+    }
+    return this._label;
 };
 
 parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
@@ -857,6 +921,7 @@ parsegraph_Node.prototype.setBlockStyle = function(style)
         return;
     }
     this._style = style;
+    this.layoutWasChanged(parsegraph_INWARD);
 };
 
 parsegraph_Node.prototype.isSelectedAt = function(direction)
@@ -928,6 +993,7 @@ parsegraph_Node.prototype.isSelected = function()
 
 parsegraph_Node.prototype.setSelected = function(selected)
 {
+    //console.log(new Error("Setsel"));
     this._selected = selected;
 };
 
@@ -963,7 +1029,7 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
 
 parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 {
-    console.log("nodeUnderCoords: " + x + ", " + y)
+    //console.log("nodeUnderCoords: " + x + ", " + y)
     if(userScale === undefined) {
         userScale = 1;
     }
@@ -977,32 +1043,28 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             x < userScale * node.absoluteX()
                 - userScale * node.absoluteScale() * s.width()/2
         ) {
-            console.log("Given coords are outside this node's body. " +
-            "(Horizontal minimum exceeds X-coord)");
+            //console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
             return false;
         }
         if(
             x > userScale * node.absoluteX()
                 + userScale * node.absoluteScale() * s.width()/2
         ) {
-            console.log("Given coords are outside this node's body. " +
-            "(X-coord exceeds horizontal maximum)");
+            //console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
             return false;
         }
         if(
             y < userScale * node.absoluteY()
                 - userScale * node.absoluteScale() * s.height()/2
         ) {
-            console.log("Given coords are outside this node's body. " +
-            "(Vertical minimum exceeds Y-coord)");
+            //console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
             return false;
         }
         if(
             y > userScale * node.absoluteY()
                 + userScale * node.absoluteScale() * s.height()/2
         ) {
-            console.log("Given coords are outside this node's body. " +
-            "(Y-coord exceeds vertical maximum)");
+            //console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
             return false;
         }
 
@@ -1082,7 +1144,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             }
 
             // Found the node.
-            console.log("Found node.");
+            //console.log("Found node.");
             return candidate;
         }
         // Not within this node, so remove it as a candidate.
@@ -1091,7 +1153,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         // Test if the click is within any child.
         if(!inNodeExtents(candidate)) {
             // Nope, so continue the search.
-            console.log("Click is not in node extents.");
+            //console.log("Click is not in node extents.");
             continue;
         }
         //console.log("Click is in node extent");
@@ -1137,7 +1199,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         }
     }
 
-    console.log("Found nothing.");
+    //console.log("Found nothing.");
     return null;
 };
 
@@ -1159,8 +1221,6 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
         }
         bodySize[0] = this._label.width() * (style.fontSize / this._label.glyphAtlas().fontSize());
         bodySize[1] = this._label.height() * (style.fontSize / this._label.glyphAtlas().fontSize());
-        bodySize[0] = Math.max(style.minWidth, bodySize[0]);
-        bodySize[1] = Math.max(style.minHeight, bodySize[1]);
     }
     else if(!bodySize) {
         bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
@@ -1181,17 +1241,18 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
 
             if(this.label()) {
                 // Allow for the content's size.
-                bodySize.setHeight(
+                bodySize.setHeight(Math.max(style.minHeight,
                     bodySize.height()
                     + this.verticalPadding()
                     + nestedSize.height() * nestedNode.scale()
-                );
+                ));
             }
             else {
                 bodySize.setHeight(
+                    Math.max(bodySize.height(),
                     nestedSize.height() * nestedNode.scale()
                     + 2 * this.verticalPadding()
-                );
+                ));
             }
         }
         else {
@@ -1206,7 +1267,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
             }
             else {
                 bodySize.setWidth(
-                    nestedNode.scale() * nestedSize.width()
+                    Math.max(bodySize.width(), nestedNode.scale() * nestedSize.width())
                 );
             }
 
@@ -1231,6 +1292,8 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
         }
     }
 
+    bodySize[0] = Math.max(style.minWidth, bodySize[0]);
+    bodySize[1] = Math.max(style.minHeight, bodySize[1]);
     return bodySize;
 };
 

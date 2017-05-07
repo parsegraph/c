@@ -73,44 +73,48 @@ function parsegraph_Input(graph, camera)
             return null;
         }
 
-        console.log("Node found for coords:", mouseInWorld, selectedNode);
+        //console.log("Node found for coords:", mouseInWorld, selectedNode);
 
         // Check if the selected node was a slider.
         if(selectedNode.type() == parsegraph_SLIDER) {
+            //console.log("Slider node!");
             selectedSlider = selectedNode;
             attachedMouseListener = sliderListener;
             sliderListener.call(this, clientX, clientY);
+            this._graph.scheduleRepaint();
             return selectedNode;
         }
 
         // Check if the selected node has a click listener.
         if(selectedNode.hasClickListener()) {
             //console.log("Selected Node has click listener", selectedNode);
-            selectedNode.click();
-            return selectedNode;
+            var rv = selectedNode.click();
+            if(rv !== false) {
+                return selectedNode;
+            }
         }
 
         // Check if the label was clicked.
         //console.log("Clicked");
         if(selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable()) {
-            //console.log("Clicked");
+            console.log("Clicked label");
             selectedNode._label.click(
                 (mouseInWorld[0] - selectedNode._labelX) / selectedNode._labelScale,
                 (mouseInWorld[1] - selectedNode._labelY) / selectedNode._labelScale
             );
-            //console.log(selectedNode._label.caretLine());
-            //console.log(selectedNode._label.caretPos());
+            console.log(selectedNode._label.caretLine());
+            console.log(selectedNode._label.caretPos());
             this._focusedLabel = true;
             this._focusedNode = selectedNode;
             this._graph.scheduleRepaint();
             return selectedNode;
         }
         if(selectedNode) {
-            console.log("Setting focusedNode to ", selectedNode);
+            //console.log("Setting focusedNode to ", selectedNode);
             this._focusedNode = selectedNode;
             this._focusedLabel = false;
             this._graph.scheduleRepaint();
-            console.log("Selected Node has nothing", selectedNode);
+            //console.log("Selected Node has nothing", selectedNode);
             return selectedNode;
         }
 
@@ -195,7 +199,13 @@ function parsegraph_Input(graph, camera)
             lastMouseY = touch.clientY;
         }
 
-        if(monitoredTouches.length > 1) {
+        var realMonitoredTouches = 0;
+        monitoredTouches.forEach(function(touchRec) {
+            if(touchRec.touchstart) {
+                realMonitoredTouches++;
+            }
+        }, this);
+        if(realMonitoredTouches > 1) {
             // Zoom.
             var dist = Math.sqrt(
                 Math.pow(
@@ -230,7 +240,8 @@ function parsegraph_Input(graph, camera)
         );
         var x = mouseInWorld[0];
         var y = mouseInWorld[1];
-        if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
+
+        //if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
             var nodeWidth = selectedSlider.absoluteSize().width();
             if(x <= selectedSlider.absoluteX() - nodeWidth / 2) {
                 // To the left!
@@ -248,7 +259,8 @@ function parsegraph_Input(graph, camera)
                 //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
                 selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
             }
-        }
+            selectedSlider.layoutWasChanged();
+        //}
         if(selectedSlider.hasClickListener()) {
             selectedSlider.click();
         }
@@ -267,11 +279,13 @@ function parsegraph_Input(graph, camera)
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches.item(i);
-            monitoredTouches.push({
+            var touchRec = {
                 "identifier": touch.identifier,
                 "x":touch.clientX,
-                "y":touch.clientY
-            });
+                "y":touch.clientY,
+                "touchstart":null
+            };
+            monitoredTouches.push(touchRec);
             lastMouseX = touch.clientX;
             lastMouseY = touch.clientY;
 
@@ -288,10 +302,18 @@ function parsegraph_Input(graph, camera)
                 return;
             }
 
+            console.log("zoom-enabled toouch");
+            touchRec.touchstart = Date.now();
             touchstartTime = Date.now();
         }
 
-        if(monitoredTouches.length > 1) {
+        var realMonitoredTouches = 0;
+        monitoredTouches.forEach(function(touchRec) {
+            if(touchRec.touchstart) {
+                realMonitoredTouches++;
+            }
+        }, this);
+        if(realMonitoredTouches > 1) {
             // Zoom.
             zoomTouchDistance = Math.sqrt(
                 Math.pow(
@@ -403,7 +425,7 @@ function parsegraph_Input(graph, camera)
 
         if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
             // A significant node was clicked.
-            console.log("Node clicked.");
+            //console.log("Node clicked.");
             this.Dispatch(true, "mousedown node");
             mousedownTime = null;
             return;
@@ -535,13 +557,13 @@ function parsegraph_Input(graph, camera)
             else if(this._focusedNode.hasKeyListener() &&
                 this._focusedNode.key(event.key)
             ) {
-                //console.log("LAYOUT CHANGED");
+                //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
             }
-            else if(this._focusedNode._label && this._focusedNode._label.key(event.key)) {
-                //console.log("LAYOUT CHANGED");
+            else if(this._focusedNode._label && this._focusedNode._label.editable() && this._focusedNode._label.key(event.key)) {
+                //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
@@ -584,7 +606,7 @@ function parsegraph_Input(graph, camera)
                         this._graph.scheduleRepaint();
                         return;
                     }
-                    console.log("ArrowRight");
+                    //console.log("ArrowRight");
                     var neighbor = node.nodeAt(parsegraph_FORWARD);
                     if(neighbor) {
                         this._focusedNode = neighbor;
@@ -646,6 +668,7 @@ function parsegraph_Input(graph, camera)
                         break;
                     }
                     // Fall through otherwise.
+                    break;
                 case "Enter":
                     if(this._focusedNode.hasKeyListener()) {
                         if(this._focusedNode.key("Enter")) {
@@ -868,7 +891,7 @@ parsegraph_Input.prototype.paint = function()
     }
 
     var label = this._focusedNode._label;
-    if(!label || !this._focusedLabel) {
+    if(!label || !label.editable() || !this._focusedLabel) {
         var s = this._focusedNode.absoluteSize();
         var srad = Math.min(
             parsegraph_FOCUSED_SPOTLIGHT_SCALE * s.width() * this._focusedNode.absoluteScale(),

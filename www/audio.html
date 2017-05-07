@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login - Parsegraph</title>
+<title>parsegraph.com/audio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -52,28 +52,532 @@ body > div input {
 <script src="parsegraph-widgets-1.0.js"></script>
 <script src="esprima.js"></script>
 <script>
-
-function parsegraph_WebAudioWidget(graph)
-{
-    this._graph = graph;
-    this._containerNode = null;
-    this._ctx = new AudioContext();
+var unsel;
+var sel;
+function updateUnsel() {
+    if(!unsel) {
+        unsel = parsegraph_copyStyle('b');
+        unsel.selectedBackgroundColor = unsel.backgroundColor;
+        sel = parsegraph_copyStyle('s');
+        //sel.backgroundColor = new parsegraph_Color(.8, .8, .8, 1);
+        sel.selectedBackgroundColor = sel.backgroundColor;
+        //sel.fontColor = new parsegraph_Color(1, 0, 0, 1);
+        sel.selectedFontColor = sel.fontColor;
+    }
 }
 
-parsegraph_WebAudioWidget.prototype.load = function(username)
+parsegraph_OscillatorWidget_COUNT = 0;
+function parsegraph_OscillatorWidget(graph)
 {
+    this._id = parsegraph_OscillatorWidget_COUNT++;
+    this._graph = graph;
+    this._containerNode = null;
+    this._oscType = "sine";
+    this._oscFrequency = 440;
+    this._oscDetune = 0;
+    this._types = {};
+}
+
+parsegraph_OscillatorWidget.prototype.build = function(audio)
+{
+    var oscillator = audio.createOscillator();
+    oscillator.frequency.value = this._oscFrequency;
+    oscillator.type = this._oscType;
+    oscillator.detune.value = this._oscDetune;
+    return oscillator;
 };
 
-parsegraph_WebAudioWidget.prototype.node = function()
+parsegraph_OscillatorWidget.prototype.setOscillatorType = function(oscType)
 {
+    this._oscType = oscType;
+}
+
+parsegraph_OscillatorWidget.prototype.setOscillatorFrequency = function(value)
+{
+    this._oscFrequency = value;
+}
+
+parsegraph_OscillatorWidget.prototype.setOscillatorDetune = function(value)
+{
+    this._oscDetune = value;
+}
+
+parsegraph_OscillatorWidget.prototype.refreshTypes = function()
+{
+    updateUnsel();
+    for(var type in this._types) {
+        this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
+    }
+};
+
+parsegraph_OscillatorWidget.prototype.node = function()
+{
+    var FS = 500;
+    var MAXFS = 3000;
     if(!this._containerNode) {
-        this._containerNode = new parsegraph_Node(parsegraph_SLOT);
-        this._containerNode.setClickListener(function() {
-            alert("CLICKED");
+        var car = new parsegraph_Caret(parsegraph_BLOCK);
+        car.setGlyphAtlas(this._graph.glyphAtlas());
+        this._containerNode = car.root();
+        car.label("Oscillator");
+        car.fitExact();
+
+        car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
+        car.pull(parsegraph_DOWNWARD);
+        car.push();
+        car.shrink();
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("Type");
+        car.push();
+        ["sine", "square", "sawtooth", "triangle"].forEach(function(oscType, i) {
+            var t = oscType === this._oscType ? 'b' : 's';
+            if(i == 0) {
+                car.spawnMove('i', t, 'v');
+                car.shrink();
+            }
+            else {
+                car.spawnMove('f', t);
+            }
+            this._types[oscType] = car.node();
+            car.onClick(function() {
+                this.setOscillatorType(oscType);
+                this.refreshTypes();
+            }, this);
+            car.label(oscType);
         }, this);
+        this.refreshTypes();
+        car.pop();
+        car.pop();
+
+        // Frequency
+        car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+        car.push();
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("Frequency");
+        var fsSlider = car.spawn('i', 'sli', 'v');
+        fsSlider.setValue(FS/MAXFS);
+        fsSlider.setChangeListener(function() {
+            FS = fsSlider.value() * MAXFS;
+            if(this._oscFrequency > FS) {
+                this.setOscillatorFrequency(FS);
+            }
+            freqSlider.setValue(FS > 0 ? this._oscFrequency / FS : 0);
+        }, this);
+        car.pull('d');
+        var freqSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+        freqSlider.setValue(this._oscFrequency / FS);
+        car.onChange(function() {
+            this.setOscillatorFrequency(freqSlider.value() * FS);
+            console.log("Frequency=" + this._oscFrequency);
+        }, this);
+        car.pop();
+
+        // Detune
+        car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("Detune");
+        car.push();
+        var detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+        car.onChange(function() {
+            this.setOscillatorDetune(detuneSlider.value() * 200);
+            console.log("Detune: " + this._oscDetune.value);
+        }, this);
+        car.pop();
     }
     return this._containerNode;
 }
+
+parsegraph_SynthWidget_COUNT = 0;
+function parsegraph_SynthWidget(graph)
+{
+    this._id = parsegraph_SynthWidget_COUNT++;
+    this._graph = graph;
+    this._containerNode = null;
+    this._oscType = "sine";
+    this._oscDetune = 0;
+    this._types = {};
+}
+
+parsegraph_SynthWidget.prototype.build = function(audio)
+{
+    var oscillator = audio.createOscillator();
+    oscillator.frequency.value = this._oscFrequency;
+    oscillator.type = this._oscType;
+    oscillator.detune.value = this._oscDetune;
+    return oscillator;
+};
+
+parsegraph_SynthWidget.prototype.setOscillatorType = function(oscType)
+{
+    this._oscType = oscType;
+}
+
+parsegraph_SynthWidget.prototype.setOscillatorDetune = function(value)
+{
+    this._oscDetune = value;
+}
+
+parsegraph_SynthWidget.prototype.play = function(freq)
+{
+    if(!this._keyListener) {
+        return;
+    }
+    this._keyListener.call(this._keyListenerThisArg, freq);
+};
+
+parsegraph_SynthWidget.prototype.onPlay = function(keyListener, keyListenerThisArg)
+{
+    this._keyListener = keyListener;
+    this._keyListenerThisArg = keyListenerThisArg;
+}
+
+parsegraph_SynthWidget.prototype.refreshTypes = function()
+{
+    updateUnsel();
+    for(var type in this._types) {
+        this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
+    }
+};
+
+parsegraph_SynthWidget.prototype.node = function()
+{
+    var FS = 500;
+    var MAXFS = 3000;
+    if(!this._containerNode) {
+        var car = new parsegraph_Caret(parsegraph_BLOCK);
+        car.setGlyphAtlas(this._graph.glyphAtlas());
+        this._containerNode = car.root();
+        car.label("Synthesizer");
+        car.fitExact();
+
+        car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
+        car.pull(parsegraph_DOWNWARD);
+        car.push();
+        car.shrink();
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("Type");
+        car.push();
+        ["sine", "square", "sawtooth", "triangle"].forEach(function(oscType, i) {
+            var t = oscType === this._oscType ? 'b' : 's';
+            if(i == 0) {
+                car.spawnMove('i', t, 'v');
+                car.shrink();
+            }
+            else {
+                car.spawnMove('f', t);
+            }
+            this._types[oscType] = car.node();
+            car.onClick(function() {
+                this.setOscillatorType(oscType);
+                this.refreshTypes();
+                return true;
+            }, this);
+            car.label(oscType);
+        }, this);
+        this.refreshTypes();
+        car.pop();
+        car.pop();
+
+        // Detune
+        car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("Detune");
+        car.push();
+        var detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+        car.onChange(function() {
+            this.setOscillatorDetune(detuneSlider.value() * 200);
+            console.log("Detune: " + this._oscDetune.value);
+        }, this);
+        car.pop();
+
+        car.moveToRoot();
+
+        var keyBlock = parsegraph_copyStyle('s');
+        //keyBlock.minHeight = keyBlock.minHeight * 10;
+        keyBlock.horizontalSeparation = 0;
+        keyBlock.verticalSeparation = 0;
+        keyBlock.fontSize = parsegraph_FONT_SIZE/3;
+        [16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12, 24.50, 25.96, 27.50, 29.14, 30.87,
+        32.70, 34.65, 36.71, 38.89, 41.20, 43.65, 46.25, 49.00, 51.91, 55.00, 58.27, 61.74,
+        65.41, 69.30, 73.42, 77.78, 82.41, 87.31, 92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
+        130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
+        261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
+        523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
+        1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53,
+        2093.00, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83, 2959.96, 3135.96, 3322.44, 3520.00, 3729.31, 3951.07,
+        4186.01, 4434.92, 4698.63, 4978.03, 5274.04, 5587.65, 5919.91, 6271.93, 6644.88, 7040.00, 7458.62, 7902.13
+        ].forEach(function(freq, i) {
+            var key;
+            if(i % 12 == 0) {
+                if(i != 0) {
+                    car.pop();
+                }
+                key = car.spawnMove('d', 's');
+                if(i == 0) {
+                    key.parentNode().setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+                }
+                car.push();
+            }
+            else {
+                key = car.spawnMove('f', 's');
+            }
+            car.label(freq);
+            key.setBlockStyle(keyBlock);
+            key.setClickListener(function() {
+                this.play(freq);
+            }, this);
+        }, this);
+        car.pop();
+    }
+    return this._containerNode;
+}
+
+function parsegraph_FilterWidget(graph)
+{
+    this._graph = graph;
+
+    this._frequency = 440;
+    this._q = 0;
+    this._gain = 1;
+    this._detune = 0;
+    this._type = "peaking";
+    this._containerNode = null;
+    this._types = {};
+}
+
+parsegraph_FilterWidget.prototype.update = function()
+{
+    if(!this._listener) {
+        return;
+    }
+    this._listener.apply(this._listenerThisArg);
+};
+
+parsegraph_FilterWidget.prototype.setUpdateListener = function(listener, listenerThisArg)
+{
+    this._listener = listener;
+    this._listenerThisArg = listenerThisArg;
+};
+
+parsegraph_FilterWidget.prototype.setDetune = function(value)
+{
+    this._detune = value;
+    this.update();
+}
+
+parsegraph_FilterWidget.prototype.setFrequency = function(value)
+{
+    this._frequency = value;
+    this.update();
+}
+
+parsegraph_FilterWidget.prototype.setGain = function(value)
+{
+    this._gain = value;
+    this.update();
+}
+
+parsegraph_FilterWidget.prototype.setQ = function(value)
+{
+    this._q = value;
+    this.update();
+}
+
+parsegraph_FilterWidget.prototype.build = function(audio)
+{
+    var n = audio.createBiquadFilter();
+    this.save(n);
+    return n;
+};
+
+parsegraph_FilterWidget.prototype.save = function(n)
+{
+    if(!Number.isNaN(this._detune)) {
+        n.detune.value = this._detune;
+    }
+    if(!Number.isNaN(this._q)) {
+        n.Q.value = this._q;
+    }
+    if(!Number.isNaN(this._gain)) {
+        n.gain.value = this._gain;
+    }
+    n.type = this._type;
+};
+
+parsegraph_FilterWidget.prototype.load = function(n)
+{
+    this._detune = n.detune.value;
+    this._q = n.Q.value;
+    this._gain = n.gain.value;
+    this._frequency = n.frequency.value;
+    this._type = n.type;
+    this.refreshTypes();
+}
+
+parsegraph_FilterWidget.prototype.refreshTypes = function()
+{
+    updateUnsel();
+    for(var type in this._types) {
+        var node = this._types[type];
+        if(this._type == type) {
+            node.setBlockStyle(sel);
+        } else {
+            node.setBlockStyle(unsel);
+        }
+    }
+};
+
+parsegraph_FilterWidget.prototype.typeNode = function()
+{
+    if(!this._typeNode) {
+        var car = new parsegraph_Caret('s');
+        this._typeNode = car.root();
+        car.label("Type");
+
+        ["passthrough", "lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass"].forEach(function(type, i) {
+            if(i == 0) {
+                car.spawnMove('i', 's', 'v');
+            }
+            else {
+                car.spawnMove('f', 's');
+            }
+            car.label(type);
+            car.node().setClickListener(function() {
+                this._type = type;
+                this.refreshTypes();
+                this.update();
+                return false;
+            }, this);
+
+            this._types[type] = car.node();
+        }, this);
+        this.refreshTypes();
+        this._typeNode = car.root();
+    }
+    return this._typeNode;
+};
+
+parsegraph_FilterWidget.prototype.frequencyNode = function()
+{
+    if(!this._frequencyNode) {
+        var car = new parsegraph_Caret('s');
+        car.label('Frequency');
+        this._frequencyNode = car.root();
+        var MAXFS = 20000;
+        var FS = 2000;
+        var magnitudeSlider = car.spawn('i', 'sli', 'v');
+        var valueSlider = car.spawn('d', 'sli');
+        magnitudeSlider.setChangeListener(function() {
+            FS = magnitudeSlider.value() * MAXFS;
+            if(valueSlider.value() > FS) {
+                this.setFrequency(FS);
+            }
+            valueSlider.setValue(this._frequency / FS);
+        }, this);
+        magnitudeSlider.setValue(FS / MAXFS);
+        valueSlider.setValue(this._frequency / FS);
+        valueSlider.setChangeListener(function() {
+            this.setFrequency(valueSlider.value() * magnitudeSlider.value()*FS);
+        }, this);
+    }
+    return this._frequencyNode;
+}
+
+parsegraph_FilterWidget.prototype.qNode = function()
+{
+    if(!this._qNode) {
+        var car = new parsegraph_Caret('s');
+        car.label('Q');
+        this._qNode = car.root();
+        var MAXFS = 20000;
+        var FS = 2000;
+        var magnitudeSlider = car.spawn('i', 'sli', 'v');
+        var valueSlider = car.spawn('d', 'sli');
+        magnitudeSlider.setChangeListener(function() {
+            FS = magnitudeSlider.value() * MAXFS;
+            if(valueSlider.value() > FS) {
+                this.setQ(FS);
+            }
+            valueSlider.setValue(this._q / FS);
+        }, this);
+        magnitudeSlider.setValue(FS / MAXFS);
+        valueSlider.setValue(this._q / FS);
+        valueSlider.setChangeListener(function() {
+            this.setQ(valueSlider.value() * magnitudeSlider.value()*FS);
+        }, this);
+    }
+    return this._qNode;
+}
+
+parsegraph_FilterWidget.prototype.gainNode = function()
+{
+    if(!this._gainNode) {
+        var car = new parsegraph_Caret('s');
+        car.label('Gain');
+        this._gainNode = car.root();
+        var MAXFS = 20000;
+        var FS = 2000;
+        var magnitudeSlider = car.spawn('i', 'sli', 'v');
+        var valueSlider = car.spawn('d', 'sli');
+        magnitudeSlider.setChangeListener(function() {
+            FS = magnitudeSlider.value() * MAXFS;
+            if(valueSlider.value() > FS) {
+                this.setGain(FS);
+            }
+            valueSlider.setValue(this._gain / FS);
+        }, this);
+        magnitudeSlider.setValue(FS / MAXFS);
+        valueSlider.setValue(this._gain / FS);
+        valueSlider.setChangeListener(function() {
+            this.setGain(valueSlider.value() * magnitudeSlider.value()*FS);
+        }, this);
+    }
+    return this._gainNode;
+}
+
+parsegraph_FilterWidget.prototype.detuneNode = function()
+{
+    if(!this._detuneNode) {
+        var car = new parsegraph_Caret('s');
+        car.label('Detune');
+        this._detuneNode = car.root();
+        var MAXFS = 20000;
+        var FS = 2000;
+        var magnitudeSlider = car.spawn('i', 'sli', 'v');
+        var valueSlider = car.spawn('d', 'sli');
+        magnitudeSlider.setChangeListener(function() {
+            FS = magnitudeSlider.value() * MAXFS;
+            if(valueSlider.value() > FS) {
+                this.setDetune(FS);
+            }
+            valueSlider.setValue(this._detune / FS);
+        }, this);
+        magnitudeSlider.setValue(FS / MAXFS);
+        valueSlider.setValue(this._detune / FS);
+        valueSlider.setChangeListener(function() {
+            this.setDetune(valueSlider.value() * magnitudeSlider.value()*FS);
+        }, this);
+    }
+    return this._detuneNode;
+}
+
+parsegraph_FilterWidget.prototype.node = function()
+{
+    if(!this._containerNode) {
+        var car = new parsegraph_Caret('b');
+        this._containerNode = car.root();
+        car.label('BiquadFilterNode');
+
+        car.connect('i', this.typeNode());
+        car.align('i', 'v');
+        car.move('i');
+        car.spawnMove('d', 'u', 'c').connectNode(parsegraph_DOWNWARD, this.frequencyNode());
+        car.pull('d');
+        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.qNode());
+        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.gainNode());
+        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.detuneNode());
+    }
+    return this._containerNode;
+};
 
 function init(main)
 {
@@ -83,18 +587,111 @@ function init(main)
         var graph = new parsegraph_Graph(surface);
         main.appendChild(surface.container());
         var widget = new parsegraph_LoginWidget(surface, graph);
+        widget.authenticate();
         graph.world().plot(widget.root());
 
-        var audioWidget;
         var cameraProtocol;
 
         widget.setLoginListener(function(res, userLogin, node) {
-            console.log(userLogin, node);
+            try {
+            var audio = new AudioContext();
+            node.setNodeFit(parsegraph_NODE_FIT_EXACT);
+            var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+            node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+            myList.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
+            var oscillatorWidget = new parsegraph_OscillatorWidget(graph, audio);
+            myList.connectNode(parsegraph_DOWNWARD, oscillatorWidget.node());
 
-            if(!audioWidget) {
-                audioWidget = new parsegraph_WebAudioWidget(graph);
-                audioWidget.load(userLogin.username);
-                node.connectNode(parsegraph_DOWNWARD, audioWidget.node());
+            var compressor = audio.createDynamicsCompressor();
+            compressor.threshold.value = -50;
+            compressor.knee.value = 40;
+            compressor.ratio.value = 12;
+            compressor.reduction.value = -20;
+            compressor.attack.value = 0;
+            compressor.release.value = 0.25;
+            var sink = audio.createGain();
+            var bqf = audio.createBiquadFilter();
+            bqf.type = "highpass";
+            bqf.frequency.value = 1000;
+            bqf.gain.value = 25;
+            sink.connect(bqf);
+            bqf.connect(compressor);
+            compressor.connect(audio.destination);
+
+            /*for(var i = 1; i <= 2; ++i) {
+                var dl = audio.createDelay(.2*i);
+                dl.delayTime.value = .2*i;
+                compressor.connect(dl);
+                //dl.connect(bqf);
+                dl.connect(audio.destination);
+            }*/
+
+            oscillatorWidget.node().setClickListener(function() {
+                var n = oscillatorWidget.build(audio);
+                n.start();
+                var b = oscillatorWidget.build(audio);
+                b.frequency.value = n.frequency.value * .6674217783390094;
+                b.start();
+                var g = audio.createGain();
+                g.gain.value = 0.1;
+                //g.gain.linearRampToValueAtTime(0.5, audio.currentTime + .02);
+                //g.gain.linearRampToValueAtTime(0, audio.currentTime + 2);
+                n.connect(g);
+                b.connect(g);
+                g.connect(sink);
+            });
+
+            var car = new parsegraph_Caret(myList);
+            var secondOsc = new parsegraph_OscillatorWidget(graph);
+            //car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, secondOsc.node());
+            secondOsc.node().setClickListener(function() {
+                secondOsc.build(audio).connect(audio.destination);
+            });
+
+            var synth = new parsegraph_SynthWidget(graph);
+            synth.onPlay(function(freq) {
+                var osc = audio.createOscillator();
+                osc.frequency.value = freq;
+                osc.type = synth._oscType;
+                osc.detune.value = synth._oscDetune;
+                osc.start();
+                var g = audio.createGain();
+                g.gain.value = 0;
+                g.gain.linearRampToValueAtTime(1, audio.currentTime + .3);
+                g.gain.linearRampToValueAtTime(0, audio.currentTime + .6);
+                osc.connect(g);
+                g.connect(sink);
+            }, this);
+            car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, synth.node());
+
+            var filterWidget = new parsegraph_FilterWidget(graph);
+            filterWidget.load(bqf);
+            car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, filterWidget.node());
+
+            var isFiltering = true;
+            filterWidget.setUpdateListener(function() {
+                if(filterWidget._type == "passthrough") {
+                    if(isFiltering) {
+                        sink.disconnect(bqf);
+                        isFiltering = false;
+                        sink.connect(compressor);
+                    }
+                }
+                else if(!isFiltering) {
+                    filterWidget.save(bqf);
+                    isFiltering = true;
+                    sink.disconnect(compressor);
+                    sink.connect(bqf);
+                }
+                else {
+                    filterWidget.save(bqf);
+                    sink.disconnect(bqf);
+                    sink.connect(bqf);
+                }
+            }, this);
+            }
+            catch(ex) {
+                console.log("Crashed during login construction: ", ex);
             }
 
             if(!cameraProtocol) {
@@ -102,11 +699,14 @@ function init(main)
                     "ws://localhost/camera/", "parsegraph-camera-protocol"
                 ), graph.camera(),
                     function(obj) {
-                        console.log(obj);
+                        //console.log(obj);
                         graph.cameraBox().setCamera(userLogin.username, obj);
                     }
                 );
             }
+            widget.setLogoutListener(function() {
+                node.disconnectNode(parsegraph_DOWNWARD);
+            });
         });
 
         var cameraName = "parsegraph_login_camera";

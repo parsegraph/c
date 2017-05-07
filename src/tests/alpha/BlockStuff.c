@@ -16,26 +16,33 @@ void test_alpha_Color_Set()
 
 void test_alpha_Face_new()
 {
-    alpha_Face* face = alpha_Face_new(pool);
+    alpha_Face* face = alpha_Face_new(pool, alpha_TRIANGLES);
     alpha_Face_destroy(face);
-}
-
-void test_alpha_Face_new()
-{
-
 }
 
 void test_alpha_Skin_new()
 {
     alpha_Skin* skin = alpha_Skin_new(pool);
-    alpha_Face_destroy(skin);
+    alpha_Skin_destroy(skin);
 }
 
 void test_alpha_Skin_addFace()
 {
-    alpha_Skin* skin = alpha_Skin_new();
-    alpha_Skin_addFace(skin, );
-    alpha_Face_destroy(skin);
+    // skins
+    float* dbrown = alpha_ColorFromStr(pool, "#3b2921");
+    float* lbrown = alpha_ColorFromStr(pool, "#604b42");
+    float* ggreen = alpha_ColorFromStr(pool, "#0b9615");
+
+    alpha_Skin* grass = alpha_createSkin(pool,
+        alpha_createFace(pool, alpha_QUADS, ggreen, ggreen, ggreen, ggreen, 0), // top
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // front
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // left
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // back
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // right
+        alpha_createFace(pool, alpha_QUADS, dbrown, dbrown, dbrown, dbrown, 0), //bottom
+        0
+    );
+    alpha_Skin_destroy(grass);
 }
 
 void test_alpha_Skin_removeAt()

@@ -11,8 +11,15 @@ function parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg) {
         if(!opened) {
             return;
         }
-        //console.log("Sending camera");
-        ws.send(JSON.stringify(camera.toJSON()));
+
+        var buffer = new ArrayBuffer(8 + 8 + 8 + 2 + 2);
+        var dataview = new DataView(buffer);
+        dataview.setFloat64(0, camera.x());
+        dataview.setFloat64(8, camera.y());
+        dataview.setFloat64(16, camera.scale());
+        dataview.setInt16(24, camera.width());
+        dataview.setInt16(26, camera.height());
+        ws.send(buffer);
         timer.cancel();
     });
 
@@ -77,4 +84,3 @@ function parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg) {
         return opened;
     };
 };
-

@@ -13,7 +13,7 @@ parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
  */
 function parsegraph_Extent(copy)
 {
-    if(copy !== undefined) {
+    if(copy !== undefined && copy._bounds) {
         // Copy another extent's array
         this._numBounds = copy._numBounds;
         this._bounds = new Float32Array(copy._bounds);

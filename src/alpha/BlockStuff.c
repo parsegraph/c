@@ -22,6 +22,9 @@ hopefully
 #include "BlockStuff.h"
 #include <math.h>
 #include <apr_strings.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "Maths.h"
 
 //--------------------------------------------
 //--------------------------------------------
@@ -53,13 +56,6 @@ const char* alpha_Color_asRGB(apr_pool_t* pool, float* color)
     return text;
 }
 
-float* alpha_Color_create(apr_pool_t* pool, float r, float g, float b)
-{
-    float* color = alpha_Color_new(pool);
-    alpha_Color_Set(color, r, g, b);
-    return color;
-}
-
 unsigned int cToI(const char c)
 {
     switch(c) {
@@ -89,9 +85,20 @@ unsigned int cToI(const char c)
     return 0;
 }
 
-float* alpha_Color_fromStr(apr_pool_t* pool, const char* str)
+void alpha_Color_fromStr(float* color, const char* str)
 {
-    float* color = apr_Color_new(pool);
+    alpha_Color_Parse(color, str);
+}
+
+float* alpha_ColorFromStr(apr_pool_t* pool, const char* str)
+{
+    float* color;
+    if(pool) {
+        color = apr_palloc(pool, sizeof(float)*3);
+    }
+    else {
+        color = malloc(sizeof(float)*3);
+    }
     alpha_Color_Parse(color, str);
     return color;
 }
@@ -234,15 +241,31 @@ alpha_Skin* alpha_Skin_new(apr_pool_t* pool)
     else {
         skin = malloc(sizeof(*skin));
     }
+    skin->pool = pool;
+    skin->facesHead = 0;
+    skin->facesTail = 0;
+    skin->length = 0;
+    return skin;
+}
+
+void alpha_Skin_destroy(alpha_Skin* skin)
+{
+    if(!skin->pool) {
+    }
+}
+
+alpha_Skin* alpha_createSkin(apr_pool_t* pool, ...)
+{
+    alpha_Skin* skin = alpha_Skin_new(pool);
     va_list ap;
     va_start(ap, pool);
     // Passed faces directly.
-    skin->numFaces = 0;
-    while(alpha_Face* face = va_arg(ap, alpha_Face*)) {
-        skin->length++;
+    alpha_Face* face;
+    while((face = va_arg(ap, alpha_Face*))) {
         alpha_Skin_addFace(skin, face);
     }
     va_end(ap);
+    return skin;
 }
 
 alpha_Face_List* alpha_Face_List_new(apr_pool_t* pool)
@@ -283,18 +306,19 @@ void alpha_Skin_addFace(alpha_Skin* skin, alpha_Face* face)
         skin->facesTail->next = item;
         skin->facesTail = item;
     }
-    skin->numFaces;
+    ++skin->length;
 }
 
 void alpha_Skin_addFaceAt(alpha_Skin* skin, int i, alpha_Face* face)
 {
     if(i == 0 && !skin->facesHead->face) {
         skin->facesHead->face = face;
+        ++skin->length;
         return;
     }
 
     // Create the item.
-    alpha_List_Item* given = skin->facesHead;
+    alpha_Face_List* given = skin->facesHead;
     while(given && i-- > 0) {
         given = given->next;
     }
@@ -304,6 +328,7 @@ void alpha_Skin_addFaceAt(alpha_Skin* skin, int i, alpha_Face* face)
     // Splice in the item.
     item->next = given->next;
     given->next = item;
+    ++skin->length;
 }
 
 alpha_Face* alpha_Skin_removeAt(alpha_Skin* skin, int i)
@@ -314,13 +339,14 @@ alpha_Face* alpha_Skin_removeAt(alpha_Skin* skin, int i)
         rv = skin->facesHead->face;
         alpha_Face_List* newHead = skin->facesHead->next;
         if(newHead) {
-            alpha_destroyFaceList(skin->facesHead);
+            alpha_Face_List_destroy(skin->facesHead, skin->pool);
             skin->facesHead = newHead;
         }
         else {
             // TEST_ASSERT_MESSAGE(skin->facesHead == skin->facesTail, "Only one element, so do nothing.")
             skin->facesHead->face = 0;
         }
+        --skin->length;
         return rv;
     }
 
@@ -329,7 +355,8 @@ alpha_Face* alpha_Skin_removeAt(alpha_Skin* skin, int i)
     while(given && i-- > 0) {
         given = given->next;
     }
-    return alpha_Face_List_destroy(alpha_spliceFaceListNext(given));
+    --skin->length;
+    return alpha_Face_List_destroy(alpha_spliceFaceListNext(given), skin->pool);
 }
 
 /**
@@ -353,76 +380,15 @@ alpha_Face_List* alpha_spliceFaceListNext(alpha_Face_List* given)
     return removed;
 }
 
-void alpha_Skin_addFace(alpha_Skin* skin, alpha_Face* face)
+void alpha_Skin_forEach(alpha_Skin* skin, void(*callback)(void*, alpha_Face*, int, alpha_Skin*), void* thisArg)
 {
-    if(!skin->facesTail->face) {
-        // At root.
-        skin->facesTail->face = face;
-    }
-    else {
-        alpha_Face_List* newTail;
-        if(skin->pool) {
-            newTail = apr_palloc(pool, sizeof(*newTail));
-        }
-        else {
-            newTail = malloc(sizeof(*newTail));
-        }
-        newTail->face = face;
-        skin->facesTail->next = newTail;
-        skin->facesTail = newTail;
-    }
-}
-
-void alpha_Shape_addFace(alpha_Skin* skin, alpha_Face* face)
-{
-    if(!skin->facesTail->face) {
-        // At root.
-        skin->facesTail->face = face;
-    }
-    else {
-        alpha_Face_List* newTail;
-        if(skin->pool) {
-            newTail = apr_palloc(pool, sizeof(*newTail));
-        }
-        else {
-            newTail = malloc(sizeof(*newTail));
-        }
-        newTail->face = face;
-        skin->facesTail->next = newTail;
-        skin->facesTail = newTail;
-    }
-}
-
-alpha_Skin* alpha_Skin_new()
-{
-    if(arguments.length > 0) {
-        // Passed a single array of faces.
-        this.length = arguments[0].length;
-        for(var i = 0; i < arguments[0].length; ++i) {
-            var face = arguments[0][i];
-            this[i] = [];
-            for(var j = 0; j < face.length; ++j) {
-                this[i].push(new alpha_Color(face[j]));
-                var c = face[j];
-            }
-        }
-    }
-    else {
-        // An empty skin?
-        this.length = 0;
-    }
-}
-
-void alpha_Skin_forEach(alpha_Skin* skin, void(*callback)(void*, float*, int, alpha_Skin*), void* thisArg)
-{
-    for(int i = 0; i < skin->length; ++i) {
-        callback(thisArg, this[i], i, this);
+    alpha_Face_List* f = skin->facesHead;
+    int i = 0;
+    while(f) {
+        callback(thisArg, f->face, i++, skin);
+        f=f->next;
     }
 };
-
-int alpha_TRIANGLES = 0;
-int alpha_QUADS = 1;
-
 
 //--------------------------------------------
 //--------------------------------------------
@@ -438,72 +404,83 @@ int alpha_QUADS = 1;
     // because its a temporary construction
 // Once it is passed to a shape the shape will copy it
 // DO NOT REUSE ( until after the face is applied to a shape )
-alpha_Face* alpha_Face_new(apr_pool_t* pool)
+alpha_Face* alpha_Face_new(apr_pool_t* pool, int drawType)
 {
     alpha_Face* face;
     if(pool) {
         face = apr_palloc(pool, sizeof(*face));
+        face->vectorsHead = apr_palloc(pool, sizeof(alpha_Vector_List));
     }
     else {
         face = malloc(sizeof(*face));
+        face->vectorsHead = malloc(sizeof(alpha_Vector_List));
     }
     face->pool = pool;
+    face->drawType = drawType;
+    memset(face->vectorsHead->value, 0, sizeof(float)*4);
+    face->vectorsHead->next = 0;
+    face->vectorsHead->prev = 0;
+    face->vectorsTail = face->vectorsHead;
+    face->length = 0;
+    return face;
+}
+
+alpha_Face* alpha_createFace(apr_pool_t* pool, int drawType, ...)
+{
+    alpha_Face* face = alpha_Face_new(pool, drawType);
+    va_list ap;
+    va_start(ap, drawType);
+    while(1) {
+        float* vec = va_arg(ap, float*);
+        if(!vec) {
+            break;
+        }
+        alpha_Face_addEach(face, vec[0], vec[1], vec[2], vec[3]);
+    }
+    va_end(ap);
     return face;
 }
 
 alpha_Face* alpha_Face_Clone(alpha_Face* face)
 {
-    alpha_Face* clone = alpha_Face_new(face->pool);
-    alpha_Face_List* item
-    alpha_Face_addFace(clone, );
+    alpha_Face* clone = alpha_Face_new(face->pool, face->drawType);
+    alpha_Vector_List* vec = face->vectorsHead;
+    while(vec) {
+        alpha_Face_addEach(clone, vec->value[0], vec->value[1], vec->value[2], vec->value[3]);
+        vec = vec->next;
+    }
     return clone;
+}
+
+void alpha_Face_addEach(alpha_Face* face, float x, float y, float z, float w)
+{
+    if(face->length==0) {
+        alpha_Quaternion_Set(&face->vectorsHead->value[0], x, y, z, w);
+        face->vectorsHead->next = 0;
+        face->vectorsTail = face->vectorsHead;
+    }
+    else {
+        alpha_Vector_List* item;
+        if(face->pool) {
+            item = apr_palloc(face->pool, sizeof(*item));
+        }
+        else {
+            item = malloc(sizeof(*item));
+        }
+        alpha_Quaternion_Set(&item->value[0], x, y, z, w);
+        item->next = 0;
+        face->vectorsTail->next = item;
+        face->vectorsTail = item;
+    }
 }
 
 void alpha_Face_destroy(alpha_Face* face)
 {
     if(!face->pool) {
+        free(face->vectorsHead);
         free(face);
     }
 }
-
-alpha_Face* alpha_Face_new(apr_pool_t* pool)
-{
-    this.drawType = arguments[0];
-
-    if(arguments.length > 2) {
-        this.length = (arguments.length - 1);
-        for(var i = 1; i < arguments.length; ++i) {
-            this[i - 1] = arguments[i];
-        }
-    }
-    else {
-        this.length = arguments[1].length;
-        for(var i = 0; i < arguments[1].length; ++i) {
-            this[i] = arguments[1][i];
-        }
-    }
-};
-
-alpha_Face.prototype.Clone = function()
-{
-    var values = [];
-    for(var i = 0; i < this.length; ++i) {
-        values.push(this[i].Clone());
-    }
-    return new alpha_Face(this.drawType, values);
-};
-
-alpha_Face.prototype.toString = function()
-{
-    var rv = "";
-    for(var i = 0; i < this.length; ++i) {
-        if(i > 0) {
-            rv += ", ";
-        }
-        rv += this[i].toString();
-    }
-    return rv;
-};
 
 //--------------------------------------------
 //--------------------------------------------
@@ -522,11 +499,309 @@ alpha_Face.prototype.toString = function()
     // cubeFront,
     // cubeBack
 // )
-function alpha_Shape()
+alpha_Shape* alpha_Shape_new(apr_pool_t* pool)
 {
-    this.length = arguments.length;
-    for(var i = 0; i < arguments.length; ++i) {
-        this[i] = arguments[i].Clone();
+    alpha_Shape* shape;
+    if(pool) {
+        shape = apr_palloc(pool, sizeof(*shape));
+        shape->facesHead = apr_palloc(pool, sizeof(struct alpha_Face_List));
+    }
+    else {
+        shape = malloc(sizeof(*shape));
+        shape->facesHead = malloc(sizeof(struct alpha_Face_List));
+    }
+    shape->pool = pool;
+    shape->length = 0;
+    shape->facesTail = 0;
+    return shape;
+}
+
+void alpha_Shape_addFace(alpha_Shape* shape, alpha_Face* face)
+{
+    if(shape->length == 0) {
+        shape->facesHead->face = face;
+        shape->facesHead->next = 0;
+        shape->facesTail = shape->facesHead;
+    }
+    else {
+        alpha_Face_List* item;
+        if(shape->pool) {
+            item = apr_palloc(shape->pool, sizeof(*item));
+        }
+        else {
+            item = malloc(sizeof(*item));
+        }
+        item->face = face;
+        item->next = 0;
+        shape->facesTail->next = item;
+        shape->facesTail = item;
+    }
+    shape->length++;
+}
+
+alpha_Shape* alpha_createShape(apr_pool_t* pool, ...)
+{
+    alpha_Shape* shape = alpha_Shape_new(pool);
+    va_list ap;
+    va_start(ap, pool);
+    alpha_Face* face;
+    while(1) {
+        face = va_arg(ap, alpha_Face*);
+        if(!face) {
+            break;
+        }
+        alpha_Shape_addFace(shape, face);
+    }
+    va_end(ap);
+    return shape;
+}
+
+//--------------------------------------------
+//--------------------------------------------
+//----------- BlockTypes  --------------------
+//--------------------------------------------
+//--------------------------------------------
+// Blocktype is where you combine a Shape(pos vec) with A Skin(color vec)
+// var stone = new alpha_BlockType("stone", "cube", Stone, graySkin)
+// BlockType automatically loads created BlockTypes into the BlockIDs table
+// it is some sort of hybrid object / masterlist
+
+alpha_BlockTypes* alpha_BlockTypes_new(apr_pool_t* pool)
+{
+    alpha_BlockTypes* bt;
+    if(pool) {
+        bt = apr_palloc(pool, sizeof(*bt));
+        bt->typeHead = apr_palloc(pool, sizeof(struct alpha_BlockType));
+    }
+    else {
+        bt = malloc(sizeof(*bt));
+        bt->typeHead = malloc(sizeof(struct alpha_BlockType));
+    }
+    bt->typeHead->next = 0;
+    bt->length = 0;
+    bt->pool = pool;
+    return bt;
+}
+
+void alpha_BlockTypes_destroy(alpha_BlockTypes* bt)
+{
+    if(!bt->pool) {
+        if(bt->length > 0) {
+            alpha_BlockType* type = bt->typeHead->next;
+            while(type) {
+                alpha_BlockType* n = type->next;
+                free(type);
+                type = n;
+            }
+        }
+        free(bt->typeHead);
+        free(bt);
     }
 }
 
+alpha_BlockType* alpha_BlockTypes_Load(alpha_BlockTypes* bt, const char* descSkin, const char* descShape, alpha_Skin* skin, alpha_Shape* shape)
+{
+    return alpha_BlockTypes_Create(bt, descSkin, descShape, skin, shape);
+}
+
+/**
+ * creates a blocktype and returns the id.
+ */
+alpha_BlockType* alpha_BlockTypes_Create(alpha_BlockTypes* bt, const char* descSkin,  const char* descShape, alpha_Skin* skin, alpha_Shape* shape)
+{
+    if(bt->length == 0) {
+        bt->typeHead->id = bt->length;
+        bt->typeHead->descSkin = descSkin;
+        bt->typeHead->descShape = descShape;
+        bt->typeHead->skin = skin;
+        bt->typeHead->shape = shape;
+        bt->typeTail = bt->typeHead;
+    }
+    else {
+        alpha_BlockType* newI;
+        if(bt->pool) {
+            newI = apr_palloc(bt->pool, sizeof(*newI));
+        }
+        else {
+            newI = malloc(sizeof(*newI));
+        }
+        newI->id = bt->length;
+        newI->descSkin = descSkin;
+        newI->descShape = descShape;
+        newI->skin = skin;
+        newI->shape = shape;
+        newI->next = 0;
+        bt->typeTail->next = newI;
+        bt->typeTail = newI;
+    }
+    bt->length++;
+    return bt->typeTail;
+};
+
+alpha_BlockType* alpha_BlockTypes_GetByID(alpha_BlockTypes* bt, int id)
+{
+    if(bt->length == 0) {
+        return 0;
+    }
+    alpha_BlockType* candidate = bt->typeHead;
+    while(candidate) {
+        if(candidate->id == id) {
+            return candidate;
+        }
+        candidate = candidate->next;
+    }
+    return 0;
+}
+
+alpha_BlockType* alpha_BlockTypes_GetByName(alpha_BlockTypes* bt, const char* descSkin, const char* descShape)
+{
+    if(bt->length == 0) {
+        return 0;
+    }
+    alpha_BlockType* candidate = bt->typeHead;
+    while(candidate) {
+        if(candidate->descSkin && candidate->descShape &&
+            !strcmp(candidate->descSkin, descSkin) && !strcmp(candidate->descShape, descShape)
+        ) {
+            return candidate;
+        }
+        candidate = candidate->next;
+    }
+    return 0;
+};
+
+//--------------------------------------------
+//--------------------------------------------
+//--------------  Blocks ---------------------
+//--------------------------------------------
+//--------------------------------------------
+
+alpha_Block* alpha_Block_new(apr_pool_t* pool, alpha_BlockType* type)
+{
+    alpha_Block* block;
+    if(pool) {
+        block = apr_palloc(pool, sizeof(*block));
+    }
+    else {
+        block = malloc(sizeof(*block));
+    }
+    block->pool = pool;
+    block->type = type;
+    return block;
+}
+
+void alpha_Block_destroy(alpha_Block* block)
+{
+    if(!block->pool) {
+        free(block);
+    }
+}
+
+alpha_Block* alpha_createBlock(apr_pool_t* pool, alpha_BlockType* type, float* pos, int orientation)
+{
+    alpha_Block* block = alpha_Block_new(pool, type);
+    alpha_Vector_Copy(block->pos, pos);
+    block->orientation = orientation;
+    if(block->orientation >= 24 || block->orientation < 0) {
+        fprintf(stderr, "Orientation cannot be out of bounds: %d", block->orientation);
+        alpha_Block_destroy(block);
+        return 0;
+    }
+    return block;
+}
+
+int alpha_Block_Equals(alpha_Block* a, alpha_Block* b)
+{
+    if(!a && !b) {
+        return 1;
+    }
+    if(!a || !b) {
+        return 0;
+    }
+    return alpha_Vector_Equals(a->pos, b->pos);
+};
+
+#define s45 0.7071067811865475
+static float alpha_BlockOrientations[] = {
+    // BOTTOM
+    // X( 0 )  Y( 0 )  Z( 0 )
+    0, 0, 0, 1, // 0
+    // X( 0 )  Y( 90 )  Z( 0 )
+    0, s45, 0, s45, // 1
+    // X( 0 )  Y( 180 )  Z( 0 )
+    0, 1, 0, 0, // 2
+    // X( 0 )  Y( 270 )  Z( 0 )
+    0, s45, 0, -s45, // 3
+
+    // FRONT
+    // X( 90 )  Y( 0 )  Z( 0 )
+    -s45 ,    0 ,    0 , -s45, // 4
+    // X( 90 )  Y( 90 )  Z( 0 )
+    -0.5 , -0.5 , -0.5 , -0.5, // 5
+    // X( 90 )  Y( 180 )  Z( 0 )
+    0 , -s45 , -s45 ,    0, // 6
+    // X( 90 )  Y( 270 )  Z( 0 )
+    0.5 , -0.5 , -0.5 ,  0.5, // 7
+
+    // LEFT
+    // X( 0 )  Y( 0 )  Z( 270 )
+    0 ,  0   , -s45 ,  s45, // 8
+    // X( 0 )  Y( 90 )  Z( 270 )
+    0.5 ,  0.5 , -0.5 ,  0.5, // 9
+    // X( 0 )  Y( 180 )  Z( 270 )
+    s45 ,  s45 ,    0 ,    0, // 10
+    // X( 0 )  Y( 270 )  Z( 270 )
+    0.5 ,  0.5 ,  0.5 , -0.5, // 11
+
+    // BACK
+    // X( 270 )  Y( 0 )  Z( 0 )
+    -s45 ,    0 ,    0 ,  s45, // 12
+    // X( 270 )  Y( 90 )  Z( 0 )
+    -0.5 ,  0.5 , -0.5 ,  0.5, // 13
+    // X( 270 )  Y( 180 )  Z( 0 )
+    0 ,  s45 , -s45 ,    0, // 14
+    // X( 270 )  Y( 270 )  Z( 0 )
+    0.5 ,  0.5 , -0.5 , -0.5, // 15
+
+    // RIGHT
+    // X( 0 )  Y( 0 )  Z( 90 )
+    0 ,    0 , -s45 , -s45, // 16
+    // X( 0 )  Y( 90 )  Z( 90 )
+    0.5 , -0.5 , -0.5 , -0.5, // 17
+    // X( 0 )  Y( 180 )  Z( 90 )
+    s45 , -s45 ,    0 ,    0, // 18
+    // X( 0 )  Y( 270 )  Z( 90 )
+    0.5 , -0.5 ,  0.5 ,  0.5, // 19
+
+    // TOP
+    // X( 180 )  Y( 0 )  Z( 0 )
+    1 ,    0 ,    0 ,    0, // 20
+    // X( 180 )  Y( 90 )  Z( 0 )
+    s45 ,    0 ,  s45 ,    0, // 21
+    // X( 180 )  Y( 180 )  Z( 0 )
+    0 ,    0 ,    1 ,    0, // 22
+    // X( 180 )  Y( 270 )  Z( 0 )
+    -s45 ,    0 ,  s45 ,    0 // 23
+};
+
+float* alpha_Block_GetAngleAxis(alpha_Block* block)
+{
+    return alpha_Quaternion_ToAxisAndAngle(
+        &alpha_BlockOrientations[4*block->orientation],
+        block->pool
+    );
+};
+
+// naively calling this function results in a quaternion that you can
+// manipulate but not  destroy the Block.Orienations
+// passing something to actual lets you avoid the overhead of making a new
+// quaternion; and returns the same quaternion for the same rotation
+// for better comparing
+// in C these values would be const static
+float* alpha_Block_GetQuaternion(alpha_Block* block, int actual)
+{
+    if(actual) {
+        return &alpha_BlockOrientations[4*block->orientation];
+    }
+    return alpha_Quaternion_Clone(block->pool, &alpha_BlockOrientations[4*block->orientation]);
+};

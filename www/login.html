@@ -62,12 +62,13 @@ function init(main)
         main.appendChild(surface.container());
         var widget = new parsegraph_LoginWidget(surface, graph);
         graph.world().plot(widget.root());
+        widget.authenticate();
 
         var profile;
         var cameraProtocol;
 
         widget.setLoginListener(function(res, userLogin, node) {
-            console.log(userLogin, node);
+            //console.log(userLogin, node);
 
             if(!profile) {
                 profile = new parsegraph_ProfileWidget(graph);
@@ -80,11 +81,14 @@ function init(main)
                     "ws://localhost/camera/", "parsegraph-camera-protocol"
                 ), graph.camera(),
                     function(obj) {
-                        console.log(obj);
+                        //console.log(obj);
                         graph.cameraBox().setCamera(userLogin.username, obj);
                     }
                 );
             }
+        });
+        widget.setLogoutListener(function(res, userLogin, node) {
+            node.disconnectNode(parsegraph_DOWNWARD);
         });
 
         var cameraName = "parsegraph_login_camera";

@@ -21,7 +21,7 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
     this._elapsed = 0;
     this._frozen = false;
-    var amt = 5;
+    var amt = 13;
     this._xMax = amt;
     this._yMax = amt;
     this._zMax = amt;

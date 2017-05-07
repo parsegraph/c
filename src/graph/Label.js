@@ -183,6 +183,12 @@ parsegraph_Line.prototype.glyphs = function()
     return this._glyphs;
 }
 
+//////////////////////////////////////
+//
+// LABEL CONSTRUCTOR
+//
+//////////////////////////////////////
+
 function parsegraph_Label(glyphAtlas)
 {
     if(!glyphAtlas) {
@@ -193,7 +199,7 @@ function parsegraph_Label(glyphAtlas)
     this._lines = [];
     this._caretLine = 0;
     this._caretPos = 0;
-    this._editable = true;
+    this._editable = false;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()

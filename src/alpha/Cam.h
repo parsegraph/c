@@ -90,4 +90,5 @@ void alpha_Camera_ChangeOffset(alpha_Camera* cam, float* vec);
 void alpha_Camera_ChangeOffsetEach(alpha_Camera* cam, float x, float y, float z);
 void alpha_Camera_MoveForward(alpha_Camera* cam, float elapsed);
 void alpha_Camera_MoveBackward(alpha_Camera* cam, float elapsed);
+void alpha_Camera_destroy(alpha_Camera* cam);
 #endif // alpha_Cam_INCLUDED

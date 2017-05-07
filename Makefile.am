@@ -1,7 +1,7 @@
 # TODO Allow tests to be excluded for production uses.
 
 ACLOCAL_AMFLAGS = -I m4
-#SUBDIRS = src
+SUBDIRS = src
 
 VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
 
@@ -42,6 +42,7 @@ parsegraph_SCRIPT_FILES = \
 	src/TestSuite.js \
 	src/date.js \
 	src/dom.js \
+	src/unicode.js \
 	src/event.js \
 	src/Form.js \
 	src/id.js \

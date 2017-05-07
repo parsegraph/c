@@ -280,24 +280,24 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
             1
         );
 
-        // Draw the bar that the slider bud is on.
-        drawLine(
-            -node.absoluteSize().width() / 2, 0,
-            node.absoluteSize().width() / 2, 0,
-            .8
-        );
-
         break;
     case parsegraph_DOWNWARD:
         // Draw upward connecting line into the horizontal slider.
         break;
     }
 
+    // Draw the bar that the slider bud is on.
+    drawLine(
+        -node.absoluteSize().width() / 2, 0,
+        node.absoluteSize().width() / 2, 0,
+        .8
+    );
+
     // Draw the first and last ticks.
 
     // If snapping, show the intermediate ticks.
 
-    if(parsegraph_isVerticalNodeDirection(node.parentDirection())) {
+    //if(parsegraph_isVerticalNodeDirection(node.parentDirection())) {
         var value = node.value();
         if(value == null) {
             value = 0.5;
@@ -331,6 +331,9 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         }
 
         // Draw the slider bud.
+        if(Number.isNaN(value)) {
+            value = 0;
+        }
         painter.drawBlock(
             worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
             worldY + node.absoluteY(),
@@ -340,7 +343,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
             style.borderThickness/1.5,
             userScale * node.absoluteScale()
         );
-    }
+    //}
 
     if(!node.label()) {
         return;

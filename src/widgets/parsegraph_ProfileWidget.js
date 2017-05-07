@@ -133,6 +133,7 @@ parsegraph_ProfileWidget.prototype.onLoad = function(success, response)
     console.log(response);
     var inner = parentNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
     inner.setLabel(response, this._graph.glyphAtlas());
+    inner.realLabel().setEditable(true);
     inner.setKeyListener(function() {
         this.save();
         return false;

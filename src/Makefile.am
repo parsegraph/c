@@ -123,6 +123,8 @@ runtest_SOURCES = \
 	tests/graph/Extent.c \
 	tests/alpha/Maths.c \
 	tests/alpha/BlockStuff.c \
+	tests/alpha/Physical.c \
+	tests/alpha/Cam.c \
 	tests/pagingbuffer.c \
 	tests/unity.c \
 	tests/main.c

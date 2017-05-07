@@ -18,6 +18,8 @@ function parsegraph_Caret(nodeRoot)
     this._savedNodes = null;
 
     this._labels = [];
+
+    this._glyphAtlas = null;
 };
 
 parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
@@ -34,16 +36,15 @@ parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
 
 parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
 {
-    return this.node()._label.setGlyphAtlas(glyphAtlas);
+    this._glyphAtlas = glyphAtlas;
 };
-
-parsegraph_Caret_Tests.addTest("setGlyphAtlas", function() {
-    var car = new parsegraph_Caret('b');
-});
 
 parsegraph_Caret.prototype.glyphAtlas = function()
 {
-    return this.node().label().glyphAtlas();
+    if(!this._glyphAtlas) {
+        this._glyphAtlas = parsegraph_defaultGlyphAtlas();
+    }
+    return this._glyphAtlas;
 };
 
 parsegraph_Caret.prototype.node = function()
@@ -143,6 +144,11 @@ parsegraph_Caret.prototype.erase = function(inDirection)
 parsegraph_Caret.prototype.onClick = function(clickListener, thisArg)
 {
     this.node().setClickListener(clickListener, thisArg);
+};
+
+parsegraph_Caret.prototype.onChange = function(clickListener, thisArg)
+{
+    this.node().setChangeListener(clickListener, thisArg);
 };
 
 /**
@@ -363,7 +369,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
     case 1:
         node = this.node();
         text = arguments[0];
-        glyphAtlas = parsegraph_defaultGlyphAtlas();
+        glyphAtlas = this.glyphAtlas();
         break;
     case 2:
         if(typeof arguments[1] === "object") {
@@ -374,7 +380,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
         else {
             node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
             text = arguments[1];
-            glyphAtlas = parsegraph_defaultGlyphAtlas();
+            glyphAtlas = this.glyphAtlas();
             //console.log(typeof arguments[0]);
             //console.log(typeof arguments[1]);
         }

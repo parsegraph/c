@@ -67,7 +67,8 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
         y: this._y,
         width: letter.width,
         height: this.letterHeight(),
-        glyphPage: glyphPage
+        glyphPage: glyphPage,
+        directionality: isRTL(glyph) ? "rtl" : "ltr"
     };
     this._glyphData[glyph] = glyphData;
     glyphPage._queued.push(glyphData);

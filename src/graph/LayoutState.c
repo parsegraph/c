@@ -1,4 +1,5 @@
 #include "LayoutState.h"
+#include "log.h"
 
 const char* parsegraph_nameLayoutState(int given)
 {

@@ -1,5 +1,7 @@
 #include "BlockIDs.h"
 #include "BlockStuff.h"
+#include "Maths.h"
+#include "../graph/log.h"
 
 // Version 1.3
 
@@ -19,12 +21,12 @@ float* alpha_BuildCubeStructure(apr_pool_t* pool)
 {
     float* cubeStructure;
     if(pool) {
-        cubeStructure = apr_palloc(sizeof(alpha_cubeStructure));
+        cubeStructure = apr_palloc(pool, sizeof(*cubeStructure));
     }
     else {
-        cubeStructure = malloc(sizeof(alpha_cubeStructure));
+        cubeStructure = malloc(sizeof(*cubeStructure));
     }
-    memcpy(cubeStructure, alpha_cubeStructure, sizeof(alpha_CubeStructure));
+    memcpy(cubeStructure, alpha_cubeStructure, sizeof(alpha_cubeStructure));
     return cubeStructure;
 };
 
@@ -32,7 +34,7 @@ float* alpha_BuildCubeStructure(apr_pool_t* pool)
 float* alpha_BuildSlabStructure(apr_pool_t* pool)
 {
     float* slabStructure = alpha_BuildCubeStructure(pool);
-    for(var i = 0; i <= 3; ++i) {
+    for(int i = 0; i <= 3; ++i) {
         alpha_Vector_AddEach(&slabStructure[i*sizeof(float)*3], 0, -0.5, 0);
     }
     return slabStructure;
@@ -40,50 +42,52 @@ float* alpha_BuildSlabStructure(apr_pool_t* pool)
 
 void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
     if(!BlockTypes) {
-        parsegraph_log(pool, "BlockTypes must not be null");
-        return 0;
+        parsegraph_log("BlockTypes must not be null");
+        return;
     }
 
     // skins
-    float* white = alpha_Color_create(pool, 1, 1, 1);
-    float* dbrown = alpha_Color_fromStr(pool, "#3b2921");
-    float* lbrown = alpha_Color_fromStr(pool, "#604b42");
-    float* ggreen = alpha_Color_fromStr(pool, "#0b9615");
-    float* gray = alpha_Color_fromStr(pool, "#5e5a5e");
-    float* lgray = alpha_Color_fromStr(pool, "#726f72");
+    float* dbrown = alpha_ColorFromStr(pool, "#3b2921");
+    float* lbrown = alpha_ColorFromStr(pool, "#604b42");
+    float* ggreen = alpha_ColorFromStr(pool, "#0b9615");
+    float* gray = alpha_ColorFromStr(pool, "#5e5a5e");
+    float* lgray = alpha_ColorFromStr(pool, "#726f72");
 
     //top to bottom
     // counter-clockwise
     // front to back
-    alpha_Skin* dirt = new alpha_Skin(
-        [lbrown, lbrown, lbrown, lbrown], // top
-        [lbrown, lbrown, dbrown, dbrown], // front
-        [lbrown, lbrown, dbrown, dbrown], // left
-        [lbrown, lbrown, dbrown, dbrown], // back
-        [lbrown, lbrown, dbrown, dbrown], // right
-        [dbrown, dbrown, dbrown, dbrown] // bottom
+    alpha_Skin* dirt = alpha_createSkin(pool,
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, lbrown, lbrown, 0), // top
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // front
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // left
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // back
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // right
+        alpha_createFace(pool, alpha_QUADS, dbrown, dbrown, dbrown, dbrown, 0), // bottom
+        0
     );
 
-    var grass = new alpha_Skin(
-        [ggreen, ggreen, ggreen, ggreen], // top
-        [lbrown, lbrown, dbrown, dbrown], // front
-        [lbrown, lbrown, dbrown, dbrown], // left
-        [lbrown, lbrown, dbrown, dbrown], // back
-        [lbrown, lbrown, dbrown, dbrown], // right
-        [dbrown, dbrown, dbrown, dbrown] //bottom
+    alpha_Skin* grass = alpha_createSkin(pool,
+        alpha_createFace(pool, alpha_QUADS, ggreen, ggreen, ggreen, ggreen, 0), // top
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // front
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // left
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // back
+        alpha_createFace(pool, alpha_QUADS, lbrown, lbrown, dbrown, dbrown, 0), // right
+        alpha_createFace(pool, alpha_QUADS, dbrown, dbrown, dbrown, dbrown, 0), //bottom
+        0
     );
 
-    var stone = new alpha_Skin(
-        [lgray, gray, lgray, gray], // top
-        [lgray, gray, lgray, gray], // front
-        [lgray, gray, lgray, gray], // left
-        [lgray, gray, lgray, gray], // back
-        [lgray, gray, lgray, gray], // right
-        [lgray, gray, lgray, gray], // bottom
-        [lgray, gray, lgray, gray], // misc
-        [lgray, gray, lgray, gray], // misc
-        [lgray, gray, lgray, gray], // misc
-        [lgray, gray, lgray, gray] // misc
+    alpha_Skin* stone = alpha_createSkin(pool,
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // top
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // front
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // left
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // back
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // right
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // bottom
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // misc
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // misc
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // misc
+        alpha_createFace(pool, alpha_QUADS, lgray, gray, lgray, gray, 0), // misc
+        0
     );
 
     // draw everthing in a face:
@@ -110,56 +114,58 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
     // rotate, then translate back
 
     // cube faces;
-    var v = alpha_BuildCubeStructure();
-    var Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    float* v = alpha_BuildCubeStructure(pool);
+    alpha_Face* Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    alpha_Face* Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    alpha_Face* Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    alpha_Face* Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    alpha_Face* Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    alpha_Face* Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
     // turn the faces into shapes
 
     // top to bottom
     // counter-clockwise
     // front to back
-    var CUBE = new alpha_Shape(
+    alpha_Shape* CUBE = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
 
-    BlockTypes.Create( "stone", "cube", stone, CUBE );
-    BlockTypes.Create("dirt", "cube", dirt, CUBE);
-    BlockTypes.Create("grass", "cube", grass, CUBE);
+    alpha_BlockTypes_Create(BlockTypes, "stone", "cube", stone, CUBE);
+    alpha_BlockTypes_Create(BlockTypes,"dirt", "cube", dirt, CUBE);
+    alpha_BlockTypes_Create(BlockTypes,"grass", "cube", grass, CUBE);
 
     // a slope lowers vertices 1 and 2 to 6 and 5;
-    var slopeStructure = alpha_BuildCubeStructure();
+    float* slopeStructure = alpha_BuildCubeStructure(pool);
     v = slopeStructure;
-    for(var i = 0; i <= 1; ++i) {
-        v[i].Add(0, -1, 0);
+    for(int i = 0; i <= 1; ++i) {
+        alpha_Vector_AddEach(&v[3 * i], 0, -1, 0);
     }
 
     // this causes left and right to become triangles
-    Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[1], v[7]);
-    Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS,     &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS,     &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS,     &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*1], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS,     &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SLOPE = new alpha_Shape(
+    alpha_Shape* SLOPE = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "slope", stone, SLOPE);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slope", stone, SLOPE);
 
     // there are 4 simple sloped corners for a fullsized cube;
     // split the top face into two triangles
@@ -174,105 +180,109 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
 
     // the beveled corner slope
     // lower 1, 2, and 3 to the bottom;
-    var bcslopeStructure = alpha_BuildCubeStructure();
+    float* bcslopeStructure = alpha_BuildCubeStructure(pool);
     v = bcslopeStructure;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -1, 0);
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -1, 0);
     }
 
     // now top, right
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[2]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3], &v[0], &v[2], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS,     &v[3], &v[2], &v[7], &v[6], 0);
+    Left   = alpha_createFace(pool, alpha_TRIANGLES, &v[3], &v[6], &v[5], 0);
+    Bottom = alpha_createFace(pool, alpha_TRIANGLES, &v[6], &v[7], &v[5], 0);
 
-    var CORNER_SLOPE = new alpha_Shape(
+    alpha_Shape* CORNER_SLOPE = alpha_createShape(pool,
         Top,
         Front,
         Left,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "corner_slope", stone, CORNER_SLOPE);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "corner_slope", stone, CORNER_SLOPE);
 
-    var ibcslopeStructure = alpha_BuildCubeStructure();
+    float* ibcslopeStructure = alpha_BuildCubeStructure(pool);
     v = ibcslopeStructure;
     // 3 top, 1 bottom;
-    v[1].Add(0, -1, 0);
+    alpha_Vector_AddEach(&v[3*1], 0, -1, 0);
 
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[0]);
-    var Slope  = new alpha_Face(alpha_TRIANGLES, v[2], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[2], &v[3], &v[0], 0);
+    alpha_Face* Slope  = alpha_createFace(pool, alpha_TRIANGLES, &v[2], &v[0], &v[1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS,     &v[3], &v[2], &v[7], &v[6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS,     &v[0], &v[3], &v[6], &v[5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[0], &v[5], &v[4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[2], &v[4], &v[7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS,     &v[6], &v[7], &v[4], &v[5], 0);
 
-    var INVERTED_CORNER_SLOPE = new alpha_Shape(
+    alpha_Shape* INVERTED_CORNER_SLOPE = alpha_createShape(pool,
         Top,
         Slope,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "inverted_corner_slope", stone, INVERTED_CORNER_SLOPE);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "inverted_corner_slope", stone, INVERTED_CORNER_SLOPE);
 
     // pyramid corner ( 1 top, 3 bottom )
-    var pcorner = alpha_BuildCubeStructure();
-    var v = pcorner;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -1, 0);
+    float* pcorner = alpha_BuildCubeStructure(pool);
+    v = pcorner;
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -1, 0);
     }
 
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-    var PYRAMID_CORNER = new alpha_Shape(
+    alpha_Face* TopLeft  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    alpha_Face* TopRight = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front    = alpha_createFace(pool, alpha_QUADS,     &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left     = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*6], &v[3*5], 0);
+    Bottom   = alpha_createFace(pool, alpha_QUADS,     &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
+    alpha_Shape* PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "pyramid_corner", stone, PYRAMID_CORNER);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "pyramid_corner", stone, PYRAMID_CORNER);
 
     // inverted pyramid corner ( 3 top, 1 bottom )
-    var ipcorner = alpha_BuildCubeStructure();
-    var v = ipcorner;
-    v[1].Add(0, -1, 0);
+    float* ipcorner = alpha_BuildCubeStructure(pool);
+    v = ipcorner;
+    alpha_Vector_AddEach(&v[3*1], 0, -1, 0);
 
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    TopLeft    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    TopRight   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var INVERTED_PYRAMID_CORNER = new alpha_Shape(
+    alpha_Shape* INVERTED_PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "inverted_pyramid_corner", stone, INVERTED_PYRAMID_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "inverted_pyramid_corner", stone, INVERTED_PYRAMID_CORNER);
 
-    var v = alpha_BuildSlabStructure();
-    var Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-    var SLAB = new alpha_Shape(
+    v = alpha_BuildSlabStructure(pool);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
+    alpha_Shape* SLAB = alpha_createShape(pool,
         Top,
         Front,
         Left,
@@ -281,147 +291,153 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
         Bottom
     );
 
-    BlockTypes.Load("stone", "slab", stone, SLAB);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab", stone, SLAB);
 
     // a slope lowers vertices 1 and 2 to 6 and 5;
-    var slopeStructure = alpha_BuildCubeStructure();
-    var v = slopeStructure;
-    for(var i = 0; i <= 1; ++i) {
-        v[i].Add(0, -0.5, 0);
+    slopeStructure = alpha_BuildCubeStructure(pool);
+    v = slopeStructure;
+    for(int i = 0; i <= 1; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // this causes left and right to become triangles
-    var Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[1], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*1], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SLAB_SLOPE = new alpha_Shape(
+    alpha_Shape* SLAB_SLOPE = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "slab_slope", stone, SLAB_SLOPE);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab_slope", stone, SLAB_SLOPE);
 
 
-    var bcslopeStructure = alpha_BuildCubeStructure();
-    var v = bcslopeStructure;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -0.5, 0);
+    bcslopeStructure = alpha_BuildCubeStructure(pool);
+    v = bcslopeStructure;
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // now top, right
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[2]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*2], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*6], &v[3*5], 0);
+    Bottom = alpha_createFace(pool, alpha_TRIANGLES, &v[3*6], &v[3*7], &v[3*5], 0);
 
-    var SLAB_CORNER = new alpha_Shape(
+    alpha_Shape* SLAB_CORNER = alpha_createShape(pool,
         Top,
         Front,
         Left,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "slab_corner", stone, SLAB_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab_corner", stone, SLAB_CORNER );
 
-    var ibcslopeStructure = alpha_BuildCubeStructure();
-    var v = ibcslopeStructure;
+    ibcslopeStructure = alpha_BuildCubeStructure(pool);
+    v = ibcslopeStructure;
     // 3 top, 1 bottom;
-    v[1].Add(0, -0.5, 0);
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[0]);
-    var Slope  = new alpha_Face(alpha_TRIANGLES, v[2], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    alpha_Vector_AddEach(&v[3*1], 0, -0.5, 0);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*0], 0);
+    Slope  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SLAB_INVERTED_CORNER = new alpha_Shape(
+    alpha_Shape* SLAB_INVERTED_CORNER = alpha_createShape(pool,
         Top,
         Slope,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "slab_inverted_corner", stone, SLAB_INVERTED_CORNER);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab_inverted_corner", stone, SLAB_INVERTED_CORNER);
 
     // pyramid corner ( 1 top, 3 bottom )
-    var pcorner = alpha_BuildCubeStructure();
-    var v = pcorner;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -0.5, 0);
+    pcorner = alpha_BuildCubeStructure(pool);
+    v = pcorner;
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-    var SLAB_PYRAMID_CORNER = new alpha_Shape(
+    TopLeft    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    TopRight   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*6], &v[3*5], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
+    alpha_Shape* SLAB_PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "slab_pyramid_corner", stone, SLAB_PYRAMID_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab_pyramid_corner", stone, SLAB_PYRAMID_CORNER );
 
     // inverted pyramid corner ( 3 top, 1 bottom )
-    var ipcorner = alpha_BuildSlabStructure();
-    var v = ipcorner;
-    v[2].Add(0, -0.5, 0);
+    ipcorner = alpha_BuildSlabStructure(pool);
+    v = ipcorner;
+    alpha_Vector_AddEach(&v[3*2], 0, -0.5, 0);
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    TopLeft    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    TopRight   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
 
-    var SLAB_INVERTED_PYRAMID_CORNER = new alpha_Shape(
+    alpha_Shape* SLAB_INVERTED_PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "slab_inverted_pyramid_corner", stone, SLAB_INVERTED_PYRAMID_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "slab_inverted_pyramid_corner", stone, SLAB_INVERTED_PYRAMID_CORNER );
 
 
 
 
     // a slope lowers vertices 1 and 2 to 6 and 5;
-    var v = alpha_BuildCubeStructure();
-    for(var i = 0; i <= 1; ++i) {
-        v[i].Add(0, -0.5, 0);
+    v = alpha_BuildCubeStructure(pool);
+    for(int i = 0; i <= 1; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // this causes left and right to become triangles
-    var Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SHALLOW_SLOPE = new alpha_Shape(
+    alpha_Shape* SHALLOW_SLOPE = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "shallow_slope", stone, SHALLOW_SLOPE);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "shallow_slope", stone, SHALLOW_SLOPE);
 
     // there are 4 simple sloped corners for a fullsized cube;
     // split the top face into two triangles
@@ -436,179 +452,184 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
 
     // the beveled corner slope
     // lower 1, 2, and 3 to the bottom;
-    var bcslopeStructure = alpha_BuildCubeStructure();
-    var v = bcslopeStructure;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -0.5, 0);
+    bcslopeStructure = alpha_BuildCubeStructure(pool);
+    v = bcslopeStructure;
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // now top, right
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[0]);
-    var Slope  = new alpha_Face(alpha_TRIANGLES, v[2], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[2], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*0], 0);
+    Slope  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*2], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SHALLOW_CORNER = new alpha_Shape(
+    alpha_Shape* SHALLOW_CORNER = alpha_createShape(pool,
         Top,
         Slope,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "shallow_corner", stone, SHALLOW_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "shallow_corner", stone, SHALLOW_CORNER );
 
-    var v = alpha_BuildCubeStructure();
+    v = alpha_BuildCubeStructure(pool);
     // 3 top, 1 bottom;
-    v[2].Add(0, -0.5, 0);
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[0]);
-    var Slope  = new alpha_Face(alpha_TRIANGLES, v[2], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    alpha_Vector_AddEach(&v[3*2], 0, -0.5, 0);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*0], 0);
+    Slope  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var SHALLOW_INVERTED_CORNER = new alpha_Shape(
+    alpha_Shape* SHALLOW_INVERTED_CORNER = alpha_createShape(pool,
         Top,
         Slope,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load("stone", "shallow_inverted_corner", stone, SHALLOW_INVERTED_CORNER);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "shallow_inverted_corner", stone, SHALLOW_INVERTED_CORNER);
 
     // pyramid corner ( 1 top, 3 bottom )
-    var pcorner = alpha_BuildCubeStructure();
-    var v = pcorner;
-    for(var i = 0; i <= 2; ++i) {
-        v[i].Add(0, -0.5, 0);
+    pcorner = alpha_BuildCubeStructure(pool);
+    v = pcorner;
+    for(int i = 0; i <= 2; ++i) {
+        alpha_Vector_AddEach(&v[3*i], 0, -0.5, 0);
     }
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-    var SHALLOW_PYRAMID_CORNER = new alpha_Shape(
+    TopLeft    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    TopRight   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
+    alpha_Shape* SHALLOW_PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "shallow_pyramid_corner", stone, SHALLOW_PYRAMID_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "shallow_pyramid_corner", stone, SHALLOW_PYRAMID_CORNER );
 
     // inverted pyramid corner ( 3 top, 1 bottom )
-    var ipcorner = alpha_BuildCubeStructure();
-    var v = ipcorner;
-    v[1].Add(0, -0.5, 0);
+    ipcorner = alpha_BuildCubeStructure(pool);
+    v = ipcorner;
+    alpha_Vector_AddEach(&v[3*1], 0, -0.5, 0);
     // now top, right
-    var TopLeft    = new alpha_Face(alpha_TRIANGLES, v[3], v[0], v[1]);
-    var TopRight   = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    TopLeft    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*3], &v[3*0], &v[3*1], 0);
+    TopRight   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
 
-    var SHALLOW_INVERTED_PYRAMID_CORNER = new alpha_Shape(
+    alpha_Shape* SHALLOW_INVERTED_PYRAMID_CORNER = alpha_createShape(pool,
         TopLeft,
         TopRight,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "shallow_inverted_pyramid_corner", stone, SHALLOW_INVERTED_PYRAMID_CORNER );
+    alpha_BlockTypes_Load(BlockTypes, "stone", "shallow_inverted_pyramid_corner", stone, SHALLOW_INVERTED_PYRAMID_CORNER );
 
 
     // an angled slab is a half slab cut in a right triangle
-    var v = alpha_BuildSlabStructure();
-    v[1].Add(0, 0, -1);
-    v[4].Add(0, 0, -1);
-    var Top    = new alpha_Face(alpha_TRIANGLES, v[2], v[3], v[0]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
-    var ANGLED_SLAB = new alpha_Shape(
+    v = alpha_BuildSlabStructure(pool);
+    alpha_Vector_AddEach(&v[3*1], 0, 0, -1);
+    alpha_Vector_AddEach(&v[3*4], 0, 0, -1);
+    Top    = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*3], &v[3*0], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Bottom = alpha_createFace(pool, alpha_TRIANGLES, &v[3*6], &v[3*7], &v[3*5], 0);
+    alpha_Shape* ANGLED_SLAB = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
-        Bottom
+        Bottom,
+        0
     );
 
-    BlockTypes.Load("stone", "angled_slab", stone, ANGLED_SLAB);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "angled_slab", stone, ANGLED_SLAB);
 
     // half-slab
-    var v = alpha_BuildSlabStructure();
-    v[0].Add(0, 0, -0.5);
-    v[1].Add(0, 0, -0.5);
-    v[4].Add(0, 0, -0.5);
-    v[5].Add(0, 0, -0.5);
+    v = alpha_BuildSlabStructure(pool);
+    alpha_Vector_AddEach(&v[0], 0, 0, -0.5);
+    alpha_Vector_AddEach(&v[3*1], 0, 0, -0.5);
+    alpha_Vector_AddEach(&v[3*4], 0, 0, -0.5);
+    alpha_Vector_AddEach(&v[3*5], 0, 0, -0.5);
 
-    var Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    var Back   = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
-    var Right  = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-    var HALF_SLAB = new alpha_Shape(
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
+    alpha_Shape* HALF_SLAB = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
 
-    BlockTypes.Load("stone", "half_slab", stone, HALF_SLAB);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "half_slab", stone, HALF_SLAB);
 
 
     // stairs
-    var stairStructure = [
-        new alpha_Vector( -0.5 , 0.5, 0 ), // 0 -- top
-        new alpha_Vector( 0.5 , 0.5, 0 ), // 1 -- top
-        new alpha_Vector( 0.5 , 0.5, -0.5 ), // 2 -- top
-        new alpha_Vector( -0.5 , 0.5, -0.5 ), // 3 -- top
-        new alpha_Vector( 0.5 , -0.5, 0.5 ), // 4 -- bottom
-        new alpha_Vector( -0.5 , -0.5, 0.5 ), // 5 -- bottom
-        new alpha_Vector( -0.5 , -0.5, -0.5 ), // 6 -- bottom
-        new alpha_Vector( 0.5 , -0.5, -0.5 ), // 7 -- bottom
-        new alpha_Vector( -0.5 , 0, 0 ), // 8 -- mid
-        new alpha_Vector( 0.5 , 0, 0 ), // 9 -- mid
-        new alpha_Vector( -0.5 , 0, 0.5 ), // 10 -- mid
-        new alpha_Vector( 0.5 , 0, 0.5 ) // 11 -- mid
-    ];
-    var v = stairStructure;
-    var Flight1Top = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    var Flight1Front = new alpha_Face(alpha_QUADS, v[1], v[0], v[8], v[9]);
-    var Flight2Top = new alpha_Face(alpha_QUADS, v[9], v[8], v[10], v[11]);
-    var Flight2Front = new alpha_Face(alpha_QUADS, v[11], v[10], v[5], v[4]);
-    var Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    var LeftTop   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[8]);
-    var LeftBot   = new alpha_Face(alpha_QUADS, v[8], v[6], v[5], v[10]);
+    float stairStructure[] = {
+        -0.5 , 0.5, 0, // 0 -- top
+        0.5 , 0.5, 0, // 1 -- top
+        0.5 , 0.5, -0.5, // 2 -- top
+        -0.5 , 0.5, -0.5, // 3 -- top
+        0.5 , -0.5, 0.5, // 4 -- bottom
+        -0.5 , -0.5, 0.5, // 5 -- bottom
+        -0.5 , -0.5, -0.5, // 6 -- bottom
+        0.5 , -0.5, -0.5, // 7 -- bottom
+        -0.5 , 0, 0, // 8 -- mid
+        0.5 , 0, 0, // 9 -- mid
+        -0.5 , 0, 0.5, // 10 -- mid
+        0.5 , 0, 0.5 // 11 -- mid
+    };
+    v = stairStructure;
+    alpha_Face* Flight1Top = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    alpha_Face* Flight1Front = alpha_createFace(pool, alpha_QUADS, &v[3*1], &v[3*0], &v[3*8], &v[3*9], 0);
+    alpha_Face* Flight2Top = alpha_createFace(pool, alpha_QUADS, &v[3*9], &v[3*8], &v[3*10], &v[3*11], 0);
+    alpha_Face* Flight2Front = alpha_createFace(pool, alpha_QUADS, &v[3*11], &v[3*10], &v[3*5], &v[3*4], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    alpha_Face* LeftTop   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*8], 0);
+    alpha_Face* LeftBot   = alpha_createFace(pool, alpha_QUADS, &v[3*8], &v[3*6], &v[3*5], &v[3*10], 0);
 
-    var RightTop  = new alpha_Face(alpha_QUADS, v[2], v[1], v[9], v[7]);
-    var RightBot  = new alpha_Face(alpha_QUADS, v[9], v[11], v[4], v[7]);
+    alpha_Face* RightTop  = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*1], &v[3*9], &v[3*7], 0);
+    alpha_Face* RightBot  = alpha_createFace(pool, alpha_QUADS, &v[3*9], &v[3*11], &v[3*4], &v[3*7], 0);
 
-    var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-
-    var STAIRS = new alpha_Shape(
+    alpha_Shape* STAIRS = alpha_createShape(pool,
         Flight1Top,
         Flight1Front,
         Flight2Top,
@@ -616,83 +637,86 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
         Front,
         LeftTop,
         LeftBot,
-
         RightTop,
         RightBot,
-        Bottom
+        Bottom,
+        0
     );
 
-    BlockTypes.Load("stone", "stairs", stone, STAIRS);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "stairs", stone, STAIRS);
 
 
     // medium corner; lowers 1 and 3 to mid range
     // and 2 to bottom
-    var v = alpha_BuildCubeStructure();
-    v[0].Add(0, -0.5, 0);
-    v[2].Add(0, -0.5, 0);
-    v[1].Add(0, -1, 0);
+    v = alpha_BuildCubeStructure(pool);
+    alpha_Vector_AddEach(&v[0], 0, -0.5, 0);
+    alpha_Vector_AddEach(&v[3*2], 0, -0.5, 0);
+    alpha_Vector_AddEach(&v[1*2], 0, -1, 0);
     // this causes left and right to become triangles
-    Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var MED_CORNER = new alpha_Shape(
+    alpha_Shape* MED_CORNER = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "med_corner", stone, MED_CORNER);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "med_corner", stone, MED_CORNER);
 
     // medium corner; lowers 1 to midrange
     // and 2 to bottom
-    var v = alpha_BuildCubeStructure();
-    v[0].Add(0, -0.5, 0);
-    v[1].Add(0, -1, 0);
+    v = alpha_BuildCubeStructure(pool);
+    alpha_Vector_AddEach(&v[0], 0, -0.5, 0);
+    alpha_Vector_AddEach(&v[3], 0, -1, 0);
     // this causes left and right to become triangles
-    Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var MED_CORNER2 = new alpha_Shape(
+    alpha_Shape* MED_CORNER2 = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "med_corner2", stone, MED_CORNER2);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "med_corner2", stone, MED_CORNER2);
 
 
     // medium corner; lowers 1 and 3 to mid range
     // and 2 to bottom
-    var v = alpha_BuildCubeStructure();
-    v[2].Add(0, -0.5, 0);
-    v[1].Add(0, -1, 0);
+    v = alpha_BuildCubeStructure(pool);
+    alpha_Vector_AddEach(&v[3*2], 0, -0.5, 0);
+    alpha_Vector_AddEach(&v[3*1], 0, -1, 0);
     // this causes left and right to become triangles
-    Top    = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-    Front  = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-    Left   = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
-    Back   = new alpha_Face(alpha_TRIANGLES, v[0], v[5], v[4]);
-    Right  = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
-    Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
+    Top    = alpha_createFace(pool, alpha_QUADS, &v[3*2], &v[3*3], &v[3*0], &v[3*1], 0);
+    Front  = alpha_createFace(pool, alpha_QUADS, &v[3*3], &v[3*2], &v[3*7], &v[3*6], 0);
+    Left   = alpha_createFace(pool, alpha_QUADS, &v[3*0], &v[3*3], &v[3*6], &v[3*5], 0);
+    Back   = alpha_createFace(pool, alpha_TRIANGLES, &v[3*0], &v[3*5], &v[3*4], 0);
+    Right  = alpha_createFace(pool, alpha_TRIANGLES, &v[3*2], &v[3*4], &v[3*7], 0);
+    Bottom = alpha_createFace(pool, alpha_QUADS, &v[3*6], &v[3*7], &v[3*4], &v[3*5], 0);
 
-    var MED_CORNER3 = new alpha_Shape(
+    alpha_Shape* MED_CORNER3 = alpha_createShape(pool,
         Top,
         Front,
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
-    BlockTypes.Load( "stone", "med_corner3", stone, MED_CORNER3);
+    alpha_BlockTypes_Load(BlockTypes, "stone", "med_corner2", stone, MED_CORNER3);
 }
