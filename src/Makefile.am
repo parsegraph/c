@@ -125,6 +125,7 @@ runtest_SOURCES = \
 	tests/alpha/BlockStuff.c \
 	tests/alpha/Physical.c \
 	tests/alpha/Cam.c \
+	tests/alpha/Cluster.c \
 	tests/pagingbuffer.c \
 	tests/unity.c \
 	tests/main.c
