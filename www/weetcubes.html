@@ -65,14 +65,19 @@ surface.addPainter(widget.paint, widget);
 surface.addRenderer(widget.render, widget);
 
 var start = alpha_GetTime();
+var audioUpdate = null;
 var frozen = false;
 var tick = function(t) {
     // Set the render flag.
     var t = alpha_GetTime();
     var elapsed = t - start;
-    widget.Tick(elapsed, frozen);
+    var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
+    widget.Tick(elapsed, frozen, updateAudio);
     if(!frozen || !widget.cubePainter) {
-        surface.paint(elapsed, frozen);
+        surface.paint(elapsed, frozen, updateAudio);
+    }
+    if(updateAudio) {
+        audioUpdate = t;
     }
     start = t;
     surface.render();

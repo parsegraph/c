@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>rainback float</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.parsegraph_Surface {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+}
+
+div {
+    text-align: center;
+    position: absolute;
+}
+
+.controls {
+    margin: auto;
+    position: absolute;
+    pointer-events: none;
+    width: 100%;
+}
+
+.controls > form button {
+    pointer-events: auto;
+}
+
+@media only screen and (max-width: 980px) {
+
+.controls {
+    display: none;
+}
+
+body > div {
+    width: 100%;
+}
+
+body > div input {
+    clear: left;
+}
+
+}
+</style>
+<script src="parsegraph-1.0.js"></script>
+<script src="parsegraph-widgets-1.0.js"></script>
+<script src="esprima.js"></script>
+<script>
+function init(main)
+{
+    try {
+        parsegraph_initialize();
+        var surface = new parsegraph_Surface();
+        var graph = new parsegraph_Graph(surface);
+        main.appendChild(surface.container());
+        var widget = new parsegraph_LoginWidget(surface, graph);
+        widget.authenticate();
+        graph.world().plot(widget.root());
+
+        var cameraProtocol;
+
+        widget.setLoginListener(function(res, userLogin, node) {
+            try {
+                // TODO
+            }
+            catch(ex) {
+                console.log("Crashed during login construction: ", ex);
+            }
+
+            if(!cameraProtocol) {
+                cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
+                    "ws://localhost/camera/", "parsegraph-camera-protocol"
+                ), graph.camera(),
+                    function(obj) {
+                        //console.log(obj);
+                        graph.cameraBox().setCamera(userLogin.username, obj);
+                    }
+                );
+            }
+            widget.setLogoutListener(function() {
+                node.disconnectNode(parsegraph_DOWNWARD);
+            });
+        });
+
+        var cameraName = "parsegraph_login_camera";
+        if(localStorage.getItem(cameraName) != null) {
+            try {
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
+            } catch(e) {
+                console.log(
+                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
+                );
+            }
+        }
+
+        // Schedule the repaint.
+        var renderTimer = new parsegraph_AnimationTimer();
+        var start = alpha_GetTime();
+        renderTimer.setListener(function() {
+            graph.input().Update(new Date());
+            var t = alpha_GetTime();
+            start = t;
+            if(graph.needsRepaint()) {
+                surface.paint(50);
+            }
+            surface.render();
+            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                if(cameraProtocol && graph.input().UpdateRepeatedly()) {
+                    cameraProtocol.update();
+                }
+                renderTimer.schedule();
+            }
+        });
+        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+            if(affectedPaint) {
+                graph.scheduleRepaint();
+            }
+            renderTimer.schedule();
+            if(inputAffectedCamera) {
+                if(cameraProtocol) {
+                    cameraProtocol.update();
+                }
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            }
+        });
+        renderTimer.schedule();
+        graph.onScheduleRepaint = function() {
+            renderTimer.schedule();
+        };
+    } catch(ex) {
+        alert("Init: " + parsegraph_writeError(ex));
+        throw ex;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init(document.body);
+});
+</script>
+</head>
+<body>
+</body>
+</html>

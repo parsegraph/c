@@ -1,14 +1,6 @@
 #!/bin/bash
 
-TARGET=${*:-$HOME/src/parsegraph/server/public_html}
-
-mkdir -p $TARGET
-
-deploy() {
-    make && make install && /bin/cp -vuf *.js www/* $TARGET
-}
-
-deploy
+./deploy.sh
 while inotifywait -e modify -r src www; do
-    deploy
+    ./deploy.sh
 done

@@ -21,10 +21,6 @@
  * OF THIS SOFTWARE.
  */
 
-// TODO Add libinput
-// TODO Add pthread
-// TODO Add cairo/pango/harfbuzz for text rendering in GlyphAtlas
-
 extern "C" {
 
 #include <apr_pools.h>
@@ -71,6 +67,7 @@ static const char* keyToName(int key) {
     case Qt::Key_Left: return "Left";
     case Qt::Key_Shift: return "Shift";
     case Qt::Key_Space: return " ";
+    case Qt::Key_0: return "0";
     }
     return 0;
 }
@@ -91,6 +88,11 @@ virtual void keyPressEvent(QKeyEvent* ev) {
     }
 
     //fprintf(stderr, "Pressed %s\n", kname);
+    if(ev->key() == Qt::Key_0) {
+        if(widget) {
+            widget->rotq = 0;
+        }
+    }
     if(ev->key() == Qt::Key_Escape) {
         frozen = !frozen;
     }
@@ -147,7 +149,8 @@ QTime frameElapsedTime;
 struct alpha_WeetCubeWidget* widget = 0;
 GLint w;
 GLint h;
-int frozen = 0;
+int hasEverPainted = 0;
+int frozen = 1;
 virtual void initializeGL() {
     frameElapsedTime.start();
 }

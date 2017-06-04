@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login - Parsegraph</title>
+<title>login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -53,6 +53,59 @@ body > div input {
 <script src="esprima.js"></script>
 <script>
 
+function parsegraph_List_new(name, callback, callbackThisArg)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', "/list?command=parsegraph_List_new", true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState === 4) {
+            if(callback) {
+                callback.call(callbackThisArg || xhr, JSON.parse(xhr.response));
+            }
+        }
+    };
+    xhr.send("name="+encodeURIComponent(name));
+    return xhr;
+}
+
+function parsegraph_List_appendItem(listId, typeId, value, callback, callbackThisArg)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', "/list?command=parsegraph_List_appendItem", true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState === 4) {
+            if(callback) {
+                console.log(xhr.response);
+                callback.call(callbackThisArg || xhr, JSON.parse(xhr.response));
+            }
+        }
+    };
+    xhr.send("list_id="+encodeURIComponent(listId) + "&type=" + encodeURIComponent(typeId) + "&value=" + encodeURIComponent(value));
+    return xhr;
+}
+
+function parsegraph_List_prependItem(listId, typeId, value, callback, callbackThisArg)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', "/list?command=parsegraph_List_prependItem", true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState === 4) {
+            if(callback) {
+                console.log(xhr.response);
+                callback.call(callbackThisArg || xhr, JSON.parse(xhr.response));
+            }
+        }
+    };
+    xhr.send("list_id="+encodeURIComponent(listId) + "&type=" + encodeURIComponent(typeId) + "&value=" + encodeURIComponent(value));
+    return xhr;
+}
+
 function init(main)
 {
     try {
@@ -86,6 +139,52 @@ function init(main)
                     }
                 );
             }
+
+            parsegraph_List_new(userLogin.username, function(response) {
+                if(response.id) {
+
+                }
+
+                var initial = profile.node().spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+                profile.node().setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+
+                var len = 0;
+                var budClickListener;
+                budClickListener = function() {
+                    if(this.hasNode(parsegraph_DOWNWARD)) {
+                        return;
+                    }
+                    value = "NOTIME" + len;
+                    if(!this.hasNode(parsegraph_FORWARD)) {
+                        parsegraph_List_appendItem(response.id, 0, value, function() {
+                            var b = this.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+                            b.setLabel(value, graph.glyphAtlas());
+                            b.realLabel().setEditable(true);
+                            this.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
+                            var n = this.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+                            n.setClickListener(budClickListener, n);
+                            if(!this.hasNode(parsegraph_BACKWARD)) {
+                                var p = this.spawnNode(parsegraph_BACKWARD, parsegraph_BUD);
+                                p.setClickListener(budClickListener, p);
+                            }
+                            graph.scheduleRepaint();
+                        }, this);
+                    }
+                    else if(!this.hasNode(parsegraph_BACKWARD)) {
+                        parsegraph_List_prependItem(response.id, 0, value, function() {
+                            var b = this.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+                            b.setLabel(value, graph.glyphAtlas());
+                            b.realLabel().setEditable(true);
+                            this.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
+                            var n = this.spawnNode(parsegraph_BACKWARD, parsegraph_BUD);
+                            n.setClickListener(budClickListener, n);
+                            graph.scheduleRepaint();
+                        }, this);
+                    }
+                    ++len;
+                };
+                initial.setClickListener(budClickListener);
+            }, this);
         });
         widget.setLogoutListener(function(res, userLogin, node) {
             node.disconnectNode(parsegraph_DOWNWARD);

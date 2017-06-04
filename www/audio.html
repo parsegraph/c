@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>parsegraph.com/audio</title>
+<title>audio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -337,7 +337,7 @@ function parsegraph_FilterWidget(graph)
 
     this._frequency = 440;
     this._q = 0;
-    this._gain = 1;
+    this._gain = 0;
     this._detune = 0;
     this._type = "peaking";
     this._containerNode = null;
@@ -514,21 +514,10 @@ parsegraph_FilterWidget.prototype.gainNode = function()
         var car = new parsegraph_Caret('s');
         car.label('Gain');
         this._gainNode = car.root();
-        var MAXFS = 20000;
-        var FS = 2000;
-        var magnitudeSlider = car.spawn('i', 'sli', 'v');
         var valueSlider = car.spawn('d', 'sli');
-        magnitudeSlider.setChangeListener(function() {
-            FS = magnitudeSlider.value() * MAXFS;
-            if(valueSlider.value() > FS) {
-                this.setGain(FS);
-            }
-            valueSlider.setValue(this._gain / FS);
-        }, this);
-        magnitudeSlider.setValue(FS / MAXFS);
-        valueSlider.setValue(this._gain / FS);
+        valueSlider.setValue((this._gain + 40) / 80);
         valueSlider.setChangeListener(function() {
-            this.setGain(valueSlider.value() * magnitudeSlider.value()*FS);
+            this.setGain(-40 + 80 * valueSlider.value());
         }, this);
     }
     return this._gainNode;
@@ -594,7 +583,7 @@ function init(main)
 
         widget.setLoginListener(function(res, userLogin, node) {
             try {
-            var audio = new AudioContext();
+            var audio = surface.audio();
             node.setNodeFit(parsegraph_NODE_FIT_EXACT);
             var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
             node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);

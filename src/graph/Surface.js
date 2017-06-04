@@ -47,6 +47,32 @@ parsegraph_Surface.prototype.gl = function()
     return this._gl;
 };
 
+parsegraph_Surface.prototype.setGL = function(gl)
+{
+    this._gl = gl;
+};
+
+parsegraph_Surface.prototype.setAudio = function(audio)
+{
+    this._audio = audio;
+};
+
+parsegraph_Surface.prototype.audio = function()
+{
+    if(!this._audio) {
+        try {
+            this._audio = new AudioContext();
+        }
+        catch(ex) {
+            console.log(ex);
+        }
+        if(this._audio == null) {
+            throw new Error("AudioContext is not supported");
+        }
+    }
+    return this._audio;
+};
+
 parsegraph_Surface.prototype.resize = function(w, h)
 {
     this.container().style.width = typeof w === "number" ? (w + "px") : w;

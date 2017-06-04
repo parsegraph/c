@@ -33,6 +33,8 @@ int main(int argc, const char* const* argv)
     test_alpha_Maths();
     test_alpha_Color();
     test_alpha_Physical();
+    test_alpha_Cam();
+    test_alpha_Cluster();
 
     // Destroy the pool for cleanliness.
     apr_pool_destroy(pool);

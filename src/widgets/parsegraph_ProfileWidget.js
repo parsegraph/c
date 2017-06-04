@@ -22,9 +22,9 @@ function parsegraph_getUserProfile(username, listener, listenerThisArg)
         try {
             var response = JSON.parse(xhr.responseText);
             var profileText = response.profile.replace(/[+]/g, "%20");
-            console.log("pt1", profileText);
+            //console.log("pt1", profileText);
             profileText = decodeURIComponent(profileText);
-            console.log("pt2", response, profileText);
+            //console.log("pt2", response, profileText);
             listener.call(listenerThisArg, response.status === 0, profileText);
         }
         catch(ex) {
@@ -130,7 +130,7 @@ parsegraph_ProfileWidget.prototype.onLoad = function(success, response)
 
     var parentNode = this.node();
 
-    console.log(response);
+    //console.log(response);
     var inner = parentNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
     inner.setLabel(response, this._graph.glyphAtlas());
     inner.realLabel().setEditable(true);

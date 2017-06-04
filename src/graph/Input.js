@@ -302,7 +302,6 @@ function parsegraph_Input(graph, camera)
                 return;
             }
 
-            console.log("zoom-enabled toouch");
             touchRec.touchstart = Date.now();
             touchstartTime = Date.now();
         }
@@ -554,16 +553,15 @@ function parsegraph_Input(graph, camera)
                     return;
                 }
             }
-            else if(this._focusedNode.hasKeyListener() &&
-                this._focusedNode.key(event.key)
+            else if(this._focusedNode.hasKeyListener() && this._focusedNode.key(event.key) !== false
             ) {
-                //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
+                console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
             }
             else if(this._focusedNode._label && this._focusedNode._label.editable() && this._focusedNode._label.key(event.key)) {
-                //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
+                console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
@@ -907,15 +905,17 @@ parsegraph_Input.prototype.paint = function()
     }
 
     var cr = label.getCaretRect();
-    this._caretPainter.drawBlock(
-        this._focusedNode._labelX + cr.x() * this._focusedNode._labelScale,
-        this._focusedNode._labelY + cr.y() * this._focusedNode._labelScale,
-        this._focusedNode._labelScale * cr.width(),
-        this._focusedNode._labelScale * cr.height(),
-        0.01,
-        0.02,
-        1
-    );
+    if(this._focusedNode._labelX != null && this._focusedNode._labelY != null) {
+        this._caretPainter.drawBlock(
+            this._focusedNode._labelX + cr.x() * this._focusedNode._labelScale,
+            this._focusedNode._labelY + cr.y() * this._focusedNode._labelScale,
+            this._focusedNode._labelScale * cr.width(),
+            this._focusedNode._labelScale * cr.height(),
+            0.01,
+            0.02,
+            1
+        );
+    }
 };
 
 parsegraph_Input.prototype.focusedNode = function()
