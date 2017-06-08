@@ -1477,7 +1477,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
 
         // Save alignment parameters.
         this._neighbors[childDirection].alignmentOffset = alignment;
-        console.log("Alignment = " + alignment);
+        //console.log("Alignment = " + alignment);
         this._neighbors[childDirection].separation = separation;
 
         // Determine the line length.
@@ -1545,24 +1545,24 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             lengthAdjustment,
             sizeAdjustment)
         {
-            console.log(
+            /*console.log(
                 "combineExtent(" +
                 parsegraph_nameNodeDirection(direction) + ", " +
                 lengthAdjustment + ", " +
                 sizeAdjustment + ")"
-            );
+            );*/
             // Calculate the new offset to this node's center.
             var lengthOffset = this._neighbors[direction].extentOffset
                 + lengthAdjustment
                 - this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
             // Combine the two extents in the given direction.
-            console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
+            /*console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
+            console.log("Child: " + parsegraph_nameLayoutState(child._layoutState));
             console.log("Length offset: " + lengthOffset);
             console.log("Size adjustment: " + sizeAdjustment);
             console.log("ExtentOffset : " + this._neighbors[direction].extentOffset);
-            console.log("Layout State: " + parsegraph_nameLayoutState(child._layoutState));
-            console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));
+            console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));*/
             if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
                 var e = this._neighbors[direction].extent;
                 var bv = child.extentsAt(direction).boundingValues();
@@ -1613,7 +1613,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                     this._neighbors[direction].extentOffset + Math.abs(lengthOffset);
             }
 
-            console.log(
+            /*console.log(
                 "New "
                 + parsegraph_nameNodeDirection(direction)
                 + " extent offset = "
@@ -1621,7 +1621,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             );
             this._neighbors[direction].extent.forEach(function(l, s, i) {
                 console.log(i + ". length=" + l + ", size=" + s);
-            });
+            });*/
 
             // Assert the extent offset is positive.
             if(this._neighbors[direction].extentOffset < 0) {
@@ -1678,10 +1678,10 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             return;
         }
 
-        console.log(
+        /*console.log(
             "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
             + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
-        );
+        );*/
 
         // Get the alignment for the children.
         var alignment = getAlignment.call(this, direction);
@@ -1787,11 +1787,11 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             return;
         }
 
-        console.log(
+        /*console.log(
             "Laying out " +
             parsegraph_nameNodeDirection(firstDirection) + " and " +
             parsegraph_nameNodeDirection(secondDirection) + " children."
-        );
+        );*/
 
         // This node has first-axis children in both directions.
         var firstNode = this.nodeAt(firstDirection);
