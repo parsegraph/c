@@ -1334,6 +1334,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         this._neighbors[inDirection].extent.clear();
         this._neighbors[inDirection].extent.appendLS(length, size);
         this._neighbors[inDirection].extentOffset = offset;
+        console.log(new Error("OFFSET = " + offset));
     };
 
     bodySize = this.size(bodySize);
@@ -1675,10 +1676,10 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             return;
         }
 
-        /*console.log(
+        console.log(
             "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
             + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
-        );*/
+        );
 
         // Get the alignment for the children.
         var alignment = getAlignment.call(this, direction);
@@ -1784,11 +1785,11 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             return;
         }
 
-        /*console.log(
+        console.log(
             "Laying out " +
             parsegraph_nameNodeDirection(firstDirection) + " and " +
             parsegraph_nameNodeDirection(secondDirection) + " children."
-        );*/
+        );
 
         // This node has first-axis children in both directions.
         var firstNode = this.nodeAt(firstDirection);
