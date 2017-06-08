@@ -344,8 +344,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", fun
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two deep", function() {
-    console.log("parsegraph_Graph - Bud with vertical blocks, two deep");
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two deep", function(dom) {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
@@ -372,11 +371,13 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two
         return diff;
     };
 
-    var diff = expect(
-        parsegraph_style('b').verticalPadding * 2
+    var computedBlockSize = parsegraph_style('b').verticalPadding * 2
         + parsegraph_style('b').borderThickness * 2
         + parsegraph_style('b').minHeight
-        + caret.node().nodeAt(parsegraph_UPWARD).verticalSeparation(parsegraph_UPWARD)
+        + caret.node().nodeAt(parsegraph_UPWARD).verticalSeparation(parsegraph_UPWARD);
+
+    var diff = expect(
+        computedBlockSize * (depth - 1)
         + parsegraph_style('b').verticalPadding * 2
         + parsegraph_style('b').borderThickness * 2
         + parsegraph_style('b').minHeight
@@ -391,10 +392,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two
     }
 
     diff = expect(
-        parsegraph_style('b').verticalPadding * 2
-        + parsegraph_style('b').borderThickness * 2
-        + parsegraph_style('b').minHeight
-        + caret.node().nodeAt(parsegraph_UPWARD).verticalSeparation(parsegraph_UPWARD)
+        computedBlockSize * (depth - 1)
         + parsegraph_style('b').verticalPadding * 2
         + parsegraph_style('b').borderThickness * 2
         + parsegraph_style('b').minHeight
