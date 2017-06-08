@@ -714,7 +714,9 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
         }
     }
 
+
     if(nextSibling && prevSibling) {
+        console.log("Adding " + parsegraph_nameNodeType(child.type()) + " child between node siblings");
         var lastOfNode = node._worldPrev;
         var prevExisting = nextSibling._worldPrev;
         prevExisting._worldNext = node;
@@ -723,6 +725,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
         nextSibling._worldPrev = lastOfNode;
     }
     else if(nextSibling) {
+        console.log("Adding child with only next siblings");
         // No previous sibling.
         var oldNext = this._worldNext;
         this._worldNext = node;
@@ -733,6 +736,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
         oldNext._worldPrev = lastOfNode;
     }
     else if(prevSibling) {
+        console.log("Adding child with only previous siblings");
         var oldPrev = this._worldPrev;
         oldPrev._worldNext = node;
         var lastOfNode = node._worldPrev;
@@ -741,6 +745,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
         this._worldPrev = lastOfNode;
     }
     else {
+        console.log("Connecting only child " + parsegraph_nameNodeType(node.type()) + " in " + parsegraph_nameNodeDirection(inDirection) + ".");
         // Connected node has no neighbors.
         var oldNext = this._worldNext;
         this._worldNext = node;
