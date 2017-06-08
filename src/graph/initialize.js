@@ -1,12 +1,13 @@
 parsegraph_GLYPH_ATLAS = null
 function parsegraph_defaultGlyphAtlas()
 {
+    var ga = new parsegraph_GlyphAtlas(
+        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
+    );
     if(!parsegraph_GLYPH_ATLAS) {
-        parsegraph_GLYPH_ATLAS = new parsegraph_GlyphAtlas(
-            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-        );
+        parsegraph_GLYPH_ATLAS = ga;
     }
-    return parsegraph_GLYPH_ATLAS;
+    return ga;
 }
 
 /**
