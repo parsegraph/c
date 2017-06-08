@@ -80,9 +80,14 @@ function createScriptGraph(url)
 {
     var surface = new parsegraph_Surface();
     var graph = new parsegraph_Graph(surface);
+    var atlas = new parsegraph_GlyphAtlas(
+        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
+    );
+    graph.setGlyphAtlas(atlas);
     surface.resize(400, "50vh");
 
     var car = new parsegraph_Caret('bu');
+    car.setGlyphAtlas(atlas);
     graph.plot(car);
     console.log("createScriptGraph");
     GRAPH = graph;
