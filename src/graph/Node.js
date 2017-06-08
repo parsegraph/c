@@ -1334,7 +1334,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         this._neighbors[inDirection].extent.clear();
         this._neighbors[inDirection].extent.appendLS(length, size);
         this._neighbors[inDirection].extentOffset = offset;
-        console.log(new Error("OFFSET = " + offset));
+        //console.log(new Error("OFFSET = " + offset));
     };
 
     bodySize = this.size(bodySize);
@@ -1477,6 +1477,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
 
         // Save alignment parameters.
         this._neighbors[childDirection].alignmentOffset = alignment;
+        console.log("Alignment = " + alignment);
         this._neighbors[childDirection].separation = separation;
 
         // Determine the line length.
