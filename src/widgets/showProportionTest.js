@@ -16,6 +16,7 @@ function showProportionTest(graph, COUNT)
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.setGlyphAtlas(graph.glyphAtlas());
     var selectedNode;
 
     var commandStyle = parsegraph_copyStyle(parsegraph_BLOCK);
