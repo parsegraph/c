@@ -71,7 +71,7 @@ parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)
     );
 };
 
-parsegraph_PaintGroup.prototype.setParent = function(paintGroup)
+parsegraph_PaintGroup.prototype.assignParent = function(paintGroup)
 {
     this._parent = paintGroup;
 };

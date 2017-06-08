@@ -35,6 +35,11 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._absoluteYPos = null;
     this._absoluteScale = null;
 
+    this._paintGroupNext = this;
+    this._paintGroupPrev = this;
+    this._worldNext = this;
+    this._worldPrev = this;
+
     // Check if a parent node was provided.
     this._layoutState = parsegraph_NEEDS_COMMIT;
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
@@ -54,21 +59,14 @@ function parsegraph_Node(newType, fromNode, parentDirection)
         });
     }
 
+    // No parent was provided; this node is a root.
+    this._layoutPreference = parsegraph_PREFER_HORIZONTAL_AXIS;
+    this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
+
+    // A parent node was provided; this node is a child.
     if(fromNode != null) {
-        // A parent node was provided; this node is a child.
-        if(!parsegraph_isNodeDirection(parentDirection) ||
-            parsegraph_NULL_NODE_DIRECTION === parentDirection
-        ) {
-            throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
-        }
         this._layoutPreference = parsegraph_PREFER_PERPENDICULAR_AXIS;
-        this._parentDirection = parentDirection;
-        this._neighbors[parentDirection].node = fromNode;
-    }
-    else {
-        // No parent was provided; this node is a root.
-        this._layoutPreference = parsegraph_PREFER_HORIZONTAL_AXIS;
-        this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
+        fromNode.connectNode(parentDirection, this);
     }
 }
 
@@ -248,14 +246,14 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
             var parentsPaintGroup = this.parentNode().findPaintGroup();
             if(parentsPaintGroup) {
                 parentsPaintGroup._childPaintGroups.push(paintGroup);
-                paintGroup.setParent(parentsPaintGroup);
+                paintGroup.assignParent(parentsPaintGroup);
             }
         }
 
         // Find the child paint groups and add them to this paint group.
         parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
             paintGroup._childPaintGroups.push(childPaintGroup);
-            childPaintGroup.setParent(paintGroup);
+            childPaintGroup.assignParent(paintGroup);
         });
 
         return;
@@ -647,48 +645,12 @@ parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg, t
 
 parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 {
-    // Ensure the node can be spawned in the given direction.
-    if(spawnDirection == parsegraph_OUTWARD) {
-        throw new Error("By rule, nodes cannot be spawned in the outward direction.");
-    }
-    if(spawnDirection == parsegraph_NULL_NODE_DIRECTION) {
-        throw new Error("Nodes cannot be spawned in the null node direction.");
-    }
-    if(spawnDirection == this.parentDirection()) {
-        throw new Error("Cannot spawn in a node in the parent's direction (" + parsegraph_nameNodeDirection(spawnDirection));
-    }
-    if(this.hasNode(spawnDirection)) {
-        throw new Error("Cannot spawn in a node in the already occupied " + parsegraph_nameNodeDirection(spawnDirection) + " direction. Parent is in the " + parsegraph_nameNodeDirection(this.parentDirection()) + " direction.");
-    }
-    if(this.type() == parsegraph_SLIDER) {
-        throw new Error("Sliders cannot have child nodes.");
-    }
-    if(this.type() == parsegraph_SCENE && spawnDirection == parsegraph_INWARD) {
-        throw new Error("Scenes cannot have inward nodes.");
-    }
-
-    // Update the neighbor record.
-    var neighbor = this._neighbors[spawnDirection];
-
-    // Looks good; create the node.
-    var node = new parsegraph_Node(
-        newType,
-        this,
-        parsegraph_reverseNodeDirection(spawnDirection)
-    );
-    neighbor.node = node;
-
-    // Allow alignments to be set before children are spawned.
-    if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
-        neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
-    }
-
-    this.layoutWasChanged(spawnDirection);
+    var created = this.connectNode(spawnDirection, new parsegraph_Node(newType));
 
     // Use the node fitting of the parent.
-    node.setNodeFit(this.nodeFit());
+    created.setNodeFit(this.nodeFit());
 
-    return node;
+    return created;
 };
 
 parsegraph_Node.prototype.connectNode = function(inDirection, node)
@@ -722,7 +684,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     // Connect the node.
     var neighbor = this._neighbors[inDirection];
     neighbor.node = node;
-    node.setParent(this, parsegraph_reverseNodeDirection(inDirection));
+    node.assignParent(this, parsegraph_reverseNodeDirection(inDirection));
 
     if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
         neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
@@ -746,8 +708,7 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
     if(!this.isRoot() && givenDirection == this.parentDirection()) {
         throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
     }
-    this._neighbors[givenDirection].node = null;
-    this.layoutWasChanged(givenDirection);
+    return this.disconnectNode(givenDirection);
 };
 
 parsegraph_Node.prototype.disconnectNode = function(inDirection)
@@ -759,7 +720,7 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     var neighbor = this._neighbors[inDirection];
     var disconnected = neighbor.node;
     neighbor.node = null;
-    disconnected.setParent(null);
+    disconnected.assignParent(null);
     this.layoutWasChanged(inDirection);
     return disconnected;
 };
@@ -971,7 +932,7 @@ parsegraph_Node.prototype.absoluteSize = function(bodySize)
     return this.size(bodySize).scaled(this.absoluteScale());
 };
 
-parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
+parsegraph_Node.prototype.assignParent = function(fromNode, parentDirection)
 {
     if(arguments.length === 0 || !fromNode) {
         // Clearing the parent.
@@ -984,7 +945,6 @@ parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
     this._neighbors[parentDirection].node = fromNode;
     this._parentDirection = parentDirection;
 };
-parsegraph_Node.prototype.setParentNode = parsegraph_Node.prototype.setParent;
 
 parsegraph_Node.prototype.isSelected = function()
 {

@@ -605,6 +605,9 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
     );
 
     var paintBound = function(rect) {
+        if(isNaN(rect.height()) || isNaN(rect.width())) {
+            return;
+        }
         painter.drawBlock(
             worldX + rect.x() + rect.width() / 2,
             worldY + rect.y() + rect.height() / 2,
