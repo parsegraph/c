@@ -1558,6 +1558,8 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
             console.log("Length offset: " + lengthOffset);
             console.log("Size adjustment: " + sizeAdjustment);
+            console.log("ExtentOffset : " + this._neighbors[direction].extentOffset);
+            console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));
             if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
                 var e = this._neighbors[direction].extent;
                 var bv = child.extentsAt(direction).boundingValues();
