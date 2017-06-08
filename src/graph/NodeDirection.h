@@ -9,6 +9,7 @@
 #define parsegraph_UPWARD 3
 #define parsegraph_INWARD 4
 #define parsegraph_OUTWARD 5
+#define parsegraph_NUM_DIRECTIONS 6
 
 // Node Axis
 #define parsegraph_NULL_AXIS 6

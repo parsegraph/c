@@ -44,7 +44,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._layoutState = parsegraph_NEEDS_COMMIT;
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
     this._neighbors = [];
-    for(var i = parsegraph_FORWARD; i <= parsegraph_OUTWARD; ++i) {
+    for(var i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
         this._neighbors.push({
             direction: i,
             extent: new parsegraph_Extent(),

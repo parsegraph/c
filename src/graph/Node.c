@@ -50,7 +50,7 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     // Check if a parent node was provided.
     node->_layoutState = parsegraph_NEEDS_COMMIT;
     node->_nodeFit = parsegraph_NODE_FIT_LOOSE;
-    for(int i = parsegraph_FORWARD; i <= parsegraph_OUTWARD; ++i) {
+    for(int i = 0; i <= parsegraph_NUM_DIRECTIONS; ++i) {
         parsegraph_DirectionData* data = &node->_neighbors[i];
         data->direction = i;
         data->extent = parsegraph_Extent_new(pool);
@@ -102,7 +102,7 @@ void parsegraph_chainTab(parsegraph_Node* a, parsegraph_Node* b, parsegraph_Node
 
 void parsegraph_Node_destroy(parsegraph_Node* node)
 {
-    for(int direction = parsegraph_FORWARD; direction <= parsegraph_OUTWARD; ++direction) {
+    for(int direction = 0; direction < parsegraph_NUM_DIRECTIONS; ++direction) {
         parsegraph_Node* neighbor = node->_neighbors[i].node;
         if(node->_parentDirection != direction) {
             // Clear all children.

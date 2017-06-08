@@ -25,6 +25,8 @@ function parsegraph_initialize(mathMode) {
     parsegraph_INWARD = 4;
     parsegraph_OUTWARD = 5;
 
+    parsegraph_NUM_DIRECTIONS = 6;
+
     // Node Axis
     parsegraph_NULL_AXIS = 6;
     parsegraph_HORIZONTAL_AXIS = 7;
