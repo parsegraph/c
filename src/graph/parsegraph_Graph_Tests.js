@@ -345,6 +345,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", fun
 });
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two deep", function() {
+    console.log("parsegraph_Graph - Bud with vertical blocks, two deep");
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
