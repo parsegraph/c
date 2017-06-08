@@ -9,6 +9,39 @@ function parsegraph_defaultGlyphAtlas()
     return parsegraph_GLYPH_ATLAS;
 }
 
+/**
+ * Show a basic graph given a parsegraph_Node.
+ */
+function parsegraph_showGraph(rootNode)
+{
+    var surface = new parsegraph_Surface();
+    var graph = new parsegraph_Graph(surface);
+    graph.world().plot(rootNode, 0, 0, 0.5);
+    graph.scheduleRepaint();
+
+    var renderTimer = new parsegraph_AnimationTimer();
+    renderTimer.setListener(function() {
+        graph.input().Update(new Date());
+        if(graph.needsRepaint()) {
+            surface.paint(10);
+        }
+        surface.render();
+        if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+            renderTimer.schedule();
+        }
+    });
+
+    graph.input().SetListener(function(affectedPaint) {
+        if(affectedPaint) {
+            graph.scheduleRepaint();
+        }
+        renderTimer.schedule();
+    });
+    renderTimer.schedule();
+
+    return graph.surface().container();
+}
+
 function parsegraph_initialize(mathMode) {
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
