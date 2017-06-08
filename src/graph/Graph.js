@@ -135,7 +135,7 @@ parsegraph_Graph.prototype.needsRepaint = function()
 parsegraph_Graph.prototype.glyphAtlas = function()
 {
     if(!this._glyphAtlas) {
-        this._glyphAtlas = parsegraph_defaultGlyphAtlas();
+        throw new Error("Graph does not have a glyph atlas");
     }
     return this._glyphAtlas;
 }

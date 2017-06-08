@@ -1,14 +1,14 @@
 parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
 
-parsegraph_Label_Tests.addTest("parsegraph_defaultGlyphAtlas", function() {
-    var glyphAtlas = parsegraph_defaultGlyphAtlas();
+parsegraph_Label_Tests.addTest("parsegraph_buildGlyphAtlas", function() {
+    var glyphAtlas = parsegraph_buildGlyphAtlas();
     if(!glyphAtlas) {
         return "No glyph atlas created";
     }
 });
 
 parsegraph_Label_Tests.addTest("new parsegraph_Label", function() {
-    var glyphAtlas = parsegraph_defaultGlyphAtlas();
+    var glyphAtlas = parsegraph_buildGlyphAtlas();
     var label = new parsegraph_Label(glyphAtlas);
     if(!label) {
         return "No label created";
@@ -16,7 +16,7 @@ parsegraph_Label_Tests.addTest("new parsegraph_Label", function() {
 });
 
 parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
-    var glyphAtlas = parsegraph_defaultGlyphAtlas();
+    var glyphAtlas = parsegraph_buildGlyphAtlas();
     var label = new parsegraph_Label(glyphAtlas);
     if(!label) {
         return "No label created";
@@ -219,7 +219,7 @@ parsegraph_Label.prototype.isEmpty = function()
 }
 
 parsegraph_Label_Tests.addTest("isEmpty", function() {
-    var atlas = parsegraph_defaultGlyphAtlas();
+    var atlas = parsegraph_buildGlyphAtlas();
     var l = new parsegraph_Label(atlas);
     if(!l.isEmpty()) {
         return "New label must begin as empty.";
@@ -508,7 +508,7 @@ parsegraph_Label.prototype.click = function(x, y)
 };
 
 parsegraph_Label_Tests.addTest("Click before beginning", function() {
-    var atlas = parsegraph_defaultGlyphAtlas();
+    var atlas = parsegraph_buildGlyphAtlas();
     var l = new parsegraph_Label(atlas);
     l.setText("No time");
     l.click(-5, -5);
@@ -522,7 +522,7 @@ parsegraph_Label_Tests.addTest("Click before beginning", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click on second character", function() {
-    var atlas = parsegraph_defaultGlyphAtlas();
+    var atlas = parsegraph_buildGlyphAtlas();
     var l = new parsegraph_Label(atlas);
     l.setText("No time");
     l.click(atlas.getGlyph('N').width + 1, 0);
@@ -536,7 +536,7 @@ parsegraph_Label_Tests.addTest("Click on second character", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click on second line", function() {
-    var atlas = parsegraph_defaultGlyphAtlas();
+    var atlas = parsegraph_buildGlyphAtlas();
     var l = new parsegraph_Label(atlas);
     l.setText("No time\nLol");
     l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + 1);
@@ -550,7 +550,7 @@ parsegraph_Label_Tests.addTest("Click on second line", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click past end", function() {
-    var atlas = parsegraph_defaultGlyphAtlas();
+    var atlas = parsegraph_buildGlyphAtlas();
     var l = new parsegraph_Label(atlas);
     l.setText("No time\nLol");
     l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + l.lineAt(1).height() + 1);

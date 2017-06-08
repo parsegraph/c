@@ -42,7 +42,7 @@ parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
 parsegraph_Caret.prototype.glyphAtlas = function()
 {
     if(!this._glyphAtlas) {
-        this._glyphAtlas = parsegraph_defaultGlyphAtlas();
+        throw new Error("Caret does not have a GlyphAtlas");
     }
     return this._glyphAtlas;
 };

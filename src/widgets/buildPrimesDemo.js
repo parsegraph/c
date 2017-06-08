@@ -4,6 +4,7 @@ function parsegraph_PrimesWidget(graph)
     this.position = 2;
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
+    this.caret.setGlyphAtlas(graph.glyphAtlas());
     this.caret.label("1", graph.glyphAtlas());
 }
 

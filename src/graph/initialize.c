@@ -35,7 +35,7 @@ float parsegraph_BUD_LEAF_SEPARATION;
 float* parsegraph_BACKGROUND_COLOR;
 int parsegraph_LINE_THICKNESS;
 
-struct parsegraph_GlyphAtlas* parsegraph_defaultGlyphAtlas()
+struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas()
 {
     if(!parsegraph_GLYPH_ATLAS) {
         parsegraph_GLYPH_ATLAS = parsegraph_GlyphAtlas_new(0,
