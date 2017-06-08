@@ -686,6 +686,73 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     neighbor.node = node;
     node.assignParent(this, parsegraph_reverseNodeDirection(inDirection));
 
+    var prevSibling;
+    for(var i = inDirection; i >= 0; --i) {
+        if(i === inDirection) {
+            continue;
+        }
+        if(i === this._parentDirection) {
+            continue;
+        }
+        prevSibling = this._neighbors[i].node;
+        if(prevSibling) {
+            break;
+        }
+    }
+
+    var nextSibling;
+    for(var i = inDirection; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        if(i === inDirection) {
+            continue;
+        }
+        if(i === this._parentDirection) {
+            continue;
+        }
+        nextSibling = this._neighbors[i].node;
+        if(nextSibling) {
+            break;
+        }
+    }
+
+    if(nextSibling && prevSibling) {
+        var lastOfNode = node._worldPrev;
+        var prevExisting = nextSibling._worldPrev;
+        prevExisting._worldNext = node;
+        node._worldPrev = prevExisting;
+        lastOfNode._worldNext = nextSibling;
+        nextSibling._worldPrev = lastOfNode;
+    }
+    else if(nextSibling) {
+        // No previous sibling.
+        var oldNext = this._worldNext;
+        this._worldNext = node;
+        var lastOfNode = node._worldPrev;
+        node._worldPrev = this;
+
+        lastOfNode._worldNext = oldNext;
+        oldNext._worldPrev = lastOfNode;
+    }
+    else if(prevSibling) {
+        var oldPrev = this._worldPrev;
+        oldPrev._worldNext = node;
+        var lastOfNode = node._worldPrev;
+        node._worldPrev = oldPrev;
+        lastOfNode._worldNext = this;
+        this._worldPrev = lastOfNode;
+    }
+    else {
+        // Connected node has no neighbors.
+        var oldNext = this._worldNext;
+        this._worldNext = node;
+
+        var lastOfNode = node._worldPrev;
+        lastOfNode._worldNext = oldNext;
+        oldNext._worldPrev = lastOfNode;
+
+        node._worldPrev = this;
+    }
+
+    // Allow alignments to be set before children are spawned.
     if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
         neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
     }
@@ -721,6 +788,72 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     var disconnected = neighbor.node;
     neighbor.node = null;
     disconnected.assignParent(null);
+
+    var prevSibling;
+    for(var i = inDirection; i >= 0; --i) {
+        if(i === inDirection) {
+            continue;
+        }
+        if(i === this._parentDirection) {
+            continue;
+        }
+        prevSibling = this._neighbors[i].node;
+        if(prevSibling) {
+            break;
+        }
+    }
+    var nextSibling;
+    for(var i = inDirection; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        if(i === inDirection) {
+            continue;
+        }
+        if(i === this._parentDirection) {
+            continue;
+        }
+        nextSibling = this._neighbors[i].node;
+        if(nextSibling) {
+            break;
+        }
+    }
+
+    if(nextSibling && prevSibling) {
+        var oldPrev = disconnected._worldPrev;
+        var lastOfDisconnected = nextSibling._worldPrev;
+
+        disconnected._worldPrev = lastOfDisconnected;
+        lastOfDisconnected._worldNext = disconnected;
+
+        nextSibling._worldPrev = oldPrev;
+        oldPrev._worldNext = nextSibling;
+    }
+    else if(nextSibling) {
+        var oldPrev = nextSibling._worldPrev;
+
+        nextSibling._worldPrev = this;
+        this._worldNext = nextSibling;
+
+        oldPrev._worldNext = disconnected;
+        disconnected._worldPrev = oldPrev;
+    }
+    else if(prevSibling) {
+        var oldPrev = disconnected._worldPrev;
+        var lastOfDisconnected = this._worldPrev;
+
+        disconnected._worldPrev = lastOfDisconnected;
+        lastOfDisconnected._worldNext = disconnected;
+
+        oldPrev._worldNext = this;
+        this._worldPrev = oldPrev;
+    }
+    else {
+        var lastOfDisconnected = this._worldPrev;
+        this._worldNext = this;
+        this._worldPrev = this;
+
+        disconnected._worldPrev = lastOfDisconnected;
+        lastOfDisconnected._worldNext = disconnected;
+    }
+
     this.layoutWasChanged(inDirection);
     return disconnected;
 };
@@ -868,6 +1001,227 @@ parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
     var n = new parsegraph_Node(parsegraph_BLOCK);
     var atlas = parsegraph_defaultGlyphAtlas();
     n.setLabel("No time", atlas);
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading spawned", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    if(n._worldPrev != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._worldNext != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    if(b._worldPrev != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._worldNext != b) {
+        throw new Error("Next sanity");
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._worldNext != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._worldNext != n) {
+        return false;
+    }
+    if(n._worldPrev != b) {
+        return false;
+    }
+    if(b._worldPrev != n) {
+        return false;
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    if(n._worldPrev != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._worldNext != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    if(b._worldPrev != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._worldNext != b) {
+        throw new Error("Next sanity");
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._worldNext != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._worldNext != n) {
+        throw new Error("Next connected sanity");
+    }
+    if(n._worldPrev != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._worldPrev != n) {
+        throw new Error("Next connected sanity");
+    }
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    n.connectNode(parsegraph_BACKWARD, c);
+
+    if(n._worldNext != c) {
+        throw new Error("N worldNext wasn't C");
+    }
+    if(c._worldNext != b) {
+        throw new Error("C worldNext wasn't B");
+    }
+    if(b._worldNext != n) {
+        throw new Error("B worldNext wasn't N");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings and disconnected", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    if(n._worldPrev != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._worldNext != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    if(b._worldPrev != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._worldNext != b) {
+        throw new Error("Next sanity");
+    }
+
+    var inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+    if(b._worldNext != inner) {
+        return "B worldNext isn't inner";
+    }
+    if(inner._worldNext != b) {
+        return "Inner worldNext isn't B";
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._worldNext != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._worldNext != inner) {
+        throw new Error("N worldNext wasn't B");
+    }
+    if(inner._worldNext != n) {
+        throw new Error("N worldNext wasn't B");
+    }
+    if(n._worldPrev != inner) {
+        throw new Error("N worldNext wasn't B");
+    }
+    if(inner._worldPrev != b) {
+        throw new Error("N worldNext wasn't B");
+    }
+    if(b._worldPrev != n) {
+        throw new Error("N worldNext wasn't B");
+    }
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    n.connectNode(parsegraph_BACKWARD, c);
+
+    if(n._worldNext != c) {
+        throw new Error("N worldNext wasn't C");
+    }
+    if(c._worldNext != b) {
+        throw new Error("C worldNext wasn't rb");
+    }
+    if(b._worldNext != inner) {
+        throw new Error("b worldNext wasn't inner");
+    }
+    if(inner._worldNext != n) {
+        throw new Error("inner worldNext wasn't N");
+    }
+    if(b !== n.disconnectNode(parsegraph_FORWARD)) {
+        throw new Error("Not even working properly");
+    }
+    if(b._worldNext !== inner) {
+        throw new Error("B worldNext wasn't inner");
+    }
+    if(b._worldPrev !== inner) {
+        throw new Error("B worldPrev wasn't inner");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings and disconnected 2", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    if(n._worldPrev != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._worldNext != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    if(b._worldPrev != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._worldNext != b) {
+        throw new Error("Next sanity");
+    }
+
+    var inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+    if(b._worldNext != inner) {
+        return "B worldNext isn't inner";
+    }
+    if(inner._worldNext != b) {
+        return "Inner worldNext isn't B";
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._worldNext != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._worldNext != inner) {
+        throw new Error("B worldNext wasn't inner");
+    }
+    if(inner._worldNext != n) {
+        throw new Error("inner worldNext wasn't B");
+    }
+    if(n._worldPrev != inner) {
+        throw new Error("N worldNext wasn't inner");
+    }
+    if(inner._worldPrev != b) {
+        throw new Error("inner worldPrev wasn't b");
+    }
+    if(b._worldPrev != n) {
+        throw new Error("N worldNext wasn't B");
+    }
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    n.connectNode(parsegraph_BACKWARD, c);
+
+    if(n._worldNext != c) {
+        throw new Error("N worldNext wasn't c");
+    }
+    if(c._worldNext != b) {
+        throw new Error("c worldNext wasn't b");
+    }
+    if(b._worldNext != inner) {
+        throw new Error("b worldNext wasn't inner");
+    }
+    if(inner._worldNext != n) {
+        throw new Error("inner worldNext wasn't N");
+    }
+    if(c !== n.disconnectNode(parsegraph_BACKWARD)) {
+        throw new Error("Not even working properly");
+    }
+    if(c._worldNext !== c) {
+        throw new Error("C worldNext wasn't C");
+    }
+    if(c._worldPrev !== c) {
+        throw new Error("C worldPrev wasn't C");
+    }
 });
 
 parsegraph_Node.prototype.blockStyle = function()
@@ -1651,6 +2005,10 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         var reversed = parsegraph_reverseNodeDirection(direction);
         var childExtent = child.extentsAt(reversed);
 
+        if(child._layoutState !== parsegraph_COMMITTED_LAYOUT) {
+            throw new Error(parsegraph_nameNodeDirection(direction) + " Child " + parsegraph_nameNodeType(child.type()) + " does not have a committed layout.", child);
+        }
+
         // Separate the child from this node.
         var separationFromChild = this._neighbors[direction].extent.separation(
             childExtent,
@@ -2208,19 +2566,32 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
         return;
     }
 
-    // Traverse the graph depth-first, committing each node's layout in turn.
+    var root = this;
+    var node = root;
     var bodySize = new parsegraph_Size();
-    var startTime = parsegraph_getTimeInMillis();
-    return this.traverse(
-        function(node) {
-            return node._layoutState === parsegraph_NEEDS_COMMIT;
-        },
-        function(node) {
-            node.commitLayout(bodySize);
-        },
-        this,
-        timeout
-    );
+
+    // Traverse the graph depth-first, committing each node's layout in turn.
+    var loop = function() {
+        var t;
+        if(timeout !== undefined) {
+            t = new Date().getTime();
+        }
+        while(true) {
+            node = node._worldPrev;
+            if(node._layoutState === parsegraph_NEEDS_COMMIT) {
+                node.commitLayout(bodySize);
+            }
+            if(timeout !== undefined && (new Date().getTime() - t > timeout)) {
+                return loop;
+            }
+            if(node === root) {
+                // Terminal condition reached.
+                return null;
+            }
+        }
+    };
+
+    return loop();
 };
 
 /**

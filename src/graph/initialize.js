@@ -51,12 +51,12 @@ function parsegraph_initialize(mathMode) {
 
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;
-    parsegraph_FORWARD = 0;
-    parsegraph_BACKWARD = 1;
+    parsegraph_INWARD = 0;
+    parsegraph_OUTWARD = 1;
     parsegraph_DOWNWARD = 2;
     parsegraph_UPWARD = 3;
-    parsegraph_INWARD = 4;
-    parsegraph_OUTWARD = 5;
+    parsegraph_BACKWARD = 4;
+    parsegraph_FORWARD = 5;
 
     parsegraph_NUM_DIRECTIONS = 6;
 
