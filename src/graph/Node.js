@@ -1543,21 +1543,21 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             lengthAdjustment,
             sizeAdjustment)
         {
-            /*console.log(
+            console.log(
                 "combineExtent(" +
                 parsegraph_nameNodeDirection(direction) + ", " +
                 lengthAdjustment + ", " +
                 sizeAdjustment + ")"
-            );*/
+            );
             // Calculate the new offset to this node's center.
             var lengthOffset = this._neighbors[direction].extentOffset
                 + lengthAdjustment
                 - this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
             // Combine the two extents in the given direction.
-            //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
-            //console.log("Length offset: " + lengthOffset);
-            //console.log("Size adjustment: " + sizeAdjustment);
+            console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
+            console.log("Length offset: " + lengthOffset);
+            console.log("Size adjustment: " + sizeAdjustment);
             if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
                 var e = this._neighbors[direction].extent;
                 var bv = child.extentsAt(direction).boundingValues();
@@ -1608,7 +1608,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                     this._neighbors[direction].extentOffset + Math.abs(lengthOffset);
             }
 
-            /*console.log(
+            console.log(
                 "New "
                 + parsegraph_nameNodeDirection(direction)
                 + " extent offset = "
@@ -1617,7 +1617,6 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             this._neighbors[direction].extent.forEach(function(l, s, i) {
                 console.log(i + ". length=" + l + ", size=" + s);
             });
-            */
 
             // Assert the extent offset is positive.
             if(this._neighbors[direction].extentOffset < 0) {

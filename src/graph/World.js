@@ -241,7 +241,7 @@ parsegraph_World_Tests.addTest("boundingRect", function() {
     var car = new parsegraph_Caret('b');
     w.plot(car);
     var r = w.boundingRect();
-    console.log(r);
+    //console.log(r);
     if(Number.isNaN(r.width())) {
         return "Width must not be NaN";
     }
