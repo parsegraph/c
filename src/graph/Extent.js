@@ -121,6 +121,9 @@ parsegraph_Extent.prototype.realloc = function(capacity)
 }
 
 parsegraph_Extent.prototype.prependLS = function(length, size) {
+    if(isNaN(length)) {
+        throw new Error("Length must not be NaN");
+    }
     if(length == 0) {
         // Drop empty lengths.
         return;
@@ -164,6 +167,9 @@ parsegraph_Extent.prototype.boundCapacity = function()
 
 parsegraph_Extent.prototype.appendLS = function(length, size)
 {
+    if(isNaN(length)) {
+        throw new Error("Length must not be NaN");
+    }
     if(length === 0) {
         // Drop empty lengths.
         return;

@@ -432,8 +432,12 @@ function parsegraph_Input(graph, camera)
 
         this._focusedLabel = false;
         this._focusedNode = null;
-        this._caretPainter.clear();
-        this._spotlightPainter.clear();
+        if(this._caretPainter) {
+            this._caretPainter.clear();
+        }
+        if(this._spotlightPainter) {
+            this._spotlightPainter.clear();
+        }
 
         // Dragging on the canvas.
         attachedMouseListener = mouseDragListener;
