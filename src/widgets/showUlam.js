@@ -73,6 +73,7 @@ function showUlam(graph, COUNT)
     var spiralType = parsegraph_BLOCK;
 
     var caret = new parsegraph_Caret(spiralType);
+    caret.setGlyphAtlas(graph.glyphAtlas());
     caret.fitExact();
     caret.push();
 

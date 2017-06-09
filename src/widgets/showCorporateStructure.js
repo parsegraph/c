@@ -1,6 +1,7 @@
 function showCorporateStructure(graph)
 {
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.setGlyphAtlas(graph.glyphAtlas());
     caret.label("Shareholders");
 
     // Show the board

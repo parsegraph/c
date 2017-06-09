@@ -23,6 +23,7 @@ parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
     }
 
     var car = new parsegraph_Caret('s');
+    car.setGlyphAtlas(glyphAtlas);
     car.label("No time");
 });
 

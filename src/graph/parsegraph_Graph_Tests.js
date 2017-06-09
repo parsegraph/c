@@ -1251,6 +1251,7 @@ parsegraph_Graph_Tests.addTest("Centrally aligned back-and-forth", function() {
 
 parsegraph_Graph_Tests.addTest("Label test", function() {
     var car = new parsegraph_Caret('b');
+    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     car.label('No time');
 
     car.root().commitLayoutIteratively();
