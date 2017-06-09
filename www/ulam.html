@@ -49,7 +49,7 @@ body > div input {
 }
 </style>
 <script src="parsegraph-1.0.js"></script>
-<script src="parsegraph-examples-1.0.js"></script>
+<script src="parsegraph-widgets-1.0.js"></script>
 <script>
 
 function init()
@@ -61,12 +61,28 @@ function init()
 
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
+        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         GRAPH = graph;
 
-        var COUNT = 100;
+        var COUNT = 2;
         main.appendChild(graph.container());
 
-        graph.plot(showUlam(graph, COUNT));
+        var car = new parsegraph_Caret(parsegraph_BLOCK);
+        car.fitExact();
+        car.setGlyphAtlas(graph.glyphAtlas());
+        car.label("R");
+        car.spawnMove(parsegraph_FORWARD, parsegraph_SLOT);
+        car.label("1");
+        car.spawnMove(parsegraph_UPWARD, parsegraph_SLOT);
+        car.label("2");
+        car.spawnMove(parsegraph_BACKWARD, parsegraph_SLOT);
+        car.label("3");
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+        car.label("4");
+        car.moveToRoot();
+
+        graph.plot(car.node());
+        //graph.plot(showUlam(graph, COUNT));
 
         var defaultScale = .25;
         graph.camera().project();
