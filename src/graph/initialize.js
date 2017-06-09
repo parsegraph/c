@@ -251,9 +251,9 @@ function parsegraph_initialize(mathMode) {
         parsegraph_SLOT_STYLE.borderColor.setA(1);
     }
 
-    parsegraph_EXTENT_BORDER_COLOR = new parsegraph_Color(1, 1, 0, .2);
+    parsegraph_EXTENT_BORDER_COLOR = new parsegraph_Color(1, 1, 0, .1);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;
-    parsegraph_EXTENT_BACKGROUND_COLOR = new parsegraph_Color(1, 0, 0, .1);
+    parsegraph_EXTENT_BACKGROUND_COLOR = new parsegraph_Color(1, 0, 0, .5);
 
     parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;

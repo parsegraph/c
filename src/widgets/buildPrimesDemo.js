@@ -15,6 +15,7 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
         this.caret.spawnMove('f', 'b');
         this.caret.label(this.position);
         this.caret.push();
+        this.caret.pull('u');
         var isPrime = true;
         for(var i = 0; i < this.knownPrimes.length; ++i) {
             var prime = this.knownPrimes[i];

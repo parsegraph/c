@@ -97,10 +97,21 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
         this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
     );
 
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
+    );
+    this._gl.blendFunc(
+        this._gl.DST_ALPHA, this._gl.SRC_ALPHA
+    );
     if(this._renderExtents) {
         this._extentPainter.render(world, scale);
     }
-
+    this._gl.disable(this._gl.CULL_FACE);
+    this._gl.disable(this._gl.DEPTH_TEST);
+    this._gl.enable(this._gl.BLEND);
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
+    );
     if(this._renderOrigin) {
         this._originPainter.render(world, scale);
     }
@@ -463,7 +474,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
     var worldX = 0;
     var worldY = 0;
     var userScale = 1;
-    if(this.isExtentRenderingEnabled()) {
+    if(this.isExtentRenderingEnabled() && node.isRoot()) {
         this.paintExtent(node, worldX, worldY, userScale);
     }
 
@@ -693,8 +704,8 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
         });
     };
 
-    paintDownwardExtent();
-    paintUpwardExtent();
+    //paintDownwardExtent();
+    //paintUpwardExtent();
     paintBackwardExtent();
     paintForwardExtent();
 };

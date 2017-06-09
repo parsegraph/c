@@ -64,7 +64,7 @@ function init()
         graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         GRAPH = graph;
 
-        var COUNT = 2;
+        var COUNT = 100;
         main.appendChild(graph.container());
 
         var car = new parsegraph_Caret(parsegraph_BLOCK);
@@ -79,10 +79,14 @@ function init()
         car.label("3");
         car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
         car.label("4");
+        car.spawnMove(parsegraph_FORWARD, parsegraph_SLOT);
+        car.label("5");
+        car.spawnMove(parsegraph_UPWARD, parsegraph_SLOT);
+        car.label("6");
         car.moveToRoot();
 
-        graph.plot(car.node());
-        //graph.plot(showUlam(graph, COUNT));
+        //graph.plot(car.node());
+        graph.plot(showUlam(graph, COUNT));
 
         var defaultScale = .25;
         graph.camera().project();
@@ -98,7 +102,6 @@ function init()
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
-            console.log("Rendering");
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
                 renderTimer.schedule();
