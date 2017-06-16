@@ -1,3 +1,8 @@
+// Line length computation must be decoupled from character insertion for correct widths to be calculated
+// sanely.
+//
+// ... or I handle all the cases in-place.
+
 parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
 
 parsegraph_Label_Tests.addTest("parsegraph_buildGlyphAtlas", function() {
