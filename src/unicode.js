@@ -126,7 +126,11 @@ parsegraph_Unicode.prototype.isArabic = function(letter) {
     if(typeof letter !== "number") {
         letter = letter.charCodeAt(0);
     }
-    var cv = this.get(letter).codeValue;
+    var data = this.get(letter);
+    if(!data) {
+        return false;
+    }
+    var cv = data.codeValue;
     return cv >= 0x621 && cv <= 0x64a;
 };
 
@@ -134,7 +138,11 @@ parsegraph_Unicode.prototype.isMark = function(letter) {
     if(typeof letter !== "number") {
         letter = letter.charCodeAt(0);
     }
-    var cat = this.get(letter).generalCategory;
+    var data = this.get(letter);
+    if(!data) {
+        return false;
+    }
+    var cat = data.generalCategory;
     return cat === "Mn" || cat === "Mc" || cat === "Me";
 };
 
@@ -142,7 +150,11 @@ parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
     if(typeof letter !== "number") {
         letter = letter.charCodeAt(0);
     }
-    var cv = this.get(letter).codeValue;
+    var data = this.get(letter);
+    if(!data) {
+        return false;
+    }
+    var cv = data.codeValue;
     return cv >= 0x621 && cv <= 0x64a;
 };
 

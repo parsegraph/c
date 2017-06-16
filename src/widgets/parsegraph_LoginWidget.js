@@ -441,6 +441,7 @@ parsegraph_LoginWidget.prototype.authenticateForm = function()
     }
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
+    car.setGlyphAtlas(this.glyphAtlas());
     var remembered = localStorage.getItem("parsegraph_LoginWidget_remember");
     if(remembered !== "1" && remembered !== "0") {
         car.label(remembered);

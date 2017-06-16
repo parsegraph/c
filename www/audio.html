@@ -151,6 +151,7 @@ parsegraph_OscillatorWidget.prototype.node = function()
         // Frequency
         car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
         car.push();
+        car.pull(parsegraph_DOWNWARD);
         car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
         car.label("Frequency");
         var fsSlider = car.spawn('i', 'sli', 'v');
@@ -568,7 +569,9 @@ parsegraph_FilterWidget.prototype.node = function()
         car.spawnMove('d', 'u', 'c').connectNode(parsegraph_DOWNWARD, this.frequencyNode());
         car.pull('d');
         car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.qNode());
+        car.pull(parsegraph_DOWNWARD);
         car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.gainNode());
+        car.pull(parsegraph_DOWNWARD);
         car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.detuneNode());
     }
     return this._containerNode;
@@ -580,7 +583,11 @@ function init(main)
         parsegraph_initialize();
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
+
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
         graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+        graph.glyphAtlas().setUnicode(uni);
         main.appendChild(surface.container());
         var widget = new parsegraph_LoginWidget(surface, graph);
         widget.authenticate();
@@ -660,6 +667,7 @@ function init(main)
                 g.connect(sink);
             }, this);
             car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, synth.node());
+            car.pull(parsegraph_DOWNWARD);
 
             var filterWidget = new parsegraph_FilterWidget(graph);
             filterWidget.load(bqf);
@@ -752,6 +760,9 @@ function init(main)
         graph.onScheduleRepaint = function() {
             renderTimer.schedule();
         };
+        };
+        uni.load();
+        parsegraph_UNICODE_INSTANCE = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

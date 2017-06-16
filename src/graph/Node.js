@@ -2460,8 +2460,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                 layoutSingle.call(
                     this,
                     oppositeFromParent,
-                    true
-                    //firstDirection != parsegraph_NULL_NODE_DIRECTION || secondDirection != parsegraph_NULL_NODE_DIRECTION
+                    false //firstDirection != parsegraph_NULL_NODE_DIRECTION || secondDirection != parsegraph_NULL_NODE_DIRECTION
                 );
             }
 

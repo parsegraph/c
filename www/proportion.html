@@ -95,7 +95,7 @@ function init()
             renderTimer.setListener(function() {
                 graph.input().Update(new Date());
                 if(graph.needsRepaint()) {
-                    surface.paint(50);
+                    surface.paint(30);
                 }
                 surface.render();
                 if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {

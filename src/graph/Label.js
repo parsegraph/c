@@ -664,37 +664,43 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
         while(l._glyphs.length > 0) {
             glyphData = l._glyphs[j];
             var glyphDirection = direction;
-            switch(u.get(glyphData.letter).bidirectionalCategory) {
-            case "L":
-            case "LRE":
-            case "LRO":
-            case "EN":
-            case "ES":
-            case "ET":
-                // Left-to-right.
-                glyphDirection = "L";
-                break;
-            case "R":
-            case "AL":
-            case "AN":
-            case "RLE":
-            case "RLO":
-                // Right-to-left
-                glyphDirection = "R";
-                break;
-            case "PDF":
-            case "CS":
-            case "ON":
-            case "WS":
-            case "P":
-            case "BN":
-            case "S":
-            case "NSM":
-                // Neutral characters
+            var unicodeData = u.get(glyphData.letter);
+            if(unicodeData) {
+                switch(unicodeData.bidirectionalCategory) {
+                case "L":
+                case "LRE":
+                case "LRO":
+                case "EN":
+                case "ES":
+                case "ET":
+                    // Left-to-right.
+                    glyphDirection = "L";
+                    break;
+                case "R":
+                case "AL":
+                case "AN":
+                case "RLE":
+                case "RLO":
+                    // Right-to-left
+                    glyphDirection = "R";
+                    break;
+                case "PDF":
+                case "CS":
+                case "ON":
+                case "WS":
+                case "P":
+                case "BN":
+                case "S":
+                case "NSM":
+                    // Neutral characters
+                    glyphDirection = direction;
+                    break;
+                default:
+                    throw new Error("Unrecognized character: \\u" + glyphData.letter.charCodeAt(0).toString(16));
+                }
+            }
+            else {
                 glyphDirection = direction;
-                break;
-            default:
-                throw new Error("Unrecognized character: \\u" + glyphData.letter.charCodeAt(0).toString(16));
             }
             if(direction === "WS" && glyphDirection !== "WS") {
                 // Use the glyph's direction if there is none currently in use.

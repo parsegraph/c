@@ -61,9 +61,15 @@ function init()
 
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
+        GRAPH = graph;
+
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+            graph.glyphAtlas().setUnicode(uni);
+
         graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         graph.plot(showCorporateStructure(graph));
-        GRAPH = graph;
         main.appendChild(surface.container());
 
         if(localStorage.getItem("parsegraph_corporate_camera") != null) {
@@ -105,6 +111,9 @@ function init()
         surface.addRenderer(function() {
             localStorage.setItem("parsegraph_corporate_camera", JSON.stringify(graph.camera().toJSON()));
         });
+        };
+        uni.load();
+        parsegraph_UNICODE_INSTANCE = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
