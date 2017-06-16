@@ -64,11 +64,11 @@ function init()
 
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
-        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         GRAPH = graph;
 
         var uni = new parsegraph_Unicode();
         uni.onLoad = function() {
+            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
             graph.glyphAtlas().setUnicode(uni);
 
             var COUNT = 25
@@ -115,7 +115,7 @@ function init()
             });
         };
         uni.load();
-        U = uni;
+        parsegraph_UNICODE_INSTANCE = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
