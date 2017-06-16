@@ -83,9 +83,9 @@ parsegraph_PaintGroup.prototype.markDirty = function()
     this._previousPaintState.i = 0;
     this._previousPaintState.ordering = [this];
 
-    this._childPaintGroups.forEach(function(pg) {
+    /*this._childPaintGroups.forEach(function(pg) {
         pg.markDirty();
-    }, this);
+    }, this);*/
 };
 
 parsegraph_PaintGroup.prototype.isDirty = function()
