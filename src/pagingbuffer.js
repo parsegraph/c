@@ -270,7 +270,9 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
 
             // Load buffer data if the page needs an update.
             var bufferData = page.buffers[attribIndex];
-            if(page.needsUpdate) {
+            if(page.needsUpdate && bufferData.length > 0) {
+                //console.log("Pushing bytes to GL");
+                parsegraph_glBufferData_BYTES += bufferData.length;
                 this._gl.bufferData(
                     this._gl.ARRAY_BUFFER,
                     new Float32Array(bufferData),
