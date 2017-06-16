@@ -10,9 +10,6 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._blockPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderBlocks = true;
 
-    this._originPainter = new parsegraph_BlockPainter(this._gl, shaders);
-    this._renderOrigin = false;
-
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
     this._renderExtents = false;
 
@@ -112,9 +109,6 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     this._gl.blendFunc(
         this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
     );
-    if(this._renderOrigin) {
-        this._originPainter.render(world, scale);
-    }
 
     if(this._renderText) {
         this._glyphPainter.render(world);
@@ -138,21 +132,6 @@ parsegraph_NodePainter.prototype.disableExtentRendering = function()
 parsegraph_NodePainter.prototype.isExtentRenderingEnabled = function()
 {
     return this._renderExtents;
-};
-
-parsegraph_NodePainter.prototype.enableOriginRendering = function()
-{
-    this._renderOrigin = true;
-};
-
-parsegraph_NodePainter.prototype.disableOriginRendering = function()
-{
-    this._renderOrigin = false;
-};
-
-parsegraph_NodePainter.prototype.isOriginRenderingEnabled = function()
-{
-    return this._renderOrigin;
 };
 
 parsegraph_NodePainter.prototype.enableBlockRendering = function()
@@ -219,7 +198,6 @@ parsegraph_NodePainter.prototype.clear = function()
 {
     this._blockPainter.clear();
     this._extentPainter.clear();
-    this._originPainter.clear();
     this._glyphPainter.clear();
 
     var gl = this._gl;
@@ -489,46 +467,6 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
         this.paintLines(node, worldX, worldY, userScale);
         this.paintBlock(node, worldX, worldY, userScale);
     }
-};
-
-/**
- * Paints a circle around the origin.
- */
-parsegraph_NodePainter.prototype.drawOrigin = function()
-{
-    this._originPainter.setBackgroundColor(
-        parsegraph_createColor(1, 1, 1, .05)
-    );
-    this._originPainter.setBorderColor(
-        parsegraph_createColor(1, 1, 1, .1)
-    );
-    var originSize = 2.5;
-    var originBorderSize = .01;
-
-    this._originPainter.drawBlock(
-        0, 0,
-        originSize,
-        originSize,
-        1,
-        originBorderSize,
-        1
-    );
-    this._originPainter.drawBlock(
-        0, 0,
-        originSize * 10,
-        originSize * 10,
-        1,
-        originBorderSize,
-        1
-    );
-    this._originPainter.drawBlock(
-        0, 0,
-        originSize * 100,
-        originSize * 100,
-        1,
-        originBorderSize,
-        1
-    );
 };
 
 /**
