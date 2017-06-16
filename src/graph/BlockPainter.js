@@ -334,17 +334,11 @@ function parsegraph_BlockPainter(gl, shaders)
     }
     this._blockProgram = shaders[shaderName];
 
-    // Prepare attribute buffers.
-    this._blockBuffer = parsegraph_createPagingBuffer(
-        this._gl, this._blockProgram
-    );
-    this.a_position = this._blockBuffer.defineAttrib("a_position", 2);
-    this.a_texCoord = this._blockBuffer.defineAttrib("a_texCoord", 2);
-    this.a_color = this._blockBuffer.defineAttrib("a_color", 4);
-    this.a_borderColor = this._blockBuffer.defineAttrib("a_borderColor", 4);
-    this.a_borderRoundedness = this._blockBuffer.defineAttrib("a_borderRoundedness", 1);
-    this.a_borderThickness = this._blockBuffer.defineAttrib("a_borderThickness", 1);
-    this.a_aspectRatio = this._blockBuffer.defineAttrib("a_aspectRatio", 1);
+    // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
+    this._blockBuffer = null;
+    this._numBlocks = null;
+    this._numFaces = 0;
+    this._numVertices = 0;
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -358,8 +352,24 @@ function parsegraph_BlockPainter(gl, shaders)
         parsegraph_createColor(1, 1, 1, 1)
     );
 
-    this._blockBuffer.addPage();
     this._bounds = null;
+    this.a_position = this._gl.getAttribLocation(this._blockProgram, "a_position");
+    this.a_texCoord = this._gl.getAttribLocation(this._blockProgram, "a_texCoord");
+    this.a_color = this._gl.getAttribLocation(this._blockProgram, "a_color");
+    this.a_borderColor = this._gl.getAttribLocation(this._blockProgram, "a_borderColor");
+    this.a_borderRoundedness = this._gl.getAttribLocation(this._blockProgram, "a_borderRoundedness");
+    this.a_borderThickness = this._gl.getAttribLocation(this._blockProgram, "a_borderThickness");
+    this.a_aspectRatio = this._gl.getAttribLocation(this._blockProgram, "a_aspectRatio");
+
+    // Position: 2 * 4 (two floats)  0-7
+    // TexCoord: 2 * 4 (two floats)  8-15
+    // Color:    4 * 4 (four floats) 16-31
+    // BorColor: 4 * 4 (four floats) 32-47
+    // BorRound: 1 * 4 (one float)   48-51
+    // BorThick: 1 * 4 (one float)   52-55
+    // AspectRa: 1 * 4 (one float)   56-59
+    this._stride = 60;
+    this._itemBuffer = new DataView(new ArrayBuffer(this._stride));
 };
 
 parsegraph_BlockPainter.prototype.bounds = function()
@@ -387,9 +397,46 @@ parsegraph_BlockPainter.prototype.setBackgroundColor = function(backgroundColor)
     this._backgroundColor = backgroundColor;
 };
 
+parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
+{
+    if(this._numBlocks === numBlocks) {
+        // Same number of blocks, so just reset the counters and overwrite.
+        this._numVertices = 0;
+        this._numFaces = 0;
+        return;
+    }
+    if(this._blockBuffer) {
+        this.clear();
+    }
+    var gl = this._gl;
+    this._blockBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this._stride*6*numBlocks, gl.STATIC_DRAW);
+    this._numBlocks = numBlocks;
+};
+
+parsegraph_BlockPainter.prototype.clear = function()
+{
+    if(!this._blockBuffer) {
+        return;
+    }
+    this._gl.deleteBuffer(this._blockBuffer);
+    this._blockBuffer = null;
+    this._bounds = null;
+    this._numBlocks = null;
+    this._numFaces = 0;
+    this._numVertices = 0;
+};
+
 parsegraph_BlockPainter.prototype.drawBlock = function(
     cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
 {
+    if(this._numFaces / 2 >= this._numBlocks) {
+        throw new Error("BlockPainter is full and cannot draw any more blocks.");
+    }
+    if(!this._blockBuffer) {
+        throw new Error("BlockPainter.initBuffer(numBlocks) must be called first.");
+    }
     if(!this._bounds) {
         this._bounds = new parsegraph_Rect(cx, cy, width, height);
     }
@@ -397,87 +444,130 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
         this._bounds.include(cx, cy, width, height);
     }
 
-    //console.log(cx + ", " + cy + ", " + width + ", " + height);
-    // Append position data.
-    this._blockBuffer.appendData(
-        this.a_position,
-        parsegraph_generateRectangleVertices(
-            cx, cy, width, height
-        )
-    );
+    var endian = true;
 
-    // Append texture coordinate data.
-    this._blockBuffer.appendData(
-        this.a_texCoord,
-        parsegraph_generateRectangleTexcoords()
-    );
+    var buf = this._itemBuffer;
 
     // Append color data.
-    for(var k = 0; k < 3 * 2; ++k) {
-        this._blockBuffer.appendData(
-            this.a_color,
-            this.backgroundColor().r(),
-            this.backgroundColor().g(),
-            this.backgroundColor().b(),
-            this.backgroundColor().a()
-        );
+    var bg = this.backgroundColor();
+    buf.setFloat32(16, bg.r(), endian);
+    buf.setFloat32(20, bg.g(), endian);
+    buf.setFloat32(24, bg.b(), endian);
+    buf.setFloat32(28, bg.a(), endian);
 
-        // Append border color data.
-        this._blockBuffer.appendData(
-            this.a_borderColor,
-            this.borderColor().r(),
-            this.borderColor().g(),
-            this.borderColor().b(),
-            this.borderColor().a()
-        );
+    // Append border color data.
+    var borC = this.borderColor();
+    buf.setFloat32(32, borC.r(), endian);
+    buf.setFloat32(36, borC.g(), endian);
+    buf.setFloat32(40, borC.b(), endian);
+    buf.setFloat32(44, borC.a(), endian);
 
-        // Append border radius data.
-        if(height < width) {
-            this._blockBuffer.appendData(
-                this.a_borderRoundedness,
-                borderScale * borderRoundedness / height
-            );
-            this._blockBuffer.appendData(
-                this.a_borderThickness,
-                borderScale * borderThickness / height
-            );
-        }
-        else {
-            // height > width
-            this._blockBuffer.appendData(
-                this.a_borderRoundedness,
-                borderScale * borderRoundedness / width
-            );
-            this._blockBuffer.appendData(
-                this.a_borderThickness,
-                borderScale * borderThickness / width
-            );
-        }
-
-        this._blockBuffer.appendData(
-            this.a_aspectRatio,
-            height / width
-        );
+    // Append border radius data.
+    if(height < width) {
+        buf.setFloat32(48, borderScale * borderRoundedness / height, endian);
+        buf.setFloat32(52, borderScale * borderThickness / height, endian);
     }
-};
+    else {
+        // height > width
+        buf.setFloat32(48, borderScale * borderRoundedness / width, endian);
+        buf.setFloat32(52, borderScale * borderThickness / width, endian);
+    }
+    buf.setFloat32(56, height/width, endian);
 
-parsegraph_BlockPainter.prototype.clear = function()
-{
-    this._blockBuffer.clear();
-    this._blockBuffer.addPage();
-    this._bounds = null;
+    var stride = this._stride;
+    var gl = this._gl;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
+
+    // Append position and texture coordinate data.
+    buf.setFloat32(0, cx - width / 2, endian);
+    buf.setFloat32(4, cy - height / 2, endian);
+    buf.setFloat32(8, 0, endian);
+    buf.setFloat32(12, 0, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    buf.setFloat32(0, cx + width / 2, endian);
+    buf.setFloat32(4, cy - height / 2, endian);
+    buf.setFloat32(8, 1, endian);
+    buf.setFloat32(12, 0, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    buf.setFloat32(0, cx + width / 2, endian);
+    buf.setFloat32(4, cy + height / 2, endian);
+    buf.setFloat32(8, 1, endian);
+    buf.setFloat32(12, 1, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    buf.setFloat32(0, cx - width / 2, endian);
+    buf.setFloat32(4, cy - height / 2, endian);
+    buf.setFloat32(8, 0, endian);
+    buf.setFloat32(12, 0, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    buf.setFloat32(0, cx + width / 2, endian);
+    buf.setFloat32(4, cy + height / 2, endian);
+    buf.setFloat32(8, 1, endian);
+    buf.setFloat32(12, 1, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    buf.setFloat32(0, cx - width / 2, endian);
+    buf.setFloat32(4, cy + height / 2, endian);
+    buf.setFloat32(8, 0, endian);
+    buf.setFloat32(12, 1, endian);
+    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+
+    //console.log(this._numVertices + " verts");
+    this._numFaces += 2;
 };
 
 parsegraph_BlockPainter.prototype.render = function(world)
 {
+    if(!this._numFaces) {
+        return;
+    }
+    var gl = this._gl;
+    //console.log("Rendering " + this._numVertices + " vertices");
+
     // Render blocks.
-    this._gl.useProgram(
-        this._blockProgram
-    );
-    this._gl.uniformMatrix3fv(
-        this.u_world,
-        false,
-        world
-    );
-    return this._blockBuffer.renderPages();
+    gl.useProgram(this._blockProgram);
+    gl.uniformMatrix3fv(this.u_world, false, world);
+
+    gl.enableVertexAttribArray(this.a_position);
+    gl.enableVertexAttribArray(this.a_texCoord);
+    gl.enableVertexAttribArray(this.a_color);
+    gl.enableVertexAttribArray(this.a_borderColor);
+    gl.enableVertexAttribArray(this.a_borderRoundedness);
+    gl.enableVertexAttribArray(this.a_borderThickness);
+    gl.enableVertexAttribArray(this.a_aspectRatio);
+
+    var stride = this._stride;
+    if(!this._blockBuffer) {
+        throw new Error("No block buffer to render; BlockPainter.initBuffer(numBlocks) must be called first.");
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
+
+    // Position: 2 * 4 (two floats)  0-7
+    // TexCoord: 2 * 4 (two floats)  8-15
+    // Color:    4 * 4 (four floats) 16-31
+    // BorColor: 4 * 4 (four floats) 32-47
+    // BorRound: 1 * 4 (one float)   48-51
+    // BorThick: 1 * 4 (one float)   52-55
+    // AspectRa: 1 * 4 (one float)   56-59
+    gl.vertexAttribPointer(this.a_position,          2, gl.FLOAT, false, stride, 0);
+    gl.vertexAttribPointer(this.a_texCoord,          2, gl.FLOAT, false, stride, 8);
+    gl.vertexAttribPointer(this.a_color,             4, gl.FLOAT, false, stride, 16);
+    gl.vertexAttribPointer(this.a_borderColor,       4, gl.FLOAT, false, stride, 32);
+    gl.vertexAttribPointer(this.a_borderRoundedness, 1, gl.FLOAT, false, stride, 48);
+    gl.vertexAttribPointer(this.a_borderThickness,   1, gl.FLOAT, false, stride, 52);
+    gl.vertexAttribPointer(this.a_aspectRatio,       1, gl.FLOAT, false, stride, 56);
+
+    gl.drawArrays(gl.TRIANGLES, 0, this._numVertices);
+
+    gl.disableVertexAttribArray(this.a_position);
+    gl.disableVertexAttribArray(this.a_texCoord);
+    gl.disableVertexAttribArray(this.a_color);
+    gl.disableVertexAttribArray(this.a_borderColor);
+    gl.disableVertexAttribArray(this.a_borderRoundedness);
+    gl.disableVertexAttribArray(this.a_borderThickness);
+    gl.disableVertexAttribArray(this.a_aspectRatio);
 };

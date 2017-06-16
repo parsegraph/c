@@ -433,7 +433,7 @@ function parsegraph_Input(graph, camera)
         this._focusedLabel = false;
         this._focusedNode = null;
         if(this._caretPainter) {
-            this._caretPainter.clear();
+            this._caretPainter.initBuffer(1);
         }
         if(this._spotlightPainter) {
             this._spotlightPainter.clear();
@@ -882,7 +882,7 @@ parsegraph_Input.prototype.paint = function()
         );
     }
 
-    this._caretPainter.clear();
+    this._caretPainter.initBuffer(1);
     this._caretPainter.setBorderColor(this._caretColor);
     this._caretPainter.setBackgroundColor(this._caretColor);
 

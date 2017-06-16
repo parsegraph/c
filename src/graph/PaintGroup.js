@@ -174,9 +174,11 @@ parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas
                 paintGroup._painter = new parsegraph_NodePainter(gl, glyphAtlas, shaders);
                 paintGroup._painter.setBackground(backgroundColor);
             }
-            else {
-                paintGroup._painter.clear();
-            }
+            var counts = {};
+            parsegraph_foreachPaintGroupNodes(paintGroup.root(), function(node) {
+                paintGroup._painter.countNode(node, counts);
+            }, paintGroup);
+            paintGroup._painter.initBlockBuffer(counts);
             parsegraph_foreachPaintGroupNodes(paintGroup.root(), function(node) {
                 paintGroup._painter.drawNode(node, shaders);
             }, paintGroup);

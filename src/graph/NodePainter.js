@@ -444,6 +444,55 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY, user
     this._textures.push(p);
 };
 
+parsegraph_NodePainter.prototype.initBlockBuffer = function(counts)
+{
+    this._blockPainter.initBuffer(counts.numBlocks);
+    this._extentPainter.initBuffer(counts.numExtents);
+    this._glyphPainter.clear();
+};
+
+parsegraph_NodePainter.prototype.countNode = function(node, counts)
+{
+    if(!counts.numBlocks) {
+        counts.numBlocks = 0;
+    }
+
+    if(this.isExtentRenderingEnabled() && node.isRoot()) {
+        if(!counts.numExtents) {
+            counts.numExtents = 0;
+        }
+        ++counts.numExtents;
+    }
+
+    if(node.type() === parsegraph_SLIDER) {
+        if(node.parentDirection() === parsegraph_UPWARD) {
+            // Only downward direction is currently supported.
+            ++counts.numBlocks;
+        }
+        // One for the joining line.
+        ++counts.numBlocks;
+        // One for the block.
+        ++counts.numBlocks;
+    }
+    else {
+        parsegraph_forEachCardinalNodeDirection(function(direction) {
+            if(node.parentDirection() == direction) {
+                return;
+            }
+            var directionData = node._neighbors[direction];
+            // Do not draw lines unless there is a node.
+            if(!directionData.node) {
+                return;
+            }
+            // One for the line
+            ++counts.numBlocks;
+        }, this);
+
+        // One for the block.
+        ++counts.numBlocks;
+    }
+};
+
 /**
  * Draws a single node, and the lines extending from it.
  */

@@ -119,7 +119,7 @@ parsegraph_Unicode.prototype.loadFromString = function(t)
             }
         }
     }
-    console.log("Text received: " + t.length + " bytes, " + lines + " lines");
+    //console.log("Text received: " + t.length + " bytes, " + lines + " lines");
 };
 
 parsegraph_Unicode.prototype.isArabic = function(letter) {
@@ -174,7 +174,7 @@ parsegraph_Unicode.prototype.load = function(dbURL) {
             }
         }
         else {
-            console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
+            //console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
         }
     };
     xhr.send();

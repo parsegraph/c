@@ -59,6 +59,7 @@ parsegraph_CameraBox.prototype.paint = function()
         else {
             this._cameraBoxPainter.clear();
         }
+        this._cameraBoxPainter._blockPainter.initBuffer(this._cameraBoxes.length);
         var rect = new parsegraph_Rect();
         for(var name in this._cameraBoxes) {
             var cameraBox = this._cameraBoxes[name];
