@@ -125,7 +125,7 @@ parsegraph_GlyphPainter.prototype.glyphAtlas = function()
 
 parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
-    if(typeof glyphData === "string") {
+    if(typeof glyphData !== "object") {
         glyphData = this._glyphAtlas.getGlyph(glyphData);
     }
     glyphData.painted = true;

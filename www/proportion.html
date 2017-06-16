@@ -67,48 +67,55 @@ function init()
         graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         GRAPH = graph;
 
-        var COUNT = 25
-        main.appendChild(surface.container());
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+            graph.glyphAtlas().setUnicode(uni);
 
-        // Look at alignment here first.
-        //graph.world().plot(showHardTest(graph, server));
-        //graph.world().plot(showStatements(graph));
+            var COUNT = 25
+            main.appendChild(surface.container());
 
-        // Then correct alignment here.
-        graph.world().plot(showProportionTest(graph, COUNT), 0, 0, 1);
+            // Look at alignment here first.
+            //graph.world().plot(showHardTest(graph, server));
+            //graph.world().plot(showStatements(graph));
 
-        if(localStorage.getItem("parsegraph_world_camera") != null) {
-            try {
-                var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
-                graph.camera().restore(parsegraph_world_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            // Then correct alignment here.
+            graph.world().plot(showProportionTest(graph, COUNT), 0, 0, 1);
+
+            if(localStorage.getItem("parsegraph_world_camera") != null) {
+                try {
+                    var parsegraph_world_camera = JSON.parse(localStorage.getItem("parsegraph_world_camera"));
+                    graph.camera().restore(parsegraph_world_camera);
+                } catch(e) {
+                    console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                }
             }
-        }
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
-                surface.paint(50);
-            }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            renderTimer.setListener(function() {
+                graph.input().Update(new Date());
+                if(graph.needsRepaint()) {
+                    surface.paint(50);
+                }
+                surface.render();
+                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                    renderTimer.schedule();
+                }
+            });
+            graph.input().SetListener(function(affectedPaint) {
+                if(affectedPaint) {
+                    graph.scheduleRepaint();
+                }
                 renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
+            });
             renderTimer.schedule();
-        });
-        renderTimer.schedule();
 
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
-        });
+            surface.addRenderer(function() {
+                localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
+            });
+        };
+        uni.load();
+        U = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

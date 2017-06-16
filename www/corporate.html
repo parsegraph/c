@@ -82,6 +82,10 @@ function init()
             if(graph.needsRepaint()) {
                 surface.paint(50);
             }
+            if(parsegraph_glBufferData_BYTES > 0) {
+                console.log("Wrote " + parsegraph_glBufferData_BYTES + " in pagingbuffer");
+                parsegraph_clearPerformanceCounters();
+            }
             surface.render();
             if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
                 renderTimer.schedule();

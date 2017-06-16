@@ -52,11 +52,17 @@ body > div input {
 <script src="parsegraph-widgets-1.0.js"></script>
 <script>
 
-function createTextDemo() {
-    var car = new parsegraph_Caret('b');
-    car.label("Click to type text here.");
+function createTextDemo(graph) {
+    var car = new parsegraph_Caret('bu');
+    car.setGlyphAtlas(graph.glyphAtlas());
+    car.spawnMove('b', 'bu');
+    car.connect('d', buildTextDemo(graph));
+    car.moveToRoot();
+    //car.label("Click to type text here.");
+    //car.node().realLabel().setEditable(true);
     for(var i = 0; i < 0; ++i) {
         car.label("Click to type text here.");
+        car.node().realLabel().setEditable(true);
         car.spawnMove('d', 'b');
     }
     return car.root();
@@ -71,47 +77,56 @@ function init()
 
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
+        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
         GRAPH = graph;
 
-        var COUNT = 25
-        main.appendChild(surface.container());
-        graph.plot(createTextDemo());
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+            graph.glyphAtlas().setUnicode(uni);
 
-        if(localStorage.getItem("parsegraph_text_camera") != null) {
-            try {
-                var parsegraph_text_camera = JSON.parse(localStorage.getItem("parsegraph_text_camera"));
-                graph.camera().restore(parsegraph_text_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-            }
-        }
+            var COUNT = 25
+            main.appendChild(surface.container());
+            graph.plot(createTextDemo(graph));
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
-                surface.paint(50);
+            if(localStorage.getItem("parsegraph_text_camera") != null) {
+                try {
+                    var parsegraph_text_camera = JSON.parse(localStorage.getItem("parsegraph_text_camera"));
+                    graph.camera().restore(parsegraph_text_camera);
+                } catch(e) {
+                    console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                }
             }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            renderTimer.setListener(function() {
+                graph.input().Update(new Date());
+                if(graph.needsRepaint()) {
+                    surface.paint(50);
+                }
+                surface.render();
+                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                    renderTimer.schedule();
+                }
+            });
+            graph.input().SetListener(function(affectedPaint) {
+                if(affectedPaint) {
+                    graph.scheduleRepaint();
+                }
                 renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
+            });
             renderTimer.schedule();
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
+            graph.onScheduleRepaint = function() {
+                renderTimer.schedule();
+            };
 
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_text_camera", JSON.stringify(graph.camera().toJSON()));
-        });
+            surface.addRenderer(function() {
+                localStorage.setItem("parsegraph_text_camera", JSON.stringify(graph.camera().toJSON()));
+            });
+        };
+        uni.load();
+        parsegraph_UNICODE_INSTANCE = uni;
+
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

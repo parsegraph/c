@@ -8,43 +8,31 @@ function buildTextDemo(graph, COUNT, text)
     }
 
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-    caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
-    caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
-    caret.node().setLabel("Rainback");
+    caret.setGlyphAtlas(graph.glyphAtlas());
 
-    caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
-    caret.move(parsegraph_DOWNWARD);
-    caret.shrink();
-    caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-    caret.pull(parsegraph_DOWNWARD);
-
-    var i = 0;
-    var addBlock = function() {
-        if(i % 2 === 0) {
-            caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
-        }
-        else {
-            caret.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
-        }
-        caret.node().setLabel(text + " " + i);
-        caret.move(parsegraph_UPWARD);
-
+    [
+        "क्या चल रहा हैं?",,
+        "नमस्ते",
+        "اَلْقَهْوَةُ",
+        "اَلْمِلْعَقَةُ",
+        //"هل بإمكانك مساعدتي؟",
+        //"سلام",
+        //"سلام",
+        //"بيع سلم",
+        //"مَسْجِدٌ",
+        //"سلام",
+        //"بَيْتٌ",
+        //"وَعَلَيْكُم السَّلَام",
+        //"הלו חבר."
+        //"بَيْتٌ"
+        "مَسْجِدٌ"
+    ].forEach(function(l) {
+        caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+        caret.label(l);
+        caret.move('u');
+        caret.pull('d');
         caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-
-        graph.scheduleRepaint();
-        ++i
-    };
-
-    for(var j = 0; j < COUNT; ++j) {
-        addBlock();
-    }
-
-    var scheduleAddBlock = function() {
-        addBlock();
-        window.setTimeout(scheduleAddBlock, 1000);
-    };
-    //scheduleAddBlock();
+    }, this);
 
     return caret.root();
 };

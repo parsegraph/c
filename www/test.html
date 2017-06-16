@@ -76,13 +76,14 @@ function createScriptTextarea(url)
     return ta;
 }
 
-function createScriptGraph(url)
+function createScriptGraph(url, uni)
 {
     var surface = new parsegraph_Surface();
     var graph = new parsegraph_Graph(surface);
     var atlas = new parsegraph_GlyphAtlas(
         parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
     );
+    atlas.setUnicode(uni);
     graph.setGlyphAtlas(atlas);
     surface.resize(400, "50vh");
 
@@ -144,9 +145,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var main = document.body;
 
     parsegraph_initialize();
-
-    var result = parsegraph_AllTests.run();
-    result.connect(main);
+    var uni = new parsegraph_Unicode();
+    uni.onLoad = function() {
+        var result = parsegraph_AllTests.run();
+        result.connect(main);
+    };
+    uni.load();
+    parsegraph_UNICODE_INSTANCE = uni;
 
     //var ta = createScriptGraph("parsegraph-1.0.js");
     //main.appendChild(ta);

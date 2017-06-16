@@ -33,6 +33,20 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._padding = this.fontSize() / 4;
     this._x = this._padding;
     this._y = this._padding;
+    this._unicode = null;
+}
+
+parsegraph_GlyphAtlas.prototype.setUnicode = function(uni)
+{
+    if(!uni.loaded()) {
+        throw new Error("Unicode provided has not been loaded.");
+    }
+    this._unicode = uni;
+}
+
+parsegraph_GlyphAtlas.prototype.unicode = function()
+{
+    return this._unicode;
 }
 
 parsegraph_GlyphAtlas.prototype.toString = function()
@@ -42,6 +56,9 @@ parsegraph_GlyphAtlas.prototype.toString = function()
 
 parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
 {
+    if(typeof glyph !== "string") {
+        glyph = String.fromCharCode(glyph);
+    }
     var glyphData = this._glyphData[glyph];
     if(glyphData !== undefined) {
         return glyphData;
@@ -67,8 +84,7 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
         y: this._y,
         width: letter.width,
         height: this.letterHeight(),
-        glyphPage: glyphPage,
-        directionality: isRTL(glyph) ? "rtl" : "ltr"
+        glyphPage: glyphPage
     };
     this._glyphData[glyph] = glyphData;
     glyphPage._queued.push(glyphData);
@@ -78,12 +94,14 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
 
     return glyphData;
 };
+parsegraph_GlyphAtlas.prototype.get = parsegraph_GlyphAtlas.prototype.getGlyph;
 
 parsegraph_GlyphAtlas.prototype.hasGlyph = function(glyph)
 {
     var glyphData = this._glyphData[glyph];
     return glyphData !== undefined;
 };
+parsegraph_GlyphAtlas.prototype.has = parsegraph_GlyphAtlas.prototype.hasGlyph;
 
 /**
  * Updates the given WebGL instance with this texture.

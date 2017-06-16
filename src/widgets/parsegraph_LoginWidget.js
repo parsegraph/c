@@ -357,6 +357,7 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
     }
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
+    car.setGlyphAtlas(this._graph.glyphAtlas());
 
     var logOut = car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
     logOut.setClickListener(this.logout, this);
@@ -417,6 +418,7 @@ parsegraph_LoginWidget.prototype.root = function()
     if(!this._root) {
 
         var car = new parsegraph_Caret(parsegraph_SLOT);
+        car.setGlyphAtlas(this.glyphAtlas());
         car.label('Iñtërnâtiônàlizætiøn☃💩 for Parsegraph.com');
         this._containerNode = car.root();
         if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
@@ -465,6 +467,7 @@ parsegraph_LoginWidget.prototype.loginForm = function()
     nbs.minWidth = parsegraph_BUD_RADIUS * 80;
 
     var car = new parsegraph_Caret(parsegraph_BUD);
+    car.setGlyphAtlas(this.glyphAtlas());
 
     this._loginForm = car.root();
     car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);

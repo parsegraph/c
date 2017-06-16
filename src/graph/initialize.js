@@ -1,8 +1,16 @@
 function parsegraph_buildGlyphAtlas()
 {
-    return new parsegraph_GlyphAtlas(
+    var ga = new parsegraph_GlyphAtlas(
         parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
     );
+    ga.setUnicode(parsegraph_defaultUnicode());
+    return ga;
+}
+
+parsegraph_glBufferData_BYTES = 0;
+function parsegraph_clearPerformanceCounters()
+{
+    parsegraph_glBufferData_BYTES = 0;
 }
 
 /**
