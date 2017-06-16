@@ -10,9 +10,13 @@ function parsegraph_PrimesWidget(graph)
 
 parsegraph_PrimesWidget.prototype.step = function(steps)
 {
+    //console.log("Stepping primes widget");
     // Check if any known prime is a multiple of the current position.
     for(var j = 0; j < steps; ++j) {
         this.caret.spawnMove('f', 'b');
+        if(this.positon % parsegraph_NATURAL_GROUP_SIZE == 0) {
+            this.caret.crease();
+        }
         this.caret.label(this.position);
         this.caret.push();
         this.caret.pull('u');
@@ -29,7 +33,7 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
             else {
                 this.caret.spawnMove('u', 's');
             }
-            if(i === 0) {
+            if(i % parsegraph_NATURAL_GROUP_SIZE == 0) {
                 this.caret.crease();
             }
         }

@@ -47,6 +47,8 @@ function parsegraph_showGraph(rootNode)
 }
 
 function parsegraph_initialize(mathMode) {
+    parsegraph_NATURAL_GROUP_SIZE = 50;
+
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
 
