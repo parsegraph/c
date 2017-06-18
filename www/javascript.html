@@ -66,6 +66,11 @@ function init()
         var graph = new parsegraph_Graph(surface);
         GRAPH = graph;
 
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+        graph.glyphAtlas().setUnicode(uni);
+
         var widget = new parsegraph_JavaScriptWidget(graph);
         widget.load("parsegraph-1.0.js");
         graph.world().plot(widget.caret.root());
@@ -125,6 +130,9 @@ function init()
         graph.onScheduleRepaint = function() {
             renderTimer.schedule();
         };
+        };
+        parsegraph_UNICODE_INSTANCE = uni;
+        uni.load();
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
