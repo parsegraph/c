@@ -306,7 +306,7 @@ parsegraph_World.prototype.paint = function(timeout)
 
         while(i < this._worldRoots.length) {
             if(pastTime()) {
-                this.previousWorldPaintState = i;
+                this._previousWorldPaintState = i;
                 return false;
             }
             var plot = this._worldRoots[i];
