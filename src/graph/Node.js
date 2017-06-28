@@ -24,6 +24,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._value = null;
     this._selected = false;
+    this._ignoresMouse = false;
 
     this._prevTabNode = null;
     this._nextTabNode = null;
@@ -381,6 +382,22 @@ parsegraph_Node_Tests.addTest("parsegraph_Node.setClickListener", function() {
     n.setClickListener(function() {
     });
 });
+
+parsegraph_Node.prototype.isClickable = function()
+{
+    var hasLabel = this._label && !Number.isNaN(this._labelX) && this._label.editable();
+    return this.type() === parsegraph_SLIDER || (this.hasClickListener() || !this.ignoresMouse()) || hasLabel;
+};
+
+parsegraph_Node.prototype.setIgnoreMouse = function(value)
+{
+    this._ignoresMouse = value;
+};
+
+parsegraph_Node.prototype.ignoresMouse = function()
+{
+    return this._ignoresMouse;
+};
 
 /**
  * Returns whether this Node has a click listener.
@@ -1410,81 +1427,89 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
     return style.horizontalSeparation;
 };
 
+/**
+ * Returns true if the coordinates are in the node.
+ */
+parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
+{
+    var s = this.size();
+    if(
+        x < userScale * this.absoluteX()
+            - userScale * this.absoluteScale() * s.width()/2
+    ) {
+        //console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
+        return false;
+    }
+    if(
+        x > userScale * this.absoluteX()
+            + userScale * this.absoluteScale() * s.width()/2
+    ) {
+        //console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
+        return false;
+    }
+    if(
+        y < userScale * this.absoluteY()
+            - userScale * this.absoluteScale() * s.height()/2
+    ) {
+        //console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
+        return false;
+    }
+    if(
+        y > userScale * this.absoluteY()
+            + userScale * this.absoluteScale() * s.height()/2
+    ) {
+        //console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
+        return false;
+    }
+
+    //console.log("Within node body" + this);
+    return true;
+};
+
+/**
+ * Returns true if the coordinates are in the node or its extent.
+ */
+parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
+{
+    if(
+        x < userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD)
+    ) {
+        return false;
+    }
+    if(
+        x > userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD)
+            + userScale * this.absoluteScale() * this.extentSize().width()
+    ) {
+        return false;
+    }
+    if(
+        y < userScale * this.absoluteY() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_FORWARD)
+    ) {
+        return false;
+    }
+    if(
+        y > userScale * this.absoluteY() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_FORWARD)
+            + userScale * this.absoluteScale() * this.extentSize().height()
+    ) {
+        return false;
+    }
+
+    //console.log("Within node extent" + this);
+    return true;
+};
+
+/**
+ * Searches for the node that contains the given position. First tests against
+ * the body, and if that fails, tests against the extent.
+ *
+ * The deepest node under the given coordinates is returned, or null otherwise.
+ */
 parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 {
     //console.log("nodeUnderCoords: " + x + ", " + y)
     if(userScale === undefined) {
         userScale = 1;
     }
-
-    /**
-     * Returns true if the coordinates are in the node.
-     */
-    var inNodeBody = function(node) {
-        var s = node.size();
-        if(
-            x < userScale * node.absoluteX()
-                - userScale * node.absoluteScale() * s.width()/2
-        ) {
-            //console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX()
-                + userScale * node.absoluteScale() * s.width()/2
-        ) {
-            //console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY()
-                - userScale * node.absoluteScale() * s.height()/2
-        ) {
-            //console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY()
-                + userScale * node.absoluteScale() * s.height()/2
-        ) {
-            //console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
-            return false;
-        }
-
-        //console.log("Within node body" + node);
-        return true;
-    };
-
-    /**
-     * Returns true if the coordinates are in the node or its extent.
-     */
-    var inNodeExtents = function(node) {
-        if(
-            x < userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-        ) {
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-                + userScale * node.absoluteScale() * node.extentSize().width()
-        ) {
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-        ) {
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-                + userScale * node.absoluteScale() * node.extentSize().height()
-        ) {
-            return false;
-        }
-
-        //console.log("Within node extent" + node);
-        return true;
-    };
 
     var candidates = [this];
 
@@ -1510,12 +1535,12 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             return candidates.pop();
         }
 
-        if(inNodeBody(candidate)) {
+        if(candidate.inNodeBody(x, y, userScale)) {
             //console.log("Click is in node body");
             if(
                 candidate.hasNode(parsegraph_INWARD)
             ) {
-                if(inNodeExtents(candidate.nodeAt(parsegraph_INWARD))) {
+                if(candidate.nodeAt(parsegraph_INWARD).inNodeExtents(x, y, userScale)) {
                     //console.log("Testing inward node");
                     candidates.push(FORCE_SELECT_PRIOR);
                     candidates.push(candidate.nodeAt(parsegraph_INWARD));
@@ -1534,7 +1559,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         candidates.pop();
 
         // Test if the click is within any child.
-        if(!inNodeExtents(candidate)) {
+        if(!candidate.inNodeExtents(x, y, userScale)) {
             // Nope, so continue the search.
             //console.log("Click is not in node extents.");
             continue;
