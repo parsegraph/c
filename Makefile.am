@@ -80,7 +80,6 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/SpotlightPainter.js \
 	src/graph/GlyphAtlas.js \
 	src/graph/GlyphPainter.js \
-	src/graph/LinePainter.js \
 	src/graph/FanPainter.js \
 	src/graph/NodePainter.js \
 	src/graph/TexturePainter.js \
