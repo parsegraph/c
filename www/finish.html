@@ -68,6 +68,7 @@ bbs.borderColor = new parsegraph_Color(.5, .5, 0, 1);
 function createChatGraph(surface, graph)
 {
     var car = new parsegraph_Caret(parsegraph_BUD);
+    car.setGlyphAtlas(graph.glyphAtlas());
 
     var m = 25;
 
@@ -101,6 +102,7 @@ var sceneNode;
 function createLoginGraph(surface, graph)
 {
     var car = new parsegraph_Caret(parsegraph_BUD);
+    car.setGlyphAtlas(graph.glyphAtlas());
     car.push();
     var n = createChatGraph(surface, graph);
     car.connect(parsegraph_UPWARD, n);
@@ -131,6 +133,7 @@ function createLoginGraph(surface, graph)
 function createWeetcubesModel(surface, graph, scene)
 {
     var car = new parsegraph_Caret(parsegraph_BUD);
+    car.setGlyphAtlas(graph.glyphAtlas());
     car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
     car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
@@ -187,52 +190,61 @@ function init(main)
         var graph = new parsegraph_Graph(surface);
         createStyles(surface, graph);
         main.appendChild(surface.container());
-        graph.world().plot(createLoginGraph(surface, graph));
 
-        var cameraName = "parsegraph_camera";
-        if(localStorage.getItem(cameraName) != null) {
-            try {
-                var cameraData = JSON.parse(localStorage.getItem(cameraName));
-                graph.camera().restore(cameraData);
-            } catch(e) {
-                console.log(
-                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
-                );
-            }
-        }
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+            graph.glyphAtlas().setUnicode(uni);
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        var start = alpha_GetTime();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            var t = alpha_GetTime();
-            sceneNode.scene().Tick(t - start);
-            sceneNode.layoutWasChanged();
-            graph.scheduleRepaint();
-            start = t;
-            if(graph.needsRepaint()) {
-                surface.paint(50);
+            graph.world().plot(createLoginGraph(surface, graph));
+
+            var cameraName = "parsegraph_camera";
+            if(localStorage.getItem(cameraName) != null) {
+                try {
+                    var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                    graph.camera().restore(cameraData);
+                } catch(e) {
+                    console.log(
+                        "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
+                    );
+                }
             }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
+
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            var start = alpha_GetTime();
+            renderTimer.setListener(function() {
+                graph.input().Update(new Date());
+                var t = alpha_GetTime();
+                sceneNode.scene().Tick(t - start);
+                sceneNode.layoutWasChanged();
                 graph.scheduleRepaint();
-            }
+                start = t;
+                if(graph.needsRepaint()) {
+                    surface.paint(50);
+                }
+                surface.render();
+                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                    renderTimer.schedule();
+                }
+            });
+            graph.input().SetListener(function(affectedPaint) {
+                if(affectedPaint) {
+                    graph.scheduleRepaint();
+                }
+                renderTimer.schedule();
+            });
             renderTimer.schedule();
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
+            graph.onScheduleRepaint = function() {
+                renderTimer.schedule();
+            };
 
-        surface.addRenderer(function() {
-            localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
-        });
+            surface.addRenderer(function() {
+                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            });
+        };
+        uni.load();
+        parsegraph_UNICODE_INSTANCE = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
