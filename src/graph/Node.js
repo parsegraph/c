@@ -325,6 +325,7 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
 {
     if(!listener) {
         this._clickListener = null;
+        this._clickListenerThisArg = null;
     }
     else {
         if(!thisArg) {
