@@ -1,0 +1,15 @@
+nav.toc {
+    float: left;
+    position: fixed;
+    min-width: 25%;
+    top: 1%;
+    max-height: 98%;
+    overflow: auto;
+}
+
+main.content {
+    float: right;
+    padding-left: 1em;
+    box-sizing: border-box;
+    max-width: 75%;
+}

@@ -1,9 +1,3 @@
-/**
- * Creates a new Node.
- *
- * parsegraph_Node(newType) - no parent
- * parsegraph_Node(newType, parentNode, parentDirection)
- */
 parsegraph_Node_COUNT = 0;
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
@@ -126,32 +120,17 @@ parsegraph_Node.prototype.y = function()
     return this.nodeParent()._neighbors[parsegraph_reverseNodeDirection(this.parentDirection())].yPos;
 };
 
-/**
- * Returns the scale of this node.
- */
 parsegraph_Node.prototype.scale = function()
 {
     return this._scale;
 }
 
-/**
- * Sets the scale of this node.
- *
- * This value is commutative with child scales.
- */
 parsegraph_Node.prototype.setScale = function(scale)
 {
     this._scale = scale;
     this.layoutWasChanged(parsegraph_INWARD);
 }
 
-/**
- * This sets whether the node's forward and backward nodes will be
- * reversed.
- *
- * If rightToLeft() == true, parsegraph_FORWARD goes to the left.
- * If rightToLeft() == false, parsegraph_FORWARD goes to the right.
- */
 parsegraph_Node.prototype.setRightToLeft = function(val)
 {
     this._rightToLeft = !!val;
@@ -298,10 +277,6 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
     this._paintGroup = paintGroup;
 }
 
-/**
- * Returns the node's paint group. If this node does not have a paint group, then
- * the parent's is returned.
- */
 parsegraph_Node.prototype.findPaintGroup = function()
 {
     var node = this;
@@ -325,9 +300,6 @@ parsegraph_Node.prototype.graph = function()
     return this._graph;
 };
 
-/**
- * Returns the color that should be used as the background color for inward nodes.
- */
 parsegraph_Node.prototype.backdropColor = function()
 {
     var node = this;
@@ -400,16 +372,12 @@ parsegraph_Node.prototype.ignoresMouse = function()
 };
 
 /**
- * Returns whether this Node has a click listener.
  */
 parsegraph_Node.prototype.hasClickListener = function()
 {
     return this._clickListener != null;
 };
 
-/**
- * Returns whether this Node has a click listener.
- */
 parsegraph_Node.prototype.hasChangeListener = function()
 {
     return this._changeListener != null;
@@ -424,11 +392,6 @@ parsegraph_Node.prototype.valueChanged = function()
     return this._changeListener.apply(this._changeListenerThisArg, arguments);
 };
 
-/**
- * Invokes the click listener on this node.
- *
- * Does nothing if no click listener is present.
- */
 parsegraph_Node.prototype.click = function()
 {
     // Invoke the click listener.
@@ -457,20 +420,11 @@ parsegraph_Node_Tests.addTest("parsegraph_Node.setKeyListener", function() {
     });
 });
 
-/**
- * Returns whether this Node has a listener to respond to key
- * events.
- */
 parsegraph_Node.prototype.hasKeyListener = function()
 {
     return this._keyListener != null;
 };
 
-/**
- * Invokes the key listener on this node.
- *
- * Does nothing if no key listener is present.
- */
 parsegraph_Node.prototype.key = function()
 {
     // Invoke the key listener.
@@ -491,17 +445,11 @@ parsegraph_Node.prototype.setNodeFit = function(nodeFit)
     this.layoutWasChanged(parsegraph_INWARD);
 };
 
-/**
- * Returns whether this node is a root node.
- */
 parsegraph_Node.prototype.isRoot = function()
 {
     return this._parentDirection === parsegraph_NULL_NODE_DIRECTION;
 };
 
-/**
- * Returns the direction of this node's parent.
- */
 parsegraph_Node.prototype.parentDirection = function()
 {
     if(this.isRoot()) {
@@ -510,11 +458,6 @@ parsegraph_Node.prototype.parentDirection = function()
     return this._parentDirection;
 };
 
-/**
- * Returns this node's parent.
- *
- * Throws parsegraph_NODE_IS_ROOT if this node is a root node.
- */
 parsegraph_Node.prototype.nodeParent = function()
 {
     if(this.isRoot()) {
@@ -525,11 +468,6 @@ parsegraph_Node.prototype.nodeParent = function()
 parsegraph_Node.prototype.parentNode = parsegraph_Node.prototype.nodeParent;
 parsegraph_Node.prototype.parent = parsegraph_Node.prototype.nodeParent;
 
-/**
- * Returns whether this node has a node in the given direction.
- *
- * Returns false if the given direction is NULL_NODE_DIRECTION.
- */
 parsegraph_Node.prototype.hasNode = function(atDirection)
 {
     if(atDirection == parsegraph_NULL_NODE_DIRECTION) {
@@ -538,23 +476,6 @@ parsegraph_Node.prototype.hasNode = function(atDirection)
     return this._neighbors[atDirection].node;
 };
 
-/**
- * Returns an array of node directions that indicate a node
- * in that direction. The directions are filtered by the given
- * axis.
- *
- * Nodes in both directions:
- * [negative node direction, positive node direction]
- *
- * Node in negative direction:
- * [negative node direction, parsegraph_NULL_NODE_DIRECTION]
- *
- * Node in positive direction:
- * [parsegraph_NULL_NODE_DIRECTION, positive node direction]
- *
- * Node in no directions:
- * [parsegraph_NULL_NODE_DIRECTION, parsegraph_NULL_NODE_DIRECTION]
- */
 parsegraph_Node.prototype.hasNodes = function(axis)
 {
     if(axis === parsegraph_NULL_AXIS) {
@@ -576,11 +497,6 @@ parsegraph_Node.prototype.hasNodes = function(axis)
     return result;
 };
 
-/**
- * Returns whether this node has a child node in the given direction.
- *
- * See also nodeAt, which returns true for the parent as well.
- */
 parsegraph_Node.prototype.hasChildAt = function(direction)
 {
     return this.hasNode(direction) && this.parentDirection() != direction;
@@ -599,10 +515,6 @@ parsegraph_Node.prototype.nodeAt = function(atDirection)
     return this._neighbors[atDirection].node;
 };
 
-/**
- * Iterates over this node and its children, calling actionFunc whenever
- * filterFunc is true.
- */
 parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg, timeout)
 {
     // First, exit immediately if this node doesn't pass the given filter.
@@ -828,12 +740,6 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     return node;
 };
 
-/**
- * Removes the node in the given direction, destroying it and its children
- * in the process.
- *
- * Does nothing if no node is in the given direction.
- */
 parsegraph_Node.prototype.eraseNode = function(givenDirection) {
     if(!this.hasNode(givenDirection)) {
         return;
@@ -1427,9 +1333,6 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
     return style.horizontalSeparation;
 };
 
-/**
- * Returns true if the coordinates are in the node.
- */
 parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
 {
     var s = this.size();
@@ -1466,9 +1369,6 @@ parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
     return true;
 };
 
-/**
- * Returns true if the coordinates are in the node or its extent.
- */
 parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
 {
     if(
@@ -1498,12 +1398,6 @@ parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
     return true;
 };
 
-/**
- * Searches for the node that contains the given position. First tests against
- * the body, and if that fails, tests against the extent.
- *
- * The deepest node under the given coordinates is returned, or null otherwise.
- */
 parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 {
     //console.log("nodeUnderCoords: " + x + ", " + y)
@@ -1611,14 +1505,6 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
     return null;
 };
 
-/**
- * Returns the size of this node, based on this node's type and label.
- *
- * Sliders appear like blocks, though they render buds and their own lines internally.
- * Scenes also appear like boxes.
- *
- * Consequently, since these types work like blocks, there is no special code for them here.
- */
 parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
 {
     // Find the size of this node's drawing area.
@@ -1705,10 +1591,6 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     return bodySize;
 };
 
-/**
- * Sets the position, calculates extents, and
- * clears the needs commit flag.
- */
 parsegraph_Node.prototype.commitLayout = function(bodySize)
 {
     // Do nothing if this node already has a layout committed.
@@ -2610,12 +2492,6 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
     return true;
 }
 
-/**
- * Returns the total distance from the given node, to the furthest node
- * found in the given direction.
- *
- * The result is in node-space; the scale of child nodes is applied.
- */
 var parsegraph_findConsecutiveLength = function(node, inDirection)
 {
     // Exclude some directions that cannot be calculated.
@@ -2687,14 +2563,6 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     return loop();
 };
 
-/**
- * Returns the separation between this node and the node
- * in the given direction.
- *
- * Throws NO_NODE_FOUND if no node is in the given direction.
- *
- * @see #commitLayout()
- */
 parsegraph_Node.prototype.separationAt = function(inDirection) {
     // Exclude some directions that cannot be calculated.
     if(!parsegraph_isCardinalDirection(inDirection)) {
@@ -2716,9 +2584,6 @@ parsegraph_Node.prototype.separationAt = function(inDirection) {
     return this._neighbors[inDirection].separation;
 };
 
-/**
- * Indicate that the layout was changed and thus needs an layout commit.
- */
 parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 {
     // Disallow null change directions.
