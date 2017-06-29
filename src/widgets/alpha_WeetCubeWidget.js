@@ -109,7 +109,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
       listener.setOrientation(vec[0], vec[1], vec[2]);
     }*/
 
-    var createNode = false;
+    var createAudioNodes = false;
     if(!this._audioOut) {
         this._audioOut=audio.createGain();
         var compressor = audio.createDynamicsCompressor();
@@ -122,10 +122,12 @@ alpha_WeetCubeWidget.prototype.paint = function()
         compressor.connect(audio.destination);
         this._audioOut.connect(compressor);
         this._audioNodes = [];
-        createNode = true;
+        this._audioNodePositions = [];
+        createAudioNodes = true;
     }
 
     var c = new alpha_Physical(this.camera);
+    var az=0;
     var z=0;
     var osc;
     var panner;
@@ -144,10 +146,12 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 c.SetPosition(20*i, 20*j, 20*k);
                 c.SetScale(1, 1, 1);
                 this.cubePainter.Cube(c.GetModelMatrix());
-                if(false && createNode) {
+                var makeAudio = Math.random() < .1;
+                if(createAudioNodes && makeAudio) {
                     osc=audio.createOscillator();
                     osc.type='square';
-                    osc.frequency.value=Math.min(1000, Math.random()*4000);//freqs[z%freqs.length];
+                    osc.frequency.value=Math.min(1000, Math.random()*4000);
+                    //freqs[z%freqs.length];
                     osc.start(0);
                     panner=audio.createPanner();
                     panner.panningModel = 'HRTF';
@@ -157,14 +161,28 @@ alpha_WeetCubeWidget.prototype.paint = function()
                     panner.coneInnerAngle = 360;
                     panner.coneOuterAngle = 0;
                     panner.coneOuterGain = 0;
+
+                    var randZ = Math.random() * 30;
+                    var randY = Math.random() * 5;
+                    //console.log(i, j, k, randY, randZ);
                     var g = audio.createGain();
-                    g.gain.value = .1;
+                    //g.gain.value = 0.1;
+                    g.gain.value = 0;
+                    g.gain.linearRampToValueAtTime(0.1, 30);
+                    //g.gain.exponentialRampToValueAtTime(.01, randY);
+                    //g.gain.linearRampToValueAtTime(0, randY + randZ);
                     osc.connect(g);
                     g.connect(panner);
                     panner.connect(this._audioOut);
                     this._audioNodes.push(panner);
+                    this._audioNodePositions.push(z);
                 }
-                panner = this._audioNodes[z];
+                else if(z === this._audioNodePositions[az]) {
+                    panner = this._audioNodes[az];
+                    az++;
+                } else {
+                    panner = null;
+                }
                 /*var ori=c.orientation.RotatedVector(new alpha_Vector(0, 0, 0));
                 if(panner.orientationX) {
                   panner.orientationX.value = ori[0];
@@ -184,22 +202,24 @@ if(panner.orientationX) {
 }
 */
 
-                var wv=c.GetModelMatrix();
-                var cx, cy, cz;
-                cx = c.position[0];
-                cy = c.position[1];
-                cz = c.position[2];
-                cx = wv[12];
-                cy = wv[13];
-                cz = wv[14];
-                //console.log(cx, cy, cz);
-                if(panner.positionX) {
-                    panner.positionX=cx;
-                    panner.positionY=cy;
-                    panner.positionZ=cz;
-                }
-                else {
-                    panner.setPosition(cx, cy, cz);
+                if(panner) {
+                    var wv=c.GetModelMatrix();
+                    var cx, cy, cz;
+                    cx = c.position[0];
+                    cy = c.position[1];
+                    cz = c.position[2];
+                    cx = wv[12];
+                    cy = wv[13];
+                    cz = wv[14];
+                    //console.log(cx, cy, cz);
+                    if(panner.positionX) {
+                        panner.positionX.value=cx;
+                        panner.positionY.value=cy;
+                        panner.positionZ.value=cz;
+                    }
+                    else {
+                        panner.setPosition(cx, cy, cz);
+                    }
                 }
                 ++z;
             }
@@ -274,4 +294,3 @@ alpha_WeetCubeWidget.prototype.render = function()
     this.cubePainter.Draw(viewMatrix);
     gl.clear(gl.DEPTH_BUFFER_BIT);
 };
-
