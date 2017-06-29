@@ -692,6 +692,7 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
                 case "BN":
                 case "S":
                 case "NSM":
+                case "B":
                     // Neutral characters
                     glyphDirection = direction;
                     break;
