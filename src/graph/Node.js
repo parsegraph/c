@@ -1304,12 +1304,12 @@ parsegraph_Node.prototype.setSelected = function(selected)
     this._selected = selected;
 };
 
-parsegraph_Node.prototype.horizontalPadding = function(direction)
+parsegraph_Node.prototype.horizontalPadding = function()
 {
     return this.blockStyle().horizontalPadding;
 };
 
-parsegraph_Node.prototype.verticalPadding = function(direction)
+parsegraph_Node.prototype.verticalPadding = function()
 {
     return this.blockStyle().verticalPadding;
 };
