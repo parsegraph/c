@@ -46,7 +46,7 @@ function parsegraph_Line(label, text)
     this._glyphs = [];
     this._width = 0;
     this._height = this.glyphAtlas().letterHeight();
-    if(arguments.length > 1) {
+    if(arguments.length > 1 && text.length > 0) {
         this.appendText(text);
     }
 }
