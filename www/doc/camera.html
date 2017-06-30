@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Camera - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Camera</h1>
+The camera controls input from the user on a surface to manage visualization of a 2D orthographic world.
+<h3>parsegraph_CLICK_DELAY_MILLIS</h3>
+The amount of delay between clicks, in milliseconds, that will be allowed before the hope for a double-click is abandoned.
+<h3>new parsegraph_Camera(surface)</h3>
+Creates a new parsegraph_Camera using the given surface, positioned at the origin, with a scale of 1.
+<p>
+An error is thrown if no surface is provided.
+<h3>parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</h3>
+Returns whether the specified viewport contains all of the specified rect.
+<h3>parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</h3>
+Returns whether the specified viewport contains any of the specified rect.
+<h3>.zoomToPoint(scaleFactor, x, y)</h3>
+Zooms to the given point.
+<h3>.setOrigin(x, y)</h3>
+Sets the camera's origin to the specified position.
+<h3>.toJSON()</h3>
+Returns a new JSON that can be passed to JSON.stringify() and used with .restore() to recreate this camera's current state.
+<h3>.restore(json)</h3>
+Changes this camera's state to the given JSON object, as defined by .toJSON().
+<h3>.surface()</h3>
+Returns the surface used by this camera.
+<h3>.graph()</h3>
+Same as .surface(). Used for backwards compat.
+<h3>.scale()</h3>
+Returns this camera's current scale.
+<h3>.x()</h3>
+Returns this camera's current position along the X-axis.
+<h3>.y()</h3>
+Returns this camera's current position along the Y-axis.
+<h3>.setScale(scale)</h3>
+Sets this camera's scale to the given value.
+<h3>.toString()</h3>
+Returns a programmer-friendly string representation of this camera.
+<h3>.adjustOrigin(x, y)</h3>
+Adjusts this camera's origin by the given delta.
+<h3>.worldMatrix()</h3>
+Computes and returns a new world matrix that represents this camera's current position.
+<h3>.aspectRatio()</h3>
+Returns this camera's aspect ratio, as computed during project().
+<h3>.width()</h3>
+Returns this camera's viewport width, as computed during project().
+<h3>.height()</h3>
+Returns this camera's viewport height, as computed during project().
+<h3>.canProject()</h3>
+Returns whether this camera's surface has usable dimensions.
+<h3>.project()</h3>
+Returns a new projection matrix for this camera and sets the computed viewport dimensions and aspect ratio.
+<p>
+Throws an error if canProject() returns false.
+</main>
+
+<nav class="toc">
+<h2>Parsegraph Camera</h2>
+<ol>
+<li>parsegraph_CLICK_DELAY_MILLIS
+<li>new parsegraph_Camera(surface)
+<li>parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+<li>parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+<li>.zoomToPoint(scaleFactor, x, y)
+<li>.setOrigin(x, y)
+<li>.toJSON()
+<li>.restore(json)
+<li>.surface()
+<li>.graph()
+<li>.scale()
+<li>.x()
+<li>.y()
+<li>.setScale(scale)
+<li>.toString()
+<li>.adjustOrigin(x, y)
+<li>.worldMatrix()
+<li>.aspectRatio()
+<li>.width()
+<li>.height()
+<li>.canProject()
+<li>.project()
+</ol>
+</nav>
+</body>
+</html>

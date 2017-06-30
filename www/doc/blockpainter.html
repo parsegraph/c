@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>BlockPainter - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph BlockPainter</h1>
+BlockPainter paints variably rounded blocks (from square edges to circular buds), as well as lines.
+<h3>new parsegraph_BlockPainter(gl, shaders)</h3>
+Creates a new BlockPainter using the given WebGL context. Shaders is a map of shader names to
+their program IDs, allowing for reuse between many painters.
+<h3>.bounds()</h3>
+Returns the computed bounding rect for all the blocks rendered by this painter.
+<h3>.borderColor()</h3>
+Returns the border color used for future drawing commands.
+<h3>.setBorderColor(borderColor)</h3>
+Sets the border color used for future drawing commands.
+<h3>.backgroundColor()</h3>
+Returns the background color used for future drawing commands.
+<h3>.setBackgroundColor(backgroundColor)</h3>
+Sets the background color used for future drawing commands.
+<h3>.initBuffer(numBlocks)</h3>
+Initializes the painter for painting up to the specified number of blocks.
+<h3>.clear()</h3>
+Releases GL resources, resets all counters, and resets the computed bounding rect.
+<h3>.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</h3>
+Draws a block, centered at the given world coordinates, of the specified size (also in world coordinates). borderRoundedness is a value between zero and one, inclusive, where zero is square and one is circular. borderThickness is a value between zero and one, inclusive, where zero is no border, and one is a completely filled border. borderScale is used to scale the border values so that they appear proportionate.
+<h3>.render(world)</h3>
+Uses this painter's WebGL context to draw all specified blocks transformed using the given world matrix.
+</main>
+
+<nav class="toc">
+<h2>Parsegraph BlockPainter</h2>
+<ol>
+<li>new parsegraph_BlockPainter(gl, shaders)
+<li>.bounds()
+<li>.borderColor()
+<li>.setBorderColor(borderColor)
+<li>.backgroundColor()
+<li>.setBackgroundColor(backgroundColor)
+<li>.initBuffer(numBlocks)
+<li>.clear()
+<li>.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
+<li>.render(world)
+</ol>
+</nav>
+</body>
+</html>

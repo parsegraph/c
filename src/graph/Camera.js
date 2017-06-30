@@ -1,8 +1,5 @@
 parsegraph_CLICK_DELAY_MILLIS = 500;
 
-/**
- * Controls input from the user on a surface.
- */
 function parsegraph_Camera(surface)
 {
     if(!surface) {
@@ -156,9 +153,6 @@ parsegraph_Camera_Tests.addTest("containsAny", function() {
     }
 });
 
-/**
- * Zooms to the given point.
- */
 parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
 {
     // Get the current mouse position, in world space.
@@ -212,7 +206,6 @@ parsegraph_Camera.prototype.surface = function()
 {
     return this._surface;
 };
-// XXX Backwards compat
 parsegraph_Camera.prototype.graph = parsegraph_Camera.prototype.surface;
 
 parsegraph_Camera.prototype.scale = function()
@@ -249,9 +242,6 @@ parsegraph_Camera.prototype.adjustOrigin = function(x, y)
     this._cameraY += y;
 }
 
-/**
- * Returns the current world matrix that represents the position of the viewer.
- */
 parsegraph_Camera.prototype.worldMatrix = function()
 {
     return matrixMultiply3x3(
@@ -265,17 +255,11 @@ parsegraph_Camera.prototype.aspectRatio = function()
     return this._aspectRatio;
 };
 
-/**
- * this._width = this.surface().canvas().width;
- */
 parsegraph_Camera.prototype.width = function()
 {
     return this._width;
 };
 
-/**
- * this._height = this.surface().canvas().height;
- */
 parsegraph_Camera.prototype.height = function()
 {
     return this._height;
