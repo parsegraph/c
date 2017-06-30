@@ -141,7 +141,7 @@ parsegraph_Caret.prototype.onChange = function(changeListener, thisArg)
     this.node().setChangeListener(changeListener, thisArg);
 };
 
-parsegraph_Caret.prototype.onKey = function(ketListener, thisArg)
+parsegraph_Caret.prototype.onKey = function(keyListener, thisArg)
 {
     this.node().setKeyListener(keyListener, thisArg);
 };
