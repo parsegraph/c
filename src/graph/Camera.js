@@ -5,6 +5,9 @@ parsegraph_CLICK_DELAY_MILLIS = 500;
  */
 function parsegraph_Camera(surface)
 {
+    if(!surface) {
+        throw new Error("A surface must be provided");
+    }
     this._surface = surface;
 
     this._cameraX = 0;

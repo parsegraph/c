@@ -285,6 +285,9 @@ function parsegraph_BlockPainter(gl, shaders)
     if(!this._gl || !this._gl.createProgram) {
         throw new Error("A GL interface must be given");
     }
+    if(!shaders) {
+        throw new Error("A shaders object must be given");
+    }
 
     // Compile the shader program.
     var shaderName = "parsegraph_BlockPainter";
