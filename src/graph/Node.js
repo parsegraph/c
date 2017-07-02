@@ -753,6 +753,14 @@ parsegraph_Node.prototype.eraseNode = function(givenDirection) {
 
 parsegraph_Node.prototype.disconnectNode = function(inDirection)
 {
+    if(arguments.length === 0) {
+        if(this.isRoot()) {
+            throw new Error("Cannot disconnect a root node.");
+        }
+        return this.parentNode().disconnectNode(
+            parsegraph_reverseNodeDirection(this._parentDirection)
+        );
+    }
     if(!this.hasNode(inDirection)) {
         return;
     }
