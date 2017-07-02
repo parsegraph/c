@@ -14,9 +14,6 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
     // Check if any known prime is a multiple of the current position.
     for(var j = 0; j < steps; ++j) {
         this.caret.spawnMove('f', 'b');
-        if(this.positon % parsegraph_NATURAL_GROUP_SIZE == 0) {
-            this.caret.crease();
-        }
         this.caret.label(this.position);
         this.caret.push();
         this.caret.pull('u');
