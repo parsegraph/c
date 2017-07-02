@@ -1530,6 +1530,9 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
         }
         bodySize[0] = this._label.width() * (style.fontSize / this._label.glyphAtlas().fontSize());
         bodySize[1] = this._label.height() * (style.fontSize / this._label.glyphAtlas().fontSize());
+        if(Number.isNaN(bodySize[0]) || Number.isNaN(bodySize[1])) {
+            throw new Error("Label returned a NaN size.");
+        }
     }
     else if(!bodySize) {
         bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
