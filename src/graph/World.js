@@ -303,6 +303,10 @@ parsegraph_World.prototype.paint = function(timeout)
             this._previousWorldPaintState = null;
             i = savedState;
         }
+        else {
+            parsegraph_PAINT_START = new Date();
+            parsegraph_NODES_PAINTED = 0;
+        }
 
         while(i < this._worldRoots.length) {
             if(pastTime()) {
@@ -332,6 +336,13 @@ parsegraph_World.prototype.paint = function(timeout)
             ++i;
         }
         this._worldPaintingDirty = false;
+    }
+
+    if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
+        var paintDuration = (new Date().getTime() - parsegraph_PAINT_START.getTime());
+        console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        parsegraph_NODES_PAINTED = 0;
+        parsegraph_PAINT_START = null;
     }
 };
 
