@@ -565,7 +565,7 @@ function parsegraph_Input(graph, camera)
                 return;
             }
             else if(this._focusedNode._label && this._focusedNode._label.editable() && this._focusedNode._label.key(event.key)) {
-                console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
+                //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
