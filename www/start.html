@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>rainback start</title>
+<title>Hello, world.</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -50,98 +50,18 @@ body > div input {
 </style>
 <script src="parsegraph-1.0.js"></script>
 <script src="parsegraph-widgets-1.0.js"></script>
-<script src="esprima.js"></script>
 <script>
-function init(main)
-{
-    try {
-        parsegraph_initialize();
-        var surface = new parsegraph_Surface();
-        var graph = new parsegraph_Graph(surface);
-        main.appendChild(surface.container());
-        var widget = new parsegraph_LoginWidget(surface, graph);
-        widget.authenticate();
-        graph.world().plot(widget.root());
-
-        var cameraProtocol;
-
-        widget.setLoginListener(function(res, userLogin, node) {
-            try {
-                // TODO
-            }
-            catch(ex) {
-                console.log("Crashed during login construction: ", ex);
-            }
-
-            if(!cameraProtocol) {
-                cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
-                    "ws://localhost/camera/", "parsegraph-camera-protocol"
-                ), graph.camera(),
-                    function(obj) {
-                        //console.log(obj);
-                        graph.cameraBox().setCamera(userLogin.username, obj);
-                    }
-                );
-            }
-            widget.setLogoutListener(function() {
-                node.disconnectNode(parsegraph_DOWNWARD);
-            });
-        });
-
-        var cameraName = "parsegraph_login_camera";
-        if(localStorage.getItem(cameraName) != null) {
-            try {
-                var cameraData = JSON.parse(localStorage.getItem(cameraName));
-                graph.camera().restore(cameraData);
-            } catch(e) {
-                console.log(
-                    "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
-                );
-            }
-        }
-
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        var start = alpha_GetTime();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            var t = alpha_GetTime();
-            start = t;
-            if(graph.needsRepaint()) {
-                surface.paint(50);
-            }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                if(cameraProtocol && graph.input().UpdateRepeatedly()) {
-                    cameraProtocol.update();
-                }
-                renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
-            renderTimer.schedule();
-            if(inputAffectedCamera) {
-                if(cameraProtocol) {
-                    cameraProtocol.update();
-                }
-                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
-            }
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
-    } catch(ex) {
-        alert("Init: " + parsegraph_writeError(ex));
-        throw ex;
-    }
-}
-
+SGA = null;
 document.addEventListener("DOMContentLoaded", function(event) {
-    init(document.body);
+    var sga = new parsegraph_SingleGraphApplication();
+    SGA = sga;
+    sga.createSessionNode = function(graph, userLogin) {
+        var car = new parsegraph_Caret('b');
+        car.setGlyphAtlas(graph.glyphAtlas());
+        car.label("Hello, " + userLogin.username + ".");
+        return car.node();
+    };
+    sga.start(document.body);
 });
 </script>
 </head>

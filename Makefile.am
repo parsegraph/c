@@ -49,6 +49,7 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
+	src/widgets/parsegraph_SingleGraphApplication.js \
 	src/ArrayList.js \
 	src/Float32List.js \
 	src/widgets/alpha_WeetCubeWidget.js \
