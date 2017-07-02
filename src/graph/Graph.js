@@ -123,7 +123,7 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
     //console.log(new Error("Scheduling repaint"));
     this._world.scheduleRepaint();
     if(this.onScheduleRepaint) {
-        this.onScheduleRepaint();
+        this.onScheduleRepaint.call(this.onScheduleRepaintThisArg);
     }
 };
 
