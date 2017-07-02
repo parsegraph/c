@@ -111,7 +111,7 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     );
 
     if(this._renderText) {
-        this._glyphPainter.render(world);
+        this._glyphPainter.render(world, scale);
     }
 
     this._textures.forEach(function(t) {

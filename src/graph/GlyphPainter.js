@@ -155,6 +155,8 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
         ]
     );
 
+    this._maxSize = Math.max(this._maxSize, glyphData.width * fontScale);
+
     // Append color data.
     for(var k = 0; k < 3 * 2; ++k) {
         page.appendData(
@@ -204,10 +206,21 @@ parsegraph_GlyphPainter.prototype.clear = function()
 {
     this._textBuffers = {};
     this._textBuffer.clear();
+    this._maxSize = 0;
 };
 
-parsegraph_GlyphPainter.prototype.render = function(world)
+parsegraph_GlyphPainter.prototype.render = function(world, scale)
 {
+    //console.log(scale);
+    //console.log("Max scale of a single largest glyph would be: " + (this._maxSize *scale));
+    if(scale < .1 && this._maxSize*scale < 2) {
+        return;
+    }
+
+    if(this._maxSize / (world[0]/world[8]) < 1) {
+        return;
+    }
+
     var gl = this._gl;
     this.glyphAtlas().update(gl);
 

@@ -253,7 +253,7 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
             makeScale3x3(this._userScale),
             matrixMultiply3x3(makeTranslation3x3(this._worldX, this._worldY), world)
         ),
-        this._userScale
+        this._userScale * camera.scale()
     );
 };
 
