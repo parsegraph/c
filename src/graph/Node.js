@@ -900,6 +900,12 @@ parsegraph_Node.prototype.setLayoutPreference = function(given)
 
 parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignmentMode)
 {
+    if(arguments.length === 1) {
+        return this.parentNode().setNodeAlignmentMode(
+            parsegraph_reverseNodeDirection(this._parentDirection),
+            arguments[0]
+        );
+    }
     this._neighbors[inDirection].alignmentMode = newAlignmentMode;
     this.layoutWasChanged(inDirection);
 };
