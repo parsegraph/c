@@ -216,6 +216,8 @@ function parsegraph_Label(glyphAtlas)
     this._caretLine = 0;
     this._caretPos = 0;
     this._editable = false;
+    this._onTextChangedListener = null;
+    this._onTextChangedListenerThisArg = null;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()
@@ -334,11 +336,13 @@ parsegraph_Label.prototype.backspaceCaret = function()
         }
         this._caretLine--;
         this._caretPos = this._lines[this._caretLine]._glyphs.length;
+        this.textChanged();
         return true;
     }
     this._caretPos--;
     line.remove(this._caretPos, 1);
     this._width = null;
+    this.textChanged();
     return true;
 }
 
@@ -350,6 +354,7 @@ parsegraph_Label.prototype.deleteCaret = function()
     }
     line.remove(this._caretPos, 1);
     this._width = null;
+    this.textChanged();
     return true;
 }
 
@@ -464,10 +469,24 @@ parsegraph_Label.prototype.key = function(key)
             this._height = Math.max(this._height, insertLine.height());
         }
         this._caretPos += key.length;
+        this.textChanged();
         return true;
     }
     return false;
 }
+
+parsegraph_Label.prototype.onTextChanged = function(listener, listenerThisArg)
+{
+    this._onTextChangedListener = listener;
+    this._onTextChangedListenerThisArg = listenerThisArg;
+};
+
+parsegraph_Label.prototype.textChanged = function()
+{
+    if(this._onTextChangedListener) {
+        return this._onTextChangedListener.call(this._onTextChangedListenerThisArg, this);
+    }
+};
 
 parsegraph_Label.prototype.editable = function()
 {
