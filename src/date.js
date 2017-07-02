@@ -192,8 +192,8 @@ function parsegraph_nextWeek(d)
 
 function parsegraph_getFirstDayOfWeek(d)
 {
-    while(d.getDay() != 1) {
-        d = previousDay(d);
+    while(d.getDay() != 0) {
+        d = parsegraph_previousDay(d);
     }
     return d;
 }
