@@ -124,6 +124,9 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_ChatProtocol.js \
 	src/widgets/parsegraph_LoginWidget.js \
 	src/widgets/parsegraph_ProfileWidget.js \
+	src/widgets/parsegraph_OscillatorWidget.js \
+	src/widgets/parsegraph_FilterWidget.js \
+	src/widgets/parsegraph_SynthWidget.js \
 	src/widgets/createSliderDemo.js \
 	src/widgets/showCorporateStructure.js \
 	src/widgets/showHardTest.js \
