@@ -28,7 +28,7 @@ function alpha_WeetCubeWidget()
 
     this._audioOut=null;
 
-    this.camera.SetPosition(-1, -1, this._zMax * -5.5);
+    this.camera.GetParent().SetPosition(-1, -1, this._zMax * -5.5);
 }
 
 alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen, updateAudio)
@@ -131,7 +131,9 @@ alpha_WeetCubeWidget.prototype.paint = function()
     var z=0;
     var osc;
     var panner;
-    ///var freqs=[440, 440*.67];
+
+    var cubeSize = 1;
+    var freqs=[440*1.33, 440, 440*.67, 440*.67*.67, 440*.67*.67*.67]
     for(var i = 0; i < this._xMax; ++i) {
         for(var j = 0; j < this._yMax; ++j) {
             for(var k = 0; k < this._zMax; ++k) {
@@ -143,24 +145,59 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 c.Rotate(rotq*2*k/10, 0, 1, 1);
                 c.Rotate(rotq*2*i/15, 1, 0, 0);
                 c.Rotate(rotq*2*j/10, 1, 0, 1);
-                c.SetPosition(20*i, 20*j, 20*k);
-                c.SetScale(1, 1, 1);
+                c.SetPosition(3*i, 3*j, 3*k);
+                c.SetScale(cubeSize, cubeSize, cubeSize);
                 this.cubePainter.Cube(c.GetModelMatrix());
                 var makeAudio = Math.random() < .1;
                 if(createAudioNodes && makeAudio) {
                     osc=audio.createOscillator();
-                    osc.type='square';
-                    osc.frequency.value=Math.min(1000, Math.random()*4000);
-                    //freqs[z%freqs.length];
+                    osc.type='sawtooth';
+                    var tRand = Math.random();
+                    if(tRand < .1) {
+                        osc.type = "triangle";
+                    }
+                    else if(tRand < .6) {
+                        osc.type='sawtooth';
+                    }
+                    else if(tRand < .8) {
+                        osc.type='sine';
+                    }
+                    else {
+                        osc.type='square';
+                    }
+                    //osc.type = "square";
+                    //osc.type = "sine";
+                    if(osc.type === "sine" || osc.type === "triangle") {
+                        //osc.frequency.value=freqs[z%freqs.length];
+                        //osc.frequency.value=Math.max(16, 16+Math.random()*280);//freqs[z%freqs.length];
+                    }
+                    else if (osc.type === "square") {
+                        osc.frequency.value=freqs[z%freqs.length];
+                        //osc.frequency.value=Math.max(4, Math.random()*200);//freqs[z%freqs.length];
+                    }
+                    else if(osc.type === "sawtooth") {
+                        osc.frequency.value=Math.max(16, 64+Math.random()*200);//freqs[z%freqs.length];
+                    }else {
+                        osc.frequency.value=Math.min(1000, Math.random()*4000);//freqs[z%freqs.length];
+                        //osc.frequency.value=freqs[z%freqs.length];
+                    }
+                    osc.type = "square";
+                    osc.frequency.value=Math.max(8, Math.random()*100);
                     osc.start(0);
                     panner=audio.createPanner();
                     panner.panningModel = 'HRTF';
                     panner.distanceModel = 'exponential';
-                    panner.refDistance = 10;
-                    panner.rolloffFactor = 1;
+                    if(osc.type === "sawtooth") {
+                        panner.refDistance = cubeSize;
+                    }
+                    else {
+                        panner.refDistance = cubeSize;
+                    }
+                    panner.rolloffFactor = 2;
                     panner.coneInnerAngle = 360;
                     panner.coneOuterAngle = 0;
                     panner.coneOuterGain = 0;
+                    //console.log(c.position);
 
                     var randZ = Math.random() * 30;
                     var randY = Math.random() * 5;
@@ -168,7 +205,15 @@ alpha_WeetCubeWidget.prototype.paint = function()
                     var g = audio.createGain();
                     //g.gain.value = 0.1;
                     g.gain.value = 0;
-                    g.gain.linearRampToValueAtTime(0.1, 30);
+                    if(osc.type === "sawtooth") {
+                        g.gain.linearRampToValueAtTime(0.8, .1);
+                    }
+                    else if(osc.type === "sawtooth") {
+                        g.gain.linearRampToValueAtTime(1.5, .1);
+                    }
+                    else {
+                        g.gain.linearRampToValueAtTime(0.8, .1);
+                    }
                     //g.gain.exponentialRampToValueAtTime(.01, randY);
                     //g.gain.linearRampToValueAtTime(0, randY + randZ);
                     osc.connect(g);
@@ -205,9 +250,9 @@ if(panner.orientationX) {
                 if(panner) {
                     var wv=c.GetModelMatrix();
                     var cx, cy, cz;
-                    cx = c.position[0];
-                    cy = c.position[1];
-                    cz = c.position[2];
+                    cx = c.position[0] + cubeSize/2;
+                    cy = c.position[1] + cubeSize/2;
+                    cz = c.position[2] + cubeSize/2;
                     cx = wv[12];
                     cy = wv[13];
                     cz = wv[14];
@@ -230,7 +275,7 @@ if(panner.orientationX) {
         if(rotq >= 360) {
             rotq = 0;
         }
-        rotq = rotq + 0.1 * elapsed;
+        rotq = rotq + 0.2 * elapsed;
     }
     //console.log("dataX=" + this.cubePainter._dataX);
 
