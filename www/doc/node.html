@@ -158,6 +158,8 @@ Synonym for .disconnectNode().
 Removes and returns the node in the given direction.
 <p>
 Does nothing if no node is in the given direction.
+<h3>.disconnectNode()</h3>
+Removes and returns this node from its parent. If this node is a root, an error is thrown.
 <h3>.eachChild(visitor, visitorThisArg)</h3>
 Invokes the specified visitor for each child of this node.
 <h3>.scaleAt(direction)</h3>
@@ -181,8 +183,12 @@ outPos is optionally a parsegraph_Size object that will be used instead of creat
 Sets the layout preference of this node to the given value. This value is used in determining the order of child layout. Because the first axis laid out will be closest to the parent, the second axis must separate not only from the parent, but from the first axis, which may cause it to be further separated. This can cause rendered graphs to appear like a part is popped out.
 <p>
 Caret uses this method to implement pull().
+<h3>.setNodeAlignmentMode(newAlignmentMode)</h3>
+Sets this node's alignment node for its parent. The node must have a parent, because alignment is always set on the parent.
 <h3>.setNodeAlignmentMode(inDirection, newAlignmentMode)</h3>
-Aligns the child in the given direction using the specified alignment technique.
+Aligns the child in the given direction using the given node alignment mode.
+<p>
+The alignment can be set and changed before a node is present.
 <h3>.nodeAlignmentMode(inDirection)</h3>
 Returns the alignment used for the given direction.
 <h3>.type()</h3>
@@ -348,11 +354,13 @@ Creates and returns a new labeled block that uses the given glyph atlas.
 <li>.connectNode(inDirection, node)
 <li>.eraseNode(givenDirection)
 <li>.disconnectNode(inDirection)
+<li>.disconnectNode()
 <li>.eachChild(visitor, visitorThisArg)
 <li>.scaleAt(direction)
 <li>.lineLengthAt(direction)
 <li>.extentSize(outPos)
 <li>.setLayoutPreference(given)
+<li>.setNodeAlignmentMode(newAlignmentMode)
 <li>.setNodeAlignmentMode(inDirection, newAlignmentMode)
 <li>.nodeAlignmentMode(inDirection)
 <li>.type()
