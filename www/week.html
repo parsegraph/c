@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Week - Parsegraph</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="sga.css">
+<script src="parsegraph-1.0.js"></script>
+<script src="parsegraph-widgets-1.0.js"></script>
+<script>
+
+SGA = null;
+document.addEventListener("DOMContentLoaded", function(event) {
+    var sga = new parsegraph_SingleGraphApplication();
+    SGA = sga;
+    sga.createSessionNode = function(graph, userLogin, node) {
+        var car = new parsegraph_Caret(parsegraph_BUD);
+        car.setGlyphAtlas(graph.glyphAtlas());
+        [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ].forEach(function(weekday, i) {
+            if(i !== 0) {
+                car.spawnMove('f', 'bu');
+            }
+
+            car.connect('d', createDay(i, graph.glyphAtlas()));
+            car.pull('d');
+        }, this);
+        return car.root();
+    };
+    sga.start(document.body);
+});
+</script>
+</head>
+<body>
+</body>
+</html>
