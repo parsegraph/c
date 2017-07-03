@@ -39,12 +39,12 @@ function createDay(i, glyphAtlas, d, currentDate, noteFunc, noteFuncThisArg, onU
         default:
             car.label(((h%12)) + (h > 12 ? "PM" : "AM"));
         }
-        if(parsegraph_datesEqual(d, currentDate)) {
+        if(d && parsegraph_datesEqual(d, currentDate)) {
             if(h < currentDate.getHours()) {
                 car.replace(pastStyleName);
             }
         }
-        else if(!parsegraph_dateGreater(d, currentDate)) {
+        else if(d && !parsegraph_dateGreater(d, currentDate)) {
             car.replace(pastStyleName);
         }
         car.move('f');
@@ -63,7 +63,7 @@ function createDay(i, glyphAtlas, d, currentDate, noteFunc, noteFuncThisArg, onU
             }, car.node());
             car.node().setValue(h);
         }
-        if(parsegraph_datesEqual(d, currentDate)) {
+        if(d && parsegraph_datesEqual(d, currentDate)) {
             if(h < currentDate.getHours()) {
                 car.node().setBlockStyle(pastNoteStyle);
             }
