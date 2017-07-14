@@ -125,6 +125,9 @@ function parsegraph_nameTokenType(tokenType)
 
 parsegraph_Token.prototype.equals = function(other)
 {
+    if(this === other) {
+        return true;
+    }
     if(!other) {
         return false;
     }
