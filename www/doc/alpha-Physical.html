@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Physical - Alpha</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha Physical</h1>
+Physical is an orientation and a position as well as rotation and movement.
+<h3>alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE</h3>
+Orders how a physical's transformations are applied when its world matrix is computed.
+<h3>alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE</h3>
+Orders how a physical's transformations are applied when its world matrix is computed.
+<h3>alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE</h3>
+Orders how a physical's transformations are applied when its world matrix is computed.
+<h3>new alpha_Physical(parent)</h3>
+Creates and returns a new physical.
+<p>
+Throws if parent is null. Set to the physical's camera for a default.
+<h3>.toJSON()</h3>
+Returns a object, described like the following, that describes the current state of this physical:
+<table>
+<tr><th>Name<th>Value</tr>
+<tr><td>position<td>[x, y, z]</tr>
+<tr><td>orientation<td>[rx, ry, rz, rw]</tr>
+</table>
+<h3>.SetOrientation(...)</h3>
+Sets this physicals's orientation quaternion using the given arguments.
+<h3>.GetOrientation()</h3>
+Returns this physical's orientation, as a quaternion.
+<h3>.SetRotationSpeeds(x, y)</h3>
+Sets this physical's rotation speeds, in radians per second, to the given values.
+<h3>.GetRotationSpeeds()</h3>
+Directly returns this physical's rotation speeds, as an array of [xSpeed, ySpeed].
+<h3>.Rotate(angle, x, y, z)</h3>
+Rotates about the local axis.
+<h3>.RotateGlobal(angle, x, y, z)</h3>
+Rotates about the world axis.
+<h3>.YawLeft(elapsed)</h3>
+Rotates this physical in a positive direction about its Y-axis for the given elapsed time.
+<p>
+This rotation takes place at the Y-speed set by rotationSpeed.
+<h3>.YawRight(elapsed)</h3>
+Rotates this physical in a negative direction about its Y-axis for the given elapsed time.
+<p>
+This rotation takes place at the Y-speed set by rotationSpeed.
+<h3>.PitchUp(elapsed)</h3>
+Turns the physical up by the specified amount of this physical's rotation X-speed.
+<h3>.PitchDown(elapsed)</h3>
+Turns the physical down by the specified amount of this physical's rotation X-speed.
+<h3>.RollLeft(elapsed)</h3>
+Rotates this physical in a positive direction about its Z-axis for the given elapsed time.
+<p>
+This rotation takes place at the Y-speed set by rotationSpeed.
+<h3>.RollRight(elapsed)</h3>
+Rotates this physical in a negative direction about its Z-axis for the given elapsed time.
+<p>
+This rotation takes place at the Y-speed set by rotationSpeed.
+<h3>.SetPosition(vector)</h3>
+Calls .SetPosition(vector[0], vector[1], vector[2]).
+<h3>.SetPosition(x, y, z)</h3>
+Sets this physical's position to the given value, returning this physical's position.
+<h3>.ChangePosition(x, y, z)</h3>
+Adds the given components to this physical's position.
+<h3>.Warp(x, y, z)</h3>
+Move this physical's position by the given distance relative to this physical's orientation.
+<h3>.Warp(distanceVec)</h3>
+Move this physical's position by the given distance vector relative to this physical's orientation.
+<h3>.WarpForward(distance)</h3>
+Moves this physical forward by the given distance.
+<h3>.WarpBackward(distance)</h3>
+Moves this physical backward by the given distance.
+<h3>.WarpLeft(distance)</h3>
+Moves this physical in the negative X-axis direction by the given distance.
+<h3>.WarpRight(distance)</h3>
+Moves this physical in the positive X-axis direction by the given distance.
+<h3>.WarpUp(distance)</h3>
+Moves this physical in the positive Y-axis direction by the given distance.
+<h3>.WarpDown(distance)</h3>
+Moves this physical in the negative Y-axis direction by the given distance.
+<h3>.SetSpeeds(x, y, z)</h3>
+Sets the speed of this physical to the given components.
+<h3>.SetSpeeds(speedVec)</h3>
+Sets the speed of this physical to the given vector components.
+<h3>.GetSpeeds()</h3>
+Directly returns the array of this physical's speeds.
+<h3>.SetSpeed(speed)</h3>
+Sets x,y, and z speeds to the same thing.
+<h3>.SetVelocity(...)</h3>
+Sets this physical's velocity vector using the given arguments.
+<h3>.GetVelocity()</h3>
+Returns this physical's velocity vector.
+<h3>.AddVelocity(...)</h3>
+Adds the given arguments to this physical's velocity vector.
+<h3>.MoveForward(elapsed)</h3>
+Moves this physical in the negative Z-axis direction for the given time.
+<h3>.MoveBackward(elapsed)</h3>
+Moves this physical in the positive Z-axis direction for the given time.
+<h3>.MoveLeft(elapsed)</h3>
+Moves this physical in the negative X-axis direction for the given time.
+<h3>.MoveRight(elapsed)</h3>
+Moves this physical in the positive X-axis direction for the given time.
+<h3>.MoveUp(elapsed)</h3>
+Moves this physical in the positive Y-axis direction for the given time.
+<h3>.MoveDown(elapsed)</h3>
+Moves this physical in the negative Y-axis direction for the given time.
+<h3>.ApplyVelocity()</h3>
+Calculates our new position using our current velocity and then resets the velocity.
+<h3>.IsGoodLineageFor(prospectiveChild)</h3>
+In order to be a good lineage, a camera must be reached therefore it must not
+infinitely loop.
+<h3>.SetParent(parent)</h3>
+Sets this physical's parent to the given value. It must not be null; set the physical's
+parent to the camera for a default.
+<h3>.GetParent()</h3>
+Returns this physical's parent.
+<h3>.SetScale()</h3>
+Sets this physical's scale using the given arguments.
+<h3>.GetScale()</h3>
+Returns this physical's scale vector.
+<h3>.GetModelMatrix()</h3>
+Combine our position and orientation into a matrix.
+<h3>.GetViewMatrix()</h3>
+When fully returned it looks like this
+<pre>
+// A -&gt; B -&gt; CAM -&gt; A -&gt; B
+// Mults as A * B * (CAM * A * B):Inverse()
+</pre>
+in order for this to work properly make sure that the camera's
+GetViewMatrix() is called before any physicals
+otherwise the physical's will be outdated
+this is to prevent having to retrace the camera's lineage more than once
+<p>
+this would be a good thing to do for any matrix that has many descendants
+say a ship with lots of npcs / players on it
+<p>
+but this would require a proper ordering of physicals
+which isn't feasible atm
+physicals would need to know who is the child of who.
+something like:
+<pre>
+/*
+	camera:CalculateViewMatrix();
+	while SomePhysicalsNotCalculated do
+		for all physicalsNotCalculated do
+			if parentPhysicalCalculated then
+				physical:CalculateViewMatrix()
+			end
+		end
+	end	
+*/
+</pre>
+a more feasible method would be to
+to have a bunch of children known by the physical
+then we simply chain down the list starting at the camera;
+this is a far better solution.
+<pre>
+/*
+	function CalculateViewMatrices()
+		self:CalculateViewMatrix(); -- for myself
+		for each child in children do
+			child:CalculateViewMatrices() -- for my children
+		end
+	end
+*/
+</pre>
+it starts with a simple camera:CalculateViewMatrices().
+I will return to this.
+<h3>.GetWorldPositionByViewMatrix()</h3>
+<pre>
+    return new alpha_RMatrix4([
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        this.position[0], this.position[1], this.position[2], 1
+    ]).Multiply(this.GetViewMatrix().Inverse());
+</pre>
+<h3>.GetWorldPosition()</h3>
+legacy code; left in case I try this again.<br/>
+it does not work correctly, in all cases
+<h3>.GetWorldOrientation()</h3>
+legacy code; left in case I try this again.<br/>
+it DOES work
+</main>
+<nav class="toc">
+<h2>Alpha Physical</h2>
+<ol>
+<li>alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE
+<li>alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE
+<li>alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE
+<li>new alpha_Physical(parent)
+<li>.toJSON()
+<li>.SetOrientation(...)
+<li>.GetOrientation()
+<li>.SetRotationSpeeds(x, y)
+<li>.GetRotationSpeeds()
+<li>.Rotate(angle, x, y, z)
+<li>.RotateGlobal(angle, x, y, z)
+<li>.YawLeft(elapsed)
+<li>.YawRight(elapsed)
+<li>.PitchUp(elapsed)
+<li>.PitchDown(elapsed)
+<li>.RollLeft(elapsed)
+<li>.RollRight(elapsed)
+<li>.SetPosition(vector)
+<li>.SetPosition(x, y, z)
+<li>.ChangePosition(x, y, z)
+<li>.Warp(x, y, z)
+<li>.Warp(distanceVec)
+<li>.WarpForward(distance)
+<li>.WarpBackward(distance)
+<li>.WarpLeft(distance)
+<li>.WarpRight(distance)
+<li>.WarpUp(distance)
+<li>.WarpDown(distance)
+<li>.SetSpeeds(x, y, z)
+<li>.SetSpeeds(speedVec)
+<li>.GetSpeeds()
+<li>.SetSpeed(speed)
+<li>.SetVelocity(...)
+<li>.GetVelocity()
+<li>.AddVelocity(...)
+<li>.MoveForward(elapsed)
+<li>.MoveBackward(elapsed)
+<li>.MoveLeft(elapsed)
+<li>.MoveRight(elapsed)
+<li>.MoveUp(elapsed)
+<li>.MoveDown(elapsed)
+<li>.ApplyVelocity()
+<li>.IsGoodLineageFor(prospectiveChild)
+<li>.SetParent(parent)
+<li>.GetParent()
+<li>.SetScale()
+<li>.GetScale()
+<li>.GetModelMatrix()
+<li>.GetViewMatrix()
+<li>.GetWorldPositionByViewMatrix()
+<li>.GetWorldPosition()
+<li>.GetWorldOrientation()
+</ol>
+</nav>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha Input</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha Input</h1>
+<h3>new alpha_Input(surface, camera)</h3>
+Creates a new Input object using the given surface and camera.
+<h3>.Get(key)</h3>
+Returns whether the specified key is currently pressed.
+<h3>.SetMouseSensitivityX(sensitivity)</h3>
+Sets the X-axis mouse sensitivity.
+<h3>.GetMouseSensitivityX()</h3>
+Returns the X-axis mouse sensitivity.
+<h3>.SetMouseSensitivityY(sensitivity)</h3>
+Sets the Y-axis mouse sensitivity.
+<h3>.GetMouseSensitivityY()</h3>
+Returns the Y-axis mouse sensitivity.
+<h3>.SetMouseSensitivity(sensitivity)</h3>
+Sets both axis sensitivities to the given value.
+<h3>.MouseLeft()</h3>
+Returns the current mouse movement delta in the left direction. Clamped at least zero.
+<h3>.MouseRight()</h3>
+Returns the current mouse movement delta in the right direction. Clamped at least zero.
+<h3>.MouseUp()</h3>
+Returns the current mouse movement delta in the up direction. Clamped at least zero.
+<h3>.MouseDown()</h3>
+Returns the current mouse movement delta in the down direction. Clamped at least zero.
+<h3>.MouseWheelUp()</h3>
+Returns the wheel delta in the upwards direction, in ticks.
+<p>
+Mouse wheel data is stored in 1/8 of a degree. This returns how many ticks of a mousewheel of standard resolution has been seen before an .Update().
+<h3>.MouseWheelDown()</h3>
+Returns the wheel delta in the downwards direction, in ticks.
+<h3>.MouseWheelDegreesUp()</h3>
+Returns the wheel delta in the upwards direction, in degrees.
+<h3>.MouseWheelDegreesDown()</h3>
+Returns the wheel delta in the downwards direction, in degrees.
+<h3>.Update(elapsed)</h3>
+Updates the scene with the given input state and given elapsed time.
+<p>
+Sets the start to the end, and clears mousewheel totals.
+</main>
+<nav class="toc">
+<h2>Alpha Input</h2>
+<ol>
+<li>new alpha_Input(surface, camera)
+<li>.Get(key)
+<li>.SetMouseSensitivityX(sensitivity)
+<li>.GetMouseSensitivityX()
+<li>.SetMouseSensitivityY(sensitivity)
+<li>.GetMouseSensitivityY()
+<li>.SetMouseSensitivity(sensitivity)
+<li>.MouseLeft()
+<li>.MouseRight()
+<li>.MouseUp()
+<li>.MouseDown()
+<li>.MouseWheelUp()
+<li>.MouseWheelDown()
+<li>.MouseWheelDegreesUp()
+<li>.MouseWheelDegreesDown()
+<li>.Update(elapsed)
+</ol>
+</nav>
+</body>
+</html>

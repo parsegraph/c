@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph GlyphAtlas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph GlyphAtlas</h1>
+<h3>new parsegraph_GlyphPage()</h3>
+Returns a new, empty glyph page.
+<h3>new parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)</h3>
+Creates a new glyph atlas using the given font.
+<h3>.setUnicode(uni)</h3>
+Sets the Unicode character database to the given object.
+<ul>
+<li>Throws an Error if the given database has not completed loading.
+</ul>
+<h3>.unicode()</h3>
+Return this glyph atlas's Unicode character database.
+<h3>.toString()</h3>
+Returns a developer-friendly string naming this glyph atlas.
+<h3>.getGlyph(glyph)</h3>
+Returns the glyph data for the given string or character code.
+<table>
+<tr><th>Name<th>Description</tr>
+<tr><td>letter<td>glyph</tr>
+<tr><td>x<td>The left-most X coordinate of this glyph in its glyph page.
+<tr><td>y<td>The top-most Y coordinate of this glyph in its glyph page.
+<tr><td>width<td>The computed width of this glyph.
+<tr><td>height<td>The computed height of this glyph.
+<tr><td>glyphPage<td>The page that contains this glyph.
+</table>
+<h3>.get(glyph)</h3>
+Alias for .getGlyph(glyph).
+<h3>.hasGlyph(glyph)</h3>
+Returns true if there is glyph data for the named glyph.
+<h3>.has(glyph)</h3>
+Alias for .hasGlyph(glyph).
+<h3>.update(gl)</h3>
+Updates the given WebGL instance with this texture.
+<p>
+<pre>
+ga.update(); // Updates the standard GL instance.
+ga.update(gl); // Updates the given GL instance and clears old one.
+</pre>
+<h3>.clear()</h3>
+Deletes all loaded GL textures.
+<h3>.imageData()</h3>
+Returns binary image data that describes the current page.
+<h3>.getImageData()</h3>
+Alias for .imageData().
+<h3>.needsUpdate()</h3>
+Returns true if this glyph atlas is flagged for update.
+<h3>.restoreProperties()</h3>
+Sets the context's font and fill-style.
+<h3>.font()</h3>
+Returns a CSS string describing the font in use.
+<h3>.canvas()</h3>
+Returns the canvas used for rendering the 2D glyph page.
+<h3>.maxTextureWidth()</h3>
+Returns the maximum texture width, in pixels.
+<h3>.letterHeight()</h3>
+Returns the height used for all letters.
+<h3>.fontBaseline()</h3>
+Returns the baseline at which the font is rendered.
+<h3>.fontSize()</h3>
+Directly returns the set font size.
+<h3>.fontName()</h3>
+Directly returns the set font name.
+<h3>.isNewline(c)</h3>
+Returns true if the given string is a newline character.
+</main>
+<nav class="toc">
+<h2>Parsegraph GlyphAtlas</h2>
+<ol>
+<li>new parsegraph_GlyphPage()
+<li>new parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
+<li>.setUnicode(uni)
+<li>.unicode()
+<li>.toString()
+<li>.getGlyph(glyph)
+<li>.get(glyph)
+<li>.hasGlyph(glyph)
+<li>.has(glyph)
+<li>.update(gl)
+<li>.clear()
+<li>.imageData()
+<li>.getImageData()
+<li>.needsUpdate()
+<li>.restoreProperties()
+<li>.font()
+<li>.canvas()
+<li>.maxTextureWidth()
+<li>.letterHeight()
+<li>.fontBaseline()
+<li>.fontSize()
+<li>.fontName()
+<li>.isNewline(c)
+</ol>
+</nav>
+</body>
+</html>

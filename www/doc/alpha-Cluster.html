@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha Cluster</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha Cluster</h1>
+Cluster is where the information from blocks, blocktype, color and face
+actually gets put to use. It figures out how to draw the blocks that have
+been added to it so that they can be drawn inside of 1 Matrix Push/Pop. It
+would probably not be efficient to put a lot of moving objects inside of a
+single cluster as the cluster would have to be continuously updating
+everytime a block was edited.
+<h3>new alpha_Cluster(widget)</h3>
+Creates a new Cluster using the given GLWidget.
+<ul>
+<li>Throws an Error if widget is null.
+</ul>
+<h3>.HasBlock(block)</h3>
+Returns the index of the given block if it is in this Cluster.
+<h3>.AddBlock(block)</h3>
+Adds the given Block to this Cluster.
+<p>
+Blocks that are already present are not re-added.
+<h3>.AddBlock(...)</h3>
+Adds the specified Block to this Cluster.
+<h3>.AddBlocks(...)</h3>
+Adds all of the given block arguments to this Cluster.
+<h3>.AddBlocks(blockList)</h3>
+Adds all of the blocks in the given block list to this Cluster.
+<h3>.ClearBlocks()</h3>
+Removes all blocks from this Cluster.
+<h3>.CalculateVertices()</h3>
+Construct all of the vertices from the blocks and store them.
+<h3>.Draw(viewMatrix)</h3>
+Renders all painted cubes for this cluster using the given matrix.
+</main>
+<nav class="toc">
+<h2>Alpha Cluster</h2>
+<ol>
+<li>new alpha_Cluster(widget)
+<li>.HasBlock(block)
+<li>.AddBlock(block)
+<li>.AddBlock(...)
+<li>.AddBlocks(...)
+<li>.AddBlocks(blockList)
+<li>.ClearBlocks()
+<li>.CalculateVertices()
+<li>.Draw(viewMatrix)
+</ol>
+</nav>
+</body>
+</html>

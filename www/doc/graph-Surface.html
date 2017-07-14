@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Surface</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Surface</h1>
+Manages a div containing a canvas rendered using the given listeners.
+<h3>new parsegraph_Surface()</h3>
+Creates a new Surface and its HTML elements. The GL context is not
+created until used.
+<h3>.canvas()</h3>
+Returns the canvas HTML element used for rendering this Surface.
+<h3>.gl()</h3>
+Returns the GL context used by this Surface, creating it if necessary.
+<h3>.setGL(gl)</h3>
+Directly sets the GL context used by this Surface.
+<h3>.setAudio(audio)</h3>
+Directly sets the audio context to the given value.
+<h3>.audio()</h3>
+Returns the AudioContext used by this Surface, creating one if necessary.
+<ul>
+<li>Throws an Error if AudioContext is not supported.
+</ul>
+<h3>.resize(w, h)</h3>
+Resizes this Surface's container to the specified size, in pixels.
+<h3>.container()</h3>
+Returns the HTML container element that holds the canvas for this graph.
+<h3>.addPainter(painter, thisArg)</h3>
+Adds a new painter function and this-object for this Surface.
+<h3>.addRenderer(renderer, thisArg)</h3>
+Adds a new renderer function and this-object for this Surface.
+<h3>.paint(...)</h3>
+Invokes all painter functions with the given arguments.
+<h3>.setBackground(color)</h3>
+Sets this Surface's background color to the given Color value.
+<h3>.setBackground(...)</h3>
+Sets this Surface's background color to the specified color.
+<h3>.backgroundColor()</h3>
+Retrieves the current background color.
+<h3>.canProject()</h3>
+Returns whether the surface has a nonzero client width and height.
+<h3>.render()</h3>
+Invokes all renderers.
+<ul>
+<li>Throws an Error if canProject() returns false.
+</ul>
+</main>
+<nav class="toc">
+<h2>Parsegraph Surface</h2>
+<ol>
+<li>new parsegraph_Surface()
+<li>.canvas()
+<li>.gl()
+<li>.setGL(gl)
+<li>.setAudio(audio)
+<li>.audio()
+<li>.resize(w, h)
+<li>.container()
+<li>.addPainter(painter, thisArg)
+<li>.addRenderer(renderer, thisArg)
+<li>.paint(...)
+<li>.setBackground(color)
+<li>.setBackground(...)
+<li>.backgroundColor()
+<li>.canProject()
+<li>.render()
+</ol>
+</nav>
+</body>
+</html>

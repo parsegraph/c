@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NodePainter - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph NodePainter</h1>
+<h3>new parsegraph_NodePainter(gl, glyphAtlas, shaders)</h3>
+Constructs a new painter using the given GL context, glyph atlas, and prepared shaders.
+<h3>.bounds()</h3>
+Returns a rect in world-space that covers this painter's painted area.
+<h3>.gl()</h3>
+Returns the GL context used by this painter.
+<h3>.glyphPainter()</h3>
+Returns the glyph painter used by this painter.
+<h3>.setBackground(color)</h3>
+Directly sets the background color to the given color.
+<h3>.setBackground(r, g, b)</h3>
+Sets the background color to the given opaque color.
+<h3>.setBackground(r, g, b, a)</h3>
+Sets the background color to the given color values.
+<h3>.backgroundColor()</h3>
+Retrieves the current background color.
+<h3>.render(world, scale)</h3>
+Renders the painted scene graph.
+<h3>.enableExtentRendering()</h3>
+Enables extent painting and rendering.
+<h3>.disableExtentRendering()</h3>
+Disables extent painting and rendering.
+<h3>.isExtentRenderingEnabled()</h3>
+Returns true if extents are being painted.
+<h3>.enableBlockRendering()</h3>
+Enables block and line painting and rendering.
+<h3>.disableBlockRendering()</h3>
+Disables block and line painting and rendering.
+<h3>.isBlockRenderingEnabled()</h3>
+Returns true if block and line painting and rendering is enabled.
+<h3>.enableTextRendering()</h3>
+Enables text painting and rendering.
+<h3>.disableTextRendering()</h3>
+Disables text painting and rendering.
+<h3>.isTextRenderingEnabled()</h3>
+Returns true if text rendering is enabled.
+<h3>.enableSceneRendering()</h3>
+Enables scene painting and rendering.
+<h3>.disableSceneRendering()</h3>
+Disables scene painting and rendering.
+<h3>.isSceneRenderingEnabled()</h3>
+Returns true if scene painting and rendering is enabled.
+<h3>.clear()</h3>
+Clears all painters and textures.
+<h3>.drawSlider(node, worldX, worldY, userScale)</h3>
+Draws a slider specified using the given node at the given world coordinates and scale.
+<h3>.drawScene(node, worldX, worldY, userScale, shaders)</h3>
+Draws a scene specified using the given node at the given world coordinates and scale.
+<p>
+The given shaders object is used to cache program compilation.
+<h3>.initBlockBuffer(counts)</h3>
+Initialize painter buffers using the specified block and extent counts.
+<table>
+<tr><th>Name<th>Value</tr>
+<tr><td>numBlocks<td>The number of painted blocks</tr>
+<tr><td>numExtents<td>The number of painted extents.</tr>
+</table>
+<h3>.countNode(node, counts)</h3>
+Counts the number of paintable blocks and extents in the given node, adding that total to
+the given counts object.
+<p>
+See .initBlockBuffer(counts).
+<h3>.drawNode(node, shaders)</h3>
+Draws a single node, and the lines extending from it.
+<h3>.paintLines(node, worldX, worldY, userScale)</h3>
+Paints the given node's lines extending to its neighbors.
+<h3>.paintExtent(node, worldX, worldY, userScale)</h3>
+Paints the given node's extents.
+<h3>.paintBlock(node, worldX, worldY, userScale)</h3>
+Paints the block that comprises the given node.
+</main>
+<nav class="toc">
+<h2>Parsegraph NodePainter</h2>
+<ol>
+<li>new parsegraph_NodePainter(gl, glyphAtlas, shaders)
+<li>.bounds()
+<li>.gl()
+<li>.glyphPainter()
+<li>.setBackground(color)
+<li>.setBackground(r, g, b)
+<li>.setBackground(r, g, b, a)
+<li>.backgroundColor()
+<li>.render(world, scale)
+<li>.enableExtentRendering()
+<li>.disableExtentRendering()
+<li>.isExtentRenderingEnabled()
+<li>.enableBlockRendering()
+<li>.disableBlockRendering()
+<li>.isBlockRenderingEnabled()
+<li>.enableTextRendering()
+<li>.disableTextRendering()
+<li>.isTextRenderingEnabled()
+<li>.enableSceneRendering()
+<li>.disableSceneRendering()
+<li>.isSceneRenderingEnabled()
+<li>.clear()
+<li>.drawSlider(node, worldX, worldY, userScale)
+<li>.drawScene(node, worldX, worldY, userScale, shaders)
+<li>.initBlockBuffer(counts)
+<li>.countNode(node, counts)
+<li>.drawNode(node, shaders)
+<li>.paintLines(node, worldX, worldY, userScale)
+<li>.paintExtent(node, worldX, worldY, userScale)
+<li>.paintBlock(node, worldX, worldY, userScale)
+</ol>
+</nav>
+</body>
+</html>

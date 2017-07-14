@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PaintGroup - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph PaintGroup</h1>
+<h3>new parsegraph_PaintGroup(root, x, y, userScale)</h3>
+Creates a new PaintGroup using the given root node with the given scale and center.
+<h3>new parsegraph_PaintGroup(root)</h3>
+Creates a new PaintGroup using the given root node with a scale of 1.0 centered at the origin.
+<h3>.clear()</h3>
+Removes all child PaintGroups from this paint group.
+<h3>.setOrigin(x, y)</h3>
+Changes this PaintGroup's origin to the specified position.
+<ul>
+<li>Throws if either coordinate is NaN.
+</ul>
+<h3>.setScale(scale)</h3>
+Changes this PaintGroup's scale to the specified value.
+<ul>
+<li>Throws if the given value is NaN.
+</ul>
+<h3>.root()</h3>
+Returns the given root Node of this PaintGroup.
+<h3>.nodeUnderCoords(x, y)</h3>
+Returns the node under the given world coordinates.
+<h3>.assignParent(paintGroup)</h3>
+Sets this PaintGroup's parent to the given value.
+<h3>.markDirty()</h3>
+Marks this PaintGroup as needing to be repainted.
+<h3>.isDirty()</h3>
+Returns true if this PaintGroup has been marked as dirty, or has been just constructed
+and never painted.
+<h3>.painter()</h3>
+Returns the NodePainter used to paint this PaintGroup.
+<h3>.isEnabled()</h3>
+Returns true if this PaintGroup is enabled. Disabled PaintGroups are not painted, and
+their descendents are merged into the parent's PaintGroup.
+<h3>.enable()</h3>
+Enables this PaintGroup.
+<h3>.disable()</h3>
+Disables this PaintGroup.
+<h3>.paint(gl, backgroundColor, glyphAtlas, shaders, timeout)</h3>
+Paints all the nodes in this paint group. paint should be called
+until it returns true.
+<h3>.toString()</h3>
+Returns a developer-friendly string naming this PaintGroup.
+<h3>.renderIteratively(world, camera)</h3>
+Renders the painted nodes of this group and all its descendents, using the given world matrix and camera.
+<h3>.traverseBreadth(callback, callbackThisArg)</h3>
+Calls the given function and this-object for this paint group and all its descendents,
+in breadth-first order.
+<h3>.render(world, camera)</h3>
+Renders the painted nodes of this group, using the given world matrix and camera.
+<p>
+Does nothing if the PaintGroup is disabled, or if it has not been painted.
+<h3>parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)</h3>
+Returns a painter's algorithm-friendly list of nodes that use the same paint
+group as the given node. The given node is included.
+<h3>parsegraph_findChildPaintGroups(root, callback, callbackThisArg)</h3>
+Traverses the paint groups in the given node in a painter's algorithm-friendly manner.
+<p>
+This method does not consider whether the paint group is enabled or disabled.
+</main>
+
+<nav class="toc">
+<h2>Parsegraph PaintGroup</h2>
+<ol>
+<li>new parsegraph_PaintGroup(root, x, y, userScale)
+<li>new parsegraph_PaintGroup(root)
+<li>.clear()
+<li>.setOrigin(x, y)
+<li>.setScale(scale)
+<li>.root()
+<li>.nodeUnderCoords(x, y)
+<li>.assignParent(paintGroup)
+<li>.markDirty()
+<li>.isDirty()
+<li>.painter()
+<li>.isEnabled()
+<li>.enable()
+<li>.disable()
+<li>.paint(gl, backgroundColor, glyphAtlas, shaders, timeout)
+<li>.toString()
+<li>.renderIteratively(world, camera)
+<li>.traverseBreadth(callback, callbackThisArg)
+<li>.render(world, camera)
+<li>parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
+<li>parsegraph_findChildPaintGroups(root, callback, callbackThisArg)
+</ol>
+</nav>
+</body>
+</html>

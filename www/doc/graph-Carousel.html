@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Carousel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Carousel</h1>
+Visual graph menu component.
+<h3>new parsegraph_Carousel()</h3>
+Creates a new, unprepared Carousel centered at the origin.
+<h3>.needsRepaint()</h3>
+Returns whether this Carousel needs paint() to be called before render().
+<h3>.prepare(gl, glyphAtlas, shaders)</h3>
+Sets up the Carousel for rendering with the given rendering arguments.
+<h3>.gl()</h3>
+Returns the prepared GL context used for rendering.
+<h3>.moveCarousel(worldX, worldY)</h3>
+Sets the origin of this Carousel to the specified position.
+<h3>.setCarouselSize(size)</h3>
+Directly sets the carousel's size to the given value.
+<h3>.showCarousel()</h3>
+Sets the Carousel to be shown.
+<h3>.isCarouselShown()</h3>
+Returns true if the Carousel is set to be shown.
+<h3>.hideCarousel()</h3>
+Sets the Carousel to be hidden.
+<h3>.addToCarousel(node, callback, thisArg)</h3>
+Adds the given node to the carousel.
+<h3>.clearCarousel()</h3>
+Removes all this Carousel's plots and callbacks.
+<h3>.removeFromCarousel(node)</h3>
+Removes the given node from the Carousel, returning it if found.
+<h3>.clickCarousel(x, y, asDown)</h3>
+Receives a click event on the carousel, in client coordinates.
+<h3>.mouseOverCarousel(x, y)</h3>
+Receives a mouseover event on the carousel, in client coordinates.
+<h3>.arrangeCarousel()</h3>
+Arranges each carousel caret in a spiral.
+<h3>.scheduleCarouselRepaint()</h3>
+Calls this Carousel's repaint scheduler and marks this Carousel as needing a repaint.
+<h3>.paint()</h3>
+Paints the plotted graphs and selection frame for this Carousel.
+<h3>.render(world)</h3>
+Renders this painted Carousel using the given world matrix.
+</main>
+<nav class="toc">
+<h2>Parsegraph Carousel</h2>
+<ol>
+<li>new parsegraph_Carousel()
+<li>.needsRepaint()
+<li>.prepare(gl, glyphAtlas, shaders)
+<li>.gl()
+<li>.moveCarousel(worldX, worldY)
+<li>.setCarouselSize(size)
+<li>.showCarousel()
+<li>.isCarouselShown()
+<li>.hideCarousel()
+<li>.addToCarousel(node, callback, thisArg)
+<li>.clearCarousel()
+<li>.removeFromCarousel(node)
+<li>.clickCarousel(x, y, asDown)
+<li>.mouseOverCarousel(x, y)
+<li>.arrangeCarousel()
+<li>.scheduleCarouselRepaint()
+<li>.paint()
+<li>.render(world)
+</ol>
+</nav>
+</body>
+</html>

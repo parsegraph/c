@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph TexturePainter</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph TexturePainter</h1>
+Paints images of a given GL texture.
+<h3>new parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)</h3>
+Returns a new painter using the given GL context, specified GL texture, and
+compiled shader map.
+<h3>.texture</h3>
+Returns this painter's given texture ID.
+<h3>.drawWholeTexture(x, y, width, height, scale)</h3>
+Draws the entire texture at the specified rectangle and given scale.
+<h3>.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)</h3>
+Draws a portion of this painter's texture at the specified rectangle and given scale.
+<h3>.clear()</h3>
+Clears this painter's buffers.
+<h3>.render(world)</h3>
+Renders all painted images using the given matrix.
+</main>
+<nav class="toc">
+<h2>Parsegraph TexturePainter</h2>
+<ol>
+<li>new parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
+<li>.texture
+<li>.drawWholeTexture(x, y, width, height, scale)
+<li>.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)
+<li>.clear()
+<li>.render(world)
+</ol>
+</nav>
+</body>
+</html>

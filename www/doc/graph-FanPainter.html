@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Carousel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph FanPainter</h1>
+Shows a circle that allows some parts to show as selected.
+<h3>new parsegraph_FanPainter(gl)</h3>
+Creates a new painter of radius 250 using the given GL context.
+<ul>
+<li>Throws an Error if a GL context is not given.
+</ul>
+<h3>.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</h3>
+Draws a selection at the given world coordinates highlighting the given angle with the
+given Colors.
+<h3>.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</h3>
+Draws a selection at the given world coordinates highlighting the given angle with the
+given Colors.
+<h3>.setAscendingRadiusfunction(ascendingRadius)</h3>
+Sets the distance from the center to the brightest point.
+<h3>.setDescendingRadius(descendingRadius)</h3>
+Sets the distance from the brightest point, to the invisible outer edge.
+<h3>setSelectionAngle(selectionAngle)</h3>
+Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area of radial brightness.
+<h3>.clear()</h3>
+Clears all buffers.
+<h3>.render(viewMatrix)</h3>
+Renders all painted fans using the given matrix.
+</main>
+<nav class="toc">
+<h2>Parsegraph FanPainter</h2>
+<ol>
+<li>new parsegraph_FanPainter(gl)
+<li>.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)
+<li>.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)
+<li>.setAscendingRadiusfunction(ascendingRadius)
+<li>.setDescendingRadius(descendingRadius)
+<li>setSelectionAngle(selectionAngle)
+<li>.clear()
+<li>.render(viewMatrix)
+</ol>
+</nav>
+</body>
+</html>

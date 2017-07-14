@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Date - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Date</h1>
+<h3>parsegraph_datesEqual(a, b)</h3>
+Returns true if the year, month, and date parts of the given Dates are equal.
+<h3>parsegraph_dateGreater(a, b)</h3>
+Returns true if the year, month, and date part of a comes past b.
+
+If true, b is in the future relative to a.
+<h3>parsegraph_getListOfDays()</h3>
+Returns a new array of day names.
+<h3>parsegraph_getListOfMonths()</h3>
+Returns a new array of month names.
+<h3>parsegraph_getRuntimeInMillis()</h3>
+Gets the number of milliseconds seconds since the file was executed.
+<h3>parsegraph_getTimeInMillis()</h3>
+Gets the current time, in milliseconds.
+<h3>parsegraph_outputMonth(d, includeYear)</h3>
+Returns a string describing the month of the given Date, including the year if specified.
+<h3>parsegraph_outputDate(d, includeDate, includeTime, includeToday)</h3>
+Returns a string describing the full date of the given Date, with flags to specify
+which parts are included:
+<table>
+<tr><th>includeDate<th>includeTime<th>includeToday<th>Result</tr>
+<tr><td>false<td>false<td>false<td>""</tr>
+<tr><td>false<td>false<td>true<td>""</tr>
+<tr><td>true<td>false<td>false<td>"February 1, 2016"</tr>
+<tr><td>true<td>true<td>false<td>"February 1, 2016 at 3:23 PM"</tr>
+<tr><td>true<td>false<td>false<td>"February 1, 2016"</tr>
+<tr><td>true<td>true<td>true<td>"Today, February 1, 2016 at 3:23 PM"</tr>
+<tr><td>false<td>true<td>true<td>"3:23 PM"</tr>
+<tr><td>false<td>false<td>true<td>"3:23 PM"</tr>
+</table>
+<h3>parsegraph_previousMonth(d)</h3>
+Returns a new Date representing the previous computed month from the given Date.
+<h3>parsegraph_nextMonth(d)</h3>
+Returns a new Date representing the next computed month from the given Date.
+<h3>parsegraph_previousDay(d)</h3>
+Returns a new Date representing 24 hours in the past from the given Date.
+<h3>parsegraph_nextDay(d)</h3>
+Returns a new Date representing 24 hours in the future from the given Date.
+<h3>parsegraph_previousWeek(d)</h3>
+Returns a new Date representing seven days in the past from the given Date.
+<h3>parsegraph_nextWeek(d)</h3>
+Returns a new Date representing seven days in the future from the given Date.
+<h3>parsegraph_getFirstDayOfWeek(d)</h3>
+Returns a new Date representing the Sunday of the same week as the given Date.
+<h3>getSunriseAndSunset(inputDatetime, signedLongitude, signedLatitude)</h3>
+Given a Date and a polar coordinate Earth position, return [sunrise in minutes since midnight, sunset in minutes since midnight].
+<p>
+From <a href="http://www.itacanet.org/the-sun-as-a-source-of-energy/part-3-calculating-solar-angles/">itacanet.org</a>.
+<h3>NormalizeTo360(n)</h3>
+Normalizes the given value to be between -360 and 360 degress.
+<h3>MonthToYearOffset(d)</h3>
+Returns the day offset of the month of the given Date. (A value between 0 and the total
+days in the year).
+</main>
+
+<nav class="toc">
+<h2>Parsegraph Date</h2>
+<ol>
+<li>parsegraph_datesEqual(a, b)
+<li>parsegraph_dateGreater(a, b)
+<li>parsegraph_getListOfDays()
+<li>parsegraph_getListOfMonths()
+<li>parsegraph_getRuntimeInMillis()
+<li>parsegraph_getTimeInMillis()
+<li>parsegraph_outputMonth(d, includeYear)
+<li>parsegraph_outputDate(d, includeDate, includeTime, includeToday)
+<li>parsegraph_previousMonth(d)
+<li>parsegraph_nextMonth(d)
+<li>parsegraph_previousDay(d)
+<li>parsegraph_nextDay(d)
+<li>parsegraph_previousWeek(d)
+<li>parsegraph_nextWeek(d)
+<li>parsegraph_getFirstDayOfWeek(d)
+<li>getSunriseAndSunset(inputDatetime, signedLongitude, signedLatitude)
+<li>NormalizeTo360(n)
+<li>MonthToYearOffset(d)
+</ol>
+</nav>
+</body>
+</html>

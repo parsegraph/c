@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CameraBox - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph CameraBox</h1>
+<h3>new parsegraph_CameraBox(graph)</h3>
+Creates a new CameraBox component for the given Graph.
+<h3>.needsRepaint()</h3>
+Returns true if this component needs repainting.
+<h3>.gl()</h3>
+Returns the GL rendering context used by this component.
+<h3>.glyphAtlas()</h3>
+Returns the glyph atlas used by this component.
+<h3>.prepare(gl, glyphAtlas, shaders)</h3>
+Prepares this component for rendering with the given GL rendering arguments.
+<h3>.setCamera(name, camera)</h3>
+Sets the specified camera box to the given camera object with the following fields:
+<table>
+<tr><th>Field name</tr>
+<tr><td>scale</tr>
+<tr><td>width</tr>
+<tr><td>height</tr>
+</table>
+<h3>.removeCamera(name)</h3>
+Removes the specified camera box.
+<h3>.paint()</h3>
+Paints all camera boxes.
+<h3>.render(world)</h3>
+Renders all painted camera boxes using the given matrix
+</main>
+<nav class="toc">
+<h2>Parsegraph CameraBox</h2>
+<ol>
+<li>new parsegraph_CameraBox(graph)
+<li>.needsRepaint()
+<li>.gl()
+<li>.glyphAtlas()
+<li>.prepare(gl, glyphAtlas, shaders)
+<li>.setCamera(name, camera)
+<li>.removeCamera(name)
+<li>.paint()
+<li>.render(world)
+</ol>
+</nav>
+</body>
+</html>

@@ -5,6 +5,33 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<nav class="toc">
+<h2>Parsegraph Camera</h2>
+<ol>
+<li>parsegraph_CLICK_DELAY_MILLIS
+<li>new parsegraph_Camera(surface)
+<li>parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+<li>parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+<li>.zoomToPoint(scaleFactor, x, y)
+<li>.setOrigin(x, y)
+<li>.toJSON()
+<li>.restore(json)
+<li>.surface()
+<li>.graph()
+<li>.scale()
+<li>.x()
+<li>.y()
+<li>.setScale(scale)
+<li>.toString()
+<li>.adjustOrigin(x, y)
+<li>.worldMatrix()
+<li>.aspectRatio()
+<li>.width()
+<li>.height()
+<li>.canProject()
+<li>.project()
+</ol>
+</nav>
 <main class="content">
 <h1>Parsegraph Camera</h1>
 The camera controls input from the user on a surface to manage visualization of a 2D orthographic world.
@@ -58,32 +85,5 @@ Returns a new projection matrix for this camera and sets the computed viewport d
 Throws an error if canProject() returns false.
 </main>
 
-<nav class="toc">
-<h2>Parsegraph Camera</h2>
-<ol>
-<li>parsegraph_CLICK_DELAY_MILLIS
-<li>new parsegraph_Camera(surface)
-<li>parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
-<li>parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
-<li>.zoomToPoint(scaleFactor, x, y)
-<li>.setOrigin(x, y)
-<li>.toJSON()
-<li>.restore(json)
-<li>.surface()
-<li>.graph()
-<li>.scale()
-<li>.x()
-<li>.y()
-<li>.setScale(scale)
-<li>.toString()
-<li>.adjustOrigin(x, y)
-<li>.worldMatrix()
-<li>.aspectRatio()
-<li>.width()
-<li>.height()
-<li>.canProject()
-<li>.project()
-</ol>
-</nav>
 </body>
 </html>

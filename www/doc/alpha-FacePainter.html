@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha FacePainter</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha FacePainter</h1>
+Draws 3d faces in a solid color.
+<h3>new alpha_FacePainter(gl)</h3>
+Returns a new painter using the given GL context.
+<ul>
+<li>Throws an Error if the painter is not given a GL context.
+</ul>
+<h3>.Clear()</h3>
+Clears this painter's buffers.
+<h3>.Quad(v1, v2, v3, v4, c1, c2, c3, c4)</h3>
+Draws a quad with the given vertices and respective Colors.
+<h3>.Triangle(v1, v2, v3, c1, c2, c3)</h3>
+Draws a triangle with the given vertices and respective Colors.
+<h3>.Draw(viewMatrix)</h3>
+Draws the painted faces using the given matrix.
+</main>
+<nav class="toc">
+<h2>Alpha FacePainter</h2>
+<ol>
+<li>new alpha_FacePainter(gl)
+<li>.Clear()
+<li>.Quad(v1, v2, v3, v4, c1, c2, c3, c4)
+<li>.Triangle(v1, v2, v3, c1, c2, c3)
+<li>.Draw(viewMatrix)
+</ol>
+</nav>
+</body>
+</html>

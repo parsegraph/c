@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Unicode - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Unicode</h1>
+Unicode functions and the Unicode character database object.
+<h3>isRTL(s)</h3>
+Returns true if the given string contains right-to-left characters. This test is a
+best-effort and not claimed to be complete.
+<h3>new parsegraph_Unicode()</h3>
+Creates a new Unicode character database object. The database begins unloaded.
+<h3>parsegraph_defaultUnicode()</h3>
+Returns the <code>parsegraph_UNICODE_INSTANCE</code>, creating and loading a new
+Unicode character database object if necessary.
+<h3>.get(codeOrLetter)</h3>
+Returns the Unicode properties for the given Unicode digit code or the first Unicode character
+of the given string.
+<p>
+.get() requires .load() to have been called and its asynchronous event completed before
+loaded values are available for use.
+<h3>.getCursiveMapping(t)</h3>
+Returns the cursive mapping for the given Unicode digit code. This mapping is an array of
+semantic code values to an array of [Isolated, Initial, Medial, Final]. Null is used for non-applicable mappings. The same table of arrays is returned for all calls.
+<h3>.loadFromString(t)</h3>
+Parses the given string as a Unicode character database file.
+<h3>.isArabic(letter)</h3>
+Returns true if the given letter or digit code is considered an Arabic semantic character.
+<h3>.isMark(letter)</h3>
+Returns true if the given letter or digit code is considered a Unicode mark category.
+<h3>.isArabicDiacritic(letter)</h3>
+Returns true if the given letter or digit code is considered an Arabic semantic character.
+<h3>.load(dbURL)</h3>
+Asynchronously loads the Unicode character database at the given location, returning the
+XMLHttpRequest used to send the request.
+<h3>.loaded()</h3>
+Returns true if the Unicode character database has completed loading.
+<h3>.setOnLoad(onLoad, onLoadThisArg)</h3>
+Sets the function that will be invoked when loading has completed.
+<p>
+Throws an error if loading has already completed.
+<p>
+For compatibility with prior versions, <code>this.onLoad</code> will also be called in
+addition to this listener, if that field is manually set.
+</main>
+<nav class="toc">
+<h2>Parsegraph Unicode</h2>
+<ol>
+<li>isRTL(s)
+<li>new parsegraph_Unicode()
+<li>parsegraph_defaultUnicode()
+<li>.get(codeOrLetter)
+<li>.getCursiveMapping(t)
+<li>.loadFromString(t)
+<li>.isArabic(letter)
+<li>.isMark(letter)
+<li>.isArabicDiacritic(letter)
+<li>.load(dbURL)
+<li>.loaded()
+<li>.setOnLoad(onLoad, onLoadThisArg)
+</ol>
+</nav>
+</body>
+</html>

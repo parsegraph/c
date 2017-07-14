@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph LayoutState</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph LayoutState</h1>
+Enumeration of Node layout states.
+<h3>parsegraph_NULL_LAYOUT_STATE</h3>
+Constant that refers to a null layout state.
+<h3>parsegraph_NEEDS_COMMIT</h3>
+Constant that indicates the Node requires a commit.
+<h3>parsegraph_COMMITTED_LAYOUT</h3>
+Constant that indicates the Node has committed its layout.
+<h3>parsegraph_IN_COMMIT</h3>
+Constant that indicates the Node is in the process of committing its layout.
+<h3>parsegraph_nameLayoutState(given)</h3>
+Returns a string that describes the given layout state.
+<ul>
+<li>Throws an error if the given layout state constant is unrecognized.
+</ul>
+</main>
+
+<nav class="toc">
+<h2>Parsegraph LayoutState</h2>
+<ol>
+<li>parsegraph_NULL_LAYOUT_STATE
+<li>parsegraph_NEEDS_COMMIT
+<li>parsegraph_COMMITTED_LAYOUT
+<li>parsegraph_IN_COMMIT
+<li>parsegraph_nameLayoutState(given)
+</ol>
+</nav>
+</body>
+</html>

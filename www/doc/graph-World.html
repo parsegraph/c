@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>World - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph World</h1>
+A World object contains a number of rendered graphs.
+<h3>parsegraph_World(graph)</h3>
+Creates a new World object using the given graph.
+<h3>.camera()</h3>
+Returns the Camera used for this World, creating it if it does not yet exist.
+<h3>.setCamera(camera)</h3>
+Directly sets the Camera used for this World.
+<h3>.plot(node, worldX, worldY, userScale)</h3>
+Plots the given Node at the given coordinates.
+<ul>
+<li>If the given object is actually a Caret, then its root node is used.
+<li>Throws if the given object is null.
+<li>If the world position is not given, (0, 0) is assumed.
+</ul>
+<p>
+The paint group is returned. Passing a paint group directly is the
+preferred method. The position of the graph is the one used when
+rendering. The caller manages the position.
+<p>
+<h3>.removePlot(plot)</h3>
+Removes the given plotted Node from this World.
+<h3>.mouseOver(x, y)</h3>
+Receives a mouseover event at the given coordinates, in client space.
+<p>
+Returns true if this event processing requires a graph repaint.
+<h3>.boundingRect(outRect)</h3>
+Returns a new parsegraph_Rect (or sets the values of the given Rect) to the bounding rectangle for all the plotted graphs in this World.
+<h3>.scheduleRepaint()</h3>
+Marks this World as dirty.
+<h3>.nodeUnderCursor()</h3>
+Directly returns the last node under the cursor.
+<h3>.nodeUnderCoords(x, y)</h3>
+Tests whether the given position, in world space, is within a node.
+<h3>.needsRepaint()</h3>
+Returns true if this World needs paint() to be called.
+<h3>.paint(timeout)</h3>
+Paints for the given time interval, in milliseconds.
+<p>
+If false is returned, painting did not complete.
+<h3>.render(world)</h3>
+Renders the painted scene to the GL context.
+<ul>
+<li>Throws if any root node does not have a paint group.
+</ul>
+</main>
+
+<nav class="toc">
+<h2>Parsegraph World</h2>
+<ol>
+<li>parsegraph_World(graph)
+<li>.camera()
+<li>.setCamera(camera)
+<li>.plot(node, worldX, worldY, userScale)
+<li>.removePlot(plot)
+<li>.mouseOver(x, y)
+<li>.boundingRect(outRect)
+<li>.scheduleRepaint()
+<li>.nodeUnderCursor()
+<li>.nodeUnderCoords(x, y)
+<li>.needsRepaint()
+<li>.paint(timeout)
+<li>.render(world)
+</ol>
+</nav>
+</body>
+</html>

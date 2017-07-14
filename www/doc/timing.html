@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Timing - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph timing</h1>
+<h3>parsegraph_timeout(name, timeoutMs)</h3>
+Returns a function that saves when this function was called. When the returned
+function is invoked, it ensures that the given timeout has not yet been exceeded.
+If it has, an error that mentions the given name is thrown.
+<h3>parsegraph_timeout(timeoutMs)</h3>
+Returns a function that saves when this function was called. When the returned
+function is invoked, it ensures that the given timeout has not yet been exceeded.
+If it has, an error is thrown.
+<h3>parsegraph_timeout()</h3>
+Returns a function that saves when this function was called. When the returned
+function is invoked, it ensures that the default timeout has not yet been exceeded.
+If it has, an error is thrown.
+<h2>parsegraph AnimationTimer</h2>
+A one-shot timer implemented using requestAnimationFrame.
+<h3>new parsegraph_AnimationTimer()</h3>
+Creates and returns a new, unscheduled timer.
+<h3>.fire()</h3>
+Forwards event arguments to this timer's listener.
+<h3>.schedule()</h3>
+Schedules the timer for activation on the next animation frame.
+<p>
+This does nothing if the timer is already scheduled.
+<h3>.setListener(listener, thisArg)</h3>
+Sets this timer's listener to the given function and this-object.
+<h3>.cancel()</h3>
+Cancels the timer's activation if scheduled.
+<p>
+This does nothing if the timer is not scheduled.
+<h2>parsegraph_TimeoutTimer()</h2>
+A one-shot timer implemented using window.setTimeout.
+<h3>new parsegraph_TimeoutTimer()</h3>
+Creates a new, unscheduled timer with a zero-millisecond delay.
+<h3>.fire()</h3>
+Forwards event arguments to this timer's listener.
+<h3>.setDelay(ms)</h3>
+Sets the delay, in milliseconds.
+<h3>.delay()</h3>
+Gets the delay, in milliseconds.
+<h3>.setListener(listener, thisArg)</h3>
+Sets this timer's listener to the given function and this-object.
+<h3>.cancel()</h3>
+Cancels the timer's activation if scheduled.
+<p>
+This does nothing if the timer is not scheduled.
+<h2>parsegraph_IntervalTimer</h2>
+A periodic timer implemented using window.setInterval.
+<h3>new parsegraph_IntervalTimer()</h3>
+Creates a new, unscheduled timer with a zero-millisecond delay.
+<h3>.fire()</h3>
+Forwards event arguments to this timer's listener.
+<h3>.setDelay(ms)</h3>
+Sets the delay, in milliseconds.
+<h3>.delay()</h3>
+Gets the delay, in milliseconds.
+<h3>.setListener(listener, thisArg)</h3>
+Sets this timer's listener to the given function and this-object.
+<h3>.cancel()</h3>
+Cancels the timer's activation if scheduled.
+<p>
+This does nothing if the timer is not scheduled.
+
+</main>
+
+<nav class="toc">
+<h2>Parsegraph timing</h2>
+<ol>
+<li>parsegraph_timeout(name, timeoutMs)
+<li>parsegraph_timeout(timeoutMs)
+<li>parsegraph_timeout()
+</ol>
+<h3>parsegraph AnimationTimer</h3>
+<ol>
+<li>new parsegraph_AnimationTimer()
+<li>.fire()
+<li>.schedule()
+<li>.setListener(listener, thisArg)
+<li>.cancel()
+</ol>
+<h3>parsegraph_TimeoutTimer</h3>
+<ol>
+<li>new parsegraph_TimeoutTimer()
+<li>.fire()
+<li>.setDelay(ms)
+<li>.delay()
+<li>.setListener(listener, thisArg)
+<li>.cancel()
+</ol>
+<h3>parsegraph_IntervalTimer</h3>
+<ol>
+<li>new parsegraph_IntervalTimer()
+<li>.fire()
+<li>.setDelay(ms)
+<li>.delay()
+<li>.setListener(listener, thisArg)
+<li>.cancel()
+</ol>
+</nav>
+</body>
+</html>

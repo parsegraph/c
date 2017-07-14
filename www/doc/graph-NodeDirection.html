@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph NodeDirection</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph NodeDirection</h1>
+<h3>parsegraph_readNodeDirection(given)</h3>
+Returns a constant that represents the given named node direction.
+<h3>parsegraph_nameNodeDirection(given)</h3>
+Returns a string that names the given node direction constant.
+<h3>parsegraph_isNodeDirection(given)</h3>
+Alias for parsegraph_nameNodeDirection(given).
+<h3>parsegraph_reverseNodeDirection(given)</h3>
+Reverses the given node direction.
+<h3>parsegraph_turnLeft(given)</h3>
+Returns the node direction that is a turn to the left of the given node direction.
+<ul>
+<li>Throws an error if the given direction is not a valid direction.
+</ul>
+<h3>parsegraph_turnRight(given)</h3>
+Returns the node direction that is a turn to the right of the given node direction.
+<ul>
+<li>Throws an error if the given direction is not a valid direction.
+</ul>
+<h3>parsegraph_turnPositive(direction)</h3>
+Returns the node direction that is a turn in the positive node direction.
+<h3>parsegraph_turnNegative(direction)</h3>
+Returns the node direction that is a turn in the negative node direction.
+<h3>parsegraph_isCardinalDirection(given)</h3>
+Returns true if the given node direction is either parsegraph_UPWARD, parsegraph_DOWNWARD,
+parsegraph_FORWARD, or parsegraph_BACKWARD.
+<ul>
+<li>Throws an error if the given direction is not a valid direction.
+</ul>
+<h3>parsegraph_nameAxis(given)</h3>
+Names the given Node axis.
+<h3>parsegraph_getNodeDirectionAxis(given)</h3>
+Returns the node axis for the given Node direction.
+<h3>parsegraph_isVerticalNodeDirection(given)</h3>
+Returns true if the given direction is along the vertical Node axis.
+<h3>parsegraph_isHorizontalNodeDirection(given)</h3>
+Returns true if the given direction is along the horizontal Node axis.
+<h3>parsegraph_getPerpendicularAxis(axisOrDirection)</h3>
+Returns the perpendicular axis for the given Node direction or Node axis.
+<h3>parsegraph_getPositiveNodeDirection(given)</h3>
+Returns the positive Node direction for the given Node axis.
+<h3>parsegraph_getNegativeNodeDirection(given)</h3>
+Returns the negative Node direction for the given Node axis.
+<h3>parsegraph_forEachCardinalNodeDirection(func, thisArg)</h3>
+Calls the given function for each Node direction.
+<h3>parsegraph_isPositiveNodeDirection(given)</h3>
+Returns true if the given Node direction is positive.
+<h3>parsegraph_isNegativeNodeDirection(given)</h3>
+Returns true if the given Node direction is negative.
+<h3>parsegraph_nodeDirectionSign(given)</h3>
+Returns 1 if the given Node direction is positive, -1 otherwise.
+<h3>parsegraph_alternateNodeDirection(given)</h3>
+Returns an alternating series of Node directions, using the given Node direction as a base.
+</main>
+<nav class="toc">
+<h2>Parsegraph NodeDirection</h2>
+<ol>
+<li>parsegraph_readNodeDirection(given)
+<li>parsegraph_nameNodeDirection(given)
+<li>parsegraph_isNodeDirection(given)
+<li>parsegraph_reverseNodeDirection(given)
+<li>parsegraph_turnLeft(given)
+<li>parsegraph_turnRight(given)
+<li>parsegraph_turnPositive(direction)
+<li>parsegraph_turnNegative(direction)
+<li>parsegraph_isCardinalDirection(given)
+<li>parsegraph_nameAxis(given)
+<li>parsegraph_getNodeDirectionAxis(given)
+<li>parsegraph_isVerticalNodeDirection(given)
+<li>parsegraph_isHorizontalNodeDirection(given)
+<li>parsegraph_getPerpendicularAxis(axisOrDirection)
+<li>parsegraph_getPositiveNodeDirection(given)
+<li>parsegraph_getNegativeNodeDirection(given)
+<li>parsegraph_forEachCardinalNodeDirection(func, thisArg)
+<li>parsegraph_isPositiveNodeDirection(given)
+<li>parsegraph_isNegativeNodeDirection(given)
+<li>parsegraph_nodeDirectionSign(given)
+<li>parsegraph_alternateNodeDirection(given)
+</ol>
+</nav>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GL - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph GL</h1>
+GL functions.
+<h3>parsegraph_generateRectangleVertices(x, y, w, h)</h3>
+Returns a list of 2-D vertex coordinates that will create
+a rectangle, centered at the specified position.
+<h3>getVerts(width, length, height)</h3>
+Returns a [vec, vec, vec, ...] array of 24 vertices representing
+an origin-centered cube of the given size.
+<h3>parsegraph_generateRectangleTexcoords()</h3>
+Returns a list of texture coordinates for use with a face of a cube.
+<h3>compileShader(gl, shaderSource, shaderType)</h3>
+Creates and compiles a shader of the given type, returning the ID of the created shader.
+<p>
+Method from webglfundamentals.org.
+<h3>createProgram(gl, vertexShader, fragmentShader)</h3>
+Creates a program from 2 shaders, returning the ID of the linked program.
+<p>
+Method from webglfundamentals.org.
+<h3>resize(gl)</h3>
+Sets the GL viewport to the size of its owning canvas.
+<p>
+Method from webglfundamentals.org.
+<h3>matrixIdentity3x3()</h3>
+Returns a 3x3 identity matrix.
+<h3>matrixCopy3x3(src)</h3>
+Returns a new 3x3 matrix that is the row-major copy of the given matrix.
+<h3>matrixMultiply3x3(...)</h3>
+Multiplies all of the given 3x3 row-major matrices, in order, returning
+a new matrix equal to the result.
+<h3>matrixTransform2D(world, x, y)</h3>
+Returns the given point, transformed by the given world matrix.
+<h3>makeTranslation3x3(tx, ty)</h3>
+Returns a new 3x3 translation-matrix using the given values.
+<h3>makeRotation3x3(angleInRadians)</h3>
+Returns a new 3x3 rotation matrix, using the given angle.
+<h3>makeScale3x3(sv)</h3>
+Calls makeScale3x3(sv, sv).
+<h3>makeScale3x3(sx, sy)</h3>
+Returns a new 3x3 matrix of the given scaled dimensions.
+<h3>makeInverse3x3(input)</h3>
+Returns a new 3x3 matrix that is the inverse of the given matrix.
+<p>
+<a href="http://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c">Stack Overflow</a>
+<h3>midPoint(x1, y1, x2, y2)</h3>
+Returns a new 2D vector positioned between the two specified points.
+<h3>make2DProjection(width, height)</h3>
+Creates a 2D orthographic projection matrix using the specified viewport dimensions.
+<h3>subtractVectors3D(a, b)</h3>
+Returns a new vector that is equal to <code>a - b</code>.
+<h3>normalize3D(v)</h3>
+Returns a new 3-dimensional vector equal to the normalized value of the given 3D vector.
+<h3>cross3D(a, b)</h3>
+Returns a new 3D vector equal to the cross product of a and b.
+<h3>makePerspective(fieldOfViewInRadians, aspect, near, far)</h3>
+Creates a new 4x4 perspective matrix specified by the given values.
+<h3>makeTranslation4x4(tx, ty, tz)</h3>
+Returns a new 4x4 translation matrix.
+<h3>makeXRotation(angleInRadians)</h3>
+Returns a new 4x4 rotation matrix, rotated the given radians amount about the X axis.
+<h3>makeYRotation(angleInRadians)</h3>
+Returns a new 4x4 rotation matrix, rotated the given radians amount about the Y axis.
+<h3>makeZRotation(angleInRadians)</h3>
+Returns a new 4x4 rotation matrix, rotated the given radians amount about the Z axis.
+<h3>makeScale4x4(sx, sy, sz)</h3>
+Returns a new 4x4 scale matrix.
+<h3>matrixMultiply4x4(a, b)</h3>
+Returns a new 4x4 matrix that is the product of the two given 4x4 matrices.
+<h3>makeInverse4x4(m)</h3>
+Returns a new 4x4 matrix that is the inverse of the given matrix.
+<h3>matrixVectorMultiply4x4(v, m)</h3>
+Returns a new 4D vector equal to the given 4D vector multiplied by the given 4x4 matrix.
+<h3>makeLookAt(cameraPosition, target, up)</h3>
+Returns a 4x4 matrix that, positioned from the camera position,
+looks at the target, a position in 3-space, angled using the
+up vector.
+</main>
+<nav class="toc">
+<h2>Parsegraph GL</h2>
+<ol>
+<li>parsegraph_generateRectangleVertices(x, y, w, h)
+<li>getVerts(width, length, height)
+<li>parsegraph_generateRectangleTexcoords()
+<li>compileShader(gl, shaderSource, shaderType)
+<li>createProgram(gl, vertexShader, fragmentShader)
+<li>resize(gl)
+<li>matrixIdentity3x3()
+<li>matrixCopy3x3(src)
+<li>matrixMultiply3x3(...)
+<li>matrixTransform2D(world, x, y)
+<li>makeTranslation3x3(tx, ty)
+<li>makeRotation3x3(angleInRadians)
+<li>makeScale3x3(sv)
+<li>makeScale3x3(sx, sy)
+<li>makeInverse3x3(input)
+<li>midPoint(x1, y1, x2, y2)
+<li>make2DProjection(width, height)
+<li>subtractVectors3D(a, b)
+<li>normalize3D(v)
+<li>cross3D(a, b)
+<li>makePerspective(fieldOfViewInRadians, aspect, near, far)
+<li>makeTranslation4x4(tx, ty, tz)
+<li>makeXRotation(angleInRadians)
+<li>makeYRotation(angleInRadians)
+<li>makeZRotation(angleInRadians)
+<li>makeScale4x4(sx, sy, sz)
+<li>matrixMultiply4x4(a, b)
+<li>makeInverse4x4(m)
+<li>matrixVectorMultiply4x4(v, m)
+<li>makeLookAt(cameraPosition, target, up)
+</ol>
+</nav>
+</body>
+</html>

@@ -5,6 +5,57 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<nav class="toc">
+<h2>parsegraph_Caret</h2>
+<ol>
+<li>new parsegraph_Caret()</li>
+<li>new parsegraph_Caret(nodeType)</li>
+<li>new parsegraph_Caret(nodeRoot)</li>
+<li>node()</li>
+<li>has(inDirection)</li>
+<li>graph()</li>
+<li>root()</li>
+<li>selected()</li>
+<li>selected(inDirection)</li>
+<li>glyphAtlas()</li>
+<li>setGlyphAtlas(glyphAtlas)</li>
+<li>spawn(inDirection, newType)</li>
+<li>spawn(inDirection, newType, newAlignmentMode)</li>
+<li>connect(inDirection, node)</li>
+<li>disconnect(inDirection)</li>
+<li>disconnect()</li>
+<li>crease(inDirection)</li>
+<li>erase(inDirection)</li>
+<li>move(inDirection)</li>
+<li>push()</li>
+<li>save(id)</li>
+<li>clearSave(id)</li>
+<li>restore(id)</li>
+<li>moveTo(id)</li>
+<li>moveToRoot()</li>
+<li>pop(id)</li>
+<li>spawnMove(inDirection, newType, newAlignmentMode)</li>
+<li>replace(withContent)</li>
+<li>replace(inDirection, withContent)</li>
+<li>at(inDirection)</li>
+<li>align(inDirection, newAlignmentMode)</li>
+<li>pull(given)</li>
+<li>shrink(inDirection)</li>
+<li>shrink()</li>
+<li>grow()</li>
+<li>fitExact()</li>
+<li>fitLoose()</li>
+<li>label(text)</li>
+<li>label(text, glyphAtlas)</li>
+<li>label(inDirection, text)</li>
+<li>label(inDirection, text, glyphAtlas)</li>
+<li>select()</li>
+<li>deselect()</li>
+<li>onClick(clickListener, thisArg)</li>
+<li>onChange(changeListener, thisArg)</li>
+<li>onKey(keyListener, thisArg)</li>
+</ol>
+</nav>
 <main class="content">
 <h1>Parsegraph Caret</h1>
 The caret builds nodes to be shown in a graph.
@@ -145,56 +196,5 @@ Sets the change listener for the currently positioned node to the given function
 Sets the key listener for the currently positioned node to the given function.
 </main>
 
-<nav class="toc">
-<h2>parsegraph_Caret</h2>
-<ol>
-<li>parsegraph_Caret()</li>
-<li>parsegraph_Caret(nodeType)</li>
-<li>parsegraph_Caret(nodeRoot)</li>
-<li>node()</li>
-<li>has(inDirection)</li>
-<li>graph()</li>
-<li>root()</li>
-<li>selected()</li>
-<li>selected(inDirection)</li>
-<li>glyphAtlas()</li>
-<li>setGlyphAtlas(glyphAtlas)</li>
-<li>spawn(inDirection, newType)</li>
-<li>spawn(inDirection, newType, newAlignmentMode)</li>
-<li>connect(inDirection, node)</li>
-<li>disconnect(inDirection)</li>
-<li>disconnect()</li>
-<li>crease(inDirection)</li>
-<li>erase(inDirection)</li>
-<li>move(inDirection)</li>
-<li>push()</li>
-<li>save(id)</li>
-<li>clearSave(id)</li>
-<li>restore(id)</li>
-<li>moveTo(id)</li>
-<li>moveToRoot()</li>
-<li>pop(id)</li>
-<li>spawnMove(inDirection, newType, newAlignmentMode)</li>
-<li>replace(withContent)</li>
-<li>replace(inDirection, withContent)</li>
-<li>at(inDirection)</li>
-<li>align(inDirection, newAlignmentMode)</li>
-<li>pull(given)</li>
-<li>shrink(inDirection)</li>
-<li>shrink()</li>
-<li>grow()</li>
-<li>fitExact()</li>
-<li>fitLoose()</li>
-<li>label(text)</li>
-<li>label(text, glyphAtlas)</li>
-<li>label(inDirection, text)</li>
-<li>label(inDirection, text, glyphAtlas)</li>
-<li>select()</li>
-<li>deselect()</li>
-<li>onClick(clickListener, thisArg)</li>
-<li>onChange(changeListener, thisArg)</li>
-<li>onKey(keyListener, thisArg)</li>
-</ol>
-</nav>
 </body>
 </html>

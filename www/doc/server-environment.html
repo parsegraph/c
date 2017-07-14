@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Environment - Parsegraph</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<h1>Environment</h1>
+<pre>
+#include &lt;parsegraph_environment.h&gt;
+</pre>
+If a return type is unspecified, it is parsegraph_EnvironmentStatus.
+<h3>const char* parsegraph_nameEnvironmentStatus(parsegraph_EnvironmentStatus)</h3>
+Returns a string that describes the given environment status.
+<h3>parsegraph_prepareEnvironmentStatements(pool, dbd)</h3>
+Loads the Environment module's strings into the dbd prepared statements hash.
+<ul>
+<li>Returns parsegraph_Environment_INTERNAL_ERROR if a statement failed to prepare.
+<li>Returns parsegraph_Environment_OK if all statements prepared successfully.
+</ul>
+<h3>parsegraph_upgradeEnvironmentTables(pool, dbd)</h3>
+Creates and upgrades the database's environment tables.
+<ul>
+<li>Returns parsegraph_Environment_INTERNAL_ERROR if the environment table could not be created or updated.
+<li>Returns parsegraph_Environment_OK if an updated environment table now exists.
+</ul>
+<h3>parsegraph_createEnvironment(pool, dbd, parsegraph_GUID* createdEnv)</h3>
+Creates a new environment, returning its GUID in the given GUID pointer.
+<ul>
+<li>Returns parsegraph_Environment_OK if the environment was created.
+<li>Returns parsegraph_Environment_INTERNAL_ERROR if an internal error prevented creation.
+</ul>
+<h3>parsegraph_cloneEnvironment(pool, dbd, parsegraph_GUID* clonedEnv, parsegraph_GUID* createdEnv)</h3>
+Clones the specified environment, returning the GUID of the new environment in the specified
+GUID pointer.
+<ul>
+<li>Returns parsegraph_Environment_OK if the environment was cloned.
+<li>Returns parsegraph_Environment_INTERNAL_ERROR if an internal error prevented the environment from being cloned.
+<li>Returns parsegraph_Environment_CLONE_UNSUPPORTED if the environment's content does not support cloning.
+<li>Returns parsegraph_Environment_NOT_FOUND if the given GUID does not specify an environment.
+</ul>
+<h3>parsegraph_destroyEnvironment(pool, dbd, parsegraph_GUID* targetEnv)</h3>
+Destroys the environment specified by the given GUID.
+<ul>
+<li>Returns parsegraph_Environment_OK if the environment was destroyed.
+<li>Returns parsegraph_Environment_INTERNAL_ERROR if an internal error prevented the environment from being deleted.
+</ul>
+</body>
+</html>

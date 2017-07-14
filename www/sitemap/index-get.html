@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GET parsegraph.com</title>
+<style>
+th, td {
+    border: 1px solid grey;
+    padding: .2em;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+</style>
+</head>
+<body>
+<h1>GET parsegraph.com</h1>
+Retrieves the frontpage.
+<p>
+If the user is authenticated and has an online environment, the server responds <code>303 See Other</code> with the <code>Location</code> response header set to <a href="environment-get-by-guid.html">the online environment</a>.
+<p>If the user is authenticated, but they do not have an online environment, the server responds <code>200 OK</code> with thumbnails of the following available environments, grouped as listed. If the user is not authenticated, then they are shown environments that are public or that only require sign-in.
+<table cellspacing=0>
+<tr><th>Title<th>Quantity<th>Ordering<th>Appearance<th>Condition</tr>
+<tr><td>Saved<td>All environments saved by the authenticated user<td>Save date<td>Small thumbnails<td>If there are any environments saved by the user.</tr>
+<tr><td>Invited<td>All invites<td>Invite send date<td>Thumbnails<td>If authenticated user has any invites</tr>
+<tr><td>Online<td>All friends<td>Login date<td>Thumbnails, or 'No friends online.'<td>If authenticated user has any friends</tr>
+<tr><td>Administration<td>All environments flagged 'admin'<td>Environment create date<td>Small thumbnails<td>If authenticated user is administrator, and there are administration environments.</tr>
+<tr><td>Top<td>Only one exists per server.<td>None<td>Live<td>If server has 'top' environment set</tr>
+<tr><td>Most Popular<td>X most popular environments<td>Environment hit count<td>Small thumbnails<td>If there are at least X environments and at least Y hits for any environment.</tr>
+<tr><td>Watched X<td>Top X environments tagged with name<td>Environment create date<td>Small thumbnails<td>One group shown for each watched tag.</tr>
+<tr><td>Subscribed X<td>Top X environments owned by X<td>Environment create date<td>Small thumbnails<td>One group shown for each subscribed user.</tr>
+<tr><td>Featured<td>Top X environments flagged 'featured'<td>Environment create date<td>Thumbnails<td>If there are any featured environments</tr>
+<tr><td>Starting<td>All environments flagged 'starting'<td>Environment create date<td>Small thumbnails<td>If authenticated user is less than X time created.</tr>
+<tr><td>New<td>Top X newest environments<td>Environment create date<td>Small thumbnails<td></tr>
+<tr><td>Random<td>X random environments<td>None<td>Small thumbnails<td>If there are at least 5*X environments.</tr>
+<tr><td>Private<td>All environments private to the user<td>Permission grant date<td>Small thumbnails<td>If there are any non-public environments with a permission set for the authenticated user.</tr>
+<tr><td>Owned<td>All environments owned by the user<td>Permission grant date<td>Small thumbnails<td>If there are any environments owned by the authenticated user.</tr>
+<tr><td>Published<td>All environments published by the user<td>Permission grant date<td>Small thumbnails<td>If there are any public environments owned by the authenticated user.</tr>
+<tr><td>Recent<td>Top X environments accessible to the user<td>Visit date<td>Small thumbnails<td>If there are any environments visited by the user.</tr>
+</table>
+<div style="display:none">
+<ol>
+<li><del>All environments for new users. These environments are thumbnails.</del>
+<li><del>All environments for administrators, if the user is an administrator. These environments are thumbnails.
+<li><del>The top environment, if one is set on the server. The environment is shown live.
+<li><del>All environments that have been featured by administrators. These environments are thumbnails.
+<li><del>All environments newly accessible to the user, ordered by descending age of permission, shown as thumbnails.
+<li><del>Recently visited environments, ordered by access date, shown as thumbnails.
+<li><del>Top 10 newest environments, ordered by descending create age, shown as thumbnails.
+<li><del>Environments for user subscriptions: one for each subscription, ordered by create date.
+<li><del>Environments for watched environment tags: one for each watched tag, ordered by create date.
+<li><del>Most popular environments accessible to the user, ordered by visit count.</li>
+<li><del>10 random environments accessible to the user, shown as thumbnails.
+</ol>
+<p>
+<del>If the user is authenticated, but they have no online environment, they are <code>303 See Other</code> redirected to the environment/, linked by GUID.</del>
+</div>
+</body>
+</html>

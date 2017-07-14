@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Extent - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Extent</h1>
+Represents a list of bounds. Each bound is comprised of a length
+and a size. The extent always extends in the positive direction.
+<p>
+An extent is used to represent each forward, backward, upward, and downward
+side of a graph. The four extents represent the combine bounding picture of
+the graph.
+<h3>parsegraph_DEFAULT_EXTENT_BOUNDS</h3>
+Initial extent bound capacity.
+<h3>new parsegraph_Extent()</h3>
+Creates a new, empty bounds array.
+<h3>new parsegraph_Extent(copy)</h3>
+Copy another extent's array.
+<h3>parsegraph_NUM_EXTENT_BOUND_COMPONENTS</h3>
+The number of components per extent bound.
+<h3>.forEach(func, thisArg)</h3>
+Iterates over the extent, calling the given function for each
+bound.
+<pre>
+extent.forEach(function(length, size, i) {}, this);
+</pre>
+<h3>.clone()</h3>
+Returns a new extent that is a copy of this one.
+<h3>.clear()</h3>
+Sets the size of this extent to zero.
+<h3>.numBounds()</h3>
+Returns the number of bounds in this extent.
+<h3>.hasBounds()</h3>
+Returns whehter this extent's size is positive and non-zero.
+<h3>.boundLengthAt(index)</h3>
+Returns the length of the specified bound.
+<h3>.boundSizeAt(index)</h3>
+Returns the size of the specified bound.
+<h3>.setBoundLengthAt(index, length)</h3>
+Sets the length of the specified bound to the given value.
+<h3>.setBoundSizeAt(index, size)</h3>
+Sets the size of the specified bound to the given value.
+<h3>.realloc(capacity)</h3>
+Reallocates the extent to the new capacity.
+<p>
+Throws an error if the given capacity is smaller than the current capacity.
+<h3>.prependLS(length, size)</h3>
+Prepends a new bound of the given dimensions to this extent.
+<p>
+Throws an error if length is NaN. NaN sizes represent empty spaces.
+<h3>.boundCapacity()</h3>
+Returns this extent's capacity. Guaranteed to be &gt;= .numBounds().
+<h3>.appendLS(length, size)</h3>
+Appends a new bound of the given dimensions to this extent.
+<h3>.prependSL(size, length)</h3>
+Prepends a new bound of the given dimensions to this extent.
+<h3>.appendSL(size, length)</h3>
+Appends a new bound of the given dimensions to this extent.
+<h3>.adjustSize(adjustment)</h3>
+Adds the given size adjustment to all bounds of this extent.
+<h3>.simplify()</h3>
+Converts this extent into a single bound that is the rectangular union of all bounds
+of this extent.
+<h3>.sizeAt(offset)</h3>
+Returns the size at the given positional offset.
+<h3>.combineBound(newBoundStart, newBoundLength, newBoundSize)</h3>
+Combines the defined bound into this extent.
+<h3>.copyFrom(from)</h3>
+Moves the bounds from the given extent into this extent.
+<h3>.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)</h3>
+Combine the given extent into this extent, such that this extent exactly covers both its
+original bounds and the bounds of the given extent. The given extent can be transformed
+using lengthAdjustment, sizeAdjustment, and scale.
+<h3>.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)</h3>
+Returns a new Extent that exactly covers both this extent and the given extent, transformed
+by the given parameters.
+<h3>.scale(factor)</h3>
+Scales all bound's size and length by the given factor.
+<h3>.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)</h3>
+Returns the minimum value that guarantees no overlap between the two extents.
+<p>
+Positive position adjustment requires this bound to be adjusted:
+<pre>
+ (this)
+ <--*--->
+    |
+    <--|------->
+    (given)
+</pre>
+<p>Negative position adjustment requires the given bound to be adjusted:
+<pre>
+  (given)
+     <-------|-->
+             |
+          <--*-->
+     (this)
+</pre>
+The position adjustment is in this extent's space. So if the given scale is 0.5, the
+given extent's length and size are adjusted by that amount.
+<h3>.boundingValues(outVal)</h3>
+Computes and returns <code>[totalLength, minSize, maxSize]</code>.
+<h3>.equals(other)</h3>
+Returns true if all this extent is component-wise equal with the given bound.
+<h3>.dump(message)</h3>
+Logs each bound of this extent using parsegraph_log, using the given optional message as the
+title.
+<h3>.toDom(message)</h3>
+Creates a HTML table describing this Extent.
+<h3>parsegraph_createExtent(copy)</h3>
+Alias for <code>new parsegraph_Extent(copy)</code>.
+<h3>parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)</h3>
+Returns true if the caret's node in the given direction is equal to the given <code>expected</code> extent, false otherwise.
+<p>
+If false and resultDom is given, then HTML elements are appended describing the difference between the actual extent in the caret node's given direction and the expected extent.
+</main>
+<nav class="toc">
+<h2>Parsegraph Extent</h2>
+<ol>
+<li>parsegraph_DEFAULT_EXTENT_BOUNDS
+<li>new parsegraph_Extent()
+<li>new parsegraph_Extent(copy)
+<li>parsegraph_NUM_EXTENT_BOUND_COMPONENTS
+<li>.forEach(func, thisArg)
+<li>.clone()
+<li>.clear()
+<li>.numBounds()
+<li>.hasBounds()
+<li>.boundLengthAt(index)
+<li>.boundSizeAt(index)
+<li>.setBoundLengthAt(index, length)
+<li>.setBoundSizeAt(index, size)
+<li>.realloc(capacity)
+<li>.prependLS(length, size)
+<li>.boundCapacity()
+<li>.appendLS(length, size)
+<li>.prependSL(size, length)
+<li>.appendSL(size, length)
+<li>.adjustSize(adjustment)
+<li>.simplify()
+<li>.sizeAt(offset)
+<li>.combineBound(newBoundStart, newBoundLength, newBoundSize)
+<li>.copyFrom(from)
+<li>.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)
+<li>.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)
+<li>.scale(factor)
+<li>.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)
+<li>.boundingValues(outVal)
+<li>.equals(other)
+<li>.dump(message)
+<li>.toDom(message)
+<li>parsegraph_createExtent(copy)
+<li>parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)
+</ol>
+</nav>
+</body>
+</html>

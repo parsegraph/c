@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph Graph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Graph</h1>
+Renders an interactive parsegraph in an HTML canvas.
+<p>
+Use graph.container() to add it to the DOM.
+<h3>new parsegraph_Graph(surface)</h3>
+Creates a new Graph using the given surface, creating one if necessary.
+<h3>.shaders()</h3>
+Returns the map of compiled shader and GL objects used by this graph and its components.
+<h3>.cameraBox()</h3>
+Returns the CameraBox used by this graph.
+<h3>.world()</h3>
+Returns the World used by this graph.
+<h3>.carousel()</h3>
+Returns the Carousel used by this graph.
+<h3>.camera()</h3>
+Returns the Camera used by this graph.
+<h3>.surface()</h3>
+Returns the Surface used by this graph.
+<h3>.gl()</h3>
+Returns the GL rendering context used by this graph.
+<h3>.container()</h3>
+Returns the HTML div container of the canvas used by this graph.
+<h3>.canvas()</h3>
+Returns the canvas used by this graph.
+<h3>.input()</h3>
+Returns the Input used by this graph.
+<h3>.scheduleRepaint()</h3>
+Schedules a repaint. The onScheduleRepaint callback is responsible for making this
+happen.
+<p>
+The previous world paint state is cleared if this is called; this can be used to reset
+a paint in progress.
+<h3>.needsRepaint()</h3>
+Returns true if any graph component needs a repaint.
+<h3>.glyphAtlas()</h3>
+Returns this graph's glyph atlas.
+<h3>.setGlyphAtlas(glyphAtlas)</h3>
+Directly sets this graph's glyph atlas.
+<h3>.plot()</h3>
+Passes the given arguments to this graph's World.
+<h3>.paint(timeout)</h3>
+Paints the graph up to the given time, in milliseconds.
+<p>
+Returns true if the graph completed painting.
+<h3>.render()</h3>
+Renders this graph in the given Surface.
+</main>
+<nav class="toc">
+<h2>Parsegraph Graph</h2>
+<ol>
+<li>new parsegraph_Graph(surface)
+<li>.shaders()
+<li>.cameraBox()
+<li>.world()
+<li>.carousel()
+<li>.camera()
+<li>.surface()
+<li>.gl()
+<li>.container()
+<li>.canvas()
+<li>.input()
+<li>.scheduleRepaint()
+<li>.needsRepaint()
+<li>.glyphAtlas()
+<li>.setGlyphAtlas(glyphAtlas)
+<li>.plot()
+<li>.paint(timeout)
+<li>.render()
+</ol>
+</nav>
+</body>
+</html>

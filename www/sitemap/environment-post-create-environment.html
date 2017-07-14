@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>POST parsegraph.com/create-environment</title>
+<style>
+th, td {
+    border: 1px solid grey;
+    padding: .2em;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+</style>
+</head>
+<body>
+<h1>POST parsegraph.com/create-environment</h1>
+Creates a new environment owned by the authenticated user.
+<h2>Response</h2>
+<h3>Content-Type: text/html</h3>
+If the environment was successfully created, redirect <code>303 See Other</code> with the <code>Location:</code> response header set to a URL of the created environment.
+<p>
+If the environment failed to create, respond <code>400 Bad Request</code> with the user-readable status message.
+<h3>Content-Type: application/json</h3>
+Respond <code>200 OK</code> if the environment was created, including a JSON object with the following fields. If the environment failed to create, then <code>400 Bad Request</code> is given, with the JSON object still returned.
+<p>
+<table>
+<tr><th>Field<th>Value</tr>
+<tr><td><code>success</code><td><p><code>true</code> if successfully created a environment, <code>false</code> if not.</tr>
+<tr><td><code>status</code><td><p>A user-readable string that describes the status of the user's request, or the error that prevented its fulfillment.</tr>
+<tr><td><code>guid</code><td><p>A 128-bit base-64 encoded string representing the GUID of the created environment.<p>This value is unspecified if <code>success</code> is <code>false</code>.</tr>
+</table>
+</body>
+</html>
+

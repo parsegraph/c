@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parser - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Parser</h1>
+<h3>getWholeChar(str, i)</h3>
+From <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt">This article on MDN</a>.
+<h2>parsegraph_Token</h2>
+Type-text storage.
+<h3>new parsegraph_Token()</h3>
+Constructs a new token.
+<h3>new parsegraph_Token(text)</h3>
+Constructs a new token with the given text.
+<h3>.type()</h3>
+Return this token's given type.
+<h3>.text()</h3>
+Return this token's given text.
+<h3>parsegraph_EOF</h3>
+End-of-file token.
+<h3>parsegraph_NAME</h3>
+Name token.
+<h3>parsegraph_COMMA</h3>
+Comma operator.
+<h3>parsegraph_LBRACK</h3>
+Left bracket operator.
+<h3>parsegraph_RBRACK</h3>
+Right bracket operator.
+<h3>parsegraph_DIVIDE</h3>
+Mathematical divison (slash) operator.
+<h3>parsegraph_SINGLE_QUOTE</h3>
+Single-quote character.
+<h3>parsegraph_DOUBLE_QUOTE</h3>
+Double-quote character.
+<h3>parsegraph_BACK_QUOTE</h3>
+Backquote character.
+<h3>parsegraph_DOT</h3>
+Period (full-stop) character.
+<h3>parsegraph_ASSIGNMENT</h3>
+Equals sign.
+<h3>parsegraph_EQUALS</h3>
+Double equals sign.
+<h3>parsegraph_IDENTITY</h3>
+Triple equals sign.
+<h3>parsegraph_NOT</h3>
+Exclamation point.
+<h3>parsegraph_NOT_EQUALS</h3>
+Not-equals operator (!=)
+<h3>parsegraph_NOT_IDENTICAL</h3>
+Not-identical operator (!==)
+<h3>parsegraph_LPAREN</h3>
+Left parenthesis.
+<h3>parsegraph_RPAREN</h3>
+Right parenthesis.
+<h3>parsegraph_INTEGER</h3>
+Numeric value.
+<h3>parsegraph_nameTokenType(tokenType)</h3>
+<h3>.equals(other)</h3>
+Returns true if this token is values-equal to the given token.
+<h3>.toString()</h3>
+Returns a user-friendly string describing this token.
+<h2>parsegraph Lexer</h2>
+Based on 'Language Implementation Patterns' by Terence Parr.
+<h3>new parsegraph_Lexer(input)</h3>
+Creates a lexer for the given input string.
+<h3>.consume()</h3>
+Consumes the next token, returning true if a token was found, or false if there
+are no more tokens.
+<h3>.c()</h3>
+Returns the current token's character value.
+<h3>.cc()</h3>
+Returns the current tokens' character code.
+<h3>.match(candidate)</h3>
+Skips the current token if it is the given candidate.
+<p>
+Throws an error if the candidate matches the given string.
+<h3>parsegraph_parse(str)</h3>
+Parses the given string according to the built-in lexer definition, returning an array
+of parsed tokens.
+<h3>parsegraph_parse(str, callback, thisArg)</h3>
+Parses the given string according to the built-in lexer definition. Callback is invoked
+for each parsed token.
+</main>
+<nav class="toc">
+<h2>Parsegraph Parser</h2>
+<ol>
+<li>getWholeChar(str, i)
+</ol>
+<h3>parsegraph_Token</h3>
+<ol>
+<li>new parsegraph_Token()
+<li>new parsegraph_Token(text)
+<li>.type()
+<li>.text()
+<li>parsegraph_EOF
+<li>parsegraph_NAME
+<li>parsegraph_COMMA
+<li>parsegraph_LBRACK
+<li>parsegraph_RBRACK
+<li>parsegraph_DIVIDE
+<li>parsegraph_SINGLE_QUOTE
+<li>parsegraph_DOUBLE_QUOTE
+<li>parsegraph_BACK_QUOTE
+<li>parsegraph_DOT
+<li>parsegraph_ASSIGNMENT
+<li>parsegraph_EQUALS
+<li>parsegraph_IDENTITY
+<li>parsegraph_NOT
+<li>parsegraph_NOT_EQUALS
+<li>parsegraph_NOT_IDENTICAL
+<li>parsegraph_LPAREN
+<li>parsegraph_RPAREN
+<li>parsegraph_INTEGER
+<li>parsegraph_nameTokenType(tokenType)
+<li>.equals(other)
+<li>.toString()
+</ol>
+<h3>parsegraph Lexer</h3>
+<ol>
+<li>new parsegraph_Lexer(input)
+<li>.consume()
+<li>.c()
+<li>.cc()
+<li>.match(candidate)
+<li>parsegraph_parse(str)
+<li>parsegraph_parse(str, callback, thisArg)
+</ol>
+</nav>
+</body>
+</html>

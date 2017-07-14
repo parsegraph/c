@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>BlockStuff - Alpha</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha BlockStuff</h1>
+<pre>
+
+			[Vector]    [Color]
+			  |         |
+			 [Face]     [Skin]
+			  |         |
+			 [Shape] ---BlockType
+			            |
+			            ID -- just a number in a table with the BlockType as its value
+			            |
+		[alpha_Block(id, x, y, z, orientation)]
+			            |
+		    [alpha_Cluster(blockTypes)]
+some of the above classes are really basic
+really nothing but tables
+they exist to make it easier to piece things together
+hopefully
+</pre>
+<h2>alpha_Color</h2>
+A simple class to make it easier to create RGB colors. Color values are in the range [0, 1].
+<p>
+This class's component values may be used like an array.
+<h3>new alpha_Color(...)</h3>
+Creates a new color. If arguments are given, they are passed to .Set().
+<h3>.asRGB()</h3>
+Returns a CSS-friendly string describing this color.
+<h3>.Set(other)</h3>
+Sets this color's value to the given color.
+<h3>.Set(r, g, b)</h3>
+Sets this color's value to the given color values.
+<h3>.Set(v)</h3>
+Sets this color's values to the given greyscale value.
+<h3>.Set(hexString)</h3>
+Sets this color's values to the color described by the given string, like '#ff00ff', or 'aabbcc'.
+<h3>.Equals(other)</h3>
+Returns true if this color's values are equal to the values of the given color.
+<h3>.Equals(r, g, b)</h3>
+Returns true if this color's values are equal to the given color values.
+<h3>.Equals(v)</h3>
+Returns true if all of this color's values are equal to the given color value.
+<h3>.toString()</h3>
+Returns a string of the printf(1) format "{%f, %f, %f}".
+<h2>alpha_Skin()</h2>
+The skin object is simply an ordered list of colors. There is one color element for each vertex of each face of a shape.
+<p>
+A skin can only be applied to a shape with the same number of vertices.
+<p>
+Skins are immutable once created.
+<h3>new alpha_Skin()</h3>
+Creates an immutable, empty Skin.
+<h3>new alpha_Skin(facesArray)</h3>
+Creates an immutable Skin using the given array of faces of the following form:
+<pre>
+// green, brown are alpha_Colors.
+var skin = new alpha_Skin([
+    [green, green, green, green], // face 1 has 4 vertices
+    [brown, brown, brown, brown], // face 2
+    [brown, brown, brown, brown] // face 3
+]);
+</pre>
+<h3>new alpha_Skin(...)</h3>
+Creates an immutable Skin using the given arguments as the array of faces.
+<pre>
+var skin = new alpha_Skin(
+    [lbrown, lbrown, lbrown, lbrown], // top
+    [lbrown, lbrown, dbrown, dbrown], // front
+    [lbrown, lbrown, dbrown, dbrown], // left
+    [lbrown, lbrown, dbrown, dbrown], // back
+    [lbrown, lbrown, dbrown, dbrown], // right
+    [dbrown, dbrown, dbrown, dbrown] // bottom
+);
+</pre>
+<h3>.forEach(callback, thisArg)</h3>
+Invokes <code>callback(thisArg, color, colorIndex, this)</code> for each color of this skin.
+<h2>alpha_Face</h2>
+Face is a simple grouping of vertices designed to be rendered by 1 call of GL_QUADS or its ilk.
+<pre>
+local cubeTop = new alpha_Face(alpha_QUADS, vector, vector, vector, vector);
+</pre>
+Face does not copy the vectors.
+<p>
+Once it is passed to a shape the shape will copy it, so do not reuse until
+after the face is applied to a shape.
+<h3>alpha_TRIANGLES</h3>
+Specifies that the face's vertices are to be interpreted as a list of triangles.
+<h3>alpha_QUADS</h3>
+Specifies that the face's vertices are to be interpreted as a list of quads.
+<h3>new alpha_Face(drawType, vertexArray)</h3>
+Creates a new face of the given draw type (either alpha_TRIANGLES or alpha_QUADS) and the
+given array of alpha_Vectors.
+<h3>new alpha_Face(drawType, ...)</h3>
+Creates a new face of the given draw type (either alpha_TRIANGLES or alpha_QUADS) and a
+variable argument list of alpha_Vectors.
+<h3>.Clone()</h3>
+Creates and returns a new face that is a deep copy of this face.
+<h3>.toString()</h3>
+Returns a string describing each color of this face.
+<h2>alpha_Shape</h2>
+Shape is a list of faces.
+<h3>new alpha_Shape(...)</h3>
+Constructs a new shape using the given list of faces.
+<h2>alpha_BlockTypes</h2>
+Blocktype stores named combinations of Shape(pos vec) + Skin(color vec).
+<pre>
+var stone = new alpha_BlockType("stone", "cube", Stone, graySkin)
+</pre>
+BlockType automatically loads created BlockTypes into the BlockIDs table<br/>
+it is some sort of hybrid object / masterlist
+<h3>new alpha_BlockTypes()</h3>
+Constructs a new BlockTypes store.
+<h3>.Load(descSkin, descShape, skin, shape)</h3>
+Alias for .Create().
+<h3>.Create(descSkin, descShape, skin, shape)</h3>
+Creates a blocktype and returns the id.
+<ul>
+<li>Throws if the name is already in use, or if the skin's size does not match the shape's size.
+</ul>
+<h3>.Get(id)</h3>
+Returns the [shape, skin] blockType for the given id.
+<h3>.Get(descSkin, descShape)</h3>
+Returns the [shape, skin] blockType with the given name.
+<h2>alpha_Block</h2>
+Orientations are one of the following values:
+<table>
+<tr><th>ID<th>Category</th><th>Euler X<th>Euler Y<th>Euler Z<th>Quat X<th>Quat Y<th>Quat Z<th>Quat W</tr>
+<tr><td>0<td>Bottom<td>0<td>0<td>0<td>0<td>0<td>0<td>1</tr>
+<tr><td>1<td>Bottom<td>0<td>90<td>0<td>0<td>s45<td>0<td>s45</tr>
+<tr><td>2<td>Bottom<td>0<td>180<td>0<td>0<td>1<td>0<td>0</tr>
+<tr><td>3<td>Bottom<td>0<td>270<td>0<td>0<td>s45<td>0<td>-s45</tr>
+<tr><td>4<td>Front<td>90<td>0<td>0<td>-s45<td>0<td>0<td>-s45</tr>
+<tr><td>5<td>Front<td>90<td>90<td>0<td>-0.5<td>-0.5<td>-0.5<td>-0.5</tr>
+<tr><td>6<td>Front<td>90<td>90<td>0<td>-0.5<td>-0.5<td>-0.5<td>-0.5</tr>
+<tr><td>7<td>Front<td>90<td>270<td>0<td>0.5<td>-0.5<td>-0.5<td>0.5</tr>
+<tr><td>8<td>Left<td>0<td>0<td>270<td>0<td>0<td>-s45<td>s45</tr>
+<tr><td>9<td>Left<td>0<td>90<td>270<td>0.5<td>0.5<td>-0.5<td>0.5</tr>
+<tr><td>10<td>Left<td>0<td>180<td>270<td>s45<td>s45<td>0<td>0</tr>
+<tr><td>11<td>Left<td>0<td>270<td>270<td>0.5<td>0.5<td>0.5<td>-0.5</tr>
+<tr><td>12<td>Back<td>270<td>0<td>0<td>-s45<td>0<td>0<td>s45</tr>
+<tr><td>13<td>Back<td>270<td>90<td>0<td>-0.5<td>0.5<td>-0.5<td>0.5</tr>
+<tr><td>14<td>Back<td>270<td>180<td>0<td>0<td>s45<td>-s45<td>0</tr>
+<tr><td>15<td>Back<td>270<td>270<td>0<td>0.5<td>0.5<td>-0.5<td>-0.5</tr>
+<tr><td>16<td>Right<td>0<td>0<td>90<td>0<td>0<td>-s45<td>-s45</tr>
+<tr><td>17<td>Right<td>0<td>90<td>90<td>0.5<td>-0.5<td>-0.5<td>-0.5</tr>
+<tr><td>18<td>Right<td>0<td>180<td>90<td>s45<td>-s45<td>0<td>0</tr>
+<tr><td>19<td>Right<td>0<td>270<td>90<td>0.5<td>-0.5<td>0.5<td>0.5</tr>
+<tr><td>20<td>Top<td>180<td>0<td>0<td>1<td>0<td>0<td>0</tr>
+<tr><td>21<td>Top<td>180<td>90<td>0<td>s45<td>0<td>s45<td>0</tr>
+<tr><td>22<td>Top<td>180<td>180<td>0<td>0<td>0<td>1<td>0</tr>
+<tr><td>23<td>Top<td>180<td>270<td>0<td>-s45<td>0<td>s45<td>0</tr>
+</table>
+<h3>new alpha_Block(id, x, y, z, orientation)</h3>
+Creates a new alpha_Block of the given block type at the given position. The orientation is one of [0, 24) possible directions.
+<h3>new alpha_Block(id, vec, orientation)</h3>
+Creates a new alpha_Block of the given block type at the specified position. The orientation is one of [0, 24) possible directions.
+<h3>alpha_createBlock(...)</h3>
+Alias for alpha_Block's constructor.
+<h3>.Equals(other)</h3>
+Returns true if this block's position is equal to the given block's position.
+<h3>.GetAngleAxis()</h3>
+Returns a [vec, angle] array that represents this block's current orientation.
+<h3>.GetQuaternion(actual)</h3>
+Returns the quaternion that represents this block's orientation.
+<p>
+If actual is true, a new quaternion is created; otherwise, the orientation is directly returned.
+</main>
+<nav class="toc">
+<h2>Alpha BlockStuff</h2>
+<h3>alpha_Color</h3>
+<ol>
+<li>new alpha_Color(...)
+<li>.asRGB()
+<li>.Set(other)
+<li>.Set(r, g, b)
+<li>.Set(v)
+<li>.Set(hexString)
+<li>.Equals(other)
+<li>.Equals(r, g, b)
+<li>.Equals(v)
+<li>.toString()
+</ol>
+<h3>alpha_Skin</h3>
+<ol>
+<li>new alpha_Skin()
+<li>new alpha_Skin(facesArray)
+<li>new alpha_Skin(...)
+<li>.forEach(callback, thisArg)
+</ol>
+<h3>alpha_Face</h3>
+<ol>
+<li>alpha_TRIANGLES
+<li>alpha_QUADS
+<li>new alpha_Face(drawType, vertexArray)
+<li>new alpha_Face(drawType, ...)
+<li>.Clone()
+<li>.toString()
+</ol>
+<h3>alpha_Shape</h3>
+<ol>
+<li>new alpha_Shape(...)
+<li>alpha_BlockTypes
+<li>new alpha_BlockTypes()
+<li>.Load(descSkin, descShape, skin, shape)
+<li>.Create(descSkin, descShape, skin, shape)
+<li>.Get(id)
+<li>.Get(descSkin, descShape)
+</ol>
+<h3>alpha_Block</h3>
+<ol>
+<li>new alpha_Block(id, x, y, z, orientation)
+<li>new alpha_Block(id, vec, orientation)
+<li>alpha_createBlock(...)
+<li>.Equals(other)
+<li>.GetAngleAxis()
+<li>.GetQuaternion(actual)
+</ol>
+</nav>
+</body>
+</html>

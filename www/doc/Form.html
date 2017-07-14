@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Form - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph Form</h1>
+<h2>parsegraph_Form</h2>
+<h3>new parsegraph_Form(name)</h3>
+Creates a new form using the given name for generated IDs and CSS classes.
+<h3>parsegraph_createForm(...)</h3>
+Alias for parsegraph_Form's constructor.
+<h3>.asDOM()</h3>
+Return this form's HTML view.
+<h3>.h1(content)</h3>
+Appends an H1 HTML element to this form.
+<h3>.h2(content)</h3>
+Appends an H2 HTML element to this form.
+<h3>.h3(content)</h3>
+Appends an H3 HTML element to this form.
+<h3>.h4(content)</h3>
+Appends an H4 HTML element to this form.
+<h3>.h5(content)</h3>
+Appends an H5 HTML element to this form.
+<h3>.h6(content)</h3>
+Appends an H6 HTML element to this form.
+<h3>.div(content)</h3>
+Appends an DIV HTML element to this form.
+<h3>.span(content)</h3>
+Appends an SPAN HTML element to this form.
+<h3>.p(content)</h3>
+Appends an P HTML element to this form.
+<h3>.appendElement(elementType)</h3>
+Creates and appends an HTML element of the given type to this form, returning the created element.
+<h3>.addFieldElement(type, name, value, choices)</h3>
+Adds a named form-field element using the given value to this form, using the given configuration.
+<p>
+Type may be one of the following values:
+<table>
+<tr><th>Name<th></tr>
+<tr><td>textarea<td></tr>
+<tr><td>label<td></tr>
+<tr><td>button<td></tr>
+<tr><td>submit<td></tr>
+<tr><td>select<td></tr>
+<tr><td>checkbox<td></tr>
+<tr><td>other types<td>No special behavior.</tr>
+</table>
+<h3>.clone()</h3>
+Clones this form, creating a new Form with the same form-field definitions.
+<h3>.load(src)</h3>
+Loads the values from the given array, in the same order as the defined form-fields, or a name-value map.
+<h3>.jsonArray()</h3>
+Returns a list of this form's values.
+<h3>.jsonObject()</h3>
+Returns a name-value map of this form's values.
+<h3>.name()</h3>
+Returns this form's name.
+<h3>.label(name, values, choices)</h3>
+Adds a label form-field element.
+<h3>.labelField(name, label, value, choices)</h3>
+Adds a label form-field element.
+<h3>.text(name, values, choices)</h3>
+Adds a text form-field element.
+<h3>.textField(name, label, value, choices)</h3>
+Adds a text form-field element.
+<h3>.textarea(name, values, choices)</h3>
+Adds a text form-field element.
+<h3>.textareaField(name, label, value, choices)</h3>
+Adds a text form-field element.
+<h3>.password(name, values, choices)</h3>
+Adds a password form-field element.
+<h3>.passwordField(name, label, value, choices)</h3>
+Adds a password form-field element.
+<h3>.checkbox(name, values, choices)</h3>
+Adds a checkbox form-field element.
+<h3>.checkboxField(name, label, value, choices)</h3>
+Adds a checkbox form-field element.
+<h3>.button(name, values, choices)</h3>
+Adds a button form-field element.
+<h3>.buttonField(name, label, value, choices)</h3>
+Adds a button form-field element.
+<h3>.submit(name, values, choices)</h3>
+Adds a submit form-field element.
+<h3>.submitField(name, label, value, choices)</h3>
+Adds a submit form-field element.
+<h3>.select(name, values, choices)</h3>
+Adds a select form-field element.
+<h3>.selectField(name, label, value, choices)</h3>
+Adds a select form-field element.
+<h3>.dropdown(name, values, choices)</h3>
+Adds a select form-field element.
+<h3>.dropdownField(name, label, value, choices)</h3>
+Adds a select form-field element.
+<h3>.comboBox(name, values, choices)</h3>
+Adds a select form-field element.
+<h3>.comboBoxField(name, label, value, choices)</h3>
+Adds a select form-field element.
+<h3>.combo(name, values, choices)</h3>
+Adds a select form-field element.
+<h3>.comboField(name, label, value, choices)</h3>
+Adds a select form-field element.
+<h3>.value(name, value, action)</h3>
+Returns the value of the field specified by the given name.
+<h3>.clear()</h3>
+Sets all fields to null.
+<h3>.getFieldByName(name)</h3>
+Returns the field info structure for the field specified by the given name.
+<p>
+Prefers non-label fields over label fields with the same name.
+<p>
+Returns null if not field exists for the given name.
+<h3>.elementFor(fieldName)</h3>
+Returns the HTML element for the specified form-field.
+<h3>.eachField(visitor, visitorThisArg)</h3>
+Invokes the given visitor function and this-object for each form-field in this form.
+<h3>.addListener(listener, thisArg)</h3>
+Adds a new listener for change events to this form.
+<h3>.update(name, value, action)</h3>
+Notify listeners that the specified field has been updated to the given value.
+</main>
+<nav class="toc">
+<h2>Parsegraph Form</h2>
+<h3>parsegraph_Form</h3>
+<ol>
+<li>new parsegraph_Form(name)
+<li>parsegraph_createForm(...)
+<li>.asDOM()
+<li>.h1(content)
+<li>.h2(content)
+<li>.h3(content)
+<li>.h4(content)
+<li>.h5(content)
+<li>.h6(content)
+<li>.div(content)
+<li>.span(content)
+<li>.p(content)
+<li>.appendElement(elementType)
+<li>.addFieldElement(type, name, value, choices)
+<li>.clone()
+<li>.load(src)
+<li>.jsonArray()
+<li>.jsonObject()
+<li>.name()
+<li>.label(name, values, choices)
+<li>.labelField(name, label, value, choices)
+<li>.text(name, values, choices)
+<li>.textField(name, label, value, choices)
+<li>.textarea(name, values, choices)
+<li>.textareaField(name, label, value, choices)
+<li>.password(name, values, choices)
+<li>.passwordField(name, label, value, choices)
+<li>.checkbox(name, values, choices)
+<li>.checkboxField(name, label, value, choices)
+<li>.button(name, values, choices)
+<li>.buttonField(name, label, value, choices)
+<li>.submit(name, values, choices)
+<li>.submitField(name, label, value, choices)
+<li>.select(name, values, choices)
+<li>.selectField(name, label, value, choices)
+<li>.dropdown(name, values, choices)
+<li>.dropdownField(name, label, value, choices)
+<li>.comboBox(name, values, choices)
+<li>.comboBoxField(name, label, value, choices)
+<li>.combo(name, values, choices)
+<li>.comboField(name, label, value, choices)
+<li>.value(name, value, action)
+<li>.clear()
+<li>.getFieldByName(name)
+<li>.elementFor(fieldName)
+<li>.eachField(visitor, visitorThisArg)
+<li>.addListener(listener, thisArg)
+<li>.update(name, value, action)
+</ol>
+</nav>
+</body>
+</html>

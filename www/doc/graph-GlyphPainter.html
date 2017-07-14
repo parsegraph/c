@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parsegraph GlyphPainter</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph GlyphPainter</h1>
+Draws 3d faces in a solid color.
+<h3>new parsegraph_GlyphPainter(gl, glyphAtlas, shaders)</h3>
+Creates a new painter using the rendering arguments.
+<p>
+The GL context is used immediately to create the shader program.
+<ul>
+<li>Throws an Error if glyphAtlas is null.
+</ul>
+<h3>.setColor(color)</h3>
+Sets the current font color to the given Color value.
+<h3>.setColor(...)</h3>
+Sets the current font color to the specified Color value.
+<h3>.setBackgroundColor(color)</h3>
+Sets the current font highlight color to the specified Color value.
+<h3>.setBackgroundColor(...)</h3>
+Sets the current font highlight color to the specified Color value.
+<h3>.fontSize()</h3>
+Returns this painter's glyph atlas's current font size.
+<h3>.glyphAtlas()</h3>
+Returns this painter's glyph atlas.
+<h3>.drawGlyph(glyphData, x, y, fontScale)</h3>
+Draws the specified glyph at the given world coordinates and scale.
+<h3>.clear()</h3>
+Clears all buffers.
+<h3>.render(world, scale)</h3>
+Renders all drawn glyphs using the specified matrix and scale.
+</main>
+<nav class="toc">
+<h2>Parsegraph GlyphPainter</h2>
+<ol>
+<li>new parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
+<li>.setColor(color)
+<li>.setColor(...)
+<li>.setBackgroundColor(color)
+<li>.setBackgroundColor(...)
+<li>.fontSize()
+<li>.glyphAtlas()
+<li>.drawGlyph(glyphData, x, y, fontScale)
+<li>.clear()
+<li>.render(world, scale)
+</ol>
+</nav>
+</body>
+</html>

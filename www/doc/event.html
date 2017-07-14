@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>event - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph event</h1>
+Javascript DOM event functions.
+<h3>parsegraph_addEventListener(targetElement, eventName, listener, useCapture)</h3>
+Uses the given callback to listen for the specified event on the given HTML element.
+<h3>parsegraph_addEventMethod(targetElement, eventName, listener, listenerThisArg, useCapture)</h3>
+Uses the given callback and this-object to listen for the specified event on the given HTML element.
+<h3>parsegraph_removeEventListener(targetElement, eventName, listener, useCapture)</h3>
+Removes the given callback as a listener for the named event on the given HTML element.
+<h3>parsegraph_addButtonListener(targetElement, listener, listenerThisArg)</h3>
+Adds a listener for "click" and "keydown" events on the given HTML element.
+<h3>normalizeWheel(event)</h3>
+Given a mousewheel event, returns a delta normalized across browsers.
+<p>
+From <a href="https://github.com/facebook/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js">normalizeWheel.js</a>.
+<h3>parsegraph_writeError(ex)</h3>
+Converts the given error-like object to a string.
+</main>
+
+<nav class="toc">
+<h2>Parsegraph event</h2>
+<ol>
+<li>parsegraph_addEventListener(targetElement, eventName, listener, useCapture)
+<li>parsegraph_addEventMethod(targetElement, eventName, listener, listenerThisArg, useCapture)
+<li>parsegraph_removeEventListener(targetElement, eventName, listener, useCapture)
+<li>parsegraph_addButtonListener(targetElement, listener, listenerThisArg)
+<li>normalizeWheel(event)
+<li>parsegraph_writeError(ex)
+</ol>
+</nav>
+</body>
+</html>
