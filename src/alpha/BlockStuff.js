@@ -305,7 +305,7 @@ alpha_QUADS = 1;
 // local cubeTop = new alpha_Face(alpha_QUADS, vector, vector, vector, vector);
 //
 // Face does not copy the vectors.
-    // because its a temporary construction
+// because its a temporary construction
 // Once it is passed to a shape the shape will copy it
 // DO NOT REUSE ( until after the face is applied to a shape )
 function alpha_Face()
@@ -563,7 +563,7 @@ function alpha_createBlock()
     throw new Error("Unexpected number of arguments: " + arguments.length);
 };
 
-alpha_Block.prototype.Equals = function()
+alpha_Block.prototype.Equals = function(other)
 {
     var fuzziness = 1e-10;
     for(var i = 0; i < this.length; ++i) {

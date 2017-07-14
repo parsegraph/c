@@ -35,25 +35,6 @@ parsegraph_NodePainter.prototype.glyphPainter = function()
     return this._glyphPainter;
 };
 
-/**
- * Sets the background color to the given value. This supports a second
- * call that creates the color from the provided arguments.
- *
- * // Sets the background to white.
- * painter.setBackground(1, 1, 1);
- *
- * // Sets the background to red.
- * painter.setBackground(1, 0, 0);
- *
- * // Sets the background to green.
- * painter.setBackground(0, 1, 0);
- *
- * // Sets the background to blue.
- * painter.setBackground(0, 0, 1);
- *
- * // Sets the background to transparent.
- * painter.setBackground(1, 1, 1, 0);
- */
 parsegraph_NodePainter.prototype.setBackground = function(color)
 {
     if(arguments.length > 1) {
@@ -64,17 +45,11 @@ parsegraph_NodePainter.prototype.setBackground = function(color)
     this._backgroundColor = color;
 };
 
-/**
- * Retrieves the current background color.
- */
 parsegraph_NodePainter.prototype.backgroundColor = function()
 {
     return this._backgroundColor;
 };
 
-/**
- * Renders the painted scene graph.
- */
 parsegraph_NodePainter.prototype.render = function(world, scale)
 {
     this._gl.disable(this._gl.CULL_FACE);
@@ -493,9 +468,6 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
     }
 };
 
-/**
- * Draws a single node, and the lines extending from it.
- */
 parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
 {
     var worldX = 0;
@@ -518,9 +490,6 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
     }
 };
 
-/**
- * Paints the given node's lines extending to its neighbors.
- */
 parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, userScale)
 {
     var bodySize = node.size();
@@ -589,9 +558,6 @@ parsegraph_NodePainter.prototype.paintLines = function(node, worldX, worldY, use
     parsegraph_forEachCardinalNodeDirection(drawLine, this);
 };
 
-/**
- * Paints the given node's extents.
- */
 parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, userScale)
 {
     var painter = this._extentPainter;
@@ -697,9 +663,6 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
     paintForwardExtent();
 };
 
-/**
- * Paints the block that comprises the given node.
- */
 parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, userScale)
 {
     var style = node.blockStyle();

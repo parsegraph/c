@@ -297,9 +297,6 @@ parsegraph_Form.prototype.jsonObject = function()
     return serialized;
 };
 
-/**
- * Returns this form's name.
- */
 parsegraph_Form.prototype.name = function()
 {
     return this._name;
@@ -341,9 +338,6 @@ parsegraph_Form.prototype.name = function()
     });
 });
 
-/**
- * Returns the value of the field specified by the given name.
- */
 parsegraph_Form.prototype.value = function(name, value, action)
 {
     var field = this.getFieldByName(name);
@@ -363,9 +357,6 @@ parsegraph_Form.prototype.value = function(name, value, action)
     return field.value;
 };
 
-/**
- * Sets all fields to null.
- */
 parsegraph_Form.prototype.clear = function()
 {
     this.eachField(function(field) {
@@ -376,13 +367,6 @@ parsegraph_Form.prototype.clear = function()
     }, this);
 };
 
-/**
- * Returns the field info structure for the field specified by the given name.
- *
- * Prefers non-label fields over label fields with the same name.
- *
- * Returns null if not field exists for the given name.
- */
 parsegraph_Form.prototype.getFieldByName = function(name)
 {
     var labelField = null;
@@ -419,9 +403,6 @@ parsegraph_Form.prototype.addListener = function(listener, thisArg)
     this._listeners.push([listener, thisArg]);
 };
 
-/**
- * Notify listeners that the specified field has been updated to the given value.
- */
 parsegraph_Form.prototype.update = function(name, value, action)
 {
     this._listeners.forEach(function(listener) {

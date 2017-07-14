@@ -15,7 +15,6 @@ function alpha_BuildCubeStructure()
     ];
 };
 
-// a slab lowers the top of the cube to the bottom;
 function alpha_BuildSlabStructure()
 {
     var slabStructure = alpha_BuildCubeStructure();

@@ -187,7 +187,7 @@ alpha_Input.prototype.MouseDown = function()
 // mouse wheel data is stored in 1/8 of a degree
 // this returns how many ticks of a mousewheel of standard resolution
 // has been seen before an Input:Update()
-alpha_Input.prototype.MouseWheelUp = function(degrees)
+alpha_Input.prototype.MouseWheelUp = function()
 {
     return this.mouseWheelUp / 120;
 };

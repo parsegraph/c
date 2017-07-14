@@ -1,8 +1,3 @@
-/**
- * Renders an interactive parsegraph in an HTML canvas.
- *
- * Use graph.container() to add it to the DOM.
- */
 function parsegraph_Surface()
 {
     this._backgroundColor = parsegraph_BACKGROUND_COLOR;

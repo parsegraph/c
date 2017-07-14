@@ -94,9 +94,6 @@ parsegraph_Carousel.prototype.removeFromCarousel = function(caret)
     return null;
 };
 
-/**
- * Receives a click event on the carousel, in client coordinates.
- */
 parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
 {
     if(!this.isCarouselShown()) {
@@ -149,9 +146,6 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     return true;
 };
 
-/**
- * Receives a mouseover event on the carousel, in client coordinates.
- */
 parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
 {
     if(!this.isCarouselShown()) {
@@ -176,9 +170,6 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
     return true;
 };
 
-/**
- * Arranges each carousel caret in a spiral.
- */
 parsegraph_Carousel.prototype.arrangeCarousel = function()
 {
     var angleSpan = this._carouselPlots.length / (2 * Math.PI);

@@ -168,9 +168,12 @@ parsegraph_Unicode.prototype.load = function(dbURL) {
     xhr.onreadystatechange = function() {
         if(xhr.readyState == 4 && xhr.status == 200) {
             that.loadFromString(xhr.responseText);
+            that._loaded = true;
             if(that.onLoad) {
-                that._loaded = true;
                 that.onLoad();
+            }
+            if(that._onLoad) {
+                that._onLoad.call(that._onLoadThisArg || this);
             }
         }
         else {
@@ -184,6 +187,15 @@ parsegraph_Unicode.prototype.load = function(dbURL) {
 parsegraph_Unicode.prototype.loaded = function()
 {
     return this._loaded;
+};
+
+parsegraph_Unicode.prototype.setOnLoad = function(onLoad, onLoadThisArg)
+{
+    if(this._loaded) {
+        throw new Error("Unicode character database is already loaded");
+    }
+    this._onLoad = onLoad;
+    this._onLoadThisArg = onLoadThisArg;
 };
 
 /*

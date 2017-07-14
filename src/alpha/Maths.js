@@ -44,13 +44,6 @@ alpha_ToDegrees = alpha_toDegrees;
 //----------------------------------------------
 //----------------------------------------------
 
-/**
- * Represents a mathematical vector with 3 components.
- *
- * The constructor calls alpha_Vector.Set with the provided arguments.
- *
- * @constructor
- */
 function alpha_Vector()
 {
     this[0] = 0;
@@ -89,11 +82,6 @@ alpha_Vector_Tests.addTest("alpha_Vector.<constructor>", function() {
     }
 });
 
-/**
- * Adds the given vector to this vector.
- *
- * The vector may be given component-wise.
- */
 alpha_Vector.prototype.Add = function()
 {
     if(arguments.length > 1) {
@@ -118,28 +106,17 @@ alpha_Vector_Tests.addTest("alpha_Vector.Add", function() {
     }
 });
 
-/**
- * Creates a clone of this Vector and adds the given vector to it.
- */
 alpha_Vector.prototype.Added = function()
 {
     var rv = this.Clone();
     return rv.Add.apply(rv, arguments);
 }
 
-/**
- * Copies each component into a new vector and returns it.
- */
 alpha_Vector.prototype.Clone = function()
 {
     return new alpha_Vector(this);
 }
 
-/**
- * Multiplies in-place this vector by the given vector.
- *
- * The vector may be given component-wise.
- */
 alpha_Vector.prototype.Multiply = function()
 {
     if(arguments.length > 1) {
@@ -379,11 +356,6 @@ alpha_Vector.prototype.toString = function()
 //----------------------------------------------
 //----------------------------------------------
 
-/**
- * Represents a quaternion, a 4-component vector with special operations.
- *
- * @constructor
- */
 function alpha_Quaternion()
 {
     this[0] = 0;
@@ -602,22 +574,12 @@ alpha_Quaternion.prototype.ToAxisAndAngle = function()
     return [new alpha_Vector(x, y, z), angle];
 };
 
-/**
- * Creates a new quaternion that is <angle> radians around the given unit vector axis.
- *
- * var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
- */
 function alpha_QuaternionFromAxisAndAngle()
 {
     var quat = new alpha_Quaternion(0, 0, 0, 1);
     return quat.FromAxisAndAngle.apply(quat, arguments);
 }
 
-/**
- * Sets this quaternion to <angle> radians around the given unnormalized vector axis.
- *
- * q.FromAxisAndAngle(x, y, z, angle);
- */
 alpha_Quaternion.prototype.FromAxisAndAngle = function()
 {
     var x, y, z, angle;
@@ -1284,11 +1246,6 @@ function alpha_RMatrix4FromEuler()
     return m.FromEuler.apply(m, arguments);
 };
 
-/**
- * x = pitch, y = yaw, z = roll;
- * applied in YXZ order
- * if you are keeping track at home: Z * X * Y
- */
 alpha_RMatrix4.prototype.FromEuler = function()
 {
     // Retrieve arguments.
@@ -1415,10 +1372,6 @@ function alpha_RMatrix4FromVectorAroundQuaternionAtVector()
     return m.FromVectorAroundQuaternionAtVector.apply(m, arguments);
 };
 
-/**
- * translation * rotation * translation
- * TranslationMatrix(vec2) * rotationMatrix(quat) * translationMatrix(vec1)
- */
 alpha_RMatrix4.prototype.FromVectorAroundQuaternionAtVector = function(vec1, quat, vec2)
 {
     // rotation * translation;
@@ -1443,9 +1396,6 @@ alpha_RMatrix4.prototype.Inverse = function()
     return this.Set(inv);
 };
 
-/**
- * Returns a new matrix equal to the inverse of this matrix.
- */
 alpha_RMatrix4.prototype.Inversed = function()
 {
   var inv = new alpha_RMatrix4();

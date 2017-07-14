@@ -1,25 +1,14 @@
 parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
 
-// The number of components per extent bound.
 parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
 
-/**
- * Represents a list of bounds. Each bound is comprised of a length
- * and a size. The extent always extends in the positive direction.
- *
- * An extent is used to represent each forward, backward, upward, and downward
- * side of a graph. The four extents represent the combine bounding picture of
- * the graph.
- */
 function parsegraph_Extent(copy)
 {
     if(copy !== undefined && copy._bounds) {
-        // Copy another extent's array
         this._numBounds = copy._numBounds;
         this._bounds = new Float32Array(copy._bounds);
     }
     else {
-        // Create a new, empty bounds array.
         this._numBounds = 0;
         this._bounds = null;
     }
@@ -27,13 +16,6 @@ function parsegraph_Extent(copy)
     this._start = 0;
 }
 
-/**
- * Iterates over the extent, calling the given function for each
- * bound.
- *
- * Example:
- * extent.forEach(function(length, size, i) {}, this);
- */
 parsegraph_Extent.prototype.forEach = function(func, thisArg) {
     for(var i = 0; i < this._numBounds; ++i) {
         func.call(
@@ -53,9 +35,6 @@ parsegraph_Extent.prototype.clear = function() {
     this._numBounds = 0;
 };
 
-/**
- * Returns the number of bounds in this extent.
- */
 parsegraph_Extent.prototype.numBounds = function() {
     return this._numBounds;
 };
@@ -509,28 +488,6 @@ parsegraph_Extent.prototype.scale = function(factor)
     }, this);
 };
 
-/**
- * Returns the minimum value that guarantees no overlap between the two extents.
- *
- * Positive position adjustment requires this bound to be adjusted:
- *
- * (this)
- * <--*--->
- *    |
- *    <--|------->
- *    (given)
- *
- * Negative position adjustment requires the given bound to be adjusted:
- *
- * (given)
- *    <-------|-->
- *            |
- *         <--*-->
- *    (this)
- *
- * The position adjustment is in this extent's space. So if the given scale is 0.5, the
- * given extent's length and size are adjusted by that amount.
- */
 parsegraph_Extent.prototype.separation = function(
     given,
     positionAdjustment,

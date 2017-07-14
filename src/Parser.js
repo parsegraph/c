@@ -37,9 +37,6 @@ function getWholeChar(str, i) {
   return false;
 }
 
-/**
- * Constructs a new token.
- */
 function parsegraph_Token()
 {
     this._type = arguments[0];

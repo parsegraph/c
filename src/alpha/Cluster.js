@@ -38,9 +38,6 @@ alpha_Cluster_Tests.addTest("alpha_Cluster", function(resultDom) {
     testCluster.CalculateVertices();
 });
 
-/**
- * is this particular block in this cluster
- */
 alpha_Cluster.prototype.HasBlock = function(block)
 {
     for(var i = 0; i < this.blocks.length; ++i) {
@@ -95,9 +92,6 @@ alpha_Cluster.prototype.ClearBlocks = function()
     this.blocks.splice(0, this.blocks.length);
 };
 
-/**
- * construct all of the vertices from the blocks and store them
- */
 alpha_Cluster.prototype.CalculateVertices = function()
 {
     if(!this.facePainter) {

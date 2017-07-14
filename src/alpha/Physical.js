@@ -61,9 +61,6 @@ alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE = 1;
 alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE = 2;
 alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE = 3;
 
-/**
- * @constructor
- */
 function alpha_Physical(parent)
 {
     this.modelMode = alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE;
@@ -128,9 +125,6 @@ alpha_Physical.prototype.GetRotationSpeeds = function()
     return this.rotationSpeed;
 }
 
-/**
- * rotates about the local axis
- */
 alpha_Physical.prototype.Rotate = function(angle, x, y, z)
 {
     // if you aren't rotating about an angle, then you aren't rotating
@@ -310,25 +304,16 @@ alpha_Physical.prototype.GetSpeeds = function()
     return this.speed;
 };
 
-/**
- * sets x,y,z and z speeds to the same thing
- */
 alpha_Physical.prototype.SetSpeed = function(speed)
 {
     return this.SetSpeeds(speed, speed, speed);
 };
 
-/**
- * set as x,y,z
- */
 alpha_Physical.prototype.SetVelocity = function()
 {
     this.velocity.Set.apply(this.velocity, arguments);
 };
 
-/**
- * return as vector
- */
 alpha_Physical.prototype.GetVelocity = function()
 {
     return this.velocity;

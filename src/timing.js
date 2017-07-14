@@ -32,9 +32,6 @@ function parsegraph_AnimationTimer()
 {
     this.timerId = null;
 
-    /**
-     * Forwards event arguments to the listener.
-     */
     var that = this;
     this.fire = function() {
         that.timerId = null;
@@ -93,17 +90,11 @@ function parsegraph_TimeoutTimer()
     };
 };
 
-/**
- * Sets the delay, in milliseconds.
- */
-parsegraph_TimeoutTimer.prototype.setDelay = function()
+parsegraph_TimeoutTimer.prototype.setDelay = function(ms)
 {
-    this.delay = arguments[0];
+    this.delay = ms;
 };
 
-/**
- * Gets the delay, in milliseconds.
- */
 parsegraph_TimeoutTimer.prototype.delay = function()
 {
     return this.delay;
@@ -158,9 +149,9 @@ function parsegraph_IntervalTimer()
 /**
  * Sets the delay, in milliseconds.
  */
-parsegraph_IntervalTimer.prototype.setDelay = function()
+parsegraph_IntervalTimer.prototype.setDelay = function(ms)
 {
-    this.delay = arguments[0];
+    this.delay = ms;
 };
 
 /**
