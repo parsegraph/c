@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Alpha WeetCubeWidget</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Alpha WeetCubeWidget</h1>
+<h3>new alpha_WeetCubeWidget(surface)</h3>
+Creates a new widget using the given Surface, creating it if necessary.
+<h3>.Tick(elapsed, frozen, updateAudio)</h3>
+Advances the scene by the given time delta, in milliseconds.
+<ul>
+<li>Throws an Error if elapsed is not provided.
+</ul>
+<h3>.refresh()</h3>
+Refreshes this painter's buffers. Invoked automatically when cube counts are changed.
+<h3>.setMax(max)</h3>
+Sets the maximum number of cubes in all directions to the given value.
+<h3>.setXMax(xMax)</h3>
+Sets the maximum number of cubes in the X direction to the given value.
+<h3>.setYMax(yMax)</h3>
+Sets the maximum number of cubes in the Y direction to the given value.
+<h3>.setZMax(zMax)</h3>
+Sets the maximum number of cubes in the Z direction to the given value.
+<h3>.setRotq(rotq)</h3>
+Sets the rotation time, in degrees.
+<h3>.switchAudioMode()</h3>
+Changes the current audio mode.
+<h3>.paint()</h3>
+Paints the current number of cubes using this set rotation time.
+<p>
+If an update listener has been given, it will be invoked when painting is complete.
+<h3>.setUpdateListener(listener, listenerThisArg)</h3>
+Sets the update listener to the given function and this-object.
+<h3>.render()</h3>
+Renders the painted cubes.
+<h3>.onKeyDown(key)</h3>
+Handles key-down events. Returns true if the event was handled.
+<h3>.createAudioNode(audio)</h3>
+Creates an AudioNode using the given content in this widget's set audio mode.
+</main>
+
+<nav class="toc">
+<h2>Alpha WeetCubeWidget</h2>
+<ol>
+<li>new alpha_WeetCubeWidget(surface)
+<li>.Tick(elapsed, frozen, updateAudio)
+<li>.refresh()
+<li>.setMax(max)
+<li>.setXMax(xMax)
+<li>.setYMax(yMax)
+<li>.setZMax(zMax)
+<li>.setRotq(rotq)
+<li>.onKeyDown(key)
+<li>.paint()
+<li>.setUpdateListener(listener, listenerThisArg)
+<li>.render()
+</ol>
+</nav>
+</body>
+</html>

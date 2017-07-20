@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NodeAlignment - Parsegraph</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>Parsegraph NodeAlignment</h1>
+Alignment constants used to position child nodes.
+<h3>parsegraph_NULL_NODE_ALIGNMENT</h3>
+Constant that refers to a null NodeAlignment value.
+<h3>parsegraph_DO_NOT_ALIGN</h3>
+Constant that indicates the node in the given direction should be aligned without consideration to its descendants.
+<h3>parsegraph_ALIGN_NEGATIVE</h3>
+Constant that indicates the node in the given direction and its descendents should be aligned in the negative direction relative to its parent.
+<h3>parsegraph_ALIGN_CENTER</h3>
+Constant that indicates the node in the given direction and its descendents should be centrally aligned relative to its parent.
+<h3>parsegraph_ALIGN_POSITIVE</h3>
+Constant that indicates the node in the given direction and its descendents should be aligned in the positive direction relative to its parent.
+<h3>parsegraph_ALIGN_HORIZONTAL</h3>
+Constant that indicates the given inward Node should be aligned horizontally relative to its container's label.
+<h3>parsegraph_ALIGN_VERTICAL</h3>
+Constant that indicates the given inward Node should be aligned vertically relative to its container's label.
+<h3>parsegraph_nameNodeAlignment(given)</h3>
+Returns a programmer-friendly string that describes the given NodeAlignment value.
+<ul>
+<li>Throws a new parsegraph_BAD_NODE_ALIGNMENT error if the given value is unrecognized.
+</ul>
+</main>
+
+<nav class="toc">
+<h2>Parsegraph NodeAlignment</h2>
+<ol>
+<li>parsegraph_NULL_NODE_ALIGNMENT
+<li>parsegraph_DO_NOT_ALIGN
+<li>parsegraph_ALIGN_NEGATIVE
+<li>parsegraph_ALIGN_CENTER
+<li>parsegraph_ALIGN_POSITIVE
+<li>parsegraph_ALIGN_HORIZONTAL
+<li>parsegraph_ALIGN_VERTICAL
+<li>parsegraph_nameNodeAlignment(given)
+</ol>
+</nav>
+</body>
+</html>

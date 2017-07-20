@@ -41,6 +41,12 @@ Returns the wheel delta in the upwards direction, in degrees.
 Returns the wheel delta in the downwards direction, in degrees.
 <h3>.Update(elapsed)</h3>
 Updates the scene with the given input state and given elapsed time.
+<h3>.onKeyDown(...)</h3>
+Handles a key-down event, invoking the set listener. Returns true if the event should not be processed by the default handler.
+<h3>.SetOnKeyDown(listener, thisObject)</h3>
+Sets the listener for keypress events. The listener is passed a keyname. If the listener returns false, it will be passed to the default handler for processing.
+<h3>.Update(elapsed)</h3>
+Updates the scene with the given input state and given elapsed time.
 <p>
 Sets the start to the end, and clears mousewheel totals.
 </main>
@@ -62,6 +68,8 @@ Sets the start to the end, and clears mousewheel totals.
 <li>.MouseWheelDown()
 <li>.MouseWheelDegreesUp()
 <li>.MouseWheelDegreesDown()
+<li>.onKeyDown(...)
+<li>.SetOnKeyDown(listener, thisObject)
 <li>.Update(elapsed)
 </ol>
 </nav>

@@ -17,6 +17,8 @@ function alpha_WeetCubeWidget()
     this.input = new alpha_Input(surface, this.camera);
     this.input.SetMouseSensitivity(.4);
 
+    this.input.SetOnKeyDown(this.onKeyDown, this);
+
     this.cubePainter = null;
     this.rotq = 0;
     this._elapsed = 0;
@@ -28,8 +30,165 @@ function alpha_WeetCubeWidget()
 
     this._audioOut=null;
 
-    this.camera.GetParent().SetPosition(-1, -1, this._zMax * -5.5);
+    this._freqs=[440*1.33, 440, 440*.67, 440*.67*.67, 440*.67*.67*.67];
+
+    this._currentAudioMode = 0;
+    this._audioModes = [function(audio) {
+        var osc=audio.createOscillator();
+        osc.type='sawtooth';
+        var tRand = Math.random();
+        if(tRand < .1) {
+            osc.type = "triangle";
+        }
+        else if(tRand < .6) {
+            osc.type='sawtooth';
+        }
+        else if(tRand < .8) {
+            osc.type='sine';
+        }
+        else {
+            osc.type='square';
+        }
+        //osc.type = "square";
+        //osc.type = "sine";
+        if(osc.type === "sine" || osc.type === "triangle") {
+            //osc.frequency.value=freqs[z%freqs.length];
+            osc.frequency.value=Math.max(320, 320+Math.random()*980);//freqs[z%freqs.length];
+        }
+        else if (osc.type === "square") {
+            osc.frequency.value=this._freqs[this._nodesPainted%this._freqs.length];
+            //osc.frequency.value=Math.max(4, Math.random()*200);//freqs[z%freqs.length];
+        }
+        else if(osc.type === "sawtooth") {
+            osc.frequency.value=Math.max(320, 320+Math.random()*200);//freqs[z%freqs.length];
+        }else {
+            osc.frequency.value=Math.min(1000, Math.random()*4000);//freqs[z%freqs.length];
+            //osc.frequency.value=freqs[z%freqs.length];
+        }
+        //osc.type = "square";
+        //osc.frequency.value=Math.max(8, Math.random()*100);
+        osc.start(0);
+        //console.log(c.position);
+
+        var randZ = Math.random() * 30;
+        var randY = Math.random() * 5;
+        //console.log(i, j, k, randY, randZ);
+        var g = audio.createGain();
+        //g.gain.value = 0.1;
+        g.gain.value = 0;
+        if(osc.type === "sawtooth") {
+            g.gain.linearRampToValueAtTime(0.8, .1);
+        }
+        else {
+            g.gain.linearRampToValueAtTime(0.8, .1);
+        }
+        //g.gain.exponentialRampToValueAtTime(.01, randY);
+        //g.gain.linearRampToValueAtTime(0, randY + randZ);
+        osc.connect(g);
+        return g;
+    }
+    //this.createSquareAudioNode,
+    //this.createSineAudioNode,
+    //this.createTriangleAudioNode,
+    //this.createSawtoothAudioNode
+];
+    this._audioModes = [this.createSineAudioNode, this.createSawtoothAudioNode];
+
+    this.camera.GetParent().SetPosition(-1, -1, this._zMax * -5.0);
+    this.camera.GetParent().SetOrientation(alpha_QuaternionFromAxisAndAngle(
+        0, 1, 0, Math.PI
+    ));
 }
+
+alpha_WeetCubeWidget.prototype.createSquareAudioNode = function(audio)
+{
+    osc=audio.createOscillator();
+    osc.type='triangle';
+    osc.frequency.value=this._freqs[this._nodesPainted%this._freqs.length];
+    osc.start(0);
+    var g = audio.createGain();
+    g.gain.value = 0;
+    g.gain.linearRampToValueAtTime(0.8, .1);
+    osc.connect(g);
+    return g;
+};
+
+alpha_WeetCubeWidget.prototype.createTriangleAudioNode = function(audio)
+{
+    osc=audio.createOscillator();
+    osc.type='triangle';
+    osc.frequency.value=Math.max(320, 320+Math.random()*980);
+    osc.start(0);
+    var g = audio.createGain();
+    g.gain.value = 0;
+    g.gain.linearRampToValueAtTime(0.8, .1);
+    osc.connect(g);
+    return g;
+};
+
+alpha_WeetCubeWidget.prototype.createSineAudioNode = function(audio)
+{
+    osc=audio.createOscillator();
+    osc.type='sine';
+    osc.frequency.value=this._freqs[this._nodesPainted%this._freqs.length];
+    //osc.frequency.value=Math.max(16, 440+Math.random()*980);
+    osc.start();
+    var g = audio.createGain();
+    g.gain.value = 0;
+    g.gain.linearRampToValueAtTime(0.8, .1);
+    osc.connect(g);
+    return g;
+};
+
+alpha_WeetCubeWidget.prototype.createSawtoothAudioNode = function(audio)
+{
+    var osc=audio.createOscillator();
+    osc.type='sawtooth';
+    osc.frequency.value=Math.max(320, 320+Math.random()*200);
+    osc.start();
+    var g = audio.createGain();
+    g.gain.value = 0;
+    g.gain.linearRampToValueAtTime(0.8, .1);
+    osc.connect(g);
+    return g;
+};
+
+alpha_WeetCubeWidget.prototype.createAudioNode = function(audio)
+{
+    var creator = this._audioModes[this._currentAudioMode];
+    var n = creator.call(this, audio);
+    console.log("Creating audio node: ", this._currentAudioMode, n);
+    return n;
+};
+
+alpha_WeetCubeWidget.prototype.onKeyDown = function(key)
+{
+    console.log(key);
+    switch(key) {
+    case "Enter":
+    case "Return":
+        this.switchAudioMode();
+        return true;
+    default:
+        // Key unhandled.
+        return false;
+    }
+};
+
+alpha_WeetCubeWidget.prototype.switchAudioMode = function()
+{
+    this._currentAudioMode = (this._currentAudioMode + 1) % this._audioModes.length;
+    if(this._audioOut) {
+        this._audioOut.disconnect();
+        this._audioCompressorOut.disconnect();
+        this._audioCompressorOut = null;
+        this._audioOut = null;
+
+        var audio = this.surface.audio();
+        this.createAudioNode(audio).connect(audio.destination);
+    }
+    this._updateAudio = true;
+};
 
 alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen, updateAudio)
 {
@@ -111,6 +270,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
 
     var createAudioNodes = false;
     if(!this._audioOut) {
+        console.log("Creating audio out");
         this._audioOut=audio.createGain();
         var compressor = audio.createDynamicsCompressor();
         compressor.threshold.value = -50;
@@ -120,6 +280,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
         compressor.attack.value = 0;
         compressor.release.value = 0.25;
         compressor.connect(audio.destination);
+        this._audioCompressorOut=compressor;
         this._audioOut.connect(compressor);
         this._audioNodes = [];
         this._audioNodePositions = [];
@@ -128,12 +289,11 @@ alpha_WeetCubeWidget.prototype.paint = function()
 
     var c = new alpha_Physical(this.camera);
     var az=0;
-    var z=0;
-    var osc;
+
+    this._nodesPainted = 0;
     var panner;
 
     var cubeSize = 1;
-    var freqs=[440*1.33, 440, 440*.67, 440*.67*.67, 440*.67*.67*.67]
     for(var i = 0; i < this._xMax; ++i) {
         for(var j = 0; j < this._yMax; ++j) {
             for(var k = 0; k < this._zMax; ++k) {
@@ -150,79 +310,20 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 this.cubePainter.Cube(c.GetModelMatrix());
                 var makeAudio = Math.random() < .1;
                 if(createAudioNodes && makeAudio) {
-                    osc=audio.createOscillator();
-                    osc.type='sawtooth';
-                    var tRand = Math.random();
-                    if(tRand < .1) {
-                        osc.type = "triangle";
-                    }
-                    else if(tRand < .6) {
-                        osc.type='sawtooth';
-                    }
-                    else if(tRand < .8) {
-                        osc.type='sine';
-                    }
-                    else {
-                        osc.type='square';
-                    }
-                    //osc.type = "square";
-                    //osc.type = "sine";
-                    if(osc.type === "sine" || osc.type === "triangle") {
-                        //osc.frequency.value=freqs[z%freqs.length];
-                        //osc.frequency.value=Math.max(16, 16+Math.random()*280);//freqs[z%freqs.length];
-                    }
-                    else if (osc.type === "square") {
-                        osc.frequency.value=freqs[z%freqs.length];
-                        //osc.frequency.value=Math.max(4, Math.random()*200);//freqs[z%freqs.length];
-                    }
-                    else if(osc.type === "sawtooth") {
-                        osc.frequency.value=Math.max(16, 64+Math.random()*200);//freqs[z%freqs.length];
-                    }else {
-                        osc.frequency.value=Math.min(1000, Math.random()*4000);//freqs[z%freqs.length];
-                        //osc.frequency.value=freqs[z%freqs.length];
-                    }
-                    osc.type = "square";
-                    osc.frequency.value=Math.max(8, Math.random()*100);
-                    osc.start(0);
+                    var node = this.createAudioNode(audio);
                     panner=audio.createPanner();
                     panner.panningModel = 'HRTF';
                     panner.distanceModel = 'exponential';
-                    if(osc.type === "sawtooth") {
-                        panner.refDistance = cubeSize;
-                    }
-                    else {
-                        panner.refDistance = cubeSize;
-                    }
                     panner.rolloffFactor = 2;
                     panner.coneInnerAngle = 360;
                     panner.coneOuterAngle = 0;
                     panner.coneOuterGain = 0;
-                    //console.log(c.position);
-
-                    var randZ = Math.random() * 30;
-                    var randY = Math.random() * 5;
-                    //console.log(i, j, k, randY, randZ);
-                    var g = audio.createGain();
-                    //g.gain.value = 0.1;
-                    g.gain.value = 0;
-                    if(osc.type === "sawtooth") {
-                        g.gain.linearRampToValueAtTime(0.8, .1);
-                    }
-                    else if(osc.type === "sawtooth") {
-                        g.gain.linearRampToValueAtTime(1.5, .1);
-                    }
-                    else {
-                        g.gain.linearRampToValueAtTime(0.8, .1);
-                    }
-                    //g.gain.exponentialRampToValueAtTime(.01, randY);
-                    //g.gain.linearRampToValueAtTime(0, randY + randZ);
-                    osc.connect(g);
-                    g.connect(panner);
                     panner.connect(this._audioOut);
+                    node.connect(panner);
                     this._audioNodes.push(panner);
-                    this._audioNodePositions.push(z);
+                    this._audioNodePositions.push(this._nodesPainted);
                 }
-                else if(z === this._audioNodePositions[az]) {
+                else if(this._nodesPainted === this._audioNodePositions[az]) {
                     panner = this._audioNodes[az];
                     az++;
                 } else {
@@ -266,7 +367,7 @@ if(panner.orientationX) {
                         panner.setPosition(cx, cy, cz);
                     }
                 }
-                ++z;
+                ++this._nodesPainted;
             }
         }
 

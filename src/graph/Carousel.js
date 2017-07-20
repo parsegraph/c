@@ -64,13 +64,20 @@ parsegraph_Carousel.prototype.hideCarousel = function()
     this._showCarousel = false;
 };
 
-/**
- * Adds the given node to the carousel.
- */
-parsegraph_Carousel.prototype.addToCarousel = function(paintGroup, callback, thisArg)
+parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg)
 {
     this._carouselCallbacks.push([callback, thisArg]);
-    return parsegraph_plot.call(this._carouselPlots, paintGroup);
+    if(!node) {
+        throw new Error("Node must not be null");
+    }
+    if(!node.localPaintGroup && node.root) {
+        // Passed a Caret.
+        node = node.root();
+    }
+    if(!node.localPaintGroup()) {
+        node.setPaintGroup(new parsegraph_PaintGroup(node));
+    }
+    this._carouselPlots.push(node);
 };
 
 parsegraph_Carousel.prototype.clearCarousel = function()
@@ -80,15 +87,23 @@ parsegraph_Carousel.prototype.clearCarousel = function()
     this._selectedCarouselPlot = null;
 };
 
-parsegraph_Carousel.prototype.removeFromCarousel = function(caret)
+parsegraph_Carousel.prototype.removeFromCarousel = function(node)
 {
+    if(!node) {
+        throw new Error("Node must not be null");
+    }
+    if(!node.localPaintGroup && node.root) {
+        // Passed a Caret.
+        node = node.root();
+    }
     for(var i in this._carouselPlots) {
-        if(this._carouselPlots[i] === paintGroup) {
+        if(this._carouselPlots[i] === node) {
             var removed = this._carouselPlots.splice(i, 1);
             this._carouselCallbacks.splice(i, 1);
             if(this._selectedCarouselPlot === removed) {
                 this._selectedCarouselPlot = null;
             }
+            return removed;
         }
     }
     return null;
@@ -177,8 +192,8 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
     var parsegraph_CAROUSEL_RADIUS = 250;
     var parsegraph_MAX_CAROUSEL_SIZE = 150;
 
-    this._carouselPlots.forEach(function(paintGroup, i) {
-        var root = paintGroup.root();
+    this._carouselPlots.forEach(function(root, i) {
+        var paintGroup = root.localPaintGroup();
 
         // Set the origin.
         var caretRad = angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);

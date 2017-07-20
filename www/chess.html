@@ -373,9 +373,6 @@ function init(main)
 
         widget.setLoginListener(function(res, userLogin, node) {
             try{
-            if(!chessWidget) {
-                chessWidget = new parsegraph_ChessWidget(graph);
-            }
             node.connectNode(parsegraph_DOWNWARD, chessWidget.node());
 
             if(!cameraProtocol) {
@@ -449,7 +446,11 @@ function init(main)
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init(document.body);
+    parsegraph_SingleGraphApplication(document.body, function(node, graph, userLogin) {
+        if(!chessWidget) {
+            chessWidget = new parsegraph_ChessWidget(graph);
+        }
+    });
 });
 </script>
 </head>

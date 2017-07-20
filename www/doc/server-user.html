@@ -29,13 +29,14 @@
 <li>parsegraph_createNewUser(pool, dbd, const char* username, const char* password)
 <li>parsegraph_changeUserPassword(pool, dbd, const char* username, const char* password)
 <li>parsegraph_removeUser(pool, dbd, const char* username)
+<li>struct parsegraph_user_login
 <li>parsegraph_generateLogin(pool, username, struct parsegraph_user_login** createdLogin)
 <li>parsegraph_refreshUserLogin(pool, dbd, struct parsegraph_user_login* createdLogin)
 <li>parsegraph_beginUserLogin(pool, dbd, const char* username, const char* password, struct parsegraph_user_login** createdLogin)
 <li>parsegraph_endUserLogin(pool, dbd, const char* username, int* logins_ended)
 <li>parsegraph_listUsers(pool, dbd, apr_dbd_results_t** res)
 <li>parsegraph_getUser(pool, dbd, apr_dbd_results_t** res, const char* username)
-<li>parsegraph_getIDForUsername(pool, dbd, const char* username, int* user_id)
+<li>parsegraph_getIdForUsername(pool, dbd, const char* username, int* user_id)
 <li>parsegraph_getUserProfile(pool, dbd, const char* username, const char** profile)
 <li>parsegraph_setUserProfile(pool, dbd, const char* username, const char* profile)
 <li>parsegraph_grantSuperadmin(pool, dbd, const char* username)
@@ -130,6 +131,15 @@ Ends the user's logins and deletes the specified user.
 <li>Returns parsegraph_ERROR if the removal query fails to execute, or if an unexpected number of users are removed.
 <li>Returns parsegraph_OK if zero or one user was successfuly removed.
 </ul>
+<h2>struct parsegraph_user_login</h2>
+Represents a user's login session.
+<p>
+<table>
+<tr><th>Name<th>Description</tr>
+<tr><td>username<td>Username for this login.</tr>
+<tr><td>session_selector<td>Selector part of this login.</tr>
+<tr><td>session_token<td>Token part of this login.</tr>
+</table>
 <h2>parsegraph_generateLogin(pool, username, struct parsegraph_user_login** createdLogin)</h2>
 Creates a pool-allocated login for the specified user, returning it in the given pointer.
 <ul>
@@ -176,8 +186,8 @@ Returns the result set for the specified user.
 <li>Results parsegraph_ERROR on database error.
 <li>Results parsegraph_UNDEFINED_PREPARED_STATEMENT if a needed prepared statement was not defined.
 </ul>
-<h2>parsegraph_getIDForUsername(pool, dbd, const char* username, int* user_id)</h2>
-Retrieves the specified user's ID.
+<h2>parsegraph_getIdForUsername(pool, dbd, const char* username, int* user_id)</h2>
+Retrieves the specified user's id.
 <ul>
 <li>Results parsegraph_USER_DOES_NOT_EXIST if the specified user does not exist.
 <li>Results parsegraph_OK on success.

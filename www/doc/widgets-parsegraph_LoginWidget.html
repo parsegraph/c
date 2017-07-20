@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>parsegraph_LoginWidget</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>parsegraph_LoginWidget</h1>
+Widget to log in to a Parsegraph server.
+<h3>parsegraph_authenticate(listener, listenerThisArg)</h3>
+Authenticates the current session with this server's user module, invoking the given listener and this-object.
+This authentication is valid for both JSON and HTML sessions.
+<p>
+Listener should be of the form <code>function(success, loginResponse)</code> where the loginResponse
+is a JSON object of the form:
+<table>
+<tr><th>Key Name<th>Value
+<tr><td>username<td>The string describing the user's name.
+</table>
+<p>
+If an exception occurs parsing the loginResponse, then <code>listener(ex)</code> is returned.
+<p>
+The XMLHttpRequest used for authentication is returned.
+<ul>
+<li>Throws if the given listener is null.
+</ul>
+<h3>parsegraph_beginUserLogin(username, password, listener, listenerThisArg)</h3>
+Begins a new user login with the given user credentials with this Parsegraph server. The listener
+is invoked when the response is returned from the server. 
+<p>
+The listener is invoked <code>listener(success, loginResponse)</code> when the request completes.
+If an exception occurs parsing the loginResponse, then <code>listener(ex)</code> is returned.
+<p>
+loginResponse is a JSON object of the form:
+<table>
+<tr><th>Key Name<th>Value
+<tr><td>username<td>The string describing the user's name.
+</table>
+<p>
+This authentication is valid for both JSON and HTML sessions.
+<h3>parsegraph_endUserLogin(listener, listenerThisArg)</h3>
+Ends the current session's login for both JSON and HTML sessions.
+<p>
+The listener is invoked <code>listener(success, loginResponse)</code> when the request completes.
+If an exception occurs parsing the loginResponse, then <code>listener(ex)</code> is returned.
+<table>
+<tr><th>Key Name<th>Value
+<tr><td>username<td>The string describing the user's name that was ended.
+</table>
+<ul>
+<li>Throws an error if listener is null.
+</ul>
+<h3>parsegraph_createNewUser(username, password, listener, listenerThisArg)</h3>
+Creates a new user with the given user login credentials.
+<p>
+The given listener is invoked as <code>listener(success, loginResponse)</code>
+when the request completes. If an exception occurs parsing the loginResponse, then
+<code>listener(ex)</code> is returned.
+<p>
+The XMLHttpRequest is returned that represents the request.
+<h3>parsegraph_passwordNode(listener, listenerThisArg)</h3>
+Returns a new Node that appears like an HTML INPUT type=password element.
+<p>
+The given function is invoked when a key is pressed, to allow for handling of key presses
+and handling of Enter.
+<h3>new parsegraph_LoginWidget(surface, graph)</h3>
+Returns a new widget using the given Surface and Graph.
+<h3>.authenticate()</h3>
+Authenticates the current session. (does not expose the session to JS).
+<h3>.logout()</h3>
+Ends the current session.
+<h3>.onLogout(res, result)</h3>
+Handles log-out events for parsegraph_endUserLogin.
+<h3>.login()</h3>
+Log in with this widget's form's credentials.
+<h3>.createNewUser()</h3>
+Create a new user using this widget's form's credentials.
+<h3>.setLoginListener(listener, listenerThisArg)</h3>
+Sets the listener to be invoked when a session has begun.
+<h3>.setLogoutListener(listener, listenerThisArg)</h3>
+Sets the listener to be invoked when a session has ended.
+<h3>.onLogin(res, userLogin)</h3>
+Handles log-in events for parsegraph_beginUserLogin.
+<h3>.loggedInForm()</h3>
+Returns the form Node used when the user is logged in. The form is created if necessary.
+<h3>.onAuthenticate(res, userLogin)</h3>
+Handles authenticate events from parsegraph_authenticate.
+<h3>.glyphAtlas()</h3>
+Returns the glyph atlas used for this widget.
+<h3>.root()</h3>
+Returns the root node containing the forms of this widget. The root Node is created if necessary.
+<h3>.authenticateForm()</h3>
+Returns the form used when the user is logged in. The form is created if necessary.
+<h3>.loginForm()</h3>
+Returns the form used when the user is not logged in. The form is created if necessary.
+<h3>.toggleRemember()</h3>
+Handles when the remember-me button is clicked.
+</main>
+
+<nav class="toc">
+<h2>parsegraph_LoginWidget</h2>
+<ol>
+<li>parsegraph_authenticate(listener, listenerThisArg)
+<li>parsegraph_beginUserLogin(username, password, listener, listenerThisArg)
+<li>parsegraph_endUserLogin(listener, listenerThisArg)
+<li>parsegraph_createNewUser(username, password, listener, listenerThisArg)
+<li>parsegraph_passwordNode(listener, listenerThisArg)
+<li>new parsegraph_LoginWidget(surface, graph)
+<li>.authenticate()
+<li>.logout()
+<li>.onLogout(res, result)
+<li>.login()
+<li>.createNewUser()
+<li>.setLoginListener(listener, listenerThisArg)
+<li>.setLogoutListener(listener, listenerThisArg)
+<li>.onLogin(res, userL
+<li>.loggedInForm()
+<li>.onAuthenticate(res, userLogin)
+<li>.glyphAtlas()
+<li>.root()
+<li>.authenticateForm()
+<li>.loginForm()
+<li>.toggleRemember()
+</ol>
+</nav>
+</body>
+</html>

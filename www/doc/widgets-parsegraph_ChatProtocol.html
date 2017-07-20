@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>parsegraph_ChatProtocol</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>parsegraph_ChatProtocol</h1>
+An object to speak Parsegraph's Chat protocol over a given WebSocket.
+<h3>parsegraph_ChatProtocol(ws, eventFunc, eventFuncThisArg)</h3>
+Creates a new unopened protocol using the given opened WebSocket.
+<p>
+The given eventFunc function and this-object are invoked when a protocol message is
+received.
+<ul>
+<li>Throws if eventFunc is not defined.
+</ul>
+<h3>.send(text)</h3>
+Sends the given text using this protocol's WebSocket. The text is sent in a JSON object with
+the following fields:
+<table>
+<tr><th>Name<th>Description</tr>
+<tr><td>data<td>The given text value.
+</table>
+<h3>.onopen()</h3>
+Handles opening events from the WebSocket.
+<h3>.onmessage(event)</h3>
+Handles message events from this protocol's WebSocket.
+<h3>.onclose()</h3>
+Handles close events from this protocol's WebSocket.
+<h3>.opened()</h3>
+Returns true if this protocol is accepting input.
+</main>
+
+<nav class="toc">
+<h2>parsegraph_ChatProtocol</h2>
+<ol>
+<li>parsegraph_ChatProtocol(ws, eventFunc, eventFuncThisArg)
+<li>.send(text)
+<li>.onopen()
+<li>.onmessage(event)
+<li>.onclose()
+<li>.opened()
+</ol>
+</nav>
+</body>
+</html>

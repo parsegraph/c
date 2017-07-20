@@ -47,6 +47,9 @@ function alpha_Input(surface, camera)
     this.grabbed = null;
 
     parsegraph_addEventMethod(document, "keydown", function(event) {
+        if(this.onKeyDown(event.key)) {
+            return;
+        }
         if(event.ctrlKey || event.altKey || event.metaKey) {
             return;
         }
@@ -106,6 +109,20 @@ function alpha_Input(surface, camera)
     };
     parsegraph_addEventListener(surface.canvas(), "DOMMouseScroll", onWheel, false);
     parsegraph_addEventListener(surface.canvas(), "mousewheel", onWheel, false);
+};
+
+alpha_Input.prototype.onKeyDown = function()
+{
+    if(this._keyDownListener) {
+        return this._keyDownListener.apply(this._keyDownThisObject, arguments);
+    }
+    return false;
+};
+
+alpha_Input.prototype.SetOnKeyDown = function(listener, thisObject)
+{
+    this._keyDownListener = listener;
+    this._keyDownThisObject = thisObject;
 };
 
 alpha_Input.prototype.Get = function(key)

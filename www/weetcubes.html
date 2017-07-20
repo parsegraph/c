@@ -87,6 +87,24 @@ var tick = function(t) {
 };
 tickIntervalId = requestAnimationFrame(tick);
 
+var backgroundAudioForcer = new parsegraph_IntervalTimer();
+backgroundAudioForcer.setDelay(0);
+backgroundAudioForcer.setListener(function() {
+    // Set the render flag.
+    var t = alpha_GetTime();
+    var elapsed = t - start;
+    var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
+    widget.Tick(elapsed, frozen, updateAudio);
+    if(!frozen || !widget.cubePainter) {
+        surface.paint(elapsed, frozen, updateAudio);
+    }
+    if(updateAudio) {
+        audioUpdate = t;
+    }
+    start = t;
+}, this);
+backgroundAudioForcer.schedule();
+
 parsegraph_addEventListener(document, "keydown", function(event) {
     if(event.key === "Escape") {
         frozen = !frozen;

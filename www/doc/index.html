@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>docs - Parsegraph</title>
+<title>Documentation - Parsegraph</title>
 <style>
 body {
     width: 50%;
@@ -10,7 +10,7 @@ body {
 </style>
 </head>
 <body>
-<h1>Parsegraph Reference</h1>
+<h1><a href="..">Parsegraph</a> Documentation</h1>
 See <a href="progress.html">Progress</a> for progress documenting the project.
 <h2>graph-js</h2>
 Javascript library for creating parsegraphs in WebGL.
@@ -54,6 +54,40 @@ Javascript library for creating parsegraphs in WebGL.
 <li><a href="graph-NodeFit.html">NodeFit</a>
 <li><a href="graph-Exception.html">Exception</a>
 </ul>
+<h3>Widgets</h3>
+<li><a href="widgets-createSliderDemo.html">createSliderDemo.js</a>
+<li><a href="widgets-Spiral.html">showSpiral.js</a>
+<li><a href="widgets-LinearWidget.html">LinearWidget.js</a>
+<li><a href="widgets-buildTextDemo.html">buildTextDemo.js</a>
+<li><a href="widgets-buildSelection.html">buildSelection.js</a>
+<li><a href="widgets-<li.html">showIPAddresses.js</a>
+<li><a href="widgets-showStatements.html">showStatements.js</a>
+<li><a href="widgets-showHardTest.html">showHardTest.js</a>
+<li><a href="widgets-parsegraph_ChatProtocol.html">parsegraph_ChatProtocol.js</a>
+<li><a href="widgets-showFunction.html">showFunction.js</a>
+<li><a href="widgets-showMemoryBlocks.html">showMemoryBlocks.js</a>
+<li><a href="widgets-buildPrimesDemo.html">buildPrimesDemo.js</a>
+<li><a href="widgets-parsegraph_CameraProtocol.html">parsegraph_CameraProtocol.js</a>
+<li><a href="widgets-showFlowchartTemplate.html">showFlowchartTemplate.js</a>
+<li><a href="widgets-showProportionTest.html">showProportionTest.js</a>
+<li><a href="widgets-parsegraph_OscillatorWidget.html">parsegraph_OscillatorWidget.js</a>
+<li><a href="timeline-HSlicePainter.html">HSlicePainter.js</a>
+<li><a href="timeline-VSlicePainter.html">VSlicePainter.js</a>
+<li><a href="widgets-showUlam.html">showUlam.js</a>
+<li><a href="widgets-parsegraph_SynthWidget.html">parsegraph_SynthWidget.js</a>
+<li><a href="widgets-parsegraph_ProfileWidget.html">parsegraph_ProfileWidget.js</a>
+<li><a href="widgets-showCorporateStructure.html">showCorporateStructure.js</a>
+<li><a href="timeline-HSunrisePainter.html">HSunrisePainter.js</a>
+<li><a href="timeline-VSunrisePainter.html">VSunrisePainter.js</a>
+<li><a href="widgets-parsegraph_SingleGraphApplication.html">parsegraph_SingleGraphApplication.js</a>
+<li><a href="widgets-parsegraph_FilterWidget.html">parsegraph_FilterWidget.js</a>
+<li><a href="widgets-showCalendar.html">showCalendar.js</a>
+<li><a href="timeline-HTimeline.html">HTimeline.js</a>
+<li><a href="timeline-VTimeline.html">VTimeline.js</a>
+<li><a href="widgets-alpha_WeetCubeWidget.html">alpha_WeetCubeWidget.js</a>
+<li><a href="widgets-parsegraph_JavaScriptWidget.html">parsegraph_JavaScriptWidget.js</a>
+<li><a href="widgets-parsegraph_LoginWidget.html">parsegraph_LoginWidget.js</a>
+</ul>
 <h3>Support Libraries</h3>
 <ul>
 <li><a href="gl.html">GL</a>
@@ -88,14 +122,49 @@ Javascript library for creating parsegraphs in WebGL.
 <li><a href="alpha-Cluster.html">Cluster</a>
 <li><a href="alpha-FacePainter.html">FacePainter</a>
 </ul>
-<h2>Sitemap</h2>
+<h2>anthonylispjs</h2>
+Lisp widgets and library.
+<ul>
+<li>Lisp library
+<li>Lisp environment
+<li>anthonylisp
+</ul>
+<h2>marla-chroot</h2>
+<ul>
+<li>marla-chroot-create
+<li>marla-chroot-disable
+<li>marla-chroot-enable
+<li>marla-chroot-yum
+<li>marla-chroot-run
+<li>marla-tmux
+</ul>
+<h2>chess</h2>
+C library for chess games.
+<h2>htmlgraph</h2>
+<ul>
+<li>html.js</li>
+</ul>
+<h2>WebSocket protocols</h2>
+<ul>
+<li>Chat
+<li>Camera
+</ul>
+<h2>Client-visible HTTP routes</h2>
 <ul>
 <li><a href="../sitemap/index-get.html">GET parsegraph.com</a>
 <li><a href="../sitemap/environment-get-by-guid.html">GET parsegraph.com/&lt;environment-guid&gt;</a>
 <li><a href="../sitemap/environment-delete.html">DELETE parsegraph.com/&lt;environment-guid&gt;</a>
 <li><a href="../sitemap/environment-get-tag.html">GET parsegraph.com/tag/&lt;environment-tag-name&gt;</a>
+</ul>
+<h2>Application HTTP routes</h2>
+<h3>Accept: text/html</h3>
 <li><a href="../sitemap/environment-post-create-environment.html">POST parsegraph.com/create-environment</a>
 <li><a href="../sitemap/environment-post-clone-environment.html">POST parsegraph.com/clone-environment</a>
+</ul>
+<h3>Accept: application/json</h3>
+<ul>
+<li>parsegraph_beginUserLogin
+<li>parsegraph_endUserLogin
 </ul>
 <h2>Database</h2>
 <ul>
@@ -106,7 +175,19 @@ C libraries that manage various parsegraph services.
 <ul>
 <li><a href="server-list.html">parsegraph_List</a>
 <li><a href="server-user.html">parsegraph_User</a>
+<li><a href="server-user_httpd.html">parsegraph_User httpd</a>
 <li><a href="server-environment.html">Parsegraph Environment</a>
+</ul>
+<h2>RPM packages</h2>
+<ul>
+<li>parsegraph_user
+<li>parsegraph_List
+<li>parsegraph_server_config
+</ul>
+<h2>pkg-config definitions</h2>
+<ul>
+<li>parsegraph_user
+<li>parsegraph_List
 </ul>
 </body>
 </html>

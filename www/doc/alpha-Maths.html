@@ -115,28 +115,54 @@ Sets this array to the given json array or object.
 </ul>
 <h3>.Clone()</h3>
 Creates and returns a new clone of this quaternion.
-<h3>.Multiply()</h3>
-Creates and returns a new clone of this quaternion.
-<h3>.Multiplied()</h3>
-<h3>.RotatedVector()</h3>
-<h3>.RotatedVector2()</h3>
+<h3>.Multiply(scalar)</h3>
+Multiplies each of this quaternion's values by the given scalar.
+<h3>.Multiply(quat)</h3>
+Multiplies this quaternion by the given quaternion.
+<h3>.Multiply(x, y, z, w)</h3>
+Multiplies this quaternion by the specified quaternion.
+<h3>.Multiplied(...)</h3>
+Creates a clone of this quaternion and calls .Multiply(), returning the product.
+<h3>.RotatedVector(x, y, z)</h3>
+Rotates the specified vector using this quaternion.
+<h3>.RotatedVector(quat)</h3>
+Rotates the given vector using this quaternion.
+<h3>.RotatedVector2(x, y, z)</h3>
+Rotates the specified vector using this quaternion.
+<h3>.RotatedVector2(quat)</h3>
+Rotates the given vector using this quaternion.
+<h3>.Equals(x, y, z, w)</h3>
+Returns true if this quaternion's values are fuzzily equal to the given values.
 <h3>.Equals(other)</h3>
+Returns true if this quaternion's values are fuzzily equal to the given quaternion.
 <h3>.Magnitude()</h3>
+Returns the dot-product of this quaternion.
 <h3>.Length()</h3>
+Alias for .Magnitude().
 <h3>.Norm()</h3>
+Alias for .Magnitude().
 <h3>.Normalize()</h3>
-<h3>.Set()</h3>
+Normalizes this quaternion.
+<h3>.Set(other)</h3>
+Sets this quaternion's values to the given quaternion's values.
+<p>
+If the given argument is 3-dimensional, the quaternion's current W-value is retained.
+<h3>.Set(x, y, z, w)</h3>
+Sets this quaternion's values to the given values.
 <h3>.Conjugate()</h3>
+Returns <code>new Quaternion(-this[0], -this[1], -this[2], this[3])</code>.
 <h3>.Inverse()</h3>
+Returns a new Quaternion that is the normalized conjugate of this quaternion.
 <h3>.ToAxisAndAngle()</h3>
+Returns <code>[vec, angleInRads]</code> that represents this vector.
 <h3>alpha_QuaternionFromAxisAndAngle()</h3>
-Creates a new quaternion that is <angle> radians around the given unit vector axis.
+Creates a new quaternion that is <code>angle</code> radians around the given unit vector axis.
 <p>
-var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
+var q = alpha_QuaternionFromAxisAndAngle(x, y, z, angleInRads);
 <h3>.FromAxisAndAngle()</h3>
-Sets this quaternion to <angle> radians around the given unnormalized vector axis.
+Sets this quaternion to <code>angle</code> radians around the given unnormalized vector axis.
 <p>
- q.FromAxisAndAngle(x, y, z, angle);
+ q.FromAxisAndAngle(x, y, z, angleInRads);
 <h3>.DotProduct = function(other)
 Returns the dot product of this quaternion with the given quaternion.
 <h3>.ScalarProduct</h3>
@@ -236,12 +262,14 @@ Sets this matrix to the rotation-matrix specified by the given quaternion values
 Sets this matrix to the rotation-matrix specified by the given quaternion.
 <h3>alpha_RMatrix4FromQuaternionAtVector()</h3>
 equivalent to rotationMatrix * translationMatrix.
-<h3>alpha_RMatrix4FromVectorAroundQuaternion()</h3>
+<h3>alpha_RMatrix4FromVectorAroundQuaternion(...)</h3>
+Alias for <code>new alpha_RMatrix4().FromVectorAroundQuaternion(...)</code>.
 <h3>.FromVectorAroundQuaternion(vector, quat)</h3>
 equivalent to translationMatrix * rotationMatrix.
 <p>
 the 4th value in this matrix multplication always end up as 0
 <h3>alpha_RMatrix4FromVectorAroundQuaternionAtVector()</h3>
+Alias for <code>new alpha_RMatrix4().FromVectorAroundQuaternionAtVector(...)</code>.
 <h3>.FromVectorAroundQuaternionAtVector(vec1, quat, vec2)</h3>
 translation * rotation * translation
 <p>

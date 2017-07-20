@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>parsegraph_OscillatorWidget</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="content">
+<h1>parsegraph_OscillatorWidget</h1>
+Widget to control an OscillatorWidget audio node.
+<h3>new parsegraph_OscillatorWidget(graph)</h3>
+Creates a new widget using the given Graph. The audio node is not created until .build() is called.
+<h3>.build(audio)</h3>
+Initializes this widget by creating a new OscillatorNode using the given AudioContext.
+<p>
+The OscillatorNode is returned.
+<h3>.setOscillatorType(oscType)</h3>
+Directly sets this widget's oscillator type.
+<h3>.setOscillatorFrequency(value)</h3>
+Directly sets this widget's oscillator frequency value.
+<h3>.setOscillatorDetune(value)</h3>
+Directly sets this widget's oscillator detune value.
+<h3>.refreshTypes()</h3>
+Refreshes the widget's state using the set values.
+<h3>.node()</h3>
+Returns the Node that contains this widget. The Node is created if necessary.
+</main>
+
+<nav class="toc">
+<h2>parsegraph_OscillatorWidget</h2>
+<ol>
+<li>new parsegraph_OscillatorWidget(graph)
+<li>.build(audio)
+<li>.setOscillatorType(oscType)
+<li>.setOscillatorFrequency(value)
+<li>.setOscillatorDetune(value)
+<li>.refreshTypes()
+<li>.node()
+</ol>
+</nav>
+</body>
+</html>
