@@ -1,3 +1,4 @@
+var audioTransition = 1.2;
 function alpha_WeetCubeWidget()
 {
     var surface;
@@ -23,7 +24,7 @@ function alpha_WeetCubeWidget()
     this.rotq = 0;
     this._elapsed = 0;
     this._frozen = false;
-    var amt = 5;
+    var amt = 7;
     this._xMax = amt;
     this._yMax = amt;
     this._zMax = amt;
@@ -32,23 +33,63 @@ function alpha_WeetCubeWidget()
 
     this._freqs=[440*1.33, 440, 440*.67, 440*.67*.67, 440*.67*.67*.67];
 
+    var randomFrequencyNodeCreator = function(nodeType, minFreq, freqRange) {
+        return function(audio) {
+            var osc=audio.createOscillator();
+            //osc.type=nodeType;
+            var tRand = Math.random();
+            if(tRand < .1) {
+                osc.type = "triangle";
+            }
+            else if(tRand < .6) {
+                osc.type='sawtooth';
+            }
+            else if(tRand < .8) {
+                osc.type='sine';
+            }
+            else {
+                osc.type='square';
+            }
+            osc.frequency.value=minFreq+Math.random()*freqRange;
+            osc.start();
+            var g = audio.createGain();
+            g.gain.setValueAtTime(0, audio.currentTime);
+            g.gain.linearRampToValueAtTime(0.8, audio.currentTime + audioTransition);
+            osc.connect(g);
+            return g;
+        };
+    };
+
+    var fixedFrequencyNodeCreator = function(nodeType, freqs) {
+        return function(audio) {
+            var osc=audio.createOscillator();
+            osc.type=nodeType;
+            osc.frequency.value=freqs[this._nodesPainted%freqs.length];
+            osc.start();
+            var g = audio.createGain();
+            g.gain.setValueAtTime(0, audio.currentTime);
+            g.gain.linearRampToValueAtTime(0.8, audio.currentTime + audioTransition);
+            osc.connect(g);
+            return g;
+        }
+    };
+
+    this._audioModes = [
+        fixedFrequencyNodeCreator("sine", this._freqs),
+        randomFrequencyNodeCreator("square", 16, 128),
+        randomFrequencyNodeCreator("triangle", 64, 1024),
+        fixedFrequencyNodeCreator("sawtooth", this._freqs),
+        randomFrequencyNodeCreator("square", 4, 16),
+        fixedFrequencyNodeCreator("triangle", this._freqs),
+        randomFrequencyNodeCreator("sine", 320, 640),
+        randomFrequencyNodeCreator("sawtooth", 64, 96),
+        //randomFrequencyNodeCreator("triangle", 320, 640),
+    ];
+
     this._currentAudioMode = 0;
-    this._audioModes = [function(audio) {
+    /*this._audioModes = [function(audio) {
         var osc=audio.createOscillator();
         osc.type='sawtooth';
-        var tRand = Math.random();
-        if(tRand < .1) {
-            osc.type = "triangle";
-        }
-        else if(tRand < .6) {
-            osc.type='sawtooth';
-        }
-        else if(tRand < .8) {
-            osc.type='sine';
-        }
-        else {
-            osc.type='square';
-        }
         //osc.type = "square";
         //osc.type = "sine";
         if(osc.type === "sine" || osc.type === "triangle") {
@@ -67,23 +108,18 @@ function alpha_WeetCubeWidget()
         }
         //osc.type = "square";
         //osc.frequency.value=Math.max(8, Math.random()*100);
-        osc.start(0);
+        osc.start();
         //console.log(c.position);
 
         var randZ = Math.random() * 30;
         var randY = Math.random() * 5;
         //console.log(i, j, k, randY, randZ);
         var g = audio.createGain();
-        //g.gain.value = 0.1;
-        g.gain.value = 0;
-        if(osc.type === "sawtooth") {
-            g.gain.linearRampToValueAtTime(0.8, .1);
-        }
-        else {
-            g.gain.linearRampToValueAtTime(0.8, .1);
-        }
-        //g.gain.exponentialRampToValueAtTime(.01, randY);
-        //g.gain.linearRampToValueAtTime(0, randY + randZ);
+        //g.gain.setValueAtTime(0.1, audio.currentTime);
+        g.gain.setValueAtTime(0, audio.currentTime);
+        g.gain.linearRampToValueAtTime(audio.currentTime + 0.8, .1);
+        //g.gain.exponentialRampToValueAtTime(.01, audio.currentTime + randY);
+        //g.gain.linearRampToValueAtTime(0, audio.currentTime + randY + randZ);
         osc.connect(g);
         return g;
     }
@@ -93,6 +129,7 @@ function alpha_WeetCubeWidget()
     //this.createSawtoothAudioNode
 ];
     this._audioModes = [this.createSineAudioNode, this.createSawtoothAudioNode];
+    */
 
     this.camera.GetParent().SetPosition(-1, -1, this._zMax * -5.0);
     this.camera.GetParent().SetOrientation(alpha_QuaternionFromAxisAndAngle(
@@ -100,70 +137,17 @@ function alpha_WeetCubeWidget()
     ));
 }
 
-alpha_WeetCubeWidget.prototype.createSquareAudioNode = function(audio)
-{
-    osc=audio.createOscillator();
-    osc.type='triangle';
-    osc.frequency.value=this._freqs[this._nodesPainted%this._freqs.length];
-    osc.start(0);
-    var g = audio.createGain();
-    g.gain.value = 0;
-    g.gain.linearRampToValueAtTime(0.8, .1);
-    osc.connect(g);
-    return g;
-};
-
-alpha_WeetCubeWidget.prototype.createTriangleAudioNode = function(audio)
-{
-    osc=audio.createOscillator();
-    osc.type='triangle';
-    osc.frequency.value=Math.max(320, 320+Math.random()*980);
-    osc.start(0);
-    var g = audio.createGain();
-    g.gain.value = 0;
-    g.gain.linearRampToValueAtTime(0.8, .1);
-    osc.connect(g);
-    return g;
-};
-
-alpha_WeetCubeWidget.prototype.createSineAudioNode = function(audio)
-{
-    osc=audio.createOscillator();
-    osc.type='sine';
-    osc.frequency.value=this._freqs[this._nodesPainted%this._freqs.length];
-    //osc.frequency.value=Math.max(16, 440+Math.random()*980);
-    osc.start();
-    var g = audio.createGain();
-    g.gain.value = 0;
-    g.gain.linearRampToValueAtTime(0.8, .1);
-    osc.connect(g);
-    return g;
-};
-
-alpha_WeetCubeWidget.prototype.createSawtoothAudioNode = function(audio)
-{
-    var osc=audio.createOscillator();
-    osc.type='sawtooth';
-    osc.frequency.value=Math.max(320, 320+Math.random()*200);
-    osc.start();
-    var g = audio.createGain();
-    g.gain.value = 0;
-    g.gain.linearRampToValueAtTime(0.8, .1);
-    osc.connect(g);
-    return g;
-};
-
 alpha_WeetCubeWidget.prototype.createAudioNode = function(audio)
 {
     var creator = this._audioModes[this._currentAudioMode];
     var n = creator.call(this, audio);
-    console.log("Creating audio node: ", this._currentAudioMode, n);
+    //console.log("Creating audio node: ", this._currentAudioMode, n);
     return n;
 };
 
 alpha_WeetCubeWidget.prototype.onKeyDown = function(key)
 {
-    console.log(key);
+    //console.log(key);
     switch(key) {
     case "Enter":
     case "Return":
@@ -178,19 +162,10 @@ alpha_WeetCubeWidget.prototype.onKeyDown = function(key)
 alpha_WeetCubeWidget.prototype.switchAudioMode = function()
 {
     this._currentAudioMode = (this._currentAudioMode + 1) % this._audioModes.length;
-    if(this._audioOut) {
-        this._audioOut.disconnect();
-        this._audioCompressorOut.disconnect();
-        this._audioCompressorOut = null;
-        this._audioOut = null;
-
-        var audio = this.surface.audio();
-        this.createAudioNode(audio).connect(audio.destination);
-    }
-    this._updateAudio = true;
+    this._modeSwitched = true;
 };
 
-alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen, updateAudio)
+alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen)
 {
     if(elapsed === undefined || Number.isNaN(elapsed)) {
         throw new Error("elapsed must be provided.");
@@ -199,7 +174,6 @@ alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen, updateAudio)
     this.input.Update(elapsed);
     this._elapsed = elapsed;
     this._frozen = frozen;
-    this._updateAudio = updateAudio;
 }
 
 alpha_WeetCubeWidget.prototype.refresh = function()
@@ -254,21 +228,6 @@ alpha_WeetCubeWidget.prototype.paint = function()
         this.cubePainter.Clear();
     }
 
-/*    if(listener.forwardX) {
-      var vec=this.camera.GetParent().orientation.RotatedVector(new alpha_Vector(0, 0, -1));
-      listener.forwardX.value = vec[0];
-      listener.forwardY.value = vec[1];
-      listener.forwardZ.value = vec[2];
-      vec=this.camera.GetParent().orientation.RotatedVector(new alpha_Vector(0, 1, 0));
-      listener.upX.value = vec[0];
-      listener.upY.value = vec[1];
-      listener.upZ.value = vec[2];
-    } else {
-      vec=this.camera.GetParent().orientation.RotatedVector(new alpha_Vector(0, -1,1));
-      listener.setOrientation(vec[0], vec[1], vec[2]);
-    }*/
-
-    var createAudioNodes = false;
     if(!this._audioOut) {
         console.log("Creating audio out");
         this._audioOut=audio.createGain();
@@ -282,16 +241,26 @@ alpha_WeetCubeWidget.prototype.paint = function()
         compressor.connect(audio.destination);
         this._audioCompressorOut=compressor;
         this._audioOut.connect(compressor);
+        this._modeAudioNodes = [];
         this._audioNodes = [];
         this._audioNodePositions = [];
-        createAudioNodes = true;
     }
+    else if(this._modeSwitched) {
+        var oldModeNodes = [].concat(this._modeAudioNodes);
+        setTimeout(function() {
+            oldModeNodes.forEach(function(node) {
+                node.disconnect();
+            });
+        }, 1000 * (audioTransition + 0.1));
+    }
+    var createAudioNodes = this._audioNodes.length == 0;
 
     var c = new alpha_Physical(this.camera);
     var az=0;
 
     this._nodesPainted = 0;
     var panner;
+
 
     var cubeSize = 1;
     for(var i = 0; i < this._xMax; ++i) {
@@ -320,33 +289,22 @@ alpha_WeetCubeWidget.prototype.paint = function()
                     panner.coneOuterGain = 0;
                     panner.connect(this._audioOut);
                     node.connect(panner);
+                    this._modeAudioNodes.push(node);
                     this._audioNodes.push(panner);
                     this._audioNodePositions.push(this._nodesPainted);
                 }
                 else if(this._nodesPainted === this._audioNodePositions[az]) {
                     panner = this._audioNodes[az];
+                    if(this._modeSwitched) {
+                        this._modeAudioNodes[az].gain.linearRampToValueAtTime(0, audio.currentTime + audioTransition);
+                        var node = this.createAudioNode(audio);
+                        this._modeAudioNodes[az] = node;
+                        node.connect(panner);
+                    }
                     az++;
                 } else {
                     panner = null;
                 }
-                /*var ori=c.orientation.RotatedVector(new alpha_Vector(0, 0, 0));
-                if(panner.orientationX) {
-                  panner.orientationX.value = ori[0];
-                  panner.orientationY.value = ori[1];
-                  panner.orientationZ.value = ori[2];
-                }
-                else {
-                  panner.setOrientation(ori[0], ori[1], ori[2]);
-                }
-
-if(panner.orientationX) {
-  panner.orientationX.value = 1;
-  panner.orientationY.value = 0;
-  panner.orientationZ.value = 0;
-} else {
-  panner.setOrientation(1,0,0);
-}
-*/
 
                 if(panner) {
                     var wv=c.GetModelMatrix();
@@ -380,7 +338,7 @@ if(panner.orientationX) {
     }
     //console.log("dataX=" + this.cubePainter._dataX);
 
-    this._updateAudio = false;
+    this._modeSwitched = false;
     this.rotq = rotq;
     if(this._listener) {
         this._listener.call(this._listenerThisArg);
