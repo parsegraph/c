@@ -1,8 +1,5 @@
 parsegraph_NODES_PAINTED = 0;
 
-/**
- * Graph painter.
- */
 parsegraph_PaintGroup_COUNT = 0;
 function parsegraph_PaintGroup(root)
 {
@@ -115,10 +112,6 @@ parsegraph_PaintGroup.prototype.disable = function()
     this._enabled = false;
 };
 
-/**
- * Paints all the nodes in this paint group. paint should be called
- * until it returns true.
- */
 parsegraph_PaintGroup.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders, timeout)
 {
     this.enable();
@@ -260,10 +253,6 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
     );
 };
 
-/**
- * Returns a painter's algorithm-friendly list of nodes that use the same paint
- * group as the given node. The given node is included.
- */
 function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
 {
     // TODO Make this overwrite the current node, since it's no longer needed, and see
@@ -297,11 +286,6 @@ function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
     }
 };
 
-/**
- * Traverses the paint groups in the given node in a painter's algorithm-friendly manner.
- *
- * This method does not consider whether the paint group is enabled or disabled.
- */
 function parsegraph_findChildPaintGroups(root, callback, callbackThisArg)
 {
     // TODO Make this overwrite the current node, since it's no longer needed, and see
