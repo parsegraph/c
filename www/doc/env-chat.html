@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chat Module</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+body {
+    width: 50%;
+    margin: auto;
+}
+</style>
+</head>
+<body>
+<h1>Chat Module</h1>
+The chat environment module provides chatrooms.
+<h4>HTTP POST commands</h4>
+<table>
+<tr><th>Name<th>Purpose</tr>
+<tr><td>send(room, text)<td>Post a message to a given chatroom</tr>
+</table>
+<h4>WebSocket Events</h4>
+<table>
+<tr><th>Name<th>Purpose</tr>
+<tr><td>message(who, room, text)<td>A message from the specified user was received in the specified room.</tr>
+</table>
+</body>
+</html>
