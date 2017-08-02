@@ -68,49 +68,48 @@ function init()
             graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
             graph.glyphAtlas().setUnicode(uni);
 
-        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
-        graph.plot(showCorporateStructure(graph));
-        main.appendChild(surface.container());
+            graph.plot(showCorporateStructure(graph));
+            main.appendChild(surface.container());
 
-        if(localStorage.getItem("parsegraph_corporate_camera") != null) {
-            try {
-                var parsegraph_corporate_camera = JSON.parse(localStorage.getItem("parsegraph_corporate_camera"));
-                graph.camera().restore(parsegraph_corporate_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+            if(localStorage.getItem("parsegraph_corporate_camera") != null) {
+                try {
+                    var parsegraph_corporate_camera = JSON.parse(localStorage.getItem("parsegraph_corporate_camera"));
+                    graph.camera().restore(parsegraph_corporate_camera);
+                } catch(e) {
+                    console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                }
             }
-        }
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
-                surface.paint(50);
-            }
-            if(parsegraph_glBufferData_BYTES > 0) {
-                console.log("Wrote " + parsegraph_glBufferData_BYTES + " in pagingbuffer");
-                parsegraph_clearPerformanceCounters();
-            }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            renderTimer.setListener(function() {
+                graph.input().Update(new Date());
+                if(graph.needsRepaint()) {
+                    surface.paint(50);
+                }
+                if(parsegraph_glBufferData_BYTES > 0) {
+                    console.log("Wrote " + parsegraph_glBufferData_BYTES + " in pagingbuffer");
+                    parsegraph_clearPerformanceCounters();
+                }
+                surface.render();
+                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                    renderTimer.schedule();
+                }
+            });
+            graph.input().SetListener(function(affectedPaint) {
+                if(affectedPaint) {
+                    graph.scheduleRepaint();
+                }
                 renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
+            });
             renderTimer.schedule();
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
+            graph.onScheduleRepaint = function() {
+                renderTimer.schedule();
+            };
 
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_corporate_camera", JSON.stringify(graph.camera().toJSON()));
-        });
+            surface.addRenderer(function() {
+                localStorage.setItem("parsegraph_corporate_camera", JSON.stringify(graph.camera().toJSON()));
+            });
         };
         uni.load();
         parsegraph_UNICODE_INSTANCE = uni;

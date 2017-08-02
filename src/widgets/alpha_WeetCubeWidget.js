@@ -75,15 +75,14 @@ function alpha_WeetCubeWidget()
     };
 
     this._audioModes = [
+        randomFrequencyNodeCreator("sawtooth", 24, 64),
         fixedFrequencyNodeCreator("sine", this._freqs),
         randomFrequencyNodeCreator("square", 16, 128),
         randomFrequencyNodeCreator("triangle", 64, 1024),
         fixedFrequencyNodeCreator("sawtooth", this._freqs),
-        randomFrequencyNodeCreator("square", 4, 16),
         fixedFrequencyNodeCreator("triangle", this._freqs),
         randomFrequencyNodeCreator("sine", 320, 640),
         randomFrequencyNodeCreator("sawtooth", 64, 96),
-        //randomFrequencyNodeCreator("triangle", 320, 640),
     ];
 
     this._currentAudioMode = 0;
@@ -217,19 +216,18 @@ alpha_WeetCubeWidget.prototype.setRotq = function(rotq)
 alpha_WeetCubeWidget.prototype.paint = function()
 {
     var elapsed = this._elapsed;
-    var frozen = this._frozen;
     var rotq = this.rotq;
     var audio=this.surface.audio();
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.surface.gl());
         this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
     }
-    else if(!frozen && elapsed > 0) {
+    else {
         this.cubePainter.Clear();
     }
 
     if(!this._audioOut) {
-        console.log("Creating audio out");
+        //console.log("Creating audio out");
         this._audioOut=audio.createGain();
         var compressor = audio.createDynamicsCompressor();
         compressor.threshold.value = -50;
@@ -334,7 +332,9 @@ alpha_WeetCubeWidget.prototype.paint = function()
         if(rotq >= 360) {
             rotq = 0;
         }
-        rotq = rotq + 0.2 * elapsed;
+        if(!this._frozen) {
+            rotq = rotq + 0.2 * elapsed;
+        }
     }
     //console.log("dataX=" + this.cubePainter._dataX);
 

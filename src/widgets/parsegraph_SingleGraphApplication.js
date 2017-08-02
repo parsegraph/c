@@ -78,13 +78,13 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
         console.log("Crashed during login construction: ", ex);
     }
 
-    if(!this._cameraProtocol) {
-        this._cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
-            "ws://localhost/camera/", "parsegraph-camera-protocol"
-        ), graph.camera(),
+    if(!this._environmentProtocol) {
+        this._environmentProtocol = new parsegraph_EnvironmentProtocol(new WebSocket(
+            "ws://localhost:8080/environment/live", "parsegraph-environment-protocol"
+        ), graph,
             function(obj) {
-                //console.log(obj);
-                graph.cameraBox().setCamera(userLogin.username, obj);
+                console.log(obj);
+                //graph.cameraBox().setCamera(userLogin.username, obj);
             }, this
         );
     }

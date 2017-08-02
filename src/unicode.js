@@ -162,7 +162,7 @@ parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
 
 parsegraph_Unicode.prototype.load = function(dbURL) {
     if(arguments.length === 0) {
-        dbURL = "UnicodeData.txt";
+        dbURL = "/UnicodeData.txt";
     }
     var xhr = new XMLHttpRequest();
     xhr.open("GET", dbURL);

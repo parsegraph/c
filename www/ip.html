@@ -51,60 +51,13 @@ body > div input {
 <script src="parsegraph-1.0.js"></script>
 <script src="parsegraph-widgets-1.0.js"></script>
 <script>
-
-function init()
-{
-    try {
-        parsegraph_initialize();
-
-        var main = document.body;
-
-        var surface = new parsegraph_Surface();
-        var graph = new parsegraph_Graph(surface);
-        graph.plot(showIPAddresses(graph));
-        GRAPH = graph;
-        main.appendChild(surface.container());
-
-        if(localStorage.getItem("parsegraph_ip_camera") != null) {
-            try {
-                var parsegraph_ip_camera = JSON.parse(localStorage.getItem("parsegraph_ip_camera"));
-                graph.camera().restore(parsegraph_ip_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-            }
-        }
-
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
-                surface.paint(50);
-            }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
-            renderTimer.schedule();
-        });
-        renderTimer.schedule();
-
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_ip_camera", JSON.stringify(graph.camera().toJSON()));
-        });
-    } catch(ex) {
-        alert("Init: " + parsegraph_writeError(ex));
-        throw ex;
-    }
-}
-
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    var sga = new parsegraph_SingleGraphApplication();
+    SGA = sga;
+    sga.createSessionNode = function(graph, userLogin) {
+        return showIPAddresses(graph);
+    };
+    sga.start(document.body);
 });
 </script>
 </head>

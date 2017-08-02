@@ -66,7 +66,7 @@ surface.addRenderer(widget.render, widget);
 
 var start = alpha_GetTime();
 var audioUpdate = null;
-var frozen = false;
+var frozen = true;
 var tick = function(t) {
     // Set the render flag.
     var t = alpha_GetTime();
@@ -74,12 +74,17 @@ var tick = function(t) {
     var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
     widget.Tick(elapsed, frozen, updateAudio);
     if(!frozen || !widget.cubePainter) {
-        surface.paint(elapsed, frozen, updateAudio);
+        surface.paint();
+    }
+    else if(widget._modeSwitched) {
+        surface.paint();
     }
     if(updateAudio) {
         audioUpdate = t;
     }
-    start = t;
+    if(!frozen) {
+        start = t;
+    }
     surface.render();
 
     // Reschedule.

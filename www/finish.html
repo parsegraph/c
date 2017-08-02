@@ -143,8 +143,9 @@ function createWeetcubesModel(surface, graph, scene)
     car.label("x");
     var s = new parsegraph_Node(parsegraph_SLIDER);
     car.connect(parsegraph_DOWNWARD, s);
+    car.pull(parsegraph_DOWNWARD);
     s.setClickListener(function() {
-        sceneNode.scene().setXMax(Math.max(2, this.value() * 25));
+        sceneNode.scene().setXMax(Math.round(Math.max(2, this.value() * 25)));
     }, s);
     s.setValue(scene._xMax / 25);
 
@@ -152,8 +153,9 @@ function createWeetcubesModel(surface, graph, scene)
     car.label("y");
     var s = new parsegraph_Node(parsegraph_SLIDER);
     car.connect(parsegraph_DOWNWARD, s);
+    car.pull(parsegraph_DOWNWARD);
     s.setClickListener(function() {
-        sceneNode.scene().setYMax(Math.max(2, this.value() * 25));
+        sceneNode.scene().setYMax(Math.round(Math.max(2, this.value() * 25)));
     }, s);
     s.setValue(scene._yMax / 25);
 
@@ -161,8 +163,9 @@ function createWeetcubesModel(surface, graph, scene)
     car.label("z");
     var s = new parsegraph_Node(parsegraph_SLIDER);
     car.connect(parsegraph_DOWNWARD, s);
+    car.pull(parsegraph_DOWNWARD);
     s.setClickListener(function() {
-        sceneNode.scene().setZMax(Math.max(2, this.value() * 25));
+        sceneNode.scene().setZMax(Math.round(Math.max(2, this.value() * 25)));
     }, s);
     s.setValue(scene._zMax / 25);
 
@@ -238,6 +241,24 @@ function init(main)
             graph.onScheduleRepaint = function() {
                 renderTimer.schedule();
             };
+
+            var backgroundAudioForcer = new parsegraph_IntervalTimer();
+            backgroundAudioForcer.setDelay(0);
+            backgroundAudioForcer.setListener(function() {
+                // Set the render flag.
+                var t = alpha_GetTime();
+                var elapsed = t - start;
+                var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
+                widget.Tick(elapsed, frozen, updateAudio);
+                if(!frozen || !widget.cubePainter) {
+                    surface.paint(elapsed, frozen, updateAudio);
+                }
+                if(updateAudio) {
+                    audioUpdate = t;
+                }
+                start = t;
+            }, this);
+            backgroundAudioForcer.schedule();
 
             surface.addRenderer(function() {
                 localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));

@@ -6,9 +6,11 @@ function showCorporateStructure(graph)
 
     // Show the board
     caret.spawnMove('d', 'b');
+    caret.node().setIgnoreMouse(true);
     caret.label("Board of Directors");
     caret.push();
     caret.spawnMove('i', 's', 'v');
+    caret.node().setIgnoreMouse(true);
     caret.shrink();
 
     // First, the chairman.
@@ -36,9 +38,11 @@ function showCorporateStructure(graph)
 
     // C-level management.
     caret.spawnMove('d', 'b');
+    caret.node().setIgnoreMouse(true);
     caret.label("C-level Management");
     caret.push();
     caret.spawnMove('i', 's', 'v');
+    caret.node().setIgnoreMouse(true);
     caret.shrink();
 
     // CEO.
@@ -109,10 +113,12 @@ function showCorporateStructure(graph)
         caret.push();
         caret.pull('d');
         caret.spawnMove('d', 'block');
+        caret.node().setIgnoreMouse(true);
         caret.label(sector);
         caret.spawnMove('i', 's', 'v');
         caret.crease();
         caret.shrink();
+        caret.node().setIgnoreMouse(true);
 
         caret.spawnMove('i', 'block');
         caret.label("Sector President");

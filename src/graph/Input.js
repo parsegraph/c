@@ -97,7 +97,7 @@ function parsegraph_Input(graph, camera)
         // Check if the label was clicked.
         //console.log("Clicked");
         if(selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable()) {
-            console.log("Clicked label");
+            //console.log("Clicked label");
             selectedNode._label.click(
                 (mouseInWorld[0] - selectedNode._labelX) / selectedNode._labelScale,
                 (mouseInWorld[1] - selectedNode._labelY) / selectedNode._labelScale
@@ -109,7 +109,7 @@ function parsegraph_Input(graph, camera)
             this._graph.scheduleRepaint();
             return selectedNode;
         }
-        if(selectedNode) {
+        if(selectedNode && !selectedNode.ignoresMouse()) {
             //console.log("Setting focusedNode to ", selectedNode);
             this._focusedNode = selectedNode;
             this._focusedLabel = false;

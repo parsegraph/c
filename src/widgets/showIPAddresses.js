@@ -5,6 +5,7 @@ function showIPAddresses(graph)
     var MAX_DEPTH = 12;
 
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.setGlyphAtlas(graph.glyphAtlas());
 
     function showLevel(depth, index) {
         if(depth === undefined) {
@@ -27,7 +28,7 @@ function showIPAddresses(graph)
         for(var i = 0; i < COUNT; ++i) {
             if(i === 0) {
                 caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
-                caret.crease();
+                //caret.crease();
                 caret.pull('d');
                 caret.push();
                 caret.label(" ");
