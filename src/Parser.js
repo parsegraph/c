@@ -37,350 +37,564 @@ function getWholeChar(str, i) {
   return false;
 }
 
-function parsegraph_Token()
+parsegraph_json_EOF = 0;
+parsegraph_json_EOL = 1;
+parsegraph_json_LCURLY = 2;
+parsegraph_json_RCURLY = 3;
+parsegraph_json_LBRACK = 4;
+parsegraph_json_RBRACK = 5;
+parsegraph_json_COLON = 6;
+parsegraph_json_COMMA = 7;
+parsegraph_json_STRING = 8;
+parsegraph_json_NUMBER = 9;
+parsegraph_json_NULL = 10;
+parsegraph_json_TRUE = 11;
+parsegraph_json_FALSE = 12;
+
+function parsegraph_json_Token(type, value)
 {
-    this._type = arguments[0];
-    if(arguments.length > 1) {
-        this._text = arguments[1];
-    }
-    else {
-        this._text = null;
-    }
+    this._type = type;
+    this._value = value;
 }
 
-parsegraph_Token.prototype.type = function()
+function parsegraph_json_error()
 {
-    return this._type;
-};
-
-parsegraph_Token.prototype.text = function()
-{
-    return this._text;
-};
-
-parsegraph_EOF = 1;
-parsegraph_NAME = 2;
-parsegraph_COMMA = 3;
-parsegraph_LBRACK = 4;
-parsegraph_RBRACK = 5;
-parsegraph_DIVIDE = 6;
-parsegraph_SINGLE_QUOTE = 7;
-parsegraph_DOUBLE_QUOTE = 8;
-parsegraph_BACK_QUOTE = 9;
-parsegraph_DOT = 10;
-parsegraph_ASSIGNMENT = 11;
-parsegraph_EQUALS = 12;
-parsegraph_IDENTITY = 13;
-parsegraph_NOT = 14;
-parsegraph_NOT_EQUALS = 15;
-parsegraph_NOT_IDENTICAL = 16;
-parsegraph_LPAREN = 17;
-parsegraph_RPAREN = 18;
-parsegraph_INTEGER = 19;
+    this._errorType = 0;
+    this._listId = 0;
+    this._message = "";
+    this._next = null;
+}
 
 function parsegraph_nameTokenType(tokenType)
 {
     switch(tokenType) {
-    case parsegraph_EOF:
+    case parsegraph_json_TRUE:
+        return "TRUE";
+    case parsegraph_json_FALSE:
+        return "FALSE";
+    case parsegraph_json_NULL:
+        return "NULL";
+    case parsegraph_json_EOF:
         return "EOF";
-    case parsegraph_NAME:
-        return "NAME";
-    case parsegraph_COMMA:
+    case parsegraph_json_COMMA:
         return "COMMA";
-    case parsegraph_LBRACK:
+    case parsegraph_json_COLON:
+        return "COLON";
+    case parsegraph_json_LBRACK:
         return "LBRACK";
-    case parsegraph_RBRACK:
+    case parsegraph_json_RBRACK:
         return "RBRACK";
-    case parsegraph_LPAREN:
-        return "LPAREN";
-    case parsegraph_RPAREN:
-        return "RPAREN";
-    case parsegraph_DIVIDE:
-        return "DIVIDE";
-    case parsegraph_SINGLE_QUOTE:
-        return "SINGLE_QUOTE";
-    case parsegraph_DOUBLE_QUOTE:
-        return "DOUBLE_QUOTE";
-    case parsegraph_BACK_QUOTE:
-        return "BACKQUOTE";
-    case parsegraph_DOT:
-        return "DOT";
-    case parsegraph_ASSIGNMENT:
-        return "ASSIGNMENT";
-    case parsegraph_EQUALS:
-        return "EQUALS";
-    case parsegraph_IDENTITY:
-        return "IDENTITY";
-    case parsegraph_NOT:
-        return "NOT";
-    case parsegraph_NOT_EQUALS:
-        return "NOT_EQUALS";
-    case parsegraph_NOT_IDENTICAL:
-        return "NOT_IDENTICAL";
-    case parsegraph_INTEGER:
-        return "INTEGER";
+    case parsegraph_json_LCURLY:
+        return "LCURLY";
+    case parsegraph_json_RCURLY:
+        return "RCURLY";
+    case parsegraph_json_STRING:
+        return "STRING";
+    case parsegraph_json_NUMBER:
+        return "NUMBER";
+    case parsegraph_json_EOL:
+        return "EOL";
     }
-    throw new Error("Unknown type " + tokenType);
-};
-
-parsegraph_Token.prototype.equals = function(other)
-{
-    if(this === other) {
-        return true;
-    }
-    if(!other) {
-        return false;
-    }
-    if(typeof other.type !== "function") {
-        return false;
-    }
-    if(typeof other.text !== "function") {
-        return false;
-    }
-    return this.type() == other.type() && this.text() == other.text();
-};
-
-parsegraph_Token.prototype.toString = function()
-{
-    var rv = parsegraph_nameTokenType(this.type());
-    if(this.text() !== null) {
-        rv += "=\"" + this.text() + "\"";
-    }
-    return rv;
-};
-
-// Based on 'Language Implementation Patterns' by Terence Parr
-function parsegraph_Lexer(input)
-{
-    this._input = input;
-    this._index = 0;
-
-    // Prime the lookahead.
-    this._char = getWholeChar(this._input, this._index);
-    this._charCode = this._char.charCodeAt(0);
+    return 0;
 }
 
-parsegraph_Lexer.prototype.consume = function()
+function parsegraph_json_Lexer()
 {
-    // Increment to the next index.
-    this._index += this._char.length;
+    this._strings = []
+    this._strIndex = 0;
+    this._index = 0;
+    this._c = null;
 
-    // Check if there's no more characters.
-    if(this._index >= this._input.length) {
-        this._char = null;
-        this._charCode = null;
-        return false;
+    this._firstError = null;
+    this._errorHead = null;
+}
+
+parsegraph_json_Lexer.prototype.feed = function(str)
+{
+    this._strings.push(str);
+    // Prime if the lexer was empty.
+    if(this._strings.length === 1 || this._c === null) {
+        return this.consume();
+    }
+}
+
+parsegraph_json_Lexer.prototype.save = function()
+{
+    this._lastIndex = this._index;
+    this._lastStrIndex = this._strIndex;
+};
+
+parsegraph_json_Lexer.prototype.rollback = function()
+{
+    this._index = this._lastIndex;
+    this._strIndex = this._lastStrIndex;
+};
+
+parsegraph_json_Lexer.prototype.commit = function()
+{
+    this._lastIndex = null;
+    this._lastStrIndex = null;
+
+    while(this._strIndex > 0) {
+        this._strIndex--;
+        this._strings.shift();
+    }
+};
+
+parsegraph_json_Lexer.prototype.consume = function()
+{
+    while(true) {
+        if(this._strIndex >= this._strings.length) {
+            break;
+        }
+        if(this._index >= this._strings[this._strIndex].length) {
+            // Index exceeds string.
+            ++this._strIndex;
+            this._index = 0;
+            continue;
+        }
+        this._c = this._strings[this._strIndex].charAt(this._index++);
+        return this._c;
+    }
+    this._c = null;
+    return null;
+};
+
+parsegraph_json_Lexer.prototype.c = function()
+{
+    return this._c;
+};
+
+parsegraph_json_Lexer.prototype.match = function(expected)
+{
+    if(this._c === expected) {
+        return this.consume();
+    }
+    return null;
+};
+
+parsegraph_json_Lexer.prototype.error = function(str)
+{
+    var err = new parsegraph_json_error();
+    err._message = str;
+    err._errorType = 0;
+    err._listId = 0;
+    err._next = 0;
+    if(this._errorHead) {
+        this._errorHead._next = err;
+    }
+    else {
+        this._firstError = err;
+    }
+    this._errorHead = err;
+
+    return err;
+};
+
+parsegraph_json_MAX_NAME_LENGTH = 1024;
+parsegraph_json_MAX_STRING_LENGTH = 4096;
+
+parsegraph_json_Lexer.prototype.isLETTER = function()
+{
+    if(this.c() !== null && this.c().match(/[a-zA-Z]/)) {
+        return 1;
+    }
+    return 0;
+};
+
+parsegraph_json_Lexer.prototype.isDIGIT = function()
+{
+    if(this.c() !== null && this.c().match(/\d/)) {
+        return 1;
+    }
+    return 0;
+};
+
+parsegraph_json_Lexer.prototype.isWS = function()
+{
+    var c = this.c();
+    if(c !== null && c.match(/\s/)) {
+        return 1;
+    }
+    return 0;
+};
+
+parsegraph_json_Lexer.prototype.isNEWLINE = function()
+{
+    var c = this.c();
+    if(c !== null && (c === '\r' || c === '\n')) {
+        return 1;
+    }
+    return 0;
+};
+
+parsegraph_json_Lexer.prototype.VALUE = function(expected)
+{
+    var rv = "";
+    var i = 0;
+    while(this.isLETTER(lexer)) {
+        rv += this.c(lexer);
+        if(null === this.consume(lexer)) {
+            return null;
+        }
     }
 
-    this._char = getWholeChar(this._input, this._index);
-    this._charCode = this._char.charCodeAt(0);
+    if("true" === rv) {
+        return new parsegraph_json_Token(parsegraph_json_TRUE);
+    }
+    if("false" === rv) {
+        return new parsegraph_json_Token(parsegraph_json_FALSE);
+    }
+    if("null" === rv) {
+        return new parsegraph_json_Token(parsegraph_json_NULL);
+    }
+
+    this.error("Unexpected bareword");
+    return null;
+};
+
+parsegraph_json_Lexer.prototype.WS = function()
+{
+    while(this.isWS() != 0 && !this.isNEWLINE()) {
+        if(null === this.consume(lexer)) {
+            return null;
+        }
+    }
     return true;
 };
 
-parsegraph_Lexer.prototype.c = function()
+parsegraph_json_Lexer.prototype.NUMBER = function()
 {
-    return this._char;
-};
+    this.save();
 
-parsegraph_Lexer.prototype.cc = function()
-{
-    return this._charCode;
-};
+    var rv = "";
+    var i = 0;
+    var c = this.c();
 
-parsegraph_Lexer.prototype.match = function(candidate)
-{
-    if(this._char == candidate) {
-        this.consume();
+    if(c === '-') {
+        // Minus sign.
+        rv += c;
+        ++i;
+        if(null === this.consume()) {
+            this.rollback();
+            return null;
+        }
+        c = this.c();
+    }
+
+    if(c.match(/\d/)) {
+        // Nonzero integer part.
+        while(c.match(/\d/)) {
+            rv += c;
+            ++i;
+            if(null === this.consume()) {
+                this.rollback();
+                return null;
+            }
+            c = this.c();
+        }
+    }
+    else if(c === '0') {
+        // Zero integer part.
+        rv += c;
+        ++i;
+        if(null === this.consume()) {
+            this.rollback();
+            return null;
+        }
+        c = this.c();
     }
     else {
-        throw new Error("Expected " + candidate + ", but found " + this._char);
+        this.error("Unexpected start of numeric literal");
+        return null;
     }
+
+    if(c === '.') {
+        // Fractional part.
+        rv += c;
+        ++i;
+        if(!this.consume()) {
+            this.error("Unexpected end of fractional part");
+            return null;
+        }
+        while(1) {
+            c = this.c();
+            if(!c.match(/\d/)) {
+                break;
+            }
+            rv += c;
+            ++i;
+            if(null === this.consume()) {
+                this.rollback();
+                return null;
+            }
+        }
+    }
+
+    if(c === 'e' || c === 'E') {
+        // Scientific notation.
+        rv += c;
+        ++i;
+        if(!this.consume()) {
+            this.error("Unexpected end of scientific notation");
+            return null;
+        }
+        c = this.c();
+        if(c === '+' || c === '-') {
+            rv += c;
+            ++i;
+            if(!this.consume()) {
+                this.error("Unexpected end of scientific notation");
+                return null;
+            }
+        }
+        while(c.match(/\d/)) {
+            rv += c;
+            ++i;
+            if(null === this.consume()) {
+                this.rollback();
+                return null;
+            }
+            c = this.c();
+        }
+    }
+
+    this.commit();
+    return new parsegraph_json_Token(parsegraph_json_NUMBER, rv);
 };
 
-function parsegraph_parse(str, callback, thisArg)
+parsegraph_json_Lexer.prototype.STRING = function()
 {
-    var lexer = new parsegraph_Lexer(str);
-    lexer.NAME = function() {
-        var rv = "";
-        do {
-            rv += this.c();
+    this.save();
+    var quote = this.c();
+    if(null === this.consume()) {
+        this.rollback();
+        return null;
+    }
+    var str = "";
+    var i = 0;
+    while(i < parsegraph_json_MAX_STRING_LENGTH) {
+        var c = this.c();
+        if(c == quote) {
             this.consume();
+            break;
         }
-        while(this.isLETTER());
+        if(c == '\\') {
+            // Skip the next two symbols.
+            str[i++] = c;
+            if(null === this.consume()) {
+                this.rollback();
+                return null;
+            }
+            if(i >= parsegraph_json_MAX_STRING_LENGTH) {
+                this.error("String too long");
+                return null;
+            }
+            str += this.c();
+            ++i;
+            if(null === this.consume()) {
+                this.rollback();
+                return null;
+            }
+            continue;
+        }
+        str += this.c();
+        ++i;
+        if(null === this.consume()) {
+            this.rollback();
+            return null;
+        }
+    }
+    this.commit();
+    return new parsegraph_json_Token(parsegraph_json_STRING, str);
+};
 
-        return new parsegraph_Token(parsegraph_NAME, rv);
-    };
-
-    lexer.isWS = function() {
-        return this.c() != null && this.c().match(/\s/);
-    };
-
-    lexer.WS = function() {
-        while(this.isWS()) {
+parsegraph_json_Lexer.prototype.nextToken = function()
+{
+    var matched;
+    var c;
+    while((c = this.c()) != null) {
+        switch(c) {
+        case '"':
+            return this.STRING();
+        case ' ':
+        case '\t':
+            {
+                var c = this.c();
+                while(c !== null && (c === ' ' || c === '\t')) {
+                    if(null === this.consume()) {
+                        return null;
+                    }
+                    c = this.c();
+                }
+            }
+            continue;
+        case '\r':
+        case '\n':
+            {
+                this.save();
+                var c = this.c();
+                while(c !== 0 && (c === '\r' || c === '\n')) {
+                    if(null === this.consume()) {
+                        this.rollback();
+                        return null;
+                    }
+                    c = this.c();
+                }
+                this.commit();
+                return new parsegraph_json_Token(parsegraph_json_EOL);
+            }
+        case ',':
             this.consume();
+            return new parsegraph_json_Token(parsegraph_json_COMMA);
+        case '[':
+            this.consume();
+            return new parsegraph_json_Token(parsegraph_json_LBRACK);
+        case ']':
+            this.consume();
+            return new parsegraph_json_Token(parsegraph_json_RBRACK);
+        case '{':
+            this.consume();
+            return new parsegraph_json_Token(parsegraph_json_LCURLY);
+        case '}':
+            this.consume();
+            return new parsegraph_json_Token(parsegraph_json_RCURLY);
+        case ':':
+            this.consume();
+            return new parsegraph_json_Token(parsegraph_json_COLON);
+        default:
+            if(this.c() === '-' || this.isDIGIT()) {
+                return this.NUMBER();
+            }
+            if(this.isLETTER()) {
+                return this.NAME(0);
+            }
+            this.error("Invalid character: " + this.c());
+            return null;
         }
-    };
+    }
+    return null;
+};
 
-    lexer.isLETTER = function() {
-        return this.c() != null && this.c().match(/[a-zA-Z]/);
-    };
+/*
 
-    lexer.isDIGIT = function() {
-        return this.c() != null && this.c().match(/\d/);
-    };
+typedef struct parsegraph_fileReloaderData {
+    int fd;
+    char* buf;
+    size_t bufsize;
+} parsegraph_fileReloaderData;
 
-    lexer.NUMBER = function() {
-        var num = "";
-        while(this.isDIGIT()) {
-            num += this.c();
-            if(!this.consume()) {
+int parsegraph_fileReloader(void* reloaderData, parsegraph_json_Lexer* lexer)
+{
+    parsegraph_fileReloaderData* d = (parsegraph_fileReloaderData*)reloaderData;
+    ssize_t numRead = read(d->fd, d->buf, d->bufsize);
+    if(numRead < 0) {
+        fprintf(stderr, "Error %d during read: %s\n", errno, strerror(errno));
+        return 0;
+    }
+    if(numRead == 0) {
+        // EOF
+        return 0;
+    }
+    lexer->input = d->buf;
+    lexer->len = numRead;
+    return 1;
+}
+
+void parsegraph_json_parseObject(parsegraph_json_Lexer* lexer, int* listId)
+{
+    if(parsegraph_List_OK != parsegraph_List_appendItem(lexer->pool, lexer->dbd, parentId, parsegraph_json_ARRAY, "", arrayId)) {
+        parsegraph_json_Lexer_error(lexer, "Failed to create object");
+        return -1;
+    }
+
+    while(1) {
+        parsegraph_json_Lexer* t = parsegraph_json_Lexer_nextToken(lexer);
+        if(!t) {
+            parsegraph_json_Lexer_error(lexer, "No token found");
+            return -1;
+        }
+
+        switch(t->type) {
+        case parsegraph_json_RCURLY:
+            return 0;
+        }
+    }
+
+end:
+}
+
+int parsegraph_json_parseArray(parsegraph_json_Lexer* lexer, int parentId, int* arrayId)
+{
+    if(parsegraph_List_OK != parsegraph_List_appendItem(lexer->pool, lexer->dbd, parentId, parsegraph_json_ARRAY, "", arrayId)) {
+        parsegraph_json_Lexer_error(lexer, "Failed to create array");
+        return -1;
+    }
+
+    while(1) {
+        parsegraph_json_Token* t = parsegraph_json_Lexer_nextToken(lexer);
+        if(!t) {
+            parsegraph_json_Lexer_error(lexer, "No token found");
+            return -1;
+        }
+
+        int childId;
+        switch(t->type) {
+        case parsegraph_json_EOF:
+            parsegraph_json_Lexer_error(lexer, "Unexpected end of array");
+            return 0;
+        case parsegraph_json_LCURLY:
+            if(!parsegraph_json_parseObject(lexer, *arrayId, &childId)) {
+                return 0;
+            }
+            break;
+        case parsegraph_json_RBRACK:
+            // Complete.
+            goto end;
+        case parsegraph_json_LBRACK:
+            if(!parsegraph_json_parseArray(lexer, *arrayId, &childId)) {
+                return 0;
+            }
+            break;
+        case parsegraph_json_EOL:
+        case parsegraph_json_NULL:
+        case parsegraph_json_TRUE:
+        case parsegraph_json_FALSE:
+            parsegraph_List_appendItem(lexer->pool, lexer->dbd, *arrayId, t->type, "", &childId);
+            break;
+        case parsegraph_json_STRING:
+        case parsegraph_json_NUMBER:
+            parsegraph_List_appendItem(lexer->pool, lexer->dbd, *arrayId, t->type, t->value, &childId);
+            break;
+        default:
+            parsegraph_json_Lexer_error(lexer, "Unexpected token");
+            return -1;
+        }
+
+        while(1) {
+            t = parsegraph_json_Lexer_nextToken(lexer);
+            if(!t) {
+                parsegraph_json_Lexer_error(lexer, "Unexpected end of array");
+                return -1;
+            }
+            if(t->type != parsegraph_json_EOL) {
                 break;
             }
         }
-        return new parsegraph_Token(parsegraph_INTEGER, num);
-    };
-
-    lexer.nextToken = function() {
-        while(this.c() != null) {
-            switch(this.c()) {
-            case '/':
-                this.consume();
-                if(this.c() == '/') {
-                    // Comment.
-                    this.consume();
-                    while(this.c() != '\n') {
-                        if(!this.consume()) {
-                            // EOF.
-                            break;
-                        }
-                    }
-
-                    continue;
-                }
-                else if(this.c() == '*') {
-                    // Multi-line comment.
-                    this.consume();
-                    while(true) {
-                        while(this.c() != '*') {
-                            this.consume();
-                        }
-                        this.consume();
-                        if(this.c() == '/') {
-                            // Comment ended.
-                            break;
-                        }
-
-                        // Still in the multi-line comment.
-                    }
-
-                    continue;
-                }
-                return new parsegraph_Token(parsegraph_DIVIDE, "/");
-            case '\'':
-            case '"':
-            case '`':
-                var quote = this.c();
-                if(!this.consume()) {
-                    throw new Error("Unexpected start of string");
-                }
-                var str = "";
-                while(true) {
-                    if(this.c() == quote) {
-                        this.consume();
-                        switch(quote) {
-                        case '\'':
-                            return new parsegraph_Token(parsegraph_SINGLE_QUOTE, str);
-                        case '"':
-                            return new parsegraph_Token(parsegraph_DOUBLE_QUOTE, str);
-                        case '`':
-                            return new parsegraph_Token(parsegraph_BACK_QUOTE, str);
-                        default:
-                            throw new Error("Unrecognized quote symbol: " + quote);
-                        }
-                    }
-
-                    str += this.c();
-                    if(!this.consume()) {
-                        throw new Error("Unterminated string");
-                    }
-                }
-                continue;
-            case ' ':
-            case '\t':
-            case '\n':
-            case '\r':
-                this.WS();
-                continue;
-            case ',':
-                this.consume();
-                return new parsegraph_Token(parsegraph_COMMA);
-            case '.':
-                this.consume();
-                return new parsegraph_Token(parsegraph_DOT);
-            case '(':
-                this.consume();
-                return new parsegraph_Token(parsegraph_LPAREN);
-            case ')':
-                this.consume();
-                return new parsegraph_Token(parsegraph_RPAREN);
-            case '!':
-                this.consume();
-                if(this.c() == '=') {
-                    this.consume();
-                    if(this.c() == '=') {
-                        // Identity
-                        return new parsegraph_Token(parsegraph_NOT_IDENTICAL);
-                    }
-                    // Equality
-                    return new parsegraph_Token(parsegraph_NOT_EQUALS);
-                }
-                // Assignment
-                return new parsegraph_Token(parsegraph_NOT);
-            case '=':
-                this.consume();
-                if(this.c() == '=') {
-                    this.consume();
-                    if(this.c() == '=') {
-                        // Identity
-                        return new parsegraph_Token(parsegraph_IDENTITY);
-                    }
-                    // Equality
-                    return new parsegraph_Token(parsegraph_EQUALS);
-                }
-                // Assignment
-                return new parsegraph_Token(parsegraph_ASSIGNMENT);
-            case '[':
-                this.consume();
-                return new parsegraph_Token(parsegraph_LBRACK);
-            case ']':
-                this.consume();
-                return new parsegraph_Token(parsegraph_RBRACK);
-            default:
-                if(this.c() == '-' || this.isDIGIT()) {
-                    return this.NUMBER();
-                }
-                if(this.isLETTER()) {
-                    return this.NAME();
-                }
-                throw new Error("Invalid character: " + this.c());
-            }
+        switch(t->type) {
+        case parsegraph_json_COMMA:
+            // Expected, continue.
+            continue;
+        case parsegraph_json_RBRACK:
+            // End of array.
+            return 0;
+        default:
+            parsegraph_json_Lexer_error(lexer, "Unexpected token");
+            return -1;
         }
-
-        return new parsegraph_Token(parsegraph_EOF, "<EOF>");
-    };
-
-    if(callback == undefined) {
-        var results = [];
-        for(var t = lexer.nextToken(); t.type() != parsegraph_EOF; t = lexer.nextToken()) {
-            results.push(t);
-        }
-        return results;
-    }
-
-    for(var t = lexer.nextToken(); t.type() != parsegraph_EOF; t = lexer.nextToken()) {
-        callback.call(thisArg, t);
     }
 }
+*/
 
 parsegraph_Parser_Tests = new parsegraph_TestSuite("parsegraph_Parser");
 
