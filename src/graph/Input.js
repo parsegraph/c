@@ -292,6 +292,7 @@ function parsegraph_Input(graph, camera)
             // Get the current mouse position, in world space.
             //alert(camera.worldMatrix());
             if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, true)) {
+                //console.log("Carousel click processed.");
                 return;
             }
 
@@ -356,7 +357,6 @@ function parsegraph_Input(graph, camera)
         }
 
         graph.carousel().clickCarousel(lastMouseX, lastMouseY, false);
-
         return true;
     };
 
@@ -388,7 +388,7 @@ function parsegraph_Input(graph, camera)
             lastMouseX = event.clientX;
             lastMouseY = event.clientY;
 
-            this.Dispatch(graph.mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel");
+            this.Dispatch(graph.carousel().mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel");
             return;
         }
 
@@ -412,13 +412,8 @@ function parsegraph_Input(graph, camera)
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
 
-        if(graph.carousel().isCarouselShown()) {
-            //console.log("Clickcarousel");
-            graph.carousel().clickCarousel(event.clientX, event.clientY, true);
-            // Carousel was hidden.
-            if(!graph.carousel().isCarouselShown()) {
-                this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "mouseover after carousel hide");
-            }
+        if(graph.carousel().clickCarousel(event.clientX, event.clientY, true)) {
+            //console.log("Carousel click processed.");
             return;
         }
 
@@ -479,16 +474,11 @@ function parsegraph_Input(graph, camera)
     var removeMouseListener = function(event) {
         //console.log("MOUSEUP");
 
+        if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, false)) {
+            //console.log("Carousel handled event.");
+            return;
+        }
         if(!attachedMouseListener) {
-            if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, false)) {
-                // Mouseup affected carousel.
-
-                // Carousel was hidden.
-                if(!graph.carousel().isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "mouseup");
-                }
-                return;
-            }
             //console.log("No attached listeenr");
             return;
         }
@@ -707,12 +697,6 @@ function parsegraph_Input(graph, camera)
         case parsegraph_CLICK_KEY:
             //console.log("Q key for click pressed!");
             if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, true)) {
-                // Mousedown affected carousel.
-
-                // Carousel was hidden.
-                if(!graph.carousel().isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "q");
-                }
                 return;
             }
             if(graph.nodeUnderCursor()) {
@@ -743,12 +727,8 @@ function parsegraph_Input(graph, camera)
         switch(keyName) {
         case parsegraph_CLICK_KEY:
             if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, false)) {
-                // Keyup affected carousel.
-
-                // Carousel was hidden.
-                if(!graph.carousel().isCarouselShown()) {
-                    this.Dispatch(graph.mouseOver(lastMouseX, lastMouseY), "q carousel");
-                }
+                //console.log("Carousel processed event.");
+                return;
             }
             // fall through
         case parsegraph_ZOOM_IN_KEY:
@@ -785,7 +765,7 @@ parsegraph_Input.prototype.SetListener = function(listener, thisArg)
 
 parsegraph_Input.prototype.UpdateRepeatedly = function()
 {
-    return this._updateRepeatedly;
+    return this._updateRepeatedly || this._graph.carousel().updateRepeatedly();
 };
 
 parsegraph_Input.prototype.Update = function(t)

@@ -5,11 +5,12 @@ function parsegraph_EnvironmentProtocol(ws, eventFunc, eventFuncThisArg) {
     var opened = false;
 
     ws.onopen = function() {
-        //console.log("Connection opened");
+        console.log("EnvironmentProtocol opened");
         opened = true;
     };
 
     ws.onclose = function() {
+        console.log("EnvironmentProtocol closed");
         opened = false;
         //timer.cancel();
     };
@@ -34,6 +35,10 @@ function parsegraph_EnvironmentProtocol(ws, eventFunc, eventFuncThisArg) {
             return;
         }
         that.feedInitialData(event.data);
+        if(that._printState.objects.length === 1) {
+            var initialData = that._printState.objects[0];
+            eventFunc.call(eventFuncThisArg, "initialData", initialData);
+        }
     };
 };
 
@@ -99,6 +104,7 @@ process:while(true) {
                 this.error("Encountered unexpected " + parsegraph_nameTokenType(t._type) + " while looking for start of object or array.");
                 return;
             }
+            this._rootValue = printState.valueStack[0];
             printState.stage = 1;
             this.commitToken();
         }
@@ -271,7 +277,8 @@ process:while(true) {
         }
         if(printState.stage === 3) {
             printState.objects.push(this._rootValue);
-            break;
+            printState.stage = 0;
+            //break;
         }
     }
 };

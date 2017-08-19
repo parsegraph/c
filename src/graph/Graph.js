@@ -47,14 +47,13 @@ function parsegraph_Graph()
     this._glyphAtlas = null;
 
     this._world = new parsegraph_World(this);
-    this._carousel = new parsegraph_Carousel(this);
     this._cameraBox = new parsegraph_CameraBox(this);
 
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
 
     this._camera = this._world.camera();
-
+    this._carousel = new parsegraph_Carousel(this._camera, this.surface().backgroundColor());
     this._input = new parsegraph_Input(this, this.camera());
 
     this._shaders = {};
@@ -111,13 +110,6 @@ parsegraph_Graph.prototype.input = function()
     return this._input;
 };
 
-/**
- * Schedules a repaint. The onScheduleRepaint callback is responsible for making this
- * happen.
- *
- * The previous world paint state is cleared if this is called; this can be used to reset
- * a paint in progress.
- */
 parsegraph_Graph.prototype.scheduleRepaint = function()
 {
     //console.log(new Error("Scheduling repaint"));
@@ -125,6 +117,12 @@ parsegraph_Graph.prototype.scheduleRepaint = function()
     if(this.onScheduleRepaint) {
         this.onScheduleRepaint.call(this.onScheduleRepaintThisArg);
     }
+};
+
+parsegraph_Graph.prototype.setOnScheduleRepaint = function(func, thisArg)
+{
+    this.onScheduleRepaint = func;
+    this.onScheduleRepaintThisArg = thisArg || this;
 };
 
 parsegraph_Graph.prototype.needsRepaint = function()

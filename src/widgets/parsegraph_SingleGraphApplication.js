@@ -1,5 +1,6 @@
 function parsegraph_SingleGraphApplication()
 {
+    this._cameraName = "parsegraph_login_camera";
 }
 
 /**
@@ -51,14 +52,16 @@ parsegraph_SingleGraphApplication.prototype.createSessionNode = function(graph, 
 
 parsegraph_SingleGraphApplication.prototype.onLogout = function() {
     //console.log("onLogout");
-    this._sessionNode.disconnectNode();
+    //this._sessionNode.disconnectNode();
     this._sessionNode = null;
+    this._loginNode = null;
 };
 
 parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) {
     var graph = this.graph();
 
     try {
+        this._loginNode = node;
         var createdNode = this.createSessionNode(graph, userLogin, node);
         if(!createdNode) {
             if(!node.hasNode(parsegraph_DOWNWARD)) {
@@ -81,13 +84,268 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
     if(!this._environmentProtocol) {
         this._environmentProtocol = new parsegraph_EnvironmentProtocol(new WebSocket(
             "ws://localhost:8080/environment/live", "parsegraph-environment-protocol"
-        ), graph,
-            function(obj) {
-                console.log(obj);
-                //graph.cameraBox().setCamera(userLogin.username, obj);
+        ), function(name, obj) {
+                if(name === "initialData") {
+                    this.loadEnvironment(obj);
+                }
             }, this
         );
     }
+};
+
+function parsegraph_leaveEnvironment(callback, callbackThisArg)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/environment");
+    xhr.setRequestHeader("Accept", "text/html");
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState !== XMLHttpRequest.DONE) {
+            return;
+        }
+        try {
+            if(xhr.status === 200 && callback) {
+                callback.call(callbackThisArg, xhr);
+            }
+        }
+        catch(ex) {
+            listener.call(listenerThisArg, ex);
+        }
+    };
+    xhr.send("action=parsegraph_leaveEnvironment");
+    return xhr;
+};
+
+
+
+parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialData)
+{
+    var createClickListener = function(node, index) {
+        if(!node) {
+            throw new Error("No node given");
+        }
+        return function() {
+            //console.log("Creating carousel");
+            var carousel = this.graph().carousel();
+            carousel.clearCarousel();
+            carousel.moveCarousel(
+                node.absoluteX(),
+                node.absoluteY()
+            );
+            carousel.showCarousel();
+
+            // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
+
+            var actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Create Link", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_placeStorageItemInMultislot(index);
+            }, this);
+            actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Clear Slot", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_placeStorageItemInMultislot(index);
+            }, this);
+            this.graph().carousel().scheduleCarouselRepaint();
+        };
+    };
+
+    var metaList = initialData.items[0].items;
+    var worldList = initialData.items[1].items;
+    var car = new parsegraph_Caret(this._loginNode);
+    car.setGlyphAtlas(this.glyphAtlas());
+
+    car.push();
+    car.spawnMove('b', 'b');
+    car.label("Exit");
+    car.onClick(function() {
+        parsegraph_leaveEnvironment(function() {
+            window.location = "/environment/";
+        }, this);
+    }, this);
+    car.pop();
+
+    for(var worldIndex = 0; worldIndex < worldList.length; ++worldIndex) {
+        if(worldIndex > 0) {
+            car.spawnMove('f', 'b');
+        }
+        else {
+            car.disconnect('d');
+            car.align('d', 'c');
+            car.spawnMove('d', 'b');
+        }
+        car.crease();
+        var bs = parsegraph_copyStyle('b');
+        bs.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+        //car.node().setBlockStyle(bs);
+        car.push();
+        var child = worldList[worldIndex];
+        switch(child.type) {
+        case 4: // multislot
+            try {
+                var childDims = JSON.parse(child.value);
+                var subtype = childDims[0];
+                var rowSize = childDims[1];
+                var columnSize = childDims[2];
+                var r = childDims[3];
+                var g = childDims[4];
+                var b = childDims[5];
+            }
+            catch(ex) {
+                console.log(ex);
+                return;
+            }
+
+            if(subtype === 0) {
+                for(var y = 0; y < columnSize; ++y) {
+                    if(y === 0) {
+                        car.pull('d');
+                        car.align('d', parsegraph_ALIGN_CENTER);
+                        car.spawnMove('d', 'u');
+                        car.shrink();
+                    }
+                    else {
+                        car.spawnMove('d', 'u');
+                    }
+                    car.pull('f');
+                    var us = parsegraph_copyStyle('u');
+                    us.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                    car.node().setBlockStyle(us);
+                    if(y === 0) {
+                        car.shrink();
+                    }
+                    car.push();
+                    for(var x = 0; x < rowSize; ++x) {
+                        car.spawnMove('f', 's');
+                        var s = parsegraph_copyStyle('s');
+                        s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                        car.node().setBlockStyle(s);
+                        car.spawnMove('d', 'u');
+                        car.onClick(createClickListener.call(this, car.node()), this);
+                        car.move('u');
+                        car.pull('d');
+                    }
+                    car.pop();
+                }
+            }
+            else if(subtype === 1) {
+                car.align('d', 'c');
+                car.pull('d');
+                car.spawnMove('d', 'u');
+
+                for(var y = 0; y < columnSize; ++y) {
+                    if(y === 0) {
+                        //car.align('d', parsegraph_ALIGN_CENTER);
+                        car.shrink();
+                    }
+                    else {
+                        car.spawnMove('f', 'u');
+                    }
+                    var us = parsegraph_copyStyle('u');
+                    us.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                    car.node().setBlockStyle(us);
+                    if(y === 0) {
+                        car.shrink();
+                    }
+                    car.push();
+                    for(var x = 0; x < rowSize; ++x) {
+                        car.spawnMove('d', 'u');
+                        var s = parsegraph_copyStyle('u');
+                        s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                        car.node().setBlockStyle(s);
+                        car.pull('f');
+                        var bsty = parsegraph_copyStyle('b');
+                        bsty.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                        car.spawnMove('f', 'b');
+                        car.node().setBlockStyle(bsty);
+                        car.spawnMove('d', 'u');
+                        car.onClick(createClickListener.call(this, car.node()), this);
+                        car.move('u');
+                        car.pull('d');
+                        car.move('b');
+                    }
+                    car.pop();
+                    car.pull('d');
+                }
+            }
+            else if(subtype === 2) {
+                car.align('d', 'c');
+                car.pull('d');
+                //car.spawnMove('d', 'u');
+
+                for(var y = 0; y < columnSize; ++y) {
+                    if(y === 0) {
+                        car.align('d', parsegraph_ALIGN_CENTER);
+                        car.spawnMove('d', 'u');
+                        car.shrink();
+                    }
+                    else {
+                        car.spawnMove('f', 'u');
+                    }
+                    var us = parsegraph_copyStyle('u');
+                    us.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                    car.node().setBlockStyle(us);
+                    if(y === 0) {
+                        car.shrink();
+                    }
+                    car.push();
+                    for(var x = 0; x < rowSize; ++x) {
+                        car.spawnMove('d', 's');
+                        var s = parsegraph_copyStyle('s');
+                        s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                        car.node().setBlockStyle(s);
+                        car.spawnMove('f', 'u');
+                        car.onClick(createClickListener.call(this, car.node()), this);
+                        car.move('b');
+                        car.pull('f');
+                    }
+                    car.pop();
+                    car.pull('d');
+                }
+            }
+            else if(subtype === 3) {
+                car.align('d', 'c');
+                car.pull('d');
+                //car.spawnMove('d', 'u');
+
+                for(var y = 0; y < columnSize; ++y) {
+                    if(y === 0) {
+                        car.align('d', parsegraph_ALIGN_CENTER);
+                        car.spawnMove('d', 'u');
+                        car.shrink();
+                    }
+                    else {
+                        car.spawnMove('f', 'u');
+                    }
+                    var us = parsegraph_copyStyle('u');
+                    us.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                    car.node().setBlockStyle(us);
+                    if(y === 0) {
+                        car.shrink();
+                    }
+                    car.push();
+                    for(var x = 0; x < rowSize; ++x) {
+                        car.spawnMove('d', 's');
+                        var s = parsegraph_copyStyle('s');
+                        s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
+                        car.node().setBlockStyle(s);
+                        car.pull('b');
+                        car.spawnMove('b', 'u');
+                        car.onClick(createClickListener.call(this, car.node()), this);
+                        car.move('f');
+                    }
+                    car.pop();
+                    car.pull('d');
+                }
+            }
+            break;
+        }
+        car.pop();
+    }
+
+    console.log("Graph reconstructed");
+    this.scheduleRepaint();
+    this.scheduleRender();
 };
 
 parsegraph_SingleGraphApplication.prototype.graph = function() {
@@ -129,7 +387,11 @@ parsegraph_SingleGraphApplication.prototype.onRender = function() {
 };
 
 parsegraph_SingleGraphApplication.prototype.cameraName = function() {
-    return "parsegraph_login_camera";
+    return this._cameraName;
+};
+
+parsegraph_SingleGraphApplication.prototype.setCameraName = function(name) {
+    this._cameraName = name;
 };
 
 parsegraph_SingleGraphApplication.prototype.container = function() {
@@ -222,8 +484,10 @@ parsegraph_SingleGraphApplication.prototype.onUnicodeLoaded = function() {
         }
     }, this);
     this.scheduleRender();
-    this._graph.onScheduleRepaint = function() {
+    this._graph.setOnScheduleRepaint(function() {
         this.scheduleRender();
-    };
-    this._graph.onScheduleRepaintThisArg = this;
+    }, this);
+    this._graph.carousel().setOnScheduleRepaint(function() {
+        this.scheduleRender();
+    }, this);
 };

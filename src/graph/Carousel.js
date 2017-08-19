@@ -1,16 +1,26 @@
-function parsegraph_Carousel()
+function parsegraph_Carousel(camera, backgroundColor)
 {
+    this._updateRepeatedly = false;
+    this._showScale = 1;
+
+    this.onScheduleRepaint = null;
+    this.onScheduleRepaintThisArg = null;
+
     // Carousel-rendered carets.
     this._carouselPaintingDirty = true;
     this._carouselPlots = [];
     this._carouselCallbacks = [];
 
+    this._backgroundColor = backgroundColor;
+    this._camera = camera;
+
     // Location of the carousel, in world coordinates.
     this._carouselCoords = [0, 0];
-    this._carouselSize = 100;
+    this._carouselSize = 50;
 
     this._showCarousel = false;
     this._selectedCarouselPlot = null;
+    this._selectedCarouselPlotIndex = null;
 
     this._gl = null;
     this._glyphAtlas = null;
@@ -18,7 +28,14 @@ function parsegraph_Carousel()
 
     // GL painters are not created until needed.
     this._fanPainter = null;
+
+    this._selectedPlot = null;
 }
+
+parsegraph_Carousel.prototype.camera = function()
+{
+    return this._camera;
+};
 
 parsegraph_Carousel.prototype.needsRepaint = function()
 {
@@ -51,6 +68,8 @@ parsegraph_Carousel.prototype.setCarouselSize = function(size)
 parsegraph_Carousel.prototype.showCarousel = function()
 {
     this._showCarousel = true;
+    this._updateRepeatedly = true;
+    this._showTime = new Date();
 };
 
 parsegraph_Carousel.prototype.isCarouselShown = function()
@@ -61,7 +80,9 @@ parsegraph_Carousel.prototype.isCarouselShown = function()
 parsegraph_Carousel.prototype.hideCarousel = function()
 {
     this._selectedCarouselPlot = null;
+    this._selectedCarouselPlotIndex = null;
     this._showCarousel = false;
+    this._hideTime = new Date();
 };
 
 parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg)
@@ -78,13 +99,16 @@ parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg)
         node.setPaintGroup(new parsegraph_PaintGroup(node));
     }
     this._carouselPlots.push(node);
+    //console.log("ADded to carousel");
 };
 
 parsegraph_Carousel.prototype.clearCarousel = function()
 {
+    //console.log("carousel cleared");
     this._carouselPlots.splice(0, this._carouselPlots.length);
     this._carouselCallbacks.splice(0, this._carouselCallbacks.length);
     this._selectedCarouselPlot = null;
+    this._selectedCarouselPlotIndex = null;
 };
 
 parsegraph_Carousel.prototype.removeFromCarousel = function(node)
@@ -98,15 +122,22 @@ parsegraph_Carousel.prototype.removeFromCarousel = function(node)
     }
     for(var i in this._carouselPlots) {
         if(this._carouselPlots[i] === node) {
+            //console.log("removed from carousel");
             var removed = this._carouselPlots.splice(i, 1);
             this._carouselCallbacks.splice(i, 1);
             if(this._selectedCarouselPlot === removed) {
                 this._selectedCarouselPlot = null;
+                this._selectedCarouselPlotIndex = null;
             }
             return removed;
         }
     }
     return null;
+};
+
+parsegraph_Carousel.prototype.updateRepeatedly = function()
+{
+    return this._updateRepeatedly;
 };
 
 parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
@@ -123,19 +154,25 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     x = mouseInWorld[0];
     y = mouseInWorld[1];
 
-    if(Math.sqrt(
+    var dist = Math.sqrt(
         Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
         Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
-    ) < this._carouselSize * .75
-    ) {
+    );
+    if(dist < this._carouselSize * .75) {
         if(asDown) {
-            // Down events within the inner region are treated as 'cancel.'
+            //console.log("Down events within the inner region are treated as 'cancel.'");
             this.hideCarousel();
-            this.scheduleRepaint();
+            this.scheduleCarouselRepaint();
             return true;
         }
 
-        // Up events within the inner region are ignored.
+        //console.log("Up events within the inner region are ignored.");
+        return false;
+    }
+    else if(dist > this._carouselSize * 4) {
+        this.hideCarousel();
+        this.scheduleCarouselRepaint();
+        //console.log("Click occurred so far outside that it is considered its own event.");
         return false;
     }
 
@@ -151,13 +188,17 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     // Click was within a carousel caret; invoke the listener.
     //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
     var carouselPlot = this._carouselPlots[i];
-    var callback = this._carouselCallbacks[i][0];
-    var thisArg = this._carouselCallbacks[i][1];
-    callback.call(thisArg);
+    this.hideCarousel();
+    try {
+        var callback = this._carouselCallbacks[i][0];
+        var thisArg = this._carouselCallbacks[i][1];
+        callback.call(thisArg);
+    }
+    catch(ex) {
+        console.log("Error occurred while running command:", ex);
+    }
 
-    this.mouseOver(x, y);
-    this.scheduleRepaint();
-
+    this.scheduleCarouselRepaint();
     return true;
 };
 
@@ -175,31 +216,81 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
     y = mouseInWorld[1];
 
     var angleSpan = 2 * Math.PI / this._carouselPlots.length;
-    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-    //var i = Math.floor(this._carouselPlots.length * mouseAngle / (2 * Math.PI));
-    //console.log(i * angleSpan);
-    if(this._fanPainter) {
-        this._fanPainter.setSelectionAngle(mouseAngle);
+    var mouseAngle = Math.PI + Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+
+    var xdiff = this._carouselCoords[0] - x;
+    var ydiff = this._carouselCoords[1] - y;
+
+    var dist = Math.sqrt(
+        Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
+        Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
+    );
+    if(dist < this._carouselSize*4 && dist > parsegraph_BUD_RADIUS*4) {
+        var i = Math.floor(this._carouselPlots.length * mouseAngle / (2 * Math.PI));
+        //console.log("mouseAngle=" + mouseAngle + "i=" + i, "angle=" + (i * angleSpan));
+        if(i != this._selectedCarouselPlotIndex) {
+            this._selectedCarouselPlotIndex = i;
+            this._selectedCarouselPlot = this._carouselPlots[i];
+        }
+        if(this._fanPainter) {
+            this._fanPainter.setSelectionAngle((angleSpan/2 + i * angleSpan) - Math.PI);
+            this._fanPainter.setSelectionSize(angleSpan);
+        }
+    }
+    else if(this._fanPainter) {
+        this._fanPainter.setSelectionAngle(null);
+        this._fanPainter.setSelectionSize(null);
     }
     this.scheduleCarouselRepaint();
     return true;
 };
 
+parsegraph_Carousel.prototype.showScale = function()
+{
+    return this._showScale;
+};
+
 parsegraph_Carousel.prototype.arrangeCarousel = function()
 {
-    var angleSpan = this._carouselPlots.length / (2 * Math.PI);
+    if(this._carouselPlots.length === 0) {
+        return;
+    }
 
-    var parsegraph_CAROUSEL_RADIUS = 250;
+    var angleSpan = 2*Math.PI/this._carouselPlots.length;
+
     var parsegraph_MAX_CAROUSEL_SIZE = 150;
+
+    var now = new Date();
+    // Milliseconds
+    var showDuration = 200;
+    if(this._showTime) {
+        var ms = now.getTime() - this._showTime.getTime();
+        if(ms < showDuration) {
+            ms /= showDuration/2;
+            if(ms < 1) {
+                this._showScale = 0.5*ms*ms;
+            }
+            else {
+                ms--;
+                this._showScale = -0.5*(ms*(ms-2)-1);
+            }
+        }
+        else {
+            this._showScale = 1;
+            this._showTime = null;
+            this._updateRepeatedly = false;
+        }
+    }
 
     this._carouselPlots.forEach(function(root, i) {
         var paintGroup = root.localPaintGroup();
+        root.commitLayout();
 
         // Set the origin.
         var caretRad = angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
         paintGroup.setOrigin(
-            parsegraph_CAROUSEL_RADIUS * Math.cos(caretRad),
-            parsegraph_CAROUSEL_RADIUS * Math.sin(caretRad)
+            2*this._carouselSize * this._showScale * Math.cos(caretRad),
+            2*this._carouselSize * this._showScale * Math.sin(caretRad)
         );
 
         // Set the scale.
@@ -214,8 +305,16 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
         if(commandSize.height() > yMax) {
             yShrinkFactor = commandSize.height() / yMax;
         }
-        paintGroup.setScale(1/Math.max(xShrinkFactor, yShrinkFactor));
+        //console.log(commandSize.width(), commandSize.height(), 1/Math.max(xShrinkFactor, yShrinkFactor));
+        paintGroup.setScale(this._showScale/Math.max(xShrinkFactor, yShrinkFactor));
     }, this);
+};
+
+parsegraph_Carousel.prototype.setOnScheduleRepaint = function(func, thisArg)
+{
+    thisArg = thisArg || this;
+    this.onScheduleRepaint = func;
+    this.onScheduleRepaintThisArg = thisArg;
 };
 
 parsegraph_Carousel.prototype.scheduleCarouselRepaint = function()
@@ -223,64 +322,89 @@ parsegraph_Carousel.prototype.scheduleCarouselRepaint = function()
     //console.log("Scheduling carousel repaint.");
     this._carouselPaintingDirty = true;
     if(this.onScheduleRepaint) {
-        this.onScheduleRepaint();
+        this.onScheduleRepaint.call(this.onScheduleRepaintThisArg);
     }
+};
+
+parsegraph_Carousel.prototype.glyphAtlas = function()
+{
+    return this._glyphAtlas;
+};
+
+parsegraph_Carousel.prototype.backgroundColor = function()
+{
+    return this._backgroundColor;
+};
+
+parsegraph_Carousel.prototype.setBackgroundColor = function(backgroundColor)
+{
+    this._backgroundColor = backgroundColor;
+    this.scheduleCarouselRepaint();
 };
 
 parsegraph_Carousel.prototype.paint = function()
 {
-    if(this._carouselPaintingDirty && this._showCarousel) {
-        // Paint the carousel.
-        //console.log("Painting the carousel");
-        for(var i in this._carouselPlots) {
-            var paintGroup = this._carouselPlots[i];
-            paintGroup.paint(
-                this.gl(),
-                this.surface().backgroundColor(),
-                this.glyphAtlas(),
-                this._shaders
-            );
-        }
-        this.arrangeCarousel();
-
-        // Paint the background highlighting fan.
-        if(!this._fanPainter) {
-            this._fanPainter = new parsegraph_FanPainter(this.gl());
-        }
-        else {
-            this._fanPainter.clear();
-        }
-        var fanPadding = 1.2;
-        this._fanPainter.setAscendingRadius(fanPadding * this._carouselSize);
-        this._fanPainter.setDescendingRadius(fanPadding * 2 * this._carouselSize);
-        this._fanPainter.selectRad(
-            this._carouselCoords[0], this._carouselCoords[1],
-            0, Math.PI * 2,
-            parsegraph_createColor(1, 1, 1, 1),
-            parsegraph_createColor(.5, .5, .5, .4)
-        );
-
-        this._carouselPaintingDirty = false;
+    if(!this._updateRepeatedly && (!this._carouselPaintingDirty || !this._showCarousel)) {
+        return;
     }
+
+    // Paint the carousel.
+    //console.log("Painting the carousel");
+    this.arrangeCarousel();
+    for(var i in this._carouselPlots) {
+        var paintGroup = this._carouselPlots[i].localPaintGroup();
+        if(!paintGroup) {
+            throw new Error("Plot no longer has a paint group?!");
+        }
+        parsegraph_PAINTING_GLYPH_ATLAS = this.glyphAtlas();
+        var paintCompleted = paintGroup.paint(
+            this.gl(),
+            this.backgroundColor(),
+            this.glyphAtlas(),
+            this._shaders,
+            undefined
+        );
+        parsegraph_PAINTING_GLYPH_ATLAS = null;
+    }
+
+    // Paint the background highlighting fan.
+    if(!this._fanPainter) {
+        this._fanPainter = new parsegraph_FanPainter(this.gl());
+    }
+    else {
+        this._fanPainter.clear();
+    }
+    var fanPadding = 1.2;
+    this._fanPainter.setAscendingRadius(this.showScale() * fanPadding * this._carouselSize);
+    this._fanPainter.setDescendingRadius(this.showScale() * fanPadding * 2 * this._carouselSize);
+    this._fanPainter.selectRad(
+        this._carouselCoords[0], this._carouselCoords[1],
+        0, Math.PI * 2,
+        parsegraph_createColor(1, 1, 1, 1),
+        parsegraph_createColor(.5, .5, .5, .4)
+    );
+
+    this._carouselPaintingDirty = false;
 };
 
 parsegraph_Carousel.prototype.render = function(world)
 {
-    if(this._showCarousel && !this._carouselPaintingDirty) {
-        //console.log("Rendering the carousel");
-        this._fanPainter.render(world);
+    if(!this._showCarousel) {
+        return;
+    }
+    if(this._updateRepeatedly || this._carouselPaintingDirty) {
+        this.paint();
     }
 
+    this._fanPainter.render(world);
+
     // Render the carousel if requested.
-    if(this._showCarousel && !this._carouselPaintingDirty) {
-        for(var i in this._carouselPlots) {
-            var paintGroup = this._carouselPlots[i];
-            paintGroup.render(
-                matrixMultiply3x3(makeTranslation3x3(
-                    this._carouselCoords[0], this._carouselCoords[1]
-                ),
+    for(var i in this._carouselPlots) {
+        var paintGroup = this._carouselPlots[i].localPaintGroup();
+        paintGroup.render(
+            matrixMultiply3x3(
+                makeTranslation3x3(this._carouselCoords[0], this._carouselCoords[1]),
                 world)
-            );
-        }
+        );
     }
 };

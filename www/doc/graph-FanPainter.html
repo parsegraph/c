@@ -25,6 +25,12 @@ Sets the distance from the center to the brightest point.
 Sets the distance from the brightest point, to the invisible outer edge.
 <h3>setSelectionAngle(selectionAngle)</h3>
 Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area of radial brightness.
+<p>
+If null is given, no selection highlight is drawn. This is the default.
+<h3>setSelectionSize(selectionSize)</h3>
+Sets the selection angle in radians from [0, 2*Math.PI], which is the size of the selected highlight.
+<p>
+If null is given, no selection highlight is drawn. This is the default.
 <h3>.clear()</h3>
 Clears all buffers.
 <h3>.render(viewMatrix)</h3>

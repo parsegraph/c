@@ -255,15 +255,15 @@ parsegraph_LoginWidget.prototype.logout = function()
 parsegraph_LoginWidget.prototype.onLogout = function(res, result)
 {
     if(res === true) {
+        if(this._logoutListener) {
+            this._logoutListener.call(this._logoutListenerThisArg, true, result, this._containerNode);
+        }
+
         localStorage.removeItem("parsegraph_LoginWidget_remember");
         this._containerNode.disconnectNode(parsegraph_INWARD);
         this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
         this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
         this._graph.scheduleRepaint();
-
-        if(this._logoutListener) {
-            this._logoutListener.call(this._logoutListenerThisArg, true, result, this._containerNode);
-        }
     }
     else if(res === false) {
         console.log("Logout failed: " + result);

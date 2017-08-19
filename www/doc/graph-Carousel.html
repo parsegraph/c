@@ -44,6 +44,16 @@ Calls this Carousel's repaint scheduler and marks this Carousel as needing a rep
 Paints the plotted graphs and selection frame for this Carousel.
 <h3>.render(world)</h3>
 Renders this painted Carousel using the given world matrix.
+<h3>.backgroundColor()</h3>
+Returns the parsegraph_Color used as the background.
+<h3>.setBackgroundColor(backgroundColor)</h3>
+Changes the parsegraph_Color used as the background.
+<h3>.glyphAtlas()</h3>
+Returns the GlyphAtlas for this carousel.
+<h3>.render(world)</h3>
+Renders this painted Carousel using the given world matrix.
+<h3>.setOnScheduleRepaint(func, thisArg)</h3>
+Sets the hook to be called when the carousel needs to be repainted.
 </main>
 <nav class="toc">
 <h2>Parsegraph Carousel</h2>
@@ -65,7 +75,11 @@ Renders this painted Carousel using the given world matrix.
 <li>.arrangeCarousel()
 <li>.scheduleCarouselRepaint()
 <li>.paint()
+<li>.backgroundColor()
+<li>.setBackgroundColor(backgroundColor)
+<li>.glyphAtlas()
 <li>.render(world)
+<li>.setOnScheduleRepaint(func, thisArg)
 </ol>
 </nav>
 </body>

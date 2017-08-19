@@ -38,6 +38,8 @@ happen.
 <p>
 The previous world paint state is cleared if this is called; this can be used to reset
 a paint in progress.
+<h3>.setOnScheduleRepaint(func, thisArg)</h3>
+Sets the hook to be called when the graph is scheduled to be repainted.
 <h3>.needsRepaint()</h3>
 Returns true if any graph component needs a repaint.
 <h3>.glyphAtlas()</h3>
@@ -68,6 +70,7 @@ Renders this graph in the given Surface.
 <li>.canvas()
 <li>.input()
 <li>.scheduleRepaint()
+<li>.setOnScheduleRepaint(func, thisArg)
 <li>.needsRepaint()
 <li>.glyphAtlas()
 <li>.setGlyphAtlas(glyphAtlas)

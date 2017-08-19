@@ -6,16 +6,19 @@ parsegraph_FanPainter_VertexShader =
 "attribute vec4 a_color;\n" +
 "attribute vec2 a_texCoord;\n" +
 "attribute float a_selectionAngle;\n" +
+"attribute float a_selectionSize;\n" +
 "\n" +
 "varying highp vec4 contentColor;\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp float selectionAngle;\n" +
+"varying highp float selectionSize;\n" +
 "\n" +
 "void main() {\n" +
     "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
     "contentColor = a_color;" +
     "texCoord = a_texCoord;" +
     "selectionAngle = a_selectionAngle;" +
+    "selectionSize = a_selectionSize;" +
 "}";
 
 parsegraph_FanPainter_FragmentShader =
@@ -26,15 +29,22 @@ parsegraph_FanPainter_FragmentShader =
 "varying highp vec4 contentColor;\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp float selectionAngle;\n" +
+"varying highp float selectionSize;\n" +
 "\n" +
 "void main() {\n" +
     "highp vec2 st = texCoord;\n" +
     "st = st * 2.0 - 1.0;" +
-    "highp float d = min(1.0, length(abs(st)));" +
-    "d = 1.0 - pow(d, 0.2);" +
+    "highp float d = 1.0 - min(1.0, length(abs(st)));" +
+    //"d = 1.0 - pow(d, 0.2);" +
     "highp float fragAngle = atan(st.y, st.x);" +
-    "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);" +
-    "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d * (1.0 - abs(selectionAngle - fragAngle) / 3.14159));" +
+    "highp float angleDiff = abs(selectionAngle - fragAngle);" +
+    "if(angleDiff > 3.14159*1.5) { angleDiff = 2.0*3.14159 - angleDiff; }" +
+    "highp float angleAlpha = 0.5*d*max(0.0, 1.0 - contentColor.a * (angleDiff / selectionSize));" +
+    "highp float centerSpotlight = 0.5;" +
+    "highp float interiorDeadspot = 0.35;" +
+    "highp float centerDist = distance(texCoord.xy, vec2(0.5, 0.5));" +
+    "highp float centerAlpha = 0.5*max(0.0, 1.0 - centerDist/centerSpotlight) - 0.5*max(0.0, 1.0 - centerDist/interiorDeadspot);" +
+    "gl_FragColor = vec4(contentColor.rgb, centerAlpha + angleAlpha);" +
     /*"if(selectionAngle - fragAngle > (3.14159 / 2.0) || fragAngle - selectionAngle > (3.14159 / 2.0)) {" +
         "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);" +
     "}" +
@@ -55,7 +65,8 @@ function parsegraph_FanPainter(gl)
 
     this._ascendingRadius = 250;
     this._descendingRadius = 250;
-    this._selectionAngle = 0;
+    this._selectionAngle = null;
+    this._selectionSize = null;
 
     // Compile the shader program.
     this.fanProgram = this._gl.createProgram();
@@ -93,6 +104,7 @@ function parsegraph_FanPainter(gl)
     this.a_color = this._fanBuffer.defineAttrib("a_color", 4);
     this.a_texCoord = this._fanBuffer.defineAttrib("a_texCoord", 2);
     this.a_selectionAngle = this._fanBuffer.defineAttrib("a_selectionAngle", 1);
+    this.a_selectionSize = this._fanBuffer.defineAttrib("a_selectionSize", 1);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -157,34 +169,31 @@ parsegraph_FanPainter.prototype.selectRad = function(
     var color = startColor;
     for(var k = 0; k < 3 * 2; ++k) {
         this._fanBuffer.appendRGBA(this.a_color, color);
-        this._fanBuffer.appendData(this.a_selectionAngle, this._selectionAngle);
+        this._fanBuffer.appendData(this.a_selectionAngle, this._selectionAngle !== null ? this._selectionAngle : 0);
+        this._fanBuffer.appendData(this.a_selectionSize, this._selectionSize !== null ? this._selectionSize : 0);
     }
 };
 
-/**
- * Sets the distance from the center to the brightest point.
- */
 parsegraph_FanPainter.prototype.setAscendingRadius = function(ascendingRadius)
 {
     this._ascendingRadius = ascendingRadius;
 };
 
-/**
- * Sets the distance from the brightest point, to the invisible outer edge.
- */
 parsegraph_FanPainter.prototype.setDescendingRadius = function(descendingRadius)
 {
     this._descendingRadius = descendingRadius;
 };
 
-/**
- * Sets the selection angle, which is an area of radial brightness.
- *
- * [-Math.PI, Math.PI]
- */
 parsegraph_FanPainter.prototype.setSelectionAngle = function(selectionAngle)
 {
+    //console.log("Selection angle: " + selectionAngle);
     this._selectionAngle = selectionAngle;
+};
+
+parsegraph_FanPainter.prototype.setSelectionSize = function(selectionSize)
+{
+    //console.log("Selection size: " + selectionSize);
+    this._selectionSize = Math.min(Math.PI/2.0, selectionSize);
 };
 
 parsegraph_FanPainter.prototype.clear = function()

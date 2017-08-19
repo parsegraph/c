@@ -57,6 +57,11 @@ parsegraph_PaintGroup.prototype.setScale = function(scale)
     }
 };
 
+parsegraph_PaintGroup.prototype.scale = function()
+{
+    return this._userScale;
+};
+
 parsegraph_PaintGroup.prototype.root = function()
 {
     return this._root;
@@ -249,7 +254,7 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
             makeScale3x3(this._userScale),
             matrixMultiply3x3(makeTranslation3x3(this._worldX, this._worldY), world)
         ),
-        this._userScale * camera.scale()
+        this._userScale * (camera ? camera.scale() : 1)
     );
 };
 
