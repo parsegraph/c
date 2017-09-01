@@ -1,7 +1,7 @@
 function parsegraph_SingleGraphApplication(guid)
 {
     this._cameraName = "parsegraph_login_camera";
-    this._guid = guid || null;
+    this._guid = guid || "";
 }
 
 /**

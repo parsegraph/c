@@ -111,8 +111,8 @@ function init()
                 localStorage.setItem("parsegraph_corporate_camera", JSON.stringify(graph.camera().toJSON()));
             });
         };
-        uni.load();
         parsegraph_UNICODE_INSTANCE = uni;
+        uni.load();
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;

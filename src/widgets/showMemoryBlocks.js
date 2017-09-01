@@ -19,29 +19,43 @@ function showMemoryBlocks(graph, COUNT)
             var r = Math.floor(Math.random() * 4);
             if(r % 4 == 0) {
                 if(i % 2 == 0) {
+                    if(j === 0) {
+                        caret.pull('d');
+                    }
                     caret.spawnMove('d', 'slot');
                 }
                 else {
+                    if(j === 0) {
+                        caret.pull('u');
+                    }
                     caret.spawnMove('u', 'slot');
                 }
             }
             else {
                 if(i % 2 == 0) {
+                    if(j === 0) {
+                        caret.pull('d');
+                    }
                     caret.spawnMove('d', 'slot');
                 }
                 else {
+                    if(j === 0) {
+                        caret.pull('u');
+                    }
                     caret.spawnMove('u', 'slot');
                 }
             }
 
             r = Math.floor(Math.random() * 2);
             if(r % 2 == 0) {
+                caret.pull('b');
                 caret.spawnMove('b', 'block');
                 caret.spawn('d', 'slider');
                 caret.move('f');
             }
             r = Math.floor(Math.random() * 2);
             if(r % 2 == 0) {
+                caret.pull('f');
                 caret.spawnMove('f', 'block');
                 caret.spawn('d', 'slider');
                 caret.move('b');
@@ -49,11 +63,13 @@ function showMemoryBlocks(graph, COUNT)
         }
 
         if(!caret.has('f')) {
+            caret.pull('f');
             caret.spawnMove('f', 'bud');
             caret.spawn('f', 'bud');
             caret.move('b');
         }
         if(!caret.has('b')) {
+            caret.pull('b');
             caret.spawnMove('b', 'bud');
             caret.spawn('b', 'bud');
             caret.move('f');

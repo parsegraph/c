@@ -61,45 +61,52 @@ function init()
 
         var surface = new parsegraph_Surface();
         var graph = new parsegraph_Graph(surface);
-        graph.plot(showMemoryBlocks(graph, 200));
         GRAPH = graph;
-        main.appendChild(surface.container());
 
-        if(localStorage.getItem("parsegraph_piers_camera") != null) {
-            try {
-                var parsegraph_piers_camera = JSON.parse(localStorage.getItem("parsegraph_piers_camera"));
-                graph.camera().restore(parsegraph_piers_camera);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-            }
-        }
+        var uni = new parsegraph_Unicode();
+        uni.onLoad = function() {
+            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+            graph.plot(showMemoryBlocks(graph, 200));
+            main.appendChild(surface.container());
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
-                surface.paint(50);
+            if(localStorage.getItem("parsegraph_piers_camera") != null) {
+                try {
+                    var parsegraph_piers_camera = JSON.parse(localStorage.getItem("parsegraph_piers_camera"));
+                    graph.camera().restore(parsegraph_piers_camera);
+                } catch(e) {
+                    console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
+                }
             }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            renderTimer.setListener(function() {
+                graph.input().Update(new Date());
+                if(graph.needsRepaint()) {
+                    surface.paint(50);
+                }
+                surface.render();
+                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                    renderTimer.schedule();
+                }
+            });
+            graph.input().SetListener(function(affectedPaint) {
+                if(affectedPaint) {
+                    graph.scheduleRepaint();
+                }
                 renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
+            });
             renderTimer.schedule();
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
+            graph.onScheduleRepaint = function() {
+                renderTimer.schedule();
+            };
 
-        surface.addRenderer(function() {
-            localStorage.setItem("parsegraph_piers_camera", JSON.stringify(graph.camera().toJSON()));
-        });
+            surface.addRenderer(function() {
+                localStorage.setItem("parsegraph_piers_camera", JSON.stringify(graph.camera().toJSON()));
+            });
+        };
+        uni.load();
+        parsegraph_UNICODE_INSTANCE = uni;
     } catch(ex) {
         alert("Init: " + parsegraph_writeError(ex));
         throw ex;
