@@ -146,6 +146,14 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
         return false;
     }
 
+    if(this._showTime) {
+        var ms = new Date().getTime() - this._showTime.getTime();
+        if(ms < 200) {
+            // Ignore events that occur so early.
+            return true;
+        }
+    }
+
     // Transform client coords to world coords.
     var mouseInWorld = matrixTransform2D(
         makeInverse3x3(this.camera().worldMatrix()),
@@ -177,13 +185,8 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     }
 
     var angleSpan = 2 * Math.PI / this._carouselPlots.length;
-    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-    if(mouseAngle < 0) {
-        // Upward half.
-        mouseAngle = 2 * Math.PI + mouseAngle;
-    }
-
-    var i = Math.floor(this._carouselPlots.length * (mouseAngle) / (2 * Math.PI));
+    var mouseAngle = Math.PI + Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+    var i = Math.floor(mouseAngle / angleSpan);
 
     // Click was within a carousel caret; invoke the listener.
     //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
@@ -217,29 +220,28 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
 
     var angleSpan = 2 * Math.PI / this._carouselPlots.length;
     var mouseAngle = Math.PI + Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
-
-    var xdiff = this._carouselCoords[0] - x;
-    var ydiff = this._carouselCoords[1] - y;
-
     var dist = Math.sqrt(
         Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
         Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
     );
+
     if(dist < this._carouselSize*4 && dist > parsegraph_BUD_RADIUS*4) {
-        var i = Math.floor(this._carouselPlots.length * mouseAngle / (2 * Math.PI));
-        //console.log("mouseAngle=" + mouseAngle + "i=" + i, "angle=" + (i * angleSpan));
+        var i = Math.floor(mouseAngle / angleSpan);
+        var selectionAngle = (angleSpan/2 + i * angleSpan) - Math.PI;
         if(i != this._selectedCarouselPlotIndex) {
             this._selectedCarouselPlotIndex = i;
             this._selectedCarouselPlot = this._carouselPlots[i];
         }
         if(this._fanPainter) {
-            this._fanPainter.setSelectionAngle((angleSpan/2 + i * angleSpan) - Math.PI);
+            this._fanPainter.setSelectionAngle(selectionAngle);
             this._fanPainter.setSelectionSize(angleSpan);
         }
     }
     else if(this._fanPainter) {
         this._fanPainter.setSelectionAngle(null);
         this._fanPainter.setSelectionSize(null);
+        this._selectedCarouselPlot = null;
+        this._selectedCarouselPlotIndex = null;
     }
     this.scheduleCarouselRepaint();
     return true;
@@ -282,12 +284,13 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
         }
     }
 
+    var minScale = 1;
     this._carouselPlots.forEach(function(root, i) {
         var paintGroup = root.localPaintGroup();
         root.commitLayout();
 
         // Set the origin.
-        var caretRad = angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
+        var caretRad = Math.PI + angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
         paintGroup.setOrigin(
             2*this._carouselSize * this._showScale * Math.cos(caretRad),
             2*this._carouselSize * this._showScale * Math.sin(caretRad)
@@ -306,7 +309,16 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
             yShrinkFactor = commandSize.height() / yMax;
         }
         //console.log(commandSize.width(), commandSize.height(), 1/Math.max(xShrinkFactor, yShrinkFactor));
-        paintGroup.setScale(this._showScale/Math.max(xShrinkFactor, yShrinkFactor));
+        minScale = Math.min(minScale, this._showScale/Math.max(xShrinkFactor, yShrinkFactor));
+    }, this);
+
+    this._carouselPlots.forEach(function(root, i) {
+        if(i === this._selectedCarouselPlotIndex) {
+            root.localPaintGroup().setScale(1.25*minScale);
+        }
+        else {
+            root.localPaintGroup().setScale(minScale);
+        }
     }, this);
 };
 

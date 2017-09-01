@@ -31,7 +31,8 @@ function alpha_WeetCubeWidget()
 
     this._audioOut=null;
 
-    this._freqs=[440*1.33, 440, 440*.67, 440*.67*.67, 440*.67*.67*.67];
+    var baseFreq = 293.665;//391.995;//311.127;//440;
+    this._freqs=[baseFreq*1.33, baseFreq, baseFreq*.67, baseFreq*.67*.67, baseFreq*.67*.67*.67];
 
     var randomFrequencyNodeCreator = function(nodeType, minFreq, freqRange) {
         return function(audio) {
@@ -231,8 +232,8 @@ alpha_WeetCubeWidget.prototype.paint = function()
         this._audioOut=audio.createGain();
         var compressor = audio.createDynamicsCompressor();
         compressor.threshold.value = -50;
-        compressor.knee.value = 40;
-        compressor.ratio.value = 12;
+        compressor.knee.value = 10;
+        compressor.ratio.value = 24;
         compressor.reduction.value = -20;
         compressor.attack.value = 0;
         compressor.release.value = 0.25;
@@ -275,7 +276,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 c.SetPosition(3*i, 3*j, 3*k);
                 c.SetScale(cubeSize, cubeSize, cubeSize);
                 this.cubePainter.Cube(c.GetModelMatrix());
-                var makeAudio = Math.random() < .1;
+                var makeAudio = Math.random() < .05;
                 if(createAudioNodes && makeAudio) {
                     var node = this.createAudioNode(audio);
                     panner=audio.createPanner();

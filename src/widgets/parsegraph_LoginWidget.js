@@ -27,7 +27,7 @@ function parsegraph_authenticate(listener, listenerThisArg)
     return xhr;
 }
 
-function parsegraph_beginUserLogin(username, password, listener, listenerThisArg)
+function parsegraph_beginUserLogin(username, password, remember, listener, listenerThisArg)
 {
     if(!listener) {
         throw new Error("Refusing to fire without a non-null listener");
@@ -40,7 +40,7 @@ function parsegraph_beginUserLogin(username, password, listener, listenerThisArg
     loginRequest.open("POST", "/user?command=parsegraph_beginUserLogin");
     loginRequest.setRequestHeader("Accept", "application/json");
     loginRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    loginRequest.send("username=" + username + "&password=" + password);
+    loginRequest.send("username=" + username + "&password=" + password + "&remember=" + (!!remember ? "1": "0"));
 
     loginRequest.addEventListener("load", function() {
         try {
@@ -189,6 +189,7 @@ function parsegraph_passwordNode(listener, listenerThisArg)
             pos += key.length;
             if(last === inner && inner.isRoot()) {
                 node.connectNode(parsegraph_INWARD, inner);
+                node.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
             }
             else {
                 last = last.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
@@ -258,6 +259,7 @@ parsegraph_LoginWidget.prototype.onLogout = function(res, result)
         if(this._logoutListener) {
             this._logoutListener.call(this._logoutListenerThisArg, true, result, this._containerNode);
         }
+        this._containerNode.disconnectNode(parsegraph_DOWNWARD);
 
         localStorage.removeItem("parsegraph_LoginWidget_remember");
         this._containerNode.disconnectNode(parsegraph_INWARD);
@@ -279,7 +281,7 @@ parsegraph_LoginWidget.prototype.login = function()
     //console.log(new Error("Logging in"));
     var username = this._usernameField._label.getText();
     var password = this._passwordField.value();
-    parsegraph_beginUserLogin(username, password, this.onLogin, this);
+    parsegraph_beginUserLogin(username, password, this.isRemembering(), this.onLogin, this);
 }
 
 // Create new user.
@@ -311,7 +313,7 @@ parsegraph_LoginWidget.prototype.setLogoutListener = function(listener, listener
 
 parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
 {
-    //console.log(new Error("onLogin"));
+    console.log(new Error("onLogin"), res, userLogin);
     var resNode;
     if(res === true) {
         this._loginForm = null;
@@ -359,16 +361,40 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
     var car = new parsegraph_Caret(parsegraph_BLOCK);
     car.setGlyphAtlas(this._graph.glyphAtlas());
 
-    var logOut = car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
-    logOut.setClickListener(this.logout, this);
-    logOut.setKeyListener(this.logout, this);
-    logOut.setBlockStyle(this._bbs);
-    logOut.setLabel("Log out", this._graph.glyphAtlas());
+    car.root().setClickListener(function() {
+        var node = car.root();
+        var carousel = this.graph().carousel();
+        carousel.clearCarousel();
+        carousel.moveCarousel(
+            node.absoluteX(),
+            node.absoluteY()
+        );
+        carousel.showCarousel();
+
+        // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
+        var actionNode = new parsegraph_Node(parsegraph_BLOCK);
+        actionNode.setLabel("Leave", this.glyphAtlas());
+        carousel.addToCarousel(actionNode, this.leave, this);
+        actionNode = new parsegraph_Node(parsegraph_BLOCK);
+        actionNode.setLabel("Log out", this.glyphAtlas());
+        carousel.addToCarousel(actionNode, this.logout, this);
+        this.graph().carousel().scheduleCarouselRepaint();
+    }, this);
 
     this._loggedInForm = car.root();
 
     return this._loggedInForm;
 }
+
+parsegraph_LoginWidget.prototype.leave = function()
+{
+    window.location = "/environment/";
+};
+
+parsegraph_LoginWidget.prototype.graph = function()
+{
+    return this._graph;
+};
 
 parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
 {
@@ -413,14 +439,25 @@ parsegraph_LoginWidget.prototype.glyphAtlas = function()
     return this._graph.glyphAtlas();
 };
 
+parsegraph_LoginWidget.prototype.setTitle = function(title)
+{
+    this._title = title;
+};
+
+parsegraph_LoginWidget.prototype.title = function()
+{
+    return this._title;
+};
+
 parsegraph_LoginWidget.prototype.root = function()
 {
     if(!this._root) {
 
         var car = new parsegraph_Caret(parsegraph_SLOT);
         car.setGlyphAtlas(this.glyphAtlas());
-        car.label('Iñtërnâtiônàlizætiøn☃💩 for Parsegraph.com');
+        car.label(this.title());
         this._containerNode = car.root();
+        this._containerNode.setIgnoreMouse(true);
         if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
             this._containerNode.connectNode(parsegraph_INWARD, this.authenticateForm());
             this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
@@ -473,6 +510,10 @@ parsegraph_LoginWidget.prototype.loginForm = function()
     this._loginForm = car.root();
     car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
     car.label('Username');
+    car.node().setClickListener(function() {
+        this.graph().input().setFocusedNode(this._usernameField);
+        return true;
+    }, this);
     car.move(parsegraph_FORWARD);
     car.pull('b');
     this._usernameField  = car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
@@ -520,9 +561,17 @@ parsegraph_LoginWidget.prototype.loginForm = function()
     car.pull(parsegraph_FORWARD);
     car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
     car.label("Remember log in");
+    car.node().setClickListener(this.toggleRemember, this);
     car.pop();
 
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    this._leaveButton = car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
+    car.node().setBlockStyle(this._bbs);
+    car.label('Leave');
+    car.node().setClickListener(this.leave, this);
+    car.node().setKeyListener(this.leave, this);
+    car.move('f');
+
     this._loginButton = car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
     car.node().setBlockStyle(this._bbs);
     car.label('Log in');
@@ -544,12 +593,15 @@ parsegraph_LoginWidget.prototype.loginForm = function()
     return this._loginForm;
 }
 
+parsegraph_LoginWidget.prototype.isRemembering = function()
+{
+    return this._rememberCheck.blockStyle() === this._scbs;
+};
+
 parsegraph_LoginWidget.prototype.toggleRemember = function()
 {
-    var reminding = this._rememberCheck.blockStyle() === this._scbs;
-    this._rememberCheck.setBlockStyle(reminding ? this._cbs : this._scbs);
-    reminding = !reminding;
-    if(reminding) {
+    this._rememberCheck.setBlockStyle(this.isRemembering() ? this._cbs : this._scbs);
+    if(this.isRemembering()) {
         localStorage.setItem("parsegraph_LoginWidget_remember", "1");
     }
     else {

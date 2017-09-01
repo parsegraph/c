@@ -1,12 +1,16 @@
-function parsegraph_EnvironmentProtocol(ws, eventFunc, eventFuncThisArg) {
+function parsegraph_EnvironmentProtocol(ws, guid, eventFunc, eventFuncThisArg) {
     if(!eventFunc) {
         throw new Error("An eventFunc must be provided");
     }
     var opened = false;
+    if(!guid) {
+        throw new Error("An environment GUID must be provided.");
+    }
 
     ws.onopen = function() {
         console.log("EnvironmentProtocol opened");
         opened = true;
+        ws.send(guid);
     };
 
     ws.onclose = function() {
@@ -30,15 +34,20 @@ function parsegraph_EnvironmentProtocol(ws, eventFunc, eventFuncThisArg) {
     };
 
     var that = this;
-    ws.onmessage = function(event) {
+    ws.onmessage = function(e) {
         if(that.errored()) {
             return;
         }
-        that.feedInitialData(event.data);
+        that.feedInitialData(e.data);
         if(that._printState.objects.length === 1) {
             var initialData = that._printState.objects[0];
             eventFunc.call(eventFuncThisArg, "initialData", initialData);
         }
+    };
+
+    that.close = function() {
+        ws.close();
+        opened = false;
     };
 };
 
@@ -83,7 +92,7 @@ parsegraph_EnvironmentProtocol.prototype.feedInitialData = function(eventData)
 {
     var printState = this._printState;
     var lexer = this._lexer;
-    lexer.feed(event.data);
+    lexer.feed(eventData);
 process:while(true) {
         if(this.errored()) {
             return;

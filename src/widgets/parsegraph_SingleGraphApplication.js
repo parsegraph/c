@@ -1,6 +1,7 @@
-function parsegraph_SingleGraphApplication()
+function parsegraph_SingleGraphApplication(guid)
 {
     this._cameraName = "parsegraph_login_camera";
+    this._guid = guid || null;
 }
 
 /**
@@ -55,6 +56,11 @@ parsegraph_SingleGraphApplication.prototype.onLogout = function() {
     //this._sessionNode.disconnectNode();
     this._sessionNode = null;
     this._loginNode = null;
+
+    if(this._environmentProtocol) {
+        this._environmentProtocol.close();
+        this._environmentProtocol = null;
+    }
 };
 
 parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) {
@@ -81,10 +87,10 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
         console.log("Crashed during login construction: ", ex);
     }
 
-    if(!this._environmentProtocol) {
+    if(!this._environmentProtocol && this._guid) {
         this._environmentProtocol = new parsegraph_EnvironmentProtocol(new WebSocket(
             "ws://localhost:8080/environment/live", "parsegraph-environment-protocol"
-        ), function(name, obj) {
+        ), this._guid, function(name, obj) {
                 if(name === "initialData") {
                     this.loadEnvironment(obj);
                 }
@@ -92,31 +98,6 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
         );
     }
 };
-
-function parsegraph_leaveEnvironment(callback, callbackThisArg)
-{
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/environment");
-    xhr.setRequestHeader("Accept", "text/html");
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = function() {
-        if(xhr.readyState !== XMLHttpRequest.DONE) {
-            return;
-        }
-        try {
-            if(xhr.status === 200 && callback) {
-                callback.call(callbackThisArg, xhr);
-            }
-        }
-        catch(ex) {
-            listener.call(listenerThisArg, ex);
-        }
-    };
-    xhr.send("action=parsegraph_leaveEnvironment");
-    return xhr;
-};
-
-
 
 parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialData)
 {
@@ -135,16 +116,35 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
             carousel.showCarousel();
 
             // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
-
             var actionNode = new parsegraph_Node(parsegraph_BLOCK);
-            actionNode.setLabel("Create Link", this.glyphAtlas());
+            actionNode.setLabel("Create link", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_createLink(index);
+            }, this);
+            actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Clear slot", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_clearSlot(index);
+            }, this);
+            actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Place storage item", this.glyphAtlas());
             carousel.addToCarousel(actionNode, function() {
                 parsegraph_placeStorageItemInMultislot(index);
             }, this);
             actionNode = new parsegraph_Node(parsegraph_BLOCK);
-            actionNode.setLabel("Clear Slot", this.glyphAtlas());
+            actionNode.setLabel("Simplify", this.glyphAtlas());
             carousel.addToCarousel(actionNode, function() {
-                parsegraph_placeStorageItemInMultislot(index);
+                parsegraph_simplifySlot(index);
+            }, this);
+            actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Replace Slot", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_replaceSlot(index);
+            }, this);
+            actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Release", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_releaseSlot(index);
             }, this);
             this.graph().carousel().scheduleCarouselRepaint();
         };
@@ -155,16 +155,6 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
     var car = new parsegraph_Caret(this._loginNode);
     car.setGlyphAtlas(this.glyphAtlas());
 
-    car.push();
-    car.spawnMove('b', 'b');
-    car.label("Exit");
-    car.onClick(function() {
-        parsegraph_leaveEnvironment(function() {
-            window.location = "/environment/";
-        }, this);
-    }, this);
-    car.pop();
-
     for(var worldIndex = 0; worldIndex < worldList.length; ++worldIndex) {
         if(worldIndex > 0) {
             car.spawnMove('f', 'b');
@@ -174,7 +164,7 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
             car.align('d', 'c');
             car.spawnMove('d', 'b');
         }
-        car.crease();
+        //car.crease();
         var bs = parsegraph_copyStyle('b');
         bs.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
         //car.node().setBlockStyle(bs);
@@ -290,6 +280,10 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
                     }
                     car.push();
                     for(var x = 0; x < rowSize; ++x) {
+                        if(x > 0) {
+                            car.spawnMove('d', 'u');
+                            car.node().setBlockStyle(us);
+                        }
                         car.spawnMove('d', 's');
                         var s = parsegraph_copyStyle('s');
                         s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
@@ -325,6 +319,10 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
                     }
                     car.push();
                     for(var x = 0; x < rowSize; ++x) {
+                        if(x > 0) {
+                            car.spawnMove('d', 'u');
+                            car.node().setBlockStyle(us);
+                        }
                         car.spawnMove('d', 's');
                         var s = parsegraph_copyStyle('s');
                         s.backgroundColor = new parsegraph_Color(r/255, g/255, b/255);
@@ -439,12 +437,13 @@ parsegraph_SingleGraphApplication.prototype.onUnicodeLoaded = function() {
 
     this._loginWidget = new parsegraph_LoginWidget(surface, graph);
     this._loginWidget.authenticate();
+    this._loginWidget.setTitle(this._guid);
     graph.world().plot(this._loginWidget.root());
 
     var cameraProtocol;
 
     this._loginWidget.setLoginListener(function(res, userLogin, node) {
-        //console.log("Logged in")
+        console.log("Logged in")
         this.onLogin(userLogin, node);
         this._loginWidget.setLogoutListener(function() {
             this.onLogout(userLogin, node);

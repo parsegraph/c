@@ -174,6 +174,11 @@ parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
     this._world.render(world);
+
+    var gl = this.gl();
+    gl.blendFunc(
+        gl.SRC_ALPHA, gl.DST_ALPHA
+    );
     this._carousel.render(world);
     this._cameraBox.render(world);
     this._input.render(world);

@@ -14,8 +14,8 @@ var parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 //var parsegraph_MOVE_BACKWARD_KEY = "a";
 //var parsegraph_MOVE_FORWARD_KEY = "d";
 
-var parsegraph_ZOOM_IN_KEY = "Shift";
-var parsegraph_ZOOM_OUT_KEY = " ";
+var parsegraph_ZOOM_IN_KEY = "ZoomIn";
+var parsegraph_ZOOM_OUT_KEY = "ZoomOut";
 
 function parsegraph_Input(graph, camera)
 {
@@ -144,7 +144,9 @@ function parsegraph_Input(graph, camera)
 
         // Adjust the scale.
         var numSteps = .4 * -wheel.spinY;
-        camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
+        if(numSteps > 0 || camera.scale() >= .01) {
+            camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
+        }
         this.Dispatch(false, "wheel", true);
     };
     parsegraph_addEventMethod(graph.canvas(), "DOMMouseScroll", onWheel, this, false);
@@ -179,19 +181,24 @@ function parsegraph_Input(graph, camera)
             return;
         }
         event.preventDefault();
-        //console.log("touchmove");
+        //console.log("touchmove", event);
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches[i];
             var touchRecord = getTouchByIdentifier(touch.identifier);
 
             if(monitoredTouches.length == 1) {
-                // Move.
-                camera.adjustOrigin(
-                    (touch.clientX - touchRecord.x) / camera.scale(),
-                    (touch.clientY - touchRecord.y) / camera.scale()
-                );
-                this.Dispatch(false, "touchmove");
+                if(!graph.carousel().isCarouselShown()) {
+                    // Move.
+                    camera.adjustOrigin(
+                        (touch.clientX - touchRecord.x) / camera.scale(),
+                        (touch.clientY - touchRecord.y) / camera.scale()
+                    );
+                    this.Dispatch(false, "touchmove");
+                }
+                else {
+                    this.Dispatch(graph.carousel().mouseOverCarousel(touch.clientX, touch.clientY), "mousemove carousel");
+                }
             }
             touchRecord.x = touch.clientX;
             touchRecord.y = touch.clientY;
@@ -221,12 +228,14 @@ function parsegraph_Input(graph, camera)
                 monitoredTouches[0].x, monitoredTouches[0].y,
                 monitoredTouches[1].x, monitoredTouches[1].y
             );
-            camera.zoomToPoint(
-                dist / zoomTouchDistance,
-                zoomCenter[0],
-                zoomCenter[1]
-            );
-            this.Dispatch(false, "touchzoom");
+            if((dist / zoomTouchDistance) > 1 || camera.scale() >= 0.01) {
+                camera.zoomToPoint(
+                    dist / zoomTouchDistance,
+                    zoomCenter[0],
+                    zoomCenter[1]
+                );
+                this.Dispatch(false, "touchzoom");
+            }
             zoomTouchDistance = dist;
         }
     }, this);
@@ -274,6 +283,7 @@ function parsegraph_Input(graph, camera)
     var touchstartTime;
 
     parsegraph_addEventMethod(graph.canvas(), "touchstart", function(event) {
+        //console.log("touchstart", event);
         event.preventDefault();
         focused = true;
 
@@ -404,7 +414,7 @@ function parsegraph_Input(graph, camera)
     }, this);
 
     parsegraph_addEventMethod(graph.canvas(), "mousedown", function(event) {
-        //console.log("Mousedown!");
+        //console.log("Mousedown", event);
         focused = true;
         event.preventDefault();
         graph.canvas().focus();
@@ -513,6 +523,10 @@ function parsegraph_Input(graph, camera)
             case "ArrowUp": return keyName;
             case "ArrowRight": return keyName;
             case "ArrowDown": return keyName;
+            case "-": return "ZoomIn";
+            case "_": return "ZoomIn";
+            case "+": return "ZoomOut";
+            case "=": return "ZoomOut";
         }
         switch(event.keyCode) {
             case 13: keyName = "Enter"; break;
@@ -525,7 +539,7 @@ function parsegraph_Input(graph, camera)
         return keyName;
     };
 
-    parsegraph_addEventMethod(document, "keydown", function(event) {
+    parsegraph_addEventMethod(graph.canvas(), "keydown", function(event) {
         if(event.altKey || event.metaKey) {
             //console.log("Key event had ignored modifiers");
             return;
@@ -703,20 +717,25 @@ function parsegraph_Input(graph, camera)
                 graph.nodeUnderCursor().click();
             }
             // fall through
+        case parsegraph_RESET_CAMERA_KEY:
+            if(graph.carousel().isCarouselShown()) {
+                graph.carousel().hideCarousel();
+                break;
+            }
         case parsegraph_ZOOM_IN_KEY:
         case parsegraph_ZOOM_OUT_KEY:
         case parsegraph_MOVE_DOWNWARD_KEY:
         case parsegraph_MOVE_UPWARD_KEY:
         case parsegraph_MOVE_BACKWARD_KEY:
         case parsegraph_MOVE_FORWARD_KEY:
-        case parsegraph_RESET_CAMERA_KEY:
             this.Dispatch(false, "keydown", true);
             break;
         }
     }, this);
 
-    parsegraph_addEventMethod(document, "keyup", function(event) {
+    parsegraph_addEventMethod(graph.canvas(), "keyup", function(event) {
         var keyName = getproperkeyname(event);
+        console.log(keyName);
 
         if(!this.keydowns[keyName]) {
             // Already processed.
@@ -806,19 +825,22 @@ parsegraph_Input.prototype.Update = function(t)
     var lastCoords = this.lastMouseCoords();
     if(this.Get(parsegraph_ZOOM_OUT_KEY)) {
         this._updateRepeatedly = true;
+        inputChangedScene = true;
         cam.zoomToPoint(Math.pow(1.1, scaleSpeed * this.Elapsed(parsegraph_ZOOM_OUT_KEY, t)),
             this._graph.gl().drawingBufferWidth / 2,
             this._graph.gl().drawingBufferHeight / 2
         );
-        inputChangedScene = true;
     }
     if(this.Get(parsegraph_ZOOM_IN_KEY)) {
+        console.log("Continuing to zoom out");
         this._updateRepeatedly = true;
-        cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
-            this._graph.gl().drawingBufferWidth / 2,
-            this._graph.gl().drawingBufferHeight / 2
-        );
         inputChangedScene = true;
+        if(cam.scale() >= .01) {
+            cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
+                this._graph.gl().drawingBufferWidth / 2,
+                this._graph.gl().drawingBufferHeight / 2
+            );
+        }
     }
     //this.Dispatch(false, "update", inputChangedScene);
 
@@ -910,7 +932,10 @@ parsegraph_Input.prototype.focusedNode = function()
 parsegraph_Input.prototype.setFocusedNode = function(focusedNode)
 {
     this._focusedNode = focusedNode;
-}
+    var selectedNode = this._focusedNode;
+    //console.log("Clicked");
+    this._focusedLabel = selectedNode && selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable();
+};
 
 parsegraph_Input.prototype.focusedLabel = function()
 {
