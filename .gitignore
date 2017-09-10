@@ -2,10 +2,11 @@
 vgcore.*
 
 # Build artifacts
-parsegraph-1.0.js
-parsegraph-widgets-1.0.js
+parsegraph-*.js
+parsegraph-widgets-*.js
 parsegraph.pc
 parsegraph.pc.head
+src/parsegraph_config.h
 
 # Object files
 lib*.so

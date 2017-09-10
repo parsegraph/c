@@ -151,3 +151,8 @@ parsegraph-widgets-$(PACKAGE_VERSION).js: $(parsegraph_WIDGET_FILES)
 	echo >>$@
 	echo "/* Generated `date` */" >>$@
 	chmod 0444 $@
+
+rpm:
+	chmod +x ./rpm.sh
+	./rpm.sh
+.PHONY: rpm
