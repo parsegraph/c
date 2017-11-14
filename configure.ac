@@ -28,19 +28,19 @@ httpd_LIBS="-lapr-1 -laprutil-1 -fPIC"
 
 PKG_CHECK_MODULES(openssl, [openssl],
     [],
-    [AC_MSG_ERROR([openssl is required])]
+    [AC_MSG_ERROR([parsegraph requires openssl-devel])]
 )
 
 PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm libudev libinput libevdev ncurses],
     [],
-    [AC_MSG_ERROR([parsegraph requires a bunch of low-level C graphics libraries.])]
+    [AC_MSG_ERROR([parsegraph requires cairo-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel.])]
 )
 
 AC_PROG_CXX
 
 PKG_CHECK_MODULES(parsegraph_cxx, [Qt5Core Qt5Gui],
     [],
-    [AC_MSG_ERROR([parsegraph for C++ requires Qt.])]
+    [AC_MSG_ERROR([parsegraph requres qt5core-qtbase-devel.])]
 )
 
 # Generate files.
