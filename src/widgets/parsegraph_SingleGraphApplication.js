@@ -2,6 +2,12 @@ function parsegraph_SingleGraphApplication(guid)
 {
     this._cameraName = "parsegraph_login_camera";
     this._guid = guid || "";
+    if(window.location.protocol == "https:") {
+        this._hostname = "wss://" + location.host;
+    }
+    else {
+        this._hostname = "ws://" + location.host;
+    }
 }
 
 /**
@@ -89,7 +95,7 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
 
     if(!this._environmentProtocol && this._guid) {
         this._environmentProtocol = new parsegraph_EnvironmentProtocol(new WebSocket(
-            "ws://localhost:8080/environment/live", "parsegraph-environment-protocol"
+            this.hostname() + "/environment/live"
         ), this._guid, function(name, obj) {
                 if(name === "initialData") {
                     this.loadEnvironment(obj);
@@ -97,6 +103,11 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
             }, this
         );
     }
+};
+
+parsegraph_SingleGraphApplication.prototype.hostname = function()
+{
+    return this._hostname;
 };
 
 parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialData)

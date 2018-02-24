@@ -27,9 +27,9 @@ const char* alpha_WeetPainter_FragmentShader =
     "gl_FragColor = contentColor;"
 "}";
 
-struct alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool)
+alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool)
 {
-    struct alpha_WeetPainter* painter;
+    alpha_WeetPainter* painter;
     if(pool) {
         painter = apr_palloc(pool, sizeof(*painter));
     }
@@ -136,7 +136,7 @@ static float alpha_CUBE_COLORS[] = {
     0, 1, 0 // 4
 };
 
-void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numCubes)
+void alpha_WeetPainter_Init(alpha_WeetPainter* painter, unsigned int numCubes)
 {
     if(!painter->_posBuffer) {
         glGenBuffers(1, &painter->_posBuffer);
@@ -190,12 +190,12 @@ void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numC
     painter->_numCubes = numCubes;
 }
 
-void alpha_WeetPainter_Clear(struct alpha_WeetPainter* painter)
+void alpha_WeetPainter_Clear(alpha_WeetPainter* painter)
 {
     painter->_dataX = 0;
 }
 
-int alpha_WeetPainter_Cube(struct alpha_WeetPainter* painter, float* m)
+int alpha_WeetPainter_Cube(alpha_WeetPainter* painter, float* m)
 {
     if(!painter->_posData) {
         fprintf(stderr, "Init must be called first");
@@ -247,7 +247,7 @@ int alpha_WeetPainter_Cube(struct alpha_WeetPainter* painter, float* m)
     return 0;
 }
 
-void alpha_WeetPainter_Draw(struct alpha_WeetPainter* painter, float* viewMatrix)
+void alpha_WeetPainter_Draw(alpha_WeetPainter* painter, float* viewMatrix)
 {
     if(!viewMatrix) {
         fprintf(stderr, "A viewMatrix must be provided");

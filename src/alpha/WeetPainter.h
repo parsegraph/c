@@ -7,7 +7,7 @@
 extern const char* alpha_WeetPainter_VertexShader;
 extern const char* alpha_WeetPainter_FragmentShader;
 
-struct alpha_WeetPainter {
+typedef struct {
     apr_pool_t* pool;
     unsigned int _numCubes;
     GLuint faceProgram;
@@ -19,12 +19,12 @@ struct alpha_WeetPainter {
     unsigned int _dataX;
     GLuint _posBuffer;
     GLuint _colorBuffer;
-};
+} alpha_WeetPainter;
 
-struct alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool);
-void alpha_WeetPainter_Init(struct alpha_WeetPainter* painter, unsigned int numCubes);
-int alpha_WeetPainter_Cube(struct alpha_WeetPainter* painter, float* m);
-void alpha_WeetPainter_Draw(struct alpha_WeetPainter* painter, float* viewMatrix);
-void alpha_WeetPainter_Clear(struct alpha_WeetPainter* painter);
+alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool);
+void alpha_WeetPainter_Init(alpha_WeetPainter* painter, unsigned int numCubes);
+int alpha_WeetPainter_Cube(alpha_WeetPainter* painter, float* m);
+void alpha_WeetPainter_Draw(alpha_WeetPainter* painter, float* viewMatrix);
+void alpha_WeetPainter_Clear(alpha_WeetPainter* painter);
 
 #endif // alpha_WeetPainter_INCLUDED

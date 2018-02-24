@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.68])
 AC_INIT([parsegraph], [1.2], [dafrito@gmail.com], [parsegraph], [https//parsegraph.com])
-AC_SUBST([PACKAGE_RELEASE], [2])
+AC_SUBST([PACKAGE_RELEASE], [5])
 AC_SUBST([PACKAGE_DESCRIPTION], ['A toolkit for creating native and browser-hosted Parsegraph applications'])
 AC_SUBST([PACKAGE_SUMMARY], ['Parsegraph toolkit for JavaScript and C'])
 AC_CONFIG_MACRO_DIR([m4])

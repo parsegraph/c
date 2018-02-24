@@ -1,4 +1,8 @@
 #include "Cluster.h"
+#include "BlockStuff.h"
+#include "FacePainter.h"
+#include <stdio.h>
+#include <stdarg.h>
 
 //--------------------------------------------
 //--------------------------------------------
@@ -22,7 +26,7 @@ alpha_Cluster* alpha_Cluster_new(apr_pool_t* pool, alpha_GLWidget* widget)
     }
     alpha_Cluster* cluster;
     if(pool) {
-        cluster = apr_calloc(pool, sizeof(*cluster));
+        cluster = apr_pcalloc(pool, sizeof(*cluster));
     }
     else {
         cluster = malloc(sizeof(*cluster));
@@ -30,7 +34,7 @@ alpha_Cluster* alpha_Cluster_new(apr_pool_t* pool, alpha_GLWidget* widget)
     cluster->pool = pool;
     cluster->widget = widget;
 
-    this.blocks = [];
+    cluster->blocks = 0;
 
     // Declare GL Painters; create them only when needed to delay GL context's creation.
     cluster->facePainter = 0;
@@ -43,18 +47,35 @@ alpha_Cluster* alpha_Cluster_new(apr_pool_t* pool, alpha_GLWidget* widget)
  */
 int alpha_Cluster_HasBlock(alpha_Cluster* cluster, alpha_Block* block)
 {
-    for(var i = 0; i < this.blocks.length; ++i) {
-        if(1 == alpha_Block_Equals(this.blocks[i], block)) {
+    if(!cluster->blocks) {
+        return -1;
+    }
+    struct alpha_BlockRec* br = cluster->blocks;
+    int i = 0;
+    while(br) {
+        alpha_Block* b = br->block;
+        if(alpha_Block_Equals(b, block)) {
             return i;
         }
+
+        // Not found.
+        ++i;
+        br = br->next;
     }
     return -1;
 };
 
 void alpha_Cluster_AddBlock(alpha_Cluster* cluster, alpha_Block* block)
 {
-    if(!this.HasBlock(block)) {
-        this.blocks.push(block);
+    if(!alpha_Cluster_HasBlock(cluster, block)) {
+        if(!cluster->lastBlock) {
+            cluster->blocks = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
+            cluster->lastBlock = cluster->blocks;
+        }
+        else {
+            cluster->lastBlock->next = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
+            cluster->lastBlock = cluster->lastBlock->next;
+        }
     }
 };
 
@@ -66,76 +87,114 @@ void alpha_Cluster_CreateBlock(alpha_Cluster* cluster, alpha_BlockType* type, fl
 
 void alpha_Cluster_RemoveBlock(alpha_Cluster* cluster, alpha_Block* block)
 {
-    int i = this.HasBlock(block);
-    if(i >= 0) {
-        return this.blocks.splice(i, 1)[0];
+    if(!cluster->blocks) {
+        return;
+    }
+    struct alpha_BlockRec* prev = 0;
+    struct alpha_BlockRec* br = cluster->blocks;
+    while(br) {
+        alpha_Block* b = br->block;
+        if(alpha_Block_Equals(b, block)) {
+            if(br->next) {
+                if(prev) {
+                    prev->next = br->next;
+                }
+                else {
+                    cluster->blocks = br->next;
+                }
+            }
+            else if(prev) {
+                prev->next = 0;
+                cluster->lastBlock = prev;
+            }
+            else {
+                cluster->blocks = 0;
+                cluster->lastBlock = 0;
+            }
+        }
+
+        // Not found so far.
+        prev = br;
+        br = br->next;
+    }
+}
+
+void alpha_Cluster_AddBlocks(alpha_Cluster* cluster, alpha_Block** block, int nblocks)
+{
+    for(int i = 0; i < nblocks; ++i) {
+        alpha_Cluster_AddBlock(cluster, block[i]);
     }
 }
 
 /**
  * pass a table of blocks and it will add the ones that are new
  */
-void alpha_Cluster_AddBlocks(alpha_Cluster* cluster, ...)
+void alpha_Cluster_AddBlockValues(alpha_Cluster* cluster, ...)
 {
-    if(arguments.length > 1) {
-        for(var i = 0; i < arguments.length; ++i) {
-            this.AddBlock(arguments[i]);
-        }
+    va_list ap;
+    va_start(ap, cluster);
+    alpha_Block* block;
+    while((block = va_arg(ap, alpha_Block*)) != NULL) {
+        alpha_Cluster_AddBlock(cluster, block);
     }
-    else {
-        for(var i = 0; i < arguments[0].length; ++i) {
-            this.AddBlock(arguments[0][i]);
-        }
-    }
+    va_end(ap);
 };
 
 void alpha_Cluster_ClearBlocks(alpha_Cluster* cluster)
 {
-    this.blocks.splice(0, this.blocks.length);
+    cluster->blocks = 0;
+    cluster->lastBlock = 0;
 };
 
 /**
  * construct all of the vertices from the blocks and store them
  */
-void alpha_Cluster_CalculateVertices(alpha_Cluster* cluster)
+int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt)
 {
-    if(!this.facePainter) {
-        this.facePainter = new alpha_FacePainter(this.widget.gl());
+    if(!cluster->facePainter) {
+        cluster->facePainter = alpha_FacePainter_new(cluster->pool);
     }
     else {
         // delete what we had;
-        this.facePainter.Clear();
+        alpha_FacePainter_Clear(cluster->facePainter);
     }
 
-    this.blocks.forEach(function(block) {
-        var quat = block.GetQuaternion( true );
+    for(struct alpha_BlockRec* block = cluster->blocks; block != 0; block = block->next) {
+        float* quat = alpha_Block_GetQuaternion(block->block, 1);
         if(!quat) {
             //console.log(block);
-            throw new Error("Block must not return a null quaternion");
+            //throw new Error("Block must not return a null quaternion");
         }
 
         // get the faces from the blocktype
-        var bType = this.widget.BlockTypes.Get(block.id);
+        alpha_BlockType* bType = alpha_BlockTypes_GetByID(bt, block->id);
         if(!bType) {
-            return;
+            return -1;
         }
-        var shape = bType[0];
-        var skin = bType[1];
+        alpha_Shape* shape = bType->shape;
+        alpha_Skin* skin = bType->skin;
 
-        for(var i = 0; i < shape.length; ++i) { // vertices is face!
-            var face = shape[i];
-            if(!face) {
-                throw new Error("Shape must not contain any null faces");
+        alpha_Face_List* shapeItem = shape->facesHead;
+        alpha_Face_List* skinItem = skin->facesHead;
+        for(;;) {
+            if(shapeItem != 0 || skinItem != 0) {
+                break;
             }
-            var colors = skin[i];
+            alpha_Face* face = faceItem->face;
+            if(!face) {
+                //throw new Error("Shape must not contain any null faces");
+                return -1;
+            }
+            alpha_Face* colors = skinItem->face;
             if(!colors) {
-                throw new Error("Shape must not contain any null colors");
+                //throw new Error("Shape must not contain any null colors");
+                return -1;
             }
 
             // every face has its own drawType;
             if(face.drawType == alpha_TRIANGLES) {
                 // Process every vertex of the face.
-                for(var j = 0; j < face.length; ++j) {
+                for(int j = 0; j < face.length; ++j) {
                     var vertex = face[j];
                     if(!vertex) {
                         throw new Error("Face must not contain any null vertices");
@@ -165,40 +224,48 @@ void alpha_Cluster_CalculateVertices(alpha_Cluster* cluster)
                 }
             } else if(face.drawType == alpha_QUADS) {
                 // Process every vertex of the face.
-                for(var j = 0; j < face.length; j += 4) {
+                for(int j = 0; j < face.length; j += 4) {
                     var v1 = face[j];
                     if(!v1) {
-                        throw new Error("Face must not contain any null vertices (v1)");
+                        //throw new Error("Face must not contain any null vertices (v1)");
+                        return -1;
                     }
                     var v2 = face[j + 1];
                     if(!v2) {
-                        throw new Error("Face must not contain any null vertices (v2)");
+                        //throw new Error("Face must not contain any null vertices (v2)");
+                        return -1;
                     }
                     var v3 = face[j + 2];
                     if(!v3) {
-                        throw new Error("Face must not contain any null vertices (v3)");
+                        //throw new Error("Face must not contain any null vertices (v3)");
+                        return -1;
                     }
                     var v4 = face[j + 3];
                     if(!v4) {
-                        throw new Error("Face must not contain any null vertices (v4)");
+                        //throw new Error("Face must not contain any null vertices (v4)");
+                        return -1;
                     }
 
                     // get the color for this vertex;
                     var c1 = colors[j];
                     if(!c1 ) {
-                        throw new Error("Colors must not contain any null color values (c1)");
+                        //throw new Error("Colors must not contain any null color values (c1)");
+                        return -1;
                     }
                     var c2 = colors[j + 1];
                     if(!c2 ) {
-                        throw new Error("Colors must not contain any null color values (c2)");
+                        //throw new Error("Colors must not contain any null color values (c2)");
+                        return -1;
                     }
                     var c3 = colors[j + 2];
                     if(!c3 ) {
-                        throw new Error("Colors must not contain any null color values (c3)");
+                        //throw new Error("Colors must not contain any null color values (c3)");
+                        return -1;
                     }
                     var c4 = colors[j + 3];
                     if(!c4 ) {
-                        throw new Error("Colors must not contain any null color values (c4)");
+                        //throw new Error("Colors must not contain any null color values (c4)");
+                        return -1;
                     }
 
                     // rotate it; if it's not the default
@@ -211,21 +278,24 @@ void alpha_Cluster_CalculateVertices(alpha_Cluster* cluster)
                     // now translate it
                     if(typeof block[0] !== "number" || typeof block[1] !== "number" || typeof block[2] !== "number") {
                         //console.log(block);
-                        throw new Error("Block must contain numeric components.");
+                        //throw new Error("Block must contain numeric components.");
+                        return -1;
                     }
-                    v1 = v1.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v2 = v2.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v3 = v3.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v4 = v4.Added(new alpha_Vector(block[0], block[1], block[2]));
+                    //float* alpha_Vector_Added(apr_pool_t* pool, float* v, float* toAdd);
+                    v1 = alpha_Vector_AddedEach(cluster->pool, v1, block[0], block[1], block[2]);
+                    v2 = alpha_Vector_AddedEach(cluster->pool, v2, block[0], block[1], block[2]);
+                    v3 = alpha_Vector_AddedEach(cluster->pool, v3, block[0], block[1], block[2]);
+                    v4 = alpha_Vector_AddedEach(cluster->pool, v4, block[0], block[1], block[2]);
 
                     // Translate quads to triangles
-                    this.facePainter.Quad(v1, v2, v3, v4, c1, c2, c3, c4);
+                    alpha_FacePainter_Quad(cluster->facePainter, v1, v2, v3, v4, c1, c2, c3, c4);
                 }
             } else {
-                throw new Error("Face must have a valid drawType property to read of either alpha_QUADS or alpha_TRIANGLES. (Given " + face.drawType + ")");
+                //throw new Error("Face must have a valid drawType property to read of either alpha_QUADS or alpha_TRIANGLES. (Given " + face.drawType + ")");
+                return -1;
             }
         }
-    }, this);
+    }
 }
 
 void alpha_Cluster_Draw(alpha_Cluster* cluster, float* viewMatrix)

@@ -179,7 +179,7 @@ parsegraph_Unicode.prototype.load = function(dbURL) {
             }
         }
         else {
-            //console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
+            console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
         }
     };
     xhr.send();
