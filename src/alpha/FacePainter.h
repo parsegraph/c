@@ -13,6 +13,7 @@ GLuint a_color;
 GLuint a_position;
 struct parsegraph_pagingbuffer* faceBuffer;
 };
+typedef struct alpha_FacePainter alpha_FacePainter;
 
 extern const char* alpha_FacePainter_VertexShader;
 extern const char* alpha_FacePainter_FragmentShader;

@@ -1,8 +1,10 @@
 #include "Cluster.h"
 #include "BlockStuff.h"
 #include "FacePainter.h"
+#include "Maths.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 //--------------------------------------------
 //--------------------------------------------
@@ -146,6 +148,80 @@ void alpha_Cluster_ClearBlocks(alpha_Cluster* cluster)
     cluster->lastBlock = 0;
 };
 
+static void drawTriangles(alpha_FacePainter* facePainter, alpha_Block* block, alpha_Face* face, alpha_Face* colors, float* quat)
+{
+    // Process every vertex of the face.
+    alpha_Vector_List* vertex = face->vectorsHead;
+    alpha_Vector_List* color = colors->vectorsHead;
+    float translatedVecs[3*4];
+    for(int j = 0; vertex && color; ++j) {
+        memcpy(translatedVecs + (j%3)*sizeof(float)*4, &vertex->value, sizeof(float)*4);
+        // rotate it; if it's not the default
+        if(block->orientation > 0) {
+            memcpy(translatedVecs + (j%3)*sizeof(float)*4, alpha_Quaternion_RotatedVector(quat, block->pool, translatedVecs + (j%3)*sizeof(float)*4), sizeof(float)*4);
+        }
+        // now translate it
+        memcpy(translatedVecs + (j%3)*sizeof(float)*4, alpha_Vector_Added(block->pool, translatedVecs + (j%3)*sizeof(float)*4, block->pos), sizeof(float)*4);
+
+        if((j+1) % 3 != 0 || j == 0) {
+            goto next_vertex_tri;
+        }
+        float* v1 = translatedVecs;
+        float* v2 = translatedVecs + 4;
+        float* v3 = translatedVecs + 8;
+
+        float* c1 = color->prev->prev->value;
+        float* c2 = color->prev->value;
+        float* c3 = color->value;
+
+        // vector and cluster use the same indexes
+        alpha_FacePainter_TriangleValues(
+            facePainter,
+            v1, v2, v3,
+            c1, c2, c3
+        );
+next_vertex_tri:
+        vertex = vertex->next;
+        color = color->next;
+    }
+}
+
+static void drawQuads(alpha_FacePainter* facePainter, alpha_Block* block, alpha_Face* face, alpha_Face* colors, float* quat)
+{
+    // Process every vertex of the face.
+    alpha_Vector_List* vertex = face->vectorsHead;
+    alpha_Vector_List* color = colors->vectorsHead;
+    float translatedVecs[4*4];
+    for(int j = 0; vertex && color; ++j) {
+        memcpy(translatedVecs + (j%4)*sizeof(float)*4, &vertex->value, sizeof(float)*4);
+        // rotate it; if it's not the default
+        if(block->orientation > 0) {
+            memcpy(translatedVecs + (j%4)*sizeof(float)*4, alpha_Quaternion_RotatedVector(quat, block->pool, translatedVecs + (j%4)*sizeof(float)*4), sizeof(float)*4);
+        }
+        // now translate it
+        memcpy(translatedVecs + (j%4)*sizeof(float)*4, alpha_Vector_Added(block->pool, translatedVecs + (j%4)*sizeof(float)*4, block->pos), sizeof(float)*4);
+
+        if((j+1) % 4 != 0 || j == 0) {
+            goto next_vertex_quad;
+        }
+        float* v1 = translatedVecs;
+        float* v2 = translatedVecs + 4;
+        float* v3 = translatedVecs + 8;
+        float* v4 = translatedVecs + 12;
+
+        float* c1 = color->prev->prev->prev->value;
+        float* c2 = color->prev->prev->value;
+        float* c3 = color->prev->value;
+        float* c4 = color->value;
+
+        // vector and cluster use the same indexes
+        alpha_FacePainter_Quad(facePainter, v1, v2, v3, v4, c1, c2, c3, c4);
+next_vertex_quad:
+        vertex = vertex->next;
+        color = color->next;
+    }
+}
+
 /**
  * construct all of the vertices from the blocks and store them
  */
@@ -159,15 +235,15 @@ int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt
         alpha_FacePainter_Clear(cluster->facePainter);
     }
 
-    for(struct alpha_BlockRec* block = cluster->blocks; block != 0; block = block->next) {
-        float* quat = alpha_Block_GetQuaternion(block->block, 1);
+    for(struct alpha_BlockRec* blockRec = cluster->blocks; blockRec != 0; blockRec = blockRec->next) {
+        float* quat = alpha_Block_GetQuaternion(blockRec->block, 1);
         if(!quat) {
             //console.log(block);
             //throw new Error("Block must not return a null quaternion");
         }
 
         // get the faces from the blocktype
-        alpha_BlockType* bType = alpha_BlockTypes_GetByID(bt, block->id);
+        alpha_BlockType* bType = alpha_BlockTypes_GetByID(bt, blockRec->block->type->id);
         if(!bType) {
             return -1;
         }
@@ -176,11 +252,8 @@ int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt
 
         alpha_Face_List* shapeItem = shape->facesHead;
         alpha_Face_List* skinItem = skin->facesHead;
-        for(;;) {
-            if(shapeItem != 0 || skinItem != 0) {
-                break;
-            }
-            alpha_Face* face = faceItem->face;
+        for(; shapeItem && skinItem;) {
+            alpha_Face* face = shapeItem->face;
             if(!face) {
                 //throw new Error("Shape must not contain any null faces");
                 return -1;
@@ -192,116 +265,29 @@ int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt
             }
 
             // every face has its own drawType;
-            if(face.drawType == alpha_TRIANGLES) {
-                // Process every vertex of the face.
-                for(int j = 0; j < face.length; ++j) {
-                    var vertex = face[j];
-                    if(!vertex) {
-                        throw new Error("Face must not contain any null vertices");
-                    }
-                    // get the color for this vertex;
-                    var color = colors[j];
-                    if(!color) {
-                        throw new Error("Colors must not contain any null color values");
-                    }
-
-                    // rotate it; if it's not the default
-                    if(block.orientation > 0) {
-                        vertex = quat.RotatedVector(vertex);
-                    }
-                    // now translate it
-                    vertex = vertex.Added(new alpha_Vector(block[0], block[1], block[2]));
-
-                    // vector and cluster use the same indexes
-                    this.facePainter.Triangle(
-                        vertex[0],
-                        vertex[1],
-                        vertex[2],
-                        color[0],
-                        color[1],
-                        color[2]
-                    );
-                }
-            } else if(face.drawType == alpha_QUADS) {
-                // Process every vertex of the face.
-                for(int j = 0; j < face.length; j += 4) {
-                    var v1 = face[j];
-                    if(!v1) {
-                        //throw new Error("Face must not contain any null vertices (v1)");
-                        return -1;
-                    }
-                    var v2 = face[j + 1];
-                    if(!v2) {
-                        //throw new Error("Face must not contain any null vertices (v2)");
-                        return -1;
-                    }
-                    var v3 = face[j + 2];
-                    if(!v3) {
-                        //throw new Error("Face must not contain any null vertices (v3)");
-                        return -1;
-                    }
-                    var v4 = face[j + 3];
-                    if(!v4) {
-                        //throw new Error("Face must not contain any null vertices (v4)");
-                        return -1;
-                    }
-
-                    // get the color for this vertex;
-                    var c1 = colors[j];
-                    if(!c1 ) {
-                        //throw new Error("Colors must not contain any null color values (c1)");
-                        return -1;
-                    }
-                    var c2 = colors[j + 1];
-                    if(!c2 ) {
-                        //throw new Error("Colors must not contain any null color values (c2)");
-                        return -1;
-                    }
-                    var c3 = colors[j + 2];
-                    if(!c3 ) {
-                        //throw new Error("Colors must not contain any null color values (c3)");
-                        return -1;
-                    }
-                    var c4 = colors[j + 3];
-                    if(!c4 ) {
-                        //throw new Error("Colors must not contain any null color values (c4)");
-                        return -1;
-                    }
-
-                    // rotate it; if it's not the default
-                    if(block.orientation > 0) {
-                        v1 = quat.RotatedVector(v1);
-                        v2 = quat.RotatedVector(v2);
-                        v3 = quat.RotatedVector(v3);
-                        v4 = quat.RotatedVector(v4);
-                    }
-                    // now translate it
-                    if(typeof block[0] !== "number" || typeof block[1] !== "number" || typeof block[2] !== "number") {
-                        //console.log(block);
-                        //throw new Error("Block must contain numeric components.");
-                        return -1;
-                    }
-                    //float* alpha_Vector_Added(apr_pool_t* pool, float* v, float* toAdd);
-                    v1 = alpha_Vector_AddedEach(cluster->pool, v1, block[0], block[1], block[2]);
-                    v2 = alpha_Vector_AddedEach(cluster->pool, v2, block[0], block[1], block[2]);
-                    v3 = alpha_Vector_AddedEach(cluster->pool, v3, block[0], block[1], block[2]);
-                    v4 = alpha_Vector_AddedEach(cluster->pool, v4, block[0], block[1], block[2]);
-
-                    // Translate quads to triangles
-                    alpha_FacePainter_Quad(cluster->facePainter, v1, v2, v3, v4, c1, c2, c3, c4);
-                }
-            } else {
+            if(face->drawType == alpha_TRIANGLES) {
+                drawTriangles(cluster->facePainter, blockRec->block, face, colors, quat);
+            }
+            else if(face->drawType == alpha_QUADS) {
+                drawQuads(cluster->facePainter, blockRec->block, face, colors, quat);
+            }
+            else {
                 //throw new Error("Face must have a valid drawType property to read of either alpha_QUADS or alpha_TRIANGLES. (Given " + face.drawType + ")");
                 return -1;
             }
+
+            shapeItem = shapeItem->next;
+            skinItem = skinItem->next;
         }
     }
+
+    return 0;
 }
 
-void alpha_Cluster_Draw(alpha_Cluster* cluster, float* viewMatrix)
+void alpha_Cluster_Draw(alpha_Cluster* cluster, alpha_BlockTypes* bt, float* viewMatrix)
 {
     if(!cluster->facePainter) {
-        alpha_Cluster_CalculateVertices(cluster);
+        alpha_Cluster_CalculateVertices(cluster, bt);
     }
-    this.facePainter.Draw(viewMatrix);
+    alpha_FacePainter_Draw(cluster->facePainter, viewMatrix);
 }

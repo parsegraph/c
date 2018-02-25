@@ -283,7 +283,7 @@ alpha_GLWidget_container(alpha_GLWidget* widget)
 /**
  * Render painted memory buffers.
  */
-alpha_GLWidget.prototype.render = function()
+alpha_GLWidget_render()
 {
     var projection;
     if(arguments.length > 0) {
@@ -328,4 +328,3 @@ alpha_GLWidget.prototype.render = function()
 
     this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
 };
-

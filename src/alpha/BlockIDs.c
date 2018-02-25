@@ -2,6 +2,7 @@
 #include "BlockStuff.h"
 #include "Maths.h"
 #include "../graph/log.h"
+#include <stdlib.h>
 
 // Version 1.3
 
