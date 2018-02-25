@@ -1,8 +1,6 @@
 #include "GLWidget.h"
 // TODO Blocks in foreground are rendered improperly relative to the projection matrix.
 
-// TODO Mouse input appears to be... strangely interpreted.
-
 // test version 1.0
 alpha_GLWidget* alpha_GLWidget_new(apr_pool_t* pool)
 {
