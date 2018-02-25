@@ -2,6 +2,7 @@
 #define alpha_Cluster_INCLUDED
 
 #include <apr_pools.h>
+#include "BlockStuff.h"
 
 struct alpha_GLWidget;
 typedef struct alpha_GLWidget alpha_GLWidget;
