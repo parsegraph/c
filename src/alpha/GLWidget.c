@@ -281,7 +281,7 @@ alpha_GLWidget_container(alpha_GLWidget* widget)
 /**
  * Render painted memory buffers.
  */
-alpha_GLWidget_render()
+void alpha_GLWidget_render()
 {
     var projection;
     if(arguments.length > 0) {
