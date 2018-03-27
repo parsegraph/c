@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET=${*:-$HOME/src/parsegraph/server/public_html}
+TARGET=${*:-../public_html}
 
 mkdir -p $TARGET
 mkdir -p $TARGET/doc
