@@ -1,4 +1,5 @@
 #include "Size.h"
+#include <stdlib.h>
 
 float* parsegraph_Size_new(apr_pool_t* pool)
 {

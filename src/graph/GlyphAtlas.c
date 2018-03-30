@@ -1,4 +1,5 @@
 #include "GlyphAtlas.h"
+#include <stdlib.h>
 
 parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(apr_pool_t* pool, int fontSize, const char* fontName, const char* fontStyle)
 {

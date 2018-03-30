@@ -1,6 +1,7 @@
 #include "pagingbuffer.h"
 #include <stdarg.h>
 #include <math.h>
+#include <stdlib.h>
 
 struct parsegraph_pagingbuffer* parsegraph_pagingbuffer_new(
     apr_pool_t* pool, GLuint program)

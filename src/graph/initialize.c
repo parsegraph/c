@@ -1,6 +1,7 @@
 #include "initialize.h"
 #include "Color.h"
 #include "Node.h"
+#include <stdlib.h>
 
 struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS = 0;
 float parsegraph_MIN_BLOCK_HEIGHT;

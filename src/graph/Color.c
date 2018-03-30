@@ -1,4 +1,5 @@
 #include "Color.h"
+#include <stdlib.h>
 
 float* parsegraph_Color_new(apr_pool_t* pool, float r, float g, float b, float a)
 {
