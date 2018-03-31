@@ -32,7 +32,8 @@ parsegraph.pc: parsegraph.pc.head
 pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
 	parsegraph-widgets-$(PACKAGE_VERSION).js \
-	esprima.js
+	esprima.js \
+	UnicodeData.txt
 
 CLEANFILES = \
 	parsegraph-$(PACKAGE_VERSION).js \
