@@ -2,95 +2,124 @@
 <html>
 <head>
 <title>Input - Parsegraph</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph Input</h1>
-<h3>parsegraph_RESET_CAMERA_KEY</h3>
-The name of the key used to reset the camera to its default position. Defaults to Escape.
-<h3>parsegraph_CLICK_KEY</h3>
-The name of the key used to simluate mouse clicks.
-<h3>parsegraph_MOVE_UPWARD_KEY</h3>
-The name of the key used to move the camera up.
-<h3>parsegraph_MOVE_DOWNWARD_KEY</h3>
-The name of the key used to move the camera down.
-<h3>parsegraph_MOVE_BACKWARD_KEY</h3>
-The name of the key used to move the camera LTR backward.
-<h3>parsegraph_MOVE_FORWARD_KEY</h3>
-The name of the key used to move the camera LTR forward.
-<h3>parsegraph_CARET_COLOR</h3>
-The color of the caret.
-<h3>parsegraph_FOCUSED_SPOTLIGHT_COLOR</h3>
-The color of the spotlight on the focused node.
-<h3>parsegraph_FOCUSED_SPOTLIGHT_SCALE</h3>
-The relative size of the focused node spotlight.
-<h3>parsegraph_ZOOM_IN_KEY</h3>
-The name of the key used to zoom the camera in.
-<h3>parsegraph_ZOOM_OUT_KEY</h3>
-The name of the key used to zoom the camera out.
-<h3>new parsegraph_Input(graph, camera)</h3>
-Constructs and attaches this input to the given graph's canvas.
-<h3>.lastMouseCoords()</h3>
-Returns the most recently detected mouse coords.
-<h3>.lastMouseX()</h3>
-Returns the most recently detected mouse X-coordinate.
-<h3>.lastMouseY()</h3>
-Returns the most recently detected mouse X-coordinate.
-<h3>.SetListener(listener, thisArg)</h3>
-Sets the input listener to the given value, or clears it if listener is null.
-<h3>.UpdateRepeatedly()</h3>
-Returns whether the current input state expects the scene to be re-rendered on animation
-timer, rather than only when scheduled through input.
-<h3>.Update(t)</h3>
-Updates the scene using the given elasped time and current input state.
-<p>
-Returns true if the input state modified the scene such that it will require rendering.
-<h3>.Get(key)</h3>
-Returns whether the specified key is considered pressed.
-<h3>.Elapsed(key, t)</h3>
-Returns the amount of time, in seconds, that the current key has been pressed, and resets
-the key's elapsed timer.
-<h3>.paint()</h3>
-Paints this scene's focusing spotlight and text caret.
-<h3>.focusedNode()</h3>
-Returns the node currently under focus.
-<h3>.setFocusedNode(focusedNode)</h3>
-Directly sets the node under focus.
-<h3>.focusedLabel()</h3>
-Returns the label currently under focus.
-<h3>.render(world)</h3>
-Renders this input's painted scene using the specified world matrix.
-<h3>.Dispatch(...)</h3>
-Calls this input's listener with the given arguments.
-</main>
-<nav class="toc">
-<h2>Parsegraph Input</h2>
-<ol>
-<li>parsegraph_RESET_CAMERA_KEY
-<li>parsegraph_CLICK_KEY
-<li>parsegraph_MOVE_UPWARD_KEY
-<li>parsegraph_MOVE_DOWNWARD_KEY
-<li>parsegraph_MOVE_BACKWARD_KEY
-<li>parsegraph_MOVE_FORWARD_KEY
-<li>parsegraph_CARET_COLOR
-<li>parsegraph_FOCUSED_SPOTLIGHT_COLOR
-<li>parsegraph_FOCUSED_SPOTLIGHT_SCALE
-<li>parsegraph_ZOOM_IN_KEY
-<li>parsegraph_ZOOM_OUT_KEY
-<li>new parsegraph_Input(graph, camera)
-<li>.SetListener(listener, thisArg)
-<li>.UpdateRepeatedly()
-<li>.Update(t)
-<li>.Get(key)
-<li>.Elapsed(key, t)
-<li>.paint()
-<li>.focusedNode()
-<li>.setFocusedNode(focusedNode)
-<li>.focusedLabel()
-<li>.render(world)
-<li>.Dispatch(...)
-</ol>
-</nav>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>Input - Parsegraph <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph Input</h2>
+		<ol>
+		<li><a href="#parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</a>
+		<li><a href="#parsegraph_CLICK_KEY">parsegraph_CLICK_KEY</a>
+		<li><a href="#parsegraph_MOVE_UPWARD_KEY">parsegraph_MOVE_UPWARD_KEY</a>
+		<li><a href="#parsegraph_MOVE_DOWNWARD_KEY">parsegraph_MOVE_DOWNWARD_KEY</a>
+		<li><a href="#parsegraph_MOVE_BACKWARD_KEY">parsegraph_MOVE_BACKWARD_KEY</a>
+		<li><a href="#parsegraph_MOVE_FORWARD_KEY">parsegraph_MOVE_FORWARD_KEY</a>
+		<li><a href="#parsegraph_CARET_COLOR">parsegraph_CARET_COLOR</a>
+		<li><a href="#parsegraph_FOCUSED_SPOTLIGHT_COLOR">parsegraph_FOCUSED_SPOTLIGHT_COLOR</a>
+		<li><a href="#parsegraph_FOCUSED_SPOTLIGHT_SCALE">parsegraph_FOCUSED_SPOTLIGHT_SCALE</a>
+		<li><a href="#parsegraph_ZOOM_IN_KEY">parsegraph_ZOOM_IN_KEY</a>
+		<li><a href="#parsegraph_ZOOM_OUT_KEY">parsegraph_ZOOM_OUT_KEY</a>
+		<li><a href="#new">new parsegraph_Input(graph, camera)</a>
+		<li><a href="#.SetListener">.SetListener(listener, thisArg)</a>
+		<li><a href="#.UpdateRepeatedly">.UpdateRepeatedly()</a>
+		<li><a href="#.Update">.Update(t)</a>
+		<li><a href="#.Get">.Get(key)</a>
+		<li><a href="#.Elapsed">.Elapsed(key, t)</a>
+		<li><a href="#.paint">.paint()</a>
+		<li><a href="#.focusedNode">.focusedNode()</a>
+		<li><a href="#.setFocusedNode">.setFocusedNode(focusedNode)</a>
+		<li><a href="#.focusedLabel">.focusedLabel()</a>
+		<li><a href="#.render">.render(world)</a>
+		<li><a href="#.Dispatch">.Dispatch(...)</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
+
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph Input</h1>
+		<h3><a name="parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</h3></a>
+		The name of the key used to reset the camera to its default position. Defaults to Escape.
+		<h3><a name="parsegraph_CLICK_KEY">parsegraph_CLICK_KEY</h3></a>
+		The name of the key used to simluate mouse clicks.
+		<h3><a name="parsegraph_MOVE_UPWARD_KEY">parsegraph_MOVE_UPWARD_KEY</h3></a>
+		The name of the key used to move the camera up.
+		<h3><a name="parsegraph_MOVE_DOWNWARD_KEY">parsegraph_MOVE_DOWNWARD_KEY</h3></a>
+		The name of the key used to move the camera down.
+		<h3><a name="parsegraph_MOVE_BACKWARD_KEY">parsegraph_MOVE_BACKWARD_KEY</h3></a>
+		The name of the key used to move the camera LTR backward.
+		<h3><a name="parsegraph_MOVE_FORWARD_KEY">parsegraph_MOVE_FORWARD_KEY</h3></a>
+		The name of the key used to move the camera LTR forward.
+		<h3><a name="parsegraph_CARET_COLOR">parsegraph_CARET_COLOR</h3></a>
+		The color of the caret.
+		<h3><a name="parsegraph_FOCUSED_SPOTLIGHT_COLOR">parsegraph_FOCUSED_SPOTLIGHT_COLOR</h3></a>
+		The color of the spotlight on the focused node.
+		<h3><a name="parsegraph_FOCUSED_SPOTLIGHT_SCALE">parsegraph_FOCUSED_SPOTLIGHT_SCALE</h3></a>
+		The relative size of the focused node spotlight.
+		<h3><a name="parsegraph_ZOOM_IN_KEY">parsegraph_ZOOM_IN_KEY</h3></a>
+		The name of the key used to zoom the camera in.
+		<h3><a name="parsegraph_ZOOM_OUT_KEY">parsegraph_ZOOM_OUT_KEY</h3></a>
+		The name of the key used to zoom the camera out.
+		<h3><a name="new">new parsegraph_Input(graph, camera)</h3></a>
+		Constructs and attaches this input to the given graph's canvas.
+		<h3><a name=".lastMouseCoords">.lastMouseCoords()</h3></a>
+		Returns the most recently detected mouse coords.
+		<h3><a name=".lastMouseX">.lastMouseX()</h3></a>
+		Returns the most recently detected mouse X-coordinate.
+		<h3><a name=".lastMouseY">.lastMouseY()</h3></a>
+		Returns the most recently detected mouse X-coordinate.
+		<h3><a name=".SetListener">.SetListener(listener, thisArg)</h3></a>
+		Sets the input listener to the given value, or clears it if listener is null.
+		<h3><a name=".UpdateRepeatedly">.UpdateRepeatedly()</h3></a>
+		Returns whether the current input state expects the scene to be re-rendered on animation
+		timer, rather than only when scheduled through input.
+		<h3><a name=".Update">.Update(t)</h3></a>
+		Updates the scene using the given elasped time and current input state.
+		<p>
+		Returns true if the input state modified the scene such that it will require rendering.
+		<h3><a name=".Get">.Get(key)</h3></a>
+		Returns whether the specified key is considered pressed.
+		<h3><a name=".Elapsed">.Elapsed(key, t)</h3></a>
+		Returns the amount of time, in seconds, that the current key has been pressed, and resets
+		the key's elapsed timer.
+		<h3><a name=".paint">.paint()</h3></a>
+		Paints this scene's focusing spotlight and text caret.
+		<h3><a name=".focusedNode">.focusedNode()</h3></a>
+		Returns the node currently under focus.
+		<h3><a name=".setFocusedNode">.setFocusedNode(focusedNode)</h3></a>
+		Directly sets the node under focus.
+		<h3><a name=".focusedLabel">.focusedLabel()</h3></a>
+		Returns the label currently under focus.
+		<h3><a name=".render">.render(world)</h3></a>
+		Renders this input's painted scene using the specified world matrix.
+		<h3><a name=".Dispatch">.Dispatch(...)</h3></a>
+		Calls this input's listener with the given arguments.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>

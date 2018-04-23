@@ -2,42 +2,70 @@
 <html>
 <head>
 <title>parsegraph_CameraProtocol</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>parsegraph_CameraProtocol</h1>
-A protocol to speak Parsegraph's Camera protocol over a given WebSocket.
-<h3>parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg)</h3>
-Creates a new object to represent the given camera using the given opened WebSocket.
-<p>
-The given eventFunc function and this-object are invoked when a protocol message is
-received.
-<ul>
-<li>Throws if eventFunc is not defined.
-</ul>
-<h3>.update()</h3>
-Schedules an update to be sent for this protocol's camera.
-<h3>.onopen()</h3>
-Handles opening events from the WebSocket.
-<h3>.onmessage(event)</h3>
-Handles message events from this protocol's WebSocket.
-<h3>.onclose()</h3>
-Handles close events from this protocol's WebSocket.
-<h3>.opened()</h3>
-Returns true if this protocol is accepting input.
-</main>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>parsegraph_CameraProtocol <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>	
+		<h2>parsegraph_CameraProtocol</h2>
+		<ol>
+		<li><a href="parsegraph_CameraProtocol">parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg)</a>
+		<li><a href="#.update">.update()</a>
+		<li><a href="#.onopen">.onopen()</a>
+		<li><a href="#.onmessage">.onmessage(event)</a>
+		<li><a href="#.onclose">.onclose()</a>
+		<li><a href="#.opened">.opened()</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
 
-<nav class="toc">
-<h2>parsegraph_CameraProtocol</h2>
-<ol>
-<li>parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg)
-<li>.update()
-<li>.onopen()
-<li>.onmessage(event)
-<li>.onclose()
-<li>.opened()
-</ol>
-</nav>
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>parsegraph_CameraProtocol</h1>
+		A protocol to speak Parsegraph's Camera protocol over a given WebSocket.
+		<h3><a name="parsegraph_CameraProtocol">parsegraph_CameraProtocol(ws, camera, eventFunc, eventFuncThisArg)</h3></a>
+		Creates a new object to represent the given camera using the given opened WebSocket.
+		<p>
+		The given eventFunc function and this-object are invoked when a protocol message is
+		received.
+		<ul>
+		<li>Throws if eventFunc is not defined.
+		</ul>
+		<h3><a name=".update">.update()</h3></a>
+		Schedules an update to be sent for this protocol's camera.
+		<h3><a name=".onopen">.onopen()</h3></a>
+		Handles opening events from the WebSocket.
+		<h3><a name=".onmessage">.onmessage(event)</h3></a>
+		Handles message events from this protocol's WebSocket.
+		<h3><a name=".onclose">.onclose()</h3></a>
+		Handles close events from this protocol's WebSocket.
+		<h3><a name=".opened">.opened()</h3></a>
+		Returns true if this protocol is accepting input.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>

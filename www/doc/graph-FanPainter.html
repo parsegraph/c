@@ -2,52 +2,81 @@
 <html>
 <head>
 <title>Parsegraph Carousel</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph FanPainter</h1>
-Shows a circle that allows some parts to show as selected.
-<h3>new parsegraph_FanPainter(gl)</h3>
-Creates a new painter of radius 250 using the given GL context.
-<ul>
-<li>Throws an Error if a GL context is not given.
-</ul>
-<h3>.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</h3>
-Draws a selection at the given world coordinates highlighting the given angle with the
-given Colors.
-<h3>.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</h3>
-Draws a selection at the given world coordinates highlighting the given angle with the
-given Colors.
-<h3>.setAscendingRadiusfunction(ascendingRadius)</h3>
-Sets the distance from the center to the brightest point.
-<h3>.setDescendingRadius(descendingRadius)</h3>
-Sets the distance from the brightest point, to the invisible outer edge.
-<h3>setSelectionAngle(selectionAngle)</h3>
-Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area of radial brightness.
-<p>
-If null is given, no selection highlight is drawn. This is the default.
-<h3>setSelectionSize(selectionSize)</h3>
-Sets the selection angle in radians from [0, 2*Math.PI], which is the size of the selected highlight.
-<p>
-If null is given, no selection highlight is drawn. This is the default.
-<h3>.clear()</h3>
-Clears all buffers.
-<h3>.render(viewMatrix)</h3>
-Renders all painted fans using the given matrix.
-</main>
-<nav class="toc">
-<h2>Parsegraph FanPainter</h2>
-<ol>
-<li>new parsegraph_FanPainter(gl)
-<li>.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)
-<li>.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)
-<li>.setAscendingRadiusfunction(ascendingRadius)
-<li>.setDescendingRadius(descendingRadius)
-<li>setSelectionAngle(selectionAngle)
-<li>.clear()
-<li>.render(viewMatrix)
-</ol>
-</nav>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>Parsegraph Carousel <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph FanPainter</h2>
+		<ol>
+		<li>new <a href="#parsegraph_FanPainter">parsegraph_FanPainter(gl)</a>
+		<li><a href="#.selectDeg">.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</a>
+		<li><a href="#.selectRad">.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</a>
+		<li><a href="#.setAscendingRadiusfunction">.setAscendingRadiusfunction(ascendingRadius)</a>
+		<li><a href="#.setDescendingRadius">.setDescendingRadius(descendingRadius)</a>
+		<li><a href="#setSelectionAngle">setSelectionAngle(selectionAngle)</a>
+		<li><a href="#.clear">.clear()</a>
+		<li><a href="#.render">.render(viewMatrix)</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
+
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph FanPainter</h1>
+		Shows a circle that allows some parts to show as selected.
+		<h3>new <a name="parsegraph_FanPainter">parsegraph_FanPainter(gl)</h3></a>
+		Creates a new painter of radius 250 using the given GL context.
+		<ul>
+		<li>Throws an Error if a GL context is not given.
+		</ul>
+		<h3><a name=".selectDeg">.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</h3></a>
+		Draws a selection at the given world coordinates highlighting the given angle with the
+		given Colors.
+		<h3><a name=".selectRad">.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</h3></a>
+		Draws a selection at the given world coordinates highlighting the given angle with the
+		given Colors.
+		<h3><a name=".setAscendingRadiusfunction">.setAscendingRadiusfunction(ascendingRadius)</h3></a>
+		Sets the distance from the center to the brightest point.
+		<h3><a name=".setDescendingRadius">.setDescendingRadius(descendingRadius)</h3></a>
+		Sets the distance from the brightest point, to the invisible outer edge.
+		<h3><a name="setSelectionAngle">.setSelectionAngle(selectionAngle)</h3></a>
+		Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area of radial brightness.
+		<p>
+		If null is given, no selection highlight is drawn. This is the default.
+		<h3><a name="setSelectionSize">.setSelectionSize(selectionSize)</h3></a>
+		Sets the selection angle in radians from [0, 2*Math.PI], which is the size of the selected highlight.
+		<p>
+		If null is given, no selection highlight is drawn. This is the default.
+		<h3><a name=".clear">.clear()</h3></a>
+		Clears all buffers.
+		<h3><a name=".render">.render(viewMatrix)</h3></a>
+		Renders all painted fans using the given matrix.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>

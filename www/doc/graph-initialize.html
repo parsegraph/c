@@ -2,222 +2,251 @@
 <html>
 <head>
 <title>Parsegraph initialize</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph initialize</h1>
-Initialization functions and constants. These constants are available once
-parsegraph_initialize() has been called.
-<h3>parsegraph_buildGlyphAtlas()</h3>
-Constructs a new GlyphAtlas using the default font, font size, and font color.
-<h3>parsegraph_clearPerformanceCounters()</h3>
-Clears the frame's performance counters.
-<h3>parsegraph_showGraph(rootNode)</h3>
-Show a basic graph given a parsegraph_Node.
-<h3>parsegraph_initialize(mathMode)</h3>
-Initializes the Parsegraph environment. If mathMode is true, then blocks and slots
-appear grid-like with tight spacing.
-<h3>parsegraph_NATURAL_GROUP_SIZE</h3>
-The natural group size that can be used as a limit before nodes should be split
-into separate PaintGroups.
-<h3>parsegraph_TOUCH_SENSITIVITY</h3>
-A multiplier for touch deltas.
-<h3>parsegraph_MOUSE_SENSITIVITY</h3>
-A multiplier for mouse deltas.
-<h3>parsegraph_RIGHT_TO_LEFT</h3>
-Whether Node's forward and backward are initially switched.
-<h3>parsegraph_NULL_NODE_DIRECTION</h3>
-Null node direction.
-<h3>parsegraph_INWARD</h3>
-Constant that refers to the direction for Nodes positioned visually inside their parents.
-<h3>parsegraph_OUTWARD</h3>
-Constant that refers to the direction for Nodes that encompass their parents.
-<p>
-This direction cannot be spawned.
-<h3>parsegraph_DOWNWARD</h3>
-Constant that refers to the direction for Nodes that are beneath their parents.
-<h3>parsegraph_UPWARD</h3>
-Constant that refers to the direction for Nodes that are above their parents.
-<h3>parsegraph_BACKWARD</h3>
-Constant that refers to the direction for Nodes that are semantically behind of their parents.
-<h3>parsegraph_FORWARD</h3>
-Constant that refers to the direction for Nodes that are semantically ahead of their parents.
-<h3>parsegraph_NUM_DIRECTIONS</h3>
-Returns the number of supported Node directions.
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>Parsegraph initialize <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph initialize</h2>
+		<ol>
+		<li><a href="#parsegraph_buildGlyphAtlas">parsegraph_buildGlyphAtlas()</a>
+		<li><a href="#parsegraph_clearPerformanceCounters">parsegraph_clearPerformanceCounters()</a>
+		<li><a href="#parsegraph_showGraph">parsegraph_showGraph(rootNode)</a>
+		<li><a href="#parsegraph_initialize">parsegraph_initialize(mathMode)</a>
+		<li><a href="#parsegraph_NATURAL_GROUP_SIZE">parsegraph_NATURAL_GROUP_SIZE</a>
+		<li><a href="#parsegraph_TOUCH_SENSITIVITY">parsegraph_TOUCH_SENSITIVITY</a>
+		<li><a href="#parsegraph_MOUSE_SENSITIVITY">parsegraph_MOUSE_SENSITIVITY</a>
+		<li><a href="#parsegraph_RIGHT_TO_LEFT">parsegraph_RIGHT_TO_LEFT</a>
+		<li><a href="#parsegraph_NULL_NODE_DIRECTION">parsegraph_NULL_NODE_DIRECTION</a>
+		<li><a href="#parsegraph_INWARD">parsegraph_INWARD</a>
+		<li><a href="#parsegraph_OUTWARD">parsegraph_OUTWARD</a>
+		<li><a href="#parsegraph_DOWNWARD">parsegraph_DOWNWARD</a>
+		<li><a href="#parsegraph_UPWARD">parsegraph_UPWARD</a>
+		<li><a href="#parsegraph_BACKWARD">parsegraph_BACKWARD</a>
+		<li><a href="#parsegraph_FORWARD">parsegraph_FORWARD</a>
+		<li><a href="#parsegraph_NUM_DIRECTIONS">parsegraph_NUM_DIRECTIONS</a>
+		<li><a href="#parsegraph_NULL_AXIS">parsegraph_NULL_AXIS</a>
+		<li><a href="#parsegraph_HORIZONTAL_AXIS">parsegraph_HORIZONTAL_AXIS</a>
+		<li><a href="#parsegraph_VERTICAL_AXIS">parsegraph_VERTICAL_AXIS</a>
+		<li><a href="#parsegraph_NULL_NODE_TYPE">parsegraph_NULL_NODE_TYPE</a>
+		<li><a href="#parsegraph_BUD">parsegraph_BUD</a>
+		<li><a href="#parsegraph_SLOT">parsegraph_SLOT</a>
+		<li><a href="#parsegraph_BLOCK">parsegraph_BLOCK</a>
+		<li><a href="#parsegraph_SLIDER">parsegraph_SLIDER</a>
+		<li><a href="#parsegraph_SCENE">parsegraph_SCENE</a>
+		<li><a href="#parsegraph_DEFAULT_NODE_TYPE">parsegraph_DEFAULT_NODE_TYPE</a>
+		<li><a href="#parsegraph_NULL_NODE_FIT">parsegraph_NULL_NODE_FIT</a>
+		<li><a href="#parsegraph_NODE_FIT_EXACT">parsegraph_NODE_FIT_EXACT</a>
+		<li><a href="#parsegraph_NODE_FIT_LOOSE">parsegraph_NODE_FIT_LOOSE</a>
+		<li><a href="#parsegraph_MAX_PRESS_RELEASE_DELAY">parsegraph_MAX_PRESS_RELEASE_DELAY</a>
+		<li><a href="#parsegraph_BACKGROUND_COLOR">parsegraph_BACKGROUND_COLOR</a>
+		<li><a href="#parsegraph_UPSCALED_FONT_SIZE">parsegraph_UPSCALED_FONT_SIZE</a>
+		<li><a href="#parsegraph_RENDERED_FONT_SIZE">parsegraph_RENDERED_FONT_SIZE</a>
+		<li><a href="#parsegraph_WRAP_WIDTH">parsegraph_WRAP_WIDTH</a>
+		<li><a href="#parsegraph_SHRINK_SCALE">parsegraph_SHRINK_SCALE</a>
+		<li><a href="#parsegraph_FONT_SIZE">parsegraph_FONT_SIZE</a>
+		<li><a href="#parsegraph_LINE_THICKNESS">parsegraph_LINE_THICKNESS</a>
+		<li><a href="#parsegraph_LINE_COLOR">parsegraph_LINE_COLOR</a>
+		<li><a href="#parsegraph_SELECTED_LINE_COLOR">parsegraph_SELECTED_LINE_COLOR</a>
+		<li><a href="#parsegraph_BUD_RADIUS">parsegraph_BUD_RADIUS</a>
+		<li><a href="#parsegraph_MIN_BLOCK_HEIGHT">parsegraph_MIN_BLOCK_HEIGHT</a>
+		<li><a href="#parsegraph_MIN_BLOCK_WIDTH">parsegraph_MIN_BLOCK_WIDTH</a>
+		<li><a href="#parsegraph_HORIZONTAL_SEPARATION_PADDING">parsegraph_HORIZONTAL_SEPARATION_PADDING</a>
+		<li><a href="#parsegraph_VERTICAL_SEPARATION_PADDING">parsegraph_VERTICAL_SEPARATION_PADDING</a>
+		<li><a href="#parsegraph_BUD_LEAF_SEPARATION">parsegraph_BUD_LEAF_SEPARATION</a>
+		<li><a href="#parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION">parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION</a>
+		</ol>
+		<h3>parsegraph_Style</h3>
+		<ol>
+		<li><a href="#parsegraph_BUD_STYLE">parsegraph_BUD_STYLE</a>
+		<li><a href="#parsegraph_SLIDER_STYLE">parsegraph_SLIDER_STYLE</a>
+		<li><a href="#parsegraph_BLOCK_STYLE">parsegraph_BLOCK_STYLE</a>
+		<li><a href="#parsegraph_SLOT_STYLE">parsegraph_SLOT_STYLE</a>
+		<li><a href="#parsegraph_SCENE_STYLE">parsegraph_SCENE_STYLE</a>
+		<li><a href="#parsegraph_EXTENT_BORDER_COLOR">parsegraph_EXTENT_BORDER_COLOR</a>
+		<li><a href="#parsegraph_EXTENT_BORDER_THICKNESS">parsegraph_EXTENT_BORDER_THICKNESS</a>
+		<li><a href="#parsegraph_EXTENT_BACKGROUND_COLOR">parsegraph_EXTENT_BACKGROUND_COLOR</a>
+		<li><a href="#parsegraph_EXTENT_BORDER_ROUNDEDNESS">parsegraph_EXTENT_BORDER_ROUNDEDNESS</a>
+		<li><a href="#parsegraph_EXTENT_BORDER_THICKNESS">parsegraph_EXTENT_BORDER_THICKNESS</a>
+		<li><a href="#parsegraph_copyStyle">parsegraph_copyStyle(type)</a>
+		<li><a href="#parsegraph_style">parsegraph_style(type)</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
 
-<h3>parsegraph_NULL_AXIS</h3>
-Constant for a null node axis.
-<h3>parsegraph_HORIZONTAL_AXIS</h3>
-Constant that refers to the horizontal Node axis (FORWARD and BACKWARD directions).
-<h3>parsegraph_VERTICAL_AXIS</h3>
-Constant that refers to the vertical Node axis (UPWARD and DOWNWARD directions).
-<h3>parsegraph_NULL_NODE_TYPE</h3>
-<h3>parsegraph_BUD</h3>
-Constant that refers to the small, circular Node type called 'bud'.
-<h3>parsegraph_SLOT</h3>
-Constant that refers to the regular-sized, block-shaped Node type called 'slot'.
-<h3>parsegraph_BLOCK</h3>
-Constant that refers to the regular-sized, block-shaped Node type called 'block'.
-<h3>parsegraph_SLIDER</h3>
-Constant that refers to the special slider Node type called 'slider'.
-<h3>parsegraph_SCENE</h3>
-Constant that refers to the scene-containing Node type called 'scene'.
-<h3>parsegraph_DEFAULT_NODE_TYPE</h3>
-Returns the default Node type.
-<h3>parsegraph_NULL_NODE_FIT</h3>
-Constant that refers to a null Node fitting.
-<h3>parsegraph_NODE_FIT_EXACT</h3>
-Constant that refers to a exact Node fitting.
-<h3>parsegraph_NODE_FIT_LOOSE</h3>
-Constant that refers to a loose Node fitting.
-<h3>parsegraph_MAX_PRESS_RELEASE_DELAY</h3>
-Returns the maximum delay in milliseconds before the hope for a double-click is abandoned.
-<h3>parsegraph_BACKGROUND_COLOR</h3>
-Returns the default background color.
-<h3>parsegraph_UPSCALED_FONT_SIZE</h3>
-Returns the size used for drawing fonts to the GlyphAtlas textures.
-<h3>parsegraph_RENDERED_FONT_SIZE</h3>
-Returns the size used for rendering fonts in the world.
-<h3>parsegraph_WRAP_WIDTH</h3>
-Returns the default width used for word wrapping.
-<h3>parsegraph_SHRINK_SCALE</h3>
-The scale at which shrunk nodes are shrunk.
-<h3>parsegraph_FONT_SIZE</h3>
-Base font size.
-<h3>parsegraph_LINE_THICKNESS</h3>
-The thickness (diameter) of the line.
-<h3>parsegraph_LINE_COLOR</h3>
-Returns the color used for drawing lines.
-<h3>parsegraph_SELECTED_LINE_COLOR</h3>
-Returns the color used for drawing highlighted lines.
-<h3>parsegraph_BUD_RADIUS</h3>
-Returns the size for a bud's radius. Many values are computed from this value.
-<h3>parsegraph_MIN_BLOCK_HEIGHT</h3>
-Returns the minimum height for block-shaped Nodes.
-<h3>parsegraph_MIN_BLOCK_WIDTH</h3>
-Returns the minimum width for block-shaped Nodes.
-<h3>parsegraph_HORIZONTAL_SEPARATION_PADDING</h3>
-Returns the default horizontal padding used to separate Nodes.
-<h3>parsegraph_VERTICAL_SEPARATION_PADDING</h3>
-Returns the default vertical padding used to separate Nodes.
-<h3>parsegraph_BUD_LEAF_SEPARATION</h3>
-The separation between leaf buds and their parents.
-<h3>parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION</h3>
-Return the verticals separation used between buds.
-<h2>parsegraph_Style</h2>
-<table>
-<tr><th>Name<th>Description</tr>
-<tr><td>minWidth<td>Minimum rendered Node width, in world units.</tr>
-<tr><td>minHeight<td>Minimum rendered Node height, in world units.</tr>
-<tr><td>horizontalPadding<td>Horizontal space between the content and the border, in world units.</tr>
-<tr><td>verticalPadding<td>Vertical space between the content and the border, in world units.</tr>
-<tr><td>borderColor<td>Color of the border.</tr>
-<tr><td>backgroundColor<td>Color of the background.</tr>
-<tr><td>selectedBorderColor<td>Color of the border when the Node is selected.</tr>
-<tr><td>selectedBackgroundColor<td>Color of background when the Node is selected.</tr>
-<tr><td>brightness<td>Multiplier of the spotlight used when the Node is selected.</tr>
-<tr><td>borderRoundness<td>Value between 0 and 1 that defined how rounded the border is. 1 is circular, 0 is square.</tr>
-<tr><td>borderThickness<td>Value between 0 and 1 that defined the amount of the Node that is devoted to the border. Does not affect layout, just appearance.</tr>
-<tr><td>maxLabelChars<td>Not used.</tr>
-<tr><td>fontColor<td>The color used for Node text.</tr>
-<tr><td>selectedFontColor<td>The color used for Node text when the Node is highlighted.</tr>
-<tr><td>fontSize<td>The font size in world units.</tr>
-<tr><td>letterWidth<td>A multiplier of the font-size used to define the default letter width.</tr>
-<tr><td>verticalSeparation<td>The distance in world units between nodes of this style and their vertical child Nodes.</tr>
-<tr><td>horizontalSeparation<td>Same as verticalSeparation, but for horizontal child Nodes.</tr>
-</table>
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph initialize</h1>
+		Initialization functions and constants. These constants are available once
+		parsegraph_initialize() has been called.
+		<h3><a name="parsegraph_buildGlyphAtlas">parsegraph_buildGlyphAtlas()</h3></a>
+		Constructs a new GlyphAtlas using the default font, font size, and font color.
+		<h3><a name="parsegraph_clearPerformanceCounters">parsegraph_clearPerformanceCounters()</h3></a>
+		Clears the frame's performance counters.
+		<h3><a name="parsegraph_showGraph">parsegraph_showGraph(rootNode)</h3></a>
+		Show a basic graph given a parsegraph_Node.
+		<h3><a name="parsegraph_initialize">parsegraph_initialize(mathMode)</h3></a>
+		Initializes the Parsegraph environment. If mathMode is true, then blocks and slots
+		appear grid-like with tight spacing.
+		<h3><a name="parsegraph_NATURAL_GROUP_SIZE">parsegraph_NATURAL_GROUP_SIZE</h3></a>
+		The natural group size that can be used as a limit before nodes should be split
+		into separate PaintGroups.
+		<h3><a name="parsegraph_TOUCH_SENSITIVITY">parsegraph_TOUCH_SENSITIVITY</h3></a>
+		A multiplier for touch deltas.
+		<h3><a name="parsegraph_MOUSE_SENSITIVITY">parsegraph_MOUSE_SENSITIVITY</h3></a>
+		A multiplier for mouse deltas.
+		<h3><a name="parsegraph_RIGHT_TO_LEFT">parsegraph_RIGHT_TO_LEFT</h3></a>
+		Whether Node's forward and backward are initially switched.
+		<h3><a name="parsegraph_NULL_NODE_DIRECTION">parsegraph_NULL_NODE_DIRECTION</h3></a>
+		Null node direction.
+		<h3><a name="parsegraph_INWARD">parsegraph_INWARD</h3></a>
+		Constant that refers to the direction for Nodes positioned visually inside their parents.
+		<h3><a name="parsegraph_OUTWARD">parsegraph_OUTWARD</h3></a>
+		Constant that refers to the direction for Nodes that encompass their parents.
+		<p>
+		This direction cannot be spawned.
+		<h3><a name="parsegraph_DOWNWARD">parsegraph_DOWNWARD</h3></a>
+		Constant that refers to the direction for Nodes that are beneath their parents.
+		<h3><a name="parsegraph_UPWARD">parsegraph_UPWARD</h3></a>
+		Constant that refers to the direction for Nodes that are above their parents.
+		<h3><a name="parsegraph_BACKWARD">parsegraph_BACKWARD</h3></a>
+		Constant that refers to the direction for Nodes that are semantically behind of their parents.
+		<h3><a name="parsegraph_FORWARD">parsegraph_FORWARD</h3></a>
+		Constant that refers to the direction for Nodes that are semantically ahead of their parents.
+		<h3><a name="parsegraph_NUM_DIRECTIONS">parsegraph_NUM_DIRECTIONS</h3></a>
+		Returns the number of supported Node directions.
 
-<h3>parsegraph_BUD_STYLE</h3>
-The style used for bud node types.
-<h3>parsegraph_SLIDER_STYLE</h3>
-The style used for slider node types.
-<h3>parsegraph_BLOCK_STYLE</h3>
-The style used for block node types.
-<h3>parsegraph_SLOT_STYLE</h3>
-The style used for slot node types.
-<h3>parsegraph_SCENE_STYLE</h3>
-The style used for scene node types.
-<h3>parsegraph_EXTENT_BORDER_COLOR</h3>
-The color used when rendering extent block borders.
-<h3>parsegraph_EXTENT_BORDER_THICKNESS</h3>
-The thickness of extent block borders.
-<h3>parsegraph_EXTENT_BACKGROUND_COLOR</h3>
-The extent block background's color.
-<h3>parsegraph_EXTENT_BORDER_ROUNDEDNESS</h3>
-Border roundedness used when drawing extent blocks.
-<h3>parsegraph_EXTENT_BORDER_THICKNESS</h3>
-Border thickness used when drawing extent blocks.
-<h3>parsegraph_copyStyle(type)</h3>
-Returns a new Style that is a copy of the given style or named style.
-<h3>parsegraph_style(type)</h3>
-Returns a style object for the given Node type name.
-</main>
-<nav class="toc">
-<h2>Parsegraph initialize</h2>
-<ol>
-<li>parsegraph_buildGlyphAtlas()
-<li>parsegraph_clearPerformanceCounters()
-<li>parsegraph_showGraph(rootNode)
-<li>parsegraph_initialize(mathMode)
-<li>parsegraph_NATURAL_GROUP_SIZE
-<li>parsegraph_TOUCH_SENSITIVITY
-<li>parsegraph_MOUSE_SENSITIVITY
-<li>parsegraph_RIGHT_TO_LEFT
-<li>parsegraph_NULL_NODE_DIRECTION
-<li>parsegraph_INWARD
-<li>parsegraph_OUTWARD
-<li>parsegraph_DOWNWARD
-<li>parsegraph_UPWARD
-<li>parsegraph_BACKWARD
-<li>parsegraph_FORWARD
-<li>parsegraph_NUM_DIRECTIONS
-<li>parsegraph_NULL_AXIS
-<li>parsegraph_HORIZONTAL_AXIS
-<li>parsegraph_VERTICAL_AXIS
-<li>parsegraph_NULL_NODE_TYPE
-<li>parsegraph_BUD
-<li>parsegraph_SLOT
-<li>parsegraph_BLOCK
-<li>parsegraph_SLIDER
-<li>parsegraph_SCENE
-<li>parsegraph_DEFAULT_NODE_TYPE
-<li>parsegraph_NULL_NODE_FIT
-<li>parsegraph_NODE_FIT_EXACT
-<li>parsegraph_NODE_FIT_LOOSE
-<li>parsegraph_MAX_PRESS_RELEASE_DELAY
-<li>parsegraph_BACKGROUND_COLOR
-<li>parsegraph_UPSCALED_FONT_SIZE
-<li>parsegraph_RENDERED_FONT_SIZE
-<li>parsegraph_WRAP_WIDTH
-<li>parsegraph_SHRINK_SCALE
-<li>parsegraph_FONT_SIZE
-<li>parsegraph_LINE_THICKNESS
-<li>parsegraph_LINE_COLOR
-<li>parsegraph_SELECTED_LINE_COLOR
-<li>parsegraph_BUD_RADIUS
-<li>parsegraph_MIN_BLOCK_HEIGHT
-<li>parsegraph_MIN_BLOCK_WIDTH
-<li>parsegraph_HORIZONTAL_SEPARATION_PADDING
-<li>parsegraph_VERTICAL_SEPARATION_PADDING
-<li>parsegraph_BUD_LEAF_SEPARATION
-<li>parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION
-</ol>
-<h3>parsegraph_Style</h3>
-<ol>
-<li>parsegraph_BUD_STYLE
-<li>parsegraph_SLIDER_STYLE
-<li>parsegraph_BLOCK_STYLE
-<li>parsegraph_SLOT_STYLE
-<li>parsegraph_SCENE_STYLE
-<li>parsegraph_EXTENT_BORDER_COLOR
-<li>parsegraph_EXTENT_BORDER_THICKNESS
-<li>parsegraph_EXTENT_BACKGROUND_COLOR
-<li>parsegraph_EXTENT_BORDER_ROUNDEDNESS
-<li>parsegraph_EXTENT_BORDER_THICKNESS
-<li>parsegraph_copyStyle(type)
-<li>parsegraph_style(type)
-</ol>
-</nav>
+		<h3><a name="parsegraph_NULL_AXIS">parsegraph_NULL_AXIS</h3></a>
+		Constant for a null node axis.
+		<h3><a name="parsegraph_HORIZONTAL_AXIS">parsegraph_HORIZONTAL_AXIS</h3></a>
+		Constant that refers to the horizontal Node axis (FORWARD and BACKWARD directions).
+		<h3><a name="parsegraph_VERTICAL_AXIS">parsegraph_VERTICAL_AXIS</h3></a>
+		Constant that refers to the vertical Node axis (UPWARD and DOWNWARD directions).
+		<h3><a name="parsegraph_NULL_NODE_TYPE">parsegraph_NULL_NODE_TYPE</h3></a>
+		<h3><a name="parsegraph_BUD">parsegraph_BUD</h3></a>
+		Constant that refers to the small, circular Node type called 'bud'.
+		<h3><a name="parsegraph_SLOT">parsegraph_SLOT</h3></a>
+		Constant that refers to the regular-sized, block-shaped Node type called 'slot'.
+		<h3><a name="parsegraph_BLOCK">parsegraph_BLOCK</h3></a>
+		Constant that refers to the regular-sized, block-shaped Node type called 'block'.
+		<h3><a name="parsegraph_SLIDER">parsegraph_SLIDER</h3></a>
+		Constant that refers to the special slider Node type called 'slider'.
+		<h3><a name="parsegraph_SCENE">parsegraph_SCENE</h3></a>
+		Constant that refers to the scene-containing Node type called 'scene'.
+		<h3><a name="parsegraph_DEFAULT_NODE_TYPE">parsegraph_DEFAULT_NODE_TYPE</h3></a>
+		Returns the default Node type.
+		<h3><a name="parsegraph_NULL_NODE_FIT">parsegraph_NULL_NODE_FIT</h3></a>
+		Constant that refers to a null Node fitting.
+		<h3><a name="parsegraph_NODE_FIT_EXACT">parsegraph_NODE_FIT_EXACT</h3></a>
+		Constant that refers to a exact Node fitting.
+		<h3><a name="parsegraph_NODE_FIT_LOOSE">parsegraph_NODE_FIT_LOOSE</h3></a>
+		Constant that refers to a loose Node fitting.
+		<h3><a name="parsegraph_MAX_PRESS_RELEASE_DELAY">parsegraph_MAX_PRESS_RELEASE_DELAY</h3></a>
+		Returns the maximum delay in milliseconds before the hope for a double-click is abandoned.
+		<h3><a name="parsegraph_BACKGROUND_COLOR">parsegraph_BACKGROUND_COLOR</h3></a>
+		Returns the default background color.
+		<h3><a name="parsegraph_UPSCALED_FONT_SIZE">parsegraph_UPSCALED_FONT_SIZE</h3></a>
+		Returns the size used for drawing fonts to the GlyphAtlas textures.
+		<h3><a name="parsegraph_RENDERED_FONT_SIZE">parsegraph_RENDERED_FONT_SIZE</h3></a>
+		Returns the size used for rendering fonts in the world.
+		<h3><a name="parsegraph_WRAP_WIDTH">parsegraph_WRAP_WIDTH</h3></a>
+		Returns the default width used for word wrapping.
+		<h3><a name="parsegraph_SHRINK_SCALE">parsegraph_SHRINK_SCALE</h3></a>
+		The scale at which shrunk nodes are shrunk.
+		<h3><a name="parsegraph_FONT_SIZE">parsegraph_FONT_SIZE</h3></a>
+		Base font size.
+		<h3><a name="parsegraph_LINE_THICKNESS">parsegraph_LINE_THICKNESS</h3></a>
+		The thickness (diameter) of the line.
+		<h3><a name="parsegraph_LINE_COLOR">parsegraph_LINE_COLOR</h3></a>
+		Returns the color used for drawing lines.
+		<h3><a name="parsegraph_SELECTED_LINE_COLOR">parsegraph_SELECTED_LINE_COLOR</h3></a>
+		Returns the color used for drawing highlighted lines.
+		<h3><a name="parsegraph_BUD_RADIUS">parsegraph_BUD_RADIUS</h3></a>
+		Returns the size for a bud's radius. Many values are computed from this value.
+		<h3><a name="parsegraph_MIN_BLOCK_HEIGHT">parsegraph_MIN_BLOCK_HEIGHT</h3></a>
+		Returns the minimum height for block-shaped Nodes.
+		<h3><a name="parsegraph_MIN_BLOCK_WIDTH">parsegraph_MIN_BLOCK_WIDTH</h3></a>
+		Returns the minimum width for block-shaped Nodes.
+		<h3><a name="parsegraph_HORIZONTAL_SEPARATION_PADDING">parsegraph_HORIZONTAL_SEPARATION_PADDING</h3></a>
+		Returns the default horizontal padding used to separate Nodes.
+		<h3><a name="parsegraph_VERTICAL_SEPARATION_PADDING">parsegraph_VERTICAL_SEPARATION_PADDING</h3></a>
+		Returns the default vertical padding used to separate Nodes.
+		<h3><a name="parsegraph_BUD_LEAF_SEPARATION">parsegraph_BUD_LEAF_SEPARATION</h3></a>
+		The separation between leaf buds and their parents.
+		<h3><a name="parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION">parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION</h3></a>
+		Return the verticals separation used between buds.
+		<h2>parsegraph_Style</h2>
+		<table>
+		<tr><th>Name<th>Description</tr>
+		<tr><td>minWidth<td>Minimum rendered Node width, in world units.</tr>
+		<tr><td>minHeight<td>Minimum rendered Node height, in world units.</tr>
+		<tr><td>horizontalPadding<td>Horizontal space between the content and the border, in world units.</tr>
+		<tr><td>verticalPadding<td>Vertical space between the content and the border, in world units.</tr>
+		<tr><td>borderColor<td>Color of the border.</tr>
+		<tr><td>backgroundColor<td>Color of the background.</tr>
+		<tr><td>selectedBorderColor<td>Color of the border when the Node is selected.</tr>
+		<tr><td>selectedBackgroundColor<td>Color of background when the Node is selected.</tr>
+		<tr><td>brightness<td>Multiplier of the spotlight used when the Node is selected.</tr>
+		<tr><td>borderRoundness<td>Value between 0 and 1 that defined how rounded the border is. 1 is circular, 0 is square.</tr>
+		<tr><td>borderThickness<td>Value between 0 and 1 that defined the amount of the Node that is devoted to the border. Does not affect layout, just appearance.</tr>
+		<tr><td>maxLabelChars<td>Not used.</tr>
+		<tr><td>fontColor<td>The color used for Node text.</tr>
+		<tr><td>selectedFontColor<td>The color used for Node text when the Node is highlighted.</tr>
+		<tr><td>fontSize<td>The font size in world units.</tr>
+		<tr><td>letterWidth<td>A multiplier of the font-size used to define the default letter width.</tr>
+		<tr><td>verticalSeparation<td>The distance in world units between nodes of this style and their vertical child Nodes.</tr>
+		<tr><td>horizontalSeparation<td>Same as verticalSeparation, but for horizontal child Nodes.</tr>
+		</table>
+
+		<h3><a name="parsegraph_BUD_STYLE">parsegraph_BUD_STYLE</h3></a>
+		The style used for bud node types.
+		<h3><a name="parsegraph_SLIDER_STYLE">parsegraph_SLIDER_STYLE</h3></a>
+		The style used for slider node types.
+		<h3><a name="parsegraph_BLOCK_STYLE">parsegraph_BLOCK_STYLE</h3></a>
+		The style used for block node types.
+		<h3><a name="parsegraph_SLOT_STYLE">parsegraph_SLOT_STYLE</h3></a>
+		The style used for slot node types.
+		<h3><a name="parsegraph_SCENE_STYLE">parsegraph_SCENE_STYLE</h3></a>
+		The style used for scene node types.
+		<h3><a name="parsegraph_EXTENT_BORDER_COLOR">parsegraph_EXTENT_BORDER_COLOR</h3></a>
+		The color used when rendering extent block borders.
+		<h3><a name="parsegraph_EXTENT_BORDER_THICKNESS">parsegraph_EXTENT_BORDER_THICKNESS</h3></a>
+		The thickness of extent block borders.
+		<h3><a name="parsegraph_EXTENT_BACKGROUND_COLOR">parsegraph_EXTENT_BACKGROUND_COLOR</h3></a>
+		The extent block background's color.
+		<h3><a name="parsegraph_EXTENT_BORDER_ROUNDEDNESS">parsegraph_EXTENT_BORDER_ROUNDEDNESS</h3></a>
+		Border roundedness used when drawing extent blocks.
+		<h3><a name="parsegraph_EXTENT_BORDER_THICKNESS">parsegraph_EXTENT_BORDER_THICKNESS</h3></a>
+		Border thickness used when drawing extent blocks.
+		<h3><a name="parsegraph_copyStyle">parsegraph_copyStyle(type)</h3></a>
+		Returns a new Style that is a copy of the given style or named style.
+		<h3><a name="parsegraph_style">parsegraph_style(type)</h3></a>
+		Returns a style object for the given Node type name.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>

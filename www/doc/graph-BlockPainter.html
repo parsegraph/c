@@ -2,49 +2,78 @@
 <html>
 <head>
 <title>BlockPainter - Parsegraph</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph BlockPainter</h1>
-BlockPainter paints variably rounded blocks (from square edges to circular buds), as well as lines.
-<h3>new parsegraph_BlockPainter(gl, shaders)</h3>
-Creates a new BlockPainter using the given WebGL context. Shaders is a map of shader names to
-their program IDs, allowing for reuse between many painters.
-<h3>.bounds()</h3>
-Returns the computed bounding rect for all the blocks rendered by this painter.
-<h3>.borderColor()</h3>
-Returns the border color used for future drawing commands.
-<h3>.setBorderColor(borderColor)</h3>
-Sets the border color used for future drawing commands.
-<h3>.backgroundColor()</h3>
-Returns the background color used for future drawing commands.
-<h3>.setBackgroundColor(backgroundColor)</h3>
-Sets the background color used for future drawing commands.
-<h3>.initBuffer(numBlocks)</h3>
-Initializes the painter for painting up to the specified number of blocks.
-<h3>.clear()</h3>
-Releases GL resources, resets all counters, and resets the computed bounding rect.
-<h3>.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</h3>
-Draws a block, centered at the given world coordinates, of the specified size (also in world coordinates). borderRoundedness is a value between zero and one, inclusive, where zero is square and one is circular. borderThickness is a value between zero and one, inclusive, where zero is no border, and one is a completely filled border. borderScale is used to scale the border values so that they appear proportionate.
-<h3>.render(world)</h3>
-Uses this painter's WebGL context to draw all specified blocks transformed using the given world matrix.
-</main>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>BlockPainter - Parsegraph <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph BlockPainter</h2>
+		<ol>
+		<li>new <a href="#parsegraph_BlockPainter">parsegraph_BlockPainter(gl, shaders)</a>
+		<li><a href="#.bounds">.bounds()</a>
+		<li><a href="#.borderColor">.borderColor()</a>
+		<li><a href="#.setBorderColor">.setBorderColor(borderColor)</a>
+		<li><a href="#.backgroundColor">.backgroundColor()</a>
+		<li><a href="#.setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
+		<li><a href="#.initBuffer">.initBuffer(numBlocks)</a>
+		<li><a href="#.clear">.clear()</a>
+		<li><a href="#.drawBlock">.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</a>
+		<li><a href="#.render">.render(world)</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
 
-<nav class="toc">
-<h2>Parsegraph BlockPainter</h2>
-<ol>
-<li>new parsegraph_BlockPainter(gl, shaders)
-<li>.bounds()
-<li>.borderColor()
-<li>.setBorderColor(borderColor)
-<li>.backgroundColor()
-<li>.setBackgroundColor(backgroundColor)
-<li>.initBuffer(numBlocks)
-<li>.clear()
-<li>.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
-<li>.render(world)
-</ol>
-</nav>
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph BlockPainter</h1>
+		BlockPainter paints variably rounded blocks (from square edges to circular buds), as well as lines.
+		<h3>new <a name="parsegraph_BlockPainter">parsegraph_BlockPainter(gl, shaders)</h3></a>
+		Creates a new BlockPainter using the given WebGL context. Shaders is a map of shader names to
+		their program IDs, allowing for reuse between many painters.
+		<h3><a name=".bounds">.bounds()</h3></a>
+		Returns the computed bounding rect for all the blocks rendered by this painter.
+		<h3><a name=".borderColor">.borderColor()</h3></a>
+		Returns the border color used for future drawing commands.
+		<h3><a name=".setBorderColor">.setBorderColor(borderColor)</h3></a>
+		Sets the border color used for future drawing commands.
+		<h3><a name=".backgroundColor">.backgroundColor()</h3></a>
+		Returns the background color used for future drawing commands.
+		<h3><a name=".setBackgroundColor">.setBackgroundColor(backgroundColor)</h3></a>
+		Sets the background color used for future drawing commands.
+		<h3><a name=".initBuffer">.initBuffer(numBlocks)</h3></a>
+		Initializes the painter for painting up to the specified number of blocks.
+		<h3><a name=".clear">.clear()</h3></a>
+		Releases GL resources, resets all counters, and resets the computed bounding rect.
+		<h3><a name=".drawBlock">.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</h3></a>
+		Draws a block, centered at the given world coordinates, of the specified size (also in world coordinates). borderRoundedness is a value between zero and one, inclusive, where zero is square and one is circular. borderThickness is a value between zero and one, inclusive, where zero is no border, and one is a completely filled border. borderScale is used to scale the border values so that they appear proportionate.
+		<h3><a name=".render">.render(world)</h3></a>
+		Uses this painter's WebGL context to draw all specified blocks transformed using the given world matrix.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
+
 </body>
 </html>

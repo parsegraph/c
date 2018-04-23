@@ -2,105 +2,133 @@
 <html>
 <head>
 <title>pagingbuffer - Parsegraph</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph pagingbuffer</h1>
-<h2>parsegraph_BufferPage</h2>
-<h3>new parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)</h3>
-Returns a new buffer page for use with the given PagingBuffer.
-<p>
-The render function and this-object is used to render the page's buffer contents to GL.
-<h3>.isEmpty()</h3>
-Returns true if this buffer page contains no buffer, or if its buffers are currently empty.
-<h3>.appendData(attribIndex, ...)</h3>
-Adds each of the specified values to the specified buffer of this page.
-<ul>
-<li>Throws if attribIndex does not specify a real buffer.
-</ul>
-<h3>.appendData(attribIndex, valueArray)</h3>
-Adds each of the values of the given array to the specified buffer this page.
-<ul>
-<li>Throws if attribIndex does not specify a real buffer.
-</ul>
-<h3>.appendRGB(attribIndex, color)</h3>
-Appends the RGB values of the given color object to the specified buffer of this page.
-<ul>
-<li>Throws if attribIndex does not specify a real buffer.
-</ul>
-<h3>.appendRGBA(attribIndex, color)</h3>
-Appends the RGBA values of the given color object to the specified buffer of this page.
-<ul>
-<li>Throws if attribIndex does not specify a real buffer.
-</ul>
-<h2>parsegraph_PagingBuffer</h2>
-Manages the low-level paging of vertex attributes.
-<h3>new parsegraph_PagingBuffer(gl, program)</h3>
-Creates a new paged buffer using the given GL content and GL program for rendering.
-<h3>parsegraph_createPagingBuffer(gl, program)</h3>
-Alias for parsegraph_PagingBuffer's constructor.
-<h3>.isEmpty()</h3>
-Returns true if this paging buffer contains no pages, or its pages are empty.
-<h3>.addPage(renderFunc, renderFuncThisArg)</h3>
-Creates a new BufferPage and adds it to the end of this paging buffer. The new page is returned.
-<h3>.getWorkingPage()</h3>
-Returns the current working page that will have values appended.
-<ul>
-<li>Throws if this paging buffer has not had any pages added.
-</ul>
-<h3>.defineAttrib(name, numComponents, drawMode)</h3>
-Defines an attribute for data entry.
-<p>
-<dl>
-<dt>name<dd>the attribute name in this paging buffer's GL program
-<dt>numComponents<dd>the number of components in the named attribute type (1, 2, 3, or 4)
-<dt>drawMode<dd>the WebGL draw mode. Defaults to gl.STATIC_DRAW
-</dl>
-<h3>.appendRGB(...)</h3>
-Appends the given color RGB components to the current working page.
-<h3>.appendRGBA(...)</h3>
-Appends the given color RGBA components to the current working page.
-<h3>.appendData(...)</h3>
-Appends the given floating-point arguments to the current working page.
-<p>
-If an array or array-like object is given, it will be iterated to extract its component values.
-<h3>.clear()</h3>
-Deletes all buffers and empties values.
-<h3>.renderPages()</h3>
-Sets up vertex attribute buffers and calls drawArrays for each page.
-<pre>
-gl.drawArrays(gl.TRIANGLES, 0, numVertices)
-</pre>
-where numVertices is calculated from the appended data size / component count. The least-filled
-buffer is used for the size, if the sizes differ.
-</main>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>pagingbuffer - Parsegraph <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph pagingbuffer</h2>
+		<h3>parsegraph_BufferPage</h3>
+		<ol>
+		<li>new <a href="#parsegraph_BufferPage">parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)</a>
+		<li><a href="#.isEmpty">.isEmpty()</a>
+		<li><a href="#.appendData">.appendData(attribIndex, ...)</a>
+		<li><a href="#.appendData">.appendData(attribIndex, valueArray)</a>
+		<li><a href="#.appendRGB">.appendRGB(attribIndex, color)</a>
+		<li><a href="#.appendRGBA">.appendRGBA(attribIndex, color)</a>
+		</ol>
+		<h3>parsegraph_PagingBuffer</h3>
+		<ol>
+		<li>new <a href="parsegraph_PagingBuffer">parsegraph_PagingBuffer(gl, program)</a>
+		<li><a href="#parsegraph_createPagingBuffer">parsegraph_createPagingBuffer(gl, program)</a>
+		<li><a href="#.isEmpty">.isEmpty()</a>
+		<li><a href="#.addPage">.addPage(renderFunc, renderFuncThisArg)</a>
+		<li><a href="#.getWorkingPage">.getWorkingPage()</a>
+		<li><a href="#.defineAttrib">.defineAttrib(name, numComponents, drawMode)</a>
+		<li><a href="#.appendRGB">.appendRGB(...)</a>
+		<li><a href="#.appendRGBA">.appendRGBA(...)</a>
+		<li><a href="#.appendData">.appendData(...)</a>
+		<li><a href="#.clear">.clear()</a>
+		<li><a href="#.renderPages">.renderPages()</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
 
-<nav class="toc">
-<h2>Parsegraph pagingbuffer</h2>
-<h3>parsegraph_BufferPage</h3>
-<ol>
-<li>new parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)
-<li>.isEmpty()
-<li>.appendData(attribIndex, ...)
-<li>.appendData(attribIndex, valueArray)
-<li>.appendRGB(attribIndex, color)
-<li>.appendRGBA(attribIndex, color)
-</ol>
-<h3>parsegraph_PagingBuffer</h3>
-<ol>
-<li>new parsegraph_PagingBuffer(gl, program)
-<li>parsegraph_createPagingBuffer(gl, program)
-<li>.isEmpty()
-<li>.addPage(renderFunc, renderFuncThisArg)
-<li>.getWorkingPage()
-<li>.defineAttrib(name, numComponents, drawMode)
-<li>.appendRGB(...)
-<li>.appendRGBA(...)
-<li>.appendData(...)
-<li>.clear()
-<li>.renderPages()
-</ol>
-</nav>
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph pagingbuffer</h1>
+		<h2>parsegraph_BufferPage</h2>
+		<h3>new <a name="parsegraph_BufferPage">parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)</h3>
+		Returns a new buffer page for use with the given PagingBuffer.
+		<p>
+		he render function and this-object is used to render the page's buffer contents to GL.
+		h3>.isEmpty()</h3>
+		eturns true if this buffer page contains no buffer, or if its buffers are currently empty.
+		<h3><a name=".appendData">.appendData(attribIndex, ...)</h3></a>
+		Adds each of the specified values to the specified buffer of this page.
+		<ul>
+		<li>Throws if attribIndex does not specify a real buffer.
+		</ul>
+		<h3><a name=".appendData">.appendData(attribIndex, valueArray)</h3></a>
+		Adds each of the values of the given array to the specified buffer this page.
+		<ul>
+		<li>Throws if attribIndex does not specify a real buffer.
+		</ul>
+		<h3><a name=".appendRGB">.appendRGB(attribIndex, color)</h3></a>
+		Appends the RGB values of the given color object to the specified buffer of this page.
+		<ul>
+		<li>Throws if attribIndex does not specify a real buffer.
+		</ul>
+		<h3><a name=".appendRGBA">.appendRGBA(attribIndex, color)</h3></a>
+		Appends the RGBA values of the given color object to the specified buffer of this page.
+		<ul>
+		<li>Throws if attribIndex does not specify a real buffer.
+		</ul>
+		<h2>parsegraph_PagingBuffer</h2>
+		Manages the low-level paging of vertex attributes.
+		<h3>new <a name="parsegraph_PagingBuffer">parsegraph_PagingBuffer(gl, program)</h3>
+		Creates a new paged buffer using the given GL content and GL program for rendering.
+		<h3><a name="parsegraph_createPagingBuffer">parsegraph_createPagingBuffer(gl, program)</h3></a>
+		Alias for parsegraph_PagingBuffer's constructor.
+		<h3><a name=".isEmpty">.isEmpty()</h3></a>
+		Returns true if this paging buffer contains no pages, or its pages are empty.
+		<h3><a name=".addPage">.addPage(renderFunc, renderFuncThisArg)</h3></a>
+		Creates a new BufferPage and adds it to the end of this paging buffer. The new page is returned.
+		<h3><a name=".getWorkingPage">.getWorkingPage()</h3></a>
+		Returns the current working page that will have values appended.
+		<ul>
+		<li>Throws if this paging buffer has not had any pages added.
+		</ul>
+		<h3><a name=".defineAttrib">.defineAttrib(name, numComponents, drawMode)</h3></a>
+		Defines an attribute for data entry.
+		<p>
+		<dl>
+		<dt>name<dd>the attribute name in this paging buffer's GL program
+		<dt>numComponents<dd>the number of components in the named attribute type (1, 2, 3, or 4)
+		<dt>drawMode<dd>the WebGL draw mode. Defaults to gl.STATIC_DRAW
+		</dl>
+		<h3><a name=".appendRGB">.appendRGB(...)</h3></a>
+		Appends the given color RGB components to the current working page.
+		<h3><a name=".appendRGBA">.appendRGBA(...)</h3></a>
+		Appends the given color RGBA components to the current working page.
+		<h3><a name=".appendData">.appendData(...)</h3></a>
+		Appends the given floating-point arguments to the current working page.
+		<p>
+		If an array or array-like object is given, it will be iterated to extract its component values.
+		<h3><a name=".clear">.clear()</h3></a>
+		Deletes all buffers and empties values.
+		<h3><a name=".renderPages">.renderPages()</h3></a>
+		Sets up vertex attribute buffers and calls drawArrays for each page.
+		<pre>
+gl.drawArrays(gl.TRIANGLES, 0, numVertices)
+		</pre>
+		where numVertices is calculated from the appended data size / component count. The least-filled
+		buffer is used for the size, if the sizes differ.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>

@@ -2,36 +2,53 @@
 <html>
 <head>
 <title>Parsegraph TexturePainter</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Parsegraph TexturePainter</h1>
-Paints images of a given GL texture.
-<h3>new parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)</h3>
-Returns a new painter using the given GL context, specified GL texture, and
-compiled shader map.
-<h3>.texture</h3>
-Returns this painter's given texture ID.
-<h3>.drawWholeTexture(x, y, width, height, scale)</h3>
-Draws the entire texture at the specified rectangle and given scale.
-<h3>.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)</h3>
-Draws a portion of this painter's texture at the specified rectangle and given scale.
-<h3>.clear()</h3>
-Clears this painter's buffers.
-<h3>.render(world)</h3>
-Renders all painted images using the given matrix.
-</main>
-<nav class="toc">
-<h2>Parsegraph TexturePainter</h2>
-<ol>
-<li>new parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
-<li>.texture
-<li>.drawWholeTexture(x, y, width, height, scale)
-<li>.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)
-<li>.clear()
-<li>.render(world)
-</ol>
-</nav>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>Parsegraph TexturePainter <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Parsegraph TexturePainter</h2>
+		<ol>
+		<li>new <a href="#parsegraph_TexturePainter">parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
+		<li><a href="#.texture">.texture
+		<li><a href="#.drawWholeTexture">.drawWholeTexture(x, y, width, height, scale)
+		<li><a href="#.drawTexture">.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)
+		<li>.clear()
+		<li>.render(world)
+		</ol>
+		</div>
+		<div class="block content">
+		<h1>Parsegraph TexturePainter</h1>
+		Paints images of a given GL texture.
+		<h3>new <a name="parsegraph_TexturePainter">parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)</h3></a>
+		Returns a new painter using the given GL context, specified GL texture, and
+		compiled shader map.
+		<h3><a name=".texture">.texture</h3></a>
+		Returns this painter's given texture ID.
+		<h3><a name=".drawWholeTexture">.drawWholeTexture(x, y, width, height, scale)</h3></a>
+		Draws the entire texture at the specified rectangle and given scale.
+		<h3><a name=".drawTexture">.drawTexture(iconX, iconY, iconWidth, iconHeight, x, y, width, height, scale)</h3></a>
+		Draws a portion of this painter's texture at the specified rectangle and given scale.
+		<h3><a name=".clear">.clear()</h3></a>
+		Clears this painter's buffers.
+		<h3><a name=".render">.render(world)</h3></a>
+		Renders all painted images using the given matrix.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>		
 </body>
 </html>

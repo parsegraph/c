@@ -2,56 +2,85 @@
 <html>
 <head>
 <title>GLWidget - Alpha</title>
-<link rel="stylesheet" href="style.css">
+<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
 </head>
 <body>
-<main class="content">
-<h1>Alpha GLWidget</h1>
-Alpha's world object.
-<h3>new alpha_GLWidget(surface)</h3>
-Creates a new GLWidget using the given Surface, or creating a Surface if necessary.
-<h3>.paint()</h3>
-Computes the scene for rendering.
-<h3>.Tick(elapsed)</h3>
-Advances the scene the given amount of time, in milliseconds.
-<h3>.setBackground(color)</h3>
-Sets the background to the given Color.
-<h3>.setBackground(...)</h3>
-Sets the background to the Color constructed using the given arguments.
-<h3>.scheduleRepaint()</h3>
-Marks this GLWidget as dirty and schedules a surface repaint.
-<h3>.backgroundColor()</h3>
-Retrieves the current background color.
-<h3>.Camera()</h3>
-Returns the widget's camera.
-<h3>.canvas()</h3>
-Returns the canvas used for rendering.
-<h3>.gl()</h3>
-Returns the GL context used for rendering.
-<h3>.surface()</h3>
-Returns the surface used for rendering.
-<h3>.container()</h3>
-Returns the container for this scene.
-<h3>.render()</h3>
-Render painted memory buffers.
-</main>
-<nav class="toc">
-<h2>Alpha GLWidget</h2>
-<ol>
-<li>new alpha_GLWidget(surface)
-<li>.paint()
-<li>.Tick(elapsed)
-<li>.setBackground(color)
-<li>.setBackground(...)
-<li>.scheduleRepaint()
-<li>.backgroundColor()
-<li>.Camera()
-<li>.canvas()
-<li>.gl()
-<li>.surface()
-<li>.container()
-<li>.render()
-</ol>
-</nav>
+	<div class="grid">
+		<div class="logo">
+		<nav class="toc" style="clear: none; ">
+		<p style="text-align: center">
+		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
+		</p>
+		</nav>
+		</div>
+		<div class="block title">
+		<h1><h1>Alpha-GLWidget - <a href="index.html">Graph-js</a></h1>
+		</h1>
+		</div>
+		<div class="slot toctitle">
+		<h2>Table of Contents</h2>
+		<h2>Alpha GLWidget</h2>
+		<ol>
+		<li>new <a href="#alpha_GLWidget">alpha_GLWidget(surface)</a>
+		<li><a href="#.paint">.paint()</a>
+		<li><a href="#.Tick">.Tick(elapsed)</a>
+		<li><a href="#.setBackground">.setBackground(color)</a>
+		<li><a href="#.setBackground">.setBackground(...)</a>
+		<li><a href="#.scheduleRepaint">.scheduleRepaint()</a>
+		<li><a href="#.backgroundColor">.backgroundColor()</a>
+		<li><a href="#.Camera">.Camera()</a>
+		<li><a href="#.canvas">.canvas()</a>
+		<li><a href="#.gl">.gl()</a>
+		<li><a href="#.surface">.surface()</a>
+		<li><a href="#.container">.container()</a>
+		<li><a href="#.render">.render()</a>
+		</ol>
+		</div>
+		<div class="block linksearch" style="font-size: 15px; width: 100%;">
+			<div class=links>
+			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
+        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
+        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
+       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
+
+        <input name=q></input> <input type=submit value=Search></input>
+        </form>
+         
+    	</div>
+		</div>
+		<div class="block content">
+		<h1>Alpha GLWidget</h1>
+		Alpha's world object.
+		<h3>new <a name="alpha_GLWidget">alpha_GLWidget(surface)</h3></a>
+		Creates a new GLWidget using the given Surface, or creating a Surface if necessary.
+		<h3><a name=".paint">.paint()</h3></a>
+		Computes the scene for rendering.
+		<h3><a name=".Tick">.Tick(elapsed)</h3></a>
+		Advances the scene the given amount of time, in milliseconds.
+		<h3><a name=".setBackground">.setBackground(color)</h3></a>
+		Sets the background to the given Color.
+		<h3><a name=".setBackground">.setBackground(...)</h3></a>
+		Sets the background to the Color constructed using the given arguments.
+		<h3><a name=".scheduleRepaint">.scheduleRepaint()</h3></a>
+		Marks this GLWidget as dirty and schedules a surface repaint.
+		<h3><a name=".backgroundColor">.backgroundColor()</h3></a>
+		Retrieves the current background color.
+		<h3><a name=".Camera">.Camera()</h3></a>
+		Returns the widget's camera.
+		<h3><a name=".canvas">.canvas()</h3></a>
+		Returns the canvas used for rendering.
+		<h3><a name=".gl">.gl()</h3></a>
+		Returns the GL context used for rendering.
+		<h3><a name=".surface">.surface()</h3></a>
+		Returns the surface used for rendering.
+		<h3><a name=".container">.container()</h3></a>
+		Returns the container for this scene.
+		<h3><a name=".render">.render()</h3></a>
+		Render painted memory buffers.
+		</div>
+		<div class="footer slot style="display: inline-block; "">
+    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
+		</div>
+	</div>
 </body>
 </html>
