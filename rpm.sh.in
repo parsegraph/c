@@ -10,11 +10,11 @@ PACKAGE_VERSION=@PACKAGE_VERSION@
 PACKAGE_RELEASE=@PACKAGE_RELEASE@
 
 RPMFLAGS=--ba
-SRCRPM=parsegraph-$PACKAGE_VERSION-$PACKAGE_RELEASE.src.rpm
+SRCRPM=$PACKAGE_NAME-$PACKAGE_VERSION-$PACKAGE_RELEASE.src.rpm
 SPECFILE=src/rpm.spec
 
 make dist-gzip || exit
-cp -u parsegraph-$PACKAGE_VERSION.tar.gz $RPMDIR/SOURCES || exit
+cp -u $PACKAGE_NAME-$PACKAGE_VERSION.tar.gz $RPMDIR/SOURCES || exit
 cp -u $SPECFILE $RPMDIR/SPECS/$PACKAGE_NAME.spec || exit
 rpmbuild $RPMFLAGS $RPMDIR/SPECS/$PACKAGE_NAME.spec || exit
 
@@ -23,4 +23,4 @@ for package in `rpm -q --specfile $SPECFILE`; do
     filename="$RPMDIR/RPMS/$arch/$package.rpm";
     [ -e ../rpm/`basename $filename` ] || ln -v -s $filename ../rpm/`basename $filename` || exit
 done
-[ -e ../rpm/$SRCRPM ] || ln -v -s $RPMDIR/SRPMS/parsegraph-$PACKAGE_VERSION-$PACKAGE_RELEASE`rpmbuild -E '%{?dist}' $SPECFILE`.src.rpm ../rpm/$SRCRPM
+[ -e ../rpm/$SRCRPM ] || ln -v -s $RPMDIR/SRPMS/$PACKAGE_NAME-$PACKAGE_VERSION-$PACKAGE_RELEASE`rpmbuild -E '%{?dist}' $SPECFILE`.src.rpm ../rpm/$SRCRPM

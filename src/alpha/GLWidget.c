@@ -22,7 +22,7 @@ alpha_GLWidget* alpha_GLWidget_new(apr_pool_t* pool)
     this._canvas = surface._canvas;
     this._container = surface._container;
 
-    this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
+    this._backgroundColor = parsegraph_Color_new(pool, 0, 47/255, 57/255, 1);
 
     this.camera = new alpha_Camera(this);
 

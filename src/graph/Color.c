@@ -10,9 +10,13 @@ float* parsegraph_Color_new(apr_pool_t* pool, float r, float g, float b, float a
     else {
         color = malloc(sizeof(float)*4);
     }
-
     parsegraph_Color_SetRGBA(color, r, g, b, a);
     return color;
+}
+
+void parsegraph_Color_destroy(float* color)
+{
+    free(color);
 }
 
 void parsegraph_Color_SetRGBA(float* color, float r, float g, float b, float a)

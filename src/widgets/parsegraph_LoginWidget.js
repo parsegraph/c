@@ -8,7 +8,7 @@ function parsegraph_authenticate(listener, listenerThisArg)
     if(!listenerThisArg) {
         listenerThisArg = xhr;
     }
-    xhr.open("POST", "/user?command=parsegraph_authenticate", true);
+    xhr.open("POST", "/authenticate/", true);
     xhr.setRequestHeader("Accept", "application/json");
     xhr.onreadystatechange = function() {
         if(xhr.readyState !== XMLHttpRequest.DONE) {
@@ -65,7 +65,7 @@ function parsegraph_endUserLogin(listener, listenerThisArg)
     if(!listenerThisArg) {
         listenerThisArg = xhr;
     }
-    xhr.open("POST", "/user?command=parsegraph_endUserLogin");
+    xhr.open("POST", "/logout");
     xhr.setRequestHeader("Accept", "application/json");
     xhr.send();
 
@@ -242,9 +242,9 @@ function parsegraph_LoginWidget(surface, graph)
 // Authenticate an existing session (does not expose the session to JS)
 parsegraph_LoginWidget.prototype.authenticate = function()
 {
-    if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+    //if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
         parsegraph_authenticate(this.onAuthenticate, this);
-    }
+    //}
 }
 
 // Log out.
@@ -261,7 +261,7 @@ parsegraph_LoginWidget.prototype.onLogout = function(res, result)
         }
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
 
-        localStorage.removeItem("parsegraph_LoginWidget_remember");
+        //localStorage.removeItem("parsegraph_LoginWidget_remember");
         this._containerNode.disconnectNode(parsegraph_INWARD);
         this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
         this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
@@ -325,9 +325,9 @@ parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
         this._graph.input().setFocusedNode(null);
         this._graph.scheduleRepaint();
 
-        if(localStorage.getItem("parsegraph_LoginWidget_remember") !== null) {
+        /*if(localStorage.getItem("parsegraph_LoginWidget_remember") !== null) {
             localStorage.setItem("parsegraph_LoginWidget_remember", userLogin.username);
-        }
+        }*/
 
         if(this._loginListener) {
             return this._loginListener.call(this._loginListenerThisArg, res, userLogin, this._containerNode);
@@ -388,7 +388,7 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
 
 parsegraph_LoginWidget.prototype.leave = function()
 {
-    window.location = "/environment/";
+    window.location = "/";
 };
 
 parsegraph_LoginWidget.prototype.graph = function()
@@ -407,15 +407,15 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
         this._graph.input().setFocusedNode(null);
         this._graph.scheduleRepaint();
 
-        if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+        /*if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
             localStorage.setItem("parsegraph_LoginWidget_remember", userLogin.username);
-        }
+        }*/
         if(this._loginListener) {
             return this._loginListener.call(this._loginListenerThisArg, res, userLogin, this._containerNode);
         }
     }
     else if(res === false) {
-        localStorage.removeItem("parsegraph_LoginWidget_remember");
+        //localStorage.removeItem("parsegraph_LoginWidget_remember");
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
         resNode.setLabel(userLogin.result, this._graph.glyphAtlas());
@@ -423,7 +423,7 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
         this._graph.scheduleRepaint();
     }
     else {
-        localStorage.removeItem("parsegraph_LoginWidget_remember");
+        //localStorage.removeItem("parsegraph_LoginWidget_remember");
         // Exception.
         //console.log(res);
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
@@ -458,14 +458,14 @@ parsegraph_LoginWidget.prototype.root = function()
         car.label(this.title());
         this._containerNode = car.root();
         this._containerNode.setIgnoreMouse(true);
-        if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+        //if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
             this._containerNode.connectNode(parsegraph_INWARD, this.authenticateForm());
             this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
-        }
-        else {
-            this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
-            this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
-        }
+        //}
+        //else {
+            //this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
+            //this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
+        //}
         this._root = car.root();
     }
     return this._root;
@@ -479,7 +479,7 @@ parsegraph_LoginWidget.prototype.authenticateForm = function()
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
     car.setGlyphAtlas(this.glyphAtlas());
-    var remembered = localStorage.getItem("parsegraph_LoginWidget_remember");
+    var remembered = "1"; // localStorage.getItem("parsegraph_LoginWidget_remember");
     if(remembered !== "1" && remembered !== "0") {
         car.label(remembered);
     }
@@ -602,10 +602,10 @@ parsegraph_LoginWidget.prototype.toggleRemember = function()
 {
     this._rememberCheck.setBlockStyle(this.isRemembering() ? this._cbs : this._scbs);
     if(this.isRemembering()) {
-        localStorage.setItem("parsegraph_LoginWidget_remember", "1");
+        //localStorage.setItem("parsegraph_LoginWidget_remember", "1");
     }
     else {
-        localStorage.removeItem("parsegraph_LoginWidget_remember");
+        //localStorage.removeItem("parsegraph_LoginWidget_remember");
     }
     this._graph.scheduleRepaint();
     return false;

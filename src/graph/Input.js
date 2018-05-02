@@ -31,6 +31,9 @@ function parsegraph_Input(graph, camera)
     var lastMouseX = 0;
     var lastMouseY = 0;
 
+    var mousedownX = 0;
+    var mousedownY = 0;
+
     this._updateRepeatedly = false;
 
     this._caretPainter = null;
@@ -164,12 +167,14 @@ function parsegraph_Input(graph, camera)
     };
 
     var removeTouchByIdentifier = function(identifier) {
+        var touch = null;
         for(var i = 0; i < monitoredTouches.length; ++i) {
             if(monitoredTouches[i].identifier == identifier) {
-                monitoredTouches.splice(i--, 1);
+                touch = monitoredTouches.splice(i--, 1)[0];
+                break;
             }
         }
-        return null;
+        return touch;
     };
 
     /*
@@ -293,6 +298,8 @@ function parsegraph_Input(graph, camera)
                 "identifier": touch.identifier,
                 "x":touch.clientX,
                 "y":touch.clientY,
+                "startX":touch.clientX,
+                "startY":touch.clientY,
                 "touchstart":null
             };
             monitoredTouches.push(touchRec);
@@ -306,12 +313,12 @@ function parsegraph_Input(graph, camera)
                 return;
             }
 
-            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
+            /*if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
                 this.Dispatch(true, "touchstart");
                 touchstartTime = null;
                 return;
-            }
+            }*/
 
             touchRec.touchstart = Date.now();
             touchstartTime = Date.now();
@@ -359,7 +366,7 @@ function parsegraph_Input(graph, camera)
         //console.log("touchend");
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches.item(i);
-            removeTouchByIdentifier(touch.identifier);
+            var touchData = removeTouchByIdentifier(touch.identifier);
         }
 
         if(touchstartTime != null && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS) {
@@ -367,11 +374,26 @@ function parsegraph_Input(graph, camera)
         }
 
         graph.carousel().clickCarousel(lastMouseX, lastMouseY, false);
+
+        var WINDOW = 10;
+
+        if(
+            touchstartTime != null
+            && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS
+        ) {
+            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
+                // A significant node was clicked.
+                this.Dispatch(true, "touchstart");
+                touchstartTime = null;
+                return;
+            }
+        }
+
         return true;
     };
 
-    parsegraph_addEventListener(graph.canvas(), "touchend", removeTouchListener);
-    parsegraph_addEventListener(graph.canvas(), "touchcancel", removeTouchListener);
+    parsegraph_addEventMethod(graph.canvas(), "touchend", removeTouchListener, this);
+    parsegraph_addEventMethod(graph.canvas(), "touchcancel", removeTouchListener, this);
 
     /*
      * Mouse event handling
@@ -422,16 +444,11 @@ function parsegraph_Input(graph, camera)
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
 
+        mousedownX = event.clientX;
+        mousedownY = event.clientY;
+
         if(graph.carousel().clickCarousel(event.clientX, event.clientY, true)) {
             //console.log("Carousel click processed.");
-            return;
-        }
-
-        if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
-            // A significant node was clicked.
-            //console.log("Node clicked.");
-            this.Dispatch(true, "mousedown node");
-            mousedownTime = null;
             return;
         }
 
@@ -507,6 +524,15 @@ function parsegraph_Input(graph, camera)
                 afterMouseTimeout,
                 parsegraph_CLICK_DELAY_MILLIS/5
             );
+
+            // test! 12
+            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
+                // A significant node was clicked.
+                //console.log("Node clicked.");
+                this.Dispatch(true, "mousedown node");
+                mousedownTime = null;
+                return;
+            }
         }
         else {
             //console.log("Click missed timeout");

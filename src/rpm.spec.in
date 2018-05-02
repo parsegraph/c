@@ -18,8 +18,8 @@ BuildArch:	noarch
 %build
 
 %install
-mkdir -p %{buildroot}/%{_datarootdir}/parsegraph
-cp *.js %{buildroot}/%{_datarootdir}/parsegraph
+mkdir -p %{buildroot}/%{_datarootdir}/parsegraph/static
+cp -r *.js UnicodeData.txt www/* %{buildroot}/%{_datarootdir}/parsegraph/static
 
 %files
-%{_datarootdir}/parsegraph/*.js
+%{_datarootdir}/parsegraph/static/*

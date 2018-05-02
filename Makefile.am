@@ -16,7 +16,11 @@ debug:
 	cd src; gdb .libs/lt-parsegraph
 .PHONY: debug
 
-dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js
+dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js \
+	parsegraph-widgets-$(PACKAGE_VERSION).js \
+	esprima.js \
+	UnicodeData.txt \
+	www
 
 # Distribute the pkg-config file.
 pkgconfigdir = $(libdir)/pkgconfig
@@ -33,7 +37,8 @@ pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
 	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js \
-	UnicodeData.txt
+	UnicodeData.txt \
+	www/sga.css
 
 CLEANFILES = \
 	parsegraph-$(PACKAGE_VERSION).js \
