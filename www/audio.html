@@ -88,13 +88,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
         compressor.attack.value = 0;
         compressor.release.value = 0.25;
         var sink = audio.createGain();
+
         var bqf = audio.createBiquadFilter();
         bqf.type = "highpass";
         bqf.frequency.value = 1000;
         bqf.gain.value = 25;
         sink.connect(bqf);
         bqf.connect(compressor);
+        var delayWidget = new parsegraph_DelayWidget(graph);
+        var delay = delayWidget.audioNode();
+        compressor.connect(delay);
         compressor.connect(audio.destination);
+        delayGain = audio.createGain();
+        delay.connect(delayGain);
+        delayGain.gain.value = 0.5;
+        delayGain.connect(audio.destination);
 
         /*for(var i = 1; i <= 2; ++i) {
             var dl = audio.createDelay(.2*i);
@@ -151,6 +159,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var filterWidget = new parsegraph_FilterWidget(graph);
         filterWidget.load(bqf);
         car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, filterWidget.node());
+
+        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, delayWidget.node());
 
         var isFiltering = true;
         filterWidget.setUpdateListener(function() {
