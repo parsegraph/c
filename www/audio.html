@@ -66,6 +66,23 @@ function updateUnsel() {
     }
 }
 
+function impulseResponse(audioContext, duration, decay, reverse ) {
+    var sampleRate = audioContext.sampleRate;
+    var length = sampleRate * duration;
+    var impulse = audioContext.createBuffer(2, length, sampleRate);
+    var impulseL = impulse.getChannelData(0);
+    var impulseR = impulse.getChannelData(1);
+
+    if (!decay)
+        decay = 2.0;
+    for (var i = 0; i < length; i++){
+      var n = reverse ? length - i : i;
+      impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+      impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+    }
+    return impulse;
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_SingleGraphApplication();
     SGA = sga;
@@ -95,14 +112,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
         bqf.gain.value = 25;
         sink.connect(bqf);
         bqf.connect(compressor);
+
+        var convolverNode = audio.createConvolver();
+        convolverNode.buffer = impulseResponse(audio, 4,4, false);
+
+        compressor.connect(convolverNode);
+
         var delayWidget = new parsegraph_DelayWidget(graph);
         var delay = delayWidget.audioNode();
-        compressor.connect(delay);
-        compressor.connect(audio.destination);
+        convolverNode.connect(delay);
+        convolverNode.connect(audio.destination);
         delayGain = audio.createGain();
         delay.connect(delayGain);
-        delayGain.gain.value = 0.5;
+        delayGain.gain.value = 0.1;
         delayGain.connect(audio.destination);
+        delayGain.connect(convolverNode);
 
         /*for(var i = 1; i <= 2; ++i) {
             var dl = audio.createDelay(.2*i);
