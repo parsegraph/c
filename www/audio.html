@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
         node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
         myList.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
+
         var oscillatorWidget = new parsegraph_OscillatorWidget(graph, audio);
         myList.connectNode(parsegraph_DOWNWARD, oscillatorWidget.node());
 
@@ -142,6 +143,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }, this);
         car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, synth.node());
         car.pull(parsegraph_DOWNWARD);
+
+        var sequencerWidget = new parsegraph_SequencerWidget(graph);
+        sequencerWidget.output().connect(sink);
+        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, sequencerWidget.node());
 
         var filterWidget = new parsegraph_FilterWidget(graph);
         filterWidget.load(bqf);
