@@ -65,21 +65,31 @@ parsegraph_SequenceStep.prototype.node = function()
     this._pitchSlider.setValue(Math.random());
     rootStep = step;
 
-    this._type = "sine";
-
     var ns = s.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
     var tn = ns.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
     tn.setLabel("sine", ga);
     tn.setClickListener(function() {
         this._type = "sine";
     }, this);
-    tn.setScale(.5);
-
+    tn.setScale(.25);
     var tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
     tnn.setLabel("triangle", ga);
     tnn.setClickListener(function() {
         this._type = "triangle";
     }, this);
+    tn = tnn;
+    tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    tnn.setLabel("sawtooth", ga);
+    tnn.setClickListener(function() {
+        this._type = "sawtooth";
+    }, this);
+    tn = tnn;
+    tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    tnn.setLabel("square", ga);
+    tnn.setClickListener(function() {
+        this._type = "square";
+    }, this);
+    tn = tnn;
 
     var nsl = ns.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
     nsl.setLabel("Type", ga);
@@ -173,21 +183,78 @@ parsegraph_SequencerWidget.prototype.onPlay = function(listener, listenerThisArg
 parsegraph_SequencerWidget.prototype.play = function(bpm)
 {
     var audio = this._graph.surface().audio();
-    this._osc = audio.createOscillator();
+    this._timer = audio.createConstantSource();
+    var tg = audio.createGain();
+    this._timer.connect(tg);
+    tg.gain.value = 0;
+    tg.connect(this._sink);
+    this._timer.start();
+
     this._gain = audio.createGain();
     this._gain.connect(this._sink);
-    this._osc.connect(this._gain);
-    this._osc.start();
+
+    var sineVoice = {
+        osc:audio.createOscillator(),
+        gain:audio.createGain(),
+    };
+    sineVoice.gain.gain.value = 0;
+    sineVoice.osc.connect(sineVoice.gain);
+    sineVoice.osc.start();
+    sineVoice.gain.connect(this._gain);
+
+    var triangleVoice = {
+        osc:audio.createOscillator(),
+        gain:audio.createGain(),
+    };
+    triangleVoice.osc.type = "triangle";
+    triangleVoice.osc.connect(triangleVoice.gain);
+    triangleVoice.osc.start();
+    triangleVoice.gain.connect(this._gain);
+    triangleVoice.gain.gain.value = 0;
+
+    var sawtoothVoice = {
+        osc:audio.createOscillator(),
+        gain:audio.createGain(),
+    };
+    sawtoothVoice.osc.type = "sawtooth";
+    sawtoothVoice.osc.connect(sawtoothVoice.gain);
+    sawtoothVoice.osc.start();
+    sawtoothVoice.gain.connect(this._gain);
+    sawtoothVoice.gain.gain.value = 0;
+
+    var squareVoice = {
+        osc:audio.createOscillator(),
+        gain:audio.createGain(),
+    };
+    squareVoice.osc.type = "square";
+    squareVoice.osc.connect(squareVoice.gain);
+    squareVoice.osc.start();
+    squareVoice.gain.connect(this._gain);
+    squareVoice.gain.gain.value = 0;
+
+    this._voices = {};
+    this._voices["sine"] = sineVoice;
+    this._voices["triangle"] = triangleVoice;
+    this._voices["sawtooth"] = sawtoothVoice;
+    this._voices["square"] = squareVoice;
+
     this._startTime = audio.currentTime;
     this._beatLength = 60 / bpm;
     for(var i = 0; i < this._steps.length; ++i) {
         var s = this._steps[i];
-        s.play(this._osc, this._gain, audio.currentTime + i * 60 / bpm, audio.currentTime + (i+1) * 60 / bpm);
+        console.log(s._type);
+        var voice = this._voices[s._type];
+        if(!voice) {
+            console.log("No voice for " + s._type);
+            continue;
+        }
+        s.play(voice.osc, voice.gain, audio.currentTime + i * 60 / bpm, audio.currentTime + (i+1) * 60 / bpm);
         var last = audio.currentTime + (i+1) * 60 / bpm;
     }
-    this._osc.stop(last);
+    this._timer.stop(last);
     var that = this;
-    this._osc.onended = function() {
+    this._timer.onended = function() {
+        console.log("Stopped");
         that.play(that._maxBpm*that._bpmSlider.value());
     };
 
@@ -261,8 +328,11 @@ parsegraph_SequencerWidget.prototype.node = function()
     l.setBlockStyle(y);
     l.setLabel("Oscillator", this._graph.glyphAtlas());
     var rootStep = n;
+    var voices = ["sine", "sawtooth", "square", "triangle"];
     for(var i = 0; i < this._numSteps; ++i) {
         var newStep = new parsegraph_SequenceStep(this, i);
+        var v = voices[Math.floor(Math.random() * voices.length)];
+        newStep._type = v;
         this._steps.push(newStep);
         rootStep.connectNode(parsegraph_FORWARD, newStep.node());
         rootStep = newStep.node();
