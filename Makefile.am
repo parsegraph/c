@@ -137,6 +137,7 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_SequencerWidget.js \
 	src/widgets/parsegraph_DelayWidget.js \
 	src/widgets/parsegraph_ConvolverWidget.js \
+	src/widgets/parsegraph_WaveShaperWidget.js \
 	src/widgets/createSliderDemo.js \
 	src/widgets/showCorporateStructure.js \
 	src/widgets/showHardTest.js \
