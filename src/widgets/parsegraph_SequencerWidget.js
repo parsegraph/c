@@ -1,27 +1,48 @@
 function parsegraph_SequenceStep(seq, i)
 {
+
     this._seq = seq;
     this._i = i;
 }
 
+parsegraph_SequenceStep.prototype.setFrequency = function(freq)
+{
+    if(this._lastOsc) {
+        this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
+    }
+    this._pitchSlider.setValue((freq - 16)/7902);
+    this._pitchSlider.layoutWasChanged();
+    console.log(this._i, this._pitchSlider.value());
+};
+
 parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end)
 {
-    osc.frequency.setValueAtTime(200 + 2000 * this._pitchSlider.value(), start);
     var len = end - start;
+    osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
+    this._lastOsc = osc;
     if(this._onButton.label() == "Off") {
-        //gain.gain.setValueAtTime(0, start);
+        console.log("Step is off!");
+        gain.gain.setValueAtTime(0, start);
         return;
     }
     var audio = this._seq._graph.surface().audio();
-    gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(1, start + .2);
-    gain.gain.setValueAtTime(1, start + len * .8);
-    gain.gain.linearRampToValueAtTime(0, end);
+    //gain.gain.setValueAtTime(0, start);
+    //gain.gain.linearRampToValueAtTime(1, start + .2);
+    //gain.gain.setValueAtTime(1, start + len * .8);
+    //gain.gain.linearRampToValueAtTime(0, end);
     //console.log(this._i, start, end);
-    //gain.gain.linearRampToValueAtTime(1, start + this._attackSlider.value());
-    //gain.gain.linearRampToValueAtTime(this._sustainLevelSlider.value(), start + len*this._attackSlider.value() + len*this._decaySlider.value());
-    //gain.gain.setValueAtTime(this._sustainLevelSlider.value(), start + len*this._attackSlider.value() + len*this._decaySlider.value() + len*this._sustainLengthSlider.value());
-    //gain.gain.linearRampToValueAtTime(0, start + len*this._attackSlider.value() + len*this._decaySlider.value() + len*this._sustainLengthSlider.value() + len*this._decaySlider.value());
+
+    var envelopeSize = this._attackSlider.value() + this._decaySlider.value() + this._sustainLengthSlider.value() + this._releaseSlider.value();
+
+    var ae = this._attackSlider.value()/envelopeSize;
+    var de = this._decaySlider.value()/envelopeSize;
+    var se = this._sustainLengthSlider.value()/envelopeSize;
+    var re = this._releaseSlider.value()/envelopeSize;
+
+    gain.gain.linearRampToValueAtTime(1, start + len*ae);
+    gain.gain.exponentialRampToValueAtTime(this._sustainLevelSlider.value(), start + len*(ae + de));
+    gain.gain.setValueAtTime(this._sustainLevelSlider.value(), start + len*(ae + de + se));
+    gain.gain.linearRampToValueAtTime(0, start + len*(ae + de + se + re));
 };
 
 parsegraph_SequenceStep.prototype.node = function()
@@ -164,10 +185,39 @@ function parsegraph_SequencerWidget(graph)
     this._steps = [];
     this._listeners = [];
     this._numSteps = 32;
-    this._maxBpm = 600;
+    this._maxBpm = 2000;
     this._bpm = this._maxBpm / 2;
     var audio = this._graph.surface().audio();
     this._sink = audio.createGain();
+};
+
+parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth)
+{
+    if(this._synth) {
+        this._synth();
+        this._synth = null;
+    }
+    if(!synth) {
+        return;
+    }
+    this._synth = synth.addListener(function(freq) {
+        if(!this._recording) {
+            return;
+        }
+        var now = this._graph.surface().audio().currentTime;
+        if(this._playing) {
+            var t = Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
+            var step = this._steps[t];
+        }
+        else {
+            step = this._steps[this._currentStep];
+        }
+        if(!step) {
+            return;
+        }
+        step.setFrequency(freq);
+        this._graph.scheduleRepaint();
+    }, this);
 };
 
 parsegraph_SequencerWidget.prototype.output = function()
@@ -184,12 +234,25 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
 {
     var audio = this._graph.surface().audio();
     this._timer = audio.createConstantSource();
+    var that = this;
+    this._timer.onended = function() {
+        that.play(that._maxBpm*that._bpmSlider.value());
+    };
+    this._timer.start();
+
     var tg = audio.createGain();
     this._timer.connect(tg);
     tg.gain.value = 0;
     tg.connect(this._sink);
-    this._timer.start();
 
+    var now = audio.currentTime;
+
+    if(this._voices) {
+        for(var type in this._voices) {
+            var voice = this._voices[type];
+            voice.osc.stop();
+        }
+    }
     this._gain = audio.createGain();
     this._gain.connect(this._sink);
 
@@ -197,9 +260,9 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
         osc:audio.createOscillator(),
         gain:audio.createGain(),
     };
-    sineVoice.gain.gain.value = 0;
+    sineVoice.gain.gain.setValueAtTime(0, now);
+    sineVoice.osc.start(now);
     sineVoice.osc.connect(sineVoice.gain);
-    sineVoice.osc.start();
     sineVoice.gain.connect(this._gain);
 
     var triangleVoice = {
@@ -208,9 +271,9 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     };
     triangleVoice.osc.type = "triangle";
     triangleVoice.osc.connect(triangleVoice.gain);
-    triangleVoice.osc.start();
+    triangleVoice.osc.start(now);
     triangleVoice.gain.connect(this._gain);
-    triangleVoice.gain.gain.value = 0;
+    triangleVoice.gain.gain.setValueAtTime(0, now);
 
     var sawtoothVoice = {
         osc:audio.createOscillator(),
@@ -218,9 +281,9 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     };
     sawtoothVoice.osc.type = "sawtooth";
     sawtoothVoice.osc.connect(sawtoothVoice.gain);
-    sawtoothVoice.osc.start();
+    sawtoothVoice.osc.start(now);
     sawtoothVoice.gain.connect(this._gain);
-    sawtoothVoice.gain.gain.value = 0;
+    sawtoothVoice.gain.gain.setValueAtTime(0, now);
 
     var squareVoice = {
         osc:audio.createOscillator(),
@@ -228,9 +291,9 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     };
     squareVoice.osc.type = "square";
     squareVoice.osc.connect(squareVoice.gain);
-    squareVoice.osc.start();
+    squareVoice.osc.start(now);
     squareVoice.gain.connect(this._gain);
-    squareVoice.gain.gain.value = 0;
+    squareVoice.gain.gain.setValueAtTime(0, now);
 
     this._voices = {};
     this._voices["sine"] = sineVoice;
@@ -238,45 +301,43 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     this._voices["sawtooth"] = sawtoothVoice;
     this._voices["square"] = squareVoice;
 
-    this._startTime = audio.currentTime;
+    this._startTime = now;
     this._beatLength = 60 / bpm;
     for(var i = 0; i < this._steps.length; ++i) {
         var s = this._steps[i];
-        console.log(s._type);
         var voice = this._voices[s._type];
         if(!voice) {
             console.log("No voice for " + s._type);
             continue;
         }
-        s.play(voice.osc, voice.gain, audio.currentTime + i * 60 / bpm, audio.currentTime + (i+1) * 60 / bpm);
-        var last = audio.currentTime + (i+1) * 60 / bpm;
+        s.play(voice.osc, voice.gain, now + i * 60 / bpm, now + (i+1) * 60 / bpm);
+        var last = now + (i+1) * 60 / bpm;
     }
     this._timer.stop(last);
-    var that = this;
-    this._timer.onended = function() {
-        console.log("Stopped");
-        that.play(that._maxBpm*that._bpmSlider.value());
-    };
 
     this._lastSelected = null;
-    this._renderTimer = new parsegraph_AnimationTimer();
+    this._currentStep = null;
+    this._renderTimer = new parsegraph_TimeoutTimer();
     this._renderTimer.setListener(function() {
-        var t = Math.floor((audio.currentTime - this._startTime) / this._beatLength) % this._numSteps;
+        now = this._graph.surface().audio().currentTime;
+        var t = Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
+        this._currentStep = t;
         s = this._steps[t];
         if(s && t != this._lastSelected) {
-            //console.log(t, this._startTime, this._beatLength, !!s, this._lastSelected);
-            if(this._lastSelected != null) {
-                s = this._steps[this._lastSelected];
-                if(s) {
+            console.log("Changing step to " + t);
+            for(var i = 0; i < this._steps.length; ++i) {
+                var s = this._steps[i];
+                if(i != t) {
                     var b = parsegraph_copyStyle(parsegraph_BLOCK);
-                    b.backgroundColor = new parsegraph_Color(1, 1, this._lastSelected % 2 == 0 ? 1 : .8, 1);
+                    b.backgroundColor = new parsegraph_Color(1, 1, i % 2 == 0 ? 1 : .8, 1);
+                    s._node.setBlockStyle(b);
+                }
+                else {
+                    var b = parsegraph_copyStyle(parsegraph_BLOCK);
+                    b.backgroundColor = new parsegraph_Color(.5, 0, 0, 1);
                     s._node.setBlockStyle(b);
                 }
             }
-            s = this._steps[t];
-            var b = parsegraph_copyStyle(parsegraph_BLOCK);
-            b.backgroundColor = new parsegraph_Color(.5, 0, 0, 1);
-            s._node.setBlockStyle(b);
             this._lastSelected = t;
             this._graph.scheduleRepaint();
         }
@@ -294,12 +355,33 @@ parsegraph_SequencerWidget.prototype.node = function()
     car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("Sequencer");
-    car.fitExact();
+    //car.fitExact();
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     var onOff = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
     onOff.setLabel("Play", this._graph.glyphAtlas());
     this._onButton = onOff;
+
+    this._recordButton = onOff.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+    this._recordButton.setLabel("Record", this._graph.glyphAtlas());
+
+    this._recordButton.setClickListener(function() {
+        this._recording = !this._recording;
+        if(this._recording) {
+            // Now recording
+            var b = parsegraph_copyStyle(parsegraph_BLOCK);
+            b.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
+            this._recordButton.setBlockStyle(b);
+            this._recordButton.setLabel("Recording");
+        }
+        else {
+            var b = parsegraph_copyStyle(parsegraph_BLOCK);
+            this._recordButton.setBlockStyle(b);
+            this._recordButton.setLabel("Record");
+        }
+        this._recordButton.layoutWasChanged();
+        this._graph.scheduleRepaint();
+    }, this);
 
     var bpmSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
     bpmSlider.setValue(.5);
@@ -308,8 +390,10 @@ parsegraph_SequencerWidget.prototype.node = function()
     }, this);
     this._bpmSlider = bpmSlider;
 
+    this._playing = false;
     onOff.setClickListener(function() {
-        if(onOff.label() === "Play") {
+        this._playing = !this._playing;
+        if(this._playing) {
             //onOff.setLabel("Stop", this._graph.glyphAtlas());
             var v = bpmSlider.value();
             var bpm = v * this._maxBpm;
@@ -320,7 +404,7 @@ parsegraph_SequencerWidget.prototype.node = function()
         }
     }, this);
 
-    var n = car.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+    var n = car.spawn(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
     car.pull(parsegraph_DOWNWARD);
     var l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
     var y = parsegraph_copyStyle(parsegraph_BLOCK);
@@ -336,6 +420,15 @@ parsegraph_SequencerWidget.prototype.node = function()
         this._steps.push(newStep);
         rootStep.connectNode(parsegraph_FORWARD, newStep.node());
         rootStep = newStep.node();
+        rootStep.setClickListener(function() {
+            var that = this[0];
+            var i = this[1];
+            if(that._playing) {
+                return true;
+            }
+            that._currentStep = i;
+            return false;
+        }, [this, i]);
     }
     var addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
     addStep.setLabel("+", this._graph.glyphAtlas());

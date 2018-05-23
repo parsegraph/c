@@ -7,6 +7,8 @@ function parsegraph_SynthWidget(graph)
     this._oscType = "sine";
     this._oscDetune = 0;
     this._types = {};
+
+    this._listeners = [];
 }
 
 parsegraph_SynthWidget.prototype.build = function(audio)
@@ -16,6 +18,27 @@ parsegraph_SynthWidget.prototype.build = function(audio)
     oscillator.type = this._oscType;
     oscillator.detune.value = this._oscDetune;
     return oscillator;
+};
+
+parsegraph_SynthWidget.prototype.addListener = function(listener, listenerThisArg)
+{
+    var l = [listener, listenerThisArg];
+    this._listeners.push(l);
+    return function() {
+        for(var i = 0; i < this._listeners.length; ++i) {
+            if(this._listeners[i] === l) {
+                this._listeners.splice(i, 1);
+            }
+        }
+    };
+};
+
+parsegraph_SynthWidget.prototype.notePlayed = function(freq)
+{
+    for(var i = 0; i < this._listeners.length; ++i) {
+        var l = this._listeners[i];
+        l[0].call(l[1], freq);
+    }
 };
 
 parsegraph_SynthWidget.prototype.setOscillatorType = function(oscType)
@@ -34,6 +57,7 @@ parsegraph_SynthWidget.prototype.play = function(freq)
         return;
     }
     this._keyListener.call(this._keyListenerThisArg, freq);
+    this.notePlayed(freq);
 };
 
 parsegraph_SynthWidget.prototype.onPlay = function(keyListener, keyListenerThisArg)
@@ -59,7 +83,7 @@ parsegraph_SynthWidget.prototype.node = function()
         car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
         car.label("Synthesizer");
-        car.fitExact();
+        //car.fitExact();
 
         car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
         car.pull(parsegraph_DOWNWARD);
@@ -142,4 +166,3 @@ parsegraph_SynthWidget.prototype.node = function()
     }
     return this._containerNode;
 }
-

@@ -66,23 +66,6 @@ function updateUnsel() {
     }
 }
 
-function impulseResponse(audioContext, duration, decay, reverse ) {
-    var sampleRate = audioContext.sampleRate;
-    var length = sampleRate * duration;
-    var impulse = audioContext.createBuffer(2, length, sampleRate);
-    var impulseL = impulse.getChannelData(0);
-    var impulseR = impulse.getChannelData(1);
-
-    if (!decay)
-        decay = 2.0;
-    for (var i = 0; i < length; i++){
-      var n = reverse ? length - i : i;
-      impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-      impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-    }
-    return impulse;
-}
-
 document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_SingleGraphApplication();
     SGA = sga;
@@ -95,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         myList.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
 
         var oscillatorWidget = new parsegraph_OscillatorWidget(graph, audio);
-        myList.connectNode(parsegraph_DOWNWARD, oscillatorWidget.node());
+        //myList.connectNode(parsegraph_DOWNWARD, oscillatorWidget.node());
 
         var compressor = audio.createDynamicsCompressor();
         compressor.threshold.value = -50;
@@ -113,8 +96,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         sink.connect(bqf);
         bqf.connect(compressor);
 
-        var convolverNode = audio.createConvolver();
-        convolverNode.buffer = impulseResponse(audio, 4,4, false);
+        var convolverWidget = new parsegraph_ConvolverWidget(graph);
+        var convolverNode = convolverWidget._convolver;
 
         compressor.connect(convolverNode);
 
@@ -173,18 +156,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
             osc.connect(g);
             g.connect(sink);
         }, this);
-        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, synth.node());
-        car.pull(parsegraph_DOWNWARD);
+        car.spawnMove('f', 'u').connectNode(parsegraph_FORWARD, synth.node());
+        car.pull(parsegraph_FORWARD);
 
         var sequencerWidget = new parsegraph_SequencerWidget(graph);
         sequencerWidget.output().connect(sink);
-        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, sequencerWidget.node());
+        car.connect(parsegraph_DOWNWARD, sequencerWidget.node());
+        sequencerWidget.useSynthesizer(synth);
 
         var filterWidget = new parsegraph_FilterWidget(graph);
         filterWidget.load(bqf);
-        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, filterWidget.node());
+        car.spawnMove('u', 'u').connectNode(parsegraph_FORWARD, filterWidget.node());
 
-        car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, delayWidget.node());
+        car.spawnMove('b', 'u').connectNode(parsegraph_DOWNWARD, delayWidget.node());
+        car.connect(parsegraph_UPWARD, convolverWidget.node());
+        car.connect(parsegraph_BACKWARD, oscillatorWidget.node());
 
         var isFiltering = true;
         filterWidget.setUpdateListener(function() {

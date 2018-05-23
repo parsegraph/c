@@ -51,7 +51,7 @@ parsegraph_OscillatorWidget.prototype.node = function()
         car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
         car.label("Oscillator");
-        car.fitExact();
+        //car.fitExact();
 
         car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
         car.pull(parsegraph_DOWNWARD);
