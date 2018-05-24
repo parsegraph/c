@@ -21,7 +21,7 @@ parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end)
     osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
     this._lastOsc = osc;
     if(this._onButton.label() == "Off") {
-        console.log("Step is off!");
+        //console.log("Step is off!");
         gain.gain.setValueAtTime(0, start);
         return;
     }
@@ -318,13 +318,14 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     this._lastSelected = null;
     this._currentStep = null;
     this._renderTimer = new parsegraph_TimeoutTimer();
+    this._renderTimer.setDelay(this._beatLength);
     this._renderTimer.setListener(function() {
         now = this._graph.surface().audio().currentTime;
         var t = Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
         this._currentStep = t;
         s = this._steps[t];
         if(s && t != this._lastSelected) {
-            console.log("Changing step to " + t);
+            //console.log("Changing step to " + t);
             for(var i = 0; i < this._steps.length; ++i) {
                 var s = this._steps[i];
                 if(i != t) {
@@ -343,7 +344,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
         }
         this._renderTimer.schedule();
     }, this);
-    this._renderTimer.schedule();
+    //this._renderTimer.schedule();
 };
 
 parsegraph_SequencerWidget.prototype.node = function()
