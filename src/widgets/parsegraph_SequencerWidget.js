@@ -442,6 +442,7 @@ parsegraph_SequencerWidget.prototype.node = function()
         for(var i = 0; i < this._numSteps; ++i) {
             var step = this._steps[i];
             step.randomize();
+            step.setActive(false);
         }
     }, this);
 
