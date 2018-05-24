@@ -234,6 +234,7 @@ parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth)
         if(!step) {
             return;
         }
+        step.setActive(true);
         step.setFrequency(freq);
         this._graph.scheduleRepaint();
     }, this);
