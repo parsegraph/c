@@ -87,7 +87,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         compressor.reduction.value = -20;
         compressor.attack.value = 0;
         compressor.release.value = 0.25;
-        var sink = audio.createGain();
+        var bit = new parsegraph_8BitWidget(graph);
+        var sink = bit.audioNode();
 
         var waveShaperWidget = new parsegraph_WaveShaperWidget(graph);
         var bqf = audio.createBiquadFilter();
@@ -106,12 +107,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var delayWidget = new parsegraph_DelayWidget(graph);
         var delay = delayWidget.audioNode();
         convolverNode.connect(delay);
-        convolverNode.connect(audio.destination);
         delayGain = audio.createGain();
         delay.connect(delayGain);
         delayGain.gain.value = 0.1;
-        delayGain.connect(audio.destination);
         delayGain.connect(convolverNode);
+
+        convolverNode.connect(audio.destination);
+        delayGain.connect(audio.destination);
 
         /*for(var i = 1; i <= 2; ++i) {
             var dl = audio.createDelay(.2*i);
@@ -177,6 +179,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
         car.connect(parsegraph_DOWNWARD, delayWidget.node());
         car.spawnMove('b', 'u');
         car.connect(parsegraph_DOWNWARD, waveShaperWidget.node());
+        car.pull('d');
+        car.spawnMove('b', 'u');
+        car.connect(parsegraph_DOWNWARD, bit.node());
         car.pop();
         car.connect(parsegraph_UPWARD, convolverWidget.node());
         car.connect(parsegraph_BACKWARD, oscillatorWidget.node());
