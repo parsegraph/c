@@ -3,23 +3,35 @@ function parsegraph_SequenceStep(seq, i)
 
     this._seq = seq;
     this._i = i;
+    this._active = true;
 }
 
 parsegraph_SequenceStep.prototype.setFrequency = function(freq)
 {
-    if(this._lastOsc) {
-        this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
-    }
+    //if(this._lastOsc) {
+        //this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
+    //}
     this._pitchSlider.setValue((freq - 16)/7902);
     this._pitchSlider.layoutWasChanged();
-    console.log(this._i, this._pitchSlider.value());
+    //console.log(this._i, this._pitchSlider.value());
+};
+
+parsegraph_SequenceStep.prototype.setActive = function(isActive)
+{
+    this._active = isActive;
+    if(this._active) {
+        this._onButton.setLabel("On");
+    }
+    else {
+        this._onButton.setLabel("Off");
+    }
 };
 
 parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end)
 {
     var len = end - start;
     osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
-    this._lastOsc = osc;
+    //this._lastOsc = osc;
     if(this._onButton.label() == "Off") {
         //console.log("Step is off!");
         gain.gain.setValueAtTime(0, start);
@@ -45,6 +57,12 @@ parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end)
     gain.gain.linearRampToValueAtTime(0, start + len*(ae + de + se + re));
 };
 
+parsegraph_SequenceStep.prototype.randomize = function()
+{
+    this.setFrequency(16 + Math.random() * 7902);
+    this.setActive(Math.random() > .2);
+};
+
 parsegraph_SequenceStep.prototype.node = function()
 {
     if(this._node) {
@@ -68,7 +86,8 @@ parsegraph_SequenceStep.prototype.node = function()
     var stepOn = s.spawnNode(parsegraph_UPWARD, parsegraph_BLOCK);
     stepOn.setLabel(Math.random() > .3 ? "On" : "Off", ga);
     stepOn.setClickListener(function() {
-        if(stepOn.label() == "On") {
+        this._active = !this._active;
+        if(this._active) {
             stepOn.setLabel("Off", ga);
         }
         else {
@@ -402,6 +421,26 @@ parsegraph_SequencerWidget.prototype.node = function()
         }
         else {
             onOff.setLabel("Play", this._graph.glyphAtlas());
+        }
+    }, this);
+
+    this._resetButton = this._recordButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+    this._resetButton.setLabel("Reset", this._graph.glyphAtlas());
+    this._resetButton.setClickListener(function() {
+        var newFreq = 220;
+        for(var i = 0; i < this._numSteps; ++i) {
+            var step = this._steps[i];
+            step.setFrequency(newFreq);
+            step.setActive(true);
+        }
+    }, this);
+
+    this._randomizeButton = this._resetButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+    this._randomizeButton.setLabel("Randomize", this._graph.glyphAtlas());
+    this._randomizeButton.setClickListener(function() {
+        for(var i = 0; i < this._numSteps; ++i) {
+            var step = this._steps[i];
+            step.randomize();
         }
     }, this);
 
