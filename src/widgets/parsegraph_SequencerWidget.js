@@ -427,11 +427,11 @@ parsegraph_SequencerWidget.prototype.node = function()
     this._resetButton = this._recordButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
     this._resetButton.setLabel("Reset", this._graph.glyphAtlas());
     this._resetButton.setClickListener(function() {
-        var newFreq = 220;
+        var newFreq = 440;
         for(var i = 0; i < this._numSteps; ++i) {
             var step = this._steps[i];
             step.setFrequency(newFreq);
-            step.setActive(true);
+            step.setActive(false);
         }
     }, this);
 
