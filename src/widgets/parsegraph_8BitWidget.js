@@ -7,6 +7,8 @@ function parsegraph_8BitWidget(graph)
     this._listeners = [];
     this._audioNode = null;
     this._active = false;
+    this._dither = .02;
+    this._ditherSlider = null;
 }
 
 parsegraph_8BitWidget.prototype.audioNode = function()
@@ -32,6 +34,7 @@ parsegraph_8BitWidget.prototype.audioNode = function()
                     if(that._active) {
                         //console.log(((inputData[sample]*0xffffFFFF) & (-1 << 24))/0xffffFFFF);
                         outputData[sample] = ((inputData[sample]*0xffffFFFF) & (-1 << 30))/0xffffFFFF;
+                        outputData[sample] = (1 - that._dither) * outputData[sample] + that._dither * Math.random();
                     }
                     else {
                         outputData[sample] = inputData[sample];
@@ -67,6 +70,13 @@ parsegraph_8BitWidget.prototype.node = function()
         else {
             onOff.setLabel("Play", this._graph.glyphAtlas());
         }
+    }, this);
+
+
+    this._ditherSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    this._ditherSlider.setValue(this._dither);
+    this._ditherSlider.setChangeListener(function() {
+        this._dither = this._ditherSlider.value();
     }, this);
 
     return this._containerNode;

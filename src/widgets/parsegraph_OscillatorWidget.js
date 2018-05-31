@@ -13,9 +13,9 @@ function parsegraph_OscillatorWidget(graph)
 parsegraph_OscillatorWidget.prototype.build = function(audio)
 {
     var oscillator = audio.createOscillator();
-    oscillator.frequency.value = this._oscFrequency;
+    oscillator.frequency.setValueAtTime(this._oscFrequency, audio.currentTime);
     oscillator.type = this._oscType;
-    oscillator.detune.value = this._oscDetune;
+    oscillator.detune.setValueAtTime(this._oscDetune, audio.currentTime);
     return oscillator;
 };
 
@@ -54,8 +54,9 @@ parsegraph_OscillatorWidget.prototype.node = function()
         //car.fitExact();
 
         car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
-        car.pull(parsegraph_DOWNWARD);
+
         car.push();
+        car.pull(parsegraph_DOWNWARD);
         car.shrink();
         car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
         car.label("Type");
@@ -100,7 +101,7 @@ parsegraph_OscillatorWidget.prototype.node = function()
         freqSlider.setValue(this._oscFrequency / FS);
         car.onChange(function() {
             this.setOscillatorFrequency(freqSlider.value() * FS);
-            console.log("Frequency=" + this._oscFrequency);
+            //console.log("Frequency=" + this._oscFrequency);
         }, this);
         car.pop();
 
@@ -112,7 +113,7 @@ parsegraph_OscillatorWidget.prototype.node = function()
         var detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
         car.onChange(function() {
             this.setOscillatorDetune(detuneSlider.value() * 200);
-            console.log("Detune: " + this._oscDetune.value);
+            //console.log("Detune: " + this._oscDetune.value);
         }, this);
         car.pop();
     }

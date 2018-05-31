@@ -208,6 +208,7 @@ function parsegraph_SequencerWidget(graph)
     this._bpm = this._maxBpm / 2;
     var audio = this._graph.surface().audio();
     this._sink = audio.createGain();
+    this._detuneScale = 300;
 };
 
 parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth)
@@ -284,6 +285,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     sineVoice.osc.start(now);
     sineVoice.osc.connect(sineVoice.gain);
     sineVoice.gain.connect(this._gain);
+    sineVoice.osc.detune.setValueAtTime(this._detuneScale * (this._detuneSlider.value()-0.5), now);
 
     var triangleVoice = {
         osc:audio.createOscillator(),
@@ -294,6 +296,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     triangleVoice.osc.start(now);
     triangleVoice.gain.connect(this._gain);
     triangleVoice.gain.gain.setValueAtTime(0, now);
+    triangleVoice.osc.detune.setValueAtTime(this._detuneScale * (this._detuneSlider.value()-0.5), now);
 
     var sawtoothVoice = {
         osc:audio.createOscillator(),
@@ -304,6 +307,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     sawtoothVoice.osc.start(now);
     sawtoothVoice.gain.connect(this._gain);
     sawtoothVoice.gain.gain.setValueAtTime(0, now);
+    sawtoothVoice.osc.detune.setValueAtTime(this._detuneScale * (this._detuneSlider.value()-0.5), now);
 
     var squareVoice = {
         osc:audio.createOscillator(),
@@ -314,6 +318,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     squareVoice.osc.start(now);
     squareVoice.gain.connect(this._gain);
     squareVoice.gain.gain.setValueAtTime(0, now);
+    squareVoice.osc.detune.setValueAtTime(this._detuneScale * (this._detuneSlider.value()-0.5), now);
 
     this._voices = {};
     this._voices["sine"] = sineVoice;
@@ -443,6 +448,15 @@ parsegraph_SequencerWidget.prototype.node = function()
             var step = this._steps[i];
             step.randomize();
             step.setActive(false);
+        }
+    }, this);
+
+    this._detuneSlider = this._randomizeButton.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    this._detuneSlider.setValue(.5);
+    this._detuneSlider.setChangeListener(function() {
+        for(var i = 0; i < this._voices.length; ++i) {
+            var voice = this._voices[i];
+            voice.osc.detune.setValueAtTime(this._detuneScale * (this._detuneSlider.value() - 0.5), voice.osc.context.currentTime);
         }
     }, this);
 
