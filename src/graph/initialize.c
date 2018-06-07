@@ -33,7 +33,6 @@ float* parsegraph_EXTENT_BORDER_COLOR;
 float parsegraph_EXTENT_BORDER_THICKNESS;
 float* parsegraph_EXTENT_BACKGROUND_COLOR;
 float parsegraph_BUD_LEAF_SEPARATION;
-float* parsegraph_BACKGROUND_COLOR;
 int parsegraph_LINE_THICKNESS;
 
 struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas()
@@ -55,13 +54,6 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_RIGHT_TO_LEFT = 0;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
-
-    // Background
-    parsegraph_BACKGROUND_COLOR = parsegraph_Color_new(pool,
-        0, 47/255, 57/255, 1
-        //256/255, 255/255, 255/255, 1
-        //45/255, 84/255, 127/255, 1
-    );
 
     // Font
     parsegraph_UPSCALED_FONT_SIZE = 144;

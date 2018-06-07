@@ -1,166 +1,113 @@
 #include "Surface.h"
+#include "Color.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <GL/gl.h>
 
-function parsegraph_Surface()
+parsegraph_Surface* parsegraph_Surface_new(void* peer)
 {
-    this._backgroundColor = parsegraph_BACKGROUND_COLOR;
+    parsegraph_Surface* rv = malloc(sizeof(*rv));
+    if(APR_SUCCESS != apr_pool_create(&rv->pool, 0)) {
+        fprintf(stderr, "Failed to create parsegraph_Surface\n");
+        abort();
+    }
+    rv->peer = peer;
 
-    this._container = document.createElement("div");
-    this._container.className = "parsegraph_Surface";
-
-    // The canvas that will be drawn to.
-    this._canvas = document.createElement("canvas");
-    this._canvas.style.display = "block";
-    this._canvas.setAttribute("tabIndex", 0);
-
-    // GL content, not created until used.
-    this._gl = null;
-
-    this._container.appendChild(this._canvas);
+    parsegraph_Color_copy(rv->backgroundColor, parsegraph_BACKGROUND_COLOR);
 
     // The identifier used to cancel a pending Render.
-    this._pendingRender = null;
-    this._needsRepaint = true;
+    rv->pendingRender = 0;
+    rv->needsRepaint = 1;
 
-    this._painters = [];
-    this._renderers = [];
-};
+    rv->first_painter = 0;
+    rv->last_painter = 0;
+    rv->first_renderer = 0;
+    rv->last_renderer = 0;
 
-parsegraph_Surface.prototype.canvas = function()
+    return rv;
+}
+
+void parsegraph_Surface_destroy(parsegraph_Surface* surface)
 {
-    return this._canvas;
-};
-
-parsegraph_Surface.prototype.gl = function()
-{
-    if(!this._gl) {
-        this._gl = this._canvas.getContext("experimental-webgl");
-        if(this._gl == null) {
-            this._gl = this._canvas.getContext("webgl");
-            if(this._gl == null) {
-                throw new Error("GL context is not supported");
-            }
-        }
+    for(parsegraph_SurfacePainter* p = surface->first_painter; p;) {
+        parsegraph_SurfacePainter* next = p->next;
+        free(p);
+        p = next;
     }
-    return this._gl;
-};
-
-parsegraph_Surface.prototype.setGL = function(gl)
-{
-    this._gl = gl;
-};
-
-parsegraph_Surface.prototype.setAudio = function(audio)
-{
-    this._audio = audio;
-};
-
-parsegraph_Surface.prototype.audio = function()
-{
-    if(!this._audio) {
-        try {
-            this._audio = new AudioContext();
-        }
-        catch(ex) {
-            console.log(ex);
-        }
-        if(this._audio == null) {
-            throw new Error("AudioContext is not supported");
-        }
+    for(parsegraph_SurfaceRenderer* r = surface->first_renderer; r;) {
+        parsegraph_SurfaceRenderer* next = r->next;
+        free(r);
+        r = next;
     }
-    return this._audio;
-};
+    free(surface);
+}
 
-parsegraph_Surface.prototype.resize = function(w, h)
+void parsegraph_Surface_addPainter(parsegraph_Surface* surface, void(*painterFunc)(void*, void*), void* data)
 {
-    this.container().style.width = typeof w === "number" ? (w + "px") : w;
-    if(arguments.length === 1) {
-        h = w;
+    parsegraph_SurfacePainter* painter = malloc(sizeof(*painter));
+    painter->painter = painterFunc;
+    painter->data = data;
+    painter->next = 0;
+    if(surface->last_painter) {
+        surface->last_painter->next = painter;
+        surface->last_painter = painter;
     }
-    this.container().style.height = typeof h === "number" ? (h + "px") : h;
-};
-
-/**
- * Returns the container that holds the canvas for this graph.
- */
-parsegraph_Surface.prototype.container = function()
-{
-    return this._container;
-};
-
-parsegraph_Surface.prototype.addPainter = function(painter, thisArg)
-{
-    this._painters.push([painter, thisArg]);
-};
-
-parsegraph_Surface.prototype.addRenderer = function(renderer, thisArg)
-{
-    this._renderers.push([renderer, thisArg]);
-};
-
-parsegraph_Surface.prototype.paint = function()
-{
-    //console.log("Painting surface");
-    var args = arguments;
-    this._painters.forEach(function(painter) {
-        painter[0].apply(painter[1], args);
-    }, this);
-};
-
-parsegraph_Surface.prototype.setBackground = function(color)
-{
-    if(arguments.length > 1) {
-        return this.setBackground(
-            parsegraph_createColor.apply(this, arguments)
-        );
+    else {
+        surface->first_painter = painter;
+        surface->last_painter = painter;
     }
-    this._backgroundColor = color;
-};
+}
+
+void parsegraph_Surface_addRenderer(parsegraph_Surface* surface, void(*rendererFunc)(void*, void*), void* data)
+{
+    parsegraph_SurfaceRenderer* renderer = malloc(sizeof(*renderer));
+    renderer->renderer = rendererFunc;
+    renderer->data = data;
+    renderer->next = 0;
+    if(surface->last_renderer) {
+        surface->last_renderer->next = renderer;
+        surface->last_renderer = renderer;
+    }
+    else {
+        surface->first_renderer = renderer;
+        surface->last_renderer = renderer;
+    }
+}
+
+void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg)
+{
+    if(!surface->needsRepaint) {
+        return;
+    }
+    for(parsegraph_SurfacePainter* painter = surface->first_painter; painter; painter = painter->next) {
+        painter->painter(painter->data, arg);
+    }
+    surface->needsRepaint = 0;
+}
+
+void parsegraph_Surface_render(parsegraph_Surface* surface, void* arg)
+{
+    glClearColor(
+        surface->backgroundColor[0],
+        surface->backgroundColor[1],
+        surface->backgroundColor[2],
+        surface->backgroundColor[3]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for(parsegraph_SurfaceRenderer* renderer = surface->first_renderer; renderer; renderer = renderer->next) {
+        renderer->renderer(renderer->data, arg);
+    }
+}
+
+void parsegraph_Surface_setBackground(parsegraph_Surface* surface, float* color)
+{
+    parsegraph_Color_copy(surface->backgroundColor, color);
+}
 
 /**
  * Retrieves the current background color.
  */
-parsegraph_Surface.prototype.backgroundColor = function()
+float* parsegraph_Surface_backgroundColor(parsegraph_Surface* surface)
 {
-    return this._backgroundColor;
-};
-
-/**
- * Returns whether the surface has a nonzero client width and height.
- */
-parsegraph_Surface.prototype.canProject = function()
-{
-    var displayWidth = this.container().clientWidth;
-    var displayHeight = this.container().clientHeight;
-
-    return displayWidth != 0 && displayHeight != 0;
-};
-
-/**
- * Invokes all renderers.
- *
- * Throws if canProject() returns false.
- */
-parsegraph_Surface.prototype.render = function()
-{
-    //console.log("Rendering surface");
-    if(!this.canProject()) {
-        throw new Error(
-            "Refusing to render to an unprojectable surface. Use canProject() to handle, and parent this surface's container to fix."
-        );
-    }
-    this._container.style.backgroundColor = this._backgroundColor.asRGB();
-
-    var gl = this.gl();
-    gl.clearColor(
-        this._backgroundColor._r,
-        this._backgroundColor._g,
-        this._backgroundColor._b,
-        this._backgroundColor._a
-    );
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    this._renderers.forEach(function(renderer) {
-        renderer[0].call(renderer[1]);
-    }, this);
-};
-
+    return surface->backgroundColor;
+}

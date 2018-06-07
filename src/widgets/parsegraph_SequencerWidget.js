@@ -27,6 +27,36 @@ parsegraph_SequenceStep.prototype.setActive = function(isActive)
     }
 };
 
+parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end)
+{
+    var len = end - start;
+    osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
+    //this._lastOsc = osc;
+    if(this._onButton.label() == "Off") {
+        //console.log("Step is off!");
+        gain.gain.setValueAtTime(0, start);
+        return;
+    }
+    var audio = this._seq._graph.surface().audio();
+    //gain.gain.setValueAtTime(0, start);
+    //gain.gain.linearRampToValueAtTime(1, start + .2);
+    //gain.gain.setValueAtTime(1, start + len * .8);
+    //gain.gain.linearRampToValueAtTime(0, end);
+    //console.log(this._i, start, end);
+
+    var envelopeSize = this._attackSlider.value() + this._decaySlider.value() + this._sustainLengthSlider.value() + this._releaseSlider.value();
+
+    var ae = this._attackSlider.value()/envelopeSize;
+    var de = this._decaySlider.value()/envelopeSize;
+    var se = this._sustainLengthSlider.value()/envelopeSize;
+    var re = this._releaseSlider.value()/envelopeSize;
+
+    gain.gain.linearRampToValueAtTime(1, start + len*ae);
+    gain.gain.exponentialRampToValueAtTime(this._sustainLevelSlider.value(), start + len*(ae + de));
+    gain.gain.setValueAtTime(this._sustainLevelSlider.value(), start + len*(ae + de + se));
+    gain.gain.linearRampToValueAtTime(0, start + len*(ae + de + se + re));
+};
+
 parsegraph_SequenceStep.prototype.randomize = function()
 {
     this.setFrequency(16 + Math.random() * 7902);
@@ -74,6 +104,93 @@ parsegraph_SequenceStep.prototype.node = function()
     this._pitchSlider = stepSlider;
     this._pitchSlider.setValue(Math.random());
     rootStep = step;
+
+    var ns = s.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+    var tn = ns.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+    tn.setLabel("sine", ga);
+    tn.setClickListener(function() {
+        this._type = "sine";
+    }, this);
+    tn.setScale(.25);
+    var tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    tnn.setLabel("triangle", ga);
+    tnn.setClickListener(function() {
+        this._type = "triangle";
+    }, this);
+    tn = tnn;
+    tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    tnn.setLabel("sawtooth", ga);
+    tnn.setClickListener(function() {
+        this._type = "sawtooth";
+    }, this);
+    tn = tnn;
+    tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    tnn.setLabel("square", ga);
+    tnn.setClickListener(function() {
+        this._type = "square";
+    }, this);
+    tn = tnn;
+
+    var nsl = ns.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+    nsl.setLabel("Type", ga);
+    nsl.setScale(.5);
+
+    var prior = ns;
+
+    // Attack
+    var attackBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+    var attackLabel = attackBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+    attackLabel.setLabel("Attack", ga);
+    attackLabel.setScale(.5);
+    var stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+    stepSlider.setScale(.5);
+    this._attackSlider = stepSlider;
+    this._attackSlider.setValue(Math.random());
+    rootStep = step;
+    prior = attackBud;
+
+    // Decay
+    var decayBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+    var decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+    decayLabel.setLabel("Decay", ga);
+    decayLabel.setScale(.5);
+    var stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+    stepSlider.setScale(.5);
+    this._decaySlider = stepSlider;
+    this._decaySlider.setValue(Math.random());
+    rootStep = step;
+    prior = decayBud;
+
+    // Sustain
+    var sustainBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+    var sustainLabel = sustainBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+    sustainLabel.setLabel("Sustain", ga);
+    sustainLabel.setScale(.5);
+    var sustainSliders = sustainBud.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+    sustainSliders.setScale(.5);
+    var stepSlider = sustainSliders.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+
+    var lenSlider = sustainSliders.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
+    .spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+    this._sustainLengthSlider = lenSlider;
+    this._sustainLengthSlider.setValue(Math.random());
+
+    this._sustainLevelSlider = stepSlider;
+    this._sustainLevelSlider.setValue(.6 + .4 * Math.random());
+    rootStep = step;
+    prior = sustainBud;
+
+    // Release
+    var releaseBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+    var releaseLabel = releaseBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+    releaseLabel.setLabel("Release", ga);
+    releaseLabel.setScale(.5);
+    var stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+    stepSlider.setScale(.5);
+    this._releaseSlider = stepSlider;
+    this._releaseSlider.setValue(Math.random());
+    rootStep = step;
+    prior = releaseBud;
 
     return this._node;
 };
@@ -345,9 +462,11 @@ parsegraph_SequencerWidget.prototype.node = function()
 
     var n = car.spawn(parsegraph_DOWNWARD, parsegraph_BUD, parsegraph_ALIGN_CENTER);
     car.pull(parsegraph_DOWNWARD);
-
-    var simpleOsc = new parsegraph_SingleOscillatorWidget(this._graph, this._graph.surface().audio().createGain());
-    n.connectNode(parsegraph_BACKWARD, simpleOsc.node());
+    var l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
+    var y = parsegraph_copyStyle(parsegraph_BLOCK);
+    y.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
+    l.setBlockStyle(y);
+    l.setLabel("Oscillator", this._graph.glyphAtlas());
     var rootStep = n;
     var voices = ["sine", "sawtooth", "square", "triangle"];
     for(var i = 0; i < this._numSteps; ++i) {

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "alpha/Maths.h"
 #include <math.h>
+#include <stdlib.h>
 #include "graph/log.h"
 
 // The following methods were copied from webglfundamentals.org:

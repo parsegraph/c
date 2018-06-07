@@ -12,6 +12,13 @@ struct alpha_Face_List {
 };
 typedef struct alpha_Face_List alpha_Face_List;
 
+struct alpha_Color_List {
+    struct alpha_Color* color;
+    struct alpha_Color_List* prev;
+    struct alpha_Color_List* next;
+};
+typedef struct alpha_Color_List alpha_Color_List;
+
 alpha_Face_List* alpha_spliceFaceListNext(alpha_Face_List* given);
 struct alpha_Face* alpha_Face_List_destroy(alpha_Face_List* item, apr_pool_t* pool);
 

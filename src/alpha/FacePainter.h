@@ -3,7 +3,6 @@
 
 #include <apr_pools.h>
 #include "../gl.h"
-#include "../pagingbuffer.h"
 
 struct alpha_FacePainter {
 apr_pool_t* pool;
@@ -11,7 +10,12 @@ GLuint faceProgram;
 GLuint u_world;
 GLuint a_color;
 GLuint a_position;
-struct parsegraph_pagingbuffer* faceBuffer;
+float* positionBuffer;
+GLuint positionGLBuffer;
+float* colorBuffer;
+GLuint colorGLBuffer;
+GLuint numVertices;
+GLuint vertexCapacity;
 };
 typedef struct alpha_FacePainter alpha_FacePainter;
 

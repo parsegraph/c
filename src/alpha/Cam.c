@@ -45,12 +45,12 @@ struct alpha_Camera* alpha_Camera_new(apr_pool_t* pool)
     cam->position = alpha_Vector_new(pool);
     cam->offset = alpha_Vector_new(pool);
     cam->reengage = 0; // here for completeness sake, setting it to null does null
-    cam->reengageIsPhysical = 0;
+    cam->reengageType = alpha_PhysicalType_PHYSICAL;
     cam->freeFloating = 0;
 
     // not using disengage because we are not engaged
     cam->parent = 0;
-    alpha_Camera_SetParent(cam, 1, alpha_Camera_GetInvisiblePhysical(cam));
+    alpha_Camera_SetParent(cam, alpha_PhysicalType_PHYSICAL, alpha_Camera_GetInvisiblePhysical(cam));
     return cam;
 }
 
@@ -78,7 +78,7 @@ alpha_Physical* alpha_Camera_GetInvisiblePhysical(alpha_Camera* cam)
     float* orientation;
     if(cam->parent) {
         void* currentParent = alpha_Camera_GetParent(cam);
-        if(cam->parentIsPhysical) {
+        if(cam->parentType == alpha_PhysicalType_PHYSICAL) {
             position = alpha_Physical_GetPosition(currentParent);
             orientation = alpha_Physical_GetOrientation(currentParent);
         }
@@ -93,11 +93,11 @@ alpha_Physical* alpha_Camera_GetInvisiblePhysical(alpha_Camera* cam)
         orientation = cam->orientation;
     }
 
-    alpha_Physical* p = alpha_Physical_new(cam->pool, 0, cam);
+    alpha_Physical* p = alpha_Physical_new(cam->pool, alpha_PhysicalType_CAMERA, cam);
     alpha_Physical_CopyPosition(p, position);
     alpha_Physical_CopyOrientation(p, orientation);
     if(cam->parent) {
-	    alpha_Physical_SetParent(p, cam->parentIsPhysical, cam->parent);
+	    alpha_Physical_SetParent(p, cam->parentType, cam->parent);
     }
     return p;
 }
@@ -650,8 +650,8 @@ void alpha_Camera_Disengage(alpha_Camera* cam)
 {
     if(!cam->freeFloating) {
         cam->reengage = cam->parent;
-        cam->reengageIsPhysical = cam->parentIsPhysical;
-        alpha_Camera_SetParent(cam, cam->reengageIsPhysical, alpha_Camera_GetInvisiblePhysical(cam));
+        cam->reengageType = cam->parentType;
+        alpha_Camera_SetParent(cam, cam->reengageType, alpha_Camera_GetInvisiblePhysical(cam));
         cam->freeFloating = 0;
     }
 }
@@ -665,13 +665,13 @@ void alpha_Camera_Engage(alpha_Camera* cam)
         // just set this bool so we don't go in an infinite loop
         // been there, it sucks  -- GOD
         cam->freeFloating = 0;
-        alpha_Camera_SetParent(cam, cam->reengageIsPhysical, cam->reengage);
+        alpha_Camera_SetParent(cam, cam->reengageType, cam->reengage);
         cam->reengage = cam->parent;
-        cam->reengageIsPhysical = cam->parentIsPhysical;
+        cam->reengageType = cam->parentType;
     }
 }
 
-void alpha_Camera_SetParent(alpha_Camera* cam, int parentIsPhysical, void* parent)
+void alpha_Camera_SetParent(alpha_Camera* cam, alpha_PhysicalType physicalType, void* parent)
 {
     // setting the camera to itself sets it to an invisble physical
     if(cam == parent) {
@@ -690,7 +690,7 @@ void alpha_Camera_SetParent(alpha_Camera* cam, int parentIsPhysical, void* paren
         cam->reengage = cam->parent; // who we reengage to;
     }
 
-    cam->parentIsPhysical = parentIsPhysical;
+    cam->parentType = physicalType;
     cam->parent = parent;
 }
 
@@ -701,7 +701,7 @@ void* alpha_Camera_GetParent(alpha_Camera* cam)
 
 int alpha_Camera_GetParentIsPhysical(alpha_Camera* cam)
 {
-    return cam->parentIsPhysical;
+    return cam->parentType == alpha_PhysicalType_PHYSICAL;
 }
 
 float* alpha_Camera_GetViewMatrix(alpha_Camera* cam, void* requestor)
@@ -720,7 +720,7 @@ float* alpha_Camera_GetViewMatrix(alpha_Camera* cam, void* requestor)
     void* parent = cam->parent;
     if(parent && parent != requestor) {
         float* ancestors;
-        if(cam->parentIsPhysical) {
+        if(cam->parentType == alpha_PhysicalType_PHYSICAL) {
             ancestors = alpha_Physical_GetViewMatrix(parent, requestor);
         }
         else {
@@ -750,7 +750,7 @@ float* alpha_Camera_GetModelMatrix(alpha_Camera* cam)
 	//fprintf(stderr, "position=(%f %f %f)\n", p[0], p[1], p[2]);
 	//fprintf(stderr, "offset=(%f %f %f)\n", o[0], o[1], o[2]);
     //fprintf(stderr, "orientation=(%f %f %f %f)\n", r[0], r[1], r[2], r[3]);
-	alpha_RMatrix4_SetIdentity(cam->modelMatrix);
+	//alpha_RMatrix4_SetIdentity(cam->modelMatrix);
     alpha_RMatrix4_FromVectorAroundQuaternionAtVector(cam->modelMatrix, p, r, o); // oh yea;
 	//alpha_dumpMatrix("modelMat=", cam->modelMatrix);
         cam->modelDirty = 0;

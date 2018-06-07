@@ -4,7 +4,9 @@
 #include "LayoutPreference.h"
 #include "NodeAlignment.h"
 #include "NodeDirection.h"
+#include "NodeFit.h"
 #include "log.h"
+#include "PaintGroup.h"
 #include <stdlib.h>
 
 int parsegraph_Node_COUNT = 0;
@@ -27,6 +29,8 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     node->_keyListenerThisArg = 0;
     node->_clickListener = 0;
     node->_clickListenerThisArg = 0;
+    node->_changeListener = 0;
+    node->_changeListenerThisArg = 0;
     node->_type = newType;
     node->_style = parsegraph_style(node->_type);
     node->_label = 0;
@@ -36,6 +40,7 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
 
     node->_value = 0;
     node->_selected = 0;
+    node->_ignoresMouse = 0;
 
     node->_prevTabNode = 0;
     node->_nextTabNode = 0;
@@ -47,21 +52,26 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     node->_absoluteYPos = 0;
     node->_absoluteScale = 0;
 
+    node->_paintGroupNext = node;
+    node->_paintGroupPrev = node;
+    node->_worldNext = node;
+    node->_worldPrev = node;
+
     // Check if a parent node was provided.
     node->_layoutState = parsegraph_NEEDS_COMMIT;
     node->_nodeFit = parsegraph_NODE_FIT_LOOSE;
-    for(int i = 0; i <= parsegraph_NUM_DIRECTIONS; ++i) {
-        parsegraph_DirectionData* data = &node->_neighbors[i];
-        data->direction = i;
-        data->extent = parsegraph_Extent_new(pool);
-        data->extentOffset = 0;
-        data->alignmentOffset = 0;
-        data->separation = 0;
-        data->lineLength = 0;
-        data->xPos = 0;
-        data->yPos = 0;
-        data->node = 0;
-        data->alignmentMode = parsegraph_NULL_NODE_ALIGNMENT;
+    for(int i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        parsegraph_DirectionData* neighbor = node->_neighbors + i;
+        neighbor->direction = i;
+        neighbor->extent = parsegraph_Extent_new(pool);
+        neighbor->extentOffset = 0;
+        neighbor->alignmentOffset = 0;
+        neighbor->separation = 0;
+        neighbor->lineLength = 0;
+        neighbor->xPos = 0;
+        neighbor->yPos = 0;
+        neighbor->node = 0;
+        neighbor->alignmentMode = parsegraph_NULL_NODE_ALIGNMENT;
     }
 
     if(fromNode != 0) {
@@ -103,7 +113,7 @@ void parsegraph_chainTab(parsegraph_Node* a, parsegraph_Node* b, parsegraph_Node
 void parsegraph_Node_destroy(parsegraph_Node* node)
 {
     for(int direction = 0; direction < parsegraph_NUM_DIRECTIONS; ++direction) {
-        parsegraph_Node* neighbor = node->_neighbors[i].node;
+        parsegraph_DirectionData* neighbor = neighbor = node->_neighbors + direction;
         if(node->_parentDirection != direction) {
             // Clear all children.
             neighbor->node = 0;
@@ -116,7 +126,7 @@ void parsegraph_Node_destroy(parsegraph_Node* node)
         free(node);
     }
 };
-.
+
 float parsegraph_Node_x(parsegraph_Node* node)
 {
     if(parsegraph_Node_isRoot(node)) {
@@ -170,6 +180,11 @@ float parsegraph_Node_rightToLeft(parsegraph_Node* node)
     return node->_rightToLeft;
 };
 
+static void resetPosition(void* data, parsegraph_Node* node, int direction)
+{
+    parsegraph_Node_positionWasChanged(node);
+}
+
 void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
 {
     if(node->_absoluteXPos != 0) {
@@ -178,7 +193,6 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
     }
 
     // Retrieve a stack of nodes to determine the absolute position.
-    parsegraph_Node* iterNode = node;
     int nodeList[1024];
     int nodeListI = 0;
     float parentScale = 1.0;
@@ -190,7 +204,7 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
             break;
         }
 
-        nodeList[nodeListI++] = parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node)));
+        nodeList[nodeListI++] = parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node));
         node = parsegraph_Node_nodeParent(node);
     }
 
@@ -210,7 +224,7 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
     node->_absoluteYPos += parsegraph_Node_y(node) * parentScale;
     node->_absoluteScale = scale;
 
-    parsegraph_Node_eachChild(node, parsegraph_Node_positionWasChanged, 0);
+    parsegraph_Node_eachChild(node, resetPosition, node);
 };
 
 void parsegraph_Node_positionWasChanged(parsegraph_Node* node)
@@ -243,10 +257,9 @@ void parsegraph_Node_setPosAt(parsegraph_Node* node, int inDirection, float x, f
     node->_neighbors[inDirection].yPos = y;
 };
 
-void parsegraph_reparentPaintGroup(parsegraph_PaintGroup* paintGroup, parsegraph_PaintGroup* parentPaintGroup)
+static void reparenter(parsegraph_PaintGroup* childPaintGroup, void* extra)
 {
-    parentsPaintGroup->_childPaintGroups.push(paintGroup);
-    paintGroup.setParent(parentsPaintGroup);
+    parsegraph_reparentPaintGroup(childPaintGroup, extra);
 }
 
 void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup* paintGroup)
@@ -263,10 +276,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
         }
 
         // Find the child paint groups and add them to this paint group.
-        parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
-            parsegraph_reparentPaintGroup(childPaintGroup, paintGroup);
-        });
-
+        parsegraph_findChildPaintGroups(node, reparenter, paintGroup);
         return;
     }
 
@@ -274,7 +284,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
 
     // Remove the paint group's entry in the parent.
     if(!parsegraph_Node_isRoot(node)) {
-        parsegraph_PaintGroup* parentsPaintGroup = parsegraph_findPaintGroup(parsegraph_Node_parentNode(node));
+        parsegraph_PaintGroup* parentsPaintGroup = parsegraph_Node_findPaintGroup(parsegraph_Node_parentNode(node));
         for(var i in parentsPaintGroup._childPaintGroups) {
             parsegraph_PaintGroup* childGroup = parentsPaintGroup._childPaintGroups[i];
             if(childGroup != node->_paintGroup) {
@@ -308,11 +318,17 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
     node->_paintGroup = paintGroup;
 }
 
+void parsegraph_reparentPaintGroup(parsegraph_PaintGroup* paintGroup, parsegraph_PaintGroup* parentPaintGroup)
+{
+    parentPaintGroup->_childPaintGroups.push(paintGroup);
+    paintGroup.assignParent(parentPaintGroup);
+}
+
 /**
  * Returns the node's paint group. If this node does not have a paint group, then
  * the parent's is returned.
  */
-parsegraph_Node_findPaintGroup(parsegraph_Node* node)
+parsegraph_PaintGroup* parsegraph_Node_findPaintGroup(parsegraph_Node* node)
 {
     while(!parsegraph_Node_isRoot(node)) {
         if(node->_paintGroup && parsegraph_PaintGroup_isEnabled(node->_paintGroup)) {
@@ -672,17 +688,16 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     return disconnected;
 };
 
-parsegraph_Node.prototype.eachChild = function(visitor, visitorThisArg)
+void parsegraph_Node_eachChild(parsegraph_Node* node, void(*visitor)(void*, parsegraph_Node*, int), void* visitorThisArg)
 {
-    this._neighbors.forEach(function(neighbor, direction) {
-            if(!neighbor.node || direction == this.parentDirection()) {
-                return;
-            }
-            visitor.call(visitorThisArg, neighbor.node, direction);
-        },
-        this
-    );
-};
+    for(int i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        parsegraph_DirectionData* neighbor = node->_neighbors[i];
+        if(!neighbor->_node || direction == parsegraph_Node_parentDirection(node)) {
+            return;
+        }
+        visitor(visitorThisArg, neighbor->_node, direction);
+    }
+}
 
 float parsegraph_Node_scaleAt(parsegraph_Node* node, int direction)
 {

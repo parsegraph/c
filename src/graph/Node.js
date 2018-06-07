@@ -5,6 +5,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._paintGroup = null;
     this._keyListener = null;
+    this._keyListenerThisArg = null;
     this._clickListener = null;
     this._clickListenerThisArg = null;
     this._changeListener = null;
@@ -18,7 +19,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 
     this._value = null;
     this._selected = false;
-    this._ignoresMouse = false;
+    this._ignoresMouse = true;
 
     this._prevTabNode = null;
     this._nextTabNode = null;
@@ -54,14 +55,15 @@ function parsegraph_Node(newType, fromNode, parentDirection)
         });
     }
 
-    // No parent was provided; this node is a root.
-    this._layoutPreference = parsegraph_PREFER_HORIZONTAL_AXIS;
-    this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
-
-    // A parent node was provided; this node is a child.
     if(fromNode != null) {
+        // A parent node was provided; this node is a child.
         this._layoutPreference = parsegraph_PREFER_PERPENDICULAR_AXIS;
         fromNode.connectNode(parentDirection, this);
+    }
+    else {
+        // No parent was provided; this node is a root.
+        this._layoutPreference = parsegraph_PREFER_HORIZONTAL_AXIS;
+        this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
     }
 }
 

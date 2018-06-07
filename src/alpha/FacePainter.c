@@ -1,15 +1,17 @@
 #include "FacePainter.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 const char* alpha_FacePainter_VertexShader =
 "uniform mat4 u_world;\n"
 "\n"
-"attribute vec3 a_position;\n"
+"attribute vec4 a_position;\n"
 "attribute vec4 a_color;\n"
 "\n"
 "varying highp vec4 contentColor;\n"
 "\n"
 "void main() {\n"
-    "gl_Position = u_world * vec4(a_position, 1.0);"
+    "gl_Position = u_world * vec4(a_position.xyz, 1.0);"
     "contentColor = a_color;"
 "}";
 
@@ -61,26 +63,31 @@ struct alpha_FacePainter* alpha_FacePainter_new(apr_pool_t* pool)
     }
 
     // Prepare attribute buffers.
-    painter->faceBuffer = parsegraph_pagingbuffer_new(
-        painter->pool, painter->faceProgram
-    );
-    painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->faceBuffer, "a_position", 3, GL_STATIC_DRAW);
-    painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->faceBuffer, "a_color", 4, GL_STATIC_DRAW);
+    painter->pool = pool;
+    painter->numVertices = 0;
+    painter->vertexCapacity = 1024;
+
+    painter->positionBuffer = malloc(4*sizeof(float)*painter->vertexCapacity);
+    memset(painter->positionBuffer, 0, sizeof(float)*4*painter->vertexCapacity);
+
+    painter->colorBuffer = malloc(4*sizeof(float)*painter->vertexCapacity);
+    memset(painter->colorBuffer, 0, sizeof(float)*4*painter->vertexCapacity);
+
+    painter->a_position = glGetAttribLocation(painter->faceProgram, "a_position");
+    painter->a_color = glGetAttribLocation(painter->faceProgram, "a_color");
 
     // Cache program locations.
-    painter->u_world = glGetUniformLocation(
-        painter->faceProgram, "u_world"
-    );
+    painter->u_world = glGetUniformLocation(painter->faceProgram, "u_world");
 
-    parsegraph_PagingBuffer_addDefaultPage(painter->faceBuffer);
+    painter->positionGLBuffer = 0;
+    painter->colorGLBuffer = 0;
 
     return painter;
 };
 
 void alpha_FacePainter_Clear(struct alpha_FacePainter* painter)
 {
-    parsegraph_PagingBuffer_Clear(painter->faceBuffer);
-    parsegraph_PagingBuffer_addDefaultPage(painter->faceBuffer);
+    painter->numVertices = 0;
 }
 
 void alpha_FacePainter_Quad(struct alpha_FacePainter* painter, float* v1, float* v2, float* v3, float* v4, float* c1, float* c2, float* c3, float* c4)
@@ -91,27 +98,26 @@ void alpha_FacePainter_Quad(struct alpha_FacePainter* painter, float* v1, float*
 
 /**
  * painter.Triangle(v1, v2, v3, c1, c2, c3);
- *
- *
  */
 void alpha_FacePainter_TriangleValues(struct alpha_FacePainter* painter, float* v1, float* v2, float* v3, float* c1, float* c2, float* c3)
 {
-    parsegraph_PagingBuffer_appendData(
-        painter->faceBuffer,
-        painter->a_position,
-        9,
-        v1[0], v1[1], v1[2],
-        v2[0], v2[1], v2[2],
-        v3[0], v3[1], v3[2]
-    );
-    parsegraph_PagingBuffer_appendData(
-        painter->faceBuffer,
-        painter->a_color,
-        12,
-        c1[0], c1[1], c1[2], c1[3],
-        c2[0], c2[1], c2[2], c2[3],
-        c3[0], c3[1], c3[2], c3[3]
-    );
+    while(painter->numVertices + 3 >= painter->vertexCapacity) {
+        painter->vertexCapacity *= 2;
+        painter->positionBuffer = realloc(painter->positionBuffer, painter->vertexCapacity*4*sizeof(float));
+        painter->colorBuffer = realloc(painter->colorBuffer, painter->vertexCapacity*4*sizeof(float));
+        //memset(painter->positionBuffer + (4*painter->vertexCapacity/2), 0, 4*sizeof(float)*(painter->vertexCapacity/2));
+        //memset(painter->colorBuffer + (4*painter->vertexCapacity/2), 0, 4*sizeof(float)*(painter->vertexCapacity/2));
+    }
+
+    memcpy(painter->positionBuffer + (4*painter->numVertices), v1, sizeof(float)*4);
+    memcpy(painter->positionBuffer + (4*(painter->numVertices + 1)), v2, sizeof(float)*4);
+    memcpy(painter->positionBuffer + (4*(painter->numVertices + 2)), v3, sizeof(float)*4);
+
+    memcpy(painter->colorBuffer + (4*painter->numVertices), c1, sizeof(float)*4);
+    memcpy(painter->colorBuffer + (4*(painter->numVertices + 1)), c2, sizeof(float)*4);
+    memcpy(painter->colorBuffer + (4*(painter->numVertices + 2)), c3, sizeof(float)*4);
+
+    painter->numVertices += 3;
 }
 
 void alpha_FacePainter_Triangle(struct alpha_FacePainter* painter, float** v, float** c)
@@ -125,8 +131,79 @@ int alpha_FacePainter_Draw(struct alpha_FacePainter* painter, float* viewMatrix)
         //throw new Error("A viewMatrix must be provided");
         return -1;
     }
+
     // Render faces.
     glUseProgram(painter->faceProgram);
-    glUniformMatrix4fv(painter->u_world, 4, 0, viewMatrix);
-    return parsegraph_pagingbuffer_renderPages(painter->faceBuffer);
-};
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glUniformMatrix4fv(painter->u_world, 1, 0, viewMatrix);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+
+    if(!painter->positionGLBuffer) {
+        glGenBuffers(1, &painter->positionGLBuffer);
+        if(glGetError() != GL_NO_ERROR) {
+            fprintf(stderr, "Error encountered.\n");
+            return -1;
+        }
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, painter->positionGLBuffer);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glBufferData(GL_ARRAY_BUFFER, 4*painter->numVertices * sizeof(float), painter->positionBuffer, GL_STATIC_DRAW);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glVertexAttribPointer(painter->a_position, 4, GL_FLOAT, 0, 0, 0);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glEnableVertexAttribArray(painter->a_position);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+
+    if(!painter->colorGLBuffer) {
+        glGenBuffers(1, &painter->colorGLBuffer);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, painter->colorGLBuffer);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glBufferData(GL_ARRAY_BUFFER, 4*painter->numVertices * sizeof(float), painter->colorBuffer, GL_STATIC_DRAW);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glVertexAttribPointer(painter->a_color, 4, GL_FLOAT, 0, 0, 0);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+    glEnableVertexAttribArray(painter->a_color);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "Error encountered.\n");
+        return -1;
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, painter->numVertices);
+    if(glGetError() != GL_NO_ERROR) {
+        fprintf(stderr, "glDrawArrays error encountered.\n");
+        return -1;
+    }
+
+    glDisableVertexAttribArray(painter->a_position);
+    glDisableVertexAttribArray(painter->a_color);
+
+    return 0;
+}

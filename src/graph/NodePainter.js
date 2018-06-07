@@ -220,7 +220,6 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
                 );
             }
         }
-
         painter.setBorderColor(color);
         painter.setBackgroundColor(color);
         painter.drawBlock(
@@ -254,7 +253,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     drawLine(
         -node.absoluteSize().width() / 2, 0,
         node.absoluteSize().width() / 2, 0,
-        .8
+        1.5
     );
 
     // Draw the first and last ticks.
@@ -298,8 +297,9 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
         if(Number.isNaN(value)) {
             value = 0;
         }
+        var thumbWidth = userScale * node.absoluteSize().height()/1.5;
         painter.drawBlock(
-            worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value,
+            worldX + node.absoluteX() - sliderWidth / 2 + thumbWidth/2 + (sliderWidth - thumbWidth) * value,
             worldY + node.absoluteY(),
             userScale * node.absoluteSize().height()/1.5,
             userScale * node.absoluteSize().height()/1.5,

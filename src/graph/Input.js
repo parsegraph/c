@@ -80,6 +80,13 @@ function parsegraph_Input(graph, camera)
 
         // Check if the selected node was a slider.
         if(selectedNode.type() == parsegraph_SLIDER) {
+            if(selectedNode === selectedSlider) {
+                console.log("Removing");
+                selectedSlider = null;
+                attachedMouseListener = null;
+                this._graph.scheduleRepaint();
+                return null;
+            }
             //console.log("Slider node!");
             selectedSlider = selectedNode;
             attachedMouseListener = sliderListener;
@@ -575,7 +582,35 @@ function parsegraph_Input(graph, camera)
         }
 
         var keyName = getproperkeyname(event);
-        if(this._focusedNode && focused) {
+        if(selectedSlider) {
+            if(event.key.length === 0) {
+                return;
+            }
+
+            var diff = .01;
+            switch(event.key) {
+            case parsegraph_MOVE_BACKWARD_KEY:
+                selectedSlider.setValue(Math.max(0, selectedSlider.value() - diff));
+                selectedSlider.layoutWasChanged();
+                this._graph.scheduleRepaint();
+                return;
+            case parsegraph_MOVE_FORWARD_KEY:
+                selectedSlider.setValue(Math.min(1, selectedSlider.value() + diff));
+                selectedSlider.layoutWasChanged();
+                this._graph.scheduleRepaint();
+                return;
+            case "Space":
+            case "Spacebar":
+            case ' ':
+            case parsegraph_RESET_CAMERA_KEY:
+                selectedSlider.layoutWasChanged();
+                attachedMouseListener = null;
+                selectedSlider = null;
+                this._graph.scheduleRepaint();
+                return;
+            }
+        }
+        else if(this._focusedNode && focused) {
             if(event.key.length === 0) {
                 return;
             }
@@ -761,7 +796,7 @@ function parsegraph_Input(graph, camera)
 
     parsegraph_addEventMethod(graph.canvas(), "keyup", function(event) {
         var keyName = getproperkeyname(event);
-        console.log(keyName);
+        //console.log(keyName);
 
         if(!this.keydowns[keyName]) {
             // Already processed.

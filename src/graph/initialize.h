@@ -42,7 +42,7 @@ extern int parsegraph_RIGHT_TO_LEFT;
 extern float parsegraph_MAX_PRESS_RELEASE_DELAY;
 
 // Background
-extern float* parsegraph_BACKGROUND_COLOR;
+extern float parsegraph_BACKGROUND_COLOR[4];
 
 // Font
 extern int parsegraph_UPSCALED_FONT_SIZE;

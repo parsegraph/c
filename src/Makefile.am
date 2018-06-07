@@ -23,6 +23,7 @@ nobase_include_HEADERS = \
 	graph/NodeType.h \
 	graph/NodePainter.h \
 	graph/PaintGroup.h \
+	graph/NodeList.h \
 	graph/Rect.h \
 	graph/Size.h \
 	graph/TexturePainter.h \
@@ -59,6 +60,7 @@ libparsegraph_la_SOURCES = \
 	graph/NodeFit.c \
 	graph/NodeType.c \
 	graph/NodePainter.c \
+	graph/NodeList.c \
 	graph/PaintGroup.c \
 	graph/Rect.c \
 	graph/Size.c \
@@ -92,7 +94,7 @@ libparsegraph_la_SOURCES = \
 
 #graph/Node.c
 
-bin_PROGRAMS = parsegraph cxx_parsegraph
+bin_PROGRAMS = parsegraph cxx_parsegraph cxx_alpha cxx_weetcubes
 
 parsegraph_CFLAGS = \
 	$(libparsegraph_la_CFLAGS) \
@@ -107,11 +109,34 @@ cxx_parsegraph_CXXFLAGS = \
 	-fPIC \
 	$(libparsegraph_la_CFLAGS) \
 	$(parsegraph_cxx_CFLAGS) \
-	-I$(top_SRCDIR)
+	-I$(top_SRCDIR) \
+	-g
 cxx_parsegraph_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
 cxx_parsegraph_LDADD = libparsegraph.la
 cxx_parsegraph_SOURCES = \
 	main.cpp
+
+cxx_alpha_CXXFLAGS = \
+	-fPIC \
+	$(libparsegraph_la_CFLAGS) \
+	$(parsegraph_cxx_CFLAGS) \
+	-I$(top_SRCDIR) \
+	-g
+cxx_alpha_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_alpha_LDADD = libparsegraph.la
+cxx_alpha_SOURCES = \
+	alpha.cpp
+
+cxx_weetcubes_CXXFLAGS = \
+	-fPIC \
+	$(libparsegraph_la_CFLAGS) \
+	$(parsegraph_cxx_CFLAGS) \
+	-I$(top_SRCDIR) \
+	-g
+cxx_weetcubes_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_weetcubes_LDADD = libparsegraph.la
+cxx_weetcubes_SOURCES = \
+	weetcubes.cpp
 
 noinst_HEADERS = tests/unity.h tests/unity_internals.h tests/testpool.h
 

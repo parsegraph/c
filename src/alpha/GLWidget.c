@@ -1,328 +1,355 @@
 #include "GLWidget.h"
+#include "graph/Surface.h"
+#include "graph/Color.h"
+#include "alpha/CubeMan.h"
+#include "alpha/Maths.h"
 // TODO Blocks in foreground are rendered improperly relative to the projection matrix.
+#include <stdio.h>
+#include <stdlib.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+
+static void renderWidget(void* widgetPtr, void* renderData)
+{
+    alpha_RenderData* rd = renderData;
+    alpha_GLWidget_render(widgetPtr, rd->width, rd->height);
+}
+
+static void paintWidget(void* widgetPtr, void* renderData)
+{
+    alpha_GLWidget_paint(widgetPtr);
+}
+
+#define SWARM_SIZE 100
 
 // test version 1.0
-alpha_GLWidget* alpha_GLWidget_new(apr_pool_t* pool)
+alpha_GLWidget* alpha_GLWidget_new(parsegraph_Surface* surface)
 {
-    // Allow surface to be created implicitly.
-    var surface;
-    if(arguments.length == 0) {
-        surface = new parsegraph_Surface();
-        surface.addPainter(this.paint, this);
-        surface.addRenderer(this.render, this);
-    }
-    else {
-        surface = arguments[0];
-    }
     if(!surface) {
-        throw new Error("Surface must be given");
+        fprintf(stderr, "alpha_GLWidget_new must be given a non-null parsegraph_Surface.\n");
+        abort();
     }
-    this._surface = surface;
 
-    this._canvas = surface._canvas;
-    this._container = surface._container;
+    alpha_GLWidget* widget = malloc(sizeof(*widget));
+    widget->surface = surface;
+    parsegraph_Surface_addPainter(surface, paintWidget, widget);
+    parsegraph_Surface_addRenderer(surface, renderWidget, widget);
 
-    this._backgroundColor = parsegraph_Color_new(pool, 0, 47/255, 57/255, 1);
+    parsegraph_Color_SetRGBA(widget->backgroundColor, 0, 47/255, 57/255, 1);
 
-    this.camera = new alpha_Camera(this);
+    widget->camera = alpha_Camera_new(surface->pool);
 
     // Set the field of view.
-    this.camera.SetFovX(60);
-    // this.camera.SetProperFOV(2,2);
+    alpha_Camera_SetFovX(widget->camera, 60);
+    //alpha_Camera_SetProperFOV(widget->camera, 2, 2);
 
     // Set the camera's near and far distance.
-    this.camera.SetFarDistance(150);
-    this.camera.SetNearDistance(1);
+    alpha_Camera_SetFarDistance(widget->camera, 150);
+    alpha_Camera_SetNearDistance(widget->camera, 1);
 
-    this.paintingDirty = true;
+    widget->paintingDirty = 1;
 
-//this.camera.PitchDown(40 * Math.PI / 180);
+    //alpha_Camera_PitchDown(widget->camera, 40 * 3.14159 / 180);
 
-    this.input = new alpha_Input(this, this.camera);
-    this.input.SetMouseSensitivity(.4);
+    widget->input = alpha_Input_new(surface, widget->camera);
+    alpha_Input_SetMouseSensitivity(widget->input, .4);
 
-    this._done = false;
+    widget->done = 0;
+    widget->time = 0;
 
-    this.BlockTypes = new alpha_BlockTypes();
-    alpha_standardBlockTypes(this.BlockTypes);
-    alpha_CubeMan(this.BlockTypes);
+    widget->BlockTypes = alpha_BlockTypes_new(surface->pool);
+    alpha_standardBlockTypes(surface->pool, widget->BlockTypes);
+    alpha_CubeMan(widget->BlockTypes);
 
-    var cubeman = this.BlockTypes.Get("blank", "cubeman");
+    alpha_BlockType* cubeman = alpha_BlockTypes_GetByName(widget->BlockTypes, "blank", "cubeman");
 
-    this.testCluster = new alpha_Cluster(this);
-    this.testCluster.AddBlock(cubeman, 0,5,0,0);
+    widget->testCluster = alpha_Cluster_new(surface->pool, widget);
+    float cubemanpos[] = {0, 5, 0};
+    alpha_Cluster_CreateBlock(widget->testCluster, cubeman, cubemanpos, 0);
 
-    var stone = this.BlockTypes.Get("stone", "cube");
-    var grass = this.BlockTypes.Get("grass", "cube");
-    var dirt = this.BlockTypes.Get("dirt", "cube");
+    alpha_BlockType* stone = alpha_BlockTypes_GetByName(widget->BlockTypes, "stone", "cube");
+    alpha_BlockType* grass = alpha_BlockTypes_GetByName(widget->BlockTypes, "grass", "cube");
+    alpha_BlockType* dirt = alpha_BlockTypes_GetByName(widget->BlockTypes, "dirt", "cube");
 
-    this.originCluster = new alpha_Cluster(this);
-    //this.originCluster.AddBlock(stone,0,0,-50,0);
+    widget->originCluster = alpha_Cluster_new(surface->pool, widget);
+    //float stonepos[4] = float[]{0, 0, -50};
+    //alpha_Cluster_CreateBlock(widget->originCluster, stone, stonepos, 0);
 
-    this.platformCluster = new alpha_Cluster(this);
-    this.worldCluster = new alpha_Cluster(this);
+    widget->platformCluster = alpha_Cluster_new(surface->pool, widget);
+    widget->worldCluster = alpha_Cluster_new(surface->pool, widget);
 
-    this.playerCluster = new alpha_Cluster(this);
+    widget->playerCluster = alpha_Cluster_new(surface->pool, widget);
 
-    for(var i = 0; i <= 2; ++i) {
-        this.playerCluster.AddBlock(grass,0,i,0,0);
+    for(int i = 0; i <= 2; ++i) {
+        float pos[3] = {0, i, 0};
+        alpha_Cluster_CreateBlock(widget->playerCluster, grass, pos, 0);
     }
 
-    this.playerCluster.AddBlock(grass,-1,3,0,16); // left
+    {
+        float playerpos[4] = {-1, 3, 0};
+        alpha_Cluster_CreateBlock(widget->playerCluster, grass, playerpos, 16); // left
+    }
 
-    this.playerCluster.AddBlock(grass, 0,4,0, 12); // head
+    {
+        float playerpos[4] = {0, 4, 0};
+        alpha_Cluster_CreateBlock(widget->playerCluster, grass, playerpos, 12); // head
+    }
 
-    this.playerCluster.AddBlock(grass, 1, 3, 0,8); // right
+    {
+        float playerpos[4] = {1, 3, 0};
+        alpha_Cluster_CreateBlock(widget->playerCluster, grass, playerpos, 8); // right
+    }
 
-    var WORLD_SIZE = 30;
-    for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
-        for(var j = 1; j <= WORLD_SIZE * 2; ++j) {
-            var r = alpha_random(0, 23);
-            this.worldCluster.AddBlock([grass, stone][alpha_random(0, 1)], i,-1,-j,r);
+    int WORLD_SIZE = 30;
+    for(int i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
+        for(int j = 1; j <= WORLD_SIZE * 2; ++j) {
+            int r = alpha_random(0, 23);
+            alpha_BlockType* bt = alpha_random(0, 1) == 0 ? grass : stone;
+            float pos[3] = {i, -1, -j};
+            alpha_Cluster_CreateBlock(widget->worldCluster, bt, pos, r);
         }
     }
 
-    for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
-        for(var j = 0; j <= WORLD_SIZE * 2; ++j) {
-            var r = alpha_random(0, 23);
-            this.worldCluster.AddBlock(stone, i,-1,-30,r);
+    for(int i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
+        for(int j = 1; j <= WORLD_SIZE * 2; ++j) {
+            int r = alpha_random(0, 23);
+            float pos[3] = {i, -1, -30};
+            alpha_Cluster_CreateBlock(widget->worldCluster, stone, pos, r);
         }
     }
 
     // build a platform
 
-    for(var i = -3; i <= 3; ++i) {
-        for(var j = -4; j <= 4; ++j) {
-            this.platformCluster.AddBlock(grass,j,0,-i,0);
+    for(int i = -3; i <= 3; ++i) {
+        for(int j = -4; j <= 4; ++j) {
+            float pos[3] = {j, 0, -i};
+            alpha_Cluster_CreateBlock(widget->platformCluster, grass, pos, 0);
         }
     }
 
-
-    this.evPlatformCluster = new alpha_Cluster(this);
-    for(var i = -2; i <= 2; ++i) {
-        for(var j = 3; j <= 4; ++j) {
-            this.evPlatformCluster.AddBlock(dirt, j, 1, i, 0);
+    widget->evPlatformCluster = alpha_Cluster_new(surface->pool, widget);
+    for(int i = -2; i <= 2; ++i) {
+        for(int j = 3; j <= 4; ++j) {
+            float pos[3] = {j, 1, i};
+            alpha_Cluster_CreateBlock(widget->evPlatformCluster, dirt, pos, 0);
         }
     }
 
+    widget->orbit = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+    alpha_Physical_SetPosition(widget->orbit, 0, 0, 0);
+    alpha_Physical* elevator = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+    alpha_Physical_SetPosition(elevator, 0, 5, 0);
+
+    alpha_Camera_SetParent(widget->camera, alpha_PhysicalType_CAMERA, widget->camera);
+    widget->playerAPhysical = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+    widget->playerBPhysical = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+    widget->offsetPlatformPhysical = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
 
 
 
-    this.orbit = new alpha_Physical(this.camera);
-    this.orbit.SetPosition(0,0, 0);
-    var elevator = new alpha_Physical(this.camera);
-    elevator.SetPosition(0,5,0);
+    alpha_Physical_SetParent(widget->offsetPlatformPhysical, alpha_PhysicalType_CAMERA, widget->camera);
+    alpha_Physical_SetParent(widget->playerAPhysical, alpha_PhysicalType_PHYSICAL, widget->offsetPlatformPhysical);
+    alpha_Physical_SetParent(widget->playerBPhysical, alpha_PhysicalType_CAMERA, widget->camera );
+
+    alpha_Camera_SetParent(widget->camera, alpha_PhysicalType_PHYSICAL, widget->playerBPhysical);
+
+    alpha_Physical_SetPosition(widget->playerAPhysical, 10,1,0);
+
+    alpha_Physical_SetPosition(widget->playerBPhysical, 0,0,-3);
+
+    alpha_Physical_SetPosition(widget->offsetPlatformPhysical, 0,0,-25);
+    alpha_Physical_YawLeft(widget->offsetPlatformPhysical, 0);
+    alpha_Physical_RollRight(widget->offsetPlatformPhysical, 0);
 
 
-    this.camera.SetParent(this.camera);
-    this.playerAPhysical = new alpha_Physical( this.camera );
-    this.playerBPhysical = new alpha_Physical( this.camera );
-    this.offsetPlatformPhysical = new alpha_Physical( this.camera );
+    widget->spherePhysical = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+    alpha_Physical_SetPosition(widget->spherePhysical, 45,0,0);
 
-
-
-    this.offsetPlatformPhysical.SetParent( this.camera );
-    this.playerAPhysical.SetParent( this.offsetPlatformPhysical );
-    this.playerBPhysical.SetParent( this.camera );
-
-    this.camera.SetParent( this.playerBPhysical );
-
-    this.playerAPhysical.SetPosition(10,1,0);
-
-
-
-    this.playerBPhysical.SetPosition(0,0,-3);
-
-    this.offsetPlatformPhysical.SetPosition(0,0,-25);
-    this.offsetPlatformPhysical.YawLeft(0);
-    this.offsetPlatformPhysical.RollRight(0);
-
-
-    this.spherePhysical = new alpha_Physical(this.camera);
-    this.spherePhysical.SetPosition(45,0,0);
-
-    var radius = 8;
-    this.sphereCluster = new alpha_Cluster(this);
+    float radius = 8;
+    widget->sphereCluster = alpha_Cluster_new(surface->pool, widget);
 
     // first circle about the x-axis
-    var rot = 0;
-    for(var i=0; i < 24; ++i) {
-        var q = alpha_QuaternionFromAxisAndAngle(1,0,0,rot * Math.PI / 180);
+    float rot = 0;
+    for(int i=0; i < 24; ++i) {
+        float pos[] = {1, 0, 0};
+        float* q = alpha_QuaternionFromAxisAndAngle(surface->pool, pos, rot * 3.14159 / 180);
         rot += 15;
-        var p = q.RotatedVector(0,0,-radius);
-        this.sphereCluster.AddBlock(stone, p, 0);
+        float* p = alpha_Quaternion_RotatedVectorEach(q, surface->pool, 0,0,-radius);
+        alpha_Cluster_CreateBlock(widget->sphereCluster, stone, p, 0);
     }
 
     rot = 0;
-    for(var i=0; i < 24; ++i) {
-        var q = alpha_QuaternionFromAxisAndAngle(0,1,0,rot * Math.PI / 180);
+    for(int i=0; i < 24; ++i) {
+        float pos[] = {0, 1, 0};
+        float* q = alpha_QuaternionFromAxisAndAngle(surface->pool, pos, rot * 3.14159 / 180);
         rot += 15;
 
-        var p = q.RotatedVector(0,0,-radius);
-        this.sphereCluster.AddBlock(stone, p, 0);
+        float* p = alpha_Quaternion_RotatedVectorEach(q, surface->pool, 0,0,-radius);
+        alpha_Cluster_CreateBlock(widget->sphereCluster, stone, p, 0);
     }
 
+    float* spot = alpha_Vector_create(surface->pool, 0,15,35);
+    widget->swarm = malloc(sizeof(alpha_Physical*)*SWARM_SIZE);
+    for(int i = 0; i < 100; ++i) {
+        widget->swarm[i] = alpha_Physical_new(surface->pool, alpha_PhysicalType_CAMERA, widget->camera);
+        float x = alpha_random(1, 30);
+        float y = alpha_random(1, 30);
+        float z = alpha_random(1, 30);
+        alpha_Physical_CopyPosition(widget->swarm[i], alpha_Vector_AddedEach(surface->pool, spot, x, y, z));
 
+        x = alpha_random(-100,100)/100;
+        y = alpha_random(-100,100)/100;
+        z = alpha_random(-100,100)/100;
+        float w = alpha_random(-100,100)/100;
+        float* q = alpha_QuaternionFromAxisAndAngleEach(surface->pool, x, y, z, w);
 
-    var spot = new alpha_Vector(0,15,35);
-    this.swarm = [];
-    for(var i = 0; i < 100; ++i) {
-        this.swarm.push(new alpha_Physical(this.camera));
-        var x = alpha_random(1, 30);
-        var y = alpha_random(1, 30);
-        var z = alpha_random(1, 30);
-        this.swarm[i].SetPosition(spot.Added(x, y, z));
-
-        var x = alpha_random(-100,100)/100;
-        var y = alpha_random(-100,100)/100;
-        var z = alpha_random(-100,100)/100;
-        var w = alpha_random(-100,100)/100;
-        var q = new alpha_Quaternion(x,y,z,w);
-        q.Normalize();
-        this.swarm[i].SetOrientation(q);
+        alpha_Quaternion_Normalize(q);
+        alpha_Physical_SetOrientation(widget->swarm[i], q[3], q[0], q[1], q[2]);
     }
 
-    this.time = 0;
-}; // alpha_GLWidget
+    widget->time = 0;
+    return widget;
+}; // alpha_GLWidget_new
 
-alpha_GLWidget_paint(alpha_GLWidget* widget)
+void alpha_GLWidget_paint(alpha_GLWidget* widget)
 {
-    if(!this.paintingDirty) {
+    if(!widget->paintingDirty) {
         return;
     }
-    this.evPlatformCluster.CalculateVertices();
-    this.testCluster.CalculateVertices();
-    this.originCluster.CalculateVertices();
-    this.playerCluster.CalculateVertices();
-    this.worldCluster.CalculateVertices();
-    this.platformCluster.CalculateVertices();
-    this.sphereCluster.CalculateVertices();
-    this.paintingDirty = false;
-};
+    alpha_Cluster_CalculateVertices(widget->evPlatformCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->testCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->originCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->playerCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->worldCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->platformCluster, widget->BlockTypes);
+    alpha_Cluster_CalculateVertices(widget->sphereCluster, widget->BlockTypes);
+    widget->paintingDirty = 0;
+}
 
-alpha_GLWidget_Tick(alpha_GLWidget* widget)
+void alpha_GLWidget_Tick(alpha_GLWidget* widget, float elapsed)
 {
-    this.time += elapsed;
-    this.input.Update(elapsed);
+    widget->time += elapsed;
+    alpha_Input_Update(widget->input, elapsed);
 
-    var ymin;
-    for(var i = 0; i < this.swarm.length; ++i) {
-        var v = this.swarm[i];
-        if(this.time < 6) {
-            v.MoveForward(elapsed);
-            v.YawRight(2 * Math.PI / 180);
+    for(int i = 0; i < SWARM_SIZE; ++i) {
+        alpha_Physical* v = widget->swarm[i];
+        if(widget->time < 6) {
+            alpha_Physical_MoveForward(v, elapsed);
+            alpha_Physical_YawRight(v, 2 * 3.14159 / 180);
         }
         else {
-            v.PitchDown(1 * Math.PI / 180);
-            v.YawRight(2 * Math.PI / 180);
-            var y = v.GetPosition()[1];
-            v.ChangePosition(0, -.2 ,0);
+            alpha_Physical_PitchDown(v, 1 * 3.14159 / 180);
+            alpha_Physical_YawRight(v, 2 * 3.14159 / 180);
+            alpha_Physical_GetPosition(v);
+            alpha_Physical_ChangeEachPosition(v, 0, -.2 ,0);
         }
     }
 
-    this.orbit.Rotate(-.01, 0, 1, 0);
-    //console.log(this.offsetPlatformPhysical.position.toString());
-    this.offsetPlatformPhysical.MoveLeft( elapsed );
-    this.offsetPlatformPhysical.YawLeft(.1 * Math.PI / 180);
-    //console.log(this.offsetPlatformPhysical.position.toString());
+    alpha_Physical_Rotate(widget->orbit, -.01, 0, 1, 0);
+    //alpha_Physical_Dump(widget->offsetPlatformPhysical);
+    alpha_Physical_MoveLeft(widget->offsetPlatformPhysical, elapsed );
+    alpha_Physical_YawLeft(widget->offsetPlatformPhysical, .1 * 3.14159 / 180.0f);
+    //alpha_Physical_Dump(widget->offsetPlatformPhysical);
 
-    //console.log("Cam: " + this.camera.GetOrientation());
-};
+    //fprintf(stderr, "Cam: %d\n", alpha_Camera_GetOrientation(widget->camera));
+}
 
-alpha_GLWidget_setBackground(alpha_GLWidget* widget)
+void alpha_GLWidget_setBackground(alpha_GLWidget* widget, float* c)
 {
-    if(arguments.length > 1) {
-        var c = new alpha_Color();
-        c.Set.apply(c, arguments);
-        return this.setBackground(c);
-    }
-    this._backgroundColor = arguments[0];
+    alpha_Color_Copy(widget->backgroundColor, c);
 
     // Make it simple to change the background color; do not require a
     // separate call to scheduleRepaint.
-    this.scheduleRepaint();
-};
+    alpha_GLWidget_scheduleRepaint(widget);
+}
 
-/**
- * Marks this GLWidget as dirty and schedules a surface repaint.
- */
-alpha_GLWidget_scheduleRepaint(alpha_GLWidget* widget)
+void alpha_GLWidget_setBackgroundRGBA(alpha_GLWidget* widget, float r, float g, float b, float a)
 {
-    this.paintingDirty = true;
-    this._surface.scheduleRepaint();
-};
+    float c[4] = {r, g, b, a};
+    alpha_GLWidget_setBackground(widget, c);
+}
 
-/**
- * Retrieves the current background color.
- */
-alpha_GLWidget_backgroundColor(alpha_GLWidget* widget)
+void alpha_GLWidget_scheduleRepaint(alpha_GLWidget* widget)
 {
-    return this._backgroundColor;
-};
+    widget->paintingDirty = 1;
+    parsegraph_Surface_scheduleRepaint(widget->surface);
+}
+
+float* alpha_GLWidget_backgroundColor(alpha_GLWidget* widget)
+{
+    return widget->backgroundColor;
+}
 
 alpha_Camera* alpha_GLWidget_Camera(alpha_GLWidget* widget)
 {
     return widget->camera;
-};
+}
 
-alpha_GLWidget_surface(alpha_GLWidget* widget)
+void alpha_GLWidget_render(alpha_GLWidget* widget, int renderWidth, int renderHeight)
 {
-    return this._surface;
-};
-
-/**
- * Returns the container for this scene.
- */
-alpha_GLWidget_container(alpha_GLWidget* widget)
-{
-    return this._container;
-};
-
-/**
- * Render painted memory buffers.
- */
-void alpha_GLWidget_render()
-{
-    var projection;
-    if(arguments.length > 0) {
-        projection = this.camera.UpdateProjection(arguments[0], arguments[1]);
+    //fprintf(stderr, "RENDERING %d %d. \n[", renderWidth, renderHeight);
+    float* projection = alpha_Camera_UpdateProjection(widget->camera, renderWidth, renderHeight);
+    /*for(int i = 0; i < 16; ++i) {
+        fprintf(stderr, "%f", projection[i]);
+        if(i < 15) {
+            fprintf(stderr, ", ");
+            if((1+i) % 4 == 0 && i > 0) {
+                fprintf(stderr, "\n");
+            }
+        }
     }
-    else {
-        projection = this.camera.UpdateProjection();
-    }
+    fprintf(stderr, "]\n");*/
 
-    // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
+    // float* fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 
-    var gl = this.gl();
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
-    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    parsegraph_Surface* surface = widget->surface;
 
-    //console.log("this.camera.GetViewMatrix() * projection:\n" + viewMatrix.toString());
+    alpha_Cluster_Draw(widget->playerCluster, widget->BlockTypes,
+        alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(widget->playerAPhysical, 0), projection)
+    );
+
+    //fprintf(stderr, "this.camera.GetViewMatrix() * projection:\n" + viewMatrix.toString());
     //console.log(this.camera.GetViewMatrix().toString());
-    var viewMatrix = this.camera.GetViewMatrix().Multiplied(projection);
-    this.worldCluster.Draw(viewMatrix);
+    float* viewMatrix = alpha_RMatrix4_Multiplied(surface->pool, alpha_Camera_GetViewMatrix(widget->camera, 0), projection);
+    alpha_Cluster_Draw(widget->worldCluster, widget->BlockTypes, viewMatrix);
 
-
-    for(var i = 0; i < this.swarm.length; ++i) {
-        var v = this.swarm[i];
-        this.testCluster.Draw(v.GetViewMatrix().Multiplied(projection));
-        //this.worldCluster.Draw(v.GetViewMatrix().Multiplied(projection));
+    for(int i = 0; i < SWARM_SIZE; ++i) {
+        alpha_Physical* v = widget->swarm[i];
+        alpha_Cluster_Draw(
+            widget->testCluster, widget->BlockTypes,
+            alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(v, 0), projection)
+        );
+        //widget->worldCluster.Draw(v.GetViewMatrix().Multiplied(projection));
     }
 
 
     //console.log(projection.toString());
     //console.log(this.offsetPlatformPhysical.GetViewMatrix().toString());
-    var platformMatrix = this.offsetPlatformPhysical.GetViewMatrix().Multiplied(projection);
-    this.platformCluster.Draw(platformMatrix);
-    this.evPlatformCluster.Draw(platformMatrix);
+    float* platformMatrix = alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(widget->offsetPlatformPhysical, 0), projection);
+    alpha_Cluster_Draw(
+        widget->platformCluster, widget->BlockTypes,
+        platformMatrix
+    );
+    alpha_Cluster_Draw(
+        widget->evPlatformCluster, widget->BlockTypes,
+        platformMatrix
+    );
 
 
-    this.playerCluster.Draw(this.playerAPhysical.GetViewMatrix().Multiplied(projection));
+    alpha_Cluster_Draw(
+        widget->playerCluster, widget->BlockTypes,
+        alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(widget->playerAPhysical, 0), projection)
+    );
+    alpha_Cluster_Draw(
+        widget->testCluster, widget->BlockTypes,
+        alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(widget->playerBPhysical, 0), projection)
+    );
 
-
-    this.testCluster.Draw(this.playerBPhysical.GetViewMatrix().Multiplied(projection));
-
-    this.sphereCluster.Draw(this.spherePhysical.GetViewMatrix().Multiplied(projection));
-};
+    alpha_Cluster_Draw(
+        widget->sphereCluster, widget->BlockTypes,
+        alpha_RMatrix4_Multiplied(surface->pool, alpha_Physical_GetViewMatrix(widget->spherePhysical, 0), projection)
+    );
+}

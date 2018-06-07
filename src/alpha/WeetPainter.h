@@ -7,7 +7,7 @@
 extern const char* alpha_WeetPainter_VertexShader;
 extern const char* alpha_WeetPainter_FragmentShader;
 
-typedef struct {
+struct alpha_WeetPainter {
     apr_pool_t* pool;
     unsigned int _numCubes;
     GLuint faceProgram;
@@ -19,7 +19,8 @@ typedef struct {
     unsigned int _dataX;
     GLuint _posBuffer;
     GLuint _colorBuffer;
-} alpha_WeetPainter;
+};
+typedef struct alpha_WeetPainter alpha_WeetPainter;
 
 alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool);
 void alpha_WeetPainter_Init(alpha_WeetPainter* painter, unsigned int numCubes);

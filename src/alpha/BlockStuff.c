@@ -296,15 +296,15 @@ alpha_Face* alpha_Face_List_destroy(alpha_Face_List* item, apr_pool_t* pool)
  */
 void alpha_Skin_addFace(alpha_Skin* skin, alpha_Face* face)
 {
-    if(!skin->facesTail->face) {
-        skin->facesTail->face = face;
-    }
-    else {
-        alpha_Face_List* item = alpha_Face_List_new(skin->pool);
-        item->face = face;
-        //TEST_ASSERT_MESSAGE(skin->facesTail->next == 0);
+    alpha_Face_List* item = alpha_Face_List_new(skin->pool);
+    item->face = face;
+    if(skin->facesTail) {
         skin->facesTail->next = item;
         skin->facesTail = item;
+    }
+    else {
+        skin->facesTail = item;
+        skin->facesHead = item;
     }
     ++skin->length;
 }
@@ -470,8 +470,10 @@ void alpha_Face_addEach(alpha_Face* face, float x, float y, float z, float w)
         alpha_Quaternion_Set(&item->value[0], x, y, z, w);
         item->next = 0;
         face->vectorsTail->next = item;
+        item->prev = face->vectorsTail;
         face->vectorsTail = item;
     }
+    ++face->length;
 }
 
 void alpha_Face_destroy(alpha_Face* face)

@@ -7,6 +7,12 @@
 #define alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE 2
 #define alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE 3
 
+enum alpha_PhysicalType {
+alpha_PhysicalType_PHYSICAL,
+alpha_PhysicalType_CAMERA
+};
+typedef enum alpha_PhysicalType alpha_PhysicalType;
+
 struct alpha_Physical {
     apr_pool_t* pool;
     int modelMode;
@@ -19,15 +25,15 @@ struct alpha_Physical {
     float* rotationSpeed;
     float* speed;
     float* scale;
-    int parentIsPhysical;
+    alpha_PhysicalType parentType;
     void* parent;
 };
 
 typedef struct alpha_Physical alpha_Physical;
 
-struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, int parentIsPhysical, void* parent);
+struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, alpha_PhysicalType parentType, void* parent);
 void alpha_Physical_destroy(struct alpha_Physical* phys);
-void alpha_Physical_SetParent(struct alpha_Physical* phys, int parentIsPhysical, void* parent);
+void alpha_Physical_SetParent(struct alpha_Physical* phys, alpha_PhysicalType parentType, void* parent);
 void alpha_Physical_SetScale(struct alpha_Physical* phys, float x, float y, float z);
 float* alpha_Physical_GetScale(struct alpha_Physical* phys);
 void alpha_Physical_Rotate(struct alpha_Physical* phys, float angle, float x, float y, float z);
@@ -57,6 +63,7 @@ float* alpha_Physical_GetWorldPositionByViewMatrix(alpha_Physical* phys);
 float* alpha_Physical_GetWorldPosition(alpha_Physical* phys, void* requestor);
 float* alpha_Physical_GetWorldOrientation(alpha_Physical* phys, void* requestor);
 int alpha_Physical_GetParentIsPhysical(alpha_Physical* phys);
+alpha_PhysicalType alpha_Physical_GetParentType(alpha_Physical* phys);
 void alpha_Physical_MoveForward(alpha_Physical* phys, float elapsed);
 void alpha_Physical_MoveBackward(alpha_Physical* phys, float elapsed);
 void alpha_Physical_MoveLeft(alpha_Physical* phys, float elapsed);
@@ -71,5 +78,6 @@ void alpha_Physical_PitchUp(struct alpha_Physical* phys, float elapsed);
 void alpha_Physical_PitchDown(struct alpha_Physical* phys, float elapsed);
 void alpha_Physical_RollLeft(struct alpha_Physical* phys, float elapsed);
 void alpha_Physical_RollRight(struct alpha_Physical* phys, float elapsed);
+void alpha_Physical_Dump(struct alpha_Physical* phys);
 
 #endif // alpha_Physical_INCLUDED

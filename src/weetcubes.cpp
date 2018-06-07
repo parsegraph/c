@@ -44,6 +44,8 @@ extern "C" {
 #include "alpha/WeetPainter.h"
 #include "alpha/Maths.h"
 #include "alpha/GLWidget.h"
+#include "widgets/alpha_WeetCubeWidget.h"
+#include "graph/Surface.h"
 #include <apr_strings.h>
 
 }
@@ -142,7 +144,7 @@ MainWindow(QOpenGLContext* shareContext) :
 
 QTime frameElapsedTime;
 struct parsegraph_Surface* surface = 0;
-struct alpha_GLWidget* widget = 0;
+struct alpha_WeetCubeWidget* widget = 0;
 GLint w;
 GLint h;
 int hasEverPainted = 0;
@@ -162,16 +164,19 @@ virtual void paintGL() {
         surface = parsegraph_Surface_new(this);
         float bg[] = {0, 47.0/255, 57.0/255, 1.0};
         parsegraph_Surface_setBackground(surface, bg);
-        widget = alpha_GLWidget_new(surface);
+        widget = alpha_WeetCubeWidget_new(surface);
         parsegraph_Surface_paint(surface, &rd);
     }
-    alpha_GLWidget_Tick(widget, ((float)frameElapsedTime.restart())/1000.0);
+    float e = ((float)frameElapsedTime.restart())/1000.0f;
+    alpha_WeetCubeWidget_Tick(widget, e, frozen);
+
     if(!frozen){
         parsegraph_Surface_paint(surface, &rd);
     }
     glViewport(0, 0, this->w, this->h);
     parsegraph_Surface_render(surface, &rd);
     glFlush();
+    parsegraph_Surface_scheduleRepaint(surface);
 }
 };
 

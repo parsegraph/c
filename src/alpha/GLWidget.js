@@ -9,8 +9,6 @@ function alpha_GLWidget()
     var surface;
     if(arguments.length == 0) {
         surface = new parsegraph_Surface();
-        surface.addPainter(this.paint, this);
-        surface.addRenderer(this.render, this);
     }
     else {
         surface = arguments[0];
@@ -19,6 +17,8 @@ function alpha_GLWidget()
         throw new Error("Surface must be given");
     }
     this._surface = surface;
+    surface.addPainter(this.paint, this);
+    surface.addRenderer(this.render, this);
 
     this._canvas = surface._canvas;
     this._container = surface._container;
@@ -301,6 +301,7 @@ alpha_GLWidget.prototype.render = function()
     else {
         projection = this.camera.UpdateProjection();
     }
+    console.log(projection);
 
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 

@@ -6,8 +6,9 @@
 #include <apr_pools.h>
 #include <apr_hash.h>
 
+struct parsegraph_Surface;
 struct alpha_Input {
-    apr_pool_t* pool;
+    struct parsegraph_Surface* surface;
     apr_hash_t* keyPress;
 
     float mouseSensitivityX;
@@ -28,7 +29,7 @@ typedef struct alpha_Input alpha_Input;
 
 void alpha_Input_keyup(alpha_Input* input, const char* key);
 void alpha_Input_keydown(alpha_Input* input, const char* key, int ctrlKey, int altKey, int metaKey);
-alpha_Input* alpha_Input_new(apr_pool_t* pool, alpha_Camera* camera);
+alpha_Input* alpha_Input_new(struct parsegraph_Surface* surface, alpha_Camera* camera);
 int alpha_Input_Get(alpha_Input* input, const char* key);
 float alpha_Input_GetMouseSensitivityY(alpha_Input* input);
 void alpha_Input_SetMouseSensitivityY(alpha_Input* input, float sensitivity);

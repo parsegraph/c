@@ -195,34 +195,34 @@ alpha_Color.prototype.toString = function()
 // you create a skin by passing it a nested table of colors
 // skins aren't designed to be edited once created
 // Skin( {
-// 	{ green, green, green, green }, -- face 1 has 4 vertices
-// 	{ brown, brown, brown, brown }, -- face 2
-// 	{ brown, brown, brown, brown }, -- face 3
+// 	{ green, green, green, green }, -- skin 1 has 4 vertices
+// 	{ brown, brown, brown, brown }, -- skin 2
+// 	{ brown, brown, brown, brown }, -- skin 3
 // 		--and so on until you have the full skin
 // })
 function alpha_Skin()
 {
     if(arguments.length > 1) {
-        // Passed faces directly.
+        // Passed colors directly.
         this.length = arguments.length;
         for(var i = 0; i < arguments.length; ++i) {
-            var face = arguments[i];
+            var color = arguments[i];
             this[i] = [];
-            for(var j = 0; j < face.length; ++j) {
-                this[i].push(new alpha_Color(face[j]));
-                var c = face[j];
+            for(var j = 0; j < color.length; ++j) {
+                this[i].push(new alpha_Color(color[j]));
+                var c = color[j];
             }
         }
     }
     else if(arguments.length > 0) {
-        // Passed a single array of faces.
+        // Passed a single array of colors.
         this.length = arguments[0].length;
         for(var i = 0; i < arguments[0].length; ++i) {
-            var face = arguments[0][i];
+            var color = arguments[0][i];
             this[i] = [];
-            for(var j = 0; j < face.length; ++j) {
-                this[i].push(new alpha_Color(face[j]));
-                var c = face[j];
+            for(var j = 0; j < color.length; ++j) {
+                this[i].push(new alpha_Color(color[j]));
+                var c = color[j];
             }
         }
     }
@@ -238,9 +238,9 @@ alpha_Skin_Tests.addTest("alpha_Skin.<constructor>", function(resultDom) {
     var green = new alpha_Color(0, 1, 0);
     var brown = new alpha_Color(.5, .5, 0);
     var skin = new alpha_Skin([
-        [green, green, green, green], // face 1 has 4 vertices
-        [brown, brown, brown, brown], // face 2
-        [brown, brown, brown, brown] // face 3
+        [green, green, green, green], // color 1 has 4 vertices
+        [brown, brown, brown, brown], // color 2
+        [brown, brown, brown, brown] // color 3
     ]);
 });
 
@@ -256,30 +256,30 @@ alpha_Skin_Tests.addTest("alpha_Skin.forEach", function(resultDom) {
     var green = new alpha_Color(0, 1, 0);
     var brown = new alpha_Color(.5, .5, 0);
     var skin = new alpha_Skin([
-        [green, green, green, green], // face 1 has 4 vertices
-        [brown, brown, brown, brown], // face 2
-        [brown, brown, brown, brown] // face 3
+        [green, green, green, green], // color 1 has 4 vertices
+        [brown, brown, brown, brown], // color 2
+        [brown, brown, brown, brown] // color 3
     ]);
 
     var maxRow = 0;
-    skin.forEach(function(face, i) {
+    skin.forEach(function(color, i) {
         maxRow = Math.max(maxRow, i);
         switch(i) {
             case 0:
-                if(!face[0].Equals(green) || !face[1].Equals(green) || !face[2].Equals(green) || !face[3].Equals(green)) {
-                    console.log(face);
+                if(!color[0].Equals(green) || !color[1].Equals(green) || !color[2].Equals(green) || !color[3].Equals(green)) {
+                    console.log(color);
                     throw new Error("Face 0 does not match");
                 };
                 break;
             case 1:
-                if(!face[0].Equals(brown) || !face[1].Equals(brown) || !face[2].Equals(brown) || !face[3].Equals(brown)) {
-                    console.log(face);
+                if(!color[0].Equals(brown) || !color[1].Equals(brown) || !color[2].Equals(brown) || !color[3].Equals(brown)) {
+                    console.log(color);
                     throw new Error("Face 1 does not match");
                 };
                 break;
             case 2:
-                if(!face[0].Equals(brown) || !face[1].Equals(brown) || !face[2].Equals(brown) || !face[3].Equals(brown)) {
-                    console.log(face);
+                if(!color[0].Equals(brown) || !color[1].Equals(brown) || !color[2].Equals(brown) || !color[3].Equals(brown)) {
+                    console.log(color);
                     throw new Error("Face 2 does not match");
                 };
                 break;

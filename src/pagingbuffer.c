@@ -226,6 +226,7 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
                 ++attribIndex;
                 continue;
             }
+
             // Bind the buffer, creating it if necessary.
             if(page->buffers[attribIndex].glBuffer == 0) {
                 glGenBuffers(1, &page->buffers[attribIndex].glBuffer);

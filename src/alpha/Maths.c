@@ -21,7 +21,7 @@ void alpha_RMatrix4_SetIdentity(float* m)
 
 long int alpha_random(long int min, long int max)
 {
-    return min + random() * (max - min);
+    return min + random() % (max - min);
 };
 
 apr_time_t alpha_startTime = 0;
@@ -692,10 +692,10 @@ void alpha_RMatrix4_MultiplyAll(float* m, float s)
 void alpha_RMatrix4_Multiply(float* m, float* other)
 {
     // using quaternions for a Vector4
-    float* r1 = &m[0];
-    float* r2 = &m[4];
-    float* r3 = &m[8];
-    float* r4 = &m[12];
+    float* r1 = m;
+    float* r2 = m + 4;
+    float* r3 = m + 8;
+    float* r4 = m + 12;
     float c1[4];
     float c2[4];
     float c3[4];

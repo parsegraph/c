@@ -37,6 +37,7 @@ alpha_Cluster* alpha_Cluster_new(apr_pool_t* pool, alpha_GLWidget* widget)
     cluster->widget = widget;
 
     cluster->blocks = 0;
+    cluster->lastBlock = 0;
 
     // Declare GL Painters; create them only when needed to delay GL context's creation.
     cluster->facePainter = 0;
@@ -69,16 +70,19 @@ int alpha_Cluster_HasBlock(alpha_Cluster* cluster, alpha_Block* block)
 
 void alpha_Cluster_AddBlock(alpha_Cluster* cluster, alpha_Block* block)
 {
-    if(!alpha_Cluster_HasBlock(cluster, block)) {
-        if(!cluster->lastBlock) {
-            cluster->blocks = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
-            cluster->lastBlock = cluster->blocks;
-        }
-        else {
-            cluster->lastBlock->next = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
-            cluster->lastBlock = cluster->lastBlock->next;
-        }
+    if(alpha_Cluster_HasBlock(cluster, block) >= 0) {
+        return;
     }
+    if(!cluster->lastBlock) {
+        cluster->blocks = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
+        cluster->lastBlock = cluster->blocks;
+    }
+    else {
+        cluster->lastBlock->next = apr_pcalloc(cluster->pool, sizeof(struct alpha_BlockRec));
+        cluster->lastBlock = cluster->lastBlock->next;
+    }
+    cluster->lastBlock->block = block;
+    cluster->lastBlock->next = 0;
 };
 
 void alpha_Cluster_CreateBlock(alpha_Cluster* cluster, alpha_BlockType* type, float* pos, int orientation)
@@ -193,13 +197,13 @@ static void drawQuads(alpha_FacePainter* facePainter, alpha_Block* block, alpha_
     alpha_Vector_List* color = colors->vectorsHead;
     float translatedVecs[4*4];
     for(int j = 0; vertex && color; ++j) {
-        memcpy(translatedVecs + (j%4)*sizeof(float)*4, &vertex->value, sizeof(float)*4);
+        memcpy(translatedVecs + (j%4)*4, vertex->value, sizeof(float)*4);
         // rotate it; if it's not the default
         if(block->orientation > 0) {
-            memcpy(translatedVecs + (j%4)*sizeof(float)*4, alpha_Quaternion_RotatedVector(quat, block->pool, translatedVecs + (j%4)*sizeof(float)*4), sizeof(float)*4);
+            memcpy(translatedVecs + (j%4)*4, alpha_Quaternion_RotatedVector(quat, block->pool, translatedVecs + (j%4)*4), sizeof(float)*4);
         }
         // now translate it
-        memcpy(translatedVecs + (j%4)*sizeof(float)*4, alpha_Vector_Added(block->pool, translatedVecs + (j%4)*sizeof(float)*4, block->pos), sizeof(float)*4);
+        memcpy(translatedVecs + (j%4)*4, alpha_Vector_Added(block->pool, translatedVecs + (j%4)*4, block->pos), sizeof(float)*4);
 
         if((j+1) % 4 != 0 || j == 0) {
             goto next_vertex_quad;
@@ -209,12 +213,13 @@ static void drawQuads(alpha_FacePainter* facePainter, alpha_Block* block, alpha_
         float* v3 = translatedVecs + 8;
         float* v4 = translatedVecs + 12;
 
-        float* c1 = color->prev->prev->prev->value;
-        float* c2 = color->prev->prev->value;
-        float* c3 = color->prev->value;
         float* c4 = color->value;
+        float* c3 = color->prev->value;
+        float* c2 = color->prev->prev->value;
+        float* c1 = color->prev->prev->prev->value;
 
         // vector and cluster use the same indexes
+        //fprintf(stderr, "Drawing quad for index: %d (%f, %f, %f, %f) {%f, %f, %f, %f}\n", j, v1[0], v1[1], v1[2], v2[0], c1, c2, c3, c4);
         alpha_FacePainter_Quad(facePainter, v1, v2, v3, v4, c1, c2, c3, c4);
 next_vertex_quad:
         vertex = vertex->next;
@@ -238,13 +243,13 @@ int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt
     for(struct alpha_BlockRec* blockRec = cluster->blocks; blockRec != 0; blockRec = blockRec->next) {
         float* quat = alpha_Block_GetQuaternion(blockRec->block, 1);
         if(!quat) {
-            //console.log(block);
-            //throw new Error("Block must not return a null quaternion");
+            fprintf(stderr, "Block must not return a null quaternion\n");
         }
 
         // get the faces from the blocktype
         alpha_BlockType* bType = alpha_BlockTypes_GetByID(bt, blockRec->block->type->id);
         if(!bType) {
+            fprintf(stderr, "Block type is not found\n");
             return -1;
         }
         alpha_Shape* shape = bType->shape;
@@ -255,12 +260,12 @@ int alpha_Cluster_CalculateVertices(alpha_Cluster* cluster, alpha_BlockTypes* bt
         for(; shapeItem && skinItem;) {
             alpha_Face* face = shapeItem->face;
             if(!face) {
-                //throw new Error("Shape must not contain any null faces");
+                fprintf(stderr, "Shape must not contain any null faces\n");
                 return -1;
             }
             alpha_Face* colors = skinItem->face;
             if(!colors) {
-                //throw new Error("Shape must not contain any null colors");
+                fprintf(stderr, "Shape must not contain any null colors\n");
                 return -1;
             }
 

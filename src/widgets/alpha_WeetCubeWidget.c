@@ -1,27 +1,35 @@
 #include "alpha_WeetCubeWidget.h"
+#include "../alpha/GLWidget.h"
 #include "../alpha/Physical.h"
 #include "../alpha/Maths.h"
 #include "../alpha/Cam.h"
+#include "../graph/Surface.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(apr_pool_t* pool)
+static void renderWidget(void* widgetPtr, void* renderData)
 {
-    struct alpha_WeetCubeWidget* widget;
-    if(pool) {
-        widget = apr_palloc(pool, sizeof(*widget));
-    }
-    else {
-        widget = malloc(sizeof(*widget));
-    }
-    widget->pool = pool;
+    alpha_RenderData* rd = renderData;
+    alpha_WeetCubeWidget_render(widgetPtr, rd->width, rd->height);
+}
 
+static void paintWidget(void* widgetPtr, void* renderData)
+{
+    alpha_WeetCubeWidget_paint(widgetPtr);
+}
+
+struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(parsegraph_Surface* surface)
+{
+    struct alpha_WeetCubeWidget* widget = malloc(sizeof(*widget));
+    widget->pool = surface->pool;
     widget->camera = alpha_Camera_new(widget->pool);
+    parsegraph_Surface_addPainter(surface, paintWidget, widget);
+    parsegraph_Surface_addRenderer(surface, renderWidget, widget);
     alpha_Camera_SetFovX(widget->camera, 60);
     alpha_Camera_SetFarDistance(widget->camera, 1000);
     alpha_Camera_SetNearDistance(widget->camera, .1);
 
-    widget->input = alpha_Input_new(widget->pool, widget->camera);
+    widget->input = alpha_Input_new(surface, widget->camera);
     alpha_Input_SetMouseSensitivity(widget->input, .4);
 
     widget->cubePainter = 0;
@@ -36,6 +44,8 @@ struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(apr_pool_t* pool)
 
     widget->_listener = 0;
     widget->_listenerThisArg = 0;
+
+
 
     return widget;
 }
@@ -122,7 +132,7 @@ void alpha_WeetCubeWidget_paint(struct alpha_WeetCubeWidget* widget)
                 alpha_WeetPainter_Cube(widget->cubePainter, alpha_Physical_GetModelMatrix(c));
             }
         }
-        rotq = rotq + 0.01 * elapsed;
+        rotq = rotq + 0.001 * elapsed;
     }
     //fprintf(stderr, "dataX=%d\n", widget->cubePainter->_dataX);
 

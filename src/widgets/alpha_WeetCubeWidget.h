@@ -23,7 +23,10 @@ struct alpha_WeetCubeWidget {
     void* _listenerThisArg;
 };
 
-struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(apr_pool_t* pool);
+struct parsegraph_Surface;
+typedef struct parsegraph_Surface parsegraph_Surface;
+
+struct alpha_WeetCubeWidget* alpha_WeetCubeWidget_new(parsegraph_Surface* surface);
 void alpha_WeetCubeWidget_Tick(struct alpha_WeetCubeWidget* widget, float elapsed, int frozen);
 void alpha_WeetCubeWidget_setMax(struct alpha_WeetCubeWidget* widget, float max);
 void alpha_WeetCubeWidget_setXMax(struct alpha_WeetCubeWidget* widget, float xMax);

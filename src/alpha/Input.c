@@ -1,23 +1,19 @@
 #include "Input.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "Maths.h"
 #include "../graph/log.h"
+#include "../graph/Surface.h"
 
-alpha_Input* alpha_Input_new(apr_pool_t* pool, alpha_Camera* camera)
+alpha_Input* alpha_Input_new(parsegraph_Surface* surface, alpha_Camera* camera)
 {
-    alpha_Input* input;
-    if(pool) {
-        input = apr_palloc(pool, sizeof(*input));
-    }
-    else {
-        input = malloc(sizeof(*input));
-    }
-    input->pool = pool;
+    alpha_Input* input = malloc(sizeof(*input));
+    input->surface = surface;
 
     alpha_Input_SetMouseSensitivityX(input, .005);
     alpha_Input_SetMouseSensitivityY(input, .005);
 
-    input->keyPress = apr_hash_make(pool);
+    input->keyPress = apr_hash_make(surface->pool);
     input->camera = camera;
     input->startX = 0;
     input->endX = 0;
@@ -219,11 +215,11 @@ void alpha_Input_Update(alpha_Input* input, float elapsed)
     //alpha_Camera_ZoomIn(input->camera, alpha_Input_Get(input, "y"), elapsed);
     //alpha_Camera_ZoomOut(input->camera, alpha_Input_Get(input, "h"), elapsed);
 
-    if(!alpha_Camera_GetParentIsPhysical(input->camera)) {
+    /*if(!alpha_Camera_GetParentIsPhysical(input->camera)) {
         alpha_Camera_MoveForward(alpha_Camera_GetParent(input->camera), alpha_Input_Get(input, "w") * elapsed );
         alpha_Camera_MoveBackward(alpha_Camera_GetParent(input->camera), alpha_Input_Get(input, "s") * elapsed );
     }
-    else {
+    else {*/
         alpha_Physical* parent = alpha_Camera_GetParent(input->camera);
         //parsegraph_log("W state=%d", alpha_Input_Get(input, "w"));
         alpha_Physical_MoveForward(parent, 100*alpha_Input_Get(input, "t") * elapsed );
@@ -242,7 +238,7 @@ void alpha_Input_Update(alpha_Input* input, float elapsed)
         alpha_Physical_PitchDown(parent, alpha_Input_Get(input, "i") * elapsed );
         alpha_Physical_RollLeft(parent, alpha_Input_Get(input, "u") * elapsed );
         alpha_Physical_RollRight(parent, alpha_Input_Get(input, "o") * elapsed );
-    }
+    //}
 
     if(alpha_Input_Get(input, "RightMouseButton") > 0) {
         if(!input->_done) {

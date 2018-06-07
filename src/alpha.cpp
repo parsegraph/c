@@ -146,7 +146,7 @@ struct alpha_GLWidget* widget = 0;
 GLint w;
 GLint h;
 int hasEverPainted = 0;
-int frozen = 1;
+int frozen = 0;
 virtual void initializeGL() {
     frameElapsedTime.start();
 }

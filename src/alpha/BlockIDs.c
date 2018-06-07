@@ -22,10 +22,10 @@ float* alpha_BuildCubeStructure(apr_pool_t* pool)
 {
     float* cubeStructure;
     if(pool) {
-        cubeStructure = apr_palloc(pool, sizeof(*cubeStructure));
+        cubeStructure = apr_palloc(pool, sizeof(alpha_cubeStructure)*sizeof(float));
     }
     else {
-        cubeStructure = malloc(sizeof(*cubeStructure));
+        cubeStructure = malloc(sizeof(alpha_cubeStructure)*sizeof(float));
     }
     memcpy(cubeStructure, alpha_cubeStructure, sizeof(alpha_cubeStructure));
     return cubeStructure;
@@ -289,7 +289,8 @@ void alpha_standardBlockTypes(apr_pool_t* pool, alpha_BlockTypes* BlockTypes) {
         Left,
         Back,
         Right,
-        Bottom
+        Bottom,
+        0
     );
 
     alpha_BlockTypes_Load(BlockTypes, "stone", "slab", stone, SLAB);

@@ -1263,7 +1263,7 @@ alpha_RMatrix4.prototype.FromEuler = function()
 
     var sx = Math.sin(x);
     var cx = Math.cos(x);
-    var sy = Math.sin(y);
+    //var sy = Math.sin(y);
     var sy = Math.cos(y);
     var sz = Math.sin(z);
     var cz = Math.cos(z);

@@ -6,7 +6,7 @@
 #include <math.h>
 #include "../graph/log.h"
 
-struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, int parentIsPhysical, void* parent)
+struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, alpha_PhysicalType parentType, void* parent)
 {
     struct alpha_Physical* phys;
     if(pool) {
@@ -27,7 +27,7 @@ struct alpha_Physical* alpha_Physical_new(apr_pool_t* pool, int parentIsPhysical
     phys->rotationSpeed = alpha_Vector_create(pool, 1, 1, 1);
     phys->speed = alpha_Vector_create(pool, 5, 5, 5);
     phys->scale = alpha_Vector_create(pool, 1, 1, 1);
-    alpha_Physical_SetParent(phys, parentIsPhysical, parent);
+    alpha_Physical_SetParent(phys, parentType, parent);
     return phys;
 }
 
@@ -346,7 +346,7 @@ int alpha_Physical_IsGoodLineageFor(alpha_Physical* phys, alpha_Physical* prospe
         // it's assumed that if its a parent now, its still a good parent;
     }
 
-    if(phys->parentIsPhysical) {
+    if(phys->parentType == alpha_PhysicalType_PHYSICAL) {
         return alpha_Physical_IsGoodLineageFor(
             (alpha_Physical*)parent,
             prospectiveChild
@@ -357,18 +357,18 @@ int alpha_Physical_IsGoodLineageFor(alpha_Physical* phys, alpha_Physical* prospe
     return 1;
 };
 
-void alpha_Physical_SetParent(alpha_Physical* phys, int parentIsPhysical, void* parent)
+void alpha_Physical_SetParent(alpha_Physical* phys, alpha_PhysicalType parentType, void* parent)
 {
     if(!parent) {
         parsegraph_log("A Physical must have a parent. Set it to the camera for a default");
-	exit(-1);
+        exit(-1);
         return;
     }
 
-    if(parentIsPhysical && !alpha_Physical_IsGoodLineageFor(parent, phys)) {
+    if(parent && parentType == alpha_PhysicalType_PHYSICAL && !alpha_Physical_IsGoodLineageFor(parent, phys)) {
         parsegraph_log("Setting this is a parent would result in a lineage that never reaches the camera" );
     }
-    phys->parentIsPhysical = parentIsPhysical;
+    phys->parentType = parentType;
     phys->parent = parent;
 }
 
@@ -379,7 +379,12 @@ void* alpha_Physical_GetParent(alpha_Physical* phys)
 
 int alpha_Physical_GetParentIsPhysical(alpha_Physical* phys)
 {
-    return phys->parentIsPhysical;
+    return alpha_Physical_GetParentType(phys) == alpha_PhysicalType_PHYSICAL;
+}
+
+alpha_PhysicalType alpha_Physical_GetParentType(alpha_Physical* phys)
+{
+    return phys->parentType;
 }
 
 //------------------------------------------
@@ -491,7 +496,7 @@ float* alpha_Physical_GetViewMatrix(alpha_Physical* phys, void* requestor)
     }
 
     if(phys->parent && phys->parent != requestor) {
-        if(phys->parentIsPhysical) {
+        if(phys->parentType == alpha_PhysicalType_PHYSICAL) {
             phys->viewMatrix = alpha_RMatrix4_Multiplied(phys->pool,
                 alpha_Physical_GetModelMatrix(phys),
                 alpha_Physical_GetViewMatrix(phys->parent, requestor)
@@ -531,7 +536,7 @@ float* alpha_Physical_GetWorldPositionByViewMatrix(alpha_Physical* phys)
 float* alpha_Physical_GetWorldPosition(alpha_Physical* phys, void* requestor)
 {
     void* parent = phys->parent;
-    if(parent && phys->parentIsPhysical && parent != requestor) {
+    if(parent && phys->parentType == alpha_PhysicalType_PHYSICAL && parent != requestor) {
         float* rot = alpha_Physical_GetWorldOrientation(parent, requestor);
         float* pos = alpha_Quaternion_RotatedVectorEach(rot, phys->pool, phys->position[0], phys->position[1], phys->position[2]);
         alpha_Vector_Add(pos, alpha_Physical_GetWorldPosition(parent, requestor));
@@ -545,7 +550,7 @@ float* alpha_Physical_GetWorldPosition(alpha_Physical* phys, void* requestor)
 float* alpha_Physical_GetWorldOrientation(alpha_Physical* phys, void* requestor)
 {
     void* parent = phys->parent;
-    if(parent && phys->parentIsPhysical && parent != requestor) {
+    if(parent && phys->parentType == alpha_PhysicalType_PHYSICAL && parent != requestor) {
         return alpha_Quaternion_Multiplied(
             phys->pool,
             alpha_Physical_GetWorldOrientation(parent, requestor),
@@ -553,4 +558,17 @@ float* alpha_Physical_GetWorldOrientation(alpha_Physical* phys, void* requestor)
         );
     }
     return phys->orientation;
+}
+
+void alpha_Physical_Dump(struct alpha_Physical* phys)
+{
+    fprintf(stderr, "([%f, %f, %f], {%f, %f, %f, %f})\n",
+        phys->position[0],
+        phys->position[1],
+        phys->position[2],
+        phys->orientation[0],
+        phys->orientation[1],
+        phys->orientation[2],
+        phys->orientation[3]
+    );
 }

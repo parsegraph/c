@@ -61,7 +61,7 @@ int parsegraph_pagingbuffer_defineAttrib(struct parsegraph_pagingbuffer* pg, con
 int parsegraph_PagingBuffer_appendRGB(struct parsegraph_pagingbuffer* pg, int attribIndex, float r, float g, float b);
 int parsegraph_PagingBuffer_appendRGBA(struct parsegraph_pagingbuffer* pg, int attribIndex, float r, float g, float b, float a);
 int parsegraph_PagingBuffer_appendData(struct parsegraph_pagingbuffer* pg, int attribIndex, int numValues, ...);
-void parsegraph_PagingBuffer_Clear(struct parsegraph_pagingbuffer* pg);
+void parsegraph_pagingbuffer_clear(struct parsegraph_pagingbuffer* pg);
 
 int parsegraph_pagingbuffer_isEmpty(struct parsegraph_pagingbuffer* pg);
 int parsegraph_BufferPage_isEmpty(struct parsegraph_BufferPage* page);

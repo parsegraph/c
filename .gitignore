@@ -7,6 +7,9 @@ parsegraph-widgets-*.js
 parsegraph.pc
 parsegraph.pc.head
 src/parsegraph_config.h
+src/cxx_alpha
+src/cxx_weetcubes
+src/cxx_parsegraph
 
 # Object files
 lib*.so

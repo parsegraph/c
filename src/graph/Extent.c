@@ -3,6 +3,7 @@
 #include "Extent.h"
 
 unsigned int parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
+unsigned int parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
 
 struct parsegraph_Extent* parsegraph_Extent_new(apr_pool_t* pool)
 {
@@ -66,6 +67,17 @@ struct parsegraph_Extent* parsegraph_Extent_clone(struct parsegraph_Extent* orig
         memcpy(clone->bounds, orig->bounds, sizeof(struct parsegraph_ExtentBound) * parsegraph_Extent_numBounds(clone));
     }
     return clone;
+}
+
+void parsegraph_Extent_clear(struct parsegraph_Extent* extent)
+{
+    extent->start = 0;
+    extent->numBounds = 0;
+}
+
+unsigned int parsegraph_Extent_numBounds(parsegraph_Extent* extent)
+{
+    return extent->numBounds;
 }
 
 int parsegraph_Extent_hasBounds(struct parsegraph_Extent* extent)
@@ -243,11 +255,6 @@ int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, f
     parsegraph_Extent_setBoundLengthAt(extent, parsegraph_Extent_numBounds(extent)- 1, length);
     parsegraph_Extent_setBoundSizeAt(extent, parsegraph_Extent_numBounds(extent)- 1, size);
     return 0;
-}
-
-unsigned int parsegraph_Extent_numBounds(struct parsegraph_Extent* extent)
-{
-    return extent->numBounds;
 }
 
 float parsegraph_Extent_boundLengthAt(struct parsegraph_Extent* extent, unsigned int index)
@@ -500,12 +507,6 @@ void parsegraph_Extent_scale(struct parsegraph_Extent* extent, float factor)
         }
     }
 };
-
-void parsegraph_Extent_clear(struct parsegraph_Extent* extent)
-{
-    extent->start = 0;
-    extent->numBounds = 0;
-}
 
 void parsegraph_Extent_destroy(struct parsegraph_Extent* extent)
 {
@@ -788,4 +789,3 @@ int parsegraph_Extent_equals(struct parsegraph_Extent* extent, struct parsegraph
     }
     return 1;
 }
-

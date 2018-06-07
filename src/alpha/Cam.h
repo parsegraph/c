@@ -31,8 +31,8 @@ struct alpha_Camera {
     float* position;
     int freeFloating;
     void* reengage;
-    int reengageIsPhysical;
-    int parentIsPhysical;
+    alpha_PhysicalType reengageType;
+    alpha_PhysicalType parentType;
     void* parent;
 };
 
@@ -44,7 +44,7 @@ float* alpha_Camera_UpdateProjection(struct alpha_Camera* cam, int renderWidth, 
 float* alpha_Camera_GetViewMatrix(alpha_Camera* cam, void* requestor);
 void* alpha_Camera_GetParent(alpha_Camera* cam);
 int alpha_Camera_GetParentIsPhysical(alpha_Camera* cam);
-void alpha_Camera_SetParent(alpha_Camera* cam, int parentIsPhysical, void* parent);
+void alpha_Camera_SetParent(alpha_Camera* cam, alpha_PhysicalType parentType, void* parent);
 alpha_Physical* alpha_Camera_GetInvisiblePhysical(alpha_Camera* cam);
 void alpha_Camera_Disengage(alpha_Camera* cam);
 void alpha_Camera_Engage(alpha_Camera* cam);
