@@ -133,6 +133,8 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_ProfileWidget.js \
 	src/widgets/parsegraph_OscillatorWidget.js \
 	src/widgets/parsegraph_SingleOscillatorWidget.js \
+	src/widgets/parsegraph_OnOffWidget.js \
+	src/widgets/parsegraph_EnvelopeGeneratorWidget.js \
 	src/widgets/parsegraph_FilterWidget.js \
 	src/widgets/parsegraph_SynthWidget.js \
 	src/widgets/parsegraph_SequencerWidget.js \

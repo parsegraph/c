@@ -67,12 +67,12 @@ parsegraph_ConvolverWidget.prototype.node = function()
 
     aSlider.setValue(this._decay / this._maxDecay);
     aSlider.setChangeListener(function() {
-        this._decay = aSlider.value() * this._maxDecay;
+        this._decay = Math.pow(aSlider.value(), 2) * this._maxDecay;
         this.refresh();
     }, this);
     bSlider.setValue(this._duration / this._maxDuration);
     bSlider.setChangeListener(function() {
-        this._duration = bSlider.value() * this._maxDuration;
+        this._duration = Math.pow(bSlider.value(), 2) * this._maxDuration;
         this.refresh();
     }, this);
 

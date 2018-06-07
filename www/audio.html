@@ -77,9 +77,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
         node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
         myList.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
 
-        var oscillatorWidget = new parsegraph_OscillatorWidget(graph, audio);
-        //myList.connectNode(parsegraph_DOWNWARD, oscillatorWidget.node());
-
         var compressor = audio.createDynamicsCompressor();
         compressor.threshold.value = -50;
         compressor.knee.value = 40;
@@ -123,28 +120,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
             dl.connect(audio.destination);
         }*/
 
-        oscillatorWidget.node().setClickListener(function() {
-            var n = oscillatorWidget.build(audio);
-            n.start();
-            var b = oscillatorWidget.build(audio);
-            b.frequency.value = n.frequency.value * .6674217783390094;
-            b.start();
-            var g = audio.createGain();
-            g.gain.value = 0.1;
-            //g.gain.linearRampToValueAtTime(0.5, audio.currentTime + .02);
-            //g.gain.linearRampToValueAtTime(0, audio.currentTime + 2);
-            n.connect(g);
-            b.connect(g);
-            g.connect(sink);
-        });
+        var oscillatorWidget = new parsegraph_SingleOscillatorWidget(graph, sink);
 
         var car = new parsegraph_Caret(myList);
         car.setGlyphAtlas(this._graph.glyphAtlas());
-        var secondOsc = new parsegraph_OscillatorWidget(graph);
-        //car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, secondOsc.node());
-        secondOsc.node().setClickListener(function() {
-            secondOsc.build(audio).connect(audio.destination);
-        });
 
         var synth = new parsegraph_SynthWidget(graph);
         synth.onPlay(function(freq) {
