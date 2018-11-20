@@ -156,4 +156,3 @@ parsegraph_TexturePainter.prototype.render = function(world)
     gl.uniformMatrix3fv(this.u_world, false, world);
     this._buffer.renderPages();
 };
-

@@ -1,5 +1,6 @@
 #include "Size.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 float* parsegraph_Size_new(apr_pool_t* pool)
 {
@@ -71,4 +72,9 @@ float parsegraph_Size_height(float* size)
 void parsegraph_Size_setHeight(float* size, float height)
 {
     size[1] = height;
+}
+
+int parsegraph_Size_toString(float* size, char* buf, size_t len)
+{
+    return snprintf(buf, len, "[w=%f, h=%f]", size[0], size[1]);
 }

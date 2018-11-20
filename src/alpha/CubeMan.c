@@ -259,11 +259,11 @@ void alpha_CubeMan(alpha_BlockTypes* BlockTypes)
         0
     );
 
-    float white[] = {1,1,1};
+    //float white[] = {1,1,1};
     float gray[] = {.5, .5, .5};
-    float dgray[] = {.25, .25, .25};
+    //float dgray[] = {.25, .25, .25};
     float owhite[] = {.9,.9,.9};
-    float black[] = {0,0,0};
+    //float black[] = {0,0,0};
 
     alpha_Skin* blank = alpha_Skin_new(pool);
     for(int i = 0; i < 150; ++i) {

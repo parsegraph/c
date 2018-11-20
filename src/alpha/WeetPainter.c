@@ -48,7 +48,6 @@ alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool)
         painter->faceProgram,
         compileShader(
             alpha_WeetPainter_VertexShader,
-            strlen(alpha_WeetPainter_VertexShader),
             GL_VERTEX_SHADER
         )
     );
@@ -57,7 +56,6 @@ alpha_WeetPainter* alpha_WeetPainter_new(apr_pool_t* pool)
         painter->faceProgram,
         compileShader(
             alpha_WeetPainter_FragmentShader,
-            strlen(alpha_WeetPainter_FragmentShader),
             GL_FRAGMENT_SHADER
         )
     );

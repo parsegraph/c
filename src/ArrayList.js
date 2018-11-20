@@ -19,6 +19,13 @@ parsegraph_ArrayList.prototype.slice = function()
     return this.data.slice(0, this._length);
 }
 
+parsegraph_ArrayList.prototype.concat = function(other)
+{
+    for(var i = 0; i < other.length(); ++i) {
+        this.push(other.at(i));
+    }
+}
+
 parsegraph_ArrayList.prototype.push = function()
 {
     for(var i = 0; i < arguments.length; ++i) {
@@ -34,7 +41,7 @@ parsegraph_ArrayList.prototype.push = function()
 
 parsegraph_ArrayList.prototype.at = function(i)
 {
-    if(i >= this.length || i < 0) {
+    if(i >= this._length || i < 0) {
         throw new Error("Index out of bounds: " + i);
     }
     return this.data[i];
@@ -46,3 +53,4 @@ parsegraph_ArrayList_Tests = new parsegraph_TestSuite("parsegraph_ArrayList");
 parsegraph_ArrayList_Tests.addTest("new parsegraph_ArrayList", function() {
     var l = new parsegraph_ArrayList();
 });
+

@@ -19,7 +19,7 @@ debug:
 dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js \
 	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js \
-	UnicodeData.txt \
+	www/UnicodeData.txt \
 	www
 
 # Distribute the pkg-config file.
@@ -37,7 +37,7 @@ pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
 	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js \
-	UnicodeData.txt \
+	www/UnicodeData.txt \
 	www/sga.css
 
 CLEANFILES = \
@@ -132,6 +132,7 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_LoginWidget.js \
 	src/widgets/parsegraph_ProfileWidget.js \
 	src/widgets/parsegraph_OscillatorWidget.js \
+	src/widgets/parsegraph_AudioKeyboard.js \
 	src/widgets/parsegraph_SingleOscillatorWidget.js \
 	src/widgets/parsegraph_OnOffWidget.js \
 	src/widgets/parsegraph_EnvelopeGeneratorWidget.js \

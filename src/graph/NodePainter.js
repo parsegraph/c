@@ -331,11 +331,11 @@ parsegraph_NodePainter.prototype.drawSlider = function(node, worldX, worldY, use
     //this._glyphPainter.setFontSize(
 //        fontScale * style.fontSize * userScale * node.absoluteScale()
 //    );
-    if(style.maxLabelChars) {
+    /*if(style.maxLabelChars) {
         this._glyphPainter.setWrapWidth(
             fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * userScale * node.absoluteScale()
         );
-    }
+    }*/
 
     var textMetrics = this._glyphPainter.measureText(node.label());
     node._label[0] = worldX + node.absoluteX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
@@ -349,9 +349,6 @@ parsegraph_NodePainter.prototype.drawScene = function(node, worldX, worldY, user
     if(!node.scene()) {
         return;
     }
-
-    var style = node.blockStyle();
-    var painter = this._blockPainter;
 
     var sceneSize = node.sizeWithoutPadding();
     var sceneX = worldX + node.absoluteX();

@@ -17,8 +17,10 @@
  *     FRAGMENT_SHADER.
  * @return {!WebGLShader} The shader.
  */
-GLuint compileShader(const char* shaderSource, GLint shaderLen, GLenum shaderType)
+GLuint compileShader(const char* shaderSource, GLenum shaderType)
 {
+  GLint shaderLen = strlen(shaderSource);
+
   // Create the shader object
   GLuint shader = glCreateShader(shaderType);
  

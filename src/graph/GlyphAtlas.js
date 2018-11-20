@@ -165,12 +165,6 @@ parsegraph_GlyphAtlas.prototype.clear = function()
     }, this);
 };
 
-parsegraph_GlyphAtlas.prototype.imageData = function()
-{
-    return this._ctx.getImageData(0, 0, this.maxTextureWidth(), this.maxTextureWidth());
-};
-parsegraph_GlyphAtlas.prototype.getImageData = parsegraph_GlyphAtlas.prototype.imageData;
-
 parsegraph_GlyphAtlas.prototype.needsUpdate = function()
 {
     return this._needsUpdate;

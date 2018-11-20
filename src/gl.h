@@ -5,7 +5,7 @@
 #include <GL/glcorearb.h>
 #include <apr_pools.h>
 
-GLuint compileShader(const char* shaderSource, GLint shaderLen, GLenum shaderType);
+GLuint compileShader(const char* shaderSource, GLenum shaderType);
 float* parsegraph_generateRectangleVertices(apr_pool_t* pool, float x, float y, float w, float h);
 float* makePerspective(apr_pool_t* pool, float fieldOfViewInRadians, float aspect, float near, float far);
 float* getVerts(apr_pool_t* pool, float width, float length, float height);

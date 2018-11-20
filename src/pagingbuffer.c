@@ -35,6 +35,8 @@ static void drawArrays(void* userdata, GLsizei numIndices)
     glDrawArrays(GL_TRIANGLES, 0, numIndices);
 }
 
+static int parsegraph_BUFFER_PAGE_COUNT = 0;
+
 struct parsegraph_BufferPage* parsegraph_BufferPage_new(
     struct parsegraph_pagingbuffer* pg,
     void(*renderFunc)(void*, int),
@@ -45,11 +47,14 @@ struct parsegraph_BufferPage* parsegraph_BufferPage_new(
     }
 
     struct parsegraph_BufferPage* page = apr_palloc(pg->pool, sizeof(*page));
+    page->id = parsegraph_BUFFER_PAGE_COUNT++;
+    page->buffers = 0;
     page->needsUpdate = 1;
     page->renderFunc = renderFunc;
     page->renderFuncThisArg = renderFuncThisArg;
     page->pg = pg;
     page->offset = 0;
+    page->next_page = 0;
 
     return page;
 }
@@ -86,6 +91,11 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addDefaultPage(struct pars
     return parsegraph_PagingBuffer_addPage(pg, drawArrays, 0);
 }
 
+struct parsegraph_BufferPage* parsegraph_pagingbuffer_addDefaultPage(struct parsegraph_pagingbuffer* pg)
+{
+    return parsegraph_PagingBuffer_addDefaultPage(pg);
+}
+
 struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_pagingbuffer* pg, void(*renderFunc)(void*, int), void* renderFuncThisArg)
 {
     // Create a new page.
@@ -95,6 +105,13 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_
     }
 
     page->buffers = apr_palloc(pg->pool, sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs);
+    for(int i = 0; i < pg->num_attribs; ++i) {
+        parsegraph_BufferPageContent* bpc = page->buffers + i;
+        bpc->data = 0;
+        bpc->datasize = 0;
+        bpc->index = 0;
+        bpc->glBuffer = 0;
+    }
 
     // Add the page.
     if(pg->last_page) {
@@ -126,10 +143,11 @@ int parsegraph_pagingbuffer_defineAttrib(struct parsegraph_pagingbuffer* pg, con
     }
 
     struct parsegraph_BufferPageAttribute* attrib = malloc(sizeof *attrib);
-    strncpy(attrib->name, name, sizeof(attrib->name));
+    strncpy(attrib->name, name, sizeof(attrib->name) - 1);
     attrib->numComponents = numComponents;
     attrib->drawMode = drawMode;
     attrib->location = glGetAttribLocation(pg->program, attrib->name);
+    attrib->next_attrib = 0;
 
     if(pg->last_attrib) {
         pg->last_attrib->next_attrib = attrib;
@@ -171,23 +189,71 @@ int parsegraph_PagingBuffer_appendData(struct parsegraph_pagingbuffer* pg, int a
     if(!page) {
         return -1;
     }
+    va_list ap;
+    va_start(ap, numValues);
+    int rv = parsegraph_BufferPage_appendData(page, attribIndex, numValues, ap);
+    va_end(ap);
+    return rv;
+}
+
+static void parsegraph_BufferPageContent_ensure(parsegraph_pagingbuffer* pg, parsegraph_BufferPageContent* content)
+{
+    while(content->datasize - content->index < 1) {
+        if(content->datasize == 0) {
+            content->datasize = 1;
+        }
+        float* oldData = content->data;
+        content->data = apr_palloc(pg->pool, content->datasize*2);
+        memcpy(content->data, oldData, content->index);
+        content->datasize *= 2;
+    }
+}
+
+int parsegraph_BufferPage_appendVarargs(parsegraph_BufferPage* page, int attribIndex, int numValues, va_list ap)
+{
+    struct parsegraph_BufferPageContent* content = page->buffers+attribIndex;
+    for(int i = 0; i < numValues; ++i) {
+        float v = (float)va_arg(ap, double);
+        parsegraph_BufferPageContent_ensure(page->pg, content);
+        content->data[content->index++] = v;
+    }
+    return 0;
+}
+
+int parsegraph_BufferPage_appendData(parsegraph_BufferPage* page, int attribIndex, int numValues, ...)
+{
+    parsegraph_pagingbuffer* pg = page->pg;
     if(attribIndex < 0 || attribIndex >= pg->num_attribs) {
         return -2;
     }
     va_list ap;
     va_start(ap, numValues);
+    int rv = parsegraph_BufferPage_appendVarargs(page, attribIndex, numValues, ap);
+    va_end(ap);
+    return rv;
+}
+
+int parsegraph_pagingbuffer_appendArray(parsegraph_pagingbuffer* pg, int attribIndex, int numValues, float* arr)
+{
+    struct parsegraph_BufferPage* page = parsegraph_PagingBuffer_getWorkingPage(pg);
+    if(!page) {
+        return -1;
+    }
+    return parsegraph_BufferPage_appendArray(page, attribIndex, numValues, arr);
+}
+
+int parsegraph_BufferPage_appendArray(parsegraph_BufferPage* page, int attribIndex, int numValues, float* arr)
+{
+    parsegraph_pagingbuffer* pg = page->pg;
+    if(attribIndex < 0 || attribIndex >= pg->num_attribs) {
+        return -2;
+    }
     struct parsegraph_BufferPageContent* content = page->buffers+attribIndex;
     for(int i = 0; i < numValues; ++i) {
-        float v = (float)va_arg(ap, double);
-        while(content->datasize - content->index < 1) {
-            float* oldData = content->data;
-            content->data = apr_palloc(pg->pool, content->datasize*2);
-            memcpy(content->data, oldData, content->index);
-            content->datasize *= 2;
-        }
+        float v = arr[i];
+        parsegraph_BufferPageContent_ensure(page->pg, content);
         content->data[content->index++] = v;
     }
-    va_end(ap);
     return 0;
 }
 

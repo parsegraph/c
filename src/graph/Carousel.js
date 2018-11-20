@@ -99,7 +99,7 @@ parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg)
         node.setPaintGroup(new parsegraph_PaintGroup(node));
     }
     this._carouselPlots.push(node);
-    //console.log("ADded to carousel");
+    //console.log("Added to carousel");
 };
 
 parsegraph_Carousel.prototype.clearCarousel = function()

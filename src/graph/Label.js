@@ -304,7 +304,7 @@ parsegraph_Label.prototype.moveCaretBackward = function(world)
             return false;
         }
         this._caretLine--;
-        this.caretPos = this._lines[this._caretLine]._glyphs.length;
+        this._caretPos = this._lines[this._caretLine]._glyphs.length;
         return true;
     }
     this._caretPos--;
@@ -642,11 +642,6 @@ parsegraph_Label.prototype.fontSize = function()
     return this._glyphAtlas.fontSize();
 };
 
-parsegraph_Label.prototype.glyphAtlas = function()
-{
-    return this._glyphAtlas;
-};
-
 parsegraph_Label.prototype.width = function()
 {
     if(this._width === null) {
@@ -707,7 +702,6 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
                 case "CS":
                 case "ON":
                 case "WS":
-                case "P":
                 case "BN":
                 case "S":
                 case "NSM":

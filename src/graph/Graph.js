@@ -36,27 +36,27 @@ function parsegraph_Graph()
     }
     else {
         surface = arguments[0];
+        if(!surface) {
+            throw new Error("Surface must be given");
+        }
     }
-    if(!surface) {
-        throw new Error("Surface must be given");
-    }
+
+    // Construct the graph.
     this._surface = surface;
     this._canvas = surface.canvas();
     this._container = surface.container();
-
     this._glyphAtlas = null;
-
     this._world = new parsegraph_World(this);
     this._cameraBox = new parsegraph_CameraBox(this);
-
-    this._surface.addPainter(this.paint, this);
-    this._surface.addRenderer(this.render, this);
-
     this._camera = this._world.camera();
     this._carousel = new parsegraph_Carousel(this._camera, this.surface().backgroundColor());
     this._input = new parsegraph_Input(this, this.camera());
-
+    this._piano = new parsegraph_AudioKeyboard(this._camera);
     this._shaders = {};
+
+    // Install the graph.
+    this._surface.addPainter(this.paint, this);
+    this._surface.addRenderer(this.render, this);
 };
 parsegraph_Graph_Tests = new parsegraph_TestSuite("parsegraph_Graph");
 
@@ -167,6 +167,8 @@ parsegraph_Graph.prototype.paint = function(timeout)
     var rv = this._world.paint(timeout);
 
     this._input.paint();
+    this._piano.prepare(this.gl(), this.glyphAtlas(), this._shaders);
+    this._piano.paint();
     return rv;
 };
 
@@ -182,4 +184,5 @@ parsegraph_Graph.prototype.render = function()
     this._carousel.render(world);
     this._cameraBox.render(world);
     this._input.render(world);
+    this._piano.render(world);
 };

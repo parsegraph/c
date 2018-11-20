@@ -1,483 +1,566 @@
-parsegraph_BlockPainter_VertexShader =
-"uniform mat3 u_world;\n" +
-"\n" +
-"attribute vec2 a_position;\n" +
-"attribute vec2 a_texCoord;\n" +
-"attribute vec4 a_color;\n" +
-"attribute vec4 a_borderColor;\n" +
-"attribute float a_borderRoundedness;\n" +
-"attribute float a_borderThickness;\n" +
-"attribute float a_aspectRatio;\n" +
-"\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp vec4 contentColor;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
-    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
-    "contentColor = a_color;" +
-    "borderColor = a_borderColor;" +
-    "borderRoundedness = max(0.001, a_borderRoundedness);" +
-    "texCoord = a_texCoord;" +
-    "borderThickness = a_borderThickness;" +
-    "aspectRatio = a_aspectRatio;" +
+#include "BlockPainter.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "Surface.h"
+#include "Rect.h"
+#include "Color.h"
+
+const char* parsegraph_BlockPainter_VertexShader =
+"uniform mat3 u_world;\n"
+"\n"
+"attribute vec2 a_position;\n"
+"attribute vec2 a_texCoord;\n"
+"attribute vec4 a_color;\n"
+"attribute vec4 a_borderColor;\n"
+"attribute float a_borderRoundedness;\n"
+"attribute float a_borderThickness;\n"
+"attribute float a_aspectRatio;\n"
+"\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp vec4 contentColor;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);\n"
+    "contentColor = a_color;\n"
+    "borderColor = a_borderColor;\n"
+    "borderRoundedness = max(0.001, a_borderRoundedness);\n"
+    "texCoord = a_texCoord;\n"
+    "borderThickness = a_borderThickness;\n"
+    "aspectRatio = a_aspectRatio;\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_FragmentShader =
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "\n" +
+const char* parsegraph_BlockPainter_FragmentShader =
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "\n"
     // Adjust for the aspect ratio.
-    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
-    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n"
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n"
 
     // Calculate the distance function.
-    "highp float d = length(max(abs(st) - (1.0 - borderRoundedness), 0.0));" +
+    "highp float d = length(max(abs(st) - (1.0 - borderRoundedness), 0.0));\n"
 
     // Default antialias implementation.
-    "highp float borderTolerance = 0.0;" +
-    "highp float inBorder = 1.0 - smoothstep(" +
-        "borderRoundedness - borderTolerance, " +
-        "borderRoundedness + borderTolerance, " +
-        "d" +
-    ");" +
-    "highp float edgeWidth = 0.0;" +
-    "highp float inContent = 1.0 - smoothstep(" +
-        "(borderRoundedness - borderThickness) - edgeWidth," +
-        "(borderRoundedness - borderThickness) + edgeWidth," +
-        "d" +
-    ");" +
+    "highp float borderTolerance = 0.0;\n"
+    "highp float inBorder = 1.0 - smoothstep(\n"
+        "borderRoundedness - borderTolerance,\n"
+        "borderRoundedness + borderTolerance,\n"
+        "d\n"
+    ");\n"
+    "highp float edgeWidth = 0.0;\n"
+    "highp float inContent = 1.0 - smoothstep(\n"
+        "(borderRoundedness - borderThickness) - edgeWidth,\n"
+        "(borderRoundedness - borderThickness) + edgeWidth,\n"
+        "d\n"
+    ");\n"
 
     // Map the two calculated indicators to their colors.
-    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
-    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
+    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);\n"
 "}";
 
 // Same as above, but using a better antialiasing technique.
-parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
-"#extension GL_OES_standard_derivatives : enable\n" +
-"\n" +
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"highp float aastep(float threshold, float value)\n" +
-"{\n" +
-    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
-    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
-    //"return step(threshold, value);\n" +
-"}\n" +
-"\n" +
-"void main() {\n" +
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "\n" +
+const char* parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
+"#extension GL_OES_standard_derivatives : enable\n"
+"\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"highp float aastep(float threshold, float value)\n"
+"{\n"
+    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n"
+    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n"
+    //"return step(threshold, value);\n"
+"}\n"
+"\n"
+"void main() {\n"
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "\n"
     // Adjust for the aspect ratio.
-    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
-    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n"
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n"
 
     // Calculate the distance function.
-    "highp float d = length(max(abs(st) - (1.0 - borderRoundedness), 0.0));" +
+    "highp float d = length(max(abs(st) - (1.0 - borderRoundedness), 0.0));\n"
 
     // Using 'OpenGL insights' antialias implementation
-    "highp float inBorder = 1.0 - aastep(borderRoundedness, d);\n" +
-    "highp float inContent = 1.0 - aastep(borderRoundedness - borderThickness, d);\n" +
+    "highp float inBorder = 1.0 - aastep(borderRoundedness, d);\n"
+    "highp float inContent = 1.0 - aastep(borderRoundedness - borderThickness, d);\n"
 
     // Map the two calculated indicators to their colors.
-    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
-    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
+    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_SquareFragmentShader =
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "\n" +
+const char* parsegraph_BlockPainter_SquareFragmentShader =
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "\n"
     // Adjust for the aspect ratio.
-    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
-    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
-    "\n"+
-    "st.x = abs(st.x);" +
-    "st.y = abs(st.y);" +
-    "if(st.y < 1.0 - borderThickness && st.x < 1.0 - borderThickness) {" +
-        "gl_FragColor = contentColor;" +
-    "} else {" +
-        "gl_FragColor = borderColor;" +
-    "}" +
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n"
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n"
+    "\n"
+    "st.x = abs(st.x);\n"
+    "st.y = abs(st.y);\n"
+    "if(st.y < 1.0 - borderThickness && st.x < 1.0 - borderThickness) {\n"
+        "gl_FragColor = contentColor;\n"
+    "} else {\n"
+        "gl_FragColor = borderColor;\n"
+    "}\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_ShadyFragmentShader =
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
+const char* parsegraph_BlockPainter_ShadyFragmentShader =
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
 // Plot a line on Y using a value between 0.0-1.0
-"float plot(vec2 st, float pct) {" +
-  "return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);" +
-"}" +
-"\n" +
-"void main() {\n" +
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "\n" +
+"float plot(vec2 st, float pct) {\n"
+  "return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);\n"
+"}\n"
+"\n"
+"void main() {\n"
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "\n"
     // Adjust for the aspect ratio.
-    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
-    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
-    "\n"+
-    "gl_FragColor = vec4(vec3(0.5 - (0.3 * st.y)), 1.0);" +
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n"
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n"
+    "\n"
+    "gl_FragColor = vec4(vec3(0.5 - (0.3 * st.y)), 1.0);\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_AngleFragmentShader =
-"#extension GL_OES_standard_derivatives : enable\n" +
-"\n" +
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
+const char* parsegraph_BlockPainter_AngleFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n"
+"\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
 // borderThickness is in [0, 1] terms.
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
     // Adjust for the aspect ratio.
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "st.x = abs(st.x);" +
-    "st.y = abs(st.y);" +
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "st.x = abs(st.x);\n"
+    "st.y = abs(st.y);\n"
 
     // 1.0 if st is inside the X-axis border.
-    "highp float t = borderThickness;" +
-    "highp float insideYContent = 1.0 - step(1.0 - t, st.y);" +
-    "highp float insideXBorder = step(1.0 - t, st.x);" +
+    "highp float t = borderThickness;\n"
+    "highp float insideYContent = 1.0 - step(1.0 - t, st.y);\n"
+    "highp float insideXBorder = step(1.0 - t, st.x);\n"
 
     // y = y1 + m(x - x1)
-    "highp float insideBorderAngle = 1.0 - step((st.x - 1.0)/-t, st.y);" +
-    "highp float insideContentAngle = 1.0 - step((st.x - 1.0)/-t - aspectRatio, st.y);" +
+    "highp float insideBorderAngle = 1.0 - step((st.x - 1.0)/-t, st.y);\n"
+    "highp float insideContentAngle = 1.0 - step((st.x - 1.0)/-t - aspectRatio, st.y);\n"
 
-    "highp float inBorder = step(1.0, insideBorderAngle);\n" +
-    "highp float inContent = step(1.0, insideContentAngle * insideYContent);\n" +
+    "highp float inBorder = step(1.0, insideBorderAngle);\n"
+    "highp float inContent = step(1.0, insideContentAngle * insideYContent);\n"
 
     // Map the two calculated indicators to their colors.
-    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
-    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
+    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_ParenthesisFragmentShader =
-"#extension GL_OES_standard_derivatives : enable\n" +
-"\n" +
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
+const char* parsegraph_BlockPainter_ParenthesisFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n"
+"\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
     // Adjust for the aspect ratio.
-    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n" +
-    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n" +
-    "st.x = abs(st.x);" +
-    "st.y = abs(st.y);" +
+    "st.x = mix(st.x, pow(abs(st.x), 1.0/aspectRatio), step(aspectRatio, 1.0));\n"
+    "st.y = mix(st.y, pow(abs(st.y), aspectRatio), 1.0 - step(aspectRatio, 1.0));\n"
+    "st.x = abs(st.x);\n"
+    "st.y = abs(st.y);\n"
 
     // 1.0 if st is inside the X-axis border.
-    "highp float t = borderThickness;" +
-    "highp float insideYContent = step(1.0 - t, st.y);" +
-    "highp float insideXBorder = step(1.0 - t, st.x/(1.0 - t/2.0));" +
+    "highp float t = borderThickness;\n"
+    "highp float insideYContent = step(1.0 - t, st.y);\n"
+    "highp float insideXBorder = step(1.0 - t, st.x/(1.0 - t/2.0));\n"
 
-    "highp float inBorder = step(1.0, 1.0 - insideXBorder + 1.0 - step(1.0, length(vec2((st.x - (1.0 - t))/t, st.y/(1.0 + 2.0*t)))));" +
-    "highp float inContent = step(1.0, 1.0 - step(1.0 - t, st.x)*(1.0 - insideYContent) + 1.0 - step(1.0 - t, length(vec2((st.x/(1.0 - t) - (1.0 - t))/t, st.y/(1.0 + 3.0*t)))));" +
+    "highp float inBorder = step(1.0, 1.0 - insideXBorder + 1.0 - step(1.0, length(vec2((st.x - (1.0 - t))/t, st.y/(1.0 + 2.0*t)))));\n"
+    "highp float inContent = step(1.0, 1.0 - step(1.0 - t, st.x)*(1.0 - insideYContent) + 1.0 - step(1.0 - t, length(vec2((st.x/(1.0 - t) - (1.0 - t))/t, st.y/(1.0 + 3.0*t)))));\n"
 
     // Map the two calculated indicators to their colors.
-    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
-    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
+    "gl_FragColor = mix(gl_FragColor, contentColor, inContent);\n"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_CurlyFragmentShader =
-"#extension GL_OES_standard_derivatives : enable\n" +
-"\n" +
-"#ifdef GL_ES\n" +
-"precision mediump float;\n" +
-"#endif\n" +
-"" +
-"varying highp vec4 contentColor;\n" +
-"varying highp vec4 borderColor;\n" +
-"varying highp float borderRoundedness;\n" +
-"varying highp vec2 texCoord;\n" +
+const char* parsegraph_BlockPainter_CurlyFragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n"
+"\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying highp vec4 contentColor;\n"
+"varying highp vec4 borderColor;\n"
+"varying highp float borderRoundedness;\n"
+"varying highp vec2 texCoord;\n"
 // borderThickness is in [0, 1] terms.
-"varying highp float borderThickness;\n" +
-"varying highp float aspectRatio;\n" +
-"\n" +
-"void main() {\n" +
+"varying highp float borderThickness;\n"
+"varying highp float aspectRatio;\n"
+"\n"
+"void main() {\n"
     // Adjust for the aspect ratio.
-    "highp vec2 st = texCoord;\n" +
-    "st = st * 2.0 - 1.0;" +
-    "st.x = abs(st.x);" +
-    "st.y = abs(st.y);" +
+    "highp vec2 st = texCoord;\n"
+    "st = st * 2.0 - 1.0;\n"
+    "st.x = abs(st.x);\n"
+    "st.y = abs(st.y);\n"
 
-    "highp float t = borderThickness;" +
-    "highp float inBorder = step(st.y, smoothstep(0.0, t, 1.0 - st.x));" +
-    "highp float inContent = step(1.0, step(st.y, (1.0-t)*smoothstep(0.0, t, 1.0 - (st.x + t*aspectRatio))));" +
+    "highp float t = borderThickness;\n"
+    "highp float inBorder = step(st.y, smoothstep(0.0, t, 1.0 - st.x));\n"
+    "highp float inContent = step(1.0, step(st.y, (1.0-t)*smoothstep(0.0, t, 1.0 - (st.x + t*aspectRatio))));\n"
 
     // Map the two calculated indicators to their colors.
-    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
-    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
+    "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
+    "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);\n"
 "}";
 
-function parsegraph_BlockPainter(gl, shaders)
+static const char* shaderName = "parsegraph_BlockPainter";
+
+parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders)
 {
-    this._gl = gl;
-    if(!this._gl || !this._gl.createProgram) {
-        throw new Error("A GL interface must be given");
+    if(!shaders || !surface) {
+        fprintf(stderr, "A shaders object must be given.\n");
+        abort();
     }
 
+    parsegraph_BlockPainter* painter = apr_palloc(surface->pool, sizeof(*painter));
+
     // Compile the shader program.
-    var shaderName = "parsegraph_BlockPainter";
-    if(!shaders[shaderName]) {
-        var program = gl.createProgram();
-        gl.attachShader(
+    GLuint* blockProgramId = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
+    if(blockProgramId) {
+        painter->_blockProgram = *blockProgramId;
+    }
+    else {
+        GLuint program = glCreateProgram();
+        glAttachShader(
             program,
             compileShader(
-                gl,
                 parsegraph_BlockPainter_VertexShader,
-                gl.VERTEX_SHADER
+                GL_VERTEX_SHADER
             )
         );
 
-        var fragProgram = parsegraph_BlockPainter_FragmentShader;
-        // OES_standard_derivatives looks worse on FF.
-        if(
-        navigator.userAgent.indexOf("Firefox") == -1 &&
-        gl.getExtension("OES_standard_derivatives") != null) {
-            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
-        }
+        const char* fragProgram = parsegraph_BlockPainter_FragmentShader;
 
         // For development.
-   //     gl.getExtension("OES_standard_derivatives");
   //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
 //       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
 //        fragProgram = parsegraph_BlockPainter_SquareFragmentShader;
 //fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
 
-        gl.attachShader(
+        glAttachShader(
             program,
             compileShader(
-                gl,
                 fragProgram,
-                gl.FRAGMENT_SHADER
+                GL_FRAGMENT_SHADER
             )
         );
 
-        gl.linkProgram(program);
-        if(!gl.getProgramParameter(
-            program, gl.LINK_STATUS
-        )) {
-            throw new Error("'" + shaderName + "' shader program failed to link.");
+        glLinkProgram(program);
+        GLint linkStatus;
+        glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+        if(linkStatus != GL_TRUE) {
+            fprintf(stderr, "'%s' shader program failed to link.\n", shaderName);
+            abort();
         }
 
-        shaders[shaderName] = program;
+        GLuint* progId = apr_palloc(surface->pool, sizeof(GLuint));
+        *progId = program;
+        apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, progId);
+        painter->_blockProgram = program;
     }
-    this._blockProgram = shaders[shaderName];
 
-    // Prepare attribute buffers.
-    this._blockBuffer = parsegraph_createPagingBuffer(
-        this._gl, this._blockProgram
-    );
-    this.a_position = this._blockBuffer.defineAttrib("a_position", 2);
-    this.a_texCoord = this._blockBuffer.defineAttrib("a_texCoord", 2);
-    this.a_color = this._blockBuffer.defineAttrib("a_color", 4);
-    this.a_borderColor = this._blockBuffer.defineAttrib("a_borderColor", 4);
-    this.a_borderRoundedness = this._blockBuffer.defineAttrib("a_borderRoundedness", 1);
-    this.a_borderThickness = this._blockBuffer.defineAttrib("a_borderThickness", 1);
-    this.a_aspectRatio = this._blockBuffer.defineAttrib("a_aspectRatio", 1);
+    // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
+    painter->_blockBuffer = 0;
+    painter->_numBlocks = 0;
+    painter->_numFaces = 0;
+    painter->_numVertices = 0;
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this._blockProgram, "u_world"
+    painter->u_world = glGetUniformLocation(
+        painter->_blockProgram, "u_world"
     );
 
     // Setup initial uniform values.
-    this._backgroundColor = parsegraph_createColor(1, 1, 1, .15);
+    parsegraph_Color_SetRGBA(painter->_backgroundColor, 1, 1, 1, .15);
+    parsegraph_Color_SetRGBA(painter->_borderColor, 1, 1, 1, 1);
 
-    this._borderColor = parsegraph_createColor(
-        parsegraph_createColor(1, 1, 1, 1)
-    );
+    parsegraph_Rect_set(painter->_bounds, 0, 0, 0, 0);
 
-    this._blockBuffer.addPage();
-    this._bounds = null;
+    painter->a_position = glGetAttribLocation(painter->_blockProgram, "a_position");
+    painter->a_texCoord = glGetAttribLocation(painter->_blockProgram, "a_texCoord");
+    painter->a_color = glGetAttribLocation(painter->_blockProgram, "a_color");
+    painter->a_borderColor = glGetAttribLocation(painter->_blockProgram, "a_borderColor");
+    painter->a_borderRoundedness = glGetAttribLocation(painter->_blockProgram, "a_borderRoundedness");
+    painter->a_borderThickness = glGetAttribLocation(painter->_blockProgram, "a_borderThickness");
+    painter->a_aspectRatio = glGetAttribLocation(painter->_blockProgram, "a_aspectRatio");
+
+    // Position: 2 * 4 (two floats)  0-7
+    // TexCoord: 2 * 4 (two floats)  8-15
+    // Color:    4 * 4 (four floats) 16-31
+    // BorColor: 4 * 4 (four floats) 32-47
+    // BorRound: 1 * 4 (one float)   48-51
+    // BorThick: 1 * 4 (one float)   52-55
+    // AspectRa: 1 * 4 (one float)   56-59
+    painter->_stride = 60;
+    painter->_itemBuffer = apr_palloc(surface->pool, painter->_stride);
+
+    return painter;
 };
 
-parsegraph_BlockPainter.prototype.bounds = function()
+float* parsegraph_BlockPainter_bounds(parsegraph_BlockPainter* painter)
 {
-    return this._bounds;
+    return painter->_bounds;
+}
+
+float* parsegraph_BlockPainter_borderColor(parsegraph_BlockPainter* painter)
+{
+    return painter->_borderColor;
 };
 
-parsegraph_BlockPainter.prototype.borderColor = function()
+void parsegraph_BlockPainter_setBorderColor(parsegraph_BlockPainter* painter, float* borderColor)
 {
-    return this._borderColor;
+    parsegraph_Color_copy(painter->_borderColor, borderColor);
 };
 
-parsegraph_BlockPainter.prototype.setBorderColor = function(borderColor)
+float* parsegraph_BlockPainter_backgroundColor(parsegraph_BlockPainter* painter)
 {
-    this._borderColor = borderColor;
+    return painter->_backgroundColor;
 };
 
-parsegraph_BlockPainter.prototype.backgroundColor = function()
+void parsegraph_BlockPainter_setBackgroundColor(parsegraph_BlockPainter* painter, float* backgroundColor)
 {
-    return this._backgroundColor;
+    parsegraph_Color_copy(painter->_backgroundColor, backgroundColor);
 };
 
-parsegraph_BlockPainter.prototype.setBackgroundColor = function(backgroundColor)
+void parsegraph_BlockPainter_initBuffer(parsegraph_BlockPainter* painter, unsigned int numBlocks)
 {
-    this._backgroundColor = backgroundColor;
-};
-
-parsegraph_BlockPainter.prototype.drawBlock = function(
-    cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
-{
-    if(!this._bounds) {
-        this._bounds = new parsegraph_Rect(cx, cy, width, height);
+    if(painter->_numBlocks == numBlocks) {
+        // Same number of blocks, so just reset the counters and overwrite.
+        painter->_numVertices = 0;
+        painter->_numFaces = 0;
+        return;
     }
-    else {
-        this._bounds.include(cx, cy, width, height);
+    if(painter->_blockBuffer) {
+        parsegraph_BlockPainter_clear(painter);
     }
+    glGenBuffers(1, &painter->_blockBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+    glBufferData(GL_ARRAY_BUFFER, painter->_stride*6*numBlocks, painter->_itemBuffer, GL_STATIC_DRAW);
+    painter->_numBlocks = numBlocks;
+};
 
-    //console.log(cx + ", " + cy + ", " + width + ", " + height);
-    // Append position data.
-    this._blockBuffer.appendData(
-        this.a_position,
-        parsegraph_generateRectangleVertices(
-            cx, cy, width, height
-        )
-    );
+void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter)
+{
+    if(!painter->_blockBuffer) {
+        return;
+    }
+    glDeleteBuffers(1, &painter->_blockBuffer);
+    painter->_blockBuffer = 0;
+    parsegraph_Rect_set(painter->_bounds, 0, 0, 0, 0);
+    painter->_numBlocks = 0;
+    painter->_numFaces = 0;
+    painter->_numVertices = 0;
+};
 
-    // Append texture coordinate data.
-    this._blockBuffer.appendData(
-        this.a_texCoord,
-        parsegraph_generateRectangleTexcoords()
-    );
+void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
+    float cx, float cy, float width, float height, float borderRoundedness, float borderThickness, float borderScale)
+{
+    if(painter->_numFaces / 2 >= painter->_numBlocks) {
+        fprintf(stderr, "BlockPainter is full and cannot draw any more blocks.\n");
+        abort();
+    }
+    if(!painter->_blockBuffer) {
+        fprintf(stderr, "BlockPainter.initBuffer(numBlocks) must be called first.\n");
+        abort();
+    }
+    parsegraph_Rect_include(painter->_bounds, cx, cy, width, height);
+
+    float* buf = painter->_itemBuffer;
 
     // Append color data.
-    for(var k = 0; k < 3 * 2; ++k) {
-        this._blockBuffer.appendData(
-            this.a_color,
-            this.backgroundColor().r(),
-            this.backgroundColor().g(),
-            this.backgroundColor().b(),
-            this.backgroundColor().a()
-        );
+    memcpy(buf + 4, parsegraph_BlockPainter_backgroundColor(painter), sizeof(float)*4);
 
-        // Append border color data.
-        this._blockBuffer.appendData(
-            this.a_borderColor,
-            this.borderColor().r(),
-            this.borderColor().g(),
-            this.borderColor().b(),
-            this.borderColor().a()
-        );
+    // Append border color data.
+    memcpy(buf + 8, parsegraph_BlockPainter_borderColor(painter), sizeof(float)*4);
 
-        // Append border radius data.
-        if(height < width) {
-            this._blockBuffer.appendData(
-                this.a_borderRoundedness,
-                borderScale * borderRoundedness / height
-            );
-            this._blockBuffer.appendData(
-                this.a_borderThickness,
-                borderScale * borderThickness / height
-            );
-        }
-        else {
-            // height > width
-            this._blockBuffer.appendData(
-                this.a_borderRoundedness,
-                borderScale * borderRoundedness / width
-            );
-            this._blockBuffer.appendData(
-                this.a_borderThickness,
-                borderScale * borderThickness / width
-            );
-        }
-
-        this._blockBuffer.appendData(
-            this.a_aspectRatio,
-            height / width
-        );
+    // Append border radius data.
+    if(height < width) {
+        buf[12] = borderScale * borderRoundedness / height;
+        buf[13] = borderScale * borderThickness / height;
     }
+    else {
+        // height > width
+        buf[12] = borderScale * borderRoundedness / width;
+        buf[13] = borderScale * borderThickness / width;
+    }
+    buf[14] = height/width;
+
+    float stride = painter->_stride;
+
+    glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+
+    // Append position and texture coordinate data.
+    buf[0] = cx - width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 0;
+    buf[3] = 0;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    buf[0] = cx + width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 1;
+    buf[3] = 0;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    buf[0] = cx + width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 1;
+    buf[3] = 1;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    buf[0] = cx - width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 0;
+    buf[3] = 0;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    buf[0] = cx + width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 1;
+    buf[3] = 1;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    buf[0] = cx - width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 0;
+    buf[3] = 1;
+    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+
+    //printf("%d verts\n", painter->_numVertices);
+    painter->_numFaces += 2;
 };
 
-parsegraph_BlockPainter.prototype.clear = function()
+void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* world)
 {
-    this._blockBuffer.clear();
-    this._blockBuffer.addPage();
-    this._bounds = null;
-};
+    if(!painter->_numFaces) {
+        return;
+    }
+    //printf("Rendering %d vertices\n", painter->_numVertices);
 
-parsegraph_BlockPainter.prototype.render = function(world)
-{
     // Render blocks.
-    this._gl.useProgram(
-        this._blockProgram
-    );
-    this._gl.uniformMatrix3fv(
-        this.u_world,
-        false,
-        world
-    );
-    return this._blockBuffer.renderPages();
-};
+    glUseProgram(painter->_blockProgram);
+    glUniformMatrix3fv(painter->u_world, 1, 0, world);
+
+    glEnableVertexAttribArray(painter->a_position);
+    glEnableVertexAttribArray(painter->a_texCoord);
+    glEnableVertexAttribArray(painter->a_color);
+    glEnableVertexAttribArray(painter->a_borderColor);
+    glEnableVertexAttribArray(painter->a_borderRoundedness);
+    glEnableVertexAttribArray(painter->a_borderThickness);
+    glEnableVertexAttribArray(painter->a_aspectRatio);
+
+    float stride = painter->_stride;
+    if(!painter->_blockBuffer) {
+        fprintf(stderr, "No block buffer to render; BlockPainter.initBuffer(numBlocks) must be called first.\n");
+        abort();
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+
+    // Position: 2 * 4 (two floats)  0-7
+    // TexCoord: 2 * 4 (two floats)  8-15
+    // Color:    4 * 4 (four floats) 16-31
+    // BorColor: 4 * 4 (four floats) 32-47
+    // BorRound: 1 * 4 (one float)   48-51
+    // BorThick: 1 * 4 (one float)   52-55
+    // AspectRa: 1 * 4 (one float)   56-59
+    glVertexAttribPointer(painter->a_position,          2, GL_FLOAT, 0, stride, (GLvoid*)0);
+    glVertexAttribPointer(painter->a_texCoord,          2, GL_FLOAT, 0, stride, (GLvoid*)8);
+    glVertexAttribPointer(painter->a_color,             4, GL_FLOAT, 0, stride, (GLvoid*)16);
+    glVertexAttribPointer(painter->a_borderColor,       4, GL_FLOAT, 0, stride, (GLvoid*)32);
+    glVertexAttribPointer(painter->a_borderRoundedness, 1, GL_FLOAT, 0, stride, (GLvoid*)48);
+    glVertexAttribPointer(painter->a_borderThickness,   1, GL_FLOAT, 0, stride, (GLvoid*)52);
+    glVertexAttribPointer(painter->a_aspectRatio,       1, GL_FLOAT, 0, stride, (GLvoid*)56);
+
+    glDrawArrays(GL_TRIANGLES, 0, painter->_numVertices);
+
+    glDisableVertexAttribArray(painter->a_position);
+    glDisableVertexAttribArray(painter->a_texCoord);
+    glDisableVertexAttribArray(painter->a_color);
+    glDisableVertexAttribArray(painter->a_borderColor);
+    glDisableVertexAttribArray(painter->a_borderRoundedness);
+    glDisableVertexAttribArray(painter->a_borderThickness);
+    glDisableVertexAttribArray(painter->a_aspectRatio);
+}

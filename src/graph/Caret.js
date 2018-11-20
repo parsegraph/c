@@ -243,7 +243,7 @@ parsegraph_Caret.prototype.at = function(inDirection)
 {
     inDirection = parsegraph_readNodeDirection(inDirection);
     if(this.node().hasNode(inDirection)) {
-        return this.node().noteAt(inDirection).type();
+        return this.node().nodeAt(inDirection).type();
     }
 };
 

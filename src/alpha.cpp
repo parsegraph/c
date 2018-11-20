@@ -153,18 +153,23 @@ virtual void initializeGL() {
 virtual void resizeGL(int w, int h) {
     this->w = w;
     this->h = h;
+    if(surface) {
+        parsegraph_Surface_setDisplaySize(surface, w, h);
+    }
 }
 virtual void paintGL() {
     struct alpha_RenderData rd;
     rd.width = w;
     rd.height = h;
     if(!widget) {
-        surface = parsegraph_Surface_new(this);
+        surface = parsegraph_Surface_new(pool, this);
         float bg[] = {0, 47.0/255, 57.0/255, 1.0};
         parsegraph_Surface_setBackground(surface, bg);
+        parsegraph_Surface_setDisplaySize(surface, w, h);
         widget = alpha_GLWidget_new(surface);
         parsegraph_Surface_paint(surface, &rd);
     }
+    parsegraph_Surface_setDisplaySize(surface, w, h);
     alpha_GLWidget_Tick(widget, ((float)frameElapsedTime.restart())/1000.0);
     if(!frozen){
         parsegraph_Surface_paint(surface, &rd);

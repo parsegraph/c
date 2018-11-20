@@ -144,7 +144,7 @@ parsegraph_Color.prototype.interpolate = function(other, interp) {
     var C1 = Math.sqrt(Math.pow(a1, 2) + Math.pow(b1, 2));
     var H1 = Math.atan2(a1, b1);
     if(H1 < 0) {
-        H1 + 2 * Math.PI;
+        H1 += 2 * Math.PI;
     }
 
     //console.log("L=" + L1 + ", C1=" + C1 + ", H1=" + H1);
@@ -185,14 +185,14 @@ parsegraph_Color.prototype.interpolate = function(other, interp) {
     var C2 = Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2));
     var H2 = Math.atan2(a2, b2);
     if(H2 < 0) {
-        H2 + 2 * Math.PI;
+        H2 += 2 * Math.PI;
     }
-    console.log("L2=" + L2 + ", C2=" + C2 + ", H2=" + H2);
+    //console.log("L2=" + L2 + ", C2=" + C2 + ", H2=" + H2);
 
     var L3 = L1 + (L2 - L1) * interp;
     var C3 = C1 + (C2 - C1) * interp;
     var H3 = H1 + (H2 - H1) * interp;
-    console.log("L3=" + L3 + ", C3=" + C3 + ", H3=" + H3);
+    //console.log("L3=" + L3 + ", C3=" + C3 + ", H3=" + H3);
 
     var a3 = C3 * Math.cos(H3);
     var b3 = C3 * Math.sin(H3);

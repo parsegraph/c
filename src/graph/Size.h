@@ -14,5 +14,6 @@ void parsegraph_Size_setWidth(float* size, float width);
 float parsegraph_Size_height(float* size);
 void parsegraph_Size_setHeight(float* size, float height);
 void parsegraph_Size_set(float* size, float w, float h);
+int parsegraph_Size_toString(float* size, char* buf, size_t len);
 
 #endif // parsegraph_Size_INCLUDED

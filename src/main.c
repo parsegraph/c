@@ -134,7 +134,7 @@ render_stuff(int width, int height)
     rd.width = width;
     rd.height = height;
     if(!widget) {
-        surface = parsegraph_Surface_new(0);
+        surface = parsegraph_Surface_new(pool, 0);
         widget = alpha_GLWidget_new(surface);
         parsegraph_Surface_paint(surface, &rd);
     }

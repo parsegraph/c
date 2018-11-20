@@ -723,7 +723,7 @@ void parsegraph_Extent_boundingValues(struct parsegraph_Extent* extent, float* t
 {
     if(totalLength) {
         *totalLength = 0;
-    }   
+    }
     if(minSize) {
         *minSize = NAN;
     }

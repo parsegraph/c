@@ -344,6 +344,8 @@ parsegraph_World.prototype.paint = function(timeout)
         parsegraph_NODES_PAINTED = 0;
         parsegraph_PAINT_START = null;
     }
+
+    return true;
 };
 
 parsegraph_World.prototype.render = function(world)

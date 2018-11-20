@@ -161,15 +161,17 @@ virtual void paintGL() {
     rd.width = w;
     rd.height = h;
     if(!widget) {
-        surface = parsegraph_Surface_new(this);
+        surface = parsegraph_Surface_new(pool, this);
+        parsegraph_Surface_setDisplaySize(surface, w, h);
         float bg[] = {0, 47.0/255, 57.0/255, 1.0};
         parsegraph_Surface_setBackground(surface, bg);
         widget = alpha_WeetCubeWidget_new(surface);
         parsegraph_Surface_paint(surface, &rd);
     }
     float e = ((float)frameElapsedTime.restart())/1000.0f;
-    alpha_WeetCubeWidget_Tick(widget, e, frozen);
 
+    parsegraph_Surface_setDisplaySize(surface, w, h);
+    alpha_WeetCubeWidget_Tick(widget, e, frozen);
     if(!frozen){
         parsegraph_Surface_paint(surface, &rd);
     }

@@ -48,6 +48,11 @@ parsegraph_CameraBox.prototype.removeCamera = function(name)
     this.scheduleRepaint();
 };
 
+parsegraph_CameraBox.prototype.scheduleRepaint = function()
+{
+    this._graph.scheduleRepaint();
+};
+
 parsegraph_CameraBox.prototype.paint = function()
 {
     if(this._showCameraBoxes && this._cameraBoxDirty) {
@@ -85,4 +90,9 @@ parsegraph_CameraBox.prototype.render = function(world)
         );
         this._cameraBoxPainter.render(world);
     }
+};
+
+parsegraph_CameraBox.prototype.shaders = function()
+{
+    return this._shaders;
 };

@@ -36,4 +36,3 @@ parsegraph_Float32List.prototype.slice = function()
 {
     return this.data.subarray(0, this._length);
 }
-

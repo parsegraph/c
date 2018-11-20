@@ -136,8 +136,11 @@ render_stuff(int width, int height)
     if(!widget) {
         surface = parsegraph_Surface_new(0);
         widget = alpha_GLWidget_new(surface);
+        parsegraph_Surface_setDisplaySize(width, height);
         parsegraph_Surface_paint(surface, &rd);
     }
+
+    parsegraph_Surface_setDisplaySize(width, height);
 
     float t = alpha_GetTime();
     float elapsed = t - start;

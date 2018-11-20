@@ -766,7 +766,7 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     if(!this.hasNode(inDirection)) {
         return;
     }
-    // Connect the node.
+    // Disconnect the node.
     var neighbor = this._neighbors[inDirection];
     var disconnected = neighbor.node;
     neighbor.node = null;
@@ -1783,7 +1783,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
         }
         var child = this.nodeAt(childDirection);
-        var reversedDirection = parsegraph_reverseNodeDirection(childDirection)
+        var reversedDirection = parsegraph_reverseNodeDirection(childDirection);
 
         // Save alignment parameters.
         this._neighbors[childDirection].alignmentOffset = alignment;
@@ -2124,7 +2124,8 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
                 * (secondNodeAlignment - secondNode.extentOffsetAt(firstDirection))
                 - (firstNodeAlignment - firstNode.extentOffsetAt(secondDirection)),
                 true,
-                this.scaleAt(secondDirection) / this.scaleAt(firstDirection)
+                this.scaleAt(secondDirection) / this.scaleAt(firstDirection),
+                0
             );
         separationBetweenChildren *= this.scaleAt(firstDirection);
 

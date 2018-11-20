@@ -294,4 +294,3 @@ ON	Other Neutrals
 13	Lowercase Mapping	informative	Similar to Uppercase mapping
 14	Titlecase Mapping	informative	Similar to Uppercase mapping
 */
-

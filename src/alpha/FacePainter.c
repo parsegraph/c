@@ -41,7 +41,6 @@ struct alpha_FacePainter* alpha_FacePainter_new(apr_pool_t* pool)
         painter->faceProgram,
         compileShader(
             alpha_FacePainter_VertexShader,
-            strlen(alpha_FacePainter_VertexShader),
             GL_VERTEX_SHADER
         )
     );
@@ -50,7 +49,6 @@ struct alpha_FacePainter* alpha_FacePainter_new(apr_pool_t* pool)
         painter->faceProgram,
         compileShader(
             alpha_FacePainter_FragmentShader,
-            strlen(alpha_FacePainter_FragmentShader),
             GL_FRAGMENT_SHADER
         )
     );

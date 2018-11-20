@@ -375,7 +375,6 @@ parsegraph_SingleGraphApplication.prototype.renderTimer = function() {
 };
 
 parsegraph_SingleGraphApplication.prototype.onRender = function() {
-    //console.log("Rendering");
     var graph = this.graph();
     var surface = this.surface();
 

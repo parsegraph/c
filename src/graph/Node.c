@@ -1,4 +1,6 @@
 #include "Node.h"
+#include "Status.h"
+#include "Color.h"
 #include "initialize.h"
 #include "LayoutState.h"
 #include "LayoutPreference.h"
@@ -7,7 +9,13 @@
 #include "NodeFit.h"
 #include "log.h"
 #include "PaintGroup.h"
+#include "Graph.h"
 #include <stdlib.h>
+#include <stdarg.h>
+#include "../die.h"
+#include "../timing.h"
+#include "../parsegraph_math.h"
+#include "Label.h"
 
 int parsegraph_Node_COUNT = 0;
 
@@ -33,14 +41,16 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     node->_changeListenerThisArg = 0;
     node->_type = newType;
     node->_style = parsegraph_style(node->_type);
-    node->_label = 0;
-    node->_labelX = 0;
-    node->_labelY = 0;
+    node->_realLabel = 0;
+    node->_labelPos[0] = 0;
+    node->_labelPos[1] = 0;
     node->_rightToLeft = parsegraph_RIGHT_TO_LEFT;
 
     node->_value = 0;
     node->_selected = 0;
     node->_ignoresMouse = 0;
+
+    parsegraph_Color_SetRGBA(node->_brightnessColor, 0, 0, 0, 0);
 
     node->_prevTabNode = 0;
     node->_nextTabNode = 0;
@@ -75,14 +85,12 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     }
 
     if(fromNode != 0) {
-        // A parent node was provided; this node is a child.
         if(!parsegraph_isNodeDirection(parentDirection) ||
             parsegraph_NULL_NODE_DIRECTION == parentDirection
         ) {
-            parsegraph_log("A parent node was provided; this node is a child.");
-            parsegraph_Node_destroy(node);
-            return 0;
+            parsegraph_die("Invalid parent direction given.");
         }
+        // A parent node was provided; this node is a child.
         node->_layoutPreference = parsegraph_PREFER_PERPENDICULAR_AXIS;
         node->_parentDirection = parentDirection;
         node->_neighbors[parentDirection].node = fromNode;
@@ -108,6 +116,37 @@ void parsegraph_chainTab(parsegraph_Node* a, parsegraph_Node* b, parsegraph_Node
     if(b) {
         b->_prevTabNode = a;
     }
+}
+
+void parsegraph_chainAllTabs(apr_pool_t* pool, ...)
+{
+    va_list ap;
+    va_start(ap, 0);
+
+    apr_pool_t* tpool;
+    apr_pool_create(&tpool, pool);
+
+    parsegraph_ArrayList* al = parsegraph_ArrayList_new(tpool);
+
+    for(;;) {
+        parsegraph_Node* node = va_arg(ap, parsegraph_Node*);
+        if(!node) {
+            break;
+        }
+        parsegraph_ArrayList_push(al, node);
+    }
+
+    if(parsegraph_ArrayList_length(al) > 2) {
+        parsegraph_Node* firstNode = parsegraph_ArrayList_at(al, 0);
+        parsegraph_Node* lastNode = parsegraph_ArrayList_at(al, parsegraph_ArrayList_length(al) - 1);
+
+        for(int i = 0; i <= parsegraph_ArrayList_length(al) - 2; ++i) {
+            parsegraph_chainTab(parsegraph_ArrayList_at(al, i), parsegraph_ArrayList_at(al, i + 1), 0);
+        }
+        parsegraph_chainTab(lastNode, firstNode, 0);
+    }
+
+    apr_pool_destroy(tpool);
 }
 
 void parsegraph_Node_destroy(parsegraph_Node* node)
@@ -156,7 +195,7 @@ float parsegraph_Node_scale(parsegraph_Node* node)
  *
  * This value is commutative with child scales.
  */
-float parsegraph_Node_setScale(parsegraph_Node* node, float scale)
+void parsegraph_Node_setScale(parsegraph_Node* node, float scale)
 {
     node->_scale = scale;
     parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);
@@ -169,7 +208,7 @@ float parsegraph_Node_setScale(parsegraph_Node* node, float scale)
  * If rightToLeft() == true, parsegraph_FORWARD goes to the left.
  * If rightToLeft() == false, parsegraph_FORWARD goes to the right.
  */
-float parsegraph_Node_setRightToLeft(parsegraph_Node* node, float val)
+void parsegraph_Node_setRightToLeft(parsegraph_Node* node, float val)
 {
     node->_rightToLeft = !!val;
     parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);
@@ -192,25 +231,27 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
         return;
     }
 
+    apr_pool_t* cpool;
+    apr_pool_create(&cpool, 0);
+
     // Retrieve a stack of nodes to determine the absolute position.
-    int nodeList[1024];
-    int nodeListI = 0;
+    parsegraph_ArrayList* nodeList = parsegraph_ArrayList_new(cpool);
     float parentScale = 1.0;
     float scale = 1.0;
-    while(1) {
+    for(;;) {
         if(parsegraph_Node_isRoot(node)) {
             node->_absoluteXPos = 0;
             node->_absoluteYPos = 0;
             break;
         }
 
-        nodeList[nodeListI++] = parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node));
+        parsegraph_ArrayList_push(nodeList, (void*)(long)parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node)));
         node = parsegraph_Node_nodeParent(node);
     }
 
     // nodeList contains [directionToThis, directionToParent, ..., directionFromRoot];
-    for(int i = nodeListI; i >= 0; --i) {
-        int directionToChild = nodeList[i];
+    for(int i = parsegraph_ArrayList_length(nodeList) - 1; i >= 0; --i) {
+        int directionToChild = (long)parsegraph_ArrayList_at(nodeList, i);
 
         node->_absoluteXPos += parsegraph_Node_x(node) * parentScale;
         node->_absoluteYPos += parsegraph_Node_y(node) * parentScale;
@@ -257,9 +298,15 @@ void parsegraph_Node_setPosAt(parsegraph_Node* node, int inDirection, float x, f
     node->_neighbors[inDirection].yPos = y;
 };
 
-static void reparenter(parsegraph_PaintGroup* childPaintGroup, void* extra)
+static void reparenter(void* extra, parsegraph_PaintGroup* childPaintGroup)
 {
     parsegraph_reparentPaintGroup(childPaintGroup, extra);
+}
+
+static void addChild(void* d, parsegraph_PaintGroup* childPaintGroup)
+{
+    parsegraph_PaintGroup* paintGroup = d;
+    parsegraph_PaintGroup_addChild(paintGroup, childPaintGroup);
 }
 
 void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup* paintGroup)
@@ -285,8 +332,8 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
     // Remove the paint group's entry in the parent.
     if(!parsegraph_Node_isRoot(node)) {
         parsegraph_PaintGroup* parentsPaintGroup = parsegraph_Node_findPaintGroup(parsegraph_Node_parentNode(node));
-        for(var i in parentsPaintGroup._childPaintGroups) {
-            parsegraph_PaintGroup* childGroup = parentsPaintGroup._childPaintGroups[i];
+        for(int i = 0; i < parsegraph_ArrayList_length(parentsPaintGroup->_childPaintGroups); ++i) {
+            parsegraph_PaintGroup* childGroup = parsegraph_ArrayList_at(parentsPaintGroup->_childPaintGroups, i);
             if(childGroup != node->_paintGroup) {
                 // Some other child that's not us, so just continue.
                 continue;
@@ -294,24 +341,22 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
 
             // This child is our current paint group, so replace it with the new.
             if(paintGroup) {
-                parentsPaintGroup._childPaintGroups[i] = paintGroup;
+                parsegraph_ArrayList_replace(parentsPaintGroup->_childPaintGroups, i, paintGroup);
             }
             else {
                 // The new group is no group.
-                parentsPaintGroup._childPaintGroups.splice(i, 1);
+                parsegraph_ArrayList_splice(parentsPaintGroup->_childPaintGroups, i, 1);
             }
         }
     }
 
     // Copy the current paint group's children, if present.
     if(paintGroup) {
-        var childGroups = paintGroup._childPaintGroups;
-        childGroups.push.apply(childGroups, this._paintGroup._childPaintGroups);
+        parsegraph_ArrayList* childGroups = paintGroup->_childPaintGroups;
+        parsegraph_ArrayList_concat(childGroups, node->_paintGroup->_childPaintGroups);
     }
     else {
-        parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
-            paintGroup.addChild(childPaintGroup);
-        });
+        parsegraph_findChildPaintGroups(node, addChild, paintGroup);
     }
 
     parsegraph_PaintGroup_clear(node->_paintGroup);
@@ -320,8 +365,8 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
 
 void parsegraph_reparentPaintGroup(parsegraph_PaintGroup* paintGroup, parsegraph_PaintGroup* parentPaintGroup)
 {
-    parentPaintGroup->_childPaintGroups.push(paintGroup);
-    paintGroup.assignParent(parentPaintGroup);
+    parsegraph_ArrayList_push(parentPaintGroup->_childPaintGroups, paintGroup);
+    parsegraph_PaintGroup_assignParent(paintGroup, parentPaintGroup);
 }
 
 /**
@@ -353,13 +398,13 @@ parsegraph_Graph* parsegraph_Node_graph(parsegraph_Node* node)
 /**
  * Returns the color that should be used as the background color for inward nodes.
  */
-parsegraph_Color* parsegraph_Node_backdropColor(parsegraph_Node* node)
+float* parsegraph_Node_backdropColor(parsegraph_Node* node)
 {
     if(parsegraph_Node_isSelected(node)) {
         return parsegraph_Node_blockStyle(node)->backgroundColor;
     }
     return parsegraph_Node_blockStyle(node)->selectedBackgroundColor;
-    while(1) {
+    for(;;) {
         if(parsegraph_Node_isRoot(node)) {
             return parsegraph_BACKGROUND_COLOR;
         }
@@ -371,9 +416,10 @@ parsegraph_Color* parsegraph_Node_backdropColor(parsegraph_Node* node)
         }
         node = parsegraph_Node_parentNode(node);
     }
+    parsegraph_die("Unreachable");
 }
 
-void parsegraph_Node_setClickListener(parsegraph_Node* node, void(*listener)(const char*, void*), void* thisArg)
+void parsegraph_Node_setClickListener(parsegraph_Node* node, int(*listener)(const char*, void*), void* thisArg)
 {
     if(!listener) {
         node->_clickListener = 0;
@@ -386,6 +432,36 @@ void parsegraph_Node_setClickListener(parsegraph_Node* node, void(*listener)(con
         node->_clickListenerThisArg = thisArg;
     }
 }
+
+void parsegraph_Node_setChangeListener(parsegraph_Node* node, void(*listener)(void*, parsegraph_Node*), void* thisArg)
+{
+    if(!listener) {
+        node->_changeListener = 0;
+    }
+    else {
+        if(!thisArg) {
+            thisArg = node;
+        }
+        node->_changeListener = listener;
+        node->_changeListenerThisArg = thisArg;
+    }
+}
+
+int parsegraph_Node_isClickable(parsegraph_Node* node)
+{
+    int hasLabel = node->_realLabel != 0 && !isnan(node->_labelPos[0]) && parsegraph_Label_editable(node->_realLabel);
+    return parsegraph_Node_type(node) == parsegraph_SLIDER || (parsegraph_Node_hasClickListener(node) || !parsegraph_Node_ignoresMouse(node)) || hasLabel;
+};
+
+void parsegraph_Node_setIgnoreMouse(parsegraph_Node* node, int value)
+{
+    node->_ignoresMouse = value;
+}
+
+int parsegraph_Node_ignoresMouse(parsegraph_Node* node)
+{
+    return node->_ignoresMouse;
+};
 
 int parsegraph_Node_hasClickListener(parsegraph_Node* node)
 {
@@ -401,7 +477,21 @@ int parsegraph_Node_click(parsegraph_Node* node, const char* button)
     return node->_clickListener(button, node->_clickListenerThisArg);
 }
 
-void parsegraph_Node_setKeyListener(parsegraph_Node* node, void(*listener)(cosnt char*, void*), void* thisArg)
+int parsegraph_Node_hasChangeListener(parsegraph_Node* node)
+{
+    return node->_changeListener != 0;
+}
+
+void parsegraph_Node_valueChanged(parsegraph_Node* node)
+{
+    // Invoke the listener.
+    if(!parsegraph_Node_hasChangeListener(node)) {
+        return;
+    }
+    return node->_changeListener(node->_changeListenerThisArg, node);
+}
+
+void parsegraph_Node_setKeyListener(parsegraph_Node* node, int(*listener)(const char*, void*), void* thisArg)
 {
     if(!listener) {
         node->_keyListener = 0;
@@ -440,7 +530,7 @@ void parsegraph_Node_setNodeFit(parsegraph_Node* node, int nodeFit)
     parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);
 }
 
-int parsegraph_Node_isRoot(parsegraph_Node* noode)
+int parsegraph_Node_isRoot(parsegraph_Node* node)
 {
     return node->_parentDirection == parsegraph_NULL_NODE_DIRECTION;
 }
@@ -508,194 +598,378 @@ parsegraph_Node* parsegraph_Node_nodeAt(parsegraph_Node* node, int atDirection)
     return node->_neighbors[atDirection].node;
 }
 
+struct AddNodeData {
+parsegraph_Node* node;
+parsegraph_ArrayList* ordering;
+int(*filterFunc)(void*, parsegraph_Node*);
+void* thisArg;
+};
+
+static void addNode(struct AddNodeData* and, int direction)
+{
+    parsegraph_Node* node = and->node;
+    // Do not add the parent.
+    if(!parsegraph_Node_isRoot(node) && parsegraph_Node_parentDirection(node) == direction) {
+        return;
+    }
+    // Add the node to the ordering if it exists and needs a layout.
+    if(parsegraph_Node_hasNode(node, direction)) {
+        parsegraph_Node* child = parsegraph_Node_nodeAt(node, direction);
+        if(and->filterFunc(and->thisArg, child)) {
+            parsegraph_ArrayList_push(and->ordering, child);
+        }
+    }
+}
+
+int parsegraph_Node_continueTraverse(parsegraph_NodeTraversal* nd)
+{
+    struct timespec t;
+    if(nd->timeout > 0) {
+        clock_gettime(CLOCK_REALTIME, &t);
+    }
+
+    for(;;) {
+        if(nd->i < 0) {
+            // Indicate completion.
+            return 0;
+        }
+        nd->actionFunc(nd->thisArg, parsegraph_ArrayList_at(nd->ordering, nd->i));
+        --nd->i;
+        if(nd->timeout > 0) {
+            struct timespec now;
+            clock_gettime(CLOCK_REALTIME, &now);
+            if(nd->timeout > 0 && parsegraph_timediffMs(&now, &t) > nd->timeout) {
+                return 1;
+            }
+        }
+    }
+    parsegraph_die("Unreachable");
+}
+
 /**
  * Iterates over this node and its children, calling actionFunc whenever
  * filterFunc is true.
  */
-void parsegraph_Node_traverse(parsegraph_Node* node, int(*filterFunc)(void*, parsegraph_Node*), void(*actionFunc)(void*,parsegraph_Node*), void* thisArg, int timeout)
+parsegraph_NodeTraversal* parsegraph_Node_traverse(parsegraph_Node* node, int(*filterFunc)(void*, parsegraph_Node*), void(*actionFunc)(void*,parsegraph_Node*), void* thisArg, int timeout)
 {
     // First, exit immediately if this node doesn't pass the given filter.
-    if(!filterFunc(thisArg, this)) {
-        return;
+    if(!filterFunc(thisArg, node)) {
+        return 0;
     }
 
-    var ordering = [this];
+    parsegraph_ArrayList* ordering = parsegraph_ArrayList_new(node->pool);
+    parsegraph_ArrayList_push(ordering, node);
 
-    var addNode = function(node, direction) {
-        // Do not add the parent.
-        if(!node.isRoot() && node.parentDirection() == direction) {
-            return;
-        }
-        // Add the node to the ordering if it exists and needs a layout.
-        if(node.hasNode(direction)) {
-            var child = node.nodeAt(direction);
-            if(filterFunc.call(thisArg, child)) {
-                ordering.push(child);
-            }
-        }
-    };
+    struct AddNodeData and;
+    and.ordering = ordering;
+    and.filterFunc = filterFunc;
+    and.thisArg = thisArg;
 
     // Build the node list.
-    for(var i = 0; i < ordering.length; ++i) {
-        var node = ordering[i];
-        addNode(node, parsegraph_INWARD);
-        addNode(node, parsegraph_DOWNWARD);
-        addNode(node, parsegraph_UPWARD);
-        addNode(node, parsegraph_BACKWARD);
-        addNode(node, parsegraph_FORWARD);
+    for(int i = 0; i < parsegraph_ArrayList_length(ordering); ++i) {
+        and.node = parsegraph_ArrayList_at(ordering, i);
+        addNode(&and, parsegraph_INWARD);
+        addNode(&and, parsegraph_DOWNWARD);
+        addNode(&and, parsegraph_UPWARD);
+        addNode(&and, parsegraph_BACKWARD);
+        addNode(&and, parsegraph_FORWARD);
     }
+
+
+    parsegraph_NodeTraversal ld;
+    ld.timeout = timeout;
+    ld.actionFunc = actionFunc;
+    ld.thisArg = thisArg;
+    ld.ordering = ordering;
+    ld.i = parsegraph_ArrayList_length(ordering) - 1;
 
     // Execute the action on allowed nodes.
-    var i = ordering.length - 1;
-    var loop = function() {
-        var t = new Date().getTime();
-        var pastTime = function() {
-            return timeout !== undefined && (new Date().getTime() - t > timeout);
-        };
-
-        while(true) {
-            if(i < 0) {
-                // Indicate completion.
-                return null;
-            }
-            actionFunc.call(thisArg, ordering[i]);
-            --i;
-            if(pastTime()) {
-                return loop;
-            }
-        }
+    if(parsegraph_Node_continueTraverse(&ld) != 0) {
+        // Completed action before timeout.
+        return 0;
     }
 
-    return loop();
+    // Did not complete action, so return the continuation.
+    struct parsegraph_NodeTraversal* anld = apr_palloc(node->pool, sizeof(ld));
+    memcpy(anld, &ld, sizeof(ld));
+    return anld;
 }
 
 parsegraph_Node* parsegraph_Node_spawnNode(parsegraph_Node* node, int spawnDirection, int newType)
 {
-    // Ensure the node can be spawned in the given direction.
-    if(spawnDirection == parsegraph_OUTWARD) {
-        throw new Error("By rule, nodes cannot be spawned in the outward direction.");
-    }
-    if(spawnDirection == parsegraph_NULL_NODE_DIRECTION) {
-        throw new Error("Nodes cannot be spawned in the null node direction.");
-    }
-    if(spawnDirection == this.parentDirection()) {
-        throw new Error("Cannot spawn in a node in the parent's direction (" + parsegraph_nameNodeDirection(spawnDirection));
-    }
-    if(this.hasNode(spawnDirection)) {
-        throw new Error("Cannot spawn in a node in the already occupied " + parsegraph_nameNodeDirection(spawnDirection) + " direction. Parent is in the " + parsegraph_nameNodeDirection(this.parentDirection()) + " direction.");
-    }
-    if(this.type() == parsegraph_SLIDER) {
-        throw new Error("Sliders cannot have child nodes.");
-    }
-    if(this.type() == parsegraph_SCENE && spawnDirection == parsegraph_INWARD) {
-        throw new Error("Scenes cannot have inward nodes.");
-    }
-
-    // Update the neighbor record.
-    var neighbor = this._neighbors[spawnDirection];
-
-    // Looks good; create the node.
-    var node = new parsegraph_Node(
-        newType,
-        this,
-        parsegraph_reverseNodeDirection(spawnDirection)
-    );
-    neighbor.node = node;
-
-    // Allow alignments to be set before children are spawned.
-    if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
-        neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
-    }
-
-    this.layoutWasChanged(spawnDirection);
+    parsegraph_Node* created = parsegraph_Node_connectNode(node, spawnDirection, parsegraph_Node_new(node->pool, newType, 0, parsegraph_NULL_NODE_DIRECTION));
 
     // Use the node fitting of the parent.
-    node.setNodeFit(this.nodeFit());
+    parsegraph_Node_setNodeFit(created, parsegraph_Node_nodeFit(node));
 
-    return node;
-};
+    return created;
+}
 
-parsegraph_Node.prototype.connectNode = function(inDirection, node)
+parsegraph_Node* parsegraph_Node_connectNode(parsegraph_Node* parentNode, int inDirection, parsegraph_Node* nodeToConnect)
 {
     // Ensure the node can be connected in the given direction.
     if(inDirection == parsegraph_OUTWARD) {
-        throw new Error("By rule, nodes cannot be spawned in the outward direction.");
+        parsegraph_die("By rule, nodes cannot be spawned in the outward direction.");
     }
     if(inDirection == parsegraph_NULL_NODE_DIRECTION) {
-        throw new Error("Nodes cannot be spawned in the null node direction.");
+        parsegraph_die("Nodes cannot be spawned in the null node direction.");
     }
-    if(inDirection == this.parentDirection()) {
-        throw new Error("Cannot connect a node in the parent's direction (" + parsegraph_nameNodeDirection(inDirection));
+    if(inDirection == parsegraph_Node_parentDirection(parentNode)) {
+        parsegraph_die("Cannot connect a node in the parent's direction (%s)", parsegraph_nameNodeDirection(inDirection));
     }
-    if(this.hasNode(inDirection)) {
-        throw new Error("Cannot connect a node in the already occupied " + parsegraph_nameNodeDirection(inDirection) + " direction.");
+    if(parsegraph_Node_hasNode(parentNode, inDirection)) {
+        parsegraph_die("Cannot connect a node in the already occupied %s direction.", parsegraph_nameNodeDirection(inDirection));
     }
-    if(this.type() == parsegraph_SLIDER) {
-        throw new Error("Sliders cannot have child nodes.");
+    if(parsegraph_Node_type(parentNode) == parsegraph_SLIDER) {
+        parsegraph_die("Sliders cannot have child nodes.");
     }
-    if(this.type() == parsegraph_SCENE && inDirection == parsegraph_INWARD) {
-        throw new Error("Scenes cannot have inward nodes.");
+    if(parsegraph_Node_type(parentNode) == parsegraph_SCENE && inDirection == parsegraph_INWARD) {
+        parsegraph_die("Scenes cannot have inward nodes.");
     }
-    if(node.parentDirection() !== parsegraph_NULL_NODE_DIRECTION) {
-        throw new Error("Node to connect must not have a parent.");
+    if(parsegraph_Node_parentDirection(nodeToConnect) != parsegraph_NULL_NODE_DIRECTION) {
+        parsegraph_die("Node to connect must not have a parent.");
     }
-    if(node.hasNode(parsegraph_reverseNodeDirection(inDirection))) {
-        throw new Error("Node to connect must not have a node in the connecting direction.");
+    if(parsegraph_Node_hasNode(nodeToConnect, parsegraph_reverseNodeDirection(inDirection))) {
+        parsegraph_die("Node to connect must not have a node in the connecting direction.");
     }
 
     // Connect the node.
-    var neighbor = this._neighbors[inDirection];
-    neighbor.node = node;
-    node.setParent(this, parsegraph_reverseNodeDirection(inDirection));
+    parsegraph_DirectionData* neighbor = &parentNode->_neighbors[inDirection];
+    neighbor->node = nodeToConnect;
+    parsegraph_Node_assignParent(nodeToConnect, parentNode, parsegraph_reverseNodeDirection(inDirection));
 
-    if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
-        neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
+    parsegraph_Node* prevSibling = 0;
+    for(int i = inDirection; i >= 0; --i) {
+        if(i == inDirection) {
+            continue;
+        }
+        if(i == parentNode->_parentDirection) {
+            continue;
+        }
+        prevSibling = parentNode->_neighbors[i].node;
+        if(prevSibling) {
+            break;
+        }
+    }
+    parsegraph_Node* deeplyLinked = 0;
+    if(prevSibling) {
+        deeplyLinked = prevSibling;
+        int foundOne = 0;
+        for(;;) {
+            foundOne = 0;
+            for(int i = parsegraph_NUM_DIRECTIONS - 1; i >= 0; --i) {
+                if(parsegraph_Node_nodeAt(deeplyLinked, i) && parsegraph_Node_parentDirection(deeplyLinked) != i) {
+                    deeplyLinked = parsegraph_Node_nodeAt(deeplyLinked, i);
+                    foundOne = 1;
+                    break;
+                }
+            }
+            if(foundOne) {
+                continue;
+            }
+            else {
+                break;
+            }
+        }
+        prevSibling = deeplyLinked;
     }
 
-    this.layoutWasChanged(inDirection);
-
-    return node;
-};
-
-/**
- * Removes the node in the given direction, destroying it and its children
- * in the process.
- *
- * Does nothing if no node is in the given direction.
- */
-parsegraph_Node.prototype.eraseNode = function(givenDirection) {
-    if(!this.hasNode(givenDirection)) {
-        return;
+    parsegraph_Node* nextSibling = 0;
+    for(int i = inDirection; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        if(i == inDirection) {
+            continue;
+        }
+        if(i == parentNode->_parentDirection) {
+            continue;
+        }
+        nextSibling = parentNode->_neighbors[i].node;
+        if(nextSibling) {
+            break;
+        }
     }
-    if(!this.isRoot() && givenDirection == this.parentDirection()) {
-        throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
+    if(nextSibling) {
+        deeplyLinked = nextSibling;
+        int foundOne = 0;
+        for(;;) {
+            foundOne = 0;
+            for(int i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
+                if(parsegraph_Node_nodeAt(deeplyLinked, i) && parsegraph_Node_parentDirection(deeplyLinked) != i) {
+                    deeplyLinked = parsegraph_Node_nodeAt(deeplyLinked, i);
+                    foundOne = 1;
+                    break;
+                }
+            }
+            if(foundOne) {
+                continue;
+            }
+            else {
+                break;
+            }
+        }
+        nextSibling = deeplyLinked;
     }
-    this._neighbors[givenDirection].node = null;
-    this.layoutWasChanged(givenDirection);
-};
 
-parsegraph_Node.prototype.disconnectNode = function(inDirection)
+    if(nextSibling && prevSibling) {
+        //console.log("Adding " + parsegraph_nameNodeType(node.type()) + " child between node siblings");
+        parsegraph_Node* lastOfNode = nodeToConnect->_worldPrev;
+        parsegraph_Node* prevExisting = nextSibling->_worldPrev;
+        prevExisting->_worldNext = nodeToConnect;
+        nodeToConnect->_worldPrev = prevExisting;
+        lastOfNode->_worldNext = nextSibling;
+        nextSibling->_worldPrev = lastOfNode;
+    }
+    else if(nextSibling) {
+        //console.log("Adding child with only next siblings");
+        // No previous sibling.
+        parsegraph_Node* oldNext = parentNode->_worldNext;
+        parentNode->_worldNext = nodeToConnect;
+        parsegraph_Node* lastOfNode = nodeToConnect->_worldPrev;
+        nodeToConnect->_worldPrev = parentNode;
+
+        lastOfNode->_worldNext = oldNext;
+        oldNext->_worldPrev = lastOfNode;
+    }
+    else if(prevSibling) {
+        //console.log("Adding child " + parsegraph_nameNodeType(node.type()) + " with only previous siblings in " + parsegraph_nameNodeDirection(inDirection) + " direction.");
+        parsegraph_Node* oldNext = prevSibling->_worldNext;
+        parsegraph_Node* lastOfNode = nodeToConnect->_worldPrev;
+
+        oldNext->_worldPrev = lastOfNode;
+        prevSibling->_worldNext = nodeToConnect;
+
+        lastOfNode->_worldNext = oldNext;
+        nodeToConnect->_worldPrev = prevSibling;
+    }
+    else {
+        //console.log("Connecting only child " + parsegraph_nameNodeType(node.type()) + " in " + parsegraph_nameNodeDirection(inDirection) + " direction.");
+        // Connected node has no neighbors.
+        parsegraph_Node* oldNext = parentNode->_worldNext;
+        parentNode->_worldNext = nodeToConnect;
+
+        parsegraph_Node* lastOfNode = nodeToConnect->_worldPrev;
+        lastOfNode->_worldNext = oldNext;
+        oldNext->_worldPrev = lastOfNode;
+
+        nodeToConnect->_worldPrev = parentNode;
+    }
+
+    // Allow alignments to be set before children are spawned.
+    if(neighbor->alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
+        neighbor->alignmentMode = parsegraph_DO_NOT_ALIGN;
+    }
+
+    parsegraph_Node_layoutWasChanged(parentNode, inDirection);
+
+    return nodeToConnect;
+}
+
+parsegraph_Node* parsegraph_Node_eraseNode(parsegraph_Node* node, int givenDirection)
 {
-    if(!this.hasNode(inDirection)) {
-        return;
+    if(!parsegraph_Node_hasNode(node, givenDirection)) {
+        return 0;
     }
-    // Connect the node.
-    var neighbor = this._neighbors[inDirection];
-    var disconnected = neighbor.node;
-    neighbor.node = null;
-    disconnected.setParent(null);
-    this.layoutWasChanged(inDirection);
+    if(!parsegraph_Node_isRoot(node) && givenDirection == parsegraph_Node_parentDirection(node)) {
+        parsegraph_abort(parsegraph_CANNOT_AFFECT_PARENT);
+    }
+    return parsegraph_Node_disconnectNode(node, givenDirection);
+}
+
+parsegraph_Node* parsegraph_Node_disconnectNode(parsegraph_Node* node, int inDirection)
+{
+    if(inDirection == parsegraph_NULL_NODE_DIRECTION) {
+        if(parsegraph_Node_isRoot(node)) {
+            parsegraph_die("Cannot disconnect a root node.");
+        }
+        return parsegraph_Node_disconnectNode(parsegraph_Node_parentNode(node),
+            parsegraph_reverseNodeDirection(node->_parentDirection)
+        );
+    }
+    if(!parsegraph_Node_hasNode(node, inDirection)) {
+        return 0;
+    }
+    // Disconnect the node.
+    parsegraph_DirectionData* neighbor = &node->_neighbors[inDirection];
+    parsegraph_Node* disconnected = neighbor->node;
+    neighbor->node = 0;
+    parsegraph_Node_assignParent(disconnected, 0, parsegraph_NULL_NODE_DIRECTION);
+
+    parsegraph_Node* prevSibling = 0;
+    for(int i = inDirection; i >= 0; --i) {
+        if(i == inDirection) {
+            continue;
+        }
+        if(i == node->_parentDirection) {
+            continue;
+        }
+        prevSibling = node->_neighbors[i].node;
+        if(prevSibling) {
+            break;
+        }
+    }
+    parsegraph_Node* nextSibling;
+    for(int i = inDirection; i < parsegraph_NUM_DIRECTIONS; ++i) {
+        if(i == inDirection) {
+            continue;
+        }
+        if(i == node->_parentDirection) {
+            continue;
+        }
+        nextSibling = node->_neighbors[i].node;
+        if(nextSibling) {
+            break;
+        }
+    }
+
+    if(nextSibling && prevSibling) {
+        parsegraph_Node* oldPrev = disconnected->_worldPrev;
+        parsegraph_Node* lastOfDisconnected = nextSibling->_worldPrev;
+
+        disconnected->_worldPrev = lastOfDisconnected;
+        lastOfDisconnected->_worldNext = disconnected;
+
+        nextSibling->_worldPrev = oldPrev;
+        oldPrev->_worldNext = nextSibling;
+    }
+    else if(nextSibling) {
+        parsegraph_Node* oldPrev = nextSibling->_worldPrev;
+
+        nextSibling->_worldPrev = node;
+        node->_worldNext = nextSibling;
+
+        oldPrev->_worldNext = disconnected;
+        disconnected->_worldPrev = oldPrev;
+    }
+    else if(prevSibling) {
+        parsegraph_Node* oldPrev = disconnected->_worldPrev;
+        parsegraph_Node* lastOfDisconnected = node->_worldPrev;
+
+        disconnected->_worldPrev = lastOfDisconnected;
+        lastOfDisconnected->_worldNext = disconnected;
+
+        oldPrev->_worldNext = node;
+        node->_worldPrev = oldPrev;
+    }
+    else {
+        parsegraph_Node* lastOfDisconnected = node->_worldPrev;
+        node->_worldNext = node;
+        node->_worldPrev = node;
+
+        disconnected->_worldPrev = lastOfDisconnected;
+        lastOfDisconnected->_worldNext = disconnected;
+    }
+
+    parsegraph_Node_layoutWasChanged(node, inDirection);
     return disconnected;
-};
+}
 
 void parsegraph_Node_eachChild(parsegraph_Node* node, void(*visitor)(void*, parsegraph_Node*, int), void* visitorThisArg)
 {
     for(int i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
-        parsegraph_DirectionData* neighbor = node->_neighbors[i];
-        if(!neighbor->_node || direction == parsegraph_Node_parentDirection(node)) {
+        parsegraph_DirectionData* neighbor = &node->_neighbors[i];
+        if(!neighbor->node || i == parsegraph_Node_parentDirection(node)) {
             return;
         }
-        visitor(visitorThisArg, neighbor->_node, direction);
+        visitor(visitorThisArg, neighbor->node, i);
     }
 }
 
@@ -719,17 +993,15 @@ float parsegraph_Node_extentOffsetAt(parsegraph_Node* node, int atDirection)
     return node->_neighbors[atDirection].extentOffset;
 };
 
-void parsegraph_Node_extentSize(parsegraph_Node* node, float* width, float* height)
+void parsegraph_Node_extentSize(parsegraph_Node* node, float* size)
 {
     // We can just use the length to determine the full size.
 
     // The horizontal extents have length in the vertical direction.
-    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_FORWARD), height, 0, 0);
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_FORWARD), size + 1, 0, 0);
 
     // The vertical extents have length in the vertical direction.
-    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD), width, 0, 0);
-
-    return outPos;
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD), size, 0, 0);
 };
 
 void parsegraph_Node_setLayoutPreference(parsegraph_Node* node, int given)
@@ -766,12 +1038,18 @@ void* parsegraph_Node_value(parsegraph_Node* node)
     return node->_value;
 };
 
-void parsegraph_Node_setValue(parsegraph_Node* node, void* newValue)
+void parsegraph_Node_setValue(parsegraph_Node* node, void* newValue, int report)
 {
+    if(node->_value == newValue) {
+        return;
+    }
     node->_value = newValue;
+    if(report) {
+        parsegraph_Node_valueChanged(node);
+    }
 };
 
-void parsegraph_Node_scene(parsegraph_Node* node)
+void* parsegraph_Node_scene(parsegraph_Node* node)
 {
     return node->_scene;
 }
@@ -787,21 +1065,27 @@ int parsegraph_Node_typeAt(parsegraph_Node* node, int direction)
     return parsegraph_Node_type(parsegraph_Node_nodeAt(node, direction));
 };
 
-const char* parsegraph_Node_label(parsegraph_Node* node)
+int parsegraph_Node_label(parsegraph_Node* node, UChar* buf, int len)
 {
-    if(!node->_label) {
+    if(!node->_realLabel) {
         return 0;
     }
-    return parsegraph_Label_text(node->_label);
+    return parsegraph_Label_getText(node->_realLabel, buf, len);
 };
 
-void parsegraph_Node_setLabel(parsegraph_Node* node, const char* text, parsegraph_GlyphAtlas* glyphAtlas)
+parsegraph_Label* parsegraph_Node_realLabel(parsegraph_Node* node)
 {
-    if(!node->_label) {
-        node->_label = parsegraph_Label_new(node->pool, glyphAtlas);
+    return node->_realLabel;
+};
+
+void parsegraph_Node_setLabel(parsegraph_Node* node, UChar* text, int len, parsegraph_GlyphAtlas* glyphAtlas)
+{
+    if(!node->_realLabel) {
+        node->_realLabel = parsegraph_Label_new(node->pool, glyphAtlas);
     }
-    parsegraph_Label_setText(node->_label, text);
-    parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);
+
+    parsegraph_Label_setText(node->_realLabel, text, len);
+    /*    parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);*/
 };
 
 parsegraph_Style* parsegraph_Node_blockStyle(parsegraph_Node* node)
@@ -818,71 +1102,71 @@ void parsegraph_Node_setBlockStyle(parsegraph_Node* node, parsegraph_Style* styl
     node->_style = style;
 };
 
-parsegraph_Node.prototype.isSelectedAt = function(direction)
+int parsegraph_Node_isSelectedAt(parsegraph_Node* node, int direction)
 {
-    if(!this.hasNode(direction)) {
-        return false;
+    if(!parsegraph_Node_hasNode(node, direction)) {
+        return 0;
     }
-    return this.nodeAt(direction).isSelected();
-};
+    return parsegraph_Node_isSelected(parsegraph_Node_nodeAt(node, direction));
+}
 
-parsegraph_Node.prototype.sizeIn = function(direction)
+float parsegraph_Node_sizeIn(parsegraph_Node* node, int direction)
 {
-    var rv = this.size();
+    float rv[2];
+    parsegraph_Node_size(node, rv);
     if(parsegraph_isVerticalNodeDirection(direction)) {
-        return rv.height() / 2;
+        return rv[1]/2;
     }
-    else {
-        return rv.width() / 2;
-    }
-};
+    return rv[0]/2;
+}
 
-parsegraph_Node.prototype.brightnessColor = function()
+float* parsegraph_Node_brightnessColor(parsegraph_Node* node)
 {
-    return this._brightnessColor;
-};
+    return node->_brightnessColor;
+}
 
-parsegraph_Node.prototype.setBrightnessColor = function(brightnessColor)
+void parsegraph_Node_setBrightnessColor(parsegraph_Node* node, float* brightnessColor)
 {
-    this._brightnessColor = brightnessColor;
-};
+    parsegraph_Color_copy(node->_brightnessColor, brightnessColor);
+}
 
-parsegraph_Node.prototype.borderThickness = function()
+float parsegraph_Node_borderThickness(parsegraph_Node* node)
 {
-    return this.blockStyle().borderThickness;
-};
+    return parsegraph_Node_blockStyle(node)->borderThickness;
+}
 
-parsegraph_Node.prototype.size = function(bodySize)
+void parsegraph_Node_size(parsegraph_Node* node, float* bodySize)
 {
-    bodySize = this.sizeWithoutPadding(bodySize);
-    bodySize[0] += 2 * this.horizontalPadding() + 2 * this.borderThickness();
-    bodySize[1] += 2 * this.verticalPadding() + 2 * this.borderThickness();
-    return bodySize;
-};
+    parsegraph_Node_sizeWithoutPadding(node, bodySize);
+    bodySize[0] += 2 * parsegraph_Node_horizontalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
+    bodySize[1] += 2 * parsegraph_Node_verticalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
+}
 
-parsegraph_Node.prototype.absoluteSize = function(bodySize)
+void parsegraph_Node_absoluteSize(parsegraph_Node* node, float* bodySize)
 {
-    return this.size(bodySize).scaled(this.absoluteScale());
-};
+    parsegraph_Node_size(node, bodySize);
+    float s = parsegraph_Node_absoluteScale(node);
+    bodySize[0] *= s;
+    bodySize[1] *= s;
+}
 
-parsegraph_Node.prototype.setParent = function(fromNode, parentDirection)
+void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* fromParent, int parentDirection)
 {
-    if(arguments.length === 0 || !fromNode) {
+    if(!fromParent) {
         // Clearing the parent.
-        if(this._parentDirection !== parsegraph_NULL_NODE_DIRECTION) {
-            this._neighbors[this._parentDirection].node = null;
-            this._parentDirection = parsegraph_NULL_NODE_DIRECTION;
+        if(node->_parentDirection != parsegraph_NULL_NODE_DIRECTION) {
+            node->_neighbors[node->_parentDirection].node = 0;
+            node->_parentDirection = parsegraph_NULL_NODE_DIRECTION;
         }
         return;
     }
-    this._neighbors[parentDirection].node = fromNode;
-    this._parentDirection = parentDirection;
-};
-parsegraph_Node.prototype.setParentNode = parsegraph_Node.prototype.setParent;
+    node->_neighbors[parentDirection].node = fromParent;
+    node->_parentDirection = parentDirection;
+}
 
-parsegraph_Node.prototype.isSelected = function()
+int parsegraph_Node_isSelected(parsegraph_Node* node)
 {
-    return this._selected;
+    return node->_selected;
 };
 
 void parsegraph_Node_setSelected(parsegraph_Node* node, int selected)
@@ -890,12 +1174,12 @@ void parsegraph_Node_setSelected(parsegraph_Node* node, int selected)
     node->_selected = selected;
 };
 
-float parsegraph_Node_horizontalPadding(parsegraph_Node* node, int direction)
+float parsegraph_Node_horizontalPadding(parsegraph_Node* node)
 {
     return parsegraph_Node_blockStyle(node)->horizontalPadding;
 };
 
-float parsegraph_Node_verticalPadding(parsegraph_Node* node, int direction)
+float parsegraph_Node_verticalPadding(parsegraph_Node* node)
 {
     return parsegraph_Node_blockStyle(node)->verticalPadding;
 };
@@ -920,1157 +1204,1162 @@ float parsegraph_Node_horizontalSeparation(parsegraph_Node* node, int direction)
     return style->horizontalSeparation;
 };
 
+/**
+ * Returns true if the coordinates are in the node.
+ */
+int parsegraph_Node_inNodeBody(parsegraph_Node* node, float x, float y, float userScale)
+{
+    float s[2];
+    parsegraph_Node_size(node, s);
+
+    float ax = parsegraph_Node_absoluteX(node);
+    float ay = parsegraph_Node_absoluteY(node);
+    float aScale = parsegraph_Node_absoluteScale(node);
+    if(x < userScale * ax - userScale * aScale * s[0]/2) {
+        //console.log("INB 1" + x + " against " + node.absoluteX());
+        return 0;
+    }
+    if(x > userScale * ax + userScale * aScale * s[0]/2) {
+        //console.log("INB 2");
+        return 0;
+    }
+    if(y < userScale * ay - userScale * aScale * s[1]/2) {
+        //console.log("INB 3");
+        return 0;
+    }
+    if(y > userScale * ay + userScale * aScale * s[1]/2) {
+        //console.log("INB 4");
+        return 0;
+    }
+
+    //console.log("Within node body" + node);
+    return 1;
+}
+
+/**
+ * Returns true if the coordinates are in the node or its extent.
+ */
+int parsegraph_Node_inNodeExtents(parsegraph_Node* node, float x, float y, float userScale)
+{
+    float ax = parsegraph_Node_absoluteX(node);
+    float ay = parsegraph_Node_absoluteY(node);
+    float aScale = parsegraph_Node_absoluteScale(node);
+    float eSize[2];
+    parsegraph_Node_extentSize(node, eSize);
+
+    if(x < userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD)) {
+        return 0;
+    }
+    if(x > userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD) + userScale * aScale * eSize[0]) {
+        return 0;
+    }
+    if(y < userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD)) {
+        return 0;
+    }
+    if(y > userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD)
+            + userScale * aScale * eSize[1]
+    ) {
+        return 0;
+    }
+    return 1;
+}
+
+static void addCandidate(parsegraph_ArrayList* candidates, parsegraph_Node* node, int direction)
+{
+    if(direction != parsegraph_NULL_NODE_DIRECTION) {
+        if(!parsegraph_Node_hasChildAt(node, direction)) {
+            return;
+        }
+        node = parsegraph_Node_nodeAt(node, direction);
+    }
+    if(node == 0) {
+        return;
+    }
+    parsegraph_ArrayList_push(candidates, node);
+}
+
 parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x, float y, float userScale)
 {
-    //console.log("nodeUnderCoords: " + x + ", " + y)
-    if(userScale === undefined) {
+    //parsegraph_log("nodeUnderCoords: %0.2f, %0.2f", x, y);
+    if(userScale == NAN) {
         userScale = 1;
     }
 
-    /**
-     * Returns true if the coordinates are in the node.
-     */
-    var inNodeBody = function(node) {
-        var s = node.size();
-        if(
-            x < userScale * node.absoluteX()
-                - userScale * node.absoluteScale() * s.width()/2
-        ) {
-            //console.log("INB 1" + x + " against " + node.absoluteX());
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX()
-                + userScale * node.absoluteScale() * s.width()/2
-        ) {
-            //console.log("INB 2");
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY()
-                - userScale * node.absoluteScale() * s.height()/2
-        ) {
-            //console.log("INB 3");
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY()
-                + userScale * node.absoluteScale() * s.height()/2
-        ) {
-            //console.log("INB 4");
-            return false;
+    parsegraph_ArrayList* candidates = parsegraph_ArrayList_new(node->pool);
+    parsegraph_ArrayList_push(candidates, node);
+
+    parsegraph_Node FORCE_SELECT_PRIOR;
+    while(parsegraph_ArrayList_length(candidates) > 0) {
+        parsegraph_Node* candidate = parsegraph_ArrayList_at(candidates, parsegraph_ArrayList_length(candidates) - 1);
+
+        if(candidate == &FORCE_SELECT_PRIOR) {
+            parsegraph_ArrayList_pop(candidates);
+            return parsegraph_ArrayList_pop(candidates);
         }
 
-        //console.log("Within node body" + node);
-        return true;
-    };
-
-    /**
-     * Returns true if the coordinates are in the node or its extent.
-     */
-    var inNodeExtents = function(node) {
-        if(
-            x < userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-        ) {
-            return false;
-        }
-        if(
-            x > userScale * node.absoluteX() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_DOWNWARD)
-                + userScale * node.absoluteScale() * node.extentSize().width()
-        ) {
-            return false;
-        }
-        if(
-            y < userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-        ) {
-            return false;
-        }
-        if(
-            y > userScale * node.absoluteY() - userScale * node.absoluteScale() * node.extentOffsetAt(parsegraph_FORWARD)
-                + userScale * node.absoluteScale() * node.extentSize().height()
-        ) {
-            return false;
-        }
-        return true;
-    };
-
-    var candidates = [this];
-
-    var addCandidate = function(node, direction) {
-        if(direction !== undefined) {
-            if(!node.hasChildAt(direction)) {
-                return;
-            }
-            node = node.nodeAt(direction);
-        }
-        if(node == null) {
-            return;
-        }
-        candidates.push(node);
-    };
-
-    var FORCE_SELECT_PRIOR = {};
-    while(candidates.length > 0) {
-        var candidate = candidates[candidates.length - 1];
-
-        if(candidate === FORCE_SELECT_PRIOR) {
-            candidates.pop();
-            return candidates.pop();
-        }
-
-        if(inNodeBody(candidate)) {
-            //console.log("Click is in node body");
+        if(parsegraph_Node_inNodeBody(candidate, x, y, userScale)) {
+            //parsegraph_log("Click is in node body");
             if(
-                candidate.hasNode(parsegraph_INWARD)
+                parsegraph_Node_hasNode(candidate, parsegraph_INWARD)
             ) {
-                if(inNodeExtents(candidate.nodeAt(parsegraph_INWARD))) {
-                    //console.log("Testing inward node");
-                    candidates.push(FORCE_SELECT_PRIOR);
-                    candidates.push(candidate.nodeAt(parsegraph_INWARD));
+                if(parsegraph_Node_inNodeExtents(
+                    parsegraph_Node_nodeAt(candidate, parsegraph_INWARD), x, y, userScale)
+                ) {
+                    //parsegraph_log("Testing inward node");
+                    parsegraph_ArrayList_push(candidates, &FORCE_SELECT_PRIOR);
+                    parsegraph_ArrayList_push(candidates, parsegraph_Node_nodeAt(candidate, parsegraph_INWARD));
                     continue;
                 }
                 else {
-                    //console.log("Click not in inward extents");
+                    //parsegraph_log("Click not in inward extents");
                 }
             }
 
             // Found the node.
-            //console.log("Found node.");
+            //parsegraph_log("Found node.");
             return candidate;
         }
         // Not within this node, so remove it as a candidate.
-        candidates.pop();
+        parsegraph_ArrayList_pop(candidates);
 
         // Test if the click is within any child.
-        if(!inNodeExtents(candidate)) {
+        if(!parsegraph_Node_inNodeExtents(candidate, x, y, userScale)) {
             // Nope, so continue the search.
             continue;
         }
-        //console.log("Click is in node extent");
+        //parsegraph_log("Click is in node extent");
+        float ax = parsegraph_Node_absoluteX(candidate);
+        float ay = parsegraph_Node_absoluteY(candidate);
 
         // It is potentially within some child, so search the children.
-        if(Math.abs(y - userScale * candidate.absoluteY()) > Math.abs(x - userScale * candidate.absoluteX())) {
+        if(parsegraph_absf(y - userScale * ay) > parsegraph_absf(x - userScale * ax)) {
             // Y extent is greater than X extent.
-            if(userScale * candidate.absoluteX() > x) {
-                addCandidate(candidate, parsegraph_BACKWARD);
-                addCandidate(candidate, parsegraph_FORWARD);
+            if(userScale * ax > x) {
+                addCandidate(candidates, candidate, parsegraph_BACKWARD);
+                addCandidate(candidates, candidate, parsegraph_FORWARD);
             }
             else {
-                addCandidate(candidate, parsegraph_FORWARD);
-                addCandidate(candidate, parsegraph_BACKWARD);
+                addCandidate(candidates, candidate, parsegraph_FORWARD);
+                addCandidate(candidates, candidate, parsegraph_BACKWARD);
             }
-            if(userScale * candidate.absoluteY() > y) {
-                addCandidate(candidate, parsegraph_UPWARD);
-                addCandidate(candidate, parsegraph_DOWNWARD);
+            if(userScale * ay > y) {
+                addCandidate(candidates, candidate, parsegraph_UPWARD);
+                addCandidate(candidates, candidate, parsegraph_DOWNWARD);
             }
             else {
-                addCandidate(candidate, parsegraph_DOWNWARD);
-                addCandidate(candidate, parsegraph_UPWARD);
+                addCandidate(candidates, candidate, parsegraph_DOWNWARD);
+                addCandidate(candidates, candidate, parsegraph_UPWARD);
             }
         }
         else {
             // X extent is greater than Y extent.
-            if(userScale * candidate.absoluteY() > y) {
-                addCandidate(candidate, parsegraph_UPWARD);
-                addCandidate(candidate, parsegraph_DOWNWARD);
+            if(userScale * ay > y) {
+                addCandidate(candidates, candidate, parsegraph_UPWARD);
+                addCandidate(candidates, candidate, parsegraph_DOWNWARD);
             }
             else {
-                addCandidate(candidate, parsegraph_DOWNWARD);
-                addCandidate(candidate, parsegraph_UPWARD);
+                addCandidate(candidates, candidate, parsegraph_DOWNWARD);
+                addCandidate(candidates, candidate, parsegraph_UPWARD);
             }
-            if(userScale * candidate.absoluteX() > x) {
-                addCandidate(candidate, parsegraph_BACKWARD);
-                addCandidate(candidate, parsegraph_FORWARD);
+            if(userScale * ax > x) {
+                addCandidate(candidates, candidate, parsegraph_BACKWARD);
+                addCandidate(candidates, candidate, parsegraph_FORWARD);
             }
             else {
-                addCandidate(candidate, parsegraph_FORWARD);
-                addCandidate(candidate, parsegraph_BACKWARD);
+                addCandidate(candidates, candidate, parsegraph_FORWARD);
+                addCandidate(candidates, candidate, parsegraph_BACKWARD);
             }
         }
     }
 
-    //console.log("Found nothing.");
-    return null;
-};
+    //parsegraph_log("Found nothing.");
+    return 0;
+}
 
-/**
- * Returns the size of this node, based on this node's type and label.
- *
- * Sliders appear like blocks, though they render buds and their own lines internally.
- * Scenes also appear like boxes.
- *
- * Consequently, since these types work like blocks, there is no special code for them here.
- */
-void parsegraph_Node_sizeWithoutPadding(parsegraph_Node* node, float* bodyWidth, float* bodyHeight)
+void parsegraph_Node_sizeWithoutPadding(parsegraph_Node* node, float* bodySize)
 {
     // Find the size of this node's drawing area.
-    var style = this.blockStyle();
-    if(this._label && !this._label.isEmpty()) {
-        if(!bodySize) {
-            bodySize = new parsegraph_Size();
+    parsegraph_Style* style = parsegraph_Node_blockStyle(node);
+    if(node->_realLabel && !parsegraph_Label_isEmpty(node->_realLabel)) {
+        float scaling = (style->fontSize / parsegraph_GlyphAtlas_fontSize(parsegraph_Label_glyphAtlas(node->_realLabel)));
+        bodySize[0] = parsegraph_Label_width(node->_realLabel) * scaling;
+        bodySize[1] = parsegraph_Label_height(node->_realLabel) * scaling;
+        if(isnan(bodySize[0]) || isnan(bodySize[1])) {
+            parsegraph_die(
+                "Label returned a NaN size. (%f, %f) to (%f, %f). Scaling is (fontSize:%f/glyphFontSize:%f=%f)",
+                parsegraph_Label_width(node->_realLabel), parsegraph_Label_height(node->_realLabel),
+                bodySize[0], bodySize[1],
+                style->fontSize, parsegraph_GlyphAtlas_fontSize(parsegraph_Label_glyphAtlas(node->_realLabel)),
+                scaling
+            );
         }
-        bodySize[0] = this._label.width() * (style.fontSize / this._label.glyphAtlas().fontSize());
-        bodySize[1] = this._label.height() * (style.fontSize / this._label.glyphAtlas().fontSize());
-        bodySize[0] = Math.max(style.minWidth, bodySize[0]);
-        bodySize[1] = Math.max(style.minHeight, bodySize[1]);
-    }
-    else if(!bodySize) {
-        bodySize = new parsegraph_Size(style.minWidth, style.minHeight);
     }
     else {
-        bodySize[0] = style.minWidth;
-        bodySize[1] = style.minHeight;
+        bodySize[0] = style->minWidth;
+        bodySize[1] = style->minHeight;
     }
-    if(this.hasNode(parsegraph_INWARD)) {
-        var nestedNode = this.nodeAt(parsegraph_INWARD);
-        var nestedSize = nestedNode.extentSize();
+    if(parsegraph_Node_hasNode(node, parsegraph_INWARD)) {
+        parsegraph_Node* nestedNode = parsegraph_Node_nodeAt(node, parsegraph_INWARD);
+        float nestedSize[2];
+        parsegraph_Node_extentSize(nestedNode, nestedSize);
 
-        if(this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
+        if(parsegraph_Node_nodeAlignmentMode(node, parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
-            bodySize.setWidth(
-                Math.max(bodySize.width(), nestedSize.width() * nestedNode.scale())
-            );
+            bodySize[0] = parsegraph_max(bodySize[0], nestedSize[0] * parsegraph_Node_scale(nestedNode));
 
-            if(this.label()) {
+            if(parsegraph_Node_realLabel(node)) {
                 // Allow for the content's size.
-                bodySize.setHeight(
-                    bodySize.height()
-                    + this.verticalPadding()
-                    + nestedSize.height() * nestedNode.scale()
+                bodySize[1] = parsegraph_max(style->minHeight,
+                    bodySize[1]
+                    + parsegraph_Node_verticalPadding(node)
+                    + nestedSize[1] * parsegraph_Node_scale(nestedNode)
                 );
             }
             else {
-                bodySize.setHeight(
-                    nestedSize.height() * nestedNode.scale()
-                    + 2 * this.verticalPadding()
+                bodySize[1] = parsegraph_max(bodySize[1],
+                    nestedSize[1] * parsegraph_Node_scale(nestedNode)
+                    + 2 * parsegraph_Node_verticalPadding(node)
                 );
             }
         }
         else {
             // Align horizontal.
-            if(this.label()) {
+            if(parsegraph_Node_realLabel(node)) {
                 // Allow for the content's size.
-                bodySize.setWidth(
-                    bodySize.width()
-                    + this.horizontalPadding()
-                    + nestedNode.scale() * nestedSize.width()
-                );
+                bodySize[0] =
+                    bodySize[0]
+                    + parsegraph_Node_horizontalPadding(node)
+                    + parsegraph_Node_scale(nestedNode) * nestedSize[0];
             }
             else {
-                bodySize.setWidth(
-                    nestedNode.scale() * nestedSize.width()
-                );
+                bodySize[0] = parsegraph_max(bodySize[0], parsegraph_Node_scale(nestedNode) * nestedSize[0]);
             }
 
-            bodySize.setHeight(
-                Math.max(
-                    bodySize.height(),
-                    nestedNode.scale() * nestedSize.height()
-                    + 2 * this.verticalPadding()
-                )
+            bodySize[1] = parsegraph_max(
+                bodySize[1],
+                parsegraph_Node_scale(nestedNode) * nestedSize[1]
+                + 2 * parsegraph_Node_verticalPadding(node)
             );
         }
     }
 
     // Buds appear circular
-    if(this.type() == parsegraph_BUD) {
-        var aspect = bodySize.width() / bodySize.height();
+    if(parsegraph_Node_type(node) == parsegraph_BUD) {
+        float aspect = bodySize[0] / bodySize[1];
         if(aspect < 2 && aspect > 1 / 2) {
-            bodySize.setWidth(
-                Math.max(bodySize.width(), bodySize.height())
-            );
-            bodySize.setHeight(bodySize.width());
+            bodySize[0] = parsegraph_max(bodySize[0], bodySize[1]);
+            bodySize[1] = bodySize[0];
         }
     }
 
-    return bodySize;
+    bodySize[0] = parsegraph_max(style->minWidth, bodySize[0]);
+    bodySize[1] = parsegraph_max(style->minHeight, bodySize[1]);
+}
+
+static void initExtent(
+    parsegraph_Node* node,
+    int inDirection,
+    float length,
+    float size,
+    float offset)
+{
+    parsegraph_Extent_clear(node->_neighbors[inDirection].extent);
+    parsegraph_Extent_appendLS(node->_neighbors[inDirection].extent, length, size);
+    node->_neighbors[inDirection].extentOffset = offset;
+}
+
+/**
+ * Returns the offset of the child's center in the given direction from
+ * this node's center.
+ *
+ * This offset is in a direction perpendicular to the given direction
+ * and is positive to indicate a negative offset.
+ *
+ * The result is in this node's space.
+ */
+float getAlignment(parsegraph_Node* node, int childDirection)
+{
+    // Calculate the alignment adjustment for both nodes.
+    parsegraph_Node* child = parsegraph_Node_nodeAt(node, childDirection);
+    int axis = parsegraph_getPerpendicularAxis(
+        parsegraph_getNodeDirectionAxis(childDirection)
+    );
+
+    float rv = 0;
+
+    int alignmentMode = node->_neighbors[childDirection].alignmentMode;
+    switch(alignmentMode) {
+    case parsegraph_NULL_NODE_ALIGNMENT:
+        parsegraph_abort(parsegraph_BAD_NODE_ALIGNMENT);
+    case parsegraph_DO_NOT_ALIGN:
+        // Unaligned nodes have no alignment offset.
+        rv = 0;
+        break;
+    case parsegraph_ALIGN_NEGATIVE:
+        rv = parsegraph_findConsecutiveLength(
+            child,
+            parsegraph_getNegativeNodeDirection(axis)
+        );
+        break;
+    case parsegraph_ALIGN_CENTER:
+    {
+        float negativeLength = parsegraph_findConsecutiveLength(
+            child, parsegraph_getNegativeNodeDirection(axis)
+        );
+
+        float positiveLength = parsegraph_findConsecutiveLength(
+            child, parsegraph_getPositiveNodeDirection(axis)
+        );
+
+        float halfLength = (negativeLength + positiveLength) / 2;
+
+        if(negativeLength > positiveLength) {
+            // The child's negative neighbors extend more than their positive neighbors.
+            rv = negativeLength - halfLength;
+        }
+        else if(negativeLength < positiveLength) {
+            rv = -(positiveLength - halfLength);
+        }
+        else {
+            rv = 0;
+        }
+        break;
+    }
+    case parsegraph_ALIGN_POSITIVE:
+        rv = -parsegraph_findConsecutiveLength(
+            child, parsegraph_getPositiveNodeDirection(axis)
+        );
+        break;
+    default:
+        parsegraph_die("Unreachable");
+    }
+    //console.log("Found alignment of " + rv);
+    return rv * parsegraph_Node_scaleAt(node, childDirection);
+}
+
+/**
+ * Positions a child.
+ *
+ * The alignment is positive in the positive direction.
+ *
+ * The separation is positive in the direction of the child.
+ *
+ * These values should in this node's space.
+ *
+ * The child's position is in this node's space.
+ */
+static void positionChild(parsegraph_Node* node, int childDirection, int alignment, float separation) {
+    // Validate arguments.
+    if(separation < 0) {
+        parsegraph_die("separation must always be positive.");
+    }
+    if(!parsegraph_isCardinalDirection(childDirection)) {
+        parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
+    }
+    parsegraph_Node* child = parsegraph_Node_nodeAt(node, childDirection);
+    int reversedDirection = parsegraph_reverseNodeDirection(childDirection);
+
+    // Save alignment parameters.
+    node->_neighbors[childDirection].alignmentOffset = alignment;
+    node->_neighbors[childDirection].separation = separation;
+
+    // Determine the line length.
+    float lineLength;
+    float extentSize;
+    if(parsegraph_Node_nodeAlignmentMode(node, childDirection) == parsegraph_DO_NOT_ALIGN) {
+        float childSize[2];
+        parsegraph_Node_size(child, childSize);
+        if(parsegraph_isVerticalNodeDirection(childDirection)) {
+            extentSize = childSize[1] / 2;
+        }
+        else {
+            extentSize = childSize[0] / 2;
+        }
+    }
+    else {
+        extentSize = parsegraph_Extent_sizeAt(parsegraph_Node_extentsAt(child, reversedDirection),
+            parsegraph_Node_extentOffsetAt(node->_neighbors[childDirection].node, reversedDirection) -
+            alignment / parsegraph_Node_scaleAt(node, childDirection)
+        );
+    }
+    lineLength = separation - parsegraph_Node_scaleAt(node, childDirection) * extentSize;
+    node->_neighbors[childDirection].lineLength = lineLength;
+    //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
+
+    // Set the position.
+    int dirSign = parsegraph_nodeDirectionSign(childDirection);
+    if(parsegraph_isVerticalNodeDirection(childDirection)) {
+        // The child is positioned vertically.
+        parsegraph_Node_setPosAt(node, childDirection, alignment, dirSign * separation);
+    }
+    else {
+        parsegraph_Node_setPosAt(node, childDirection, dirSign * separation, alignment);
+    }
+    /*console.log(
+        parsegraph_nameNodeDirection(childDirection) + " " +
+        parsegraph_nameNodeType(child.type()) + "'s position set to (" +
+        this._neighbors[childDirection].xPos + ", " + this._neighbors[childDirection].yPos + ")"
+    );*/
+};
+
+/**
+ * Combine an extent.
+ *
+ * lengthAdjustment and sizeAdjustment are in this node's space.
+ */
+static void combineExtent(parsegraph_Node* node,
+    int childDirection,
+    int direction,
+    float lengthAdjustment,
+    float sizeAdjustment)
+{
+    parsegraph_Node* child = parsegraph_Node_nodeAt(node, childDirection);
+    /*console.log(
+        "combineExtent(" +
+        parsegraph_nameNodeDirection(direction) + ", " +
+        lengthAdjustment + ", " +
+        sizeAdjustment + ")"
+    );*/
+    // Calculate the new offset to this node's center.
+    float lengthOffset = node->_neighbors[direction].extentOffset
+        + lengthAdjustment
+        - parsegraph_Node_scaleAt(node, childDirection) * parsegraph_Node_extentOffsetAt(child, direction);
+
+    // Combine the two extents in the given direction.
+    //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
+    //console.log("Length offset: " + lengthOffset);
+    //console.log("Size adjustment: " + sizeAdjustment);
+    if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_LOOSE) {
+        parsegraph_Extent* e = node->_neighbors[direction].extent;
+        float bv[3];
+        parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(child, direction), bv, bv + 1, bv + 2);
+        float scale = parsegraph_Node_scaleAt(node, childDirection);
+        if(lengthOffset == 0) {
+            //parsegraph_log("lengthOffset == 0");
+            parsegraph_Extent_setBoundLengthAt(e, 0, parsegraph_max(parsegraph_Extent_boundLengthAt(e, 0), bv[0]*scale + lengthOffset));
+            parsegraph_Extent_setBoundSizeAt(e, 0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment));
+        }
+        else if(lengthOffset < 0) {
+            //console.log("lengthOffset < 0");
+            parsegraph_Extent_setBoundLengthAt(e, 0, parsegraph_max(
+                parsegraph_Extent_boundLengthAt(e, 0) + parsegraph_absf(lengthOffset),
+                bv[0]*scale
+            ));
+            parsegraph_Extent_setBoundSizeAt(e, 0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment));
+        }
+        else {
+            //console.log("lengthOffset > 0");
+            parsegraph_Extent_setBoundLengthAt(e,
+                0, parsegraph_max(parsegraph_Extent_boundLengthAt(e, 0), lengthOffset + bv[0]*scale)
+            );
+            parsegraph_Extent_setBoundSizeAt(e,
+                0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment)
+            );
+        }
+        /*e.combineExtent(
+            child.extentsAt(direction),
+            lengthOffset,
+            sizeAdjustment,
+            this.scaleAt(childDirection)
+        );
+        e.simplify();*/
+    }
+    else {
+        parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
+            parsegraph_Node_extentsAt(child, direction),
+            lengthOffset,
+            sizeAdjustment,
+            parsegraph_Node_scaleAt(node, childDirection)
+        );
+    }
+
+    // Adjust the length offset to remain positive.
+    if(lengthOffset < 0) {
+        //console.log("Adjusting negative extent offset.");
+        node->_neighbors[direction].extentOffset =
+            node->_neighbors[direction].extentOffset + parsegraph_absf(lengthOffset);
+    }
+
+    /*console.log(
+        "New "
+        + parsegraph_nameNodeDirection(direction)
+        + " extent offset = "
+        + this._neighbors[direction].extentOffset
+    );
+    this._neighbors[direction].extent.forEach(function(l, s, i) {
+        console.log(i + ". length=" + l + ", size=" + s);
+    });
+    */
+
+    // Assert the extent offset is positive.
+    if(node->_neighbors[direction].extentOffset < 0) {
+        parsegraph_die("Extent offset must not be negative.");
+    }
+};
+
+/**
+ * Merge this node's extents in the given direction with the
+ * child's extents.
+ *
+ * alignment is the offset of the child from this node.
+ * Positive values indicate presence in the positive
+ * direction. (i.e. forward or upward).
+ *
+ * separation is the distance from the center of this node to the center
+ * of the node in the specified direction.
+ */
+static void combineExtents(
+    parsegraph_Node* node,
+    int childDirection,
+    int alignment,
+    float separation)
+{
+    switch(childDirection) {
+    case parsegraph_DOWNWARD:
+        // Downward child.
+        combineExtent(node, childDirection, parsegraph_DOWNWARD, alignment, separation);
+        combineExtent(node, childDirection, parsegraph_UPWARD, alignment, -separation);
+
+        combineExtent(node, childDirection, parsegraph_FORWARD, separation, alignment);
+        combineExtent(node, childDirection, parsegraph_BACKWARD, separation, -alignment);
+        break;
+    case parsegraph_UPWARD:
+        // Upward child.
+        combineExtent(node, childDirection, parsegraph_DOWNWARD, alignment, -separation);
+        combineExtent(node, childDirection, parsegraph_UPWARD, alignment, separation);
+
+        combineExtent(node, childDirection, parsegraph_FORWARD, -separation, alignment);
+        combineExtent(node, childDirection, parsegraph_BACKWARD, -separation, -alignment);
+        break;
+    case parsegraph_FORWARD:
+        // Forward child.
+        combineExtent(node, childDirection, parsegraph_DOWNWARD, separation, alignment);
+        combineExtent(node, childDirection, parsegraph_UPWARD, separation, -alignment);
+
+        combineExtent(node, childDirection, parsegraph_FORWARD, alignment, separation);
+        combineExtent(node, childDirection, parsegraph_BACKWARD, alignment, -separation);
+        break;
+    case parsegraph_BACKWARD:
+        // Backward child.
+        combineExtent(node, childDirection, parsegraph_DOWNWARD, -separation, alignment);
+        combineExtent(node, childDirection, parsegraph_UPWARD, -separation, -alignment);
+
+        combineExtent(node, childDirection, parsegraph_FORWARD, alignment, -separation);
+        combineExtent(node, childDirection, parsegraph_BACKWARD, alignment, separation);
+        break;
+    default:
+        parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
+    }
+};
+
+/**
+ * Layout a single node in the given direction.
+ */
+void layoutSingle(parsegraph_Node* node,
+    float* bodySize,
+    int direction,
+    int allowAxisOverlap)
+{
+    if(!parsegraph_Node_hasNode(node, direction)) {
+        return;
+    }
+
+    /*console.log(
+        "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
+        + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
+    );*/
+
+    // Get the alignment for the children.
+    int alignment = getAlignment(node, direction);
+    //console.log("Calculated alignment of " + alignment + ".");
+
+    parsegraph_Node* child = parsegraph_Node_nodeAt(node, direction);
+    int reversed = parsegraph_reverseNodeDirection(direction);
+    parsegraph_Extent* childExtent = parsegraph_Node_extentsAt(child, reversed);
+
+    // Separate the child from this node.
+    float separationFromChild = parsegraph_Extent_separation(node->_neighbors[direction].extent,
+        childExtent,
+        node->_neighbors[direction].extentOffset
+            + alignment
+            - parsegraph_Node_scaleAt(node, direction) * parsegraph_Node_extentOffsetAt(child, reversed),
+        allowAxisOverlap,
+        parsegraph_Node_scaleAt(node, direction),
+        parsegraph_LINE_THICKNESS / 2
+    );
+    //console.log("Calculated unpadded separation of " + separationFromChild + ".");
+
+    float childSize[2];
+    parsegraph_Node_size(child, childSize);
+    // Add padding and ensure the child is not separated less than
+    // it would be if the node was not offset by alignment.
+    if(
+        parsegraph_getNodeDirectionAxis(direction) == parsegraph_VERTICAL_AXIS
+    ) {
+        separationFromChild = parsegraph_max(
+            separationFromChild,
+            parsegraph_Node_scaleAt(node, direction) * (childSize[1] / 2) + bodySize[1] / 2
+        );
+        separationFromChild
+            += parsegraph_Node_verticalSeparation(node, direction) * parsegraph_Node_scaleAt(node, direction);
+    }
+    else {
+        separationFromChild = parsegraph_max(
+            separationFromChild,
+            parsegraph_Node_scaleAt(node, direction) * (childSize[0] / 2) + bodySize[0] / 2
+        );
+        separationFromChild
+            += parsegraph_Node_horizontalSeparation(node, direction) * parsegraph_Node_scaleAt(node, direction);
+    }
+    //console.log("Calculated padded separation of " + separationFromChild + ".");
+
+    // Set the node's position.
+    positionChild(
+        node,
+        direction,
+        alignment,
+        separationFromChild
+    );
+
+    // Combine the extents of the child and this node.
+    combineExtents(
+        node,
+        direction,
+        alignment,
+        separationFromChild
+    );
+}
+
+/**
+ * Layout a pair of nodes in the given directions.
+ */
+void layoutAxis(parsegraph_Node* node,
+    float* bodySize,
+    int firstDirection,
+    int secondDirection,
+    int allowAxisOverlap)
+{
+    // Change the node direction to null if there is no node in that
+    // direction.
+    if(!parsegraph_Node_hasNode(node, firstDirection)) {
+        firstDirection = parsegraph_NULL_NODE_DIRECTION;
+    }
+    if(!parsegraph_Node_hasNode(node, secondDirection)) {
+        secondDirection = parsegraph_NULL_NODE_DIRECTION;
+    }
+
+    // Return if there are no directions.
+    if(
+        firstDirection == parsegraph_NULL_NODE_DIRECTION
+        && secondDirection == parsegraph_NULL_NODE_DIRECTION
+    ) {
+        return;
+    }
+
+    // Test if this node has a first-axis child in only one direction.
+    if(
+        firstDirection == parsegraph_NULL_NODE_DIRECTION
+        || secondDirection == parsegraph_NULL_NODE_DIRECTION
+    ) {
+        // Find the direction of the only first-axis child.
+        int firstAxisDirection;
+        if(firstDirection != parsegraph_NULL_NODE_DIRECTION) {
+            firstAxisDirection = firstDirection;
+        }
+        else {
+            // It must be the second direction.
+            firstAxisDirection = secondDirection;
+        }
+
+        // Layout that node.
+        layoutSingle(node, bodySize, firstAxisDirection, allowAxisOverlap);
+        return;
+    }
+
+    /*parsegraph_log(
+        "Laying out " +
+        parsegraph_nameNodeDirection(firstDirection) + " and " +
+        parsegraph_nameNodeDirection(secondDirection) + " children."
+    );*/
+
+    // This node has first-axis children in both directions.
+    parsegraph_Node* firstNode = parsegraph_Node_nodeAt(node, firstDirection);
+    parsegraph_Node* secondNode = parsegraph_Node_nodeAt(node, secondDirection);
+
+    // Get the alignments for the children.
+    int firstNodeAlignment = getAlignment(node, firstDirection);
+    int secondNodeAlignment = getAlignment(node, secondDirection);
+    //parsegraph_log("First alignment: " + firstNodeAlignment);
+    //parsegraph_log("Second alignment: " + secondNodeAlignment);
+
+    float separationBetweenChildren = parsegraph_Extent_separation(
+        parsegraph_Node_extentsAt(firstNode, secondDirection),
+        parsegraph_Node_extentsAt(secondNode, firstDirection),
+        (parsegraph_Node_scaleAt(node, secondDirection) / parsegraph_Node_scaleAt(node, firstDirection))
+        * (secondNodeAlignment - parsegraph_Node_extentOffsetAt(secondNode, firstDirection))
+        - (firstNodeAlignment - parsegraph_Node_extentOffsetAt(firstNode, secondDirection)),
+        1,
+        parsegraph_Node_scaleAt(node, secondDirection) / parsegraph_Node_scaleAt(node, firstDirection),
+        0
+    );
+    separationBetweenChildren *= parsegraph_Node_scaleAt(node, firstDirection);
+
+    //parsegraph_log("Separation between children=" + separationBetweenChildren);
+
+    /*console.log(
+        "This " +
+        parsegraph_nameNodeDirection(firstDirection) +
+        " extent (offset to center=" +
+        this._neighbors[firstDirection].extentOffset +
+        ")"
+    );
+    this._neighbors[firstDirection].extent.forEach(
+        function(length, size, i) {
+            console.log(i + ". l=" + length + ", s=" + size);
+        }
+    );
+
+    console.log(
+        parsegraph_nameNodeDirection(firstDirection) +
+        " " + parsegraph_nameNodeType(this.nodeAt(firstDirection).type()) +
+        "'s " + parsegraph_nameNodeDirection(secondDirection) +
+        " extent (offset to center=" +
+        this.nodeAt(firstDirection).extentOffsetAt(secondDirection) +
+        ")"
+    );
+    this.nodeAt(firstDirection).extentsAt(secondDirection).forEach(
+        function(length, size, i) {
+            console.log(i + ". l=" + length + ", s=" + size);
+        }
+    );
+
+    console.log(
+        "FirstNodeAlignment=" + firstNodeAlignment
+    );
+    console.log(
+        "this._neighbors[firstDirection].extentOffset=" +
+            this._neighbors[firstDirection].extentOffset
+    );
+    console.log(
+        "firstNode.extentOffsetAt(secondDirection)=" + firstNode.extentOffsetAt(secondDirection)
+    );*/
+
+    // Allow some overlap if we have both first-axis sides, but
+    // nothing ahead on the second axis.
+    float separationFromFirst = parsegraph_Extent_separation(node->_neighbors[firstDirection].extent,
+        parsegraph_Node_extentsAt(firstNode, secondDirection),
+        node->_neighbors[firstDirection].extentOffset
+        + firstNodeAlignment
+        - parsegraph_Node_scaleAt(node, firstDirection) * parsegraph_Node_extentOffsetAt(firstNode, secondDirection),
+        allowAxisOverlap,
+        parsegraph_Node_scaleAt(node, firstDirection),
+        parsegraph_LINE_THICKNESS / 2
+    );
+
+    float separationFromSecond = parsegraph_Extent_separation(node->_neighbors[secondDirection].extent,
+        parsegraph_Node_extentsAt(secondNode, firstDirection),
+        node->_neighbors[secondDirection].extentOffset
+        + secondNodeAlignment
+        - parsegraph_Node_scaleAt(node, secondDirection) * parsegraph_Node_extentOffsetAt(secondNode, firstDirection),
+        allowAxisOverlap,
+        parsegraph_Node_scaleAt(node, secondDirection),
+        parsegraph_LINE_THICKNESS / 2
+    );
+
+    /*console.log(
+        "Separation from this " + parsegraph_nameNodeType(this.type()) + " to " +
+        parsegraph_nameNodeDirection(firstDirection) + " " +
+        parsegraph_nameNodeType(this.nodeAt(firstDirection).type()) + "=" +
+        separationFromFirst
+    );
+    console.log(
+        "Separation from this " + parsegraph_nameNodeType(this.type()) + " to " +
+        parsegraph_nameNodeDirection(secondDirection) + " " +
+        parsegraph_nameNodeType(this.nodeAt(secondDirection).type()) + "=" +
+        separationFromSecond
+    );*/
+
+    // TODO Handle occlusion of the second axis if we have a parent or
+    // if we have a second-axis child. Doesn't this code need to ensure
+    // the second-axis child is not trapped inside too small a space?
+
+    if(separationBetweenChildren
+        >= separationFromFirst + separationFromSecond) {
+        // The separation between the children is greater than the
+        // separation between each child and this node.
+
+        // Center them as much as possible.
+        separationFromFirst = parsegraph_max(
+            separationFromFirst,
+            separationBetweenChildren / 2
+        );
+        separationFromSecond = parsegraph_max(
+            separationFromSecond,
+            separationBetweenChildren / 2
+        );
+    }
+    else {
+        //separationBetweenChildren
+        //    < separationFromFirst + separationFromSecond
+
+        // The separation between children is less than what this node
+        // needs to separate each child from itself, so do nothing to
+        // the separation values.
+    }
+
+    float firstNodeSize[2];
+    parsegraph_Node_size(firstNode, firstNodeSize);
+    float secondNodeSize[2];
+    parsegraph_Node_size(secondNode, secondNodeSize);
+
+    if(
+        parsegraph_getNodeDirectionAxis(firstDirection)
+        == parsegraph_VERTICAL_AXIS
+    ) {
+        separationFromFirst = parsegraph_max(
+            separationFromFirst,
+            parsegraph_Node_scaleAt(node, firstDirection) * (firstNodeSize[1] / 2)
+            + bodySize[1] / 2
+        );
+        separationFromFirst
+            += parsegraph_Node_verticalSeparation(node, firstDirection)
+            * parsegraph_Node_scaleAt(node, firstDirection);
+
+        separationFromSecond = parsegraph_max(
+            separationFromSecond,
+            parsegraph_Node_scaleAt(node, secondDirection) * (secondNodeSize[1] / 2)
+            + bodySize[1] / 2
+        );
+        separationFromSecond
+            += parsegraph_Node_verticalSeparation(node, secondDirection)
+            * parsegraph_Node_scaleAt(node, secondDirection);
+    }
+    else {
+        separationFromFirst = parsegraph_max(
+            separationFromFirst,
+            parsegraph_Node_scaleAt(node, firstDirection) * (firstNodeSize[0] / 2)
+            + bodySize[0] / 2
+        );
+        separationFromFirst
+            += parsegraph_Node_horizontalSeparation(node, firstDirection)
+            * parsegraph_Node_scaleAt(node, firstDirection);
+
+        separationFromSecond = parsegraph_max(
+            separationFromSecond,
+            parsegraph_Node_scaleAt(node, secondDirection) * (secondNodeSize[0] / 2)
+            + bodySize[0] / 2
+        );
+        separationFromSecond
+            += parsegraph_Node_horizontalSeparation(node, secondDirection)
+            * parsegraph_Node_scaleAt(node, secondDirection);
+    }
+
+    // Set the positions of the nodes.
+    positionChild(
+        node,
+        firstDirection,
+        firstNodeAlignment,
+        separationFromFirst
+    );
+    positionChild(
+        node,
+        secondDirection,
+        secondNodeAlignment,
+        separationFromSecond
+    );
+
+    // Combine their extents.
+    combineExtents(
+        node,
+        firstDirection,
+        firstNodeAlignment,
+        separationFromFirst
+    );
+    combineExtents(
+        node,
+        secondDirection,
+        secondNodeAlignment,
+        separationFromSecond
+    );
+}
+
+static void addLineBounds(void* nodePtr, int given)
+{
+    parsegraph_Node* node = nodePtr;
+    if(!parsegraph_Node_hasNode(node, given)) {
+        return;
+    }
+
+    int perpAxis = parsegraph_getPerpendicularAxis(given);
+    int dirSign = parsegraph_nodeDirectionSign(given);
+
+    float positiveOffset = node->_neighbors[
+        parsegraph_getPositiveNodeDirection(perpAxis)
+    ].extentOffset;
+
+    float negativeOffset = node->_neighbors[
+        parsegraph_getNegativeNodeDirection(perpAxis)
+    ].extentOffset;
+
+    if(dirSign < 0) {
+        positiveOffset -= parsegraph_Node_sizeIn(node, given) + parsegraph_Node_lineLengthAt(node, given);
+        negativeOffset -= parsegraph_Node_sizeIn(node, given) + parsegraph_Node_lineLengthAt(node, given);
+    }
+
+    if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_EXACT) {
+        // Append the line-shaped bound.
+        parsegraph_Extent_combineBound(node->_neighbors[
+            parsegraph_getPositiveNodeDirection(perpAxis)
+        ].extent,
+            positiveOffset,
+            parsegraph_Node_lineLengthAt(node, given),
+            parsegraph_Node_scaleAt(node, given) * parsegraph_LINE_THICKNESS / 2
+        );
+        parsegraph_Extent_combineBound(node->_neighbors[
+            parsegraph_getNegativeNodeDirection(perpAxis)
+        ].extent,
+            negativeOffset,
+            parsegraph_Node_lineLengthAt(node, given),
+            parsegraph_Node_scaleAt(node, given) * parsegraph_LINE_THICKNESS / 2
+        );
+    }
 };
 
 /**
  * Sets the position, calculates extents, and
  * clears the needs commit flag.
  */
-parsegraph_Node.prototype.commitLayout = function(bodySize)
+int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
 {
     // Do nothing if this node already has a layout committed.
-    if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
-        return false;
+    if(node->_layoutState == parsegraph_COMMITTED_LAYOUT) {
+        return 0;
     }
 
     // Check for invalid layout states.
-    if(this._layoutState === parsegraph_NULL_LAYOUT_STATE) {
-        throw parsegraph_createException(parsegraph_BAD_LAYOUT_STATE);
+    if(node->_layoutState == parsegraph_NULL_LAYOUT_STATE) {
+        parsegraph_abort(parsegraph_BAD_LAYOUT_STATE);
     }
 
     // Do not allow overlapping layout commits.
-    if(this._layoutState === parsegraph_IN_COMMIT) {
-        throw parsegraph_createException(parsegraph_BAD_LAYOUT_STATE);
+    if(node->_layoutState == parsegraph_IN_COMMIT) {
+        parsegraph_abort(parsegraph_BAD_LAYOUT_STATE);
     }
 
     // Begin the layout.
-    this._layoutState = parsegraph_IN_COMMIT;
+    node->_layoutState = parsegraph_IN_COMMIT;
 
     // Clear the absolute point values, to be safe.
-    this._absoluteXPos = null;
-    this._absoluteYPos = null;
+    node->_absoluteXPos = 0;
+    node->_absoluteYPos = 0;
 
-    var initExtent = function(
-        inDirection,
-        length,
-        size,
-        offset)
-    {
-        this._neighbors[inDirection].extent.clear();
-        this._neighbors[inDirection].extent.appendLS(length, size);
-        this._neighbors[inDirection].extentOffset = offset;
-    };
 
-    bodySize = this.size(bodySize);
+    parsegraph_Node_size(node, bodySize);
 
     // This node's horizontal bottom, used with downward nodes.
-    initExtent.call(
-        this,
+    initExtent(
+        node,
         parsegraph_DOWNWARD,
         // Length:
-        bodySize.width(),
+        bodySize[0],
         // Size:
-        bodySize.height() / 2,
+        bodySize[1] / 2,
         // Offset to body center:
-        bodySize.width() / 2
+        bodySize[0] / 2
     );
 
     // This node's horizontal top, used with upward nodes.
-    initExtent.call(
-        this,
+    initExtent(
+        node,
         parsegraph_UPWARD,
         // Length:
-        bodySize.width(),
+        bodySize[0],
         // Size:
-        bodySize.height() / 2,
+        bodySize[1] / 2,
         // Offset to body center:
-        bodySize.width() / 2
+        bodySize[0] / 2
     );
 
     // This node's vertical back, used with backward nodes.
-    initExtent.call(
-        this,
+    initExtent(
+        node,
         parsegraph_BACKWARD,
         // Length:
-        bodySize.height(),
+        bodySize[1],
         // Size:
-        bodySize.width() / 2,
+        bodySize[0] / 2,
         // Offset to body center:
-        bodySize.height() / 2
+        bodySize[1] / 2
     );
 
     // This node's vertical front, used with forward nodes.
-    initExtent.call(
-        this,
+    initExtent(
+        node,
         parsegraph_FORWARD,
         // Length:
-        bodySize.height(),
+        bodySize[1],
         // Size:
-        bodySize.width() / 2,
+        bodySize[0] / 2,
         // Offset to body center:
-        bodySize.height() / 2
+        bodySize[1] / 2
     );
 
-    /**
-     * Returns the offset of the child's center in the given direction from
-     * this node's center.
-     *
-     * This offset is in a direction perpendicular to the given direction
-     * and is positive to indicate a negative offset.
-     *
-     * The result is in this node's space.
-     */
-    var getAlignment = function(childDirection) {
-        // Calculate the alignment adjustment for both nodes.
-        var child = this.nodeAt(childDirection);
-        var axis = parsegraph_getPerpendicularAxis(
-            parsegraph_getNodeDirectionAxis(childDirection)
-        );
-
-        var rv;
-
-        var alignmentMode = this._neighbors[childDirection].alignmentMode;
-        switch(alignmentMode) {
-        case parsegraph_NULL_NODE_ALIGNMENT:
-            throw parsegraph_createException(parsegraph_BAD_NODE_ALIGNMENT);
-        case parsegraph_DO_NOT_ALIGN:
-            // Unaligned nodes have no alignment offset.
-            rv = 0;
-            break;
-        case parsegraph_ALIGN_NEGATIVE:
-            rv = parsegraph_findConsecutiveLength(
-                child,
-                parsegraph_getNegativeNodeDirection(axis)
-            );
-            break;
-        case parsegraph_ALIGN_CENTER:
-        {
-            var negativeLength = parsegraph_findConsecutiveLength(
-                child, parsegraph_getNegativeNodeDirection(axis)
-            );
-
-            var positiveLength = parsegraph_findConsecutiveLength(
-                child, parsegraph_getPositiveNodeDirection(axis)
-            );
-
-            var halfLength = (negativeLength + positiveLength) / 2;
-
-            if(negativeLength > positiveLength) {
-                // The child's negative neighbors extend more than their positive neighbors.
-                rv = negativeLength - halfLength;
-            }
-            else if(negativeLength < positiveLength) {
-                rv = -(positiveLength - halfLength);
-            }
-            else {
-                rv = 0;
-            }
-            break;
-        }
-        case parsegraph_ALIGN_POSITIVE:
-            rv = -parsegraph_findConsecutiveLength(
-                child, parsegraph_getPositiveNodeDirection(axis)
-            );
-            break;
-        }
-        //console.log("Found alignment of " + rv);
-        return rv * this.scaleAt(childDirection);
-    };
-
-    /**
-     * Positions a child.
-     *
-     * The alignment is positive in the positive direction.
-     *
-     * The separation is positive in the direction of the child.
-     *
-     * These values should in this node's space.
-     *
-     * The child's position is in this node's space.
-     */
-    var positionChild = function(childDirection, alignment, separation) {
-        // Validate arguments.
-        if(separation < 0) {
-            throw new Error("separation must always be positive.");
-        }
-        if(!parsegraph_isCardinalDirection(childDirection)) {
-            throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
-        }
-        var child = this.nodeAt(childDirection);
-        var reversedDirection = parsegraph_reverseNodeDirection(childDirection)
-
-        // Save alignment parameters.
-        this._neighbors[childDirection].alignmentOffset = alignment;
-        this._neighbors[childDirection].separation = separation;
-
-        // Determine the line length.
-        var lineLength;
-        var extentSize;
-        if(this.nodeAlignmentMode(childDirection) === parsegraph_DO_NOT_ALIGN) {
-            if(parsegraph_isVerticalNodeDirection(childDirection)) {
-                extentSize = child.size().height() / 2;
-            }
-            else {
-                extentSize = child.size().width() / 2;
-            }
-        }
-        else {
-            extentSize = child.extentsAt(reversedDirection).sizeAt(
-                this._neighbors[childDirection].node.extentOffsetAt(reversedDirection) -
-                alignment / this.scaleAt(childDirection)
-            );
-        }
-        lineLength = separation - this.scaleAt(childDirection) * extentSize;
-        this._neighbors[childDirection].lineLength = lineLength;
-        //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
-
-        // Set the position.
-        var dirSign = parsegraph_nodeDirectionSign(childDirection);
-        if(parsegraph_isVerticalNodeDirection(childDirection)) {
-            // The child is positioned vertically.
-            this.setPosAt(childDirection, alignment, dirSign * separation);
-        }
-        else {
-            this.setPosAt(childDirection, dirSign * separation, alignment);
-        }
-        /*console.log(
-            parsegraph_nameNodeDirection(childDirection) + " " +
-            parsegraph_nameNodeType(child.type()) + "'s position set to (" +
-            this._neighbors[childDirection].xPos + ", " + this._neighbors[childDirection].yPos + ")"
-        );*/
-    };
-
-    /**
-     * Merge this node's extents in the given direction with the
-     * child's extents.
-     *
-     * alignment is the offset of the child from this node.
-     * Positive values indicate presence in the positive
-     * direction. (i.e. forward or upward).
-     *
-     * separation is the distance from the center of this node to the center
-     * of the node in the specified direction.
-     */
-    var combineExtents = function(
-        childDirection,
-        alignment,
-        separation)
-    {
-        var child = this.nodeAt(childDirection);
-
-        /**
-         * Combine an extent.
-         *
-         * lengthAdjustment and sizeAdjustment are in this node's space.
-         */
-        var combineExtent = function(
-            direction,
-            lengthAdjustment,
-            sizeAdjustment)
-        {
-            /*console.log(
-                "combineExtent(" +
-                parsegraph_nameNodeDirection(direction) + ", " +
-                lengthAdjustment + ", " +
-                sizeAdjustment + ")"
-            );*/
-            // Calculate the new offset to this node's center.
-            var lengthOffset = this._neighbors[direction].extentOffset
-                + lengthAdjustment
-                - this.scaleAt(childDirection) * child.extentOffsetAt(direction);
-
-            // Combine the two extents in the given direction.
-            //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
-            //console.log("Length offset: " + lengthOffset);
-            //console.log("Size adjustment: " + sizeAdjustment);
-            if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
-                var e = this._neighbors[direction].extent;
-                var bv = child.extentsAt(direction).boundingValues();
-                var scale = this.scaleAt(childDirection);
-                if(lengthOffset === 0) {
-                    //console.log("lengthOffset == 0");
-                    e.setBoundLengthAt(0, Math.max(e.boundLengthAt(0), bv[0]*scale + lengthOffset));
-                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
-                }
-                else if(lengthOffset < 0) {
-                    //console.log("lengthOffset < 0");
-                    e.setBoundLengthAt(0, Math.max(
-                        e.boundLengthAt(0) + Math.abs(lengthOffset),
-                        bv[0]*scale
-                    ));
-                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
-                }
-                else {
-                    //console.log("lengthOffset > 0");
-                    e.setBoundLengthAt(
-                        0, Math.max(e.boundLengthAt(0), lengthOffset + bv[0]*scale)
-                    );
-                    e.setBoundSizeAt(
-                        0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment)
-                    );
-                }
-                /*e.combineExtent(
-                    child.extentsAt(direction),
-                    lengthOffset,
-                    sizeAdjustment,
-                    this.scaleAt(childDirection)
-                );
-                e.simplify();*/
-            }
-            else {
-                this._neighbors[direction].extent.combineExtent(
-                    child.extentsAt(direction),
-                    lengthOffset,
-                    sizeAdjustment,
-                    this.scaleAt(childDirection)
-                );
-            }
-
-            // Adjust the length offset to remain positive.
-            if(lengthOffset < 0) {
-                //console.log("Adjusting negative extent offset.");
-                this._neighbors[direction].extentOffset =
-                    this._neighbors[direction].extentOffset + Math.abs(lengthOffset);
-            }
-
-            /*console.log(
-                "New "
-                + parsegraph_nameNodeDirection(direction)
-                + " extent offset = "
-                + this._neighbors[direction].extentOffset
-            );
-            this._neighbors[direction].extent.forEach(function(l, s, i) {
-                console.log(i + ". length=" + l + ", size=" + s);
-            });
-            */
-
-            // Assert the extent offset is positive.
-            if(this._neighbors[direction].extentOffset < 0) {
-                throw new Error("Extent offset must not be negative.");
-            }
-        };
-
-        switch(childDirection) {
-        case parsegraph_DOWNWARD:
-            // Downward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, alignment, separation);
-            combineExtent.call(this, parsegraph_UPWARD, alignment, -separation);
-
-            combineExtent.call(this, parsegraph_FORWARD, separation, alignment);
-            combineExtent.call(this, parsegraph_BACKWARD, separation, -alignment);
-            break;
-        case parsegraph_UPWARD:
-            // Upward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, alignment, -separation);
-            combineExtent.call(this, parsegraph_UPWARD, alignment, separation);
-
-            combineExtent.call(this, parsegraph_FORWARD, -separation, alignment);
-            combineExtent.call(this, parsegraph_BACKWARD, -separation, -alignment);
-            break;
-        case parsegraph_FORWARD:
-            // Forward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, separation, alignment);
-            combineExtent.call(this, parsegraph_UPWARD, separation, -alignment);
-
-            combineExtent.call(this, parsegraph_FORWARD, alignment, separation);
-            combineExtent.call(this, parsegraph_BACKWARD, alignment, -separation);
-            break;
-        case parsegraph_BACKWARD:
-            // Backward child.
-            combineExtent.call(this, parsegraph_DOWNWARD, -separation, alignment);
-            combineExtent.call(this, parsegraph_UPWARD, -separation, -alignment);
-
-            combineExtent.call(this, parsegraph_FORWARD, alignment, -separation);
-            combineExtent.call(this, parsegraph_BACKWARD, alignment, separation);
-            break;
-        default:
-            throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
-        }
-    };
-
-    /**
-     * Layout a single node in the given direction.
-     */
-    var layoutSingle = function(
-        direction,
-        allowAxisOverlap)
-    {
-        if(!this.hasNode(direction)) {
-            return;
-        }
-
-        /*console.log(
-            "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
-            + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
-        );*/
-
-        // Get the alignment for the children.
-        var alignment = getAlignment.call(this, direction);
-        //console.log("Calculated alignment of " + alignment + ".");
-
-        var child = this.nodeAt(direction);
-        var reversed = parsegraph_reverseNodeDirection(direction);
-        var childExtent = child.extentsAt(reversed);
-
-        // Separate the child from this node.
-        var separationFromChild = this._neighbors[direction].extent.separation(
-            childExtent,
-            this._neighbors[direction].extentOffset
-                + alignment
-                - this.scaleAt(direction) * child.extentOffsetAt(reversed),
-            allowAxisOverlap,
-            this.scaleAt(direction),
-            parsegraph_LINE_THICKNESS / 2
-        );
-        //console.log("Calculated unpadded separation of " + separationFromChild + ".");
-
-        // Add padding and ensure the child is not separated less than
-        // it would be if the node was not offset by alignment.
-        if(
-            parsegraph_getNodeDirectionAxis(direction) == parsegraph_VERTICAL_AXIS
-        ) {
-            separationFromChild = Math.max(
-                separationFromChild,
-                this.scaleAt(direction) * (child.size().height() / 2) + bodySize.height() / 2
-            );
-            separationFromChild
-                += this.verticalSeparation(direction) * this.scaleAt(direction);
-        }
-        else {
-            separationFromChild = Math.max(
-                separationFromChild,
-                this.scaleAt(direction) * (child.size().width() / 2) + bodySize.width() / 2
-            );
-            separationFromChild
-                += this.horizontalSeparation(direction) * this.scaleAt(direction);
-        }
-        //console.log("Calculated padded separation of " + separationFromChild + ".");
-
-        // Set the node's position.
-        positionChild.call(
-            this,
-            direction,
-            alignment,
-            separationFromChild
-        );
-
-        // Combine the extents of the child and this node.
-        combineExtents.call(
-            this,
-            direction,
-            alignment,
-            separationFromChild
-        );
-    };
-
-    /**
-     * Layout a pair of nodes in the given directions.
-     */
-    var layoutAxis = function(
-        firstDirection,
-        secondDirection,
-        allowAxisOverlap)
-    {
-        // Change the node direction to null if there is no node in that
-        // direction.
-        if(!this.hasNode(firstDirection)) {
-            firstDirection = parsegraph_NULL_NODE_DIRECTION;
-        }
-        if(!this.hasNode(secondDirection)) {
-            secondDirection = parsegraph_NULL_NODE_DIRECTION;
-        }
-
-        // Return if there are no directions.
-        if(
-            firstDirection == parsegraph_NULL_NODE_DIRECTION
-            && secondDirection == parsegraph_NULL_NODE_DIRECTION
-        ) {
-            return;
-        }
-
-        // Test if this node has a first-axis child in only one direction.
-        if(
-            firstDirection == parsegraph_NULL_NODE_DIRECTION
-            || secondDirection == parsegraph_NULL_NODE_DIRECTION
-        ) {
-            // Find the direction of the only first-axis child.
-            var firstAxisDirection;
-            if(firstDirection != parsegraph_NULL_NODE_DIRECTION) {
-                firstAxisDirection = firstDirection;
-            }
-            else {
-                // It must be the second direction.
-                firstAxisDirection = secondDirection;
-            }
-
-            // Layout that node.
-            layoutSingle.call(this, firstAxisDirection, allowAxisOverlap);
-            return;
-        }
-
-        /*console.log(
-            "Laying out " +
-            parsegraph_nameNodeDirection(firstDirection) + " and " +
-            parsegraph_nameNodeDirection(secondDirection) + " children."
-        );*/
-
-        // This node has first-axis children in both directions.
-        var firstNode = this.nodeAt(firstDirection);
-        var secondNode = this.nodeAt(secondDirection);
-
-        // Get the alignments for the children.
-        var firstNodeAlignment = getAlignment.call(this, firstDirection);
-        var secondNodeAlignment = getAlignment.call(this, secondDirection);
-        //console.log("First alignment: " + firstNodeAlignment);
-        //console.log("Second alignment: " + secondNodeAlignment);
-
-        var separationBetweenChildren =
-            firstNode.extentsAt(secondDirection).separation(
-                secondNode.extentsAt(firstDirection),
-                (this.scaleAt(secondDirection) / this.scaleAt(firstDirection))
-                * (secondNodeAlignment - secondNode.extentOffsetAt(firstDirection))
-                - (firstNodeAlignment - firstNode.extentOffsetAt(secondDirection)),
-                true,
-                this.scaleAt(secondDirection) / this.scaleAt(firstDirection)
-            );
-        separationBetweenChildren *= this.scaleAt(firstDirection);
-
-        //console.log("Separation between children=" + separationBetweenChildren);
-
-        var separationFromSecond = this._neighbors[secondDirection].extent;
-
-        /*console.log(
-            "This " +
-            parsegraph_nameNodeDirection(firstDirection) +
-            " extent (offset to center=" +
-            this._neighbors[firstDirection].extentOffset +
-            ")"
-        );
-        this._neighbors[firstDirection].extent.forEach(
-            function(length, size, i) {
-                console.log(i + ". l=" + length + ", s=" + size);
-            }
-        );
-
-        console.log(
-            parsegraph_nameNodeDirection(firstDirection) +
-            " " + parsegraph_nameNodeType(this.nodeAt(firstDirection).type()) +
-            "'s " + parsegraph_nameNodeDirection(secondDirection) +
-            " extent (offset to center=" +
-            this.nodeAt(firstDirection).extentOffsetAt(secondDirection) +
-            ")"
-        );
-        this.nodeAt(firstDirection).extentsAt(secondDirection).forEach(
-            function(length, size, i) {
-                console.log(i + ". l=" + length + ", s=" + size);
-            }
-        );
-
-        console.log(
-            "FirstNodeAlignment=" + firstNodeAlignment
-        );
-        console.log(
-            "this._neighbors[firstDirection].extentOffset=" +
-                this._neighbors[firstDirection].extentOffset
-        );
-        console.log(
-            "firstNode.extentOffsetAt(secondDirection)=" + firstNode.extentOffsetAt(secondDirection)
-        );*/
-
-        // Allow some overlap if we have both first-axis sides, but
-        // nothing ahead on the second axis.
-        var separationFromFirst = this._neighbors[firstDirection].extent
-            .separation(
-                firstNode.extentsAt(secondDirection),
-                this._neighbors[firstDirection].extentOffset
-                + firstNodeAlignment
-                - this.scaleAt(firstDirection) * firstNode.extentOffsetAt(secondDirection),
-                allowAxisOverlap,
-                this.scaleAt(firstDirection),
-                parsegraph_LINE_THICKNESS / 2
-            );
-
-        var separationFromSecond = this._neighbors[secondDirection].extent
-            .separation(
-                secondNode.extentsAt(firstDirection),
-                this._neighbors[secondDirection].extentOffset
-                + secondNodeAlignment
-                - this.scaleAt(secondDirection) * secondNode.extentOffsetAt(firstDirection),
-                allowAxisOverlap,
-                this.scaleAt(secondDirection),
-                parsegraph_LINE_THICKNESS / 2
-            );
-
-        /*console.log(
-            "Separation from this " + parsegraph_nameNodeType(this.type()) + " to " +
-            parsegraph_nameNodeDirection(firstDirection) + " " +
-            parsegraph_nameNodeType(this.nodeAt(firstDirection).type()) + "=" +
-            separationFromFirst
-        );
-        console.log(
-            "Separation from this " + parsegraph_nameNodeType(this.type()) + " to " +
-            parsegraph_nameNodeDirection(secondDirection) + " " +
-            parsegraph_nameNodeType(this.nodeAt(secondDirection).type()) + "=" +
-            separationFromSecond
-        );*/
-
-        // TODO Handle occlusion of the second axis if we have a parent or
-        // if we have a second-axis child. Doesn't this code need to ensure
-        // the second-axis child is not trapped inside too small a space?
-
-        if(separationBetweenChildren
-            >= separationFromFirst + separationFromSecond) {
-            // The separation between the children is greater than the
-            // separation between each child and this node.
-
-            // Center them as much as possible.
-            separationFromFirst = Math.max(
-                separationFromFirst,
-                separationBetweenChildren / 2
-            );
-            separationFromSecond = Math.max(
-                separationFromSecond,
-                separationBetweenChildren / 2
-            );
-        }
-        else {
-            //separationBetweenChildren
-            //    < separationFromFirst + separationFromSecond
-
-            // The separation between children is less than what this node
-            // needs to separate each child from itself, so do nothing to
-            // the separation values.
-        }
-
-        if(
-            parsegraph_getNodeDirectionAxis(firstDirection)
-            == parsegraph_VERTICAL_AXIS
-        ) {
-            separationFromFirst = Math.max(
-                separationFromFirst,
-                this.scaleAt(firstDirection) * (firstNode.size().height() / 2)
-                + bodySize.height() / 2
-            );
-            separationFromFirst
-                += this.verticalSeparation(firstDirection)
-                * this.scaleAt(firstDirection);
-
-            separationFromSecond = Math.max(
-                separationFromSecond,
-                this.scaleAt(secondDirection) * (secondNode.size().height() / 2)
-                + bodySize.height() / 2
-            );
-            separationFromSecond
-                += this.verticalSeparation(secondDirection)
-                * this.scaleAt(secondDirection);
-        }
-        else {
-            separationFromFirst = Math.max(
-                separationFromFirst,
-                this.scaleAt(firstDirection) * (firstNode.size().width() / 2)
-                + bodySize.width() / 2
-            );
-            separationFromFirst
-                += this.horizontalSeparation(firstDirection)
-                * this.scaleAt(firstDirection);
-
-            separationFromSecond = Math.max(
-                separationFromSecond,
-                this.scaleAt(secondDirection) * (secondNode.size().width() / 2)
-                + bodySize.width() / 2
-            );
-            separationFromSecond
-                += this.horizontalSeparation(secondDirection)
-                * this.scaleAt(secondDirection);
-        }
-
-        // Set the positions of the nodes.
-        positionChild.call(
-            this,
-            firstDirection,
-            firstNodeAlignment,
-            separationFromFirst
-        );
-        positionChild.call(
-            this,
-            secondDirection,
-            secondNodeAlignment,
-            separationFromSecond
-        );
-
-        // Combine their extents.
-        combineExtents.call(
-            this,
-            firstDirection,
-            firstNodeAlignment,
-            separationFromFirst
-        );
-        combineExtents.call(
-            this,
-            secondDirection,
-            secondNodeAlignment,
-            separationFromSecond
-        );
-    };
-
     if(
-        this.isRoot()
-        || this.parentDirection() == parsegraph_INWARD
-        || this.parentDirection() == parsegraph_OUTWARD
+        parsegraph_Node_isRoot(node)
+        || parsegraph_Node_parentDirection(node) == parsegraph_INWARD
+        || parsegraph_Node_parentDirection(node) == parsegraph_OUTWARD
     ) {
-        if(this._layoutPreference == parsegraph_PREFER_HORIZONTAL_AXIS) {
+        if(node->_layoutPreference == parsegraph_PREFER_HORIZONTAL_AXIS) {
             // Root-like, so just lay out both axes.
-            layoutAxis.call(this, parsegraph_BACKWARD, parsegraph_FORWARD,
-                !this.hasNode(parsegraph_UPWARD) && !this.hasNode(parsegraph_DOWNWARD)
+            layoutAxis(node, bodySize, parsegraph_BACKWARD, parsegraph_FORWARD,
+                !parsegraph_Node_hasNode(node, parsegraph_UPWARD) && !parsegraph_Node_hasNode(node, parsegraph_DOWNWARD)
             );
 
             // This node is root-like, so it lays out the second-axis children in
             // the same method as the first axis.
-            layoutAxis.call(this, parsegraph_UPWARD, parsegraph_DOWNWARD, true);
+            layoutAxis(node, bodySize, parsegraph_UPWARD, parsegraph_DOWNWARD, 1);
         }
         else {
             // Root-like, so just lay out both axes.
-            layoutAxis.call(this, parsegraph_UPWARD, parsegraph_DOWNWARD,
-                !this.hasNode(parsegraph_BACKWARD) && !this.hasNode(parsegraph_FORWARD)
+            layoutAxis(node, bodySize, parsegraph_UPWARD, parsegraph_DOWNWARD,
+                !parsegraph_Node_hasNode(node, parsegraph_BACKWARD) && !parsegraph_Node_hasNode(node, parsegraph_FORWARD)
             );
 
             // This node is root-like, so it lays out the second-axis children in
             // the same method as the first axis.
-            layoutAxis.call(this, parsegraph_BACKWARD, parsegraph_FORWARD, true);
+            layoutAxis(node, bodySize, parsegraph_BACKWARD, parsegraph_FORWARD, 1);
         }
     }
     else {
         // Layout based upon the axis preference.
-        if(this.canonicalLayoutPreference() == parsegraph_PREFER_PERPENDICULAR_AXIS) {
+        if(parsegraph_Node_canonicalLayoutPreference(node) == parsegraph_PREFER_PERPENDICULAR_AXIS) {
             // firstDirection and secondDirection, if not NULL_NODE_DIRECTION,
             // indicate a neighboring node in at least that direction.
-            var firstDirection
-                = parsegraph_NULL_NODE_DIRECTION;
-            var secondDirection
-                = parsegraph_NULL_NODE_DIRECTION;
+            //int firstDirection
+            //    = parsegraph_NULL_NODE_DIRECTION;
+            //int secondDirection
+            //    = parsegraph_NULL_NODE_DIRECTION;
 
             // firstAxis indicates the first-axis.
-            var firstAxis =
-                parsegraph_getPerpendicularAxis(this.parentDirection());
+            int firstAxis =
+                parsegraph_getPerpendicularAxis(parsegraph_Node_parentDirection(node));
 
             // Check for nodes perpendicular to parent's direction
-            var hasFirstAxisNodes = this.hasNodes(
-                firstAxis
-            );
-            var oppositeFromParent =
-                parsegraph_reverseNodeDirection(this.parentDirection());
-            layoutAxis.call(
-                this,
+            //parsegraph_Node_hasNodes(node, int axis, int* hasNegative, int* hasPositive)
+            int hasFirstAxisNodes[2];
+            parsegraph_Node_hasNodes(node, firstAxis, hasFirstAxisNodes, hasFirstAxisNodes + 1);
+            int oppositeFromParent =
+                parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node));
+            layoutAxis(
+                node, bodySize,
                 hasFirstAxisNodes[0],
                 hasFirstAxisNodes[1],
-                false
+                0
             );
 
             // Layout this node's second-axis child, if that child exists.
-            if(this.hasNode(oppositeFromParent)) {
+            if(parsegraph_Node_hasNode(node, oppositeFromParent)) {
                 // Layout the second-axis child.
-                layoutSingle.call(this, oppositeFromParent, true);
+                layoutSingle(node, bodySize, oppositeFromParent, 1);
             }
         }
         else {
             // Layout this node's second-axis child, if that child exists.
-            var oppositeFromParent =
-                parsegraph_reverseNodeDirection(this.parentDirection());
+            int oppositeFromParent =
+                parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node));
 
             // firstDirection and secondDirection, if not NULL_NODE_DIRECTION,
             // indicate a neighboring node in at least that direction.
-            var firstDirection
+            int firstDirection
                 = parsegraph_NULL_NODE_DIRECTION;
-            var secondDirection
+            int secondDirection
                 = parsegraph_NULL_NODE_DIRECTION;
 
             // Check for nodes perpendicular to parent's direction
-            var perpendicularNodes = this.hasNodes(
-                parsegraph_getPerpendicularAxis(this.parentDirection())
+            int perpendicularNodes[2];
+            parsegraph_Node_hasNodes(node,
+                parsegraph_getPerpendicularAxis(parsegraph_Node_parentDirection(node)),
+                perpendicularNodes, perpendicularNodes + 1
             );
 
-            if(this.hasNode(oppositeFromParent)) {
+            if(parsegraph_Node_hasNode(node, oppositeFromParent)) {
                 // Layout the second-axis child.
-                layoutSingle.call(
-                    this,
+                layoutSingle(
+                    node, bodySize,
                     oppositeFromParent,
                     firstDirection != parsegraph_NULL_NODE_DIRECTION ||
                     secondDirection != parsegraph_NULL_NODE_DIRECTION
                 );
             }
 
-            layoutAxis.call(this, perpendicularNodes[0], perpendicularNodes[1], true);
+            layoutAxis(node, bodySize, perpendicularNodes[0], perpendicularNodes[1], 1);
         }
     }
 
-    var addLineBounds = function(given)
-    {
-        if(!this.hasNode(given)) {
-            return;
-        }
-
-        var perpAxis = parsegraph_getPerpendicularAxis(given);
-        var dirSign = parsegraph_nodeDirectionSign(given);
-
-        var positiveOffset = this._neighbors[
-            parsegraph_getPositiveNodeDirection(perpAxis)
-        ].extentOffset;
-
-        var negativeOffset = this._neighbors[
-            parsegraph_getNegativeNodeDirection(perpAxis)
-        ].extentOffset;
-
-        if(dirSign < 0) {
-            positiveOffset -= this.sizeIn(given) + this.lineLengthAt(given);
-            negativeOffset -= this.sizeIn(given) + this.lineLengthAt(given);
-        }
-
-        if(this.nodeFit() == parsegraph_NODE_FIT_EXACT) {
-            // Append the line-shaped bound.
-            this._neighbors[
-                parsegraph_getPositiveNodeDirection(perpAxis)
-            ].extent.combineBound(
-                positiveOffset,
-                this.lineLengthAt(given),
-                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
-            );
-            this._neighbors[
-                parsegraph_getNegativeNodeDirection(perpAxis)
-            ].extent.combineBound(
-                negativeOffset,
-                this.lineLengthAt(given),
-                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
-            );
-        }
-    };
-
     // Set our extents, combined with non-point neighbors.
-    parsegraph_forEachCardinalNodeDirection(addLineBounds, this);
+    parsegraph_forEachCardinalNodeDirection(addLineBounds, node);
 
-    if(this.hasNode(parsegraph_INWARD)) {
-        var nestedNode = this.nodeAt(parsegraph_INWARD);
-        var nestedSize = nestedNode.extentSize();
+    if(parsegraph_Node_hasNode(node, parsegraph_INWARD)) {
+        parsegraph_Node* nestedNode = parsegraph_Node_nodeAt(node, parsegraph_INWARD);
+        float nestedSize[2];
+        parsegraph_Node_extentSize(nestedNode, nestedSize);
         if(
-            this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL
-            && nestedNode.scale() * nestedSize.width() <
-            bodySize.width() - 2 * (this.horizontalPadding() + this.borderThickness())
+            parsegraph_Node_nodeAlignmentMode(node, parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL
+            && parsegraph_Node_scale(nestedNode) * nestedSize[0] <
+            bodySize[0] - 2 * (parsegraph_Node_horizontalPadding(node) + parsegraph_Node_borderThickness(node))
         ) {
-            this.setPosAt(parsegraph_INWARD,
-                nestedNode.scale() * (
-                    nestedNode.extentOffsetAt(parsegraph_DOWNWARD)
-                    - nestedSize.width() / 2
+            parsegraph_Node_setPosAt(node, parsegraph_INWARD,
+                parsegraph_Node_scale(nestedNode) * (
+                    parsegraph_Node_extentOffsetAt(nestedNode, parsegraph_DOWNWARD)
+                    - nestedSize[0] / 2
                 ),
-                bodySize.height() / 2
-                - this.verticalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.height()
-                    + nestedNode.extentOffsetAt(parsegraph_FORWARD)
+                bodySize[1] / 2
+                - parsegraph_Node_verticalPadding(node)
+                - parsegraph_Node_borderThickness(node)
+                + parsegraph_Node_scale(nestedNode) * (
+                    - nestedSize[1]
+                    + parsegraph_Node_extentOffsetAt(nestedNode, parsegraph_FORWARD)
                 )
             );
         }
         else if(
-            this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_HORIZONTAL
-            && nestedNode.scale() * nestedSize.height() <
-            bodySize.height() - 2 * (this.verticalPadding() + this.borderThickness())
+            parsegraph_Node_nodeAlignmentMode(node, parsegraph_INWARD) == parsegraph_ALIGN_HORIZONTAL
+            && parsegraph_Node_scale(nestedNode) * nestedSize[1] <
+            bodySize[1] - 2 * (parsegraph_Node_verticalPadding(node) + parsegraph_Node_borderThickness(node))
         ) {
-            this.setPosAt(parsegraph_INWARD,
-                bodySize.width() / 2
-                - this.horizontalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.width()
-                    + nestedNode.extentOffsetAt(
+            parsegraph_Node_setPosAt(node, parsegraph_INWARD,
+                bodySize[0] / 2
+                - parsegraph_Node_horizontalPadding(node)
+                - parsegraph_Node_borderThickness(node)
+                + parsegraph_Node_scale(nestedNode) * (
+                    - nestedSize[0]
+                    + parsegraph_Node_extentOffsetAt(nestedNode,
                         parsegraph_DOWNWARD
                     )
                 ),
-                nestedNode.scale() * (
-                    nestedNode.extentOffsetAt(parsegraph_FORWARD)
-                    - nestedSize.height() / 2
+                parsegraph_Node_scale(nestedNode) * (
+                    parsegraph_Node_extentOffsetAt(nestedNode, parsegraph_FORWARD)
+                    - nestedSize[1] / 2
                 )
             );
         }
         else {
-            this.setPosAt(parsegraph_INWARD,
-                bodySize.width() / 2
-                - this.horizontalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.width()
-                    + nestedNode.extentOffsetAt(
+            parsegraph_Node_setPosAt(node, parsegraph_INWARD,
+                bodySize[0] / 2
+                - parsegraph_Node_horizontalPadding(node)
+                - parsegraph_Node_borderThickness(node)
+                + parsegraph_Node_scale(nestedNode) * (
+                    - nestedSize[0]
+                    + parsegraph_Node_extentOffsetAt(nestedNode,
                         parsegraph_DOWNWARD
                     )
                 ),
-                bodySize.height() / 2
-                - this.verticalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.height()
-                    + nestedNode.extentOffsetAt(
+                bodySize[1] / 2
+                - parsegraph_Node_verticalPadding(node)
+                - parsegraph_Node_borderThickness(node)
+                + parsegraph_Node_scale(nestedNode) * (
+                    - nestedSize[1]
+                    + parsegraph_Node_extentOffsetAt(nestedNode,
                         parsegraph_FORWARD
                     )
                 )
@@ -2078,10 +2367,10 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         }
     }
 
-    this._layoutState = parsegraph_COMMITTED_LAYOUT;
+    node->_layoutState = parsegraph_COMMITTED_LAYOUT;
 
     // Needed a commit, so return true.
-    return true;
+    return 1;
 }
 
 /**
@@ -2090,63 +2379,85 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
  *
  * The result is in node-space; the scale of child nodes is applied.
  */
-var parsegraph_findConsecutiveLength = function(node, inDirection)
+float parsegraph_findConsecutiveLength(parsegraph_Node* node, int inDirection)
 {
     // Exclude some directions that cannot be calculated.
     if(!parsegraph_isCardinalDirection(inDirection)) {
-        throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
+        parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
     }
 
-    var directionAxis = parsegraph_getNodeDirectionAxis(inDirection);
+    int directionAxis = parsegraph_getNodeDirectionAxis(inDirection);
     if(directionAxis == parsegraph_NULL_AXIS) {
         // This should be impossible.
-        throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
+        parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
     }
 
     // Calculate the length, starting from the center of this node.
-    var total = 0;
-    var scale = 1.0;
+    float total = 0;
+    float scale = 1.0;
 
     // Iterate in the given direction.
-    if(node.hasNode(inDirection)) {
-        total += node.separationAt(inDirection);
+    if(parsegraph_Node_hasNode(node, inDirection)) {
+        total += parsegraph_Node_separationAt(node, inDirection);
 
-        scale *= node.scaleAt(inDirection);
-        var thisNode = node.nodeAt(inDirection);
-        var nextNode = thisNode.nodeAt(inDirection);
-        while(nextNode != null) {
-            total += thisNode.separationAt(inDirection) * scale;
-            scale *= thisNode.scaleAt(inDirection);
+        scale *= parsegraph_Node_scaleAt(node, inDirection);
+        parsegraph_Node* thisNode = parsegraph_Node_nodeAt(node, inDirection);
+        parsegraph_Node* nextNode = parsegraph_Node_nodeAt(thisNode, inDirection);
+        while(nextNode != 0) {
+            total += parsegraph_Node_separationAt(thisNode, inDirection) * scale;
+            scale *= parsegraph_Node_scaleAt(thisNode, inDirection);
 
             thisNode = nextNode;
-            nextNode = nextNode.nodeAt(inDirection);
+            nextNode = parsegraph_Node_nodeAt(nextNode, inDirection);
         }
     }
 
     return total;
-};
+}
 
-parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
+int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
+{
+    struct timespec t;
+    if(cl->timeout > 0) {
+        clock_gettime(CLOCK_REALTIME, &t);
+    }
+    float bodySize[2];
+    parsegraph_Node* node = cl->node;
+    for(;;) {
+        node = node->_worldPrev;
+        if(node->_layoutState == parsegraph_NEEDS_COMMIT) {
+            parsegraph_Node_commitLayout(node, bodySize);
+        }
+        if(cl->timeout > 0) {
+            struct timespec now;
+            clock_gettime(CLOCK_REALTIME, &now);
+            if(parsegraph_timediffMs(&now, &t) > cl->timeout) {
+                cl->node = node;
+                return 1;
+            }
+        }
+        if(node == cl->root) {
+            // Terminal condition reached.
+            return 0;
+        }
+    }
+    parsegraph_die("Unreachable");
+}
+
+int parsegraph_Node_commitLayoutIteratively(parsegraph_Node* node, parsegraph_CommitLayoutTraversal* cl)
 {
     // Avoid needless work if possible.
-    if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
-        return;
+    if(node->_layoutState == parsegraph_COMMITTED_LAYOUT) {
+        return 0;
     }
 
+    // Reset the traversal.
+    cl->root = node;
+    cl->node = node;
+
     // Traverse the graph depth-first, committing each node's layout in turn.
-    var bodySize = new parsegraph_Size();
-    var startTime = parsegraph_getTimeInMillis();
-    return this.traverse(
-        function(node) {
-            return node._layoutState === parsegraph_NEEDS_COMMIT;
-        },
-        function(node) {
-            node.commitLayout(bodySize);
-        },
-        this,
-        timeout
-    );
-};
+    return parsegraph_Node_continueCommitLayout(cl);
+}
 
 /**
  * Returns the separation between this node and the node
@@ -2156,26 +2467,46 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
  *
  * @see #commitLayout()
  */
-parsegraph_Node.prototype.separationAt = function(inDirection) {
+float parsegraph_Node_separationAt(parsegraph_Node* node, int inDirection)
+{
     // Exclude some directions that cannot be calculated.
     if(!parsegraph_isCardinalDirection(inDirection)) {
-        throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
+        parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
     }
 
     // If the given direction is the parent's direction, use
     // their measurement instead.
-    if(!this.isRoot() && inDirection == this.parentDirection()) {
-        return this.nodeParent().separationAt(
+    if(!parsegraph_Node_isRoot(node) && inDirection == parsegraph_Node_parentDirection(node)) {
+        return parsegraph_Node_separationAt(
+            parsegraph_Node_nodeParent(node),
             parsegraph_reverseNodeDirection(inDirection)
         );
     }
 
-    if(!this.hasNode(inDirection)) {
-        throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
+    if(!parsegraph_Node_hasNode(node, inDirection)) {
+        parsegraph_abort(parsegraph_NO_NODE_FOUND);
     }
 
-    return this._neighbors[inDirection].separation;
+    return node->_neighbors[inDirection].separation;
 };
+
+// Notifies children that may need to move due to this layout change.
+static void notifyChild(parsegraph_Node* node, int direction) {
+    // Don't recurse into the parent direction.
+    if(!parsegraph_Node_isRoot(node) && direction == parsegraph_Node_parentDirection(node)) {
+        return;
+    }
+
+    // Ignore empty node directions.
+    if(!parsegraph_Node_hasNode(node, direction)) {
+        return;
+    }
+
+    // Recurse the layout change to the affected node.
+    parsegraph_Node_positionWasChanged(
+        parsegraph_Node_nodeAt(node, direction)
+    );
+}
 
 /**
  * Indicate that the layout was changed and thus needs an layout commit.
@@ -2188,50 +2519,32 @@ void parsegraph_Node_layoutWasChanged(parsegraph_Node* node, int changeDirection
         return;
     }
 
-    // Notifies children that may need to move due to this layout change.
-    var notifyChild = function(direction) {
-        // Don't recurse into the parent direction.
-        if(!this.isRoot() && direction == this.parentDirection()) {
-            return;
-        }
-
-        // Ignore empty node directions.
-        if(!this.hasNode(direction)) {
-            return;
-        }
-
-        // Recurse the layout change to the affected node.
-        this.nodeAt(direction).positionWasChanged(
-            parsegraph_reverseNodeDirection(direction)
-        );
-    };
-
-    var node = this;
-    while(node !== null) {
-        var oldLayoutState = node._layoutState;
+    while(node) {
+        int oldLayoutState = node->_layoutState;
 
         // Set the needs layout flag.
-        node._layoutState = parsegraph_NEEDS_COMMIT;
+        node->_layoutState = parsegraph_NEEDS_COMMIT;
 
-        if(node.findPaintGroup()) {
-            node.findPaintGroup().markDirty();
+        parsegraph_PaintGroup* pg = parsegraph_Node_findPaintGroup(node);
+        if(pg) {
+            parsegraph_PaintGroup_markDirty(pg);
         }
 
         // Recurse for the children of this node.
-        notifyChild.call(node, parsegraph_DOWNWARD);
-        notifyChild.call(node, parsegraph_UPWARD);
-        notifyChild.call(node, parsegraph_BACKWARD);
-        notifyChild.call(node, parsegraph_FORWARD);
-        notifyChild.call(node, parsegraph_INWARD);
+        notifyChild(node, parsegraph_DOWNWARD);
+        notifyChild(node, parsegraph_UPWARD);
+        notifyChild(node, parsegraph_BACKWARD);
+        notifyChild(node, parsegraph_FORWARD);
+        notifyChild(node, parsegraph_INWARD);
 
-        if(node.isRoot()) {
+        if(parsegraph_Node_isRoot(node)) {
             break;
         }
         else if(oldLayoutState == parsegraph_COMMITTED_LAYOUT) {
             // Notify our parent, if we were previously committed.
-            node = node.nodeParent();
+            node = parsegraph_Node_nodeParent(node);
             changeDirection = parsegraph_reverseNodeDirection(
-                node.parentDirection()
+                parsegraph_Node_parentDirection(node)
             );
         }
         else {
@@ -2239,23 +2552,23 @@ void parsegraph_Node_layoutWasChanged(parsegraph_Node* node, int changeDirection
             break;
         }
     }
-};
+}
 
-parsegraph_Node.prototype.canonicalLayoutPreference = function()
+int parsegraph_Node_canonicalLayoutPreference(parsegraph_Node* node)
 {
     // Root nodes do not have a canonical layout preference.
-    if(this.isRoot()) {
-        throw parsegraph_createException(parsegraph_NODE_IS_ROOT);
+    if(parsegraph_Node_isRoot(node)) {
+        parsegraph_abort(parsegraph_NODE_IS_ROOT);
     }
 
     // Convert the layout preference to either preferring the parent or
     // the perpendicular axis.
-    var canonicalPref = this._layoutPreference;
-    switch(this._layoutPreference) {
+    int canonicalPref = node->_layoutPreference;
+    switch(node->_layoutPreference) {
     case parsegraph_PREFER_HORIZONTAL_AXIS:
     {
         if(
-            parsegraph_getNodeDirectionAxis(this.parentDirection()) ==
+            parsegraph_getNodeDirectionAxis(parsegraph_Node_parentDirection(node)) ==
             parsegraph_HORIZONTAL_AXIS
         ) {
             canonicalPref = parsegraph_PREFER_PARENT_AXIS;
@@ -2268,7 +2581,7 @@ parsegraph_Node.prototype.canonicalLayoutPreference = function()
     case parsegraph_PREFER_VERTICAL_AXIS:
     {
         if(
-            parsegraph_getNodeDirectionAxis(this.parentDirection()) ==
+            parsegraph_getNodeDirectionAxis(parsegraph_Node_parentDirection(node)) ==
             parsegraph_VERTICAL_AXIS
         ) {
             canonicalPref = parsegraph_PREFER_PARENT_AXIS;
@@ -2280,64 +2593,31 @@ parsegraph_Node.prototype.canonicalLayoutPreference = function()
     }
     case parsegraph_PREFER_PERPENDICULAR_AXIS:
     case parsegraph_PREFER_PARENT_AXIS:
-        canonicalPref = this._layoutPreference;
+        canonicalPref = node->_layoutPreference;
         break;
     case parsegraph_NULL_LAYOUT_PREFERENCE:
-        throw parsegraph_createException(parsegraph_BAD_LAYOUT_PREFERENCE);
+        parsegraph_abort(parsegraph_BAD_LAYOUT_PREFERENCE);
     }
     return canonicalPref;
 };
 
-parsegraph_Node.prototype.dumpExtentBoundingRect = function()
+parsegraph_Node* parsegraph_labeledBud(apr_pool_t* pool, UChar* label, int len, parsegraph_GlyphAtlas* glyphAtlas)
 {
-    // extent.boundingValues() returns [totalLength, minSize, maxSize]
-    var backwardOffset = this.extentOffsetAt(parsegraph_BACKWARD);
-    var backwardValues = this.extentsAt(parsegraph_BACKWARD).boundingValues();
-    this.extentsAt(parsegraph_BACKWARD).dump(
-        "Backward extent (center at " + backwardOffset + ")"
-    );
-
-    var forwardOffset = this.extentOffsetAt(parsegraph_FORWARD);
-    var forwardValues = this.extentsAt(parsegraph_FORWARD).boundingValues();
-    this.extentsAt(parsegraph_FORWARD).dump(
-        "Forward extent (center at " + forwardOffset + ")"
-    );
-
-    var downwardOffset = this.extentOffsetAt(parsegraph_DOWNWARD);
-    var downwardValues = this.extentsAt(parsegraph_DOWNWARD).boundingValues();
-    this.extentsAt(parsegraph_DOWNWARD).dump(
-        "Downward extent (center at " + downwardOffset + ")"
-    );
-
-    var upwardOffset = this.extentOffsetAt(parsegraph_UPWARD);
-    var upwardValues = this.extentsAt(parsegraph_UPWARD).boundingValues();
-    this.extentsAt(parsegraph_UPWARD).dump(
-        "Upward extent (center at " + upwardOffset + ")"
-    );
-
-    /*parsegraph_log("Backward values: " + backwardValues);
-    parsegraph_log("Forward values: " + forwardValues);
-    parsegraph_log("Upward values: " + upwardValues);
-    parsegraph_log("Downward values: " + downwardValues);*/
-};
-
-parsegraph_Node* parsegraph_labeledBud(const char* label, parsegraph_GlyphAtlas* glyphAtlas)
-{
-    parsegraph_Node* node = parsegraph_Node_new(parsegraph_BUD, 0, 0);
-    parsegraph_Node_setLabel(node, label, glyphAtlas);
+    parsegraph_Node* node = parsegraph_Node_new(pool, parsegraph_BUD, 0, 0);
+    parsegraph_Node_setLabel(node, label, len, glyphAtlas);
     return node;
 }
 
-parsegraph_Node* parsegraph_labeledSlot(const char* label, parsegraph_GlyphAtlas* glyphAtlas)
+parsegraph_Node* parsegraph_labeledSlot(apr_pool_t* pool, UChar* label, int len, parsegraph_GlyphAtlas* glyphAtlas)
 {
-    parsegraph_Node* node = parsegraph_Node_new(parsegraph_SLOT, 0, 0);
-    parsegraph_Node_setLabel(node, label, glyphAtlas);
+    parsegraph_Node* node = parsegraph_Node_new(pool, parsegraph_SLOT, 0, 0);
+    parsegraph_Node_setLabel(node, label, len, glyphAtlas);
     return node;
 }
 
-parsegraph_Node* parsegraph_labeledBlock(const char* label, parsegraph_GlyphAtlas* glyphAtlas)
+parsegraph_Node* parsegraph_labeledBlock(apr_pool_t* pool, UChar* label, int len, parsegraph_GlyphAtlas* glyphAtlas)
 {
-    parsegraph_Node* node = parsegraph_Node_new(parsegraph_BLOCK, 0, 0);
-    parsegraph_Node_setLabel(node, label, glyphAtlas);
+    parsegraph_Node* node = parsegraph_Node_new(pool, parsegraph_BLOCK, 0, 0);
+    parsegraph_Node_setLabel(node, label, len, glyphAtlas);
     return node;
 }

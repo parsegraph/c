@@ -1,4 +1,4 @@
-PROG = cxx_parsegraph
+PROG = cxx_primes
 run:
 	./$(PROG)
 .PHONY: run
@@ -11,9 +11,15 @@ valgrind:
 
 lib_LTLIBRARIES = libparsegraph.la
 libparsegraph_la_CFLAGS = -Wall @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
-libparsegraph_la_LDFLAGS = -lm @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@
+libparsegraph_la_LDFLAGS = -fPIC -lm @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
+libparsegraph_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
 
 nobase_include_HEADERS = \
+	die.h \
+	ArrayList.h \
+	Float32List.h \
+	id.h \
+	parsegraph_math.h \
 	graph/LayoutPreference.h \
 	graph/LayoutState.h \
 	graph/NodeAlignment.h \
@@ -34,6 +40,7 @@ nobase_include_HEADERS = \
 	graph/Color.h \
 	graph/Graph.h \
 	graph/World.h \
+	graph/Status.h \
 	pagingbuffer.h \
 	graph/Extent.h \
 	alpha/Cam.h \
@@ -43,6 +50,14 @@ nobase_include_HEADERS = \
 	graph/Input.h \
 	graph/log.h \
 	graph/initialize.h \
+	graph/CameraBox.h \
+	graph/SpotlightPainter.h \
+	graph/CameraBoxPainter.h \
+	graph/BlockPainter.h \
+	graph/GlyphPainter.h \
+	graph/Label.h \
+	graph/FanPainter.h \
+	graph/Carousel.h \
 	alpha/GLWidget.h \
 	alpha/Input.h \
 	alpha/Maths.h \
@@ -51,27 +66,44 @@ nobase_include_HEADERS = \
 	alpha/WeetPainter.h \
 	alpha/Physical.h \
 	widgets/alpha_WeetCubeWidget.h \
-	gl.h
+	graph/AudioKeyboard.h \
+	gl.h \
+	unicode.h
 
 libparsegraph_la_SOURCES = \
-	graph/GlyphAtlas.c \
+	die.c \
+	ArrayList.c \
+	Float32List.c \
+	id.c \
+	timing.c \
+	parsegraph_math.c \
+	graph/Color.c \
+	graph/BlockPainter.c \
+	graph/GlyphPainter.c \
 	graph/LayoutPreference.c \
 	graph/LayoutState.c \
+	graph/Caret.c \
 	graph/NodeFit.c \
 	graph/NodeType.c \
+	graph/TexturePainter.c \
+	graph/Node.c \
 	graph/NodePainter.c \
 	graph/NodeList.c \
 	graph/PaintGroup.c \
+	graph/CameraBox.c \
+	graph/CameraBoxPainter.c \
+	graph/Carousel.c \
 	graph/Rect.c \
 	graph/Size.c \
+	graph/SpotlightPainter.c \
+	graph/Status.c \
 	graph/log.c \
-	graph/TexturePainter.c \
+	graph/FanPainter.c \
+	graph/Label.c \
 	graph/NodeAlignment.c \
 	graph/NodeDirection.c \
 	graph/Camera.c \
 	graph/Surface.c \
-	graph/Caret.c \
-	graph/Color.c \
 	graph/Graph.c \
 	graph/World.c \
 	graph/Input.c \
@@ -90,11 +122,24 @@ libparsegraph_la_SOURCES = \
 	alpha/Input.c \
 	alpha/CubeMan.c \
 	widgets/alpha_WeetCubeWidget.c \
-	gl.c
+	widgets/buildPrimesDemo.c \
+	graph/AudioKeyboard.c \
+	gl.c \
+	unicode.c
 
-#graph/Node.c
+graph/libparsegraph-GlyphAtlas.a: graph/GlyphAtlas.cpp graph/GlyphAtlas.c graph/GlyphAtlas.h Makefile
+	gcc -fPIC -c $(libparsegraph_la_CFLAGS) -I. graph/GlyphAtlas.c -ograph/GlyphAtlas-c.o
+	g++ -fPIC -c $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. graph/GlyphAtlas.cpp -ograph/GlyphAtlas-cxx.o
+	ar rc graph/libparsegraph-GlyphAtlas.a graph/GlyphAtlas-c.o graph/GlyphAtlas-cxx.o
+	ranlib graph/libparsegraph-GlyphAtlas.a
 
-bin_PROGRAMS = parsegraph cxx_parsegraph cxx_alpha cxx_weetcubes
+libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
+	gcc -fPIC -c $(libparsegraph_la_CFLAGS) -I. timing.c -otiming-c.o
+	g++ -fPIC -c $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. timing.cpp -otiming-cxx.o
+	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
+	ranlib libparsegraph-timing.a
+
+bin_PROGRAMS = parsegraph cxx_alpha cxx_weetcubes cxx_primes
 
 parsegraph_CFLAGS = \
 	$(libparsegraph_la_CFLAGS) \
@@ -106,15 +151,21 @@ parsegraph_SOURCES = \
 	main.c
 
 cxx_parsegraph_CXXFLAGS = \
-	-fPIC \
-	$(libparsegraph_la_CFLAGS) \
-	$(parsegraph_cxx_CFLAGS) \
-	-I$(top_SRCDIR) \
-	-g
+	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
 cxx_parsegraph_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
 cxx_parsegraph_LDADD = libparsegraph.la
 cxx_parsegraph_SOURCES = \
 	main.cpp
+
+cxx_primes_CFLAGS = \
+	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_primes_CXXFLAGS = \
+	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_primes_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_primes_LDADD = libparsegraph.la
+cxx_primes_SOURCES = \
+	main.cpp \
+	apps/primes.c
 
 cxx_alpha_CXXFLAGS = \
 	-fPIC \

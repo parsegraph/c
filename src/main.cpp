@@ -41,11 +41,11 @@ extern "C" {
 #include <string.h>
 #include <time.h>
 #include <cairo.h>
-#include "alpha/WeetPainter.h"
-#include "alpha/Maths.h"
-#include "alpha/GLWidget.h"
+#include "graph/Input.h"
+#include "die.h"
 #include <apr_strings.h>
 
+parsegraph_Surface* init(void*);
 }
 
 #include <QTime>
@@ -76,13 +76,16 @@ protected:
 
 
 virtual void keyPressEvent(QKeyEvent* ev) {
+    if(!input) {
+        return;
+    }
     const char* kname = keyToName(ev->key());
     if(!kname) {
         QByteArray kval = ev->text().toLower().toUtf8();
         kname = apr_pstrdup(pool, kval.constData());
     }
 
-    if(alpha_Input_Get(widget->input, kname)) {
+    if(parsegraph_Input_Get(input, kname)) {
         // Already pressed, ignore it.
         return;
     }
@@ -92,42 +95,111 @@ virtual void keyPressEvent(QKeyEvent* ev) {
         frozen = !frozen;
     }
     else {
-        alpha_Input_keydown(widget->input, kname,
-            ev->modifiers() & Qt::ControlModifier,
+        parsegraph_Input_keydown(input, kname, ev->key(),
             ev->modifiers() & Qt::AltModifier,
-            ev->modifiers() & Qt::MetaModifier
+            ev->modifiers() & Qt::MetaModifier,
+            ev->modifiers() & Qt::ControlModifier,
+            ev->modifiers() & Qt::ShiftModifier
         );
     }
 }
 
 virtual void keyReleaseEvent(QKeyEvent* ev) {
+    if(!input) {
+        return;
+    }
     const char* kname = keyToName(ev->key());
     if(!kname) {
         QByteArray kval = ev->text().toLower().toUtf8();
         kname = apr_pstrdup(pool, kval.constData());
     }
 
-    if(!alpha_Input_Get(widget->input, kname)) {
+    if(!parsegraph_Input_Get(input, kname)) {
         // Already released, ignore it.
         return;
     }
     //fprintf(stderr, "Releasing %s\n", kname);
-    alpha_Input_keyup(widget->input, kname);
+    parsegraph_Input_keyup(input, kname, ev->key());
+}
+
+virtual void focusInEvent(QFocusEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_onfocus(input);
+}
+
+virtual void focusOutEvent(QFocusEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_onblur(input);
 }
 
 virtual void mouseMoveEvent(QMouseEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_mousemove(input, ev->x(), ev->y());
 }
 
 virtual void mousePressEvent(QMouseEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_mousedown(input, ev->x(), ev->y());
 }
 
 virtual void mouseReleaseEvent(QMouseEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_removeMouseListener(input);
 }
 
 virtual void touchEvent(QTouchEvent* ev) {
+    if(!input) {
+        return;
+    }
+    apr_pool_t* spool;
+    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
+        parsegraph_die("Failed to create pool for touch event");
+    }
+    parsegraph_ArrayList* movedTouches = parsegraph_ArrayList_new(spool);
+    parsegraph_ArrayList* pressedTouches = parsegraph_ArrayList_new(spool);
+    parsegraph_ArrayList* releasedTouches = parsegraph_ArrayList_new(spool);
+    for(QTouchEvent::TouchPoint p : ev->touchPoints()) {
+        parsegraph_TouchEvent* te = static_cast<parsegraph_TouchEvent*>(apr_palloc(spool, sizeof(*te)));
+        te->clientX = p.pos().x();
+        te->clientY = p.pos().y();
+        snprintf(te->identifier, sizeof(te->identifier), "%lld", p.uniqueId().numericId());
+        if(p.state() & Qt::TouchPointPressed) {
+            parsegraph_ArrayList_push(pressedTouches, te);
+        }
+        if(p.state() & Qt::TouchPointReleased) {
+            parsegraph_ArrayList_push(releasedTouches, te);
+        }
+        if(p.state() & Qt::TouchPointMoved) {
+            parsegraph_ArrayList_push(movedTouches, te);
+        }
+    }
+    if(parsegraph_ArrayList_length(pressedTouches) > 0) {
+        parsegraph_Input_touchstart(input, pressedTouches);
+    }
+    if(parsegraph_ArrayList_length(movedTouches) > 0) {
+        parsegraph_Input_touchmove(input, movedTouches);
+    }
+    if(parsegraph_ArrayList_length(releasedTouches) > 0) {
+        parsegraph_Input_removeTouchListener(input, releasedTouches);
+    }
+    apr_pool_destroy(spool);
 }
 
-virtual void wheelEvent(QTouchEvent* ev) {
+virtual void wheelEvent(QWheelEvent* ev) {
+    if(!input) {
+        return;
+    }
+    parsegraph_Input_onWheel(input, ev->x(), ev->y(), ev->angleDelta().y());
 }
 
 public:
@@ -140,46 +212,58 @@ MainWindow(QOpenGLContext* shareContext) :
     });
 }
 
+parsegraph_Input* input = 0;
 QTime frameElapsedTime;
 struct parsegraph_Surface* surface = 0;
-struct alpha_GLWidget* widget = 0;
+struct parsegraph_Surface* graph = 0;
 GLint w;
 GLint h;
 int hasEverPainted = 0;
 int frozen = 1;
 virtual void initializeGL() {
+    // Invoke global init function.
+    surface = init(this);
+
+    float bg[] = {0, 47.0/255, 57.0/255, 1.0};
+    parsegraph_Surface_setBackground(surface, bg);
     frameElapsedTime.start();
 }
 virtual void resizeGL(int w, int h) {
     this->w = w;
     this->h = h;
+    parsegraph_Surface_setDisplaySize(surface, w, h);
 }
 virtual void paintGL() {
-    struct alpha_RenderData rd;
-    rd.width = w;
-    rd.height = h;
-    if(!widget) {
-        surface = parsegraph_Surface_new(this);
-        float bg[] = {0, 47.0/255, 57.0/255, 1.0};
-        parsegraph_Surface_setBackground(surface, bg);
-        widget = alpha_GLWidget_new(surface);
-        parsegraph_Surface_paint(surface, &rd);
-    }
-    alpha_GLWidget_Tick(widget, ((float)frameElapsedTime.restart())/1000.0);
-    if(!frozen){
-        parsegraph_Surface_paint(surface, &rd);
-    }
-    glViewport(0, 0, this->w, this->h);
-    parsegraph_Surface_render(surface, &rd);
-    glFlush();
+    parsegraph_Surface_runAnimationCallbacks(surface, ((float)frameElapsedTime.restart())/1000.0);
 }
 };
+
+extern "C" {
 
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
 {
     MainWindow* win = (MainWindow*)surface->peer;
     surface->needsRepaint = 1;
     win->update();
+}
+
+void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* input)
+{
+    MainWindow* win = static_cast<MainWindow*>(surface->peer);
+    if(win->input) {
+        parsegraph_Surface_uninstall(surface);
+        return;
+    }
+    win->input = input;
+}
+
+void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
+{
+    MainWindow* win = static_cast<MainWindow*>(surface->peer);
+    if(!win->input) {
+        return;
+    }
+    win->input = 0;
 }
 
 int main(int argc, char**argv)
@@ -226,4 +310,6 @@ int main(int argc, char**argv)
     pool = NULL;
     apr_terminate();
     return rv;
+}
+
 }

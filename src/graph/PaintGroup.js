@@ -71,13 +71,14 @@ parsegraph_PaintGroup.prototype.nodeUnderCoords = function(x, y)
 {
     return this._root.nodeUnderCoords(
         x - this._worldX,
-        y - this._worldY
+        y - this._worldY,
+        this._userScale
     );
 };
 
-parsegraph_PaintGroup.prototype.assignParent = function(paintGroup)
+parsegraph_PaintGroup.prototype.assignParent = function(parentGroup)
 {
-    this._parent = paintGroup;
+    this._parent = parentGroup;
 };
 
 parsegraph_PaintGroup.prototype.markDirty = function()
@@ -232,16 +233,7 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
 
     // Do not render paint groups that cannot be seen.
     var s = this._painter.bounds();
-    if(camera && !parsegraph_containsAny(
-        -camera.x() + camera.width()/(camera.scale()*2),
-        -camera.y() + camera.height()/(camera.scale()*2),
-        camera.width() / camera.scale(),
-        camera.height() / camera.scale(),
-        s.x(),
-        s.y(),
-        s.width(),
-        s.height()
-    )) {
+    if(camera && !camera.contains(s)) {
         //console.log(this);
         return;
     }

@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.68])
 AC_INIT([parsegraph-js], [1.3], [dafrito@gmail.com], [parsegraph-js], [https//parsegraph.com])
-AC_SUBST([PACKAGE_RELEASE], [9])
+AC_SUBST([PACKAGE_RELEASE], [10])
 AC_SUBST([PACKAGE_DESCRIPTION], ['A toolkit for creating native and browser-hosted Parsegraph applications'])
 AC_SUBST([PACKAGE_SUMMARY], ['Parsegraph toolkit for JavaScript and C'])
 AC_CONFIG_MACRO_DIR([m4])
@@ -31,11 +31,10 @@ PKG_CHECK_MODULES(openssl, [openssl],
     [AC_MSG_ERROR([parsegraph requires openssl-devel])]
 )
 
-PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm libudev libinput libevdev ncurses],
+PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n],
     [],
-    [AC_MSG_ERROR([parsegraph requires cairo-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel.])]
+    [AC_MSG_ERROR([parsegraph requires cairo-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel.])]
 )
-
 AC_PROG_CXX
 
 PKG_CHECK_MODULES(parsegraph_cxx, [Qt5Core Qt5Gui],
