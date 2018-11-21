@@ -45,20 +45,21 @@
 #include <cairo.h>
 #include <libudev.h>
 #include <libinput.h>
-#include "alpha/WeetPainter.h"
-#include "widgets/alpha_WeetCubeWidget.h"
-#include "alpha/Maths.h"
 #include <libevdev/libevdev.h>
 #include <ncurses.h>
 #include <stdarg.h>
 #include "graph/log.h"
 #include "graph/Surface.h"
-#include "alpha/GLWidget.h"
+#include "graph/Input.h"
+#include "die.h"
+#include "timing.h"
+#include <apr_hash.h>
 
 static apr_pool_t* pool = 0;
 
-static struct alpha_GLWidget* widget = 0;
 static struct parsegraph_Surface* surface = 0;
+static struct parsegraph_Input* input = 0;
+parsegraph_Surface* init(void*, int, int);
 
 #ifdef GL_OES_EGL_image
 static PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES_func;
@@ -119,37 +120,51 @@ setup_kms(int fd, struct kms *kms)
    return EGL_TRUE;
 }
 
-static float start = 0;
-static int frozen = 0;
+static struct timespec start;
+static int needToFocus = 0;
+static int needToBlur = 0;
 
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* sched)
 {
 }
 
+void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* givenInput)
+{
+    if(input) {
+        parsegraph_Surface_uninstall(surface);
+        return;
+    }
+    input = givenInput;
+    needToBlur = 0;
+    needToFocus = 1;
+}
+
+void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
+{
+    input = 0;
+    needToFocus = 0;
+    needToBlur = 1;
+}
+
 static void
 render_stuff(int width, int height)
 {
-    struct alpha_RenderData rd;
-    rd.width = width;
-    rd.height = height;
-    if(!widget) {
-        surface = parsegraph_Surface_new(pool, 0);
-        widget = alpha_GLWidget_new(surface);
-        parsegraph_Surface_paint(surface, &rd);
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+
+    float elapsed = ((float)parsegraph_timediffMs(&now, &start))/1000.0;
+    start = now;
+
+    if(input && needToBlur) {
+        parsegraph_Input_onblur(input);
+        needToBlur = 0;
+    }
+    if(input && needToFocus) {
+        parsegraph_Input_onfocus(input);
+        needToFocus = 0;
     }
 
-    float t = alpha_GetTime();
-    float elapsed = t - start;
-    //parsegraph_log("Elapsed: %f\n", elapsed);
-    alpha_GLWidget_Tick(widget, elapsed/1000.0);
-    start = t;
-    if(!frozen) {
-        parsegraph_Surface_paint(surface, &rd);
-    }
-    glViewport(0, 0, (GLint) width, (GLint) height);
-    glClearColor(0, 47.0/255, 57.0/255, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    parsegraph_Surface_render(surface, &rd);
+    parsegraph_Surface_runAnimationCallbacks(surface, elapsed);
     glFlush();
 }
 
@@ -178,7 +193,7 @@ void quit_handler(int signum)
 static apr_hash_t* keyNames = 0;
 
 static void
-print_key_event(struct libinput *li, struct libinput_event *ev)
+key_event(struct libinput *li, struct libinput_event *ev)
 {
     if(!keyNames) {
         keyNames = apr_hash_make(pool);
@@ -237,24 +252,22 @@ print_key_event(struct libinput *li, struct libinput_event *ev)
     }
 
     if(state == LIBINPUT_KEY_STATE_PRESSED) {
-        if(!strcmp(formalKeyName, "c") && alpha_Input_Get(widget->input, "Control")) {
+        if(!strcmp(formalKeyName, "c") && parsegraph_Input_Get(input, "Control")) {
             quit_handler(0);
             return;
         }
-        if(!strcmp(formalKeyName, "F4") && alpha_Input_Get(widget->input, "Alt")) {
+        if(!strcmp(formalKeyName, "F4") && parsegraph_Input_Get(input, "Alt")) {
             quit_handler(0);
             return;
         }
-        if(!strcmp(formalKeyName, "Escape")) {
-            frozen = !frozen;
-            if(!frozen) {
-                start = alpha_GetTime();
-            }
+        if(input) {
+            parsegraph_Input_keydown(input, formalKeyName, key, 0, 0, 0, 0);
         }
-        alpha_Input_keydown(widget->input, formalKeyName, 0, 0, 0);
     }
     else {
-        alpha_Input_keyup(widget->input, formalKeyName);
+        if(input) {
+            parsegraph_Input_keyup(input, formalKeyName, key);
+        }
     }
 }
 
@@ -283,7 +296,7 @@ int main(int argc, const char * const *argv)
    struct gbm_device *gbm;
    struct gbm_bo *bo[2];
    drmModeCrtcPtr saved_crtc;
-   time_t start, end;
+   //struct timespec end;
 
     initscr();
     raw();
@@ -309,10 +322,6 @@ int main(int argc, const char * const *argv)
     if(!udev) {
       parsegraph_log("udev couldn't open");
       return -1;
-    }
-
-    if(!start) {
-        start = alpha_GetTime();
     }
 
     struct libinput_interface libinput_interface;
@@ -474,7 +483,9 @@ int main(int argc, const char * const *argv)
    saved_crtc = drmModeGetCrtc(fd, kms.encoder->crtc_id);
    if (saved_crtc == NULL)
       goto rm_fb;
-   time(&start);
+
+    int needInit = 1;
+    clock_gettime(CLOCK_REALTIME, &start);
 
    do {
      drmEventContext evctx;
@@ -488,6 +499,10 @@ int main(int argc, const char * const *argv)
        parsegraph_log("framebuffer not complete: %x\n", ret);
        ret = 1;
        goto rm_rb;
+     }
+     if(needInit) {
+        surface = init(&kms, kms.mode.hdisplay, kms.mode.vdisplay);
+        parsegraph_Surface_setDisplaySize(surface, kms.mode.hdisplay, kms.mode.vdisplay);
      }
      render_stuff(kms.mode.hdisplay, kms.mode.vdisplay);
      ret = drmModePageFlip(fd, kms.encoder->crtc_id,
@@ -512,13 +527,117 @@ listen_to_fds:
      if(FD_ISSET(libinput_get_fd(libinput), &rfds)) {
         // Input had an event.
         struct libinput_event *ev;
-        while ((ev = libinput_get_event(libinput))) {
+        while((ev = libinput_get_event(libinput))) {
             switch (libinput_event_get_type(ev)) {
             case LIBINPUT_EVENT_NONE:
                 break;
             case LIBINPUT_EVENT_KEYBOARD_KEY:
-                print_key_event(libinput, ev);
+                key_event(libinput, ev);
                 //quit = 1;
+                break;
+            case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
+                if(input) {
+                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                    parsegraph_Input_mousemove(input,
+                        libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface)),
+                        libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface))
+                    );
+                }
+                break;
+            case LIBINPUT_EVENT_POINTER_BUTTON:
+                if(input) {
+                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                    int x = libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface));
+                    int y = libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface));
+                    if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
+                        parsegraph_Input_mousedown(input, x, y);
+                    }
+                    else {
+                        parsegraph_Input_removeMouseListener(input);
+                    }
+                }
+                break;
+            case LIBINPUT_EVENT_POINTER_AXIS:
+                if(input) {
+                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                    int x = libinput_event_pointer_get_absolute_x_transformed(
+                        pev, parsegraph_Surface_getWidth(surface)
+                    );
+                    int y = libinput_event_pointer_get_absolute_y_transformed(
+                        pev, parsegraph_Surface_getHeight(surface)
+                    );
+                    parsegraph_Input_onWheel(input, x, y, -libinput_event_pointer_get_axis_value(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)/60.0);
+                }
+                break;
+            case LIBINPUT_EVENT_TOUCH_DOWN:
+                if(input) {
+                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                    apr_pool_t* spool;
+                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
+                        parsegraph_die("Failed to create pool for touch event");
+                    }
+                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                    parsegraph_ArrayList_push(touches, te);
+                    parsegraph_Input_touchstart(input, touches);
+                    apr_pool_destroy(spool);
+                }
+                break;
+            case LIBINPUT_EVENT_TOUCH_UP:
+                if(input) {
+                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                    apr_pool_t* spool;
+                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
+                        parsegraph_die("Failed to create pool for touch event");
+                    }
+                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                    parsegraph_ArrayList_push(touches, te);
+                    parsegraph_Input_removeTouchListener(input, touches);
+                    apr_pool_destroy(spool);
+                }
+                break;
+            case LIBINPUT_EVENT_TOUCH_MOTION:
+                if(input) {
+                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                    apr_pool_t* spool;
+                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
+                        parsegraph_die("Failed to create pool for touch event");
+                    }
+                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                    parsegraph_ArrayList_push(touches, te);
+                    parsegraph_Input_touchmove(input, touches);
+                    apr_pool_destroy(spool);
+                }
+                break;
+            case LIBINPUT_EVENT_TOUCH_CANCEL:
+                if(input) {
+                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                    apr_pool_t* spool;
+                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
+                        parsegraph_die("Failed to create pool for touch event");
+                    }
+                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                    parsegraph_ArrayList_push(touches, te);
+                    parsegraph_Input_removeTouchListener(input, touches);
+                    apr_pool_destroy(spool);
+                }
+                break;
+            case LIBINPUT_EVENT_TOUCH_FRAME:
                 break;
             default:
                 break;
@@ -551,8 +670,8 @@ listen_to_fds:
          current ^= 1;
          frames++;
    } while (!quit);
-   time(&end);
-   printf("Frames per second: %.2lf\n", frames / difftime(end, start));
+   //time(&end);
+   //printf("Frames per second: %.2lf\n", frames / difftime(end, start));
    ret = drmModeSetCrtc(fd, saved_crtc->crtc_id, saved_crtc->buffer_id,
                         saved_crtc->x, saved_crtc->y,
                         &kms.connector->connector_id, 1, &saved_crtc->mode);

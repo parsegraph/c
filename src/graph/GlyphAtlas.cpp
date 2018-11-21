@@ -35,7 +35,7 @@ int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const U
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
 {
     int maxTextureWidth = parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas);
-    auto img = new QImage(maxTextureWidth, maxTextureWidth, QImage::Format_RGB888);
+    auto img = new QImage(maxTextureWidth, maxTextureWidth, QImage::Format_ARGB32_Premultiplied);
     QPainter p;
     if(!p.begin(img)) {
         parsegraph_die("Failed to create texture");

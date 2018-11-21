@@ -82,7 +82,7 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     /**
      * Base font size.
      */
-    parsegraph_FONT_SIZE = 72;
+    parsegraph_FONT_SIZE = 60;
 
     /**
      * The thickness (diameter) of the line.

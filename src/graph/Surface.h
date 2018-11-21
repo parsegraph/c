@@ -2,6 +2,7 @@
 #define parsegraph_Surface_INCLUDED
 
 #include <apr_pools.h>
+#include <pthread.h>
 
 struct parsegraph_Input;
 typedef struct parsegraph_Input parsegraph_Input;
@@ -30,6 +31,7 @@ struct parsegraph_AnimationCallback* next;
 typedef struct parsegraph_AnimationCallback parsegraph_AnimationCallback;
 
 struct parsegraph_Surface {
+pthread_mutex_t lock;
 parsegraph_AnimationCallback* firstAnimationCallback;
 parsegraph_AnimationCallback* lastAnimationCallback;
 parsegraph_Input* input;

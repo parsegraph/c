@@ -1004,13 +1004,13 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         //console.log("Continuing to zoom out");
         input->_updateRepeatedly = 1;
         inputChangedScene = 1;
-        if(parsegraph_Camera_scale(cam) >= .01) {
+        //if(parsegraph_Camera_scale(cam) >= .01) {
             parsegraph_Camera_zoomToPoint(cam,
             powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, t)),
                 parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
                 parsegraph_Surface_getHeight(input->_graph->_surface) / 2
             );
-        }
+        //}
     }
     //this.Dispatch(false, "update", inputChangedScene);
 

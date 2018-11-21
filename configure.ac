@@ -26,14 +26,20 @@ AC_SUBST(httpd_LIBS)
 httpd_CFLAGS="-I/usr/include/httpd -I/usr/include/apr-1"
 httpd_LIBS="-lapr-1 -laprutil-1 -fPIC"
 
+# Include pthreads
+AC_SUBST(pthread_CFLAGS)
+AC_SUBST(pthread_LIBS)
+pthread_CFLAGS=""
+pthread_LIBS="-lpthread"
+
 PKG_CHECK_MODULES(openssl, [openssl],
     [],
     [AC_MSG_ERROR([parsegraph requires openssl-devel])]
 )
 
-PKG_CHECK_MODULES(parsegraph, [cairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n],
+PKG_CHECK_MODULES(parsegraph, [marla cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n],
     [],
-    [AC_MSG_ERROR([parsegraph requires cairo-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel.])]
+    [AC_MSG_ERROR([parsegraph requires marla pangocairo cairo-devel pango-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel.])]
 )
 AC_PROG_CXX
 

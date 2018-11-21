@@ -83,6 +83,7 @@ float parsegraph_GlyphAtlas_fontBaseline(parsegraph_GlyphAtlas* glyphAtlas);
 float parsegraph_GlyphAtlas_fontSize(parsegraph_GlyphAtlas* glyphAtlas);
 UChar* parsegraph_GlyphAtlas_fontName(parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_GlyphAtlas_isNewline(parsegraph_GlyphAtlas* glyphAtlas, UChar c);
+parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas);
 
 parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
 
@@ -94,6 +95,5 @@ void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
 void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* texture);
 const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
-parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas);
 
 #endif // parsegraph_GlyphAtlas_INCLUDED

@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include "Surface.h"
 #include "die.h"
 #include "Color.h"
@@ -29,11 +30,25 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
     rv->firstAnimationCallback = 0;
     rv->lastAnimationCallback = 0;
 
+    pthread_mutexattr_t mutexattr;
+    if(0 != pthread_mutexattr_init(&mutexattr)) {
+        parsegraph_die("Failed to initialize Surface's mutex attributes");
+    }
+    if(0 != pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE)) {
+        parsegraph_die("Failed to set Surface's mutex type");
+    }
+    if(0 != pthread_mutex_init(&rv->lock, &mutexattr)) {
+        parsegraph_die("Failed to initialize Surface's mutex");
+    }
+
     return rv;
 }
 
 parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph_Surface* surface, void(*listener)(void*, float), void* thisArg)
 {
+    if(0 != pthread_mutex_lock(&surface->lock)) {
+        parsegraph_die("Failed to lock surface to add animation callback");
+    }
     parsegraph_AnimationCallback* cb = malloc(sizeof(*cb));
     cb->listener = listener;
     cb->listenerThisArg = thisArg;
@@ -46,11 +61,17 @@ parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph
         surface->lastAnimationCallback->next = cb;
         surface->lastAnimationCallback = cb;
     }
+    if(0 != pthread_mutex_unlock(&surface->lock)) {
+        parsegraph_die("Failed to unlock surface to add animation callback");
+    }
     return cb;
 }
 
 void parsegraph_Surface_removeAnimationCallback(parsegraph_Surface* surface, parsegraph_AnimationCallback* given)
 {
+    if(0 != pthread_mutex_lock(&surface->lock)) {
+        parsegraph_die("Failed to lock surface to remove animation callback");
+    }
     parsegraph_AnimationCallback* cb = surface->firstAnimationCallback;
     parsegraph_AnimationCallback* prev = 0;
     for(; cb; cb = cb->next) {
@@ -63,17 +84,27 @@ void parsegraph_Surface_removeAnimationCallback(parsegraph_Surface* surface, par
                 surface->lastAnimationCallback = prev;
             }
             free(cb);
-            return;
+            goto end;
         }
         prev = cb;
+    }
+end:
+    if(0 != pthread_mutex_unlock(&surface->lock)) {
+        parsegraph_die("Failed to unlock surface after removing animation callback");
     }
 }
 
 void parsegraph_Surface_runAnimationCallbacks(parsegraph_Surface* surface, float elapsed)
 {
+    if(0 != pthread_mutex_lock(&surface->lock)) {
+        parsegraph_die("Failed to lock surface before running animation callbacks");
+    }
     parsegraph_AnimationCallback* cb = surface->firstAnimationCallback;
     surface->firstAnimationCallback = 0;
     surface->lastAnimationCallback = 0;
+    if(0 != pthread_mutex_unlock(&surface->lock)) {
+        parsegraph_die("Failed to unlock surface after running animation callbacks");
+    }
     for(; cb;) {
         cb->listener(cb->listenerThisArg, elapsed);
         parsegraph_AnimationCallback* old = cb;
@@ -84,6 +115,9 @@ void parsegraph_Surface_runAnimationCallbacks(parsegraph_Surface* surface, float
 
 void parsegraph_Surface_destroy(parsegraph_Surface* surface)
 {
+    if(0 != pthread_mutex_lock(&surface->lock)) {
+        parsegraph_die("Failed to lock surface before destruction");
+    }
     for(parsegraph_SurfacePainter* p = surface->first_painter; p;) {
         parsegraph_SurfacePainter* next = p->next;
         free(p);
@@ -97,7 +131,11 @@ void parsegraph_Surface_destroy(parsegraph_Surface* surface)
     for(parsegraph_AnimationCallback* cb = surface->firstAnimationCallback; cb; cb = cb->next) {
         free(cb);
     }
+    if(0 != pthread_mutex_unlock(&surface->lock)) {
+        parsegraph_die("Failed to unlock surface after destruction");
+    }
     apr_pool_destroy(surface->pool);
+    pthread_mutex_destroy(&surface->lock);
     free(surface);
 }
 

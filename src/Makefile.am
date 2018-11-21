@@ -1,4 +1,4 @@
-PROG = cxx_proportion
+PROG = cxx_primes
 run:
 	./$(PROG)
 .PHONY: run
@@ -9,10 +9,15 @@ valgrind:
 	$(VALGRIND) .libs/lt-$(PROG)
 .PHONY: valgrind
 
-lib_LTLIBRARIES = libparsegraph.la
-libparsegraph_la_CFLAGS = -Wall @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
-libparsegraph_la_LDFLAGS = -fPIC -lm @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
-libparsegraph_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
+lib_LTLIBRARIES = libparsegraph-Qt.la
+libparsegraph_Qt_la_CFLAGS = -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
+libparsegraph_Qt_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
+libparsegraph_Qt_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
+
+lib_LTLIBRARIES += libparsegraph-kms.la
+libparsegraph_kms_la_CFLAGS = -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
+libparsegraph_kms_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
+libparsegraph_kms_la_LIBADD =
 
 nobase_include_HEADERS = \
 	die.h \
@@ -72,12 +77,11 @@ nobase_include_HEADERS = \
 	gl.h \
 	unicode.h
 
-libparsegraph_la_SOURCES = \
+libparsegraph_Qt_la_SOURCES = \
 	die.c \
 	ArrayList.c \
 	Float32List.c \
 	id.c \
-	timing.c \
 	parsegraph_math.c \
 	graph/Color.c \
 	graph/BlockPainter.c \
@@ -130,84 +134,89 @@ libparsegraph_la_SOURCES = \
 	gl.c \
 	unicode.c
 
+libparsegraph_kms_la_SOURCES = $(libparsegraph_Qt_la_SOURCES) \
+	graph/GlyphAtlas.c \
+	graph/GlyphAtlas-pango.c \
+	timing.c \
+	timing-linux.c
+
 graph/libparsegraph-GlyphAtlas.a: graph/GlyphAtlas.cpp graph/GlyphAtlas.c graph/GlyphAtlas.h Makefile
-	gcc -fPIC -c $(libparsegraph_la_CFLAGS) -I. graph/GlyphAtlas.c -ograph/GlyphAtlas-c.o
-	g++ -fPIC -c $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. graph/GlyphAtlas.cpp -ograph/GlyphAtlas-cxx.o
+	gcc -fPIC -c $(libparsegraph_Qt_la_CFLAGS) -I. graph/GlyphAtlas.c -ograph/GlyphAtlas-c.o
+	g++ -fPIC -c $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. graph/GlyphAtlas.cpp -ograph/GlyphAtlas-cxx.o
 	ar rc graph/libparsegraph-GlyphAtlas.a graph/GlyphAtlas-c.o graph/GlyphAtlas-cxx.o
 	ranlib graph/libparsegraph-GlyphAtlas.a
 
 libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
-	gcc -fPIC -c $(libparsegraph_la_CFLAGS) -I. timing.c -otiming-c.o
-	g++ -fPIC -c $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. timing.cpp -otiming-cxx.o
+	gcc -fPIC -c $(libparsegraph_Qt_la_CFLAGS) -I. timing.c -otiming-c.o
+	g++ -fPIC -c $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I. timing.cpp -otiming-cxx.o
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
 bin_PROGRAMS = parsegraph cxx_alpha cxx_weetcubes cxx_primes cxx_proportion
 
 parsegraph_CFLAGS = \
-	$(libparsegraph_la_CFLAGS) \
+	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
-parsegraph_LDFLAGS = $(libparsegraph_la_LDFLAGS)
-parsegraph_LDADD = libparsegraph.la
-
+parsegraph_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
+parsegraph_LDADD = libparsegraph-kms.la
 parsegraph_SOURCES = \
-	main.c
+	main.c apps/primes.c
 
 cxx_parsegraph_CXXFLAGS = \
-	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
-cxx_parsegraph_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_parsegraph_LDADD = libparsegraph.la
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_parsegraph_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_parsegraph_LDADD = libparsegraph-Qt.la
 cxx_parsegraph_SOURCES = \
 	main.cpp
 
 cxx_primes_CFLAGS = \
-	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
 cxx_primes_CXXFLAGS = \
-	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
-cxx_primes_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_primes_LDADD = libparsegraph.la
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_primes_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_primes_LDADD = libparsegraph-Qt.la
 cxx_primes_SOURCES = \
 	main.cpp \
 	apps/primes.c
 
 cxx_proportion_CFLAGS = \
-	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
 cxx_proportion_CXXFLAGS = \
-	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
-cxx_proportion_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_proportion_LDADD = libparsegraph.la
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_proportion_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_proportion_LDADD = libparsegraph-Qt.la
 cxx_proportion_SOURCES = \
 	main.cpp \
 	apps/proportion.c
 
 cxx_alpha_CXXFLAGS = \
 	-fPIC \
-	$(libparsegraph_la_CFLAGS) \
+	$(libparsegraph_Qt_la_CFLAGS) \
 	$(parsegraph_cxx_CFLAGS) \
 	-I$(top_SRCDIR) \
 	-g
-cxx_alpha_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_alpha_LDADD = libparsegraph.la
+cxx_alpha_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_alpha_LDADD = libparsegraph-Qt.la
 cxx_alpha_SOURCES = \
 	alpha.cpp
 
 cxx_weetcubes_CXXFLAGS = \
 	-fPIC \
-	$(libparsegraph_la_CFLAGS) \
+	$(libparsegraph_Qt_la_CFLAGS) \
 	$(parsegraph_cxx_CFLAGS) \
 	-I$(top_SRCDIR) \
 	-g
-cxx_weetcubes_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_weetcubes_LDADD = libparsegraph.la
+cxx_weetcubes_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_weetcubes_LDADD = libparsegraph-Qt.la
 cxx_weetcubes_SOURCES = \
 	weetcubes.cpp
 
 noinst_HEADERS = tests/unity.h tests/unity_internals.h tests/testpool.h
 
 check_PROGRAMS = runtest
-runtest_CFLAGS = $(libparsegraph_la_CFLAGS) -I$(top_SRCDIR)
-runtest_LDFLAGS = $(libparsegraph_la_LDFLAGS)
-runtest_LDADD = libparsegraph.la
+runtest_CFLAGS = $(libparsegraph_Qt_la_CFLAGS) -I$(top_SRCDIR)
+runtest_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS)
+runtest_LDADD = libparsegraph-Qt.la
 runtest_SOURCES = \
 	tests/graph/Extent.c \
 	tests/alpha/Maths.c \

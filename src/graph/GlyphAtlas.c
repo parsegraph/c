@@ -194,12 +194,36 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
             glGenTextures(1, &page->_glyphTexture);
         }
 
-        const GLvoid* glyphCanvas = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, texture);
+        // Accept ARGB32_Premultiplied
+        const unsigned char* glyphCanvas = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, texture);
+        unsigned char swizzled[4*1024*1024];
+        for(int i = 0; i < 4*1024*1024; i += 4) {
+            float a = (float)glyphCanvas[i];
+            float r = (float)glyphCanvas[i+1];
+            float g = (float)glyphCanvas[i+2];
+            float b = (float)glyphCanvas[i+3];
+
+            if(a > 0) {
+                r /= (a/255.0);
+                g /= (a/255.0);
+                b /= (a/255.0);
+            }
+            else {
+                r = 0;
+                g = 0;
+                b = 0;
+            }
+
+            swizzled[i] = r;
+            swizzled[i+1] = g;
+            swizzled[i+2] = b;
+            swizzled[i+3] = a;
+        }
 
         // Draw from 2D canvas.
         glBindTexture(GL_TEXTURE_2D, page->_glyphTexture);
         glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGB, maxTextureWidth, maxTextureWidth, 0, GL_RGB, GL_UNSIGNED_BYTE, glyphCanvas
+            GL_TEXTURE_2D, 0, GL_RGBA, maxTextureWidth, maxTextureWidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, swizzled
         );
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);

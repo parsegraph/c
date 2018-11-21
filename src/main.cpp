@@ -95,9 +95,6 @@ virtual void keyPressEvent(QKeyEvent* ev) {
     }
 
     //fprintf(stderr, "Pressed %s\n", kname);
-    if(ev->key() == Qt::Key_Escape) {
-        //frozen = !frozen;
-    }
     parsegraph_Input_keydown(input, kname, ev->key(),
         ev->modifiers() & Qt::AltModifier,
         ev->modifiers() & Qt::MetaModifier,
@@ -221,11 +218,8 @@ MainWindow(QOpenGLContext* shareContext) :
 parsegraph_Input* input = 0;
 QTime frameElapsedTime;
 struct parsegraph_Surface* surface = 0;
-struct parsegraph_Surface* graph = 0;
 GLint w = 0;
 GLint h = 0;
-int hasEverPainted = 0;
-int frozen = 1;
 virtual void initializeGL() {
     glEnable(GL_MULTISAMPLE);
     // Invoke global init function.
