@@ -1,7 +1,10 @@
 #include "pagingbuffer.h"
+#include "graph/log.h"
+#include "die.h"
 #include <stdarg.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct parsegraph_pagingbuffer* parsegraph_pagingbuffer_new(
     apr_pool_t* pool, GLuint program)
@@ -116,6 +119,7 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_
     // Add the page.
     if(pg->last_page) {
         pg->last_page->next_page = page;
+        pg->last_page = page;
     }
     else {
         pg->first_page = page;
@@ -170,7 +174,7 @@ int parsegraph_pagingbuffer_defineAttrib(struct parsegraph_pagingbuffer* pg, con
         page->buffers[pg->num_attribs - 1].glBuffer = 0;
     }
 
-    return pg->num_attribs;
+    return pg->num_attribs - 1;
 }
 
 int parsegraph_PagingBuffer_appendRGB(struct parsegraph_pagingbuffer* pg, int attribIndex, float r, float g, float b)
@@ -203,8 +207,8 @@ static void parsegraph_BufferPageContent_ensure(parsegraph_pagingbuffer* pg, par
             content->datasize = 1;
         }
         float* oldData = content->data;
-        content->data = apr_palloc(pg->pool, content->datasize*2);
-        memcpy(content->data, oldData, content->index);
+        content->data = apr_palloc(pg->pool, sizeof(float)*content->datasize*2);
+        memcpy(content->data, oldData, sizeof(float)*content->index);
         content->datasize *= 2;
     }
 }
@@ -216,6 +220,7 @@ int parsegraph_BufferPage_appendVarargs(parsegraph_BufferPage* page, int attribI
         float v = (float)va_arg(ap, double);
         parsegraph_BufferPageContent_ensure(page->pg, content);
         content->data[content->index++] = v;
+        //fprintf(stderr, "index is %d\n", content->index);
     }
     return 0;
 }
@@ -224,7 +229,7 @@ int parsegraph_BufferPage_appendData(parsegraph_BufferPage* page, int attribInde
 {
     parsegraph_pagingbuffer* pg = page->pg;
     if(attribIndex < 0 || attribIndex >= pg->num_attribs) {
-        return -2;
+        parsegraph_die("attribIndex %d out of range", attribIndex);
     }
     va_list ap;
     va_start(ap, numValues);
@@ -259,6 +264,7 @@ int parsegraph_BufferPage_appendArray(parsegraph_BufferPage* page, int attribInd
 
 void parsegraph_pagingbuffer_clear(struct parsegraph_pagingbuffer* pg)
 {
+    //fprintf(stderr, "Clearing pagingbuffer\n");
     // Clear the buffers for all pages.
     for(struct parsegraph_BufferPage* page = pg->first_page; page != 0; page = page->next_page) {
         for(int attribIndex = 0; attribIndex < pg->num_attribs; ++attribIndex) {
@@ -284,6 +290,8 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
     // Draw each page.
     for(struct parsegraph_BufferPage* page = pg->first_page; page != 0; page = page->next_page) {
         int numIndices = -1;
+
+        //fprintf(stderr, "Rendering buffer page\n");
 
         // Prepare each vertex attribute.
         int attribIndex = 0;
@@ -318,8 +326,10 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
             );
 
             float thisNumIndices = content->index / attrib->numComponents;
+            //parsegraph_log("This num indices: %d/%d=%f\n", content->index, attrib->numComponents, thisNumIndices);
             if(floor(thisNumIndices) != thisNumIndices) {
                 //throw new Error("Odd number of indices for attrib " + attrib.name + ". Wanted " + Math.round(thisNumIndices) + ", but got " + thisNumIndices);
+                parsegraph_die("Odd number of indices");
                 return -1;
             }
             if(numIndices == -1) {
@@ -334,8 +344,12 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
 
         // Draw the page's triangles.
         if(numIndices > 0) {
+            //parsegraph_log("Invoking page's renderFunc\n");
             page->renderFunc(page->renderFuncThisArg, numIndices);
             count += numIndices/3;
+        }
+        else {
+            //parsegraph_log("Page was empty\n");
         }
 
         page->needsUpdate = 0;

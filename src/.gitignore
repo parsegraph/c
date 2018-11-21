@@ -1,6 +1,7 @@
 runtest
 runtest_pagingbuffer
 parsegraph
+cxx_proportion
 cxx_parsegraph
 cxx_primes
 graph/.dirstamp

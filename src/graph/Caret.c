@@ -119,13 +119,12 @@ parsegraph_Node* parsegraph_Caret_disconnect(parsegraph_Caret* caret, const char
 parsegraph_PaintGroup* parsegraph_Caret_crease(parsegraph_Caret* caret, const char* inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    int inDirectionVal = parsegraph_readNodeDirection(inDirection);
-
     parsegraph_Node* node;
     if(!inDirection) {
         node = parsegraph_Caret_node(caret);
     }
     else {
+        int inDirectionVal = parsegraph_readNodeDirection(inDirection);
         node = parsegraph_Node_nodeAt(parsegraph_Caret_node(caret), inDirectionVal);
     }
 

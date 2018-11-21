@@ -314,7 +314,7 @@ parsegraph_Camera.prototype.project = function()
     );
 };
 
-parsegraph_Camera.prototype.contains = function(rect)
+parsegraph_Camera.prototype.contains = function(s)
 {
     var camera = this;
     return parsegraph_containsAny(

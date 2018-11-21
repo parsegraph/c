@@ -1,4 +1,4 @@
-PROG = cxx_primes
+PROG = cxx_proportion
 run:
 	./$(PROG)
 .PHONY: run
@@ -66,6 +66,8 @@ nobase_include_HEADERS = \
 	alpha/WeetPainter.h \
 	alpha/Physical.h \
 	widgets/alpha_WeetCubeWidget.h \
+	widgets/buildPrimesDemo.h \
+	widgets/showProportionTest.h \
 	graph/AudioKeyboard.h \
 	gl.h \
 	unicode.h
@@ -123,6 +125,7 @@ libparsegraph_la_SOURCES = \
 	alpha/CubeMan.c \
 	widgets/alpha_WeetCubeWidget.c \
 	widgets/buildPrimesDemo.c \
+	widgets/showProportionTest.c \
 	graph/AudioKeyboard.c \
 	gl.c \
 	unicode.c
@@ -139,7 +142,7 @@ libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
-bin_PROGRAMS = parsegraph cxx_alpha cxx_weetcubes cxx_primes
+bin_PROGRAMS = parsegraph cxx_alpha cxx_weetcubes cxx_primes cxx_proportion
 
 parsegraph_CFLAGS = \
 	$(libparsegraph_la_CFLAGS) \
@@ -166,6 +169,16 @@ cxx_primes_LDADD = libparsegraph.la
 cxx_primes_SOURCES = \
 	main.cpp \
 	apps/primes.c
+
+cxx_proportion_CFLAGS = \
+	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_proportion_CXXFLAGS = \
+	-fPIC $(libparsegraph_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_proportion_LDFLAGS = $(libparsegraph_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_proportion_LDADD = libparsegraph.la
+cxx_proportion_SOURCES = \
+	main.cpp \
+	apps/proportion.c
 
 cxx_alpha_CXXFLAGS = \
 	-fPIC \

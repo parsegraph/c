@@ -650,14 +650,14 @@ void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* pa
             default:
                 parsegraph_die("Unrecognized Unicode character: %d", l32);
             }
-            fprintf(stderr, "Glyphdata is %d. Length is %d\n", glyphData->letter[0], glyphData->length);
-            fprintf(stderr, "Char is %d Direction is %s\n", l32[0], glyphDirection);
+            //fprintf(stderr, "Glyphdata is %d. Length is %d\n", glyphData->letter[0], glyphData->length);
+            //fprintf(stderr, "Char is %d Direction is %s\n", l32[0], glyphDirection);
             if(!strcmp(direction, "WS") && strcmp(glyphDirection, "WS")) {
                 // Use the glyph's direction if there is none currently in use.
                 direction = glyphDirection;
             }
             if(j < parsegraph_ArrayList_length(l->_glyphs) - 1 && !strcmp(direction, glyphDirection)) {
-                fprintf(stderr, "Incrementing J\n");
+                //fprintf(stderr, "Incrementing J\n");
                 ++j;
                 continue;
             }
@@ -851,7 +851,7 @@ void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* pa
             direction = glyphDirection;
             startRun = j;
             endRun = startRun;
-            fprintf(stderr, "Incrementing J\n");
+            //fprintf(stderr, "Incrementing J\n");
             ++j;
             if(j == parsegraph_ArrayList_length(l->_glyphs)) {
                 break;

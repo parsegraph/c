@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Node.h"
 #include "Status.h"
 #include "Color.h"
@@ -58,6 +59,7 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     node->_scene = 0;
 
     node->_scale = 1.0;
+    node->_hasAbsolutePos = 0;
     node->_absoluteXPos = 0;
     node->_absoluteYPos = 0;
     node->_absoluteScale = 0;
@@ -85,15 +87,9 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     }
 
     if(fromNode != 0) {
-        if(!parsegraph_isNodeDirection(parentDirection) ||
-            parsegraph_NULL_NODE_DIRECTION == parentDirection
-        ) {
-            parsegraph_die("Invalid parent direction given.");
-        }
         // A parent node was provided; this node is a child.
         node->_layoutPreference = parsegraph_PREFER_PERPENDICULAR_AXIS;
-        node->_parentDirection = parentDirection;
-        node->_neighbors[parentDirection].node = fromNode;
+        parsegraph_Node_connectNode(fromNode, parentDirection, node);
     }
     else {
         // No parent was provided; this node is a root.
@@ -224,13 +220,15 @@ static void resetPosition(void* data, parsegraph_Node* node, int direction)
     parsegraph_Node_positionWasChanged(node);
 }
 
-void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
+void parsegraph_Node_commitAbsolutePos(parsegraph_Node* nodeRoot)
 {
-    if(node->_absoluteXPos != 0) {
+    if(nodeRoot->_hasAbsolutePos) {
         // No need for an update, so just return.
         return;
     }
 
+
+    parsegraph_Node* givenNode = nodeRoot;
     apr_pool_t* cpool;
     apr_pool_create(&cpool, 0);
 
@@ -239,37 +237,40 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* node)
     float parentScale = 1.0;
     float scale = 1.0;
     for(;;) {
-        if(parsegraph_Node_isRoot(node)) {
-            node->_absoluteXPos = 0;
-            node->_absoluteYPos = 0;
+        if(parsegraph_Node_isRoot(givenNode)) {
+            nodeRoot->_absoluteXPos = 0;
+            nodeRoot->_absoluteYPos = 0;
             break;
         }
 
-        parsegraph_ArrayList_push(nodeList, (void*)(long)parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(node)));
-        node = parsegraph_Node_nodeParent(node);
+        parsegraph_ArrayList_push(nodeList, (void*)(long)parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(givenNode)));
+        givenNode = parsegraph_Node_nodeParent(givenNode);
     }
 
     // nodeList contains [directionToThis, directionToParent, ..., directionFromRoot];
     for(int i = parsegraph_ArrayList_length(nodeList) - 1; i >= 0; --i) {
         int directionToChild = (long)parsegraph_ArrayList_at(nodeList, i);
 
-        node->_absoluteXPos += parsegraph_Node_x(node) * parentScale;
-        node->_absoluteYPos += parsegraph_Node_y(node) * parentScale;
+        nodeRoot->_absoluteXPos += parsegraph_Node_x(givenNode) * parentScale;
+        nodeRoot->_absoluteYPos += parsegraph_Node_y(givenNode) * parentScale;
 
         parentScale = scale;
-        scale *= parsegraph_Node_scaleAt(node, directionToChild);
-        node = parsegraph_Node_nodeAt(node, directionToChild);
+        scale *= parsegraph_Node_scaleAt(givenNode, directionToChild);
+        givenNode = parsegraph_Node_nodeAt(givenNode, directionToChild);
     }
 
-    node->_absoluteXPos += parsegraph_Node_x(node) * parentScale;
-    node->_absoluteYPos += parsegraph_Node_y(node) * parentScale;
-    node->_absoluteScale = scale;
+    nodeRoot->_absoluteXPos += parsegraph_Node_x(givenNode) * parentScale;
+    nodeRoot->_absoluteYPos += parsegraph_Node_y(givenNode) * parentScale;
+    nodeRoot->_absoluteScale = scale;
+    nodeRoot->_hasAbsolutePos = 1;
 
-    parsegraph_Node_eachChild(node, resetPosition, node);
+    parsegraph_Node_eachChild(nodeRoot, resetPosition, nodeRoot);
+    apr_pool_destroy(cpool);
 };
 
 void parsegraph_Node_positionWasChanged(parsegraph_Node* node)
 {
+    node->_hasAbsolutePos = 0;
     node->_absoluteXPos = 0;
     node->_absoluteYPos = 0;
 };
@@ -546,7 +547,7 @@ int parsegraph_Node_parentDirection(parsegraph_Node* node)
 parsegraph_Node* parsegraph_Node_nodeParent(parsegraph_Node* node)
 {
     if(parsegraph_Node_isRoot(node)) {
-        parsegraph_log("Node root does not have a root.");
+        parsegraph_log("Node root does not have a root.\n");
         return 0;
     }
     return node->_neighbors[parsegraph_Node_parentDirection(node)].node;
@@ -568,15 +569,21 @@ int parsegraph_Node_hasNode(parsegraph_Node* node, int atDirection)
 void parsegraph_Node_hasNodes(parsegraph_Node* node, int axis, int* hasNegative, int* hasPositive)
 {
     if(axis == parsegraph_NULL_AXIS) {
-        parsegraph_log("Axis cannot be null");
+        parsegraph_log("Axis cannot be null\n");
         return;
     }
 
     if(parsegraph_Node_hasNode(node, parsegraph_getNegativeNodeDirection(axis))) {
         *hasNegative = parsegraph_getNegativeNodeDirection(axis);
     }
+    else {
+        *hasNegative = parsegraph_NULL_NODE_DIRECTION;
+    }
     if(parsegraph_Node_hasNode(node, parsegraph_getPositiveNodeDirection(axis))) {
         *hasPositive = parsegraph_getPositiveNodeDirection(axis);
+    }
+    else {
+        *hasPositive = parsegraph_NULL_NODE_DIRECTION;
     }
 }
 
@@ -1140,6 +1147,7 @@ void parsegraph_Node_size(parsegraph_Node* node, float* bodySize)
     parsegraph_Node_sizeWithoutPadding(node, bodySize);
     bodySize[0] += 2 * parsegraph_Node_horizontalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
     bodySize[1] += 2 * parsegraph_Node_verticalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
+    //parsegraph_log("Calculated %s node size of (%f, %f)\n", parsegraph_nameNodeType(parsegraph_Node_type(node)), bodySize[0], bodySize[1]);
 }
 
 void parsegraph_Node_absoluteSize(parsegraph_Node* node, float* bodySize)
@@ -1280,7 +1288,7 @@ static void addCandidate(parsegraph_ArrayList* candidates, parsegraph_Node* node
 
 parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x, float y, float userScale)
 {
-    //parsegraph_log("nodeUnderCoords: %0.2f, %0.2f", x, y);
+    //parsegraph_log("nodeUnderCoords: %0.2f, %0.2f\n", x, y);
     if(userScale == NAN) {
         userScale = 1;
     }
@@ -1298,25 +1306,25 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
         }
 
         if(parsegraph_Node_inNodeBody(candidate, x, y, userScale)) {
-            //parsegraph_log("Click is in node body");
+            //parsegraph_log("Click is in node body\n");
             if(
                 parsegraph_Node_hasNode(candidate, parsegraph_INWARD)
             ) {
                 if(parsegraph_Node_inNodeExtents(
                     parsegraph_Node_nodeAt(candidate, parsegraph_INWARD), x, y, userScale)
                 ) {
-                    //parsegraph_log("Testing inward node");
+                    //parsegraph_log("Testing inward node\n");
                     parsegraph_ArrayList_push(candidates, &FORCE_SELECT_PRIOR);
                     parsegraph_ArrayList_push(candidates, parsegraph_Node_nodeAt(candidate, parsegraph_INWARD));
                     continue;
                 }
                 else {
-                    //parsegraph_log("Click not in inward extents");
+                    //parsegraph_log("Click not in inward extents\n");
                 }
             }
 
             // Found the node.
-            //parsegraph_log("Found node.");
+            //parsegraph_log("Found node.\n");
             return candidate;
         }
         // Not within this node, so remove it as a candidate.
@@ -1327,7 +1335,7 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
             // Nope, so continue the search.
             continue;
         }
-        //parsegraph_log("Click is in node extent");
+        //parsegraph_log("Click is in node extent\n");
         float ax = parsegraph_Node_absoluteX(candidate);
         float ay = parsegraph_Node_absoluteY(candidate);
 
@@ -1372,7 +1380,7 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
         }
     }
 
-    //parsegraph_log("Found nothing.");
+    //parsegraph_log("Found nothing.\n");
     return 0;
 }
 
@@ -1584,7 +1592,7 @@ static void positionChild(parsegraph_Node* node, int childDirection, int alignme
     }
     lineLength = separation - parsegraph_Node_scaleAt(node, childDirection) * extentSize;
     node->_neighbors[childDirection].lineLength = lineLength;
-    //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
+    //parsegraph_log("Line length: %f, separation: %f, extentSize: %f\n", lineLength, separation, extentSize);
 
     // Set the position.
     int dirSign = parsegraph_nodeDirectionSign(childDirection);
@@ -1595,11 +1603,11 @@ static void positionChild(parsegraph_Node* node, int childDirection, int alignme
     else {
         parsegraph_Node_setPosAt(node, childDirection, dirSign * separation, alignment);
     }
-    /*console.log(
-        parsegraph_nameNodeDirection(childDirection) + " " +
-        parsegraph_nameNodeType(child.type()) + "'s position set to (" +
-        this._neighbors[childDirection].xPos + ", " + this._neighbors[childDirection].yPos + ")"
-    );*/
+    //parsegraph_log("%s %s's position set to (%f, %f)\n",
+        //parsegraph_nameNodeDirection(childDirection),
+        //parsegraph_nameNodeType(parsegraph_Node_type(child)),
+        //node->_neighbors[childDirection].xPos, node->_neighbors[childDirection].yPos
+    //);
 };
 
 /**
@@ -1764,14 +1772,15 @@ void layoutSingle(parsegraph_Node* node,
         return;
     }
 
-    /*console.log(
-        "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
-        + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
-    );*/
+    //parsegraph_log(
+        //"Laying out single %s child, %s axis overlap.\n",
+        //parsegraph_nameNodeDirection(direction),
+        //(allowAxisOverlap ? "with" : "without")
+    //);
 
     // Get the alignment for the children.
     int alignment = getAlignment(node, direction);
-    //console.log("Calculated alignment of " + alignment + ".");
+    //parsegraph_log("Calculated alignment of %d.\n", alignment);
 
     parsegraph_Node* child = parsegraph_Node_nodeAt(node, direction);
     int reversed = parsegraph_reverseNodeDirection(direction);
@@ -1787,7 +1796,7 @@ void layoutSingle(parsegraph_Node* node,
         parsegraph_Node_scaleAt(node, direction),
         parsegraph_LINE_THICKNESS / 2
     );
-    //console.log("Calculated unpadded separation of " + separationFromChild + ".");
+    //parsegraph_log("Calculated unpadded separation of %f.\n", separationFromChild);
 
     float childSize[2];
     parsegraph_Node_size(child, childSize);
@@ -1811,7 +1820,7 @@ void layoutSingle(parsegraph_Node* node,
         separationFromChild
             += parsegraph_Node_horizontalSeparation(node, direction) * parsegraph_Node_scaleAt(node, direction);
     }
-    //console.log("Calculated padded separation of " + separationFromChild + ".");
+    //parsegraph_log("Calculated padded separation of %f.\n", separationFromChild);
 
     // Set the node's position.
     positionChild(
@@ -1839,6 +1848,9 @@ void layoutAxis(parsegraph_Node* node,
     int secondDirection,
     int allowAxisOverlap)
 {
+    if(firstDirection == secondDirection && firstDirection != parsegraph_NULL_NODE_DIRECTION) {
+        parsegraph_die("Bad node directions");
+    }
     // Change the node direction to null if there is no node in that
     // direction.
     if(!parsegraph_Node_hasNode(node, firstDirection)) {
@@ -1853,6 +1865,7 @@ void layoutAxis(parsegraph_Node* node,
         firstDirection == parsegraph_NULL_NODE_DIRECTION
         && secondDirection == parsegraph_NULL_NODE_DIRECTION
     ) {
+        //fprintf(stderr, "No nodes in any direction.\n");
         return;
     }
 
@@ -1861,6 +1874,7 @@ void layoutAxis(parsegraph_Node* node,
         firstDirection == parsegraph_NULL_NODE_DIRECTION
         || secondDirection == parsegraph_NULL_NODE_DIRECTION
     ) {
+        //fprintf(stderr, "Only node in one direction\n");
         // Find the direction of the only first-axis child.
         int firstAxisDirection;
         if(firstDirection != parsegraph_NULL_NODE_DIRECTION) {
@@ -1876,19 +1890,20 @@ void layoutAxis(parsegraph_Node* node,
         return;
     }
 
-    /*parsegraph_log(
-        "Laying out " +
-        parsegraph_nameNodeDirection(firstDirection) + " and " +
-        parsegraph_nameNodeDirection(secondDirection) + " children."
-    );*/
+    //parsegraph_log(
+        //"Laying out %s and %s children.\n",
+        //parsegraph_nameNodeDirection(firstDirection),
+        //parsegraph_nameNodeDirection(secondDirection)
+    //);
 
     // This node has first-axis children in both directions.
     parsegraph_Node* firstNode = parsegraph_Node_nodeAt(node, firstDirection);
     parsegraph_Node* secondNode = parsegraph_Node_nodeAt(node, secondDirection);
 
     // Get the alignments for the children.
-    int firstNodeAlignment = getAlignment(node, firstDirection);
-    int secondNodeAlignment = getAlignment(node, secondDirection);
+    //fprintf(stderr, "firstDirection=%s. firstNode=%d\n", parsegraph_nameNodeDirection(firstDirection), firstNode ? firstNode->_id : -1);
+    int firstNodeAlignment = firstNode != 0 ? getAlignment(node, firstDirection) : parsegraph_NULL_NODE_DIRECTION;
+    int secondNodeAlignment = secondNode != 0 ? getAlignment(node, secondDirection) : parsegraph_NULL_NODE_DIRECTION;
     //parsegraph_log("First alignment: " + firstNodeAlignment);
     //parsegraph_log("Second alignment: " + secondNodeAlignment);
 
@@ -2150,9 +2165,9 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
     node->_layoutState = parsegraph_IN_COMMIT;
 
     // Clear the absolute point values, to be safe.
+    node->_hasAbsolutePos = 0;
     node->_absoluteXPos = 0;
     node->_absoluteYPos = 0;
-
 
     parsegraph_Node_size(node, bodySize);
 
@@ -2210,7 +2225,7 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
         || parsegraph_Node_parentDirection(node) == parsegraph_OUTWARD
     ) {
         if(node->_layoutPreference == parsegraph_PREFER_HORIZONTAL_AXIS) {
-            // Root-like, so just lay out both axes.
+            // Root-like, so just lay out both axes. (this is a root's default)
             layoutAxis(node, bodySize, parsegraph_BACKWARD, parsegraph_FORWARD,
                 !parsegraph_Node_hasNode(node, parsegraph_UPWARD) && !parsegraph_Node_hasNode(node, parsegraph_DOWNWARD)
             );
@@ -2515,7 +2530,7 @@ void parsegraph_Node_layoutWasChanged(parsegraph_Node* node, int changeDirection
 {
     // Disallow null change directions.
     if(changeDirection == parsegraph_NULL_NODE_DIRECTION) {
-        parsegraph_log("Change direction cannot be null.");
+        parsegraph_log("Change direction cannot be null.\n");
         return;
     }
 

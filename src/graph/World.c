@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include "log.h"
 #include "World.h"
 #include "Node.h"
 #include "Graph.h"
@@ -124,6 +126,8 @@ void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect)
         parsegraph_Node* plot = parsegraph_ArrayList_at(world->_worldRoots, i);
         parsegraph_CommitLayoutTraversal clt;
         clt.timeout = 0;
+        clt.root = plot;
+        clt.node = plot;
         parsegraph_Node_commitLayoutIteratively(plot, &clt);
 
         // Get plot extent data.
@@ -195,7 +199,7 @@ void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect)
 
 void parsegraph_World_scheduleRepaint(parsegraph_World* world)
 {
-    //console.log(new Error("Scheduling repaint"));
+    //fprintf(stderr, "Scheduling World repaint\n");
     world->_worldPaintingDirty = 1;
     world->_previousWorldPaintState = 0;
 };
@@ -211,7 +215,7 @@ parsegraph_Node* parsegraph_World_nodeUnderCursor(parsegraph_World* world)
 parsegraph_Node* parsegraph_World_nodeUnderCoords(parsegraph_World* world, float x, float y)
 {
     // Test if there is a node under the given coordinates.
-    for(int i = parsegraph_ArrayList_length(world->_worldRoots); i >= 0; --i) {
+    for(int i = parsegraph_ArrayList_length(world->_worldRoots) - 1; i >= 0; --i) {
         parsegraph_Node* selectedNode = parsegraph_Node_nodeUnderCoords(
             parsegraph_ArrayList_at(world->_worldRoots, i), x, y, 1.0);
         if(selectedNode) {
@@ -250,7 +254,7 @@ struct parsegraph_GlyphAtlas* parsegraph_PAINTING_GLYPH_ATLAS = 0;
 
 int parsegraph_World_paint(parsegraph_World* world, int timeout)
 {
-    //console.log("Painting Graph, timeout=" + timeout);
+    //parsegraph_log("Painting world, timeout=%d\n", timeout);
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
 
@@ -292,8 +296,10 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
                 return 0;
             }
 
+            //fprintf(stderr, "Painted world root %d\n", i);
             ++i;
         }
+        //fprintf(stderr, "World is no longer dirty.\n");
         world->_worldPaintingDirty = 0;
     }
 

@@ -74,6 +74,7 @@ struct parsegraph_Node {
     parsegraph_Scene* _scene;
 
     float _scale;
+    int _hasAbsolutePos;
     float _absoluteXPos;
     float _absoluteYPos;
     float _absoluteScale;

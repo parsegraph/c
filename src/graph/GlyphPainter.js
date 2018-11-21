@@ -28,13 +28,14 @@ parsegraph_GlyphPainter_FragmentShader =
 "varying highp vec2 texCoord;\n" +
 "\n" +
 "void main() {\n" +
-    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).r;" +
+    "gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
+    /*"highp float opacity = texture2D(u_glyphTexture, texCoord.st).r;" +
     "if(backgroundColor.a == 0.0) {" +
         "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
     "}" +
     "else {" +
         "gl_FragColor = mix(backgroundColor, fragmentColor, opacity);" +
-    "}" +
+    "}" +*/
 "}";
 
 function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
@@ -150,8 +151,11 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
             x + glyphData.width * fontScale, y + glyphData.height * fontScale,
 
             x, y,
-            x + glyphData.width * fontScale, y + glyphData.height * fontScale,
-            x, y + glyphData.height * fontScale
+            x + glyphData.width * fontScale, y,
+            x + glyphData.width * fontScale, y + glyphData.height * fontScale
+            //x, y,
+            //x + glyphData.width * fontScale, y + glyphData.height * fontScale,
+            //x, y + glyphData.height * fontScale
         ]
     );
 

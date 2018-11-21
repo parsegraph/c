@@ -1,4 +1,5 @@
 #include "BlockPainter.h"
+#include "log.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "Surface.h"
@@ -313,7 +314,10 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface
         );
 
         const char* fragProgram = parsegraph_BlockPainter_FragmentShader;
-
+        //fprintf(stderr, "%s\n", glGetString(GL_EXTENSIONS));
+        if(strstr((const char*)glGetString(GL_EXTENSIONS), "GL_OES_standard_derivatives")) {
+            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
+        }
         // For development.
   //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
 //       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
@@ -374,7 +378,7 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface
     // BorRound: 1 * 4 (one float)   48-51
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
-    painter->_stride = 60;
+    painter->_stride = 15*sizeof(float);
     painter->_itemBuffer = apr_palloc(surface->pool, painter->_stride);
 
     return painter;
@@ -420,6 +424,7 @@ void parsegraph_BlockPainter_initBuffer(parsegraph_BlockPainter* painter, unsign
     glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
     glBufferData(GL_ARRAY_BUFFER, painter->_stride*6*numBlocks, painter->_itemBuffer, GL_STATIC_DRAW);
     painter->_numBlocks = numBlocks;
+    //parsegraph_log("BlockPainter has buffer of %d blocks", numBlocks);
 };
 
 void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter)
@@ -446,6 +451,7 @@ void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
         fprintf(stderr, "BlockPainter.initBuffer(numBlocks) must be called first.\n");
         abort();
     }
+    //parsegraph_log("Drawing block (%f, %f, w=%f, h=%f, border(%f, %f))\n", cx, cy, width, height, borderRoundedness, borderThickness);
     parsegraph_Rect_include(painter->_bounds, cx, cy, width, height);
 
     float* buf = painter->_itemBuffer;

@@ -167,8 +167,8 @@ parsegraph_Graph.prototype.paint = function(timeout)
     var rv = this._world.paint(timeout);
 
     this._input.paint();
-    this._piano.prepare(this.gl(), this.glyphAtlas(), this._shaders);
-    this._piano.paint();
+    //this._piano.prepare(this.gl(), this.glyphAtlas(), this._shaders);
+    //this._piano.paint();
     return rv;
 };
 
@@ -184,5 +184,5 @@ parsegraph_Graph.prototype.render = function()
     this._carousel.render(world);
     this._cameraBox.render(world);
     this._input.render(world);
-    this._piano.render(world);
+    //this._piano.render(world);
 };

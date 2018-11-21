@@ -39,7 +39,6 @@ void* peer;
 struct apr_pool_t* pool;
 float backgroundColor[4];
 int pendingRender;
-int needsRepaint;
 struct parsegraph_SurfacePainter* first_painter;
 struct parsegraph_SurfacePainter* last_painter;
 struct parsegraph_SurfaceRenderer *first_renderer;

@@ -124,7 +124,6 @@ static int frozen = 0;
 
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* sched)
 {
-    sched->needsRepaint = 1;
 }
 
 static void

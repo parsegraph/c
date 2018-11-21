@@ -1,3 +1,4 @@
+#include "log.h"
 #include "GlyphAtlas.h"
 #include "Surface.h"
 #include "../unicode.h"
@@ -110,6 +111,7 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     }
     int letterWidth = parsegraph_GlyphAtlas_measureText(glyphAtlas, glyph, len);
 
+
     parsegraph_GlyphPage* glyphPage = glyphAtlas->_lastPage;
     if(!glyphPage) {
         glyphPage = parsegraph_GlyphPage_new(glyphAtlas);
@@ -134,6 +136,7 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     }
 
     glyphData = parsegraph_GlyphData_new(glyphPage, glyph, len, glyphAtlas->_x, glyphAtlas->_y, letterWidth, letterHeight);
+    //fprintf(stderr, "Glyph width is now is %d\n", glyphData->width);
 
     apr_hash_set(glyphAtlas->_glyphData, &glyphData->letter, len*sizeof(UChar), glyphData);
     if(glyphPage->_lastGlyph) {
@@ -171,8 +174,10 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         parsegraph_GlyphAtlas_restoreProperties(glyphAtlas);
     }
     if(!glyphAtlas->_needsUpdate) {
+        //parsegraph_log("GlpyhAtlas does not need update\n");
         return;
     }
+    //parsegraph_log("GlpyhAtlas is updating\n");
     glyphAtlas->_needsUpdate = 0;
 
     for(parsegraph_GlyphPage* page = glyphAtlas->_firstPage; page; page = page->next) {
@@ -180,6 +185,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         void* texture = parsegraph_GlyphAtlas_createTexture(glyphAtlas);
         for(parsegraph_GlyphData* glyphData = page->_firstGlyph; glyphData; glyphData = glyphData->next) {
+            //parsegraph_log("Rendering glyph with width %d and height %d\n", glyphData->width, glyphData->height);
             parsegraph_GlyphAtlas_renderGlyph(glyphAtlas, glyphData, texture);
         }
 
@@ -197,9 +203,9 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         );
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         // Prevents t-coordinate wrapping (repeating).
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);

@@ -1,4 +1,7 @@
+#include <apr_strings.h>
 #include "Input.h"
+#include "log.h"
+#include <stdio.h>
 #include "Rect.h"
 #include "gl.h"
 #include "Label.h"
@@ -196,15 +199,31 @@ void parsegraph_Input_onWheel(parsegraph_Input* input, float clientX, float clie
 {
     //event.preventDefault();
 
+    //input->_graph->_surface->displayWidth
+    //
+
     // Get the mouse coordinates, relative to bottom-left of the canvas.
-    float x = clientX - parsegraph_Camera_x(input->_camera);
-    float y = clientY - parsegraph_Camera_y(input->_camera);
+    //float x = clientX - parsegraph_Camera_x(input->_camera);
+    //float y = clientY - parsegraph_Camera_y(input->_camera);
+    float x = parsegraph_Camera_x(input->_camera) - clientX;
+    float y = parsegraph_Camera_y(input->_camera) - clientY;
+
+    //parsegraph_log("Zooming to %f, %f. Current is %f, %f. Other is %f, %f\n",
+            //x, y,
+            //parsegraph_Camera_x(input->_camera),
+            //parsegraph_Camera_y(input->_camera),
+            //parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
+            //parsegraph_Surface_getHeight(input->_graph->_surface) / 2
+        //);
 
     // Adjust the scale.
     float numSteps = .4 * -angleDelta;
-    if(numSteps > 0 || parsegraph_Camera_scale(input->_camera) >= .01) {
-        parsegraph_Camera_zoomToPoint(input->_camera, powf(1.1, numSteps), x, y);
-    }
+    //if(numSteps > 0 || parsegraph_Camera_scale(input->_camera) >= .01) {
+        parsegraph_Camera_zoomToPoint(input->_camera, powf(1.1, numSteps), x, y
+            //parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
+            //parsegraph_Surface_getHeight(input->_graph->_surface) / 2
+        );
+    //}
 
     parsegraph_Input_Dispatch(input, 0, "wheel", 1);
 }
@@ -325,6 +344,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
     }
 
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
+    //fprintf(stderr, "Key pressed: %s\n", keyName);
     if(input->selectedSlider) {
         if(strlen(keyName) == 0) {
             return;
@@ -514,8 +534,9 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
     }
 
     struct timespec* downtime = apr_palloc(input->pool, sizeof(struct timespec));
-    clock_gettime(CLOCK_MONOTONIC, downtime);
-    apr_hash_set(input->keydowns, keyName, APR_HASH_KEY_STRING, downtime);
+    clock_gettime(CLOCK_REALTIME, downtime);
+    //parsegraph_log("Logging %s keypress\n", keyName);
+    apr_hash_set(input->keydowns, apr_pstrdup(input->pool, keyName), APR_HASH_KEY_STRING, downtime);
 
     if(!strcmp(keyName, parsegraph_CLICK_KEY)) {
         parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
@@ -663,10 +684,10 @@ const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const cha
         return keyName;
     }
     if(!strcmp(keyName, "-") || !strcmp(keyName, "_")) {
-        return "ZoomIn";
+        return "ZoomOut";
     }
     if(!strcmp(keyName, "+") || !strcmp(keyName, "=")) {
-        return "ZoomOut";
+        return "ZoomIn";
     }
     switch(keyCode) {
         case 13: return "Enter"; break;
@@ -943,7 +964,9 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
     int inputChangedScene = 0;
     input->_updateRepeatedly = 0;
 
+    //parsegraph_log("Input update\n");
     if(parsegraph_Input_Get(input, parsegraph_RESET_CAMERA_KEY)) {
+        //parsegraph_log("RESET CAMERA\n");
         //var defaultScale = .5;
         float defaultScale = 1;
         float x = parsegraph_Surface_getWidth(input->_graph->_surface) / 2;
@@ -960,9 +983,10 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
     }
 
     if(parsegraph_Input_Get(input, parsegraph_MOVE_BACKWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_FORWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_UPWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_DOWNWARD_KEY)) {
+        //parsegraph_log("CAMERA MOVE\n");
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed);
-        float y = cam->_cameraY + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * ySpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed);
+        float x = cam->_cameraX + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * -xSpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * xSpeed);
+        float y = cam->_cameraY + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * -ySpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * ySpeed);
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
@@ -1006,6 +1030,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
 
 int parsegraph_Input_Get(parsegraph_Input* input, const char* key)
 {
+    //parsegraph_log("Checking input keydown for %s=%d\n", key, apr_hash_get(input->keydowns, key, APR_HASH_KEY_STRING));
     return apr_hash_get(input->keydowns, key, APR_HASH_KEY_STRING) != 0;
 };
 
@@ -1018,6 +1043,7 @@ float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct 
     struct timespec* v = data;
     float elapsed = (float)parsegraph_timediffMs(&t, v);
     elapsed /= 1000;
+    //parsegraph_log("%s elapsed for %f seconds (then=%d.%d versus now=%d.%d).\n", key, elapsed, v->tv_sec, v->tv_nsec, t.tv_sec, t.tv_nsec);
 
     struct timespec* downtime = apr_palloc(input->pool, sizeof(struct timespec));
     memcpy(downtime, &t, sizeof(*downtime));

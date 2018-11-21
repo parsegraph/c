@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "log.h"
 #include "../gl.h"
 #include "Rect.h"
 #include <stdio.h>
@@ -117,6 +118,7 @@ void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor,
 
 void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y)
 {
+    //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
     camera->_cameraX = x;
     camera->_cameraY = y;
 }
@@ -201,6 +203,7 @@ float* parsegraph_Camera_project(parsegraph_Camera* camera)
     camera->_aspectRatio = displayWidth / displayHeight;
     camera->_width = displayWidth;
     camera->_height = displayHeight;
+    //fprintf(stderr, "Camera projection (%f, %f, aspect=%f)\n", camera->_width, camera->_height, camera->_aspectRatio);
 
     return matrixMultiply3x3(pool,
         parsegraph_Camera_worldMatrix(camera),

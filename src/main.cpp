@@ -23,6 +23,7 @@
 
 extern "C" {
 
+#include "graph/log.h"
 #include <apr_pools.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +46,7 @@ extern "C" {
 #include "die.h"
 #include <apr_strings.h>
 
-parsegraph_Surface* init(void*);
+parsegraph_Surface* init(void*, int, int);
 }
 
 #include <QTime>
@@ -64,7 +65,10 @@ static const char* keyToName(int key) {
     case Qt::Key_Escape: return "Escape";
     case Qt::Key_Tab: return "Tab";
     case Qt::Key_Return: return "Return";
-    case Qt::Key_Left: return "Left";
+    case Qt::Key_Left: return "ArrowLeft";
+    case Qt::Key_Up: return "ArrowUp";
+    case Qt::Key_Right: return "ArrowRight";
+    case Qt::Key_Down: return "ArrowDown";
     case Qt::Key_Shift: return "Shift";
     case Qt::Key_Space: return " ";
     case Qt::Key_0: return "0";
@@ -74,8 +78,8 @@ static const char* keyToName(int key) {
 
 protected:
 
-
 virtual void keyPressEvent(QKeyEvent* ev) {
+    //fprintf(stderr, "KEYPRESS EVENT\n");
     if(!input) {
         return;
     }
@@ -87,21 +91,19 @@ virtual void keyPressEvent(QKeyEvent* ev) {
 
     if(parsegraph_Input_Get(input, kname)) {
         // Already pressed, ignore it.
-        return;
+        //return;
     }
 
     //fprintf(stderr, "Pressed %s\n", kname);
     if(ev->key() == Qt::Key_Escape) {
-        frozen = !frozen;
+        //frozen = !frozen;
     }
-    else {
-        parsegraph_Input_keydown(input, kname, ev->key(),
-            ev->modifiers() & Qt::AltModifier,
-            ev->modifiers() & Qt::MetaModifier,
-            ev->modifiers() & Qt::ControlModifier,
-            ev->modifiers() & Qt::ShiftModifier
-        );
-    }
+    parsegraph_Input_keydown(input, kname, ev->key(),
+        ev->modifiers() & Qt::AltModifier,
+        ev->modifiers() & Qt::MetaModifier,
+        ev->modifiers() & Qt::ControlModifier,
+        ev->modifiers() & Qt::ShiftModifier
+    );
 }
 
 virtual void keyReleaseEvent(QKeyEvent* ev) {
@@ -116,7 +118,7 @@ virtual void keyReleaseEvent(QKeyEvent* ev) {
 
     if(!parsegraph_Input_Get(input, kname)) {
         // Already released, ignore it.
-        return;
+        //return;
     }
     //fprintf(stderr, "Releasing %s\n", kname);
     parsegraph_Input_keyup(input, kname, ev->key());
@@ -174,12 +176,15 @@ virtual void touchEvent(QTouchEvent* ev) {
         te->clientY = p.pos().y();
         snprintf(te->identifier, sizeof(te->identifier), "%lld", p.uniqueId().numericId());
         if(p.state() & Qt::TouchPointPressed) {
+            parsegraph_log("Touch PRESS\n");
             parsegraph_ArrayList_push(pressedTouches, te);
         }
         if(p.state() & Qt::TouchPointReleased) {
+            parsegraph_log("Touch RELEASE\n");
             parsegraph_ArrayList_push(releasedTouches, te);
         }
         if(p.state() & Qt::TouchPointMoved) {
+            parsegraph_log("Touch MOVE\n");
             parsegraph_ArrayList_push(movedTouches, te);
         }
     }
@@ -199,7 +204,8 @@ virtual void wheelEvent(QWheelEvent* ev) {
     if(!input) {
         return;
     }
-    parsegraph_Input_onWheel(input, ev->x(), ev->y(), ev->angleDelta().y());
+    //fprintf(stderr, "Wheel at %d, %d\n", ev->x(), height() - ev->y());
+    parsegraph_Input_onWheel(input, ev->x(), ev->y(), -ev->angleDelta().y()/60);
 }
 
 public:
@@ -216,25 +222,34 @@ parsegraph_Input* input = 0;
 QTime frameElapsedTime;
 struct parsegraph_Surface* surface = 0;
 struct parsegraph_Surface* graph = 0;
-GLint w;
-GLint h;
+GLint w = 0;
+GLint h = 0;
 int hasEverPainted = 0;
 int frozen = 1;
 virtual void initializeGL() {
+    glEnable(GL_MULTISAMPLE);
     // Invoke global init function.
-    surface = init(this);
-
-    float bg[] = {0, 47.0/255, 57.0/255, 1.0};
-    parsegraph_Surface_setBackground(surface, bg);
+    w = width();
+    h = height();
+    surface = init(this, w, h);
+    //fprintf(stderr, "Window size: %d, %d\n", w, h);
     frameElapsedTime.start();
 }
 virtual void resizeGL(int w, int h) {
+    float dx = w - this->w;
+    float dy = h - this->h;
     this->w = w;
     this->h = h;
     parsegraph_Surface_setDisplaySize(surface, w, h);
+    if(input) {
+        float scale = parsegraph_Camera_scale(input->_camera);
+        parsegraph_Camera_adjustOrigin(input->_camera, 0.5*dx/scale, 0.5*dy/scale);
+    }
+    parsegraph_Surface_scheduleRepaint(surface);
 }
 virtual void paintGL() {
     parsegraph_Surface_runAnimationCallbacks(surface, ((float)frameElapsedTime.restart())/1000.0);
+    glFlush();
 }
 };
 
@@ -243,7 +258,6 @@ extern "C" {
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
 {
     MainWindow* win = (MainWindow*)surface->peer;
-    surface->needsRepaint = 1;
     win->update();
 }
 

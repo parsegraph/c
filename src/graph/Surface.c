@@ -17,7 +17,6 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
 
     // The identifier used to cancel a pending Render.
     rv->pendingRender = 0;
-    rv->needsRepaint = 1;
 
     rv->first_painter = 0;
     rv->last_painter = 0;
@@ -152,17 +151,14 @@ void parsegraph_Surface_addRenderer(parsegraph_Surface* surface, void(*rendererF
 
 void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg)
 {
-    if(!surface->needsRepaint) {
-        return;
-    }
     for(parsegraph_SurfacePainter* painter = surface->first_painter; painter; painter = painter->next) {
         painter->painter(painter->data, arg);
     }
-    surface->needsRepaint = 0;
 }
 
 void parsegraph_Surface_render(parsegraph_Surface* surface, void* arg)
 {
+    //fprintf(stderr, "Background color is (%f, %f, %f, %f)\n", surface->backgroundColor[0], surface->backgroundColor[1], surface->backgroundColor[2], surface->backgroundColor[3]);
     glClearColor(
         surface->backgroundColor[0],
         surface->backgroundColor[1],

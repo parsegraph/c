@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Graph.h"
 #include "Input.h"
 #include "World.h"
@@ -34,6 +35,9 @@ parsegraph_Graph* parsegraph_Graph_new(parsegraph_Surface* surface)
     graph->_piano = parsegraph_AudioKeyboard_new(graph->_camera, 0, 0, 1);
 
     graph->_shaders = apr_hash_make(graph->_surface->pool);
+
+    graph->onScheduleRepaint = 0;
+    graph->onScheduleRepaintThisArg = 0;
 
     // Install the graph.
     parsegraph_Surface_addPainter(graph->_surface, paintGraph, graph);
@@ -97,6 +101,10 @@ void parsegraph_Graph_setOnScheduleRepaint(parsegraph_Graph* graph, void(*func)(
 
 int parsegraph_Graph_needsRepaint(parsegraph_Graph* graph)
 {
+    //fprintf(stderr, "Repaint state: World=%d, Carousel=%d, CameraBox=%d\n", parsegraph_World_needsRepaint(graph->_world),
+        //(parsegraph_Carousel_isShown(graph->_carousel) && parsegraph_Carousel_needsRepaint(graph->_carousel)),
+        //parsegraph_CameraBox_needsRepaint(graph->_cameraBox)
+    //);
     return parsegraph_World_needsRepaint(graph->_world)
         || (parsegraph_Carousel_isShown(graph->_carousel) && parsegraph_Carousel_needsRepaint(graph->_carousel))
         || parsegraph_CameraBox_needsRepaint(graph->_cameraBox);
@@ -135,8 +143,8 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
     int rv = parsegraph_World_paint(graph->_world, timeout);
 
     parsegraph_Input_paint(graph->_input);
-    parsegraph_AudioKeyboard_prepare(graph->_piano, glyphAtlas, graph->_shaders);
-    parsegraph_AudioKeyboard_paint(graph->_piano);
+    //parsegraph_AudioKeyboard_prepare(graph->_piano, glyphAtlas, graph->_shaders);
+    //parsegraph_AudioKeyboard_paint(graph->_piano);
     return rv;
 }
 
@@ -149,5 +157,5 @@ void parsegraph_Graph_render(parsegraph_Graph* graph)
     parsegraph_Carousel_render(graph->_carousel, world);
     parsegraph_CameraBox_render(graph->_cameraBox, world);
     parsegraph_Input_render(graph->_input, world);
-    parsegraph_AudioKeyboard_render(graph->_piano, world);
+    //parsegraph_AudioKeyboard_render(graph->_piano, world);
 }

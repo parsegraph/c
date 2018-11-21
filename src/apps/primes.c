@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "graph/Surface.h"
 #include "unicode.h"
 #include "die.h"
@@ -17,9 +18,9 @@ parsegraph_PrimesWidget* widget;
 
 static void bTimerCallback(void* data)
 {
-    int MAX_PRIME = 440;
-    int LOOPING_DELAY = 50;
-    parsegraph_PrimesWidget_step(primesApp.widget, 1);
+    int MAX_PRIME = 100;
+    int LOOPING_DELAY = 1000;
+    parsegraph_PrimesWidget_step(primesApp.widget, 10);
     parsegraph_Graph_scheduleRepaint(primesApp.graph);
     parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
     if(primesApp.widget->position <= MAX_PRIME) {
@@ -45,6 +46,7 @@ static void renderTimerCallback(void* data, float elapsed)
     //}
     parsegraph_Surface_render(surface, 0);
     if(parsegraph_Input_UpdateRepeatedly(input) || parsegraph_Graph_needsRepaint(graph)) {
+        //fprintf(stderr, "Scheduling because of input(%d) or graph(%d)\n", parsegraph_Input_UpdateRepeatedly(input), parsegraph_Graph_needsRepaint(graph));
         parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
     }
 }
@@ -62,6 +64,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_Graph* graph = data;
     parsegraph_Surface* surface = parsegraph_Graph_surface(graph);
     parsegraph_Input* input = parsegraph_Graph_input(graph);
+    parsegraph_Surface_install(surface, input);
 
     parsegraph_Graph_setGlyphAtlas(graph, parsegraph_buildGlyphAtlas(surface));
     parsegraph_GlyphAtlas_setUnicode(parsegraph_Graph_glyphAtlas(graph), uni);
@@ -71,6 +74,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     //var linear = new parsegraph_LinearWidget(graph);
     //graph.plot(linear.root());
     parsegraph_PrimesWidget* primes = parsegraph_PrimesWidget_new(graph);
+    primesApp.widget = primes;
     parsegraph_Graph_plot(graph, parsegraph_PrimesWidget_root(primes));
 
     float defaultScale = .25;
@@ -109,7 +113,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
 }
 
-parsegraph_Surface* init(void* peer)
+parsegraph_Surface* init(void* peer, int w, int h)
 {
     primesApp.pool = 0;
     if(APR_SUCCESS != apr_pool_create(&primesApp.pool, 0)) {
@@ -118,6 +122,7 @@ parsegraph_Surface* init(void* peer)
     parsegraph_initialize(primesApp.pool, 1);
 
     parsegraph_Surface* surface = parsegraph_Surface_new(primesApp.pool, peer);
+    parsegraph_Surface_setDisplaySize(surface, w, h);
     parsegraph_Graph* graph = parsegraph_Graph_new(surface);
     primesApp.graph = graph;
 

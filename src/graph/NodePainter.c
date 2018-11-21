@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include "../die.h"
 #include "GlyphPainter.h"
 #include "NodePainter.h"
 #include "NodeAlignment.h"
@@ -392,6 +394,7 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
         parsegraph_ArrayList_clear(nodePainter->_textures);
     }
 
+    parsegraph_die("WHAT?");
     glClearColor(parsegraph_BACKGROUND_COLOR[0],
     parsegraph_BACKGROUND_COLOR[1],
     parsegraph_BACKGROUND_COLOR[2],
@@ -774,6 +777,10 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     parsegraph_Node_absoluteSize(node, size);
     size[0] *= userScale;
     size[1] *= userScale;
+    //fprintf(stderr, "Painting node at world %f, %f, %f\nNode at %f, %f\n", worldX, worldY, userScale,
+        //userScale * parsegraph_Node_absoluteX(node),
+        //userScale * parsegraph_Node_absoluteY(node)
+    //);
     parsegraph_BlockPainter_drawBlock(painter,
         worldX + userScale * parsegraph_Node_absoluteX(node),
         worldY + userScale * parsegraph_Node_absoluteY(node),

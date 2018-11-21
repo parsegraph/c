@@ -46,7 +46,7 @@ void parsegraph_PrimesWidget_step(parsegraph_PrimesWidget* widget, int steps)
                 parsegraph_Caret_spawnMove(widget->caret, "u", "s", 0);
             }
             if(i % parsegraph_NATURAL_GROUP_SIZE == 0) {
-                parsegraph_Caret_crease(widget->caret, 0);
+                //parsegraph_Caret_crease(widget->caret, 0);
             }
         }
         if(isPrime) {

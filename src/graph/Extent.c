@@ -580,7 +580,7 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
     if(isnan(givenScale)) {
         givenScale = 1.0;
     }
-    //fprintf(stderr, "Separation(positionAdjustment=%f)", positionAdjustment);
+    //fprintf(stderr, "Separation(positionAdjustment=%f)\n", positionAdjustment);
 
     unsigned int thisBound = 0;
     unsigned int givenBound = 0;
@@ -638,9 +638,9 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
     // While the iterators still have bounds in both extents.
     while(givenBound != parsegraph_Extent_numBounds(given) && thisBound != parsegraph_Extent_numBounds(extent)) {
         // Calculate the separation between these bounds.
-        //fprintf(stderr, "Separating");
-        //fprintf(stderr, "This bound size: %f", parsegraph_Extent_boundSizeAt(extent, thisBound));
-        //fprintf(stderr, "Given bound size: %f", givenScale * parsegraph_Extent_boundSizeAt(given, givenBound));
+        //fprintf(stderr, "Separating\n");
+        //fprintf(stderr, "This bound size: %f\n", parsegraph_Extent_boundSizeAt(extent, thisBound));
+        //fprintf(stderr, "Given bound size: %f\n", givenScale * parsegraph_Extent_boundSizeAt(given, givenBound));
         float thisSize = parsegraph_Extent_boundSizeAt(extent, thisBound);
         float givenSize = givenScale * parsegraph_Extent_boundSizeAt(given, givenBound);
         float boundSeparation;
@@ -665,7 +665,7 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
         }
         if(boundSeparation > extentSeparation) {
             extentSeparation = boundSeparation;
-            //fprintf(stderr, "Found new separation of %f.", extentSeparation);
+            //fprintf(stderr, "Found new separation of %f.\n", extentSeparation);
         }
 
         // Increment the iterators to the next testing point.

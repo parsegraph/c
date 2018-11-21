@@ -185,7 +185,6 @@ virtual void paintGL() {
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
 {
     MainWindow* win = (MainWindow*)surface->peer;
-    surface->needsRepaint = 1;
     win->update();
 }
 

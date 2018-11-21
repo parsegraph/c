@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include "../die.h"
+#include "log.h"
 #include "../timing.h"
 #include <stdio.h>
 
@@ -167,6 +168,7 @@ static void countNode(void* d, parsegraph_Node* node)
 static void drawNode(void* d, parsegraph_Node* node)
 {
     struct NodeRenderData* nrd = d;
+    //parsegraph_log("Drawing one node.\n");
     parsegraph_NodePainter_drawNode(nrd->paintGroup->_painter, node, nrd->shaders);
     parsegraph_NODES_PAINTED++;
 }
@@ -174,8 +176,10 @@ static void drawNode(void* d, parsegraph_Node* node)
 int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColor, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders, int timeout)
 {
     parsegraph_PaintGroup_enable(pg);
+    //fprintf(stderr, "Trying to paint!\n");
 
     if(!parsegraph_PaintGroup_isDirty(pg)) {
+        //fprintf(stderr, "Paint group is clean\n");
         return 1;
     }
 
@@ -188,11 +192,13 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
     parsegraph_ArrayList* ordering = savedState->ordering;
 
     if(savedState->inProgress) {
+        //fprintf(stderr, "Continuing paint job in progress\n");
         if(parsegraph_Node_continueCommitLayout(&savedState->commitLayout) == 0) {
             savedState->inProgress = 0;
         }
     }
     else if(i == 0) {
+        //fprintf(stderr, "Beginning new paint job\n");
         savedState->inProgress = 0;
         savedState->commitLayout.timeout = timeout;
         if(parsegraph_Node_commitLayoutIteratively(pg->_root, &savedState->commitLayout) != 0) {
@@ -201,7 +207,7 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
     }
 
     if(savedState->inProgress) {
-        // Timed out during commitLayout
+        //fprintf(stderr, "Timed out during commitLayout\n");
         return 0;
     }
     else {
@@ -214,11 +220,12 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
         if(pastTime(timeout, &t)) {
             savedState->i = i;
             pg->_dirty = 1;
+            //fprintf(stderr, "Past time during painting\n");
             return 0;
         }
 
         parsegraph_PaintGroup* paintGroup = parsegraph_ArrayList_at(ordering, i);
-        //parsegraph_log("Painting " + paintGroup);
+        //parsegraph_log("Painting paintgroup %d (%d, %d)\n", paintGroup->_id, parsegraph_PaintGroup_isEnabled(paintGroup), parsegraph_PaintGroup_isDirty(paintGroup));
         if(parsegraph_PaintGroup_isEnabled(paintGroup) && parsegraph_PaintGroup_isDirty(paintGroup)) {
             // Paint and render nodes marked for the current group.
             if(!paintGroup->_painter) {
@@ -230,6 +237,7 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
             ncd.paintGroup = paintGroup;
             memset(&ncd.counts, 0, sizeof(ncd.counts));
             parsegraph_foreachPaintGroupNodes(root, countNode, &ncd);
+            //parsegraph_log("Initializing block buffer of size %d.\n", ncd.counts);
             parsegraph_NodePainter_initBlockBuffer(paintGroup->_painter, &ncd.counts);
 
             struct NodeRenderData nrd;
@@ -237,6 +245,8 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
             nrd.shaders = shaders;
             parsegraph_foreachPaintGroupNodes(root, drawNode, &nrd);
         }
+
+        //parsegraph_log("Paint group %d is done drawing and no longer dirty.\n", paintGroup->_id);
         paintGroup->_dirty = 0;
         parsegraph_ArrayList_concat(ordering, paintGroup->_childPaintGroups);
         ++i;
@@ -245,7 +255,8 @@ int parsegraph_PaintGroup_paint(parsegraph_PaintGroup* pg, float* backgroundColo
     savedState->i = 0;
     parsegraph_ArrayList_clear(savedState->ordering);
     pg->_dirty = 0;
-    return pg->_dirty;
+    //fprintf(stderr, "Done painting\n");
+    return 1;
 }
 
 int parsegraph_PaintGroup_toString(parsegraph_PaintGroup* pg, char* buf, size_t len)
