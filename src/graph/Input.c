@@ -814,7 +814,7 @@ int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_Arr
 {
     //parsegraph_log("touchend\n");
     for(int i = 0; i < parsegraph_ArrayList_length(changedTouches); ++i) {
-        parsegraph_Touch* touch = parsegraph_ArrayList_at(changedTouches, i);
+        parsegraph_TouchEvent* touch = parsegraph_ArrayList_at(changedTouches, i);
         //parsegraph_log("Removing touch %lld (%d) using listener '%s'\n", touch, strlen(touch->identifier), touch->identifier);
         parsegraph_Input_removeTouchByIdentifier(input, touch->identifier);
     }
