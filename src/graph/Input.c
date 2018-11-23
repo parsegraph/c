@@ -934,6 +934,7 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
         }*/
 
         clock_gettime(CLOCK_REALTIME, &touchRec->touchstart);
+        touchRec->has_touchstart = 1;
         input->has_touchstartTime = 1;
         clock_gettime(CLOCK_REALTIME, &input->touchstartTime);
     }
