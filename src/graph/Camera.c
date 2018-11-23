@@ -155,6 +155,7 @@ int parsegraph_Camera_toString(parsegraph_Camera* camera, char* buf, int maxlen)
 
 void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float dy)
 {
+    //parsegraph_log("Adjusting Camera origin (%f, %f) by (%f, %f)\n", camera->_cameraX, camera->_cameraY, dx, dy);
     camera->_cameraX += dx;
     camera->_cameraY += dy;
 }
@@ -207,7 +208,7 @@ float* parsegraph_Camera_project(parsegraph_Camera* camera)
 
     return matrixMultiply3x3(pool,
         parsegraph_Camera_worldMatrix(camera),
-        make2DProjection(pool, displayWidth, displayHeight)
+        make2DProjection(pool, displayWidth, displayHeight, 1)
     );
 }
 

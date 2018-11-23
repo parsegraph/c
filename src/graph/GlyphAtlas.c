@@ -111,7 +111,6 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     }
     int letterWidth = parsegraph_GlyphAtlas_measureText(glyphAtlas, glyph, len);
 
-
     parsegraph_GlyphPage* glyphPage = glyphAtlas->_lastPage;
     if(!glyphPage) {
         glyphPage = parsegraph_GlyphPage_new(glyphAtlas);
@@ -136,7 +135,6 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     }
 
     glyphData = parsegraph_GlyphData_new(glyphPage, glyph, len, glyphAtlas->_x, glyphAtlas->_y, letterWidth, letterHeight);
-    //fprintf(stderr, "Glyph width is now is %d\n", glyphData->width);
 
     apr_hash_set(glyphAtlas->_glyphData, &glyphData->letter, len*sizeof(UChar), glyphData);
     if(glyphPage->_lastGlyph) {

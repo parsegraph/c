@@ -7,7 +7,7 @@ void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas)
 {
     UChar buf[1024];
     u_memset(buf, 0, 1024);
-    int32_t len = u_sprintf(buf, "%s %d", glyphAtlas->_fontName, glyphAtlas->_fontSize);
+    int32_t len = u_sprintf(buf, "%s %f", glyphAtlas->_fontName, glyphAtlas->_fontSize);
     if(len == 1024) {
         parsegraph_die("Font name too long");
     }
@@ -16,12 +16,13 @@ void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas)
     int neededLen;
     UErrorCode uerr = U_ZERO_ERROR;
     u_strToUTF8(0, 0, &neededLen, buf, len, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error during font conversion to UTF8");
-    }
+    //if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        //parsegraph_die("Unicode error during font conversion to UTF8");
+    //}
     textutf8 = malloc(neededLen+1);
     memset(textutf8, 0, neededLen+1);
-    u_strToUTF8(textutf8, neededLen, 0, buf, len, &uerr);
+    uerr = U_ZERO_ERROR;
+    u_strToUTF8(textutf8, neededLen+1, 0, buf, len, &uerr);
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error during font conversion to UTF8");
     }
@@ -39,20 +40,25 @@ void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas)
 
 int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len)
 {
-    PangoContext* pango = pango_context_new();
-    PangoLayout* layout = pango_layout_new(pango);
+	void* texture = parsegraph_GlyphAtlas_createTexture(glyphAtlas);
+    cairo_t* cr = cairo_create(texture);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_paint(cr);
+
+    PangoLayout* layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, glyphAtlas->_font);
 
     char* textutf8;
     int neededLen;
     UErrorCode uerr = U_ZERO_ERROR;
     u_strToUTF8(0, 0, &neededLen, glyph, len, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error during glyph conversion to UTF8");
-    }
+    //if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        //parsegraph_die("Unicode error during glyph conversion to UTF8");
+    //}
+    uerr = U_ZERO_ERROR;
     textutf8 = malloc(neededLen+1);
     memset(textutf8, 0, neededLen+1);
-    u_strToUTF8(textutf8, neededLen, 0, glyph, len, &uerr);
+    u_strToUTF8(textutf8, neededLen+1, 0, glyph, len, &uerr);
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error during glyph conversion to UTF8");
     }
@@ -61,12 +67,13 @@ int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const U
 
     int width;
     int height;
-    pango_layout_get_size(layout, &width, &height);
+    pango_layout_get_pixel_size(layout, &width, &height);
+    //parsegraph_log("%dx%d\n", width, height);
 
     g_object_unref(layout);
-    g_object_unref(pango);
+	cairo_destroy(cr);
     free(textutf8);
-
+	parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);
     return width;
 }
 
@@ -91,8 +98,8 @@ void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, voi
 void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* texture)
 {
     cairo_t* cr = cairo_create(texture);
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_paint(cr);
+    //cairo_set_source_rgb(cr, 0, 0, 1);
+    //cairo_paint(cr);
 
     PangoLayout* layout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, glyphAtlas->_font);
@@ -101,17 +108,20 @@ void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parseg
     int neededLen;
     UErrorCode uerr = U_ZERO_ERROR;
     u_strToUTF8(0, 0, &neededLen, glyphData->letter, glyphData->length, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error during glyph conversion to UTF8");
-    }
+    //if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        //parsegraph_die("Unicode error during glyph conversion to UTF8");
+    //}
     textutf8 = malloc(neededLen+1);
     memset(textutf8, 0, neededLen+1);
-    u_strToUTF8(textutf8, neededLen, 0, glyphData->letter, glyphData->length, &uerr);
+    uerr = U_ZERO_ERROR;
+    u_strToUTF8(textutf8, neededLen+1, 0, glyphData->letter, glyphData->length, &uerr);
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error during glyph conversion to UTF8");
     }
 
     pango_layout_set_text(layout, textutf8, neededLen);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_move_to(cr, glyphData->x, glyphData->y);
     pango_cairo_update_layout(cr, layout);
     pango_cairo_show_layout(cr, layout);
 

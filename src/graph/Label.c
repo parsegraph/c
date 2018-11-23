@@ -1,4 +1,5 @@
 #include "Label.h"
+#include "log.h"
 #include "die.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -76,6 +77,7 @@ void parsegraph_Line_appendText(parsegraph_Line* line, const UChar* text, int le
         // Increment.
         line->_height = parsegraph_max(line->_height, glyphData->height);
         line->_width += glyphData->width;
+        //parsegraph_log("%d. Line width is %f because of glyph %d\n", i, line->_width,  glyphData->width);
         i += llen;
     }
 };
@@ -186,6 +188,8 @@ parsegraph_Label* parsegraph_Label_new(apr_pool_t* pool, parsegraph_GlyphAtlas* 
     label->_editable = 0;
     label->_onTextChangedListener = 0;
     label->_onTextChangedListenerThisArg = 0;
+    label->_width = -1;
+    label->_height = 0;
     return label;
 }
 

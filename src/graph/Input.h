@@ -7,6 +7,11 @@
 #include "SpotlightPainter.h"
 #include <time.h>
 
+struct parsegraph_KeyDown {
+struct timespec when;
+char keyName[64];
+};
+
 struct parsegraph_Label;
 typedef struct parsegraph_Label parsegraph_Label;
 
@@ -29,6 +34,7 @@ char identifier[64];
 typedef struct parsegraph_TouchEvent parsegraph_TouchEvent;
 
 struct parsegraph_Input {
+int _id;
 apr_pool_t* pool;
 parsegraph_Graph* _graph;
 parsegraph_Camera* _camera;
@@ -53,7 +59,7 @@ int _focusedLabel;
 parsegraph_SpotlightPainter* _spotlightPainter;
 float _spotlightColor[4];
 int focused;
-apr_hash_t* keydowns;
+parsegraph_ArrayList* keydowns;
 parsegraph_Node* selectedSlider;
 struct timespec touchstartTime;
 int has_touchstartTime;
@@ -64,7 +70,7 @@ void* mouseupTimeout;
 };
 typedef struct parsegraph_Input parsegraph_Input;
 
-parsegraph_Input* parsegraph_Input_new();
+parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera);
 void parsegraph_Input_paint(parsegraph_Input* input);
 void parsegraph_Input_render(parsegraph_Input* input, float* world);
 parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, float clientX, float clientY);

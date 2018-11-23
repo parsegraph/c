@@ -21,10 +21,6 @@
  * OF THIS SOFTWARE.
  */
 
-// TODO Add libinput
-// TODO Add pthread
-// TODO Add cairo/pango/harfbuzz for text rendering in GlyphAtlas
-
 #include <stdio.h>
 #include <apr_pools.h>
 #include <stdlib.h>
@@ -55,74 +51,396 @@
 #include "timing.h"
 #include <apr_hash.h>
 
-static apr_pool_t* pool = 0;
+#define parsegraph_NCURSES
 
-static struct parsegraph_Surface* surface = 0;
-static struct parsegraph_Input* input = 0;
+// This function must be defined by applications; it is not defined here.
 parsegraph_Surface* init(void*, int, int);
+
+static volatile int quit = 0;
+
+struct parsegraph_Framebuffer {
+GLuint color_rb;
+GLuint depth_rb;
+struct gbm_bo* bo;
+EGLImage image;
+uint32_t fb_id;
+GLuint fb;
+};
+typedef struct parsegraph_Framebuffer parsegraph_Framebuffer;
+
+struct parsegraph_Environment;
+struct parsegraph_Display {
+struct parsegraph_Environment* env;
+drmModeConnector *connector;
+drmModeEncoder *encoder;
+drmModeModeInfo mode;
+drmModeCrtcPtr saved_crtc;
+int current;
+struct parsegraph_Display* next_display;
+int frames;
+parsegraph_Framebuffer framebuffers[2];
+int width;
+int height;
+};
+typedef struct parsegraph_Display parsegraph_Display;
+
+struct parsegraph_Environment {
+apr_pool_t* pool;
+parsegraph_Surface* surface;
+int needInit;
+int needToFocus;
+int needToBlur;
+parsegraph_Input* input;
+struct libinput* libinput;
+EGLDisplay dpy;
+EGLContext ctx;
+struct gbm_device *gbm;
+struct udev* udev;
+int drm_fd;
+struct timespec start;
+apr_hash_t* keyNames;
+parsegraph_Display* first_display;
+parsegraph_Display* last_display;
+};
+typedef struct parsegraph_Environment parsegraph_Environment;
 
 #ifdef GL_OES_EGL_image
 static PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES_func;
 #endif
 
-struct kms {
-   drmModeConnector *connector;
-   drmModeEncoder *encoder;
-   drmModeModeInfo mode;
-   uint32_t fb_id[2];
-};
-GLfloat x = 1.0;
-GLfloat y = 1.0;
-GLfloat xstep = 1.0f;
-GLfloat ystep = 1.0f;
-GLfloat rsize = 50;
-int quit = 0;
-static EGLBoolean
-setup_kms(int fd, struct kms *kms)
+static const char device_name[] = "/dev/dri/card0";
+
+void parsegraph_Display_initFramebuffer(parsegraph_Display* disp, parsegraph_Framebuffer* fb)
 {
-   drmModeRes *resources;
-   drmModeConnector *connector;
-   drmModeEncoder *encoder;
-   int i;
-   resources = drmModeGetResources(fd);
-   if (!resources) {
-      parsegraph_log("drmModeGetResources failed\n");
-      return EGL_FALSE;
-   }
+    glGenFramebuffers(1, &fb->fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
 
-   connector = 0;
-   for (i = 0; i < resources->count_connectors; i++) {
-      connector = drmModeGetConnector(fd, resources->connectors[i]);
-      if (connector == NULL)
-	 continue;
-      if (connector->connection == DRM_MODE_CONNECTED &&
-	  connector->count_modes > 0)
-	 break;
-      drmModeFreeConnector(connector);
-   }
-   if (i == resources->count_connectors) {
-      parsegraph_log("No currently active connector found.\n");
-      return EGL_FALSE;
-   }
+    glGenRenderbuffers(1, &fb->color_rb);
+    glBindRenderbuffer(GL_RENDERBUFFER, fb->color_rb);
 
-   encoder = 0;
-   for (i = 0; i < resources->count_encoders; i++) {
-      encoder = drmModeGetEncoder(fd, resources->encoders[i]);
-      if (encoder == NULL)
-	 continue;
-      if (encoder->encoder_id == connector->encoder_id)
-	 break;
-      drmModeFreeEncoder(encoder);
-   }
-   kms->connector = connector;
-   kms->encoder = encoder;
-   kms->mode = connector->modes[0];
-   return EGL_TRUE;
+    fb->bo = gbm_bo_create(disp->env->gbm, disp->width, disp->height,
+        GBM_BO_FORMAT_XRGB8888,
+        GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING
+    );
+    if(!fb->bo) {
+        parsegraph_die("failed to create gbm bo\n");
+    }
+    uint32_t handle = gbm_bo_get_handle(fb->bo).u32;
+    uint32_t stride = gbm_bo_get_stride(fb->bo);
+    fb->image = eglCreateImage(disp->env->dpy, NULL,
+        EGL_NATIVE_PIXMAP_KHR, fb->bo, NULL);
+    if(fb->image == EGL_NO_IMAGE) {
+        parsegraph_die("failed to create egl image\n");
+    }
+#ifdef GL_OES_EGL_image
+    glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, fb->image);
+#else
+     parsegraph_die("GL_OES_EGL_image was not found at compile time\n");
+#endif
+    int ret;
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fb->color_rb
+    );
+
+    glGenRenderbuffers(1, &fb->depth_rb);
+    glBindRenderbuffer(GL_RENDERBUFFER, fb->depth_rb);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, disp->width, disp->height);
+
+    if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+        parsegraph_die("Framebuffer must be complete: %x\n", ret);
+    }
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fb->depth_rb);
+
+    ret = drmModeAddFB(disp->env->drm_fd, disp->width, disp->height, 24, 32, stride, handle, &fb->fb_id);
+    if(ret) {
+        parsegraph_die("DRM failed to create fb\n");
+    }
 }
 
-static struct timespec start;
-static int needToFocus = 0;
-static int needToBlur = 0;
+parsegraph_Display* parsegraph_Display_new(parsegraph_Environment* env, drmModeConnector* connector, drmModeRes* resources)
+{
+    parsegraph_Display* disp = apr_palloc(env->pool, sizeof(*disp));
+    disp->env = env;
+    disp->connector = connector;
+    disp->encoder = 0;
+    disp->mode = connector->modes[0];
+    disp->width = disp->mode.hdisplay;
+    disp->height = disp->mode.vdisplay;
+    disp->current = 0;
+    disp->next_display = 0;
+    disp->frames = 0;
+
+    for(int i = 0; i < resources->count_encoders; i++) {
+        drmModeEncoder* encoder = drmModeGetEncoder(disp->env->drm_fd, resources->encoders[i]);
+        if(encoder == NULL) {
+            continue;
+        }
+        if(encoder->encoder_id == connector->encoder_id) {
+            disp->encoder = encoder;
+            break;
+        }
+        drmModeFreeEncoder(encoder);
+    }
+
+    if(env->last_display) {
+        env->last_display->next_display = disp;
+        env->last_display = disp;
+    }
+    else {
+        env->first_display = disp;
+        env->last_display = disp;
+    }
+
+    // Create frame buffers.
+    for (int i = 0; i < 2; i++) {
+        parsegraph_Display_initFramebuffer(disp, disp->framebuffers + i);
+    }
+
+    // Save the CRTC configuration to restore upon exit.
+    disp->saved_crtc = drmModeGetCrtc(env->drm_fd, disp->encoder->crtc_id);
+    if(disp->saved_crtc == NULL) {
+        parsegraph_die("Failed to save current CRTC");
+    }
+
+    parsegraph_Framebuffer* fb = disp->framebuffers + disp->current;
+    drmModeSetCrtc(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
+
+    return disp;
+}
+
+static int open_restricted(const char *path, int flags, void *user_data)
+{
+    return open(path, flags);
+}
+static void close_restricted(int fd, void *user_data)
+{
+    close(fd);
+}
+
+static struct libinput_interface libinput_interface = {
+open_restricted,
+close_restricted
+};
+
+const char* get_egl_error(int error)
+{
+	const char* ename = 0;
+	switch(eglGetError()) {
+	   case EGL_SUCCESS: ename = "EGL_SUCCESS"; break;
+	   case EGL_NOT_INITIALIZED: ename = "EGL_NOT_INITIALIZED"; break;
+	   case EGL_BAD_ACCESS: ename = "EGL_BAD_ACCESS"; break;
+	   case EGL_BAD_ALLOC: ename = "EGL_BAD_ALLOC"; break;
+	   case EGL_BAD_ATTRIBUTE: ename = "EGL_BAD_ATTRIBUTE"; break;
+	   case EGL_BAD_CONTEXT: ename = "EGL_BAD_CONTEXT"; break;
+	   case EGL_BAD_CONFIG: ename = "EGL_BAD_CONFIG"; break;
+	   case EGL_BAD_CURRENT_SURFACE: ename = "EGL_BAD_CURRENT_SURFACE"; break;
+	   case EGL_BAD_DISPLAY: ename = "EGL_BAD_DISPLAY"; break;
+	   case EGL_BAD_SURFACE: ename = "EGL_BAD_SURFACE"; break;
+	   case EGL_BAD_MATCH: ename = "EGL_BAD_MATCH"; break;
+	   case EGL_BAD_PARAMETER: ename = "EGL_BAD_PARAMETER"; break;
+	   case EGL_BAD_NATIVE_PIXMAP: ename = "EGL_BAD_NATIVE_PIXMAP"; break;
+	   case EGL_BAD_NATIVE_WINDOW: ename = "EGL_BAD_NATIVE_WINDOW"; break;
+	   case EGL_CONTEXT_LOST: ename = "EGL_CONTEXT_LOST"; break;
+	}
+	return ename;
+}
+
+parsegraph_Environment* parsegraph_Environment_new()
+{
+    apr_pool_t* pool;
+    if(APR_SUCCESS != apr_pool_create(&pool, 0)) {
+        parsegraph_die("Failed to create environment pool");
+    }
+    parsegraph_Environment* env = apr_palloc(pool, sizeof(*env));
+    env->pool = pool;
+    env->surface = 0;
+    env->input = 0;
+    env->needInit = 1;
+    env->keyNames = 0;
+
+    env->needToFocus = 0;
+    env->needToBlur = 0;
+
+    env->first_display = 0;
+    env->last_display = 0;
+
+    env->udev = udev_new();
+    if(!env->udev) {
+        parsegraph_die("udev couldn't open");
+    }
+
+    env->libinput = libinput_udev_create_context(&libinput_interface, 0, env->udev);
+    if(!env->libinput) {
+        parsegraph_die("libinput couldn't open");
+    }
+
+    if(0 != libinput_udev_assign_seat(env->libinput, "seat0")) {
+        parsegraph_die("libinput couldn't assign seat");
+    }
+
+    env->drm_fd = open(device_name, O_RDWR);
+    if(env->drm_fd < 0) {
+        parsegraph_die("couldn't open DRM %s (probably permissions)\n", device_name);
+    }
+
+    env->gbm = gbm_create_device(env->drm_fd);
+    if(!env->gbm) {
+        parsegraph_die("Failed to create GBM context for parsegraph_Environment");
+    }
+
+    // Create the graphics context
+    env->dpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_MESA, env->gbm, NULL);
+    if(env->dpy == EGL_NO_DISPLAY) {
+        parsegraph_die("eglGetDisplay() failed with EGL_NO_DISPLAY");
+    }
+    EGLint major, minor;
+    if(!eglInitialize(env->dpy, &major, &minor)) {
+        parsegraph_die("eglInitialize() failed");
+    }
+    //const char* ver = eglQueryString(env->dpy, EGL_VERSION);
+    //printf("EGL_VERSION = %s\n", ver);
+
+    const char* extensions = eglQueryString(env->dpy, EGL_EXTENSIONS);
+    //printf("EGL_EXTENSIONS: %s\n", extensions);
+    if(!strstr(extensions, "EGL_KHR_surfaceless_context")) {
+        parsegraph_die("No support for EGL_KHR_surfaceless_context\n");
+    }
+
+    const EGLint context_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE
+    };
+    EGLConfig config;
+    const EGLint config_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_ALPHA_SIZE, 0,
+        EGL_DEPTH_SIZE, 24,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+    eglBindAPI(EGL_OPENGL_ES_API);
+    EGLint n;
+    if(!eglChooseConfig(env->dpy, config_attribs, &config, 1, &n)) {
+        parsegraph_die("Failed to select EGL config");
+    }
+    env->ctx = eglCreateContext(env->dpy, config, EGL_NO_CONTEXT, context_attribs);
+    if(env->ctx == NULL) {
+        const char* ename = get_egl_error(eglGetError());
+        if(ename) {
+            parsegraph_die("Failed to create EGL context: %s\n", ename);
+        }
+        parsegraph_die("Failed to create EGL context: %d\n", eglGetError());
+    }
+
+    if(!eglMakeCurrent(env->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, env->ctx)) {
+        parsegraph_die("failed to make context current");
+    }
+
+#ifdef GL_OES_EGL_image
+    glEGLImageTargetRenderbufferStorageOES_func =
+        (PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC)
+        eglGetProcAddress("glEGLImageTargetRenderbufferStorageOES");
+#else
+    parsegraph_die("GL_OES_EGL_image not supported at compile time\n");
+#endif
+
+    drmModeRes* resources = drmModeGetResources(env->drm_fd);
+    if(!resources) {
+        parsegraph_die("drmModeGetResources failed");
+    }
+
+    int i;
+    drmModeConnector* connector = 0;
+    for(i = 0; i < resources->count_connectors; i++) {
+        connector = drmModeGetConnector(env->drm_fd, resources->connectors[i]);
+        if(connector == NULL) {
+            continue;
+        }
+        if(connector->connection == DRM_MODE_CONNECTED && connector->count_modes > 0) {
+            // Use this connector
+            parsegraph_Display_new(env, connector, resources);
+            continue;
+        }
+        drmModeFreeConnector(connector);
+    }
+    if(!env->first_display) {
+        parsegraph_die("No currently active connector found.");
+    }
+
+    drmModeFreeResources(resources);
+
+    return env;
+}
+
+void parsegraph_Display_destroy(parsegraph_Display* disp)
+{
+    // Reset the CRTC.
+    int ret = drmModeSetCrtc(disp->env->drm_fd, disp->saved_crtc->crtc_id, disp->saved_crtc->buffer_id,
+        disp->saved_crtc->x, disp->saved_crtc->y,
+        &disp->connector->connector_id, 1, &disp->saved_crtc->mode);
+    if(ret) {
+        parsegraph_log("failed to restore crtc: %m\n");
+    }
+    drmModeFreeCrtc(disp->saved_crtc);
+
+    for(int i = 0; i < sizeof(disp->framebuffers)/sizeof(*disp->framebuffers); ++i) {
+        parsegraph_Framebuffer* fb = disp->framebuffers + i;
+        glDeleteRenderbuffers(1, &fb->color_rb);
+        glDeleteRenderbuffers(1, &fb->depth_rb);
+        drmModeRmFB(disp->env->drm_fd, fb->fb_id);
+        eglDestroyImage(disp->env->dpy, fb->image);
+        gbm_bo_destroy(fb->bo);
+        glDeleteFramebuffers(1, &fb->fb);
+    }
+
+    parsegraph_Display* prev = 0;
+    for(parsegraph_Display* test = disp->env->first_display; test;) {
+        if(test != disp) {
+            prev = test;
+            test = test->next_display;
+            continue;
+        }
+        if(prev) {
+            prev->next_display = disp->next_display;
+            if(!prev->next_display) {
+                disp->env->last_display = prev;
+            }
+        }
+        else if(disp->env->first_display == disp) {
+            disp->env->first_display = disp->next_display;
+            if(!disp->next_display) {
+                disp->env->last_display = 0;
+            }
+        }
+        break;
+    }
+
+    drmModeFreeEncoder(disp->encoder);
+    drmModeFreeConnector(disp->connector);
+}
+
+void parsegraph_Environment_destroy(parsegraph_Environment* env)
+{
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    eglMakeCurrent(env->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    for(parsegraph_Display* disp = env->first_display; disp;) {
+        parsegraph_Display* old = disp;
+        disp = old->next_display;
+        parsegraph_Display_destroy(old);
+    }
+
+    eglDestroyContext(env->dpy, env->ctx);
+    eglTerminate(env->dpy);
+    gbm_device_destroy(env->gbm);
+    close(env->drm_fd);
+    libinput_unref(env->libinput);
+    udev_unref(env->udev);
+    apr_pool_destroy(env->pool);
+}
 
 void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* sched)
 {
@@ -130,49 +448,50 @@ void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* sched)
 
 void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* givenInput)
 {
-    if(input) {
+    parsegraph_Environment* env = surface->peer;
+    if(env->input) {
         parsegraph_Surface_uninstall(surface);
         return;
     }
-    input = givenInput;
-    needToBlur = 0;
-    needToFocus = 1;
+    env->input = givenInput;
+    env->needToBlur = 0;
+    env->needToFocus = 1;
 }
 
 void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
 {
-    input = 0;
-    needToFocus = 0;
-    needToBlur = 1;
+    parsegraph_Environment* env = surface->peer;
+    if(env && env->input) {
+        env->needToBlur = 0;
+        env->needToFocus = 0;
+        env->input = 0;
+    }
 }
 
 static void
-render_stuff(int width, int height)
+render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, int height)
 {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
 
-    float elapsed = ((float)parsegraph_timediffMs(&now, &start))/1000.0;
-    start = now;
+    float elapsed = ((float)parsegraph_timediffMs(&now, &env->start))/1000.0;
+    env->start = now;
 
-    if(input && needToBlur) {
-        parsegraph_Input_onblur(input);
-        needToBlur = 0;
+    if(env->input && env->needToBlur) {
+        parsegraph_Input_onblur(env->input);
+        env->needToBlur = 0;
     }
-    if(input && needToFocus) {
-        parsegraph_Input_onfocus(input);
-        needToFocus = 0;
+    if(env->input && env->needToFocus) {
+        parsegraph_Input_onfocus(env->input);
+        env->needToFocus = 0;
     }
+    //glViewport(0, 0, width, height);
+    //glClearColor(disp->current, disp->current, disp->current, 1);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    parsegraph_Surface_runAnimationCallbacks(surface, elapsed);
+    //parsegraph_log("Running animation callbacks\n");
+    parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
     glFlush();
-}
-
-static const char device_name[] = "/dev/dri/card0";
-static void
-page_flip_handler(int fd, unsigned int frame,
-		  unsigned int sec, unsigned int usec, void *data)
-{
 }
 void quit_handler(int signum)
 {
@@ -180,64 +499,66 @@ void quit_handler(int signum)
   parsegraph_log("Quitting!\n");
 }
 
- int open_restricted(const char *path, int flags, void *user_data)
- {
-    return open(path, flags);
- }
-
- void close_restricted(int fd, void *user_data)
- {
-    close(fd);
- }
-
-static apr_hash_t* keyNames = 0;
+void init_keyNames(parsegraph_Environment* env)
+{
+    if(env->keyNames) {
+        return;
+    }
+    apr_hash_t* keyNames = apr_hash_make(env->pool);
+    apr_hash_set(keyNames, "KEY_ESC", APR_HASH_KEY_STRING, "Escape");
+    apr_hash_set(keyNames, "KEY_TAB", APR_HASH_KEY_STRING, "Tab");
+    apr_hash_set(keyNames, "KEY_RETURN", APR_HASH_KEY_STRING, "Return");
+    apr_hash_set(keyNames, "KEY_LEFT", APR_HASH_KEY_STRING, "ArrowLeft");
+    apr_hash_set(keyNames, "KEY_UP", APR_HASH_KEY_STRING, "ArrowUp");
+    apr_hash_set(keyNames, "KEY_MINUS", APR_HASH_KEY_STRING, "-");
+    apr_hash_set(keyNames, "KEY_UNDERSCORE", APR_HASH_KEY_STRING, "_");
+    apr_hash_set(keyNames, "KEY_PLUS", APR_HASH_KEY_STRING, "+");
+    apr_hash_set(keyNames, "KEY_EQUAL", APR_HASH_KEY_STRING, "=");
+    apr_hash_set(keyNames, "KEY_RIGHT", APR_HASH_KEY_STRING, "ArrowRight");
+    apr_hash_set(keyNames, "KEY_DOWN", APR_HASH_KEY_STRING, "ArrowDown");
+    apr_hash_set(keyNames, "KEY_LEFTSHIFT", APR_HASH_KEY_STRING, "Shift");
+    apr_hash_set(keyNames, "KEY_RIGHTSHIFT", APR_HASH_KEY_STRING, "Shift");
+    apr_hash_set(keyNames, "KEY_SPACE", APR_HASH_KEY_STRING, " ");
+    apr_hash_set(keyNames, "KEY_LEFTCTRL", APR_HASH_KEY_STRING, "Control");
+    apr_hash_set(keyNames, "KEY_RIGHTCTRL", APR_HASH_KEY_STRING, "Control");
+    apr_hash_set(keyNames, "KEY_LEFTALT", APR_HASH_KEY_STRING, "Alt");
+    apr_hash_set(keyNames, "KEY_RIGHTALT", APR_HASH_KEY_STRING, "Alt");
+    apr_hash_set(keyNames, "KEY_A", APR_HASH_KEY_STRING, "a");
+    apr_hash_set(keyNames, "KEY_B", APR_HASH_KEY_STRING, "b");
+    apr_hash_set(keyNames, "KEY_C", APR_HASH_KEY_STRING, "c");
+    apr_hash_set(keyNames, "KEY_D", APR_HASH_KEY_STRING, "d");
+    apr_hash_set(keyNames, "KEY_E", APR_HASH_KEY_STRING, "e");
+    apr_hash_set(keyNames, "KEY_F", APR_HASH_KEY_STRING, "f");
+    apr_hash_set(keyNames, "KEY_G", APR_HASH_KEY_STRING, "g");
+    apr_hash_set(keyNames, "KEY_H", APR_HASH_KEY_STRING, "h");
+    apr_hash_set(keyNames, "KEY_I", APR_HASH_KEY_STRING, "i");
+    apr_hash_set(keyNames, "KEY_J", APR_HASH_KEY_STRING, "j");
+    apr_hash_set(keyNames, "KEY_K", APR_HASH_KEY_STRING, "k");
+    apr_hash_set(keyNames, "KEY_L", APR_HASH_KEY_STRING, "l");
+    apr_hash_set(keyNames, "KEY_M", APR_HASH_KEY_STRING, "m");
+    apr_hash_set(keyNames, "KEY_N", APR_HASH_KEY_STRING, "n");
+    apr_hash_set(keyNames, "KEY_O", APR_HASH_KEY_STRING, "o");
+    apr_hash_set(keyNames, "KEY_P", APR_HASH_KEY_STRING, "p");
+    apr_hash_set(keyNames, "KEY_Q", APR_HASH_KEY_STRING, "q");
+    apr_hash_set(keyNames, "KEY_R", APR_HASH_KEY_STRING, "r");
+    apr_hash_set(keyNames, "KEY_S", APR_HASH_KEY_STRING, "s");
+    apr_hash_set(keyNames, "KEY_T", APR_HASH_KEY_STRING, "t");
+    apr_hash_set(keyNames, "KEY_U", APR_HASH_KEY_STRING, "u");
+    apr_hash_set(keyNames, "KEY_V", APR_HASH_KEY_STRING, "v");
+    apr_hash_set(keyNames, "KEY_W", APR_HASH_KEY_STRING, "w");
+    apr_hash_set(keyNames, "KEY_X", APR_HASH_KEY_STRING, "x");
+    apr_hash_set(keyNames, "KEY_Y", APR_HASH_KEY_STRING, "y");
+    apr_hash_set(keyNames, "KEY_Z", APR_HASH_KEY_STRING, "z");
+    apr_hash_set(keyNames, "KEY_F1", APR_HASH_KEY_STRING, "F1");
+    apr_hash_set(keyNames, "KEY_F4", APR_HASH_KEY_STRING, "F4");
+    env->keyNames = keyNames;
+}
 
 static void
-key_event(struct libinput *li, struct libinput_event *ev)
+key_event(parsegraph_Environment* env, struct libinput_event *ev)
 {
-    if(!keyNames) {
-        keyNames = apr_hash_make(pool);
-        apr_hash_set(keyNames, "KEY_ESC", APR_HASH_KEY_STRING, "Escape");
-        apr_hash_set(keyNames, "KEY_TAB", APR_HASH_KEY_STRING, "Tab");
-        apr_hash_set(keyNames, "KEY_RETURN", APR_HASH_KEY_STRING, "Return");
-        apr_hash_set(keyNames, "KEY_LEFT", APR_HASH_KEY_STRING, "Left");
-        apr_hash_set(keyNames, "KEY_LEFTSHIFT", APR_HASH_KEY_STRING, "Shift");
-        apr_hash_set(keyNames, "KEY_RIGHTSHIFT", APR_HASH_KEY_STRING, "Shift");
-        apr_hash_set(keyNames, "KEY_SPACE", APR_HASH_KEY_STRING, " ");
-        apr_hash_set(keyNames, "KEY_LEFTCTRL", APR_HASH_KEY_STRING, "Control");
-        apr_hash_set(keyNames, "KEY_RIGHTCTRL", APR_HASH_KEY_STRING, "Control");
-        apr_hash_set(keyNames, "KEY_LEFTALT", APR_HASH_KEY_STRING, "Alt");
-        apr_hash_set(keyNames, "KEY_RIGHTALT", APR_HASH_KEY_STRING, "Alt");
-        apr_hash_set(keyNames, "KEY_A", APR_HASH_KEY_STRING, "a");
-        apr_hash_set(keyNames, "KEY_B", APR_HASH_KEY_STRING, "b");
-        apr_hash_set(keyNames, "KEY_C", APR_HASH_KEY_STRING, "c");
-        apr_hash_set(keyNames, "KEY_D", APR_HASH_KEY_STRING, "d");
-        apr_hash_set(keyNames, "KEY_E", APR_HASH_KEY_STRING, "e");
-        apr_hash_set(keyNames, "KEY_F", APR_HASH_KEY_STRING, "f");
-        apr_hash_set(keyNames, "KEY_G", APR_HASH_KEY_STRING, "g");
-        apr_hash_set(keyNames, "KEY_H", APR_HASH_KEY_STRING, "h");
-        apr_hash_set(keyNames, "KEY_I", APR_HASH_KEY_STRING, "i");
-        apr_hash_set(keyNames, "KEY_J", APR_HASH_KEY_STRING, "j");
-        apr_hash_set(keyNames, "KEY_K", APR_HASH_KEY_STRING, "k");
-        apr_hash_set(keyNames, "KEY_L", APR_HASH_KEY_STRING, "l");
-        apr_hash_set(keyNames, "KEY_M", APR_HASH_KEY_STRING, "m");
-        apr_hash_set(keyNames, "KEY_N", APR_HASH_KEY_STRING, "n");
-        apr_hash_set(keyNames, "KEY_O", APR_HASH_KEY_STRING, "o");
-        apr_hash_set(keyNames, "KEY_P", APR_HASH_KEY_STRING, "p");
-        apr_hash_set(keyNames, "KEY_Q", APR_HASH_KEY_STRING, "q");
-        apr_hash_set(keyNames, "KEY_R", APR_HASH_KEY_STRING, "r");
-        apr_hash_set(keyNames, "KEY_S", APR_HASH_KEY_STRING, "s");
-        apr_hash_set(keyNames, "KEY_T", APR_HASH_KEY_STRING, "t");
-        apr_hash_set(keyNames, "KEY_U", APR_HASH_KEY_STRING, "u");
-        apr_hash_set(keyNames, "KEY_V", APR_HASH_KEY_STRING, "v");
-        apr_hash_set(keyNames, "KEY_W", APR_HASH_KEY_STRING, "w");
-        apr_hash_set(keyNames, "KEY_X", APR_HASH_KEY_STRING, "x");
-        apr_hash_set(keyNames, "KEY_Y", APR_HASH_KEY_STRING, "y");
-        apr_hash_set(keyNames, "KEY_Z", APR_HASH_KEY_STRING, "z");
-        apr_hash_set(keyNames, "KEY_F1", APR_HASH_KEY_STRING, "F1");
-        apr_hash_set(keyNames, "KEY_F4", APR_HASH_KEY_STRING, "F4");
-    }
-	struct libinput_event_keyboard *k = libinput_event_get_keyboard_event(ev);
+    init_keyNames(env);
+    struct libinput_event_keyboard *k = libinput_event_get_keyboard_event(ev);
 	enum libinput_key_state state;
 	uint32_t key;
 
@@ -246,12 +567,18 @@ key_event(struct libinput *li, struct libinput_event *ev)
     key = libinput_event_keyboard_get_key(k);
     const char* keyname = libevdev_event_code_get_name(EV_KEY, key);
     keyname = keyname ? keyname : "???";
-    const char* formalKeyName = apr_hash_get(keyNames, keyname, APR_HASH_KEY_STRING);
+    //parsegraph_log("KEYNAME is %s\n", keyname);
+    const char* formalKeyName = apr_hash_get(env->keyNames, keyname, APR_HASH_KEY_STRING);
+    parsegraph_Input* input = env->input;
     if(!formalKeyName) {
         formalKeyName = keyname;
     }
 
     if(state == LIBINPUT_KEY_STATE_PRESSED) {
+        if(!strcmp(formalKeyName, "q")) {
+            quit_handler(0);
+            return;
+	}
         if(!strcmp(formalKeyName, "c") && parsegraph_Input_Get(input, "Control")) {
             quit_handler(0);
             return;
@@ -278,374 +605,215 @@ void parsegraph_logcurses(const char* fmt, va_list ap)
     //refresh();
 }
 
-int main(int argc, const char * const *argv)
+void process_input(parsegraph_Environment* env)
 {
-   if(geteuid() != 0) {
-    fprintf(stderr, "This program must be run as root.\n");
-    return -1;
-    }
-   EGLDisplay dpy;
-   EGLContext ctx;
-   EGLImage image[2];
-   EGLint major, minor;
-   const char *ver, *extensions;
-   GLuint fb, color_rb[2];
-   uint32_t handle, stride;
-   struct kms kms;
-   int ret, fd, i, frames = 0, current = 0;
-   struct gbm_device *gbm;
-   struct gbm_bo *bo[2];
-   drmModeCrtcPtr saved_crtc;
-   //struct timespec end;
+    //parsegraph_log("Input had an event.\n");
+    struct libinput* libinput = env->libinput;
+    parsegraph_Input* input = env->input;
+    parsegraph_Surface* surface = env->surface;
 
-    initscr();
-    raw();
-    keypad(stdscr, TRUE);
-    noecho();
-    nodelay(stdscr, TRUE);
-    parsegraph_log_func = parsegraph_logcurses;
-
-    // Initialize the APR.
-    apr_status_t rv;
-    rv = apr_app_initialize(&argc, &argv, NULL);
-    if(rv != APR_SUCCESS) {
-        parsegraph_log("Failed initializing APR. APR status of %d.\n", rv);
-        return -1;
-    }
-    rv = apr_pool_create(&pool, NULL);
-    if(rv != APR_SUCCESS) {
-        parsegraph_log("Failed creating memory pool. APR status of %d.\n", rv);
-        return -1;
-    }
-
-    struct udev* udev = udev_new();
-    if(!udev) {
-      parsegraph_log("udev couldn't open");
-      return -1;
-    }
-
-    struct libinput_interface libinput_interface;
-    libinput_interface.open_restricted = open_restricted;
-    libinput_interface.close_restricted = close_restricted;
-
-    struct libinput* libinput = libinput_udev_create_context(&libinput_interface, 0, udev);
-    if(!libinput) {
-      parsegraph_log("libinput couldn't open");
-      return -1;
-    }
-
-    if(0 != libinput_udev_assign_seat(libinput, "seat0")) {
-      parsegraph_log("libinput couldn't assign seat");
-      return -1;
-    }
-
-   signal (SIGINT, quit_handler);
-   fd = open(device_name, O_RDWR);
-   if (fd < 0) {
-      /* Probably permissions error */
-      parsegraph_log("couldn't open %s, skipping\n", device_name);
-      return -1;
-   }
-
-    gbm = gbm_create_device(fd);
-    if(!gbm) {
-        ret = -1;
-        goto close_fd;
-    }
-
-    dpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_MESA, gbm, NULL);
-   if (dpy == EGL_NO_DISPLAY) {
-      parsegraph_log("eglGetDisplay() failed with EGL_NO_DISPLAY\n");
-      ret = -1;
-      goto close_fd;
-   }
-   if (!eglInitialize(dpy, &major, &minor)) {
-      printf("eglInitialize() failed\n");
-      ret = -1;
-      goto egl_terminate;
-   }
-   ver = eglQueryString(dpy, EGL_VERSION);
-   printf("EGL_VERSION = %s\n", ver);
-   extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-   printf("EGL_EXTENSIONS: %s\n", extensions);
-   if (!strstr(extensions, "EGL_KHR_surfaceless_context")) {
-      printf("No support for EGL_KHR_surfaceless_context\n");
-      ret = -1;
-      goto egl_terminate;
-   }
-   if (!setup_kms(fd, &kms)) {
-      ret = -1;
-      goto egl_terminate;
-   }
-    const EGLint context_attribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE
-    };
-    EGLConfig config;
-    const EGLint config_attribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
-        EGL_ALPHA_SIZE, 0,
-        EGL_DEPTH_SIZE, 24,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-   eglBindAPI(EGL_OPENGL_ES_API);
-    EGLint n;
-    if(!eglChooseConfig(dpy, config_attribs, &config, 1, &n)) {
-      ret = -1;
-      goto egl_terminate;
-    }
-   ctx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, context_attribs);
-   if (ctx == NULL) {
-	   const char* ename = 0;
-	   switch(eglGetError()) {
-		   case EGL_SUCCESS: ename = "EGL_SUCCESS"; break;
-		   case EGL_NOT_INITIALIZED: ename = "EGL_NOT_INITIALIZED"; break;
-		   case EGL_BAD_ACCESS: ename = "EGL_BAD_ACCESS"; break;
-		   case EGL_BAD_ALLOC: ename = "EGL_BAD_ALLOC"; break;
-		   case EGL_BAD_ATTRIBUTE: ename = "EGL_BAD_ATTRIBUTE"; break;
-		   case EGL_BAD_CONTEXT: ename = "EGL_BAD_CONTEXT"; break;
-		   case EGL_BAD_CONFIG: ename = "EGL_BAD_CONFIG"; break;
-		   case EGL_BAD_CURRENT_SURFACE: ename = "EGL_BAD_CURRENT_SURFACE"; break;
-		   case EGL_BAD_DISPLAY: ename = "EGL_BAD_DISPLAY"; break;
-		   case EGL_BAD_SURFACE: ename = "EGL_BAD_SURFACE"; break;
-		   case EGL_BAD_MATCH: ename = "EGL_BAD_MATCH"; break;
-		   case EGL_BAD_PARAMETER: ename = "EGL_BAD_PARAMETER"; break;
-		   case EGL_BAD_NATIVE_PIXMAP: ename = "EGL_BAD_NATIVE_PIXMAP"; break;
-		   case EGL_BAD_NATIVE_WINDOW: ename = "EGL_BAD_NATIVE_WINDOW"; break;
-		   case EGL_CONTEXT_LOST: ename = "EGL_CONTEXT_LOST"; break;
-	   }
-	   if(ename) {
-	      parsegraph_log("failed to create context: %s\n", ename);
-	   }
-	   else {
-	      parsegraph_log("failed to create context: %d\n", eglGetError());
-	   }
-      ret = -1;
-      goto egl_terminate;
-   }
-   if (!eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx)) {
-      parsegraph_log("failed to make context current\n");
-      ret = -1;
-      goto destroy_context;
-   }
-#ifdef GL_OES_EGL_image
-   glEGLImageTargetRenderbufferStorageOES_func =
-      (PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC)
-      eglGetProcAddress("glEGLImageTargetRenderbufferStorageOES");
-#else
-   parsegraph_log("GL_OES_EGL_image not supported at compile time\n");
-#endif
-   glGenFramebuffers(1, &fb);
-   glBindFramebuffer(GL_FRAMEBUFFER, fb);
-   glGenRenderbuffers(2, color_rb);
-   for (i = 0; i < 2; i++) {
-     glBindRenderbuffer(GL_RENDERBUFFER, color_rb[i]);
-     bo[i]  = gbm_bo_create(gbm, kms.mode.hdisplay, kms.mode.vdisplay,
-			    GBM_BO_FORMAT_XRGB8888,
-			    GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
-     if (bo[i] == NULL) {
-       parsegraph_log("failed to create gbm bo\n");
-       ret = -1;
-       goto unmake_current;
-     }
-     handle = gbm_bo_get_handle(bo[i]).u32;
-     stride = gbm_bo_get_stride(bo[i]);
-     image[i] = eglCreateImage(dpy, NULL, EGL_NATIVE_PIXMAP_KHR,
-				  bo[i], NULL);
-     if (image[i] == EGL_NO_IMAGE) {
-       parsegraph_log("failed to create egl image\n");
-       ret = -1;
-       goto destroy_gbm_bo;
-     }
-#ifdef GL_OES_EGL_image
-     glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, image[i]);
-#else
-     parsegraph_log("GL_OES_EGL_image was not found at compile time\n");
-#endif
-
-     GLuint depth_rb;
-     glGenRenderbuffers(1, &depth_rb);
-     glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
-     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, kms.mode.hdisplay, kms.mode.vdisplay);
-     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
-
-     ret = drmModeAddFB(fd,
-			kms.mode.hdisplay, kms.mode.vdisplay,
-			24, 32, stride, handle, &kms.fb_id[i]);
-     if (ret) {
-       parsegraph_log("failed to create fb\n");
-       goto rm_rb;
-     }
-   }
-   saved_crtc = drmModeGetCrtc(fd, kms.encoder->crtc_id);
-   if (saved_crtc == NULL)
-      goto rm_fb;
-
-    int needInit = 1;
-    clock_gettime(CLOCK_REALTIME, &start);
-
-   do {
-     drmEventContext evctx;
-     fd_set rfds;
-     glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-			       GL_COLOR_ATTACHMENT0,
-			       GL_RENDERBUFFER,
-			       color_rb[current]);
-     if ((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) !=
-	 GL_FRAMEBUFFER_COMPLETE) {
-       parsegraph_log("framebuffer not complete: %x\n", ret);
-       ret = 1;
-       goto rm_rb;
-     }
-     if(needInit) {
-        surface = init(&kms, kms.mode.hdisplay, kms.mode.vdisplay);
-        parsegraph_Surface_setDisplaySize(surface, kms.mode.hdisplay, kms.mode.vdisplay);
-     }
-     render_stuff(kms.mode.hdisplay, kms.mode.vdisplay);
-     ret = drmModePageFlip(fd, kms.encoder->crtc_id,
-			   kms.fb_id[current],
-			   DRM_MODE_PAGE_FLIP_EVENT, 0);
-     if (ret) {
-       parsegraph_log("failed to page flip: %m\n");
-       goto free_saved_crtc;
-     }
-listen_to_fds:
-     FD_ZERO(&rfds);
-     FD_SET(fd, &rfds);
-     FD_SET(libinput_get_fd(libinput), &rfds);
-
-     int maxfd = libinput_get_fd(libinput);
-     if(maxfd < fd) {
-        maxfd = fd;
-     }
-     while (select(maxfd + 1, &rfds, NULL, NULL, NULL) == -1) {
-   }
     libinput_dispatch(libinput);
-     if(FD_ISSET(libinput_get_fd(libinput), &rfds)) {
-        // Input had an event.
-        struct libinput_event *ev;
-        while((ev = libinput_get_event(libinput))) {
-            switch (libinput_event_get_type(ev)) {
-            case LIBINPUT_EVENT_NONE:
-                break;
-            case LIBINPUT_EVENT_KEYBOARD_KEY:
-                key_event(libinput, ev);
-                //quit = 1;
-                break;
-            case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
-                if(input) {
-                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
-                    parsegraph_Input_mousemove(input,
-                        libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface)),
-                        libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface))
-                    );
-                }
-                break;
-            case LIBINPUT_EVENT_POINTER_BUTTON:
-                if(input) {
-                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
-                    int x = libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface));
-                    int y = libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface));
-                    if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
-                        parsegraph_Input_mousedown(input, x, y);
-                    }
-                    else {
-                        parsegraph_Input_removeMouseListener(input);
-                    }
-                }
-                break;
-            case LIBINPUT_EVENT_POINTER_AXIS:
-                if(input) {
-                    struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
-                    int x = libinput_event_pointer_get_absolute_x_transformed(
-                        pev, parsegraph_Surface_getWidth(surface)
-                    );
-                    int y = libinput_event_pointer_get_absolute_y_transformed(
-                        pev, parsegraph_Surface_getHeight(surface)
-                    );
-                    parsegraph_Input_onWheel(input, x, y, -libinput_event_pointer_get_axis_value(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)/60.0);
-                }
-                break;
-            case LIBINPUT_EVENT_TOUCH_DOWN:
-                if(input) {
-                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
-                    apr_pool_t* spool;
-                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
-                        parsegraph_die("Failed to create pool for touch event");
-                    }
-                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
-                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
-                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
-                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
-                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
-                    parsegraph_ArrayList_push(touches, te);
-                    parsegraph_Input_touchstart(input, touches);
-                    apr_pool_destroy(spool);
-                }
-                break;
-            case LIBINPUT_EVENT_TOUCH_UP:
-                if(input) {
-                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
-                    apr_pool_t* spool;
-                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
-                        parsegraph_die("Failed to create pool for touch event");
-                    }
-                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
-                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
-                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
-                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
-                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
-                    parsegraph_ArrayList_push(touches, te);
-                    parsegraph_Input_removeTouchListener(input, touches);
-                    apr_pool_destroy(spool);
-                }
-                break;
-            case LIBINPUT_EVENT_TOUCH_MOTION:
-                if(input) {
-                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
-                    apr_pool_t* spool;
-                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
-                        parsegraph_die("Failed to create pool for touch event");
-                    }
-                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
-                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
-                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
-                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
-                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
-                    parsegraph_ArrayList_push(touches, te);
-                    parsegraph_Input_touchmove(input, touches);
-                    apr_pool_destroy(spool);
-                }
-                break;
-            case LIBINPUT_EVENT_TOUCH_CANCEL:
-                if(input) {
-                    struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
-                    apr_pool_t* spool;
-                    if(APR_SUCCESS != apr_pool_create(&spool, pool)) {
-                        parsegraph_die("Failed to create pool for touch event");
-                    }
-                    parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
-                    parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
-                    te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
-                    te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
-                    snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
-                    parsegraph_ArrayList_push(touches, te);
-                    parsegraph_Input_removeTouchListener(input, touches);
-                    apr_pool_destroy(spool);
-                }
-                break;
-            case LIBINPUT_EVENT_TOUCH_FRAME:
-                break;
-            default:
-                break;
+    struct libinput_event *ev;
+    while((ev = libinput_get_event(libinput))) {
+        switch (libinput_event_get_type(ev)) {
+        case LIBINPUT_EVENT_NONE:
+            break;
+        case LIBINPUT_EVENT_KEYBOARD_KEY:
+    //fprintf(stderr, "KEYBOARD EVENT!!\n");
+            key_event(env, ev);
+            //quit = 1;
+            continue;
+        case LIBINPUT_EVENT_POINTER_MOTION:
+            if(input) {
+                struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                parsegraph_Input_mousemove(input,
+                    input->lastMouseX + libinput_event_pointer_get_dx(pev),
+                    input->lastMouseY + libinput_event_pointer_get_dy(pev)
+                );
             }
-            libinput_event_destroy(ev);
+            break;
+        case LIBINPUT_EVENT_POINTER_BUTTON:
+            if(input) {
+                //fprintf(stderr, "mOUSE click!!\n");
+                struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                int x = 0;//libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface));
+                int y = 0;//libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface));
+                if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
+                    fprintf(stderr, "mosuedown !!\n");
+                    parsegraph_Input_mousedown(input, x, y);
+                }
+                else {
+                    parsegraph_Input_removeMouseListener(input);
+                }
+            }
+            continue;
+        case LIBINPUT_EVENT_POINTER_AXIS:
+            if(input) {
+                struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
+                //int x = libinput_event_pointer_get_absolute_x_transformed(
+                    //pev, parsegraph_Surface_getWidth(surface)
+                //);
+                //int y = libinput_event_pointer_get_absolute_y_transformed(
+                    //pev, parsegraph_Surface_getHeight(surface)
+                //);
+int x = 0; int y = 0;
+                parsegraph_Input_onWheel(input, x, y, -libinput_event_pointer_get_axis_value(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)/60.0);
+            }
+            break;
+        case LIBINPUT_EVENT_TOUCH_DOWN:
+            if(input) {
+                struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                apr_pool_t* spool;
+                if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
+                    parsegraph_die("Failed to create pool for touch event");
+                }
+                parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                parsegraph_ArrayList_push(touches, te);
+                parsegraph_Input_touchstart(input, touches);
+                apr_pool_destroy(spool);
+            }
+            break;
+        case LIBINPUT_EVENT_TOUCH_UP:
+            if(input) {
+                struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                apr_pool_t* spool;
+                if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
+                    parsegraph_die("Failed to create pool for touch event");
+                }
+                parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                parsegraph_ArrayList_push(touches, te);
+                parsegraph_Input_removeTouchListener(input, touches);
+                apr_pool_destroy(spool);
+            }
+            break;
+        case LIBINPUT_EVENT_TOUCH_MOTION:
+            if(input) {
+                struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                apr_pool_t* spool;
+                if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
+                    parsegraph_die("Failed to create pool for touch event");
+                }
+                parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                parsegraph_ArrayList_push(touches, te);
+                parsegraph_Input_touchmove(input, touches);
+                apr_pool_destroy(spool);
+            }
+            break;
+        case LIBINPUT_EVENT_TOUCH_CANCEL:
+            if(input) {
+                struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
+                apr_pool_t* spool;
+                if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
+                    parsegraph_die("Failed to create pool for touch event");
+                }
+                parsegraph_ArrayList* touches = parsegraph_ArrayList_new(spool);
+                parsegraph_TouchEvent* te = apr_palloc(spool, sizeof(*te));
+                te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
+                te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
+                snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                parsegraph_ArrayList_push(touches, te);
+                parsegraph_Input_removeTouchListener(input, touches);
+                apr_pool_destroy(spool);
+            }
+            break;
+        case LIBINPUT_EVENT_TOUCH_FRAME:
+            break;
+        default:
+            break;
         }
-     }
+        libinput_event_destroy(ev);
+    }
+}
 
+void draw_dev(parsegraph_Display* disp)
+{
+    parsegraph_Environment* env = disp->env;
+    parsegraph_Framebuffer* fb = disp->framebuffers + disp->current;
+    //parsegraph_log("Using framebuffer %d\n", disp->current);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
+    int ret;
+    if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+        parsegraph_die("Framebuffer must be complete: %x\n", ret);
+    }
+
+    if(env->needInit) {
+        env->surface = init(env, disp->width, disp->height);
+        env->needInit = 0;
+    }
+
+    // Actually render this environment.
+    parsegraph_Surface_setDisplaySize(env->surface, disp->width, disp->height);
+    render_stuff(env, disp, disp->width, disp->height);
+
+    // Request a page flip.
+    drmModeSetCrtc(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
+
+    ret = drmModePageFlip(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, disp);
+    if(ret) {
+        parsegraph_die("failed to page flip: %m\n");
+    }
+
+    disp->current ^= 1;
+    ++disp->frames;
+}
+
+static void
+page_flip_handler(int fd, unsigned int frame,
+		  unsigned int sec, unsigned int usec, void *data)
+{
+    parsegraph_Display* disp = data;
+    draw_dev(disp);
+}
+
+void loop(parsegraph_Environment* env)
+{
+
+    // Start the environment's loop.
+    clock_gettime(CLOCK_REALTIME, &env->start);
+
+    // Render the scene.
+    for(parsegraph_Display* disp = env->first_display; disp; disp = disp->next_display) {
+        draw_dev(disp);
+    }
+
+    for(; !quit;) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(env->drm_fd, &rfds);
+        FD_SET(libinput_get_fd(env->libinput), &rfds);
+
+        int maxfd = libinput_get_fd(env->libinput);
+        if(maxfd < env->drm_fd) {
+            maxfd = env->drm_fd;
+        }
+        while(select(maxfd + 1, &rfds, NULL, NULL, NULL) == -1) {
+            // Wait for events from DRM or libinput.
+        }
+        if(FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
+            process_input(env);
+        }
+        if(FD_ISSET(env->drm_fd, &rfds)) {
+            // DRM has events.
+            drmEventContext evctx;
+            memset(&evctx, 0, sizeof evctx);
+            evctx.version = DRM_EVENT_CONTEXT_VERSION;
+            evctx.page_flip_handler = page_flip_handler;
+            drmHandleEvent(env->drm_fd, &evctx);
+        }
+
+#ifdef parsegraph_NCURSES
         // Consume terminal input.
         char c;
         while((c = getch()) != ERR) {
@@ -653,65 +821,73 @@ listen_to_fds:
                 quit = 1;
             }
         }
+#endif
 
-        if(!FD_ISSET(fd, &rfds)) {
-            // Only the input (or nothing) had events, so don't page flip.
-            if(quit) {
-                break;
-            }
-            goto listen_to_fds;
-         }
+    }
 
-        // DRM has events.
-         memset(&evctx, 0, sizeof evctx);
-         evctx.version = DRM_EVENT_CONTEXT_VERSION;
-         evctx.page_flip_handler = page_flip_handler;
-         drmHandleEvent(fd, &evctx);
-         current ^= 1;
-         frames++;
-   } while (!quit);
    //time(&end);
    //printf("Frames per second: %.2lf\n", frames / difftime(end, start));
-   ret = drmModeSetCrtc(fd, saved_crtc->crtc_id, saved_crtc->buffer_id,
-                        saved_crtc->x, saved_crtc->y,
-                        &kms.connector->connector_id, 1, &saved_crtc->mode);
-   if (ret) {
-      parsegraph_log("failed to restore crtc: %m\n");
-   }
-free_saved_crtc:
-   //drmModeFreeCrtc(saved_crtc);
-rm_rb:
-   //glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-			     //GL_COLOR_ATTACHMENT0,
-			     //GL_RENDERBUFFER, 0);
-   //glBindRenderbuffer(GL_RENDERBUFFER, 0);
-   //glDeleteRenderbuffers(2, color_rb);
-rm_fb:
-   for (int i = 0; i < 2; i++) {
-     //drmModeRmFB(fd, kms.fb_id[i]);
-     //eglDestroyImage(dpy, image[i]);
-   }
-destroy_gbm_bo:
-   for (int i = 0; i < 2; i++)
-     //gbm_bo_destroy(bo[i]);
-unmake_current:
-   //eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-destroy_context:
-   //eglDestroyContext(dpy, ctx);
-egl_terminate:
-   //eglTerminate(dpy);
-close_fd:
-   //close(fd);
+}
 
-    // Destroy the pool for cleanliness.
-    //apr_pool_destroy(pool);
-    pool = NULL;
 
-    //apr_terminate();
+void quit_signal_handler(int sig, siginfo_t* si, void* data)
+{
+    quit = 1;
+}
 
-    noraw();
+int main(int argc, const char * const *argv)
+{
+    if(geteuid() != 0) {
+        parsegraph_die("This program must be run as root.");
+    }
+
+    // Initialize the APR.
+    apr_status_t rv;
+    rv = apr_app_initialize(&argc, &argv, NULL);
+    if(rv != APR_SUCCESS) {
+        parsegraph_die("Failed initializing APR. APR status of %d.\n", rv);
+    }
+
+    // Create the environment.
+    parsegraph_Environment* env = parsegraph_Environment_new();
+
+#ifdef parsegraph_NCURSES
+    // Start ncurses.
+    initscr();
+    raw();
+    keypad(stdscr, TRUE);
+    noecho();
+    nodelay(stdscr, TRUE);
+    curs_set(0);
+    parsegraph_log_func = parsegraph_logcurses;
+#endif
+
+    // Interpret SIGINT gracefully.
+    {
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_flags = SA_SIGINFO;
+        sa.sa_sigaction = quit_signal_handler;
+        sigaction(SIGINT, &sa, NULL);
+    }
+
+    // Run the environment's loop.
+    loop(env);
+
+    // Destroy the environment.
+    //parsegraph_log("Quitting\n");
+    parsegraph_Environment_destroy(env);
+
+#ifdef parsegraph_NCURSES
+    // Close ncurses.
+    curs_set(1);
     echo();
     endwin();
+#endif
 
-   return ret;
+    // Close APR.
+    apr_terminate();
+
+
+    return 0;
 }

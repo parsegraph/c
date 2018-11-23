@@ -37,15 +37,15 @@ PKG_CHECK_MODULES(openssl, [openssl],
     [AC_MSG_ERROR([parsegraph requires openssl-devel])]
 )
 
-PKG_CHECK_MODULES(parsegraph, [marla cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n],
+PKG_CHECK_MODULES(parsegraph, [cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n],
     [],
-    [AC_MSG_ERROR([parsegraph requires marla pangocairo cairo-devel pango-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel.])]
+    [AC_MSG_ERROR([parsegraph requires marla-devel make httpd-devel apr-devel apr-util-devel autoconf automake libtool pango-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel.])]
 )
 AC_PROG_CXX
 
 PKG_CHECK_MODULES(parsegraph_cxx, [Qt5Core Qt5Gui],
     [],
-    [AC_MSG_ERROR([parsegraph requres qt5core-qtbase-devel.])]
+    [AC_MSG_ERROR([parsegraph requires qt5-qtbase-devel.])]
 )
 
 # Generate files.

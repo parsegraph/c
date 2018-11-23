@@ -20,7 +20,7 @@ float* makeRotation3x3(apr_pool_t* pool, float angleInRadians);
 float* makeScale3x3(apr_pool_t* pool, float sx, float sy);
 float* makeInverse3x3(apr_pool_t* pool, float* input);
 void midPoint(float x1, float y1, float x2, float y2, float* midX, float* midY);
-float* make2DProjection(apr_pool_t* pool, float width, float height);
+float* make2DProjection(apr_pool_t* pool, float width, float height, int flipVertical);
 float* subtractVectors3D(apr_pool_t* pool, float* a, float* b);
 float* normalize3D(apr_pool_t* pool, float* v);
 float* cross3D(apr_pool_t* pool, float* a, float* b);

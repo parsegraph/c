@@ -1,6 +1,7 @@
 #include <apr_strings.h>
 #include "Input.h"
 #include "log.h"
+#include "../die.h"
 #include <stdio.h>
 #include "Rect.h"
 #include "gl.h"
@@ -11,6 +12,7 @@
 #include "Color.h"
 #include "parsegraph_math.h"
 #include "NodeAlignment.h"
+#include <stdlib.h>
 
 const char* parsegraph_RESET_CAMERA_KEY = "Escape";
 const char* parsegraph_CLICK_KEY = "q";
@@ -31,11 +33,15 @@ float parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 const char* parsegraph_ZOOM_IN_KEY = "ZoomIn";
 const char* parsegraph_ZOOM_OUT_KEY = "ZoomOut";
 
+static int parsegraph_INPUT_COUNT = 0;
+
 parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera)
 {
     parsegraph_Input* input = apr_palloc(graph->_surface->pool, sizeof(*input));
     input->_graph = graph;
     input->_camera = camera;
+
+    input->_id = ++parsegraph_INPUT_COUNT;
 
     input->attachedMouseListener = 0;
 
@@ -65,7 +71,7 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
 
     // A map of event.key's to a true value.
     input->pool = graph->_surface->pool;
-    input->keydowns = apr_hash_make(input->pool);
+    input->keydowns = parsegraph_ArrayList_new(input->pool);
 
     input->zoomTouchDistance = 0;
     input->monitoredTouches = parsegraph_ArrayList_new(input->pool);
@@ -141,7 +147,6 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float clientX, float cl
 
 void parsegraph_Input_mousedown(parsegraph_Input* input, float clientX, float clientY)
 {
-    //console.log("Mousedown", event);
     input->focused = 1;
     //event.preventDefault();
     //graph.canvas().focus();
@@ -326,6 +331,7 @@ void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float mouseX, f
     input->lastMouseY = mouseY;
 
     float camScale = parsegraph_Camera_scale(input->_camera);
+    //parsegraph_log("%f, %f, %f\n", deltaX, deltaY, camScale);
     parsegraph_Camera_adjustOrigin(input->_camera,
         deltaX / camScale,
         deltaY / camScale
@@ -527,16 +533,20 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
         }
     }
 
-    if(apr_hash_get(input->keydowns, keyName, APR_HASH_KEY_STRING)) {
+    if(parsegraph_Input_Get(input, keyName)) {
         // Already processed.
-        //console.log("Key event, but already processed.");
+        parsegraph_log("Key event, but already processed.");
         return;
     }
 
-    struct timespec* downtime = apr_palloc(input->pool, sizeof(struct timespec));
-    clock_gettime(CLOCK_REALTIME, downtime);
-    //parsegraph_log("Logging %s keypress\n", keyName);
-    apr_hash_set(input->keydowns, apr_pstrdup(input->pool, keyName), APR_HASH_KEY_STRING, downtime);
+    struct parsegraph_KeyDown* kd = malloc(sizeof(*kd));
+	clock_gettime(CLOCK_REALTIME, &kd->when);
+    strcpy(kd->keyName, keyName);
+    //parsegraph_log("Logging %s keypress at %lld.%lld\n", keyName, kd->when.tv_sec, kd->when.tv_nsec);
+    parsegraph_ArrayList_push(input->keydowns, kd);
+	if(!parsegraph_Input_Get(input, keyName)) {
+	    parsegraph_die("Failed to actually save keydown");
+	}
 
     if(!strcmp(keyName, parsegraph_CLICK_KEY)) {
         parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
@@ -575,13 +585,22 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
 void parsegraph_Input_keyup(parsegraph_Input* input, const char* keyName, int keyCode)
 {
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
-    //console.log(keyName);
+    //fprintf(stderr, "Key released: %s\n", keyName);
 
-    if(!apr_hash_get(input->keydowns, keyName, APR_HASH_KEY_STRING)) {
+    if(!parsegraph_Input_Get(input, keyName)) {
         // Already processed.
         return;
     }
-    apr_hash_set(input->keydowns, keyName, APR_HASH_KEY_STRING, 0);
+
+    for(int i = 0; i < parsegraph_ArrayList_length(input->keydowns); ++i) {
+        struct parsegraph_KeyDown* kd = parsegraph_ArrayList_at(input->keydowns, i);
+        if(!strcmp(kd->keyName, keyName)) {
+            //parsegraph_log("Removing keydown for %s\n", keyName);
+            parsegraph_ArrayList_splice(input->keydowns, i, 1);
+            free(kd);
+            break;
+        }
+    }
 
     if(!strcmp(keyName, parsegraph_CLICK_KEY)) {
         parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
@@ -664,6 +683,7 @@ void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* c
 
 const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const char* keyName, int keyCode)
 {
+    //parsegraph_log("Proper name for %s\n", keyName);
     //console.log(keyName + " " + event.keyCode);
     if(!strcmp(keyName, "Enter")) {
         return keyName;
@@ -982,11 +1002,36 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         inputChangedScene = 1;
     }
 
-    if(parsegraph_Input_Get(input, parsegraph_MOVE_BACKWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_FORWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_UPWARD_KEY) || parsegraph_Input_Get(input, parsegraph_MOVE_DOWNWARD_KEY)) {
-        //parsegraph_log("CAMERA MOVE\n");
+    if(
+        parsegraph_Input_Get(input, parsegraph_MOVE_BACKWARD_KEY)
+    ) {
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * -xSpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * xSpeed);
-        float y = cam->_cameraY + (parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * -ySpeed + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * ySpeed);
+        float x = cam->_cameraX + parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed;
+        float y = cam->_cameraY;
+        parsegraph_Camera_setOrigin(cam, x, y);
+        inputChangedScene = 1;
+    }
+
+    if(parsegraph_Input_Get(input, parsegraph_MOVE_FORWARD_KEY)) {
+        input->_updateRepeatedly = 1;
+        float x = cam->_cameraX + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed;
+        float y = cam->_cameraY;
+        parsegraph_Camera_setOrigin(cam, x, y);
+        inputChangedScene = 1;
+    }
+
+    if(parsegraph_Input_Get(input, parsegraph_MOVE_UPWARD_KEY)) {
+        input->_updateRepeatedly = 1;
+        float x = cam->_cameraX;
+        float y = cam->_cameraY + parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * ySpeed;
+        parsegraph_Camera_setOrigin(cam, x, y);
+        inputChangedScene = 1;
+    }
+
+    if(parsegraph_Input_Get(input, parsegraph_MOVE_DOWNWARD_KEY)) {
+        input->_updateRepeatedly = 1;
+        float x = cam->_cameraX;
+        float y = cam->_cameraY + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed;
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
@@ -995,7 +1040,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         input->_updateRepeatedly = 1;
         inputChangedScene = 1;
         parsegraph_Camera_zoomToPoint(cam,
-        powf(1.1, scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, t)),
+        powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, t)),
             parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
             parsegraph_Surface_getHeight(input->_graph->_surface) / 2
         );
@@ -1006,7 +1051,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         inputChangedScene = 1;
         //if(parsegraph_Camera_scale(cam) >= .01) {
             parsegraph_Camera_zoomToPoint(cam,
-            powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, t)),
+            powf(1.1, scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, t)),
                 parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
                 parsegraph_Surface_getHeight(input->_graph->_surface) / 2
             );
@@ -1030,24 +1075,38 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
 
 int parsegraph_Input_Get(parsegraph_Input* input, const char* key)
 {
-    //parsegraph_log("Checking input keydown for %s=%d\n", key, apr_hash_get(input->keydowns, key, APR_HASH_KEY_STRING));
-    return apr_hash_get(input->keydowns, key, APR_HASH_KEY_STRING) != 0;
+    //parsegraph_log("%d key(s) are down\n", parsegraph_ArrayList_length(input->keydowns));
+	for(int i = 0; i < parsegraph_ArrayList_length(input->keydowns); ++i) {
+		struct parsegraph_KeyDown* kd = parsegraph_ArrayList_at(input->keydowns, i);
+        //parsegraph_log("KEY IS DOWN: %s\n", kd->keyName);
+		if(!strcmp(kd->keyName, key)) {
+            //parsegraph_log("Key is down: %s\n", key);
+			return 1;
+		}
+	}
+    //parsegraph_log("Key is NOT down: %s\n", key);
+    return 0;
 };
 
 float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct timespec t)
 {
-    void* data = apr_hash_get(input->keydowns, key, APR_HASH_KEY_STRING);
-    if(!data) {
+	struct parsegraph_KeyDown* kd = 0;
+	for(int i = 0; i < parsegraph_ArrayList_length(input->keydowns); ++i) {
+		kd = parsegraph_ArrayList_at(input->keydowns, i);
+		if(!strcmp(kd->keyName, key)) {
+			break;
+		}
+        //parsegraph_log("KEY IS DOWN: %s\n", kd->keyName);
+	}
+    if(!kd) {
         return 0;
     }
-    struct timespec* v = data;
-    float elapsed = (float)parsegraph_timediffMs(&t, v);
-    elapsed /= 1000;
+    struct timespec* v = &kd->when;
+    float elapsed = (float)parsegraph_timediffMs(v, &t);
+    elapsed /= 1000.0;
     //parsegraph_log("%s elapsed for %f seconds (then=%d.%d versus now=%d.%d).\n", key, elapsed, v->tv_sec, v->tv_nsec, t.tv_sec, t.tv_nsec);
+	kd->when = t;
 
-    struct timespec* downtime = apr_palloc(input->pool, sizeof(struct timespec));
-    memcpy(downtime, &t, sizeof(*downtime));
-    apr_hash_set(input->keydowns, key, APR_HASH_KEY_STRING, downtime);
     return elapsed;
 }
 

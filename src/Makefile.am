@@ -1,4 +1,4 @@
-PROG = cxx_primes
+PROG = parsegraph
 run:
 	./$(PROG)
 .PHONY: run
@@ -160,7 +160,7 @@ parsegraph_CFLAGS = \
 parsegraph_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
 parsegraph_LDADD = libparsegraph-kms.la
 parsegraph_SOURCES = \
-	main.c apps/primes.c
+	main.c apps/proportion.c
 
 cxx_parsegraph_CXXFLAGS = \
 	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g

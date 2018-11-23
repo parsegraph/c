@@ -372,8 +372,14 @@ void midPoint(float x1, float y1, float x2, float y2, float* midX, float* midY)
     *midY = y1 + (y2 - y1) * .5;
 }
 
-float* make2DProjection(apr_pool_t* pool, float width, float height)
+float* make2DProjection(apr_pool_t* pool, float width, float height, int flipVertical)
 {
+    if(!flipVertical) {
+        flipVertical = 1;
+    }
+    else {
+        flipVertical = -1;
+    }
     float* rv;
     if(pool) {
         rv = apr_palloc(pool, sizeof(float)*9);
@@ -383,8 +389,8 @@ float* make2DProjection(apr_pool_t* pool, float width, float height)
     }
     float cop[] = {
         2 / width, 0, 0,
-        0, -2 / height, 0,
-        -1, 1, 1
+        0, -2 / (flipVertical * height), 0,
+        -1, flipVertical, 1
     };
     memcpy(rv, cop, sizeof(float)*9);
     return rv;

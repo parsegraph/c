@@ -422,7 +422,7 @@ void parsegraph_BlockPainter_initBuffer(parsegraph_BlockPainter* painter, unsign
     }
     glGenBuffers(1, &painter->_blockBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
-    glBufferData(GL_ARRAY_BUFFER, painter->_stride*6*numBlocks, painter->_itemBuffer, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, painter->_stride*6*numBlocks, 0, GL_STATIC_DRAW);
     painter->_numBlocks = numBlocks;
     //parsegraph_log("BlockPainter has buffer of %d blocks", numBlocks);
 };
