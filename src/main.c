@@ -600,7 +600,8 @@ key_event(parsegraph_Environment* env, struct libinput_event *ev)
 
 void parsegraph_logcurses(const char* fmt, va_list ap)
 {
-    vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
+
     //vwprintw(stdscr, fmt, ap);
     //refresh();
 }
