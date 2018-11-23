@@ -161,7 +161,7 @@ parsegraph_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
 parsegraph_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
-parsegraph_LDADD = libparsegraphkms.la
+parsegraph_LDADD = libparsegraph-kms.la
 parsegraph_SOURCES = \
 	main.c apps/primes.c
 
