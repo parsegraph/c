@@ -11,7 +11,7 @@ parsegraph_Node* showProportionTest(parsegraph_Graph* graph, int COUNT)
         COUNT = 30;
     }
     //COUNT = parsegraph_min(COUNT, 100);
-    COUNT = 200;
+    COUNT = 30;
 
     apr_pool_t* pool = graph->_surface->pool;
 
