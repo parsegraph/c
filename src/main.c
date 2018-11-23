@@ -639,7 +639,7 @@ void process_input(parsegraph_Environment* env)
                 int x = 0;//libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface));
                 int y = 0;//libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface));
                 if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
-                    fprintf(stderr, "mosuedown !!\n");
+                    //fprintf(stderr, "mosuedown !!\n");
                     parsegraph_Input_mousedown(input, x, y);
                 }
                 else {
@@ -672,6 +672,7 @@ int x = 0; int y = 0;
                 te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
                 te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
                 snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                //fprintf(stderr, "TOUCH DOWN %s\n", te->identifier);
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_touchstart(input, touches);
                 apr_pool_destroy(spool);
@@ -689,6 +690,7 @@ int x = 0; int y = 0;
                 te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
                 te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
                 snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                //fprintf(stderr, "TOUCH END '%s' (%lld, %d) %d\n", te->identifier, te, strlen(te->identifier), sizeof(*te));
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_removeTouchListener(input, touches);
                 apr_pool_destroy(spool);
@@ -706,6 +708,7 @@ int x = 0; int y = 0;
                 te->clientX = libinput_event_touch_get_x_transformed(lte, parsegraph_Surface_getWidth(surface));
                 te->clientY = libinput_event_touch_get_y_transformed(lte, parsegraph_Surface_getHeight(surface));
                 snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
+                //fprintf(stderr, "TOUCH MOTION '%s'\n", te->identifier);
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_touchmove(input, touches);
                 apr_pool_destroy(spool);
@@ -713,6 +716,7 @@ int x = 0; int y = 0;
             break;
         case LIBINPUT_EVENT_TOUCH_CANCEL:
             if(input) {
+                //fprintf(stderr, "TOUCH CANCEL\n");
                 struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
                 apr_pool_t* spool;
                 if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {

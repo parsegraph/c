@@ -246,8 +246,10 @@ parsegraph_Touch* parsegraph_Input_getTouchByIdentifier(parsegraph_Input* input,
 
 parsegraph_Touch* parsegraph_Input_removeTouchByIdentifier(parsegraph_Input* input, const char* identifier)
 {
+    //parsegraph_log("Removing touch '%s'\n", identifier);
     for(int i = 0; i < parsegraph_ArrayList_length(input->monitoredTouches); ++i) {
         parsegraph_Touch* t = parsegraph_ArrayList_at(input->monitoredTouches, i);
+        //parsegraph_log("Checking monitored %s against touch '%s'\n", t->identifier, identifier);
         if(!strcmp(t->identifier, identifier)) {
             parsegraph_ArrayList_splice(input->monitoredTouches, i, 1);
             return t;
@@ -656,6 +658,7 @@ void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* c
         input->lastMouseY = touch->clientY;
     }
 
+    //parsegraph_log("Touches monitored: %d", parsegraph_ArrayList_length(input->monitoredTouches));
     int realMonitoredTouches = 0;
     for(int i = 0; i < parsegraph_ArrayList_length(input->monitoredTouches); ++i) {
         parsegraph_Touch* touchRec = parsegraph_ArrayList_at(input->monitoredTouches, i);
@@ -809,9 +812,10 @@ float parsegraph_Input_lastMouseY(parsegraph_Input* input)
 
 int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_ArrayList* changedTouches)
 {
-    //console.log("touchend");
+    //parsegraph_log("touchend\n");
     for(int i = 0; i < parsegraph_ArrayList_length(changedTouches); ++i) {
         parsegraph_Touch* touch = parsegraph_ArrayList_at(changedTouches, i);
+        //parsegraph_log("Removing touch %lld (%d) using listener '%s'\n", touch, strlen(touch->identifier), touch->identifier);
         parsegraph_Input_removeTouchByIdentifier(input, touch->identifier);
     }
 
@@ -903,6 +907,7 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
         parsegraph_TouchEvent* touch = parsegraph_ArrayList_at(changedTouches, i);
         parsegraph_Touch* touchRec = apr_palloc(input->pool, sizeof(*touchRec));
         strcpy(touchRec->identifier, touch->identifier);
+        //parsegraph_log("New touch %s from %s\n", touchRec->identifier, touch->identifier);
         touchRec->x = touch->clientX;
         touchRec->y = touch->clientY;
         touchRec->startX = touch->clientX;
