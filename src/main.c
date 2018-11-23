@@ -763,7 +763,7 @@ void draw_dev(parsegraph_Display* disp)
         parsegraph_die("failed to page flip: %m\n");
     }
 
-    disp->current ^= 1;
+    //disp->current ^= 1;
     ++disp->frames;
 }
 
