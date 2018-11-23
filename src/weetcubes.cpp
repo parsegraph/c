@@ -24,23 +24,6 @@
 extern "C" {
 
 #include <apr_pools.h>
-#include <stdio.h>
-#include <stdlib.h>
-#define EGL_EGLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#include <gbm.h>
-#include <GL/gl.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <drm.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <unistd.h>
-#include <string.h>
-#include <time.h>
-#include <cairo.h>
 #include "alpha/WeetPainter.h"
 #include "alpha/Maths.h"
 #include "alpha/GLWidget.h"

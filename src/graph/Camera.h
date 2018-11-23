@@ -4,6 +4,8 @@
 #include <apr_pools.h>
 #include "Surface.h"
 
+extern int parsegraph_VFLIP;
+
 struct parsegraph_Camera {
 parsegraph_Surface* surface;
 float _cameraX;

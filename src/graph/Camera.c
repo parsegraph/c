@@ -208,7 +208,7 @@ float* parsegraph_Camera_project(parsegraph_Camera* camera)
 
     return matrixMultiply3x3(pool,
         parsegraph_Camera_worldMatrix(camera),
-        make2DProjection(pool, displayWidth, displayHeight, 1)
+        make2DProjection(pool, displayWidth, displayHeight, parsegraph_VFLIP)
     );
 }
 

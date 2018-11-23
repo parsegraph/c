@@ -9,14 +9,14 @@ valgrind:
 	$(VALGRIND) .libs/lt-$(PROG)
 .PHONY: valgrind
 
-lib_LTLIBRARIES = libparsegraph-Qt.la
-libparsegraph_Qt_la_CFLAGS = -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
-libparsegraph_Qt_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
+lib_LTLIBRARIES = libparsegraph-Qt.la libparsegraph-kms.la
+
+libparsegraph_Qt_la_CFLAGS = -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@
+libparsegraph_Qt_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @parsegraph_cxx_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_Qt_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
 
-lib_LTLIBRARIES += libparsegraph-kms.la
-libparsegraph_kms_la_CFLAGS = -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @openssl_CFLAGS@ @parsegraph_CFLAGS@
-libparsegraph_kms_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @openssl_LIBS@ @parsegraph_LIBS@ @parsegraph_cxx_LIBS@
+libparsegraph_kms_la_CFLAGS = -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@ @parsegraph_CFLAGS@
+libparsegraph_kms_la_LDFLAGS = -fPIC -lm -lrt @pthread_LIBS@ @httpd_LIBS@ @parsegraph_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_kms_la_LIBADD =
 
 nobase_include_HEADERS = \
@@ -77,7 +77,7 @@ nobase_include_HEADERS = \
 	gl.h \
 	unicode.h
 
-libparsegraph_Qt_la_SOURCES = \
+parsegraph_common_SOURCES = \
 	die.c \
 	ArrayList.c \
 	Float32List.c \
@@ -134,7 +134,10 @@ libparsegraph_Qt_la_SOURCES = \
 	gl.c \
 	unicode.c
 
-libparsegraph_kms_la_SOURCES = $(libparsegraph_Qt_la_SOURCES) \
+libparsegraph_Qt_la_SOURCES = $(parsegraph_common_SOURCES) graph/Camera-novflip.c
+
+libparsegraph_kms_la_SOURCES = $(parsegraph_common_SOURCES) \
+	graph/Camera-vflip.c \
 	graph/GlyphAtlas.c \
 	graph/GlyphAtlas-pango.c \
 	timing.c \
@@ -158,9 +161,9 @@ parsegraph_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
 parsegraph_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
-parsegraph_LDADD = libparsegraph-kms.la
+parsegraph_LDADD = libparsegraphkms.la
 parsegraph_SOURCES = \
-	main.c apps/proportion.c
+	main.c apps/primes.c
 
 cxx_parsegraph_CXXFLAGS = \
 	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
