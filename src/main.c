@@ -202,9 +202,6 @@ parsegraph_Display* parsegraph_Display_new(parsegraph_Environment* env, drmModeC
         parsegraph_die("Failed to save current CRTC");
     }
 
-    parsegraph_Framebuffer* fb = disp->framebuffers + disp->current;
-    drmModeSetCrtc(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
-
     return disp;
 }
 
