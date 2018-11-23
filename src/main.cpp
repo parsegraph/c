@@ -234,6 +234,8 @@ void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
     win->input = 0;
 }
 
+}
+
 int main(int argc, char**argv)
 {
     // Initialize the APR.
@@ -278,6 +280,4 @@ int main(int argc, char**argv)
     pool = NULL;
     apr_terminate();
     return rv;
-}
-
 }
