@@ -562,27 +562,27 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
         parsegraph_Input_onfocus(env->input);
         env->needToFocus = 0;
     }
-    //glViewport(0, 0, width, height);
 
     //parsegraph_log("Old BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
-    disp->color[0] = next_color(&disp->color_up[0], disp->color[0], 10);
-    disp->color[1] = next_color(&disp->color_up[1], disp->color[1], 5);
-    disp->color[2] = next_color(&disp->color_up[2], disp->color[2], 2);
+    disp->color[0] = next_color(&disp->color_up[0], disp->color[0], 20);
+    disp->color[1] = next_color(&disp->color_up[1], disp->color[1], 10);
+    disp->color[2] = next_color(&disp->color_up[2], disp->color[2], 5);
     //parsegraph_log("New BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
-    //glClearColor(disp->color[0], disp->color[1], disp->color[2], 1);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //parsegraph_log("Running animation callbacks\n");
     if(fb->needsRender) {
         glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
-        glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fb->color_rb
-        );
+        //glFramebufferRenderbuffer(
+            //GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fb->color_rb
+        //);
+        //int ret;
+        //if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+            //parsegraph_die("Framebuffer must be complete: %x\n", ret);
+        //}
+        glViewport(0, 0, width, height);
+        glClearColor(disp->color[0], disp->color[1], disp->color[2], 1);
+        glClear(GL_COLOR_BUFFER_BIT);
         parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
-        int ret;
-        if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
-            parsegraph_die("Framebuffer must be complete: %x\n", ret);
-        }
         parsegraph_Surface_render(env->surface, 0);
         glFlush();
         //glFinish();
@@ -592,7 +592,7 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
 void quit_handler(int signum)
 {
   quit = 1;
-  parsegraph_log("Quitting!\n");
+  //parsegraph_log("Quitting!\n");
 }
 
 void init_keyNames(parsegraph_Environment* env)
@@ -716,7 +716,7 @@ void process_input(parsegraph_Environment* env)
         case LIBINPUT_EVENT_NONE:
             break;
         case LIBINPUT_EVENT_KEYBOARD_KEY:
-    //fprintf(stderr, "KEYBOARD EVENT!!\n");
+            //parsegraph_log("KEYBOARD EVENT!!\n");
             key_event(env, ev);
             //quit = 1;
             continue;
@@ -733,11 +733,9 @@ void process_input(parsegraph_Environment* env)
             if(input) {
                 //fprintf(stderr, "mOUSE click!!\n");
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
-                int x = 0;//libinput_event_pointer_get_absolute_x_transformed(pev, parsegraph_Surface_getWidth(surface));
-                int y = 0;//libinput_event_pointer_get_absolute_y_transformed(pev, parsegraph_Surface_getHeight(surface));
                 if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
                     //fprintf(stderr, "mosuedown !!\n");
-                    parsegraph_Input_mousedown(input, x, y);
+                    parsegraph_Input_mousedown(input, input->lastMouseX, input->lastMouseY);
                 }
                 else {
                     parsegraph_Input_removeMouseListener(input);
@@ -874,7 +872,7 @@ void loop(parsegraph_Environment* env)
         disp->color[0] = rand() % 0xff;
         disp->color[1] = rand() % 0xff;
         disp->color[2] = rand() % 0xff;
-        parsegraph_log("BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
+        //parsegraph_log("BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
         memset(disp->color_up, 1, sizeof(disp->color_up));
 
         parsegraph_Framebuffer* fb = &disp->framebuffers[disp->front_fb];
@@ -896,7 +894,13 @@ void loop(parsegraph_Environment* env)
             // Wait for events from DRM or libinput.
         }
         if(env->surface && FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
+            if(0 != pthread_mutex_lock(&env->surface->lock)) {
+                parsegraph_die("Failed to lock surface to add animation callback");
+            }
             process_input(env);
+            if(0 != pthread_mutex_unlock(&env->surface->lock)) {
+                parsegraph_die("Failed to unlock surface to add animation callback");
+            }
         }
         if(FD_ISSET(env->drm_fd, &rfds)) {
             // DRM has events.
@@ -923,10 +927,43 @@ void loop(parsegraph_Environment* env)
    //printf("Frames per second: %.2lf\n", frames / difftime(end, start));
 }
 
+static parsegraph_Environment* env = 0;
+
 
 void quit_signal_handler(int sig, siginfo_t* si, void* data)
 {
     quit = 1;
+}
+
+static int has_shutdown = 0;
+
+void parsegraph_shutdown()
+{
+    //parsegraph_log("Quitting\n");
+    if(has_shutdown) {
+        return;
+    }
+    has_shutdown = 1;
+
+    // Destroy the environment.
+    parsegraph_Environment_destroy(env);
+
+    #ifdef parsegraph_NCURSES
+        // Close ncurses.
+        curs_set(1);
+        echo();
+        endwin();
+    #endif
+
+    // Close APR.
+    apr_terminate();
+    exit(255);
+}
+
+void crash_signal_handler(int sig, siginfo_t* si, void* data)
+{
+    quit = 1;
+    parsegraph_shutdown();
 }
 
 int main(int argc, const char * const *argv)
@@ -943,7 +980,7 @@ int main(int argc, const char * const *argv)
     }
 
     // Create the environment.
-    parsegraph_Environment* env = parsegraph_Environment_new();
+    env = parsegraph_Environment_new();
 
 #ifdef parsegraph_NCURSES
     // Start ncurses.
@@ -965,23 +1002,19 @@ int main(int argc, const char * const *argv)
         sigaction(SIGINT, &sa, NULL);
     }
 
+    // Interpret SIGSEGV gracefully.
+    {
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_flags = SA_SIGINFO;
+        sa.sa_sigaction = crash_signal_handler;
+        sigaction(SIGSEGV, &sa, NULL);
+    }
+
     // Run the environment's loop.
     loop(env);
 
-    // Destroy the environment.
-    //parsegraph_log("Quitting\n");
-    parsegraph_Environment_destroy(env);
-
-#ifdef parsegraph_NCURSES
-    // Close ncurses.
-    curs_set(1);
-    echo();
-    endwin();
-#endif
-
-    // Close APR.
-    apr_terminate();
-
+    parsegraph_shutdown();
 
     return 0;
 }
