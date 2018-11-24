@@ -1,4 +1,4 @@
-PROG = parsegraph
+PROG = parsegraph_kms_proportion
 run:
 	./$(PROG)
 .PHONY: run
@@ -155,14 +155,22 @@ libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
-bin_PROGRAMS = parsegraph cxx_alpha cxx_weetcubes cxx_primes cxx_proportion
+bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion
 
-parsegraph_CFLAGS = \
+parsegraph_kms_proportion_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
-parsegraph_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
-parsegraph_LDADD = libparsegraph-kms.la
-parsegraph_SOURCES = \
+parsegraph_kms_proportion_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
+parsegraph_kms_proportion_LDADD = libparsegraph-kms.la
+parsegraph_kms_proportion_SOURCES = \
+	main.c apps/proportion.c
+
+parsegraph_kms_primes_CFLAGS = \
+	$(libparsegraph_kms_la_CFLAGS) \
+	-I$(top_SRCDIR)
+parsegraph_kms_primes_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
+parsegraph_kms_primes_LDADD = libparsegraph-kms.la
+parsegraph_kms_primes_SOURCES = \
 	main.c apps/primes.c
 
 cxx_parsegraph_CXXFLAGS = \

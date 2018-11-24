@@ -1,6 +1,8 @@
 runtest
 runtest_pagingbuffer
 parsegraph
+parsegraph_kms_primes
+parsegraph_kms_proportion
 cxx_proportion
 cxx_parsegraph
 cxx_primes
