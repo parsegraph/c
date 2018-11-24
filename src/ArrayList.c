@@ -49,7 +49,9 @@ void parsegraph_ArrayList_splice(parsegraph_ArrayList* al, int i, int count)
     if(count > al->_length - i) {
         count = al->_length - i;
     }
-    memcpy(al->data + i, al->data + i + count, sizeof(void*)*count);
+    if(i < al->_length - count) {
+        memcpy(al->data + i, al->data + i + count, sizeof(void*)*(al->_length - count - i));
+    }
     al->_length -= count;
 }
 
