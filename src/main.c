@@ -59,12 +59,13 @@ parsegraph_Surface* init(void*, int, int);
 static volatile int quit = 0;
 
 struct parsegraph_Framebuffer {
+uint32_t drm_fb;
+GLuint fb;
 GLuint color_rb;
-GLuint depth_rb;
 struct gbm_bo* bo;
 EGLImage image;
-uint32_t fb_id;
-GLuint fb;
+GLuint depth_rb;
+int needsRender;
 };
 typedef struct parsegraph_Framebuffer parsegraph_Framebuffer;
 
@@ -72,15 +73,18 @@ struct parsegraph_Environment;
 struct parsegraph_Display {
 struct parsegraph_Environment* env;
 drmModeConnector *connector;
-drmModeEncoder *encoder;
+
 drmModeModeInfo mode;
 drmModeCrtcPtr saved_crtc;
-int current;
+int crtc;
 struct parsegraph_Display* next_display;
 int frames;
+int front_fb;
 parsegraph_Framebuffer framebuffers[2];
 int width;
 int height;
+char color[3];
+int color_up[3];
 };
 typedef struct parsegraph_Display parsegraph_Display;
 
@@ -109,6 +113,20 @@ static PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbuffe
 #endif
 
 static const char device_name[] = "/dev/dri/card0";
+
+static char next_color(int* up, char cur, unsigned int mod)
+{
+	char next;
+
+	next = cur + (*up == 1 ? 1 : -1) * (rand() % mod);
+	if ((*up == 1 && next < cur) || (*up == 0 && next > cur)) {
+		*up = *up == 1 ? 0 : 1;
+		next = cur;
+	}
+
+	return next;
+}
+
 
 void parsegraph_Display_initFramebuffer(parsegraph_Display* disp, parsegraph_Framebuffer* fb)
 {
@@ -151,10 +169,22 @@ void parsegraph_Display_initFramebuffer(parsegraph_Display* disp, parsegraph_Fra
     }
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fb->depth_rb);
 
-    ret = drmModeAddFB(disp->env->drm_fd, disp->width, disp->height, 24, 32, stride, handle, &fb->fb_id);
+    ret = drmModeAddFB(disp->env->drm_fd, disp->width, disp->height, 24, 32, stride, handle, &fb->drm_fb);
     if(ret) {
         parsegraph_die("DRM failed to create fb\n");
     }
+
+    fb->needsRender = 1;
+}
+
+void parsegraph_Display_destroyFramebuffer(parsegraph_Display* disp, parsegraph_Framebuffer* fb)
+{
+    glDeleteRenderbuffers(1, &fb->color_rb);
+    glDeleteRenderbuffers(1, &fb->depth_rb);
+    drmModeRmFB(disp->env->drm_fd, fb->drm_fb);
+    eglDestroyImage(disp->env->dpy, fb->image);
+    gbm_bo_destroy(fb->bo);
+    glDeleteFramebuffers(1, &fb->fb);
 }
 
 parsegraph_Display* parsegraph_Display_new(parsegraph_Environment* env, drmModeConnector* connector, drmModeRes* resources)
@@ -162,26 +192,74 @@ parsegraph_Display* parsegraph_Display_new(parsegraph_Environment* env, drmModeC
     parsegraph_Display* disp = apr_palloc(env->pool, sizeof(*disp));
     disp->env = env;
     disp->connector = connector;
-    disp->encoder = 0;
+    disp->crtc = -1;
     disp->mode = connector->modes[0];
     disp->width = disp->mode.hdisplay;
     disp->height = disp->mode.vdisplay;
-    disp->current = 0;
+    disp->front_fb = 0;
     disp->next_display = 0;
     disp->frames = 0;
 
-    for(int i = 0; i < resources->count_encoders; i++) {
-        drmModeEncoder* encoder = drmModeGetEncoder(disp->env->drm_fd, resources->encoders[i]);
-        if(encoder == NULL) {
-            continue;
+    memset(disp->color, 0, sizeof(disp->color));
+    memset(disp->color_up, 0, sizeof(disp->color_up));
+
+    drmModeEncoder *encoder;
+    if(disp->connector->encoder_id) {
+        encoder = drmModeGetEncoder(disp->env->drm_fd, disp->connector->encoder_id);
+    }
+    else {
+        encoder = 0;
+    }
+    if(encoder) {
+        int crtc = -1;
+        if(encoder->crtc_id) {
+            crtc = encoder->crtc_id;
+            for(parsegraph_Display* otherDisp = env->first_display; otherDisp; otherDisp = otherDisp->next_display) {
+                if(otherDisp->crtc == crtc) {
+                    crtc = -1;
+                    break;
+                }
+            }
+
+            if(crtc >= 0) {
+                drmModeFreeEncoder(encoder);
+                disp->crtc = crtc;
+                goto encoder_found;
+            }
         }
-        if(encoder->encoder_id == connector->encoder_id) {
-            disp->encoder = encoder;
-            break;
+    }
+    
+    {
+        int crtc = -1;
+        for(int i = 0; i < disp->connector->count_encoders; i++) {
+            drmModeEncoder* enc = drmModeGetEncoder(disp->env->drm_fd, disp->connector->encoders[i]);
+            if(enc == NULL) {
+                continue;
+            }
+            for(int j = 0; j < resources->count_crtcs; ++j) {
+                if(!(enc->possible_crtcs & (1 << j))) {
+                    continue;
+                }
+                crtc = resources->crtcs[j];
+
+                for(parsegraph_Display* otherDisp = env->first_display; otherDisp; otherDisp = otherDisp->next_display) {
+                    if(otherDisp->crtc == crtc) {
+                        crtc = -1;
+                        break;
+                    }
+                }
+
+                if(crtc >= 0) {
+                    drmModeFreeEncoder(encoder);
+                    disp->crtc = crtc;
+                    goto encoder_found;
+                }
+            }
+            drmModeFreeEncoder(enc);
         }
-        drmModeFreeEncoder(encoder);
     }
 
+encoder_found:
     if(env->last_display) {
         env->last_display->next_display = disp;
         env->last_display = disp;
@@ -197,7 +275,7 @@ parsegraph_Display* parsegraph_Display_new(parsegraph_Environment* env, drmModeC
     }
 
     // Save the CRTC configuration to restore upon exit.
-    disp->saved_crtc = drmModeGetCrtc(env->drm_fd, disp->encoder->crtc_id);
+    disp->saved_crtc = drmModeGetCrtc(env->drm_fd, disp->crtc);
     if(disp->saved_crtc == NULL) {
         parsegraph_die("Failed to save current CRTC");
     }
@@ -384,12 +462,7 @@ void parsegraph_Display_destroy(parsegraph_Display* disp)
 
     for(int i = 0; i < sizeof(disp->framebuffers)/sizeof(*disp->framebuffers); ++i) {
         parsegraph_Framebuffer* fb = disp->framebuffers + i;
-        glDeleteRenderbuffers(1, &fb->color_rb);
-        glDeleteRenderbuffers(1, &fb->depth_rb);
-        drmModeRmFB(disp->env->drm_fd, fb->fb_id);
-        eglDestroyImage(disp->env->dpy, fb->image);
-        gbm_bo_destroy(fb->bo);
-        glDeleteFramebuffers(1, &fb->fb);
+        parsegraph_Display_destroyFramebuffer(disp, fb);
     }
 
     parsegraph_Display* prev = 0;
@@ -414,7 +487,6 @@ void parsegraph_Display_destroy(parsegraph_Display* disp)
         break;
     }
 
-    drmModeFreeEncoder(disp->encoder);
     drmModeFreeConnector(disp->connector);
 }
 
@@ -433,14 +505,22 @@ void parsegraph_Environment_destroy(parsegraph_Environment* env)
     eglDestroyContext(env->dpy, env->ctx);
     eglTerminate(env->dpy);
     gbm_device_destroy(env->gbm);
+
     close(env->drm_fd);
     libinput_unref(env->libinput);
     udev_unref(env->udev);
     apr_pool_destroy(env->pool);
 }
 
-void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* sched)
+void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
 {
+    parsegraph_Environment* env = surface->peer;
+    for(parsegraph_Display* disp = env->first_display; disp; disp = disp->next_display) {
+        for(int i = 0; i < 2; ++i) {
+            parsegraph_Framebuffer* fb = &disp->framebuffers[i];
+            fb->needsRender = 1;
+        }
+    }
 }
 
 void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* givenInput)
@@ -466,7 +546,7 @@ void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
 }
 
 static void
-render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, int height)
+render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, int height, parsegraph_Framebuffer* fb)
 {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
@@ -483,12 +563,31 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
         env->needToFocus = 0;
     }
     //glViewport(0, 0, width, height);
-    //glClearColor(disp->current, disp->current, disp->current, 1);
+
+    //parsegraph_log("Old BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
+    disp->color[0] = next_color(&disp->color_up[0], disp->color[0], 10);
+    disp->color[1] = next_color(&disp->color_up[1], disp->color[1], 5);
+    disp->color[2] = next_color(&disp->color_up[2], disp->color[2], 2);
+    //parsegraph_log("New BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
+    //glClearColor(disp->color[0], disp->color[1], disp->color[2], 1);
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //parsegraph_log("Running animation callbacks\n");
-    parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
-    glFlush();
+    if(fb->needsRender) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fb->color_rb
+        );
+        parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
+        int ret;
+        if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+            parsegraph_die("Framebuffer must be complete: %x\n", ret);
+        }
+        parsegraph_Surface_render(env->surface, 0);
+        glFlush();
+        //glFinish();
+        fb->needsRender = 0;
+    }
 }
 void quit_handler(int signum)
 {
@@ -572,10 +671,10 @@ key_event(parsegraph_Environment* env, struct libinput_event *ev)
     }
 
     if(state == LIBINPUT_KEY_STATE_PRESSED) {
-        if(!strcmp(formalKeyName, "q")) {
+        if(!strcmp(formalKeyName, "x")) {
             quit_handler(0);
             return;
-	}
+        }
         if(!strcmp(formalKeyName, "c") && parsegraph_Input_Get(input, "Control")) {
             quit_handler(0);
             return;
@@ -735,13 +834,8 @@ void process_input(parsegraph_Environment* env)
 void draw_dev(parsegraph_Display* disp)
 {
     parsegraph_Environment* env = disp->env;
-    parsegraph_Framebuffer* fb = disp->framebuffers + disp->current;
-    //parsegraph_log("Using framebuffer %d\n", disp->current);
-    glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
-    int ret;
-    if((ret = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
-        parsegraph_die("Framebuffer must be complete: %x\n", ret);
-    }
+    parsegraph_Framebuffer* fb = &disp->framebuffers[disp->front_fb^1];
+    //parsegraph_log("Using framebuffer %d\n", fb->fb);
 
     if(env->needInit) {
         env->surface = init(env, disp->width, disp->height);
@@ -750,17 +844,14 @@ void draw_dev(parsegraph_Display* disp)
 
     // Actually render this environment.
     parsegraph_Surface_setDisplaySize(env->surface, disp->width, disp->height);
-    render_stuff(env, disp, disp->width, disp->height);
+    render_stuff(env, disp, disp->width, disp->height, fb);
 
     // Request a page flip.
-    drmModeSetCrtc(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
-
-    ret = drmModePageFlip(env->drm_fd, disp->encoder->crtc_id, fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, disp);
+    int ret = drmModePageFlip(env->drm_fd, disp->crtc, fb->drm_fb, DRM_MODE_PAGE_FLIP_EVENT, disp);
     if(ret) {
         parsegraph_die("failed to page flip: %m\n");
     }
-
-    //disp->current ^= 1;
+    disp->front_fb ^= 1;
     ++disp->frames;
 }
 
@@ -780,6 +871,14 @@ void loop(parsegraph_Environment* env)
 
     // Render the scene.
     for(parsegraph_Display* disp = env->first_display; disp; disp = disp->next_display) {
+        disp->color[0] = rand() % 0xff;
+        disp->color[1] = rand() % 0xff;
+        disp->color[2] = rand() % 0xff;
+        parsegraph_log("BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
+        memset(disp->color_up, 1, sizeof(disp->color_up));
+
+        parsegraph_Framebuffer* fb = &disp->framebuffers[disp->front_fb];
+        drmModeSetCrtc(env->drm_fd, disp->crtc, fb->drm_fb, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
         draw_dev(disp);
     }
 
@@ -796,7 +895,7 @@ void loop(parsegraph_Environment* env)
         while(select(maxfd + 1, &rfds, NULL, NULL, NULL) == -1) {
             // Wait for events from DRM or libinput.
         }
-        if(FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
+        if(env->surface && FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
             process_input(env);
         }
         if(FD_ISSET(env->drm_fd, &rfds)) {
@@ -812,7 +911,7 @@ void loop(parsegraph_Environment* env)
         // Consume terminal input.
         char c;
         while((c = getch()) != ERR) {
-            if(c == 'q') {
+            if(c == 'x') {
                 quit = 1;
             }
         }

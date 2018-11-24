@@ -107,7 +107,7 @@ void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor,
         makeInverse3x3(pool, parsegraph_Camera_worldMatrix(camera)),
         x, y
     );
-    //console.log("mouseAdjustment=" + mouseAdjustment[0] + ", " + mouseAdjustment[1]);
+    //parsegraph_log("mouseAdjustment=%f, %f", mouseAdjustment[0], mouseAdjustment[1]);
 
     // Adjust the origin by the movement of the fixed point.
     parsegraph_Camera_adjustOrigin(camera,

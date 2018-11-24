@@ -28,6 +28,7 @@ handler(union sigval data)
 {
     struct TimerData* td = data.sival_ptr;
     td->callback = parsegraph_Surface_addAnimationCallback(td->surface, animationhandler, td);
+    parsegraph_Surface_scheduleRepaint(td->surface);
 }
 
 static struct TimerData* createTimer(parsegraph_Surface* surface, void(*listener)(void*), int durMs, void* data, int repeat)

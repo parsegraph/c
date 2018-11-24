@@ -44,7 +44,7 @@ static void renderTimerCallback(void* data, float elapsed)
         //console.log("Wrote " + parsegraph_glBufferData_BYTES + " in pagingbuffer");
         //parsegraph_clearPerformanceCounters();
     //}
-    parsegraph_Surface_render(surface, 0);
+    //parsegraph_Surface_render(surface, 0);
     if(parsegraph_Input_UpdateRepeatedly(input) || parsegraph_Graph_needsRepaint(graph)) {
         //fprintf(stderr, "Scheduling because of input(%d) or graph(%d)\n", parsegraph_Input_UpdateRepeatedly(input), parsegraph_Graph_needsRepaint(graph));
         parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
@@ -57,6 +57,7 @@ static void inputListener(parsegraph_Input* input, int affectedPaint, const char
         parsegraph_Graph_scheduleRepaint(primesApp.graph);
     }
     parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
+    parsegraph_Surface_scheduleRepaint(parsegraph_Graph_surface(primesApp.graph));
 }
 
 static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)

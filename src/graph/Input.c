@@ -1063,7 +1063,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
             );
         //}
     }
-    //this.Dispatch(false, "update", inputChangedScene);
+    parsegraph_Input_Dispatch(input, 0, "update", inputChangedScene);
 
     float x = cam->_cameraX;
     float y = cam->_cameraY;

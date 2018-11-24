@@ -26,7 +26,7 @@ static void renderTimerCallback(void* data, float elapsed)
     if(parsegraph_Graph_needsRepaint(graph)) {
         parsegraph_Surface_paint(surface, (void*)(long)30);
     }
-    parsegraph_Surface_render(surface, 0);
+    //parsegraph_Surface_render(surface, 0);
     if(parsegraph_Input_UpdateRepeatedly(input) || parsegraph_Graph_needsRepaint(graph)) {
         //fprintf(stderr, "Scheduling because of input(%d) or graph(%d)\n", parsegraph_Input_UpdateRepeatedly(input), parsegraph_Graph_needsRepaint(graph));
         parsegraph_AnimationTimer_schedule(proportionApp.renderTimer);
@@ -39,6 +39,7 @@ static void inputListener(parsegraph_Input* input, int affectedPaint, const char
         parsegraph_Graph_scheduleRepaint(proportionApp.graph);
     }
     parsegraph_AnimationTimer_schedule(proportionApp.renderTimer);
+    parsegraph_Surface_scheduleRepaint(parsegraph_Graph_surface(proportionApp.graph));
 }
 
 static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
