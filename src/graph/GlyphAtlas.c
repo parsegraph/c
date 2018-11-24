@@ -194,7 +194,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         // Accept ARGB32_Premultiplied
         const unsigned char* glyphCanvas = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, texture);
-        unsigned char swizzled[4*1024*1024];
+        unsigned char* swizzled = malloc(4*1024*1024);
         for(int i = 0; i < 4*1024*1024; i += 4) {
             float a = (float)glyphCanvas[i];
             float r = (float)glyphCanvas[i+1];
