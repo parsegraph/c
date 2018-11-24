@@ -46,6 +46,7 @@ float touchX;
 float touchY;
 float lastMouseX;
 float lastMouseY;
+int has_mousedown;
 float mousedownX;
 float mousedownY;
 float zoomTouchDistance;

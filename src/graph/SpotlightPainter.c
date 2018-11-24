@@ -1,4 +1,5 @@
 #include "SpotlightPainter.h"
+#include "log.h"
 #include "../die.h"
 
 const char* parsegraph_SpotlightPainter_VertexShader =
@@ -30,8 +31,9 @@ const char* parsegraph_SpotlightPainter_FragmentShader =
     "st = st * 2.0 - 1.0;\n"
     "\n"
     "highp float d = min(1.0, length(abs(st)));\n"
-    "d = 1.0 - pow(d, 0.2);\n"
-    "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);\n"
+    "d = 1.0 - pow(d, 0.3);\n"
+    "gl_FragColor = vec4(contentColor.rgb, d*contentColor.a);\n"
+    //"gl_FragColor = vec4(1.0, 1.0, 1.0, d);\n"
 "}\n";
 
 static const char* shaderName = "parsegraph_SpotlightPainter";
@@ -88,7 +90,7 @@ parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(parsegraph_Surface*
 
 void parsegraph_SpotlightPainter_drawSpotlight(parsegraph_SpotlightPainter* painter, float cx, float cy, float radius, float* color)
 {
-    //console.log(cx + ", " + cy + ", " + radius + " " + color.toString());
+    //parsegraph_log("Spotlight at (%f, %f) of size %f\n", cx, cy, radius);
     // Append position data.
     parsegraph_pagingbuffer_appendArray(painter->_spotlightBuffer,
         painter->a_position,
@@ -105,6 +107,7 @@ void parsegraph_SpotlightPainter_drawSpotlight(parsegraph_SpotlightPainter* pain
         parsegraph_generateRectangleTexcoords(painter->pool)
     );
 
+    //parsegraph_log("Color is %f, %f, %f, %f\n", color[0], color[1], color[2], color[3]);
     // Append color data.
     for(int k = 0; k < 3 * 2; ++k) {
         parsegraph_PagingBuffer_appendRGBA(painter->_spotlightBuffer, painter->a_color,
@@ -147,7 +150,6 @@ void parsegraph_SpotlightPainter_drawRectSpotlight(parsegraph_SpotlightPainter* 
 void parsegraph_SpotlightPainter_clear(parsegraph_SpotlightPainter* painter)
 {
     parsegraph_pagingbuffer_clear(painter->_spotlightBuffer);
-    parsegraph_pagingbuffer_addDefaultPage(painter->_spotlightBuffer);
 }
 
 void parsegraph_SpotlightPainter_render(parsegraph_SpotlightPainter* painter, float* world, float scale)

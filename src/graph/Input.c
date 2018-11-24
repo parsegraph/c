@@ -12,6 +12,7 @@
 #include "Color.h"
 #include "parsegraph_math.h"
 #include "NodeAlignment.h"
+#include "initialize.h"
 #include <stdlib.h>
 
 const char* parsegraph_RESET_CAMERA_KEY = "Escape";
@@ -22,6 +23,8 @@ const char* parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
 const char* parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
 const char* parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
 float parsegraph_CARET_COLOR[] = {0, 0, 0, .5};
+float parsegraph_CURSOR_COLOR[] = {1, 1, 1, 1};
+float parsegraph_CURSOR_BORDER_COLOR[] = {0, 0, 0, 1};
 float parsegraph_FOCUSED_SPOTLIGHT_COLOR[] = {1, 1, 1, .5};
 float parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
@@ -51,6 +54,7 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->lastMouseX = 0;
     input->lastMouseY = 0;
 
+    input->has_mousedown = 0;
     input->mousedownX = 0;
     input->mousedownY = 0;
 
@@ -141,6 +145,7 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float clientX, float cl
         "mousemove world",
         0
     );
+
     input->lastMouseX = clientX;
     input->lastMouseY = clientY;
 }
@@ -153,7 +158,9 @@ void parsegraph_Input_mousedown(parsegraph_Input* input, float clientX, float cl
 
     input->lastMouseX = clientX;
     input->lastMouseY = clientY;
+    //fprintf(stderr, "down: %f, %f\n", clientX, clientY);
 
+    input->has_mousedown = 1;
     input->mousedownX = clientX;
     input->mousedownY = clientY;
 
@@ -164,12 +171,6 @@ void parsegraph_Input_mousedown(parsegraph_Input* input, float clientX, float cl
 
     input->_focusedLabel = 0;
     input->_focusedNode = 0;
-    if(input->_caretPainter) {
-        parsegraph_BlockPainter_initBuffer(input->_caretPainter, 1);
-    }
-    if(input->_spotlightPainter) {
-        parsegraph_SpotlightPainter_clear(input->_spotlightPainter);
-    }
 
     // Dragging on the canvas.
     input->attachedMouseListener = parsegraph_Input_mouseDragListener;
@@ -291,6 +292,9 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
         return;
     }
     input->attachedMouseListener = 0;
+    input->has_mousedown = 0;
+    input->lastMouseX = input->mousedownX;
+    input->lastMouseY = input->mousedownY;
 
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
@@ -352,7 +356,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
     }
 
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
-    //fprintf(stderr, "Key pressed: %s\n", keyName);
+    //parsegraph_log("Key pressed: %s\n", keyName);
     if(input->selectedSlider) {
         if(strlen(keyName) == 0) {
             return;
@@ -537,7 +541,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
 
     if(parsegraph_Input_Get(input, keyName)) {
         // Already processed.
-        parsegraph_log("Key event, but already processed.");
+        //parsegraph_log("Key event, but already processed.");
         return;
     }
 
@@ -587,7 +591,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
 void parsegraph_Input_keyup(parsegraph_Input* input, const char* keyName, int keyCode)
 {
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
-    //fprintf(stderr, "Key released: %s\n", keyName);
+    //parsegraph_log("Key released: %s\n", keyName);
 
     if(!parsegraph_Input_Get(input, keyName)) {
         // Already processed.
@@ -597,7 +601,7 @@ void parsegraph_Input_keyup(parsegraph_Input* input, const char* keyName, int ke
     for(int i = 0; i < parsegraph_ArrayList_length(input->keydowns); ++i) {
         struct parsegraph_KeyDown* kd = parsegraph_ArrayList_at(input->keydowns, i);
         if(!strcmp(kd->keyName, keyName)) {
-            //parsegraph_log("Removing keydown for %s\n", keyName);
+            //parsegraph_log("Removing keydown for %s at pos %d\n", keyName, i);
             parsegraph_ArrayList_splice(input->keydowns, i, 1);
             free(kd);
             break;
@@ -1127,11 +1131,37 @@ void parsegraph_Input_paint(parsegraph_Input* input)
         );
     }
 
-    parsegraph_BlockPainter_initBuffer(input->_caretPainter, 1);
-    parsegraph_BlockPainter_setBorderColor(input->_caretPainter, input->_caretColor);
-    parsegraph_BlockPainter_setBackgroundColor(input->_caretPainter, input->_caretColor);
+    parsegraph_BlockPainter_initBuffer(input->_caretPainter, 2);
 
     parsegraph_SpotlightPainter_clear(input->_spotlightPainter);
+
+    if(!input->has_mousedown)  {
+        int cursorSize[2];
+        cursorSize[0] = 2*parsegraph_BUD_STYLE->minWidth;
+        cursorSize[1] = 2*parsegraph_BUD_STYLE->minHeight;
+        parsegraph_BlockPainter_setBorderColor(input->_caretPainter, parsegraph_CURSOR_BORDER_COLOR);
+        parsegraph_BlockPainter_setBackgroundColor(input->_caretPainter, parsegraph_CURSOR_COLOR);
+        parsegraph_BlockPainter_drawBlock(input->_caretPainter,
+            input->lastMouseX - cursorSize[0]/2,
+            input->lastMouseY - cursorSize[1]/2,
+            cursorSize[0],
+            cursorSize[1],
+            parsegraph_BUD_STYLE->borderRoundness,
+            parsegraph_BUD_STYLE->borderThickness,
+            1
+        );
+
+        float srad = parsegraph_min(
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[0],
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[1]
+        );
+        parsegraph_SpotlightPainter_drawSpotlight(input->_spotlightPainter,
+            input->lastMouseX - cursorSize[0]/2,
+            input->lastMouseY - cursorSize[1]/2,
+            srad,
+            input->_spotlightColor
+        );
+    }
 
     if(!input->_focusedNode) {
         return;
@@ -1157,6 +1187,8 @@ void parsegraph_Input_paint(parsegraph_Input* input)
     float cr[4];
     parsegraph_Label_getCaretRect(label, cr);
     if(!isnan(input->_focusedNode->_labelPos[0]) && !isnan(input->_focusedNode->_labelPos[1])) {
+        parsegraph_BlockPainter_setBorderColor(input->_caretPainter, input->_caretColor);
+        parsegraph_BlockPainter_setBackgroundColor(input->_caretPainter, input->_caretColor);
         parsegraph_BlockPainter_drawBlock(input->_caretPainter,
             input->_focusedNode->_labelPos[0] + parsegraph_Rect_x(cr) * input->_focusedNode->_labelPos[2],
             input->_focusedNode->_labelPos[1] + parsegraph_Rect_y(cr) * input->_focusedNode->_labelPos[2],
@@ -1189,11 +1221,14 @@ int parsegraph_Input_focusedLabel(parsegraph_Input* input)
 
 void parsegraph_Input_render(parsegraph_Input* input, float* world)
 {
+    parsegraph_Input_paint(input);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    parsegraph_BlockPainter_render(input->_caretPainter, world);
     glEnable(GL_BLEND);
+    glBlendFunc(
+        GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+    );
+    parsegraph_BlockPainter_render(input->_caretPainter, world);
     parsegraph_SpotlightPainter_render(input->_spotlightPainter, world, 1);
 }
 
