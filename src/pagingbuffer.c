@@ -195,7 +195,7 @@ int parsegraph_PagingBuffer_appendData(struct parsegraph_pagingbuffer* pg, int a
     }
     va_list ap;
     va_start(ap, numValues);
-    int rv = parsegraph_BufferPage_appendData(page, attribIndex, numValues, ap);
+    int rv = parsegraph_BufferPage_appendVarargs(page, attribIndex, numValues, ap);
     va_end(ap);
     return rv;
 }
