@@ -30,6 +30,7 @@ struct parsegraph_AnimationCallback* next;
 };
 typedef struct parsegraph_AnimationCallback parsegraph_AnimationCallback;
 
+struct parsegraph_SurfaceDestructor;
 struct parsegraph_Surface {
 pthread_mutex_t lock;
 parsegraph_AnimationCallback* firstAnimationCallback;
@@ -45,8 +46,21 @@ struct parsegraph_SurfacePainter* first_painter;
 struct parsegraph_SurfacePainter* last_painter;
 struct parsegraph_SurfaceRenderer *first_renderer;
 struct parsegraph_SurfaceRenderer *last_renderer;
+struct parsegraph_SurfaceDestructor* first_destructor;
+struct parsegraph_SurfaceDestructor* last_destructor;
 };
 typedef struct parsegraph_Surface parsegraph_Surface;
+
+struct parsegraph_SurfaceDestructor {
+void(*listener)(parsegraph_Surface*, void*);
+void* listenerThisArg;
+struct parsegraph_SurfaceDestructor* prev;
+struct parsegraph_SurfaceDestructor* next;
+};
+typedef struct parsegraph_SurfaceDestructor parsegraph_SurfaceDestructor;
+
+parsegraph_SurfaceDestructor* parsegraph_Surface_addDestructor(parsegraph_Surface* surface, void(*listener)(parsegraph_Surface*, void*), void* listenerThisArg);
+void parsegraph_Surface_removeDestructor(parsegraph_Surface* surface, parsegraph_SurfaceDestructor* destructor);
 
 parsegraph_Surface* parsegraph_Surface_new(apr_pool_t*, void*);
 parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph_Surface* surface, void(*listener)(void*, float), void* thisArg);

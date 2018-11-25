@@ -30,6 +30,9 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
     rv->firstAnimationCallback = 0;
     rv->lastAnimationCallback = 0;
 
+    rv->first_destructor = 0;
+    rv->last_destructor = 0;
+
     pthread_mutexattr_t mutexattr;
     if(0 != pthread_mutexattr_init(&mutexattr)) {
         parsegraph_die("Failed to initialize Surface's mutex attributes");
@@ -42,6 +45,48 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
     }
 
     return rv;
+}
+
+parsegraph_SurfaceDestructor* parsegraph_Surface_addDestructor(parsegraph_Surface* surface, void(*listener)(parsegraph_Surface*,void*), void* thisArg)
+{
+    parsegraph_SurfaceDestructor* cb = malloc(sizeof(*cb));
+    cb->listener = listener;
+    cb->listenerThisArg = thisArg;
+    cb->prev = 0;
+    cb->next = 0;
+    if(!surface->last_destructor) {
+        surface->first_destructor = cb;
+        surface->last_destructor = cb;
+    }
+    else {
+        cb->prev = surface->last_destructor;
+        surface->last_destructor->next = cb;
+        surface->last_destructor = cb;
+    }
+    return cb;
+}
+
+void parsegraph_Surface_removeDestructor(parsegraph_Surface* surface, parsegraph_SurfaceDestructor* given)
+{
+    parsegraph_SurfaceDestructor* cb = surface->first_destructor;
+    parsegraph_SurfaceDestructor* prev = 0;
+    for(; cb; cb = cb->next) {
+        if(cb == given) {
+            prev->next = cb->next;
+            if(cb->next) {
+                cb->prev = prev;
+            }
+            if(surface->first_destructor == cb) {
+                surface->first_destructor = surface->first_destructor->next;
+            }
+            if(surface->last_destructor == cb) {
+                surface->last_destructor = prev;
+            }
+            free(cb);
+            return;
+        }
+        prev = cb;
+    }
 }
 
 parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph_Surface* surface, void(*listener)(void*, float), void* thisArg)
@@ -117,6 +162,12 @@ void parsegraph_Surface_destroy(parsegraph_Surface* surface)
 {
     if(0 != pthread_mutex_lock(&surface->lock)) {
         parsegraph_die("Failed to lock surface before destruction");
+    }
+    for(parsegraph_SurfaceDestructor* d = surface->last_destructor; d;) {
+        parsegraph_SurfaceDestructor* next = d->prev;
+        d->listener(surface, d->listenerThisArg);
+        free(d);
+        d = next;
     }
     for(parsegraph_SurfacePainter* p = surface->first_painter; p;) {
         parsegraph_SurfacePainter* next = p->next;
