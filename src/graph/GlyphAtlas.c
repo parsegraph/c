@@ -231,6 +231,8 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         glGenerateMipmap(GL_TEXTURE_2D);
 
         parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);
+        glFlush();
+        free(swizzled);
     }
 };
 

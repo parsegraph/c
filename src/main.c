@@ -729,8 +729,7 @@ void process_input(parsegraph_Environment* env)
         case LIBINPUT_EVENT_KEYBOARD_KEY:
             //parsegraph_log("KEYBOARD EVENT!!\n");
             key_event(env, ev);
-            //quit = 1;
-            continue;
+            break;
         case LIBINPUT_EVENT_POINTER_MOTION:
             if(input) {
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
@@ -752,7 +751,7 @@ void process_input(parsegraph_Environment* env)
                     parsegraph_Input_removeMouseListener(input);
                 }
             }
-            continue;
+            break;
         case LIBINPUT_EVENT_POINTER_AXIS:
             if(input) {
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);

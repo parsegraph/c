@@ -314,6 +314,7 @@ void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int le
         label->_width = parsegraph_max(label->_width, parsegraph_Line_width(l));
         label->_height += parsegraph_Line_height(l);
     }
+    uregex_close(ws);
 }
 
 void parsegraph_Label_moveCaretDown(parsegraph_Label* label)
