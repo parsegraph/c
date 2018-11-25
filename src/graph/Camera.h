@@ -10,6 +10,8 @@ struct parsegraph_Camera {
 parsegraph_Surface* surface;
 float _cameraX;
 float _cameraY;
+int has_pos;
+float _defaultCameraPos[2];
 float _scale;
 float _width;
 float _height;
@@ -23,6 +25,7 @@ parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface);
 int parsegraph_containsAll(int viewportX, int viewportY, int viewWidth, int viewHeight, int cx, int cy, int width, int height);
 int parsegraph_containsAny(int viewportX, int viewportY, int viewWidth, int viewHeight, int cx, int cy, int width, int height);
 void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor, int x, int y);
+void parsegraph_Camera_setDefaultOrigin(parsegraph_Camera* camera, float x, float y);
 void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y);
 parsegraph_Surface* parsegraph_Camera_surface(parsegraph_Camera* camera);
 float parsegraph_Camera_scale(parsegraph_Camera* camera);

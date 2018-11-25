@@ -223,6 +223,17 @@ void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* i
         return;
     }
     win->input = input;
+
+    float defaultScale = .25;
+    parsegraph_Camera* cam = input->_camera;
+    parsegraph_Camera_project(cam);
+    parsegraph_Camera_setDefaultOrigin(cam,
+        parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
+        parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
+    );
+    parsegraph_Camera_setScale(cam, defaultScale);
+    input->cursorScreenPos[0] = parsegraph_Camera_x(cam);
+    input->cursorScreenPos[1] = parsegraph_Camera_y(cam);
 }
 
 void parsegraph_Surface_uninstall(parsegraph_Surface* surface)

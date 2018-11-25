@@ -56,19 +56,6 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
 
     parsegraph_Graph_plot(graph, showProportionTest(graph, COUNT));
 
-    float defaultScale = .25;
-    parsegraph_Camera* cam = parsegraph_Graph_camera(graph);
-    parsegraph_Camera_project(cam);
-    //parsegraph_log(
-        //"ORIGIN = %f, %f", (float)parsegraph_Surface_getWidth(surface) / (2.0 * defaultScale),
-        //(float)parsegraph_Surface_getHeight(surface) / (2.0 * defaultScale)
-    //);
-    parsegraph_Camera_setOrigin(cam,
-        parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
-        parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
-    );
-    parsegraph_Camera_setScale(cam, defaultScale);
-
     proportionApp.renderTimer = parsegraph_AnimationTimer_new(surface);
     parsegraph_AnimationTimer_setListener(proportionApp.renderTimer, renderTimerCallback, graph);
 

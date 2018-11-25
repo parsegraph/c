@@ -78,15 +78,6 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     primesApp.widget = primes;
     parsegraph_Graph_plot(graph, parsegraph_PrimesWidget_root(primes));
 
-    float defaultScale = .25;
-    parsegraph_Camera* cam = parsegraph_Graph_camera(graph);
-    parsegraph_Camera_project(cam);
-    parsegraph_Camera_setOrigin(cam,
-        parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
-        parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
-    );
-    parsegraph_Camera_setScale(cam, defaultScale);
-
     primesApp.bTimer = parsegraph_TimeoutTimer_new(surface);
     parsegraph_TimeoutTimer_setDelay(primesApp.bTimer, 10);
     parsegraph_TimeoutTimer_setListener(primesApp.bTimer, bTimerCallback, 0);

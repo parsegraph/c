@@ -16,9 +16,11 @@ parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface)
     }
     camera->surface = surface;
 
+    camera->has_pos = 0;
     camera->_cameraX = 0;
     camera->_cameraY = 0;
     camera->_scale = 1;
+    memset(camera->_defaultCameraPos, 0, sizeof(float)*2);
 
     camera->_aspectRatio = 1;
 
@@ -118,9 +120,19 @@ void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor,
 
 void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y)
 {
+    if(!camera->has_pos) {
+        camera->has_pos = 1;
+    }
     //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
     camera->_cameraX = x;
     camera->_cameraY = y;
+}
+
+void parsegraph_Camera_setDefaultOrigin(parsegraph_Camera* camera, float x, float y)
+{
+    //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
+    camera->_defaultCameraPos[0] = x;
+    camera->_defaultCameraPos[1] = y;
 }
 
 parsegraph_Surface* parsegraph_Camera_surface(parsegraph_Camera* camera)
@@ -135,11 +147,17 @@ float parsegraph_Camera_scale(parsegraph_Camera* camera)
 
 float parsegraph_Camera_x(parsegraph_Camera* camera)
 {
+    if(!camera->has_pos) {
+        return camera->_defaultCameraPos[0];
+    }
     return camera->_cameraX;
 };
 
 float parsegraph_Camera_y(parsegraph_Camera* camera)
 {
+    if(!camera->has_pos) {
+        return camera->_defaultCameraPos[1];
+    }
     return camera->_cameraY;
 };
 
@@ -150,11 +168,16 @@ void parsegraph_Camera_setScale(parsegraph_Camera* camera, float scale)
 
 int parsegraph_Camera_toString(parsegraph_Camera* camera, char* buf, int maxlen)
 {
-    return snprintf(buf, maxlen, "(%f, %f, %f)", camera->_cameraX, camera->_cameraY, camera->_scale);
+    return snprintf(buf, maxlen, "(%f, %f, %f)", parsegraph_Camera_x(camera), parsegraph_Camera_y(camera));
 };
 
 void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float dy)
 {
+    if(!camera->has_pos) {
+        camera->_cameraX = camera->_defaultCameraPos[0];
+        camera->_cameraY = camera->_defaultCameraPos[1];
+        camera->has_pos = 1;
+    }
     //parsegraph_log("Adjusting Camera origin (%f, %f) by (%f, %f)\n", camera->_cameraX, camera->_cameraY, dx, dy);
     camera->_cameraX += dx;
     camera->_cameraY += dy;
