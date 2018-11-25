@@ -95,18 +95,27 @@ virtual void focusOutEvent(QFocusEvent* ev) {
     parsegraph_Input_onblur(input);
 }
 
+float cursorScreenPos[2] = {0, 0};
+
 virtual void mouseMoveEvent(QMouseEvent* ev) {
     if(!input) {
         return;
     }
-    parsegraph_Input_mousemove(input, ev->x(), ev->y());
+    float dx = ev->x() - cursorScreenPos[0];
+    float dy = ev->y() - cursorScreenPos[1];
+    parsegraph_Input_mousemove(input, dx, dy);
+    cursorScreenPos[0] = ev->x();
+    cursorScreenPos[1] = ev->y();
 }
 
 virtual void mousePressEvent(QMouseEvent* ev) {
     if(!input) {
         return;
     }
-    parsegraph_Input_mousedown(input, ev->x(), ev->y());
+    if(ev->x() != cursorScreenPos[0] || ev->y() != cursorScreenPos[1]) {
+        parsegraph_Input_mousemove(input, ev->x() - cursorScreenPos[0], ev->y() - cursorScreenPos[1]);
+    }
+    parsegraph_Input_mousedown(input);
 }
 
 virtual void mouseReleaseEvent(QMouseEvent* ev) {
@@ -135,6 +144,8 @@ virtual void touchEvent(QTouchEvent* ev) {
         if(p.state() & Qt::TouchPointPressed) {
             parsegraph_log("Touch PRESS\n");
             parsegraph_ArrayList_push(pressedTouches, te);
+            cursorScreenPos[0] = p.pos().x();
+            cursorScreenPos[1] = p.pos().y();
         }
         if(p.state() & Qt::TouchPointReleased) {
             parsegraph_log("Touch RELEASE\n");
@@ -162,7 +173,7 @@ virtual void wheelEvent(QWheelEvent* ev) {
         return;
     }
     //fprintf(stderr, "Wheel at %d, %d\n", ev->x(), height() - ev->y());
-    parsegraph_Input_onWheel(input, ev->x(), ev->y(), -ev->angleDelta().y()/60);
+    parsegraph_Input_onWheel(input, -ev->angleDelta().y()/60);
 }
 
 public:

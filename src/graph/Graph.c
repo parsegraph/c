@@ -150,12 +150,13 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
 
 void parsegraph_Graph_render(parsegraph_Graph* graph)
 {
-    float* world = parsegraph_Camera_project(parsegraph_Graph_camera(graph));
+    parsegraph_Camera* cam = parsegraph_Graph_camera(graph);
+    float* world = parsegraph_Camera_project(cam);
     parsegraph_World_render(graph->_world, world);
 
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     parsegraph_Carousel_render(graph->_carousel, world);
     parsegraph_CameraBox_render(graph->_cameraBox, world);
-    parsegraph_Input_render(graph->_input, world);
+    parsegraph_Input_render(graph->_input, world, parsegraph_Camera_scale(cam));
     //parsegraph_AudioKeyboard_render(graph->_piano, world);
 }

@@ -1,4 +1,7 @@
 #include <apr_strings.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "Input.h"
 #include "log.h"
 #include "../die.h"
@@ -44,6 +47,8 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->_graph = graph;
     input->_camera = camera;
 
+    clock_gettime(CLOCK_REALTIME, &input->_startTime);
+
     input->_id = ++parsegraph_INPUT_COUNT;
 
     input->attachedMouseListener = 0;
@@ -51,23 +56,29 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->touchX = 0;
     input->touchY = 0;
 
-    input->lastMouseX = 0;
-    input->lastMouseY = 0;
+    input->cursorWorldPos[0] = 0;
+    input->cursorWorldPos[1] = 0;
+    memset(input->cursorScreenPos, 0, sizeof(float)*2);
 
     input->has_mousedown = 0;
+    input->has_touchdown = 0;
     input->mousedownX = 0;
     input->mousedownY = 0;
 
     input->_updateRepeatedly = 0;
 
     input->_caretPainter = 0;
+    input->_cursorPainter = 0;
+    input->_glyphPainter = 0;
+    input->_debugLabel = 0;
     input->_caretPos[0] = 0;
     input->_caretPos[1] = 0;
     parsegraph_Color_copy(input->_caretColor, parsegraph_CARET_COLOR);
     input->_focusedNode = 0;
     input->_focusedLabel = 0;
 
-    input->_spotlightPainter = 0;
+    input->_cursorSpotlightPainter = 0;
+    input->_caretSpotlightPainter = 0;
     parsegraph_Color_copy(input->_spotlightColor, parsegraph_FOCUSED_SPOTLIGHT_COLOR);
 
     // Whether the container is focused and not blurred.
@@ -117,54 +128,52 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->listener = 0;
     input->listenerThisArg = 0;
     return input;
-};
+}
 
-void parsegraph_Input_mousemove(parsegraph_Input* input, float clientX, float clientY)
+void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy)
 {
-    if(parsegraph_Carousel_isCarouselShown(parsegraph_Graph_carousel(input->_graph))) {
-        input->lastMouseX = clientX;
-        input->lastMouseY = clientY;
+    input->cursorScreenPos[0] += dx;
+    input->cursorScreenPos[1] += dy;
 
+    float scale = parsegraph_Camera_scale(input->_camera);
+    if(parsegraph_Carousel_isCarouselShown(parsegraph_Graph_carousel(input->_graph))) {
         parsegraph_Input_Dispatch(input,
-            parsegraph_Carousel_mouseOverCarousel(parsegraph_Graph_carousel(input->_graph), clientX, clientY),
+            parsegraph_Carousel_mouseOverCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]),
             "mousemove carousel",
             0
         );
         return;
     }
 
+    input->cursorWorldPos[0] += dx*scale;
+    input->cursorWorldPos[1] += dy*scale;
+
     // Moving during a mousedown i.e. dragging (or zooming)
     if(input->attachedMouseListener) {
-        return input->attachedMouseListener(input, clientX, clientY);
+        return input->attachedMouseListener(input, dx, dy);
     }
 
     // Just a mouse moving over the (focused) canvas.
     parsegraph_Input_Dispatch(
         input,
-        parsegraph_World_mouseOver(parsegraph_Graph_world(input->_graph), clientX, clientY),
+        parsegraph_World_mouseOver(parsegraph_Graph_world(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]),
         "mousemove world",
         0
     );
-
-    input->lastMouseX = clientX;
-    input->lastMouseY = clientY;
 }
 
-void parsegraph_Input_mousedown(parsegraph_Input* input, float clientX, float clientY)
+void parsegraph_Input_mousedown(parsegraph_Input* input)
 {
     input->focused = 1;
     //event.preventDefault();
     //graph.canvas().focus();
 
-    input->lastMouseX = clientX;
-    input->lastMouseY = clientY;
-    //fprintf(stderr, "down: %f, %f\n", clientX, clientY);
-
+    //fprintf(stderr, "down\n");
     input->has_mousedown = 1;
-    input->mousedownX = clientX;
-    input->mousedownY = clientY;
+    input->mousedownX = input->cursorScreenPos[0];
+    input->mousedownY = input->cursorScreenPos[1];
 
-    if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), clientX, clientY, 1)) {
+    if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 1)) {
         //console.log("Carousel click processed.");
         return;
     }
@@ -201,18 +210,11 @@ void parsegraph_Input_onblur(parsegraph_Input* input)
 /**
  * The receiver of all graph canvas wheel events.
  */
-void parsegraph_Input_onWheel(parsegraph_Input* input, float clientX, float clientY, float angleDelta)
+void parsegraph_Input_onWheel(parsegraph_Input* input, float angleDelta)
 {
     //event.preventDefault();
 
-    //input->_graph->_surface->displayWidth
-    //
-
     // Get the mouse coordinates, relative to bottom-left of the canvas.
-    //float x = clientX - parsegraph_Camera_x(input->_camera);
-    //float y = clientY - parsegraph_Camera_y(input->_camera);
-    float x = parsegraph_Camera_x(input->_camera) - clientX;
-    float y = parsegraph_Camera_y(input->_camera) - clientY;
 
     //parsegraph_log("Zooming to %f, %f. Current is %f, %f. Other is %f, %f\n",
             //x, y,
@@ -223,9 +225,9 @@ void parsegraph_Input_onWheel(parsegraph_Input* input, float clientX, float clie
         //);
 
     // Adjust the scale.
-    float numSteps = .4 * -angleDelta;
+    float numSteps = -angleDelta;
     //if(numSteps > 0 || parsegraph_Camera_scale(input->_camera) >= .01) {
-        parsegraph_Camera_zoomToPoint(input->_camera, powf(1.1, numSteps), x, y
+        parsegraph_Camera_zoomToPoint(input->_camera, powf(1.1, numSteps), input->cursorScreenPos[0], input->cursorScreenPos[1]
             //parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
             //parsegraph_Surface_getHeight(input->_graph->_surface) / 2
         );
@@ -283,7 +285,7 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
 {
     //console.log("MOUSEUP");
 
-    if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->lastMouseX, input->lastMouseY, 0)) {
+    if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 0)) {
         //console.log("Carousel handled event.");
         return;
     }
@@ -293,8 +295,8 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
     }
     input->attachedMouseListener = 0;
     input->has_mousedown = 0;
-    input->lastMouseX = input->mousedownX;
-    input->lastMouseY = input->mousedownY;
+    //input->cursorScreenPos[0] = input->mousedownX;
+    //input->cursorScreenPos[1] = input->mousedownY;
 
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
@@ -313,8 +315,8 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
             input
         );
 
-        // test! 12
-        if(parsegraph_Input_checkForNodeClick(input, input->lastMouseX, input->lastMouseY)) {
+        parsegraph_log("Click at %f, %f\n", input->cursorScreenPos[0], input->cursorScreenPos[1]);
+        if(parsegraph_Input_checkForNodeClick(input, input->cursorScreenPos[0], input->cursorScreenPos[1])) {
             // A significant node was clicked.
             //console.log("Node clicked.");
             parsegraph_Input_Dispatch(input, 1, "mousedown node", 0);
@@ -329,18 +331,12 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
 /**
  * Receives events that cause the camera to be moved.
  */
-void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float mouseX, float mouseY)
+void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float dx, float dy)
 {
-    float deltaX = mouseX - input->lastMouseX;
-    float deltaY = mouseY - input->lastMouseY;
-    input->lastMouseX = mouseX;
-    input->lastMouseY = mouseY;
-
     float camScale = parsegraph_Camera_scale(input->_camera);
     //parsegraph_log("%f, %f, %f\n", deltaX, deltaY, camScale);
     parsegraph_Camera_adjustOrigin(input->_camera,
-        deltaX / camScale,
-        deltaY / camScale
+        dx / camScale, dy / camScale
     );
     parsegraph_Input_Dispatch(input, 0, "mouseDrag world", 1);
 }
@@ -557,7 +553,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
     if(!strcmp(keyName, parsegraph_CLICK_KEY)) {
         parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
         //console.log("Q key for click pressed!");
-        if(parsegraph_Carousel_clickCarousel(carousel, input->lastMouseX, input->lastMouseY, 1)) {
+        if(parsegraph_Carousel_clickCarousel(carousel, input->cursorScreenPos[0], input->cursorScreenPos[1], 1)) {
             return;
         }
         //if(graph.nodeUnderCursor()) {
@@ -610,7 +606,7 @@ void parsegraph_Input_keyup(parsegraph_Input* input, const char* keyName, int ke
 
     if(!strcmp(keyName, parsegraph_CLICK_KEY)) {
         parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
-        if(parsegraph_Carousel_clickCarousel(carousel, input->lastMouseX, input->lastMouseY, 0)) {
+        if(parsegraph_Carousel_clickCarousel(carousel, input->cursorScreenPos[0], input->cursorScreenPos[1], 0)) {
             //console.log("Carousel processed event.");
             return;
         }
@@ -645,31 +641,28 @@ void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* c
         if(parsegraph_ArrayList_length(input->monitoredTouches) == 1) {
             parsegraph_Carousel* carousel = parsegraph_Graph_carousel(input->_graph);
             if(!parsegraph_Carousel_isShown(carousel)) {
+                parsegraph_Touch* onlyTouch = parsegraph_ArrayList_at(input->monitoredTouches, 0);
+                // Get the current mouse position, in world space.
+                input->has_touchdown = 1;
+                input->touchX = onlyTouch->x;
+                input->touchY = onlyTouch->y;
+                float adjustX = (touch->clientX - onlyTouch->x)/parsegraph_Camera_scale(input->_camera);
+                float adjustY = (touch->clientY - onlyTouch->y)/parsegraph_Camera_scale(input->_camera);
+
                 // Move.
-                parsegraph_Camera_adjustOrigin(input->_camera,
-                    (touch->clientX - touchRecord->x) / parsegraph_Camera_scale(input->_camera),
-                    (touch->clientY - touchRecord->y) / parsegraph_Camera_scale(input->_camera)
-                );
-                parsegraph_Input_Dispatch(input, 0, "touchmove", 0);
+                parsegraph_Camera_adjustOrigin(input->_camera, adjustX, adjustY);
+                parsegraph_Input_Dispatch(input, 0, "touchmove", 1);
             }
             else {
-                parsegraph_Input_Dispatch(input, parsegraph_Carousel_mouseOverCarousel(carousel, touch->clientX, touch->clientY), "mousemove carousel", 0);
+                parsegraph_Input_Dispatch(input, parsegraph_Carousel_mouseOverCarousel(carousel, touch->clientX, touch->clientY), "mousemove carousel", 1);
             }
         }
         touchRecord->x = touch->clientX;
         touchRecord->y = touch->clientY;
-        input->lastMouseX = touch->clientX;
-        input->lastMouseY = touch->clientY;
     }
 
     //parsegraph_log("Touches monitored: %d", parsegraph_ArrayList_length(input->monitoredTouches));
-    int realMonitoredTouches = 0;
-    for(int i = 0; i < parsegraph_ArrayList_length(input->monitoredTouches); ++i) {
-        parsegraph_Touch* touchRec = parsegraph_ArrayList_at(input->monitoredTouches, i);
-        if(touchRec->has_touchstart) {
-            realMonitoredTouches++;
-        }
-    }
+    int realMonitoredTouches = parsegraph_Input_countTouches(input);
     if(realMonitoredTouches > 1) {
         parsegraph_Touch* a = parsegraph_ArrayList_at(input->monitoredTouches, 0);
         parsegraph_Touch* b = parsegraph_ArrayList_at(input->monitoredTouches, 1);
@@ -677,6 +670,8 @@ void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* c
         float dist = sqrtf(powf(b->x - a->x, 2) + powf(b->y - a->y, 2));
         float zoomCenterX, zoomCenterY;
         midPoint(a->x, a->y, b->x, b->y, &zoomCenterX, &zoomCenterY);
+        input->touchX = zoomCenterX;
+        input->touchY = zoomCenterY;
         if((dist / input->zoomTouchDistance) > 1 || parsegraph_Camera_scale(input->_camera) >= 0.01) {
             parsegraph_Camera_zoomToPoint(input->_camera,
                 dist / input->zoomTouchDistance,
@@ -727,7 +722,7 @@ const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const cha
     return keyName;
 }
 
-void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, float mouseY);
+void parsegraph_Input_sliderListener(parsegraph_Input* input, float dx, float dy);
 
 parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, float clientX, float clientY)
 {
@@ -800,18 +795,30 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
 
 void parsegraph_Input_lastMouseCoords(parsegraph_Input* input, float* coords)
 {
-    coords[0] = input->lastMouseX;
-    coords[1] = input->lastMouseY;
+    coords[0] = input->cursorWorldPos[0];
+    coords[1] = input->cursorWorldPos[1];
 }
 
 float parsegraph_Input_lastMouseX(parsegraph_Input* input)
 {
-    return input->lastMouseX;
+    return input->cursorWorldPos[0];
 }
 
 float parsegraph_Input_lastMouseY(parsegraph_Input* input)
 {
-    return input->lastMouseY;
+    return input->cursorWorldPos[1];
+}
+
+int parsegraph_Input_countTouches(parsegraph_Input* input)
+{
+    int realMonitoredTouches = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(input->monitoredTouches); ++i) {
+        parsegraph_Touch* touchRec = parsegraph_ArrayList_at(input->monitoredTouches, i);
+        if(touchRec->has_touchstart) {
+            realMonitoredTouches++;
+        }
+    }
+    return realMonitoredTouches;
 }
 
 int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_ArrayList* changedTouches)
@@ -829,18 +836,25 @@ int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_Arr
         input->touchendTimeout = parsegraph_setTimeout(input->_graph->_surface, parsegraph_Input_afterTouchTimeout, parsegraph_CLICK_DELAY_MILLIS, input);
     }
 
-    parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->lastMouseX, input->lastMouseY, 0);
+    parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 0);
 
     if(
         input->has_touchstartTime
         && parsegraph_timediffMs(&now, &input->touchstartTime) < parsegraph_CLICK_DELAY_MILLIS
     ) {
-        if(parsegraph_Input_checkForNodeClick(input, input->lastMouseX, input->lastMouseY)) {
+        if(parsegraph_Input_checkForNodeClick(input, input->cursorScreenPos[0], input->cursorScreenPos[1])) {
             // A significant node was clicked.
             parsegraph_Input_Dispatch(input, 1, "touchstart", 0);
             input->has_touchstartTime = 0;
             return 0;
         }
+    }
+
+    int realMonitoredTouches = parsegraph_Input_countTouches(input);
+    if(realMonitoredTouches == 0) {
+        input->cursorScreenPos[0] = input->touchX;
+        input->cursorScreenPos[1] = input->touchY;
+        input->has_touchdown = 0;
     }
 
     return 1;
@@ -884,9 +898,7 @@ void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, floa
         parsegraph_Node_click(input->selectedSlider, "slider");
     }
     parsegraph_Input_Dispatch(input, 1, "slider", 0);
-    input->lastMouseX = mouseX;
-    input->lastMouseY = mouseY;
-};
+}
 
 void parsegraph_Input_SetListener(parsegraph_Input* input, void(*listener)(parsegraph_Input*, int, const char*, int, void*), void* thisArg)
 {
@@ -918,14 +930,14 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
         touchRec->startY = touch->clientY;
         touchRec->has_touchstart = 0;
         parsegraph_ArrayList_push(input->monitoredTouches, touchRec);
-        input->lastMouseX = touch->clientX;
-        input->lastMouseY = touch->clientY;
+
+        //fprintf(stderr, "mouseInWorld=%f, %f\n", mouseInWorld[0], mouseInWorld[1]);
 
         // Get the current mouse position, in world space.
         //alert(camera.worldMatrix());
         if(parsegraph_Carousel_clickCarousel(
             parsegraph_Graph_carousel(input->_graph),
-            input->lastMouseX, input->lastMouseY, 1)) {
+            input->cursorScreenPos[0], input->cursorScreenPos[1], 1)) {
             //console.log("Carousel click processed.");
             return;
         }
@@ -959,6 +971,21 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
             powf(b->y - a->y, 2)
         );
         parsegraph_Input_Dispatch(input, 0, "touchzoomstart", 0);
+    }
+    else if(realMonitoredTouches == 1) {
+        // Get the current mouse position, in world space.
+        parsegraph_Touch* touch = parsegraph_ArrayList_at(input->monitoredTouches, 0);
+        float* mouseInWorld = matrixTransform2D(input->pool,
+            makeInverse3x3(input->pool, parsegraph_Camera_worldMatrix(input->_camera)),
+            touch->x, touch->y
+        );
+        input->has_touchdown = 1;
+        input->cursorWorldPos[0] = mouseInWorld[0];
+        input->cursorWorldPos[1] = mouseInWorld[1];
+        input->cursorScreenPos[0] = touch->x;
+        input->cursorScreenPos[1] = touch->y;
+        //parsegraph_log("Mouse position is %f, %f %f from touch\n", input->cursorWorldPos[0], input->cursorWorldPos[1], parsegraph_Camera_scale(input->_camera));
+        parsegraph_Input_Dispatch(input, 0, "touchstart", 1);
     }
 }
 
@@ -1016,32 +1043,32 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         parsegraph_Input_Get(input, parsegraph_MOVE_BACKWARD_KEY)
     ) {
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX + parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed;
-        float y = cam->_cameraY;
+        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed;
+        float y = parsegraph_Camera_y(cam);
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
 
     if(parsegraph_Input_Get(input, parsegraph_MOVE_FORWARD_KEY)) {
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed;
-        float y = cam->_cameraY;
+        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed;
+        float y = parsegraph_Camera_y(cam);
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
 
     if(parsegraph_Input_Get(input, parsegraph_MOVE_UPWARD_KEY)) {
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX;
-        float y = cam->_cameraY + parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * ySpeed;
+        float x = parsegraph_Camera_x(cam);
+        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * ySpeed;
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
 
     if(parsegraph_Input_Get(input, parsegraph_MOVE_DOWNWARD_KEY)) {
         input->_updateRepeatedly = 1;
-        float x = cam->_cameraX;
-        float y = cam->_cameraY + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed;
+        float x = parsegraph_Camera_x(cam);
+        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed;
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
@@ -1050,9 +1077,9 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         input->_updateRepeatedly = 1;
         inputChangedScene = 1;
         parsegraph_Camera_zoomToPoint(cam,
-        powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, t)),
-            parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
-            parsegraph_Surface_getHeight(input->_graph->_surface) / 2
+            powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, t)),
+            input->cursorScreenPos[0],
+            input->cursorScreenPos[1]
         );
     }
     if(parsegraph_Input_Get(input, parsegraph_ZOOM_IN_KEY)) {
@@ -1062,15 +1089,15 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         //if(parsegraph_Camera_scale(cam) >= .01) {
             parsegraph_Camera_zoomToPoint(cam,
             powf(1.1, scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, t)),
-                parsegraph_Surface_getWidth(input->_graph->_surface) / 2,
-                parsegraph_Surface_getHeight(input->_graph->_surface) / 2
+                input->cursorScreenPos[0],
+                input->cursorScreenPos[1]
             );
         //}
     }
     parsegraph_Input_Dispatch(input, 0, "update", inputChangedScene);
 
-    float x = cam->_cameraX;
-    float y = cam->_cameraY;
+    float x = parsegraph_Camera_x(cam);
+    float y = parsegraph_Camera_y(cam);
     float r[4];
     parsegraph_World_boundingRect(input->_graph->_world, r);
     x = parsegraph_max(x, parsegraph_Rect_x(r) - parsegraph_Rect_width(r)/2);
@@ -1125,43 +1152,77 @@ void parsegraph_Input_paint(parsegraph_Input* input)
     if(!input->_caretPainter) {
         input->_caretPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
     }
-    if(!input->_spotlightPainter) {
-        input->_spotlightPainter = parsegraph_SpotlightPainter_new(input->_graph->_surface,
+    if(!input->_cursorPainter) {
+        input->_cursorPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
+    }
+    if(!input->_caretSpotlightPainter) {
+        input->_caretSpotlightPainter = parsegraph_SpotlightPainter_new(input->_graph->_surface,
             input->_graph->_shaders
         );
     }
+    if(!input->_cursorSpotlightPainter) {
+        input->_cursorSpotlightPainter = parsegraph_SpotlightPainter_new(input->_graph->_surface,
+            input->_graph->_shaders
+        );
+    }
+    if(!input->_glyphPainter) {
+        input->_glyphPainter = parsegraph_GlyphPainter_new(input->_graph->_glyphAtlas, input->_graph->_shaders
+        );
+    }
+    if(!input->_debugLabel) {
+        input->_debugLabel = parsegraph_Label_new(input->pool, input->_graph->_glyphAtlas);
+        clock_gettime(CLOCK_REALTIME, &input->_lastFrame);
+    }
 
-    parsegraph_BlockPainter_initBuffer(input->_caretPainter, 2);
+    parsegraph_BlockPainter_initBuffer(input->_caretPainter, 1);
+    parsegraph_BlockPainter_initBuffer(input->_cursorPainter, 1);
 
-    parsegraph_SpotlightPainter_clear(input->_spotlightPainter);
+    parsegraph_SpotlightPainter_clear(input->_caretSpotlightPainter);
+    parsegraph_SpotlightPainter_clear(input->_cursorSpotlightPainter);
 
-    if(!input->has_mousedown)  {
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    if(10000 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
+        parsegraph_GlyphPainter_clear(input->_glyphPainter);
+        char buf[255];
+        snprintf(buf, sizeof(buf), "/proc/%d/statm", getpid());
+        int memfd = open(buf, O_RDONLY);
+        if(memfd >= 0) {
+            read(memfd, buf, sizeof(buf));
+            close(memfd);
+            //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
+            //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
+            parsegraph_Label_setTextUTF8(input->_debugLabel, buf, 28);
+        }
+        parsegraph_Label_paint(input->_debugLabel, input->_glyphPainter, 0, 0, 1);
+        input->_lastFrame = now;
+    }
+
+    if(!input->has_mousedown && !input->has_touchdown)  {
         int cursorSize[2];
-        cursorSize[0] = 2*parsegraph_BUD_STYLE->minWidth;
-        cursorSize[1] = 2*parsegraph_BUD_STYLE->minHeight;
-        parsegraph_BlockPainter_setBorderColor(input->_caretPainter, parsegraph_CURSOR_BORDER_COLOR);
-        parsegraph_BlockPainter_setBackgroundColor(input->_caretPainter, parsegraph_CURSOR_COLOR);
-        parsegraph_BlockPainter_drawBlock(input->_caretPainter,
-            input->lastMouseX - cursorSize[0]/2,
-            input->lastMouseY - cursorSize[1]/2,
-            cursorSize[0],
-            cursorSize[1],
-            parsegraph_BUD_STYLE->borderRoundness,
-            parsegraph_BUD_STYLE->borderThickness,
+        cursorSize[0] = parsegraph_BUD_RADIUS + parsegraph_BUD_STYLE->minWidth;
+        cursorSize[1] = parsegraph_BUD_RADIUS + parsegraph_BUD_STYLE->minHeight;
+        parsegraph_BlockPainter_setBorderColor(input->_cursorPainter, parsegraph_CURSOR_BORDER_COLOR);
+        parsegraph_BlockPainter_setBackgroundColor(input->_cursorPainter, parsegraph_CURSOR_COLOR);
+        parsegraph_BlockPainter_drawBlock(input->_cursorPainter,
+            input->cursorScreenPos[0],
+            input->cursorScreenPos[1],
+            cursorSize[0], cursorSize[1],
+            parsegraph_BUD_STYLE->borderRoundness/2.0, parsegraph_BUD_STYLE->borderThickness/2.0,
             1
         );
 
         float srad = parsegraph_min(
-            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[0],
-            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[1]
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[0]/2.0,
+            parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[1]/2.0
         );
-        parsegraph_SpotlightPainter_drawSpotlight(input->_spotlightPainter,
-            input->lastMouseX - cursorSize[0]/2,
-            input->lastMouseY - cursorSize[1]/2,
+        parsegraph_SpotlightPainter_drawSpotlight(input->_cursorSpotlightPainter,
+            input->cursorScreenPos[0], input->cursorScreenPos[1],
             srad,
             input->_spotlightColor
         );
     }
+
 
     if(!input->_focusedNode) {
         return;
@@ -1175,7 +1236,7 @@ void parsegraph_Input_paint(parsegraph_Input* input)
             parsegraph_FOCUSED_SPOTLIGHT_SCALE * s[0] * parsegraph_Node_absoluteScale(input->_focusedNode),
             parsegraph_FOCUSED_SPOTLIGHT_SCALE * s[1] * parsegraph_Node_absoluteScale(input->_focusedNode)
         );
-        parsegraph_SpotlightPainter_drawSpotlight(input->_spotlightPainter,
+        parsegraph_SpotlightPainter_drawSpotlight(input->_caretSpotlightPainter,
             parsegraph_Node_absoluteX(input->_focusedNode),
             parsegraph_Node_absoluteY(input->_focusedNode),
             srad,
@@ -1219,7 +1280,7 @@ int parsegraph_Input_focusedLabel(parsegraph_Input* input)
     return input->_focusedLabel;
 }
 
-void parsegraph_Input_render(parsegraph_Input* input, float* world)
+void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
 {
     parsegraph_Input_paint(input);
     glDisable(GL_CULL_FACE);
@@ -1228,8 +1289,29 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world)
     glBlendFunc(
         GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
     );
-    parsegraph_BlockPainter_render(input->_caretPainter, world);
-    parsegraph_SpotlightPainter_render(input->_spotlightPainter, world, 1);
+
+    apr_pool_t* pool = 0;
+    apr_pool_create(&pool, input->_graph->_surface->pool);
+    float* scaledWorld = matrixMultiply3x3(
+        pool,
+        makeScale3x3(pool, 1.0/scale, 1.0/scale),
+        world
+    );
+    parsegraph_BlockPainter_render(input->_caretPainter, scaledWorld);
+    parsegraph_SpotlightPainter_render(input->_caretSpotlightPainter, world, 1);
+
+    parsegraph_Surface* surface = parsegraph_Graph_surface(input->_graph);
+    float displayWidth = parsegraph_Surface_getWidth(surface);
+    float displayHeight = parsegraph_Surface_getHeight(surface);
+    float* screenWorld = make2DProjection(input->pool, displayWidth, displayHeight, parsegraph_VFLIP);
+    float screenScale = .1;
+    float* screenTextWorld = matrixMultiply3x3(
+        pool, makeScale3x3(pool, screenScale, screenScale), screenWorld
+    );
+    parsegraph_GlyphPainter_render(input->_glyphPainter, screenTextWorld, 1);
+    parsegraph_BlockPainter_render(input->_cursorPainter, screenWorld);
+    parsegraph_SpotlightPainter_render(input->_cursorSpotlightPainter, screenWorld, 1);
+    apr_pool_destroy(pool);
 }
 
 void parsegraph_Input_Dispatch(parsegraph_Input* input, int argc, const char* event, int argc2)

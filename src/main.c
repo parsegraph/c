@@ -734,8 +734,7 @@ void process_input(parsegraph_Environment* env)
             if(input) {
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
                 parsegraph_Input_mousemove(input,
-                    input->lastMouseX + libinput_event_pointer_get_dx(pev),
-                    input->lastMouseY + libinput_event_pointer_get_dy(pev)
+                    libinput_event_pointer_get_dx(pev), libinput_event_pointer_get_dy(pev)
                 );
             }
             break;
@@ -745,7 +744,7 @@ void process_input(parsegraph_Environment* env)
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
                 if(libinput_event_pointer_get_button_state(pev) == LIBINPUT_BUTTON_STATE_PRESSED) {
                     //fprintf(stderr, "mosuedown !!\n");
-                    parsegraph_Input_mousedown(input, input->lastMouseX, input->lastMouseY);
+                    parsegraph_Input_mousedown(input);
                 }
                 else {
                     parsegraph_Input_removeMouseListener(input);
@@ -756,7 +755,9 @@ void process_input(parsegraph_Environment* env)
             if(input) {
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
                 if(libinput_event_pointer_has_axis(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)) {
-                    parsegraph_Input_onWheel(input, input->lastMouseX, input->lastMouseY, -libinput_event_pointer_get_axis_value(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)/60.0);
+                    parsegraph_Input_onWheel(input,
+                        libinput_event_pointer_get_axis_value(pev, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)/60.0
+                    );
                 }
             }
             break;
