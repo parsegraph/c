@@ -105,7 +105,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
 }
 
-parsegraph_Surface* init(void* peer, int w, int h)
+parsegraph_Surface* parsegraph_init(void* peer, int w, int h)
 {
     primesApp.pool = 0;
     if(APR_SUCCESS != apr_pool_create(&primesApp.pool, 0)) {

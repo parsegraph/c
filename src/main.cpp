@@ -6,7 +6,7 @@ extern "C" {
 #include "die.h"
 #include <apr_strings.h>
 
-parsegraph_Surface* init(void*, int, int);
+parsegraph_Surface* parsegraph_init(void* peer, int w, int h);
 }
 
 #include <QTime>
@@ -185,7 +185,7 @@ virtual void initializeGL() {
     // Invoke global init function.
     w = width();
     h = height();
-    surface = init(this, w, h);
+    surface = parsegraph_init(this, w, h);
     //fprintf(stderr, "Window size: %d, %d\n", w, h);
     frameElapsedTime.start();
 }

@@ -54,7 +54,7 @@
 #define parsegraph_NCURSES
 
 // This function must be defined by applications; it is not defined here.
-parsegraph_Surface* init(void*, int, int);
+parsegraph_Surface* parsegraph_init(void*, int, int);
 
 static volatile int quit = 0;
 
@@ -847,7 +847,7 @@ void draw_dev(parsegraph_Display* disp)
     //parsegraph_log("Using framebuffer %d\n", fb->fb);
 
     if(env->needInit) {
-        env->surface = init(env, disp->width, disp->height);
+        env->surface = parsegraph_init(env, disp->width, disp->height);
         env->needInit = 0;
     }
 

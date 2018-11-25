@@ -63,7 +63,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_AnimationTimer_schedule(proportionApp.renderTimer);
 }
 
-parsegraph_Surface* init(void* peer, int w, int h)
+parsegraph_Surface* parsegraph_init(void* peer, int w, int h)
 {
     proportionApp.pool = 0;
     if(APR_SUCCESS != apr_pool_create(&proportionApp.pool, 0)) {
