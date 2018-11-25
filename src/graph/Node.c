@@ -1085,7 +1085,17 @@ parsegraph_Label* parsegraph_Node_realLabel(parsegraph_Node* node)
     return node->_realLabel;
 };
 
-void parsegraph_Node_setLabel(parsegraph_Node* node, UChar* text, int len, parsegraph_GlyphAtlas* glyphAtlas)
+void parsegraph_Node_setLabelUTF8(parsegraph_Node* node, const char* text, int len, parsegraph_GlyphAtlas* glyphAtlas)
+{
+    if(!node->_realLabel) {
+        node->_realLabel = parsegraph_Label_new(node->pool, glyphAtlas);
+    }
+
+    parsegraph_Label_setTextUTF8(node->_realLabel, text, len);
+    /*    parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);*/
+};
+
+void parsegraph_Node_setLabel(parsegraph_Node* node, const UChar* text, int len, parsegraph_GlyphAtlas* glyphAtlas)
 {
     if(!node->_realLabel) {
         node->_realLabel = parsegraph_Label_new(node->pool, glyphAtlas);

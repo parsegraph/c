@@ -48,6 +48,7 @@ typedef struct parsegraph_GlyphPainter parsegraph_GlyphPainter;
 
 parsegraph_Label* parsegraph_Label_new(apr_pool_t* pool, parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_Label_setText(parsegraph_Label* label, const UChar* name, int len);
+void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len);
 void parsegraph_Label_moveCaretDown(parsegraph_Label* label);
 void parsegraph_Label_moveCaretUp(parsegraph_Label* label);
 int parsegraph_Label_moveCaretBackward(parsegraph_Label* label);

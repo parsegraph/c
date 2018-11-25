@@ -240,6 +240,27 @@ int parsegraph_Label_getText(parsegraph_Label* label, UChar* buf, int len)
     return totallen;
 }
 
+void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len)
+{
+    UErrorCode uerr = U_ZERO_ERROR;
+    UChar* buf;
+    int32_t destLen;
+    u_strFromUTF8(0, 0, &destLen, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text (preflight)");
+    }
+    buf = malloc(sizeof(UChar)*(destLen+1));
+    u_memset(buf, 0, destLen+1);
+
+    uerr = U_ZERO_ERROR;
+    u_strFromUTF8(buf, destLen+1, 0, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text (conversion)");
+    }
+    parsegraph_Label_setText(label, buf, destLen);
+    free(buf);
+}
+
 void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int len)
 {
     parsegraph_ArrayList_clear(label->_lines);

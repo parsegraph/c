@@ -375,29 +375,7 @@ void parsegraph_Caret_label(parsegraph_Caret* caret, const char* text, parsegrap
     if(!glyphAtlas) {
         glyphAtlas = parsegraph_Caret_glyphAtlas(caret);
     }
-
-    apr_pool_t* cpool;
-    if(APR_SUCCESS != apr_pool_create(&cpool, caret->pool)) {
-        parsegraph_die("APR error during convert from UTF8 text (allocation)");
-    }
-
-    UErrorCode uerr = U_ZERO_ERROR;
-    UChar* buf;
-    int32_t destLen;
-    u_strFromUTF8(0, 0, &destLen, text, -1, &uerr);
-    if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
-        parsegraph_die("Unicode error during convert from UTF8 text (preflight)");
-    }
-    buf = apr_palloc(cpool, sizeof(UChar)*destLen+1);
-    u_memset(buf, 0, destLen+1);
-
-    uerr = U_ZERO_ERROR;
-    u_strFromUTF8(buf, destLen+1, 0, text, -1, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error during convert from UTF8 text (conversion)");
-    }
-    parsegraph_Node_setLabel(node, buf, destLen, glyphAtlas);
-    apr_pool_destroy(cpool);
+    parsegraph_Node_setLabelUTF8(node, text, strlen(text), glyphAtlas);
 }
 
 void parsegraph_Caret_select(parsegraph_Caret* caret, const char* inDir)
