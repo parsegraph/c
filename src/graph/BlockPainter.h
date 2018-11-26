@@ -3,15 +3,17 @@
 
 #include "../gl.h"
 #include <apr_hash.h>
+#include <apr_pools.h>
 
 struct parsegraph_Surface;
 typedef struct parsegraph_Surface parsegraph_Surface;
 
 struct parsegraph_BlockPainter {
+apr_pool_t* pool;
 float _borderColor[4];
 float _backgroundColor[4];
 float _bounds[4];
-float* _itemBuffer;
+float _itemBuffer[15*sizeof(float)];
 GLuint _blockProgram;
 GLuint u_world;
 GLuint a_position;
@@ -40,5 +42,6 @@ void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter);
 void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
     float cx, float cy, float width, float height, float borderRoundedness, float borderThickness, float borderScale);
 void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* world);
+void parsegraph_BlockPainter_destroy(parsegraph_BlockPainter* painter);
 
 #endif // parsegraph_BlockPainter_INCLUDED

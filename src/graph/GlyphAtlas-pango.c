@@ -2,6 +2,17 @@
 #include "../die.h"
 #include "GlyphAtlas.h"
 
+struct parsegraph_PangoTexture {
+cairo_surface_t* surface;
+cairo_t* cr;
+PangoLayout* layout;
+};
+
+struct parsegraph_PangoFont {
+void* _font;
+struct parsegraph_PangoTexture* measure;
+};
+
 // These are platform-specific.
 void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas)
 {
@@ -26,28 +37,30 @@ void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas)
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error during font conversion to UTF8");
     }
-
-    glyphAtlas->_font = pango_font_description_from_string(textutf8);
-
+    struct parsegraph_PangoFont* pf = malloc(sizeof(struct parsegraph_PangoFont));
+    pf->_font = pango_font_description_from_string(textutf8);
+    glyphAtlas->_font = pf;
+    pf->measure = parsegraph_GlyphAtlas_createTexture(glyphAtlas);
     free(textutf8);
-    return glyphAtlas->_font;
+    return pf;
 }
 
 void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas)
 {
-    pango_font_description_free(glyphAtlas->_font);
+    struct parsegraph_PangoFont* pf = glyphAtlas->_font;
+    if(!pf) {
+        return;
+    }
+    if(pf->measure) {
+        parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, pf->measure);
+    }
+    pango_font_description_free(pf->_font);
+    free(pf);
 }
 
 int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len)
 {
-	void* texture = parsegraph_GlyphAtlas_createTexture(glyphAtlas);
-    cairo_t* cr = cairo_create(texture);
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_paint(cr);
-
-    PangoLayout* layout = pango_cairo_create_layout(cr);
-    pango_layout_set_font_description(layout, glyphAtlas->_font);
-
+    struct parsegraph_PangoFont* pf = glyphAtlas->_font;
     char* textutf8;
     int neededLen;
     UErrorCode uerr = U_ZERO_ERROR;
@@ -63,46 +76,45 @@ int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const U
         parsegraph_die("Unicode error during glyph conversion to UTF8");
     }
 
-    pango_layout_set_text(layout, textutf8, neededLen);
+    pango_layout_set_text(pf->measure->layout, textutf8, neededLen);
 
     int width;
     int height;
-    pango_layout_get_pixel_size(layout, &width, &height);
+    pango_layout_get_pixel_size(pf->measure->layout, &width, &height);
     //parsegraph_log("%dx%d\n", width, height);
 
-    g_object_unref(layout);
-	cairo_destroy(cr);
     free(textutf8);
-	parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);
     return width;
 }
 
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
 {
+    struct parsegraph_PangoTexture* rv = malloc(sizeof(*rv));
     int maxTextureWidth = parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas);
-    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, maxTextureWidth, maxTextureWidth);
+    rv->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, maxTextureWidth, maxTextureWidth);
 
-    cairo_t* cr = cairo_create(surface);
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_paint(cr);
-    cairo_destroy(cr);
+    rv->cr = cairo_create(rv->surface);
+    cairo_set_source_rgb(rv->cr, 0, 0, 0);
+    cairo_paint(rv->cr);
 
-    return surface;
+    rv->layout = pango_cairo_create_layout(rv->cr);
+    pango_layout_set_font_description(rv->layout, ((struct parsegraph_PangoFont*)glyphAtlas->_font)->_font);
+
+    return rv;
 }
 
-void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
+void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* data)
 {
-    cairo_surface_destroy(texture);
+    struct parsegraph_PangoTexture* texture = data;
+    g_object_unref(texture->layout);
+    cairo_destroy(texture->cr);
+    cairo_surface_destroy(texture->surface);
+    free(texture);
 }
 
-void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* texture)
+void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* data)
 {
-    cairo_t* cr = cairo_create(texture);
-    //cairo_set_source_rgb(cr, 0, 0, 1);
-    //cairo_paint(cr);
-
-    PangoLayout* layout = pango_cairo_create_layout(cr);
-    pango_layout_set_font_description(layout, glyphAtlas->_font);
+    struct parsegraph_PangoTexture* texture = data;
 
     char* textutf8;
     int neededLen;
@@ -119,18 +131,16 @@ void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parseg
         parsegraph_die("Unicode error during glyph conversion to UTF8");
     }
 
-    pango_layout_set_text(layout, textutf8, neededLen);
-    cairo_set_source_rgb(cr, 1, 1, 1);
-    cairo_move_to(cr, glyphData->x, glyphData->y);
-    pango_cairo_update_layout(cr, layout);
-    pango_cairo_show_layout(cr, layout);
-
-    g_object_unref(layout);
-    cairo_destroy(cr);
+    pango_layout_set_text(texture->layout, textutf8, neededLen);
+    cairo_set_source_rgb(texture->cr, 1, 1, 1);
+    cairo_move_to(texture->cr, glyphData->x, glyphData->y);
+    pango_cairo_update_layout(texture->cr, texture->layout);
+    pango_cairo_show_layout(texture->cr, texture->layout);
     free(textutf8);
 }
 
-const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
+const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
 {
-    return cairo_image_surface_get_data(texture);
+    struct parsegraph_PangoTexture* texture = data;
+    return cairo_image_surface_get_data(texture->surface);
 }

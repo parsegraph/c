@@ -123,5 +123,7 @@ parsegraph_Node* showProportionTest(parsegraph_Graph* graph, int COUNT)
     parsegraph_Caret_spawn(caret, "b", "bud", 0);
     parsegraph_Caret_spawn(caret, "f", "bud", 0);
 
-    return parsegraph_Caret_root(caret);
+    parsegraph_Node* node = parsegraph_Caret_root(caret);
+    parsegraph_Caret_destroy(caret);
+    return node;
 }

@@ -30,8 +30,10 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
         node = malloc(sizeof(*node));
     }
     node->pool = pool;
+    node->refcount = 1;
 
     node->_id = parsegraph_Node_COUNT++;
+    //parsegraph_log("NEW node %d\n", node->_id);
 
     node->_paintGroup = 0;
     node->_keyListener = 0;
@@ -100,6 +102,12 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     return node;
 }
 
+void parsegraph_Node_ref(parsegraph_Node* n)
+{
+    //parsegraph_log("REF node %d\n", n->_id);
+    ++n->refcount;
+}
+
 void parsegraph_chainTab(parsegraph_Node* a, parsegraph_Node* b, parsegraph_Node** swappedOut)
 {
     if(swappedOut) {
@@ -132,6 +140,8 @@ void parsegraph_chainAllTabs(apr_pool_t* pool, ...)
         parsegraph_ArrayList_push(al, node);
     }
 
+    va_end(ap);
+
     if(parsegraph_ArrayList_length(al) > 2) {
         parsegraph_Node* firstNode = parsegraph_ArrayList_at(al, 0);
         parsegraph_Node* lastNode = parsegraph_ArrayList_at(al, parsegraph_ArrayList_length(al) - 1);
@@ -142,21 +152,30 @@ void parsegraph_chainAllTabs(apr_pool_t* pool, ...)
         parsegraph_chainTab(lastNode, firstNode, 0);
     }
 
+    parsegraph_ArrayList_destroy(al);
     apr_pool_destroy(tpool);
 }
 
-void parsegraph_Node_destroy(parsegraph_Node* node)
+void parsegraph_Node_unref(parsegraph_Node* node)
 {
+    //parsegraph_log("UNREF node %d\n", node->_id);
+    if(--node->refcount > 0) {
+        return;
+    }
+
+    if(node->_realLabel) {
+        parsegraph_Label_destroy(node->_realLabel);
+    }
+
     for(int direction = 0; direction < parsegraph_NUM_DIRECTIONS; ++direction) {
         parsegraph_DirectionData* neighbor = neighbor = node->_neighbors + direction;
-        if(node->_parentDirection != direction) {
-            // Clear all children.
-            neighbor->node = 0;
+        if(neighbor->node && node->_parentDirection != direction) {
+            parsegraph_Node_unref(neighbor->node);
         }
     }
-    node->_parentDirection = parsegraph_NULL_NODE_DIRECTION;
-    node->_layoutState = parsegraph_NULL_LAYOUT_STATE;
-    node->_scale = 1.0;
+    if(node->_paintGroup) {
+        parsegraph_PaintGroup_unref(node->_paintGroup);
+    }
     if(!node->pool) {
         free(node);
     }
@@ -227,7 +246,6 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* nodeRoot)
         return;
     }
 
-
     parsegraph_Node* givenNode = nodeRoot;
     apr_pool_t* cpool;
     apr_pool_create(&cpool, 0);
@@ -265,6 +283,7 @@ void parsegraph_Node_commitAbsolutePos(parsegraph_Node* nodeRoot)
     nodeRoot->_hasAbsolutePos = 1;
 
     parsegraph_Node_eachChild(nodeRoot, resetPosition, nodeRoot);
+    parsegraph_ArrayList_destroy(nodeList);
     apr_pool_destroy(cpool);
 };
 
@@ -313,13 +332,16 @@ static void addChild(void* d, parsegraph_PaintGroup* childPaintGroup)
 void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup* paintGroup)
 {
     if(!node->_paintGroup) {
+        // No prior paint group.
         node->_paintGroup = paintGroup;
-
-        // Parent this paint group to this node, since it now has a paint group.
-        if(paintGroup && !parsegraph_Node_isRoot(node)) {
-            parsegraph_PaintGroup* parentsPaintGroup = parsegraph_Node_findPaintGroup(parsegraph_Node_parentNode(node));
-            if(parentsPaintGroup) {
-                parsegraph_reparentPaintGroup(paintGroup, parentsPaintGroup);
+        if(paintGroup) {
+            parsegraph_PaintGroup_ref(paintGroup);
+            // Parent this paint group to this node, since it now has a paint group.
+            if(!parsegraph_Node_isRoot(node)) {
+                parsegraph_PaintGroup* parentsPaintGroup = parsegraph_Node_findPaintGroup(parsegraph_Node_parentNode(node));
+                if(parentsPaintGroup) {
+                    parsegraph_reparentPaintGroup(paintGroup, parentsPaintGroup);
+                }
             }
         }
 
@@ -339,13 +361,16 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
                 // Some other child that's not us, so just continue.
                 continue;
             }
+            // childGroup == node->_paintGroup
 
             // This child is our current paint group, so replace it with the new.
             if(paintGroup) {
+                //parsegraph_PaintGroup_unref(childGroup);
                 parsegraph_ArrayList_replace(parentsPaintGroup->_childPaintGroups, i, paintGroup);
             }
             else {
                 // The new group is no group.
+                //parsegraph_PaintGroup_unref(childGroup);
                 parsegraph_ArrayList_splice(parentsPaintGroup->_childPaintGroups, i, 1);
             }
         }
@@ -354,14 +379,23 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, parsegraph_PaintGroup*
     // Copy the current paint group's children, if present.
     if(paintGroup) {
         parsegraph_ArrayList* childGroups = paintGroup->_childPaintGroups;
-        parsegraph_ArrayList_concat(childGroups, node->_paintGroup->_childPaintGroups);
+        for(int i = 0; i < parsegraph_ArrayList_length(childGroups); ++i) {
+            parsegraph_PaintGroup* child = parsegraph_ArrayList_at(childGroups, i);
+            addChild(paintGroup, child);
+        }
     }
     else {
         parsegraph_findChildPaintGroups(node, addChild, paintGroup);
     }
 
     parsegraph_PaintGroup_clear(node->_paintGroup);
+    if(node->_paintGroup) {
+        parsegraph_PaintGroup_unref(node->_paintGroup);
+    }
     node->_paintGroup = paintGroup;
+    if(node->_paintGroup) {
+        parsegraph_PaintGroup_ref(node->_paintGroup);
+    }
 }
 
 void parsegraph_reparentPaintGroup(parsegraph_PaintGroup* paintGroup, parsegraph_PaintGroup* parentPaintGroup)
@@ -743,6 +777,7 @@ parsegraph_Node* parsegraph_Node_connectNode(parsegraph_Node* parentNode, int in
     // Connect the node.
     parsegraph_DirectionData* neighbor = &parentNode->_neighbors[inDirection];
     neighbor->node = nodeToConnect;
+    parsegraph_Node_ref(nodeToConnect);
     parsegraph_Node_assignParent(nodeToConnect, parentNode, parsegraph_reverseNodeDirection(inDirection));
 
     parsegraph_Node* prevSibling = 0;
@@ -870,15 +905,16 @@ parsegraph_Node* parsegraph_Node_connectNode(parsegraph_Node* parentNode, int in
     return nodeToConnect;
 }
 
-parsegraph_Node* parsegraph_Node_eraseNode(parsegraph_Node* node, int givenDirection)
+void parsegraph_Node_eraseNode(parsegraph_Node* node, int givenDirection)
 {
     if(!parsegraph_Node_hasNode(node, givenDirection)) {
-        return 0;
+        return;
     }
     if(!parsegraph_Node_isRoot(node) && givenDirection == parsegraph_Node_parentDirection(node)) {
         parsegraph_abort(parsegraph_CANNOT_AFFECT_PARENT);
     }
-    return parsegraph_Node_disconnectNode(node, givenDirection);
+    parsegraph_Node* disconnected = parsegraph_Node_disconnectNode(node, givenDirection);
+    parsegraph_Node_unref(disconnected);
 }
 
 parsegraph_Node* parsegraph_Node_disconnectNode(parsegraph_Node* node, int inDirection)
@@ -1173,11 +1209,15 @@ void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* fromPa
     if(!fromParent) {
         // Clearing the parent.
         if(node->_parentDirection != parsegraph_NULL_NODE_DIRECTION) {
+            if(node->_neighbors[node->_parentDirection].node) {
+                parsegraph_Node_unref(node->_neighbors[node->_parentDirection].node);
+            }
             node->_neighbors[node->_parentDirection].node = 0;
             node->_parentDirection = parsegraph_NULL_NODE_DIRECTION;
         }
         return;
     }
+    //parsegraph_Node_ref(fromParent);
     node->_neighbors[parentDirection].node = fromParent;
     node->_parentDirection = parentDirection;
 }
@@ -1303,7 +1343,13 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
         userScale = 1;
     }
 
-    parsegraph_ArrayList* candidates = parsegraph_ArrayList_new(node->pool);
+    apr_pool_t* spool = 0;
+    if(APR_SUCCESS != apr_pool_create(&spool, node->pool)) {
+        parsegraph_die("Failed to create memory pool to check for Node click.");
+    }
+
+    parsegraph_Node* rv = 0;
+    parsegraph_ArrayList* candidates = parsegraph_ArrayList_new(spool);
     parsegraph_ArrayList_push(candidates, node);
 
     parsegraph_Node FORCE_SELECT_PRIOR;
@@ -1335,7 +1381,8 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
 
             // Found the node.
             //parsegraph_log("Found node.\n");
-            return candidate;
+            rv = candidate;
+            goto end;
         }
         // Not within this node, so remove it as a candidate.
         parsegraph_ArrayList_pop(candidates);
@@ -1391,7 +1438,10 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
     }
 
     //parsegraph_log("Found nothing.\n");
-    return 0;
+end:
+    parsegraph_ArrayList_destroy(candidates);
+    apr_pool_destroy(spool);
+    return rv;
 }
 
 void parsegraph_Node_sizeWithoutPadding(parsegraph_Node* node, float* bodySize)

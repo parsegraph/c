@@ -30,6 +30,23 @@ struct parsegraph_pagingbuffer* parsegraph_pagingbuffer_new(
 
 void parsegraph_pagingbuffer_destroy(struct parsegraph_pagingbuffer* pg)
 {
+    for(struct parsegraph_BufferPage* page = pg->first_page; page;) {
+        struct parsegraph_BufferPage* next = page->next_page;
+        for(int i = 0; i < pg->num_attribs; ++i) {
+            struct parsegraph_BufferPageContent* content = page->buffers + i;
+            if(content->glBuffer >= 0) {
+                glDeleteBuffers(1, &content->glBuffer);
+            }
+            free(content->data);
+        }
+        free(page->buffers);
+        page = next;
+    }
+    for(struct parsegraph_BufferPageAttribute* attrib = pg->first_attrib; attrib;) {
+        struct parsegraph_BufferPageAttribute* next = attrib->next_attrib;
+        free(attrib);
+        attrib = next;
+    }
     apr_pool_destroy(pg->pool);
 }
 
@@ -107,13 +124,10 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_
         return 0;
     }
 
-    page->buffers = apr_palloc(pg->pool, sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs);
+    page->buffers = malloc(sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs);
     for(int i = 0; i < pg->num_attribs; ++i) {
         parsegraph_BufferPageContent* bpc = page->buffers + i;
-        bpc->data = 0;
-        bpc->datasize = 0;
-        bpc->index = 0;
-        bpc->glBuffer = 0;
+        parsegraph_BufferPage_initContent(bpc);
     }
 
     // Add the page.
@@ -165,16 +179,20 @@ int parsegraph_pagingbuffer_defineAttrib(struct parsegraph_pagingbuffer* pg, con
 
     // Add a new buffer entry for this new attribute.
     for(struct parsegraph_BufferPage* page = pg->first_page; page != 0; page = page->next_page) {
-        struct parsegraph_BufferPageContent* oldBuffers = page->buffers;
-        page->buffers = apr_palloc(pg->pool, sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs);
-        memcpy(page->buffers, oldBuffers, sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs-1);
-        page->buffers[pg->num_attribs - 1].data = 0;
-        page->buffers[pg->num_attribs - 1].datasize = 0;
-        page->buffers[pg->num_attribs - 1].index = 0;
-        page->buffers[pg->num_attribs - 1].glBuffer = 0;
+        page->buffers = realloc(page->buffers, sizeof(struct parsegraph_BufferPageContent)*pg->num_attribs);
+        parsegraph_BufferPage_initContent(&page->buffers[pg->num_attribs - 1]);
     }
 
     return pg->num_attribs - 1;
+}
+
+void parsegraph_BufferPage_initContent(struct parsegraph_BufferPageContent* bpc)
+{
+    bpc->data = 0;
+    bpc->datasize = 0;
+    bpc->index = 0;
+    bpc->glBuffer = -1;
+    bpc->has_glBuffer = 0;
 }
 
 int parsegraph_PagingBuffer_appendRGB(struct parsegraph_pagingbuffer* pg, int attribIndex, float r, float g, float b)
@@ -206,9 +224,7 @@ static void parsegraph_BufferPageContent_ensure(parsegraph_pagingbuffer* pg, par
         if(content->datasize == 0) {
             content->datasize = 1;
         }
-        float* oldData = content->data;
-        content->data = apr_palloc(pg->pool, sizeof(float)*content->datasize*2);
-        memcpy(content->data, oldData, sizeof(float)*content->index);
+        content->data = realloc(content->data, sizeof(float)*content->datasize*2);
         content->datasize *= 2;
     }
 }
@@ -264,7 +280,7 @@ int parsegraph_BufferPage_appendArray(parsegraph_BufferPage* page, int attribInd
 
 void parsegraph_pagingbuffer_clear(struct parsegraph_pagingbuffer* pg)
 {
-    //fprintf(stderr, "Clearing pagingbuffer\n");
+    //fprintf(stderr, "Clearing paginger\n");
     // Clear the buffers for all pages.
     for(struct parsegraph_BufferPage* page = pg->first_page; page != 0; page = page->next_page) {
         for(int attribIndex = 0; attribIndex < pg->num_attribs; ++attribIndex) {
@@ -302,8 +318,9 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
             }
 
             // Bind the buffer, creating it if necessary.
-            if(page->buffers[attribIndex].glBuffer == 0) {
+            if(!page->buffers[attribIndex].has_glBuffer) {
                 glGenBuffers(1, &page->buffers[attribIndex].glBuffer);
+                page->buffers[attribIndex].has_glBuffer = 1;
             }
             glBindBuffer(GL_ARRAY_BUFFER, page->buffers[attribIndex].glBuffer);
             struct parsegraph_BufferPageContent* content = page->buffers + attribIndex;

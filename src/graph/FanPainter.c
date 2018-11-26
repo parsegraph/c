@@ -60,7 +60,7 @@ const char* parsegraph_FanPainter_FragmentShader =
 /**
  * Shows a circle that allows some parts to show as selected.
  */
-parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool)
+parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* shaders)
 {
     parsegraph_FanPainter* painter = apr_palloc(pool, sizeof(*painter));
     painter->pool = pool;
@@ -71,24 +71,10 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool)
     painter->_selectionSize = 0;
 
     // Compile the shader program.
-    painter->fanProgram = glCreateProgram();
-
-    glAttachShader(
-        painter->fanProgram,
-        compileShader(parsegraph_FanPainter_VertexShader, GL_VERTEX_SHADER)
+    painter->fanProgram = parsegraph_compileProgram(shaders, "parsegraph_FanPainter",
+        parsegraph_FanPainter_VertexShader, 
+        parsegraph_FanPainter_FragmentShader
     );
-
-    glAttachShader(
-        painter->fanProgram,
-        compileShader(parsegraph_FanPainter_FragmentShader, GL_FRAGMENT_SHADER)
-    );
-
-    glLinkProgram(painter->fanProgram);
-    GLint linkStatus;
-    glGetProgramiv(painter->fanProgram, GL_LINK_STATUS, &linkStatus);
-    if(linkStatus != GL_TRUE) {
-        parsegraph_die("FanPainter program failed to link.");
-    }
 
     // Prepare attribute buffers.
     painter->_fanBuffer = parsegraph_pagingbuffer_new(pool, painter->fanProgram);
@@ -108,6 +94,11 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool)
 
     //this._fanBuffer.addPage();
     return painter;
+}
+
+void parsegraph_FanPainter_destroy(parsegraph_FanPainter* painter)
+{
+    parsegraph_pagingbuffer_destroy(painter->_fanBuffer);
 }
 
 void parsegraph_FanPainter_selectDeg(parsegraph_FanPainter* painter,

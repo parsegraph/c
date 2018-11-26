@@ -34,12 +34,12 @@ float parsegraph_Camera_y(parsegraph_Camera* camera);
 void parsegraph_Camera_setScale(parsegraph_Camera* camera, float scale);
 int parsegraph_Camera_toString(parsegraph_Camera* camera, char* buf, int maxlen);
 void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float dy);
-float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera);
+float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera, apr_pool_t* pool);
 float parsegraph_Camera_aspectRatio(parsegraph_Camera* camera);
 float parsegraph_Camera_width(parsegraph_Camera* camera);
 float parsegraph_Camera_height(parsegraph_Camera* camera);
 int parsegraph_Camera_canProject(parsegraph_Camera* camera);
-float* parsegraph_Camera_project(parsegraph_Camera* camera);
+float* parsegraph_Camera_project(parsegraph_Camera* camera, apr_pool_t* pool);
 int parsegraph_Camera_ContainsAny(parsegraph_Camera* camera, float* rect);
 
 #endif // parsegraph_Camera_INCLUDED

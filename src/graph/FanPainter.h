@@ -22,7 +22,7 @@ GLuint u_time;
 };
 typedef struct parsegraph_FanPainter parsegraph_FanPainter;
 
-parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool);
+parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* shaders);
 void parsegraph_FanPainter_selectDeg(parsegraph_FanPainter* painter,
     float userX, float userY,
     float startAngle, float spanAngle,
@@ -37,5 +37,6 @@ void parsegraph_FanPainter_clear(parsegraph_FanPainter* painter);
 void parsegraph_FanPainter_setSelectionAngle(parsegraph_FanPainter* painter, float selectionAngle);
 void parsegraph_FanPainter_setSelectionSize(parsegraph_FanPainter* painter, float selectionSize);
 void parsegraph_FanPainter_render(parsegraph_FanPainter* painter, float* viewMatrix);
+void parsegraph_FanPainter_destroy(parsegraph_FanPainter* painter);
 
 #endif // parsegraph_FanPainter_INCLUDED

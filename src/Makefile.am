@@ -3,7 +3,7 @@ run:
 	./$(PROG)
 .PHONY: run
 
-VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes
+VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --suppressions=suppressions.valgrind
 
 valgrind:
 	$(VALGRIND) .libs/lt-$(PROG)

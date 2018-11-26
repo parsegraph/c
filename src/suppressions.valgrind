@@ -1,0 +1,17 @@
+{
+<gobject_init_ctor>
+Memcheck:Leak
+match-leak-kinds: possible
+...
+fun:gobject_init_ctor
+...
+}
+
+{
+<libinput_udev_assign_seat>
+Memcheck:Leak
+match-leak-kinds: definite
+...
+fun:libinput_udev_assign_seat
+...
+}

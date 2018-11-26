@@ -8,8 +8,9 @@
 #include "Surface.h"
 
 struct parsegraph_NodePainter {
+apr_pool_t* pool;
 parsegraph_Surface* _surface;
-float* _backgroundColor;
+float _backgroundColor[4];
 parsegraph_BlockPainter* _blockPainter;
 int _renderBlocks;
 parsegraph_BlockPainter* _extentPainter;
@@ -61,5 +62,6 @@ void parsegraph_NodePainter_drawNode(parsegraph_NodePainter* nodePainter, parseg
 void parsegraph_NodePainter_paintLines(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale);
 void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale);
 void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale);
+void parsegraph_NodePainter_destroy(parsegraph_NodePainter* nodePainter);
 
 #endif // parsegraph_NodePainter_INCLUDED

@@ -107,5 +107,7 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
 void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* changedTouches);
 void parsegraph_Input_SetListener(parsegraph_Input* input, void(*listener)(parsegraph_Input*, int, const char*, int, void*), void* thisArg);
 int parsegraph_Input_countTouches(parsegraph_Input* input);
+void parsegraph_Input_destroy(parsegraph_Input* input);
+void parsegraph_Input_transformPos(parsegraph_Input* input, float sx, float sy, float* dx, float* dy);
 
 #endif // parsegraph_Input_INCLUDED

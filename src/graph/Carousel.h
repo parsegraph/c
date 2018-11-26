@@ -47,6 +47,7 @@ typedef struct parsegraph_Carousel parsegraph_Carousel;
 
 parsegraph_Carousel* parsegraph_Carousel_new(parsegraph_Camera* camera, float* backgroundColor);
 parsegraph_Camera* parsegraph_Carousel_camera(parsegraph_Carousel* carousel);
+void parsegraph_Carousel_destroy(parsegraph_Carousel* carousel);
 int parsegraph_Carousel_needsRepaint(parsegraph_Carousel* carousel);
 void parsegraph_Carousel_prepare(parsegraph_Carousel* carousel, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
 void parsegraph_Carousel_moveCarousel(parsegraph_Carousel* carousel, float worldX, float worldY);

@@ -40,42 +40,20 @@ static const char* shaderName = "parsegraph_SpotlightPainter";
 
 parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders)
 {
-    parsegraph_SpotlightPainter* painter = apr_palloc(surface->pool, sizeof(*painter));
-    painter->pool = surface->pool;
-
-    // Compile the shader program.
-    if(!apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING)) {
-        GLuint program = glCreateProgram();
-
-        glAttachShader(
-            program,
-            compileShader(
-                parsegraph_SpotlightPainter_VertexShader,
-                GL_VERTEX_SHADER
-            )
-        );
-
-        glAttachShader(
-            program,
-            compileShader(
-                parsegraph_SpotlightPainter_FragmentShader,
-                GL_FRAGMENT_SHADER
-            )
-        );
-
-        glLinkProgram(program);
-        GLint linkStatus;
-        glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-        if(linkStatus != GL_TRUE) {
-            parsegraph_die("SpotlightPainter program failed to link.");
-        }
-
-        apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, (void*)(long)program);
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+        parsegraph_die("Failed to create SpotlightPainter memory pool.");
     }
-    painter->_program = (long)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
+    parsegraph_SpotlightPainter* painter = apr_palloc(pool, sizeof(*painter));
+    painter->pool = pool;
+
+    painter->_program = parsegraph_compileProgram(shaders, shaderName,
+        parsegraph_SpotlightPainter_VertexShader,
+        parsegraph_SpotlightPainter_FragmentShader
+    );
 
     // Prepare attribute buffers.
-    painter->_spotlightBuffer = parsegraph_pagingbuffer_new(surface->pool, painter->_program);
+    painter->_spotlightBuffer = parsegraph_pagingbuffer_new(pool, painter->_program);
 
     painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->_spotlightBuffer, "a_position", 2, GL_STATIC_DRAW);
     painter->a_texCoord = parsegraph_pagingbuffer_defineAttrib(painter->_spotlightBuffer, "a_texCoord", 2, GL_STATIC_DRAW);
@@ -86,6 +64,12 @@ parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(parsegraph_Surface*
 
     parsegraph_pagingbuffer_addDefaultPage(painter->_spotlightBuffer);
     return painter;
+}
+
+void parsegraph_SpotlightPainter_destroy(parsegraph_SpotlightPainter* painter)
+{
+    parsegraph_pagingbuffer_destroy(painter->_spotlightBuffer);
+    apr_pool_destroy(painter->pool);
 }
 
 void parsegraph_SpotlightPainter_drawSpotlight(parsegraph_SpotlightPainter* painter, float cx, float cy, float radius, float* color)

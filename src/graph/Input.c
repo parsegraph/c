@@ -43,7 +43,12 @@ static int parsegraph_INPUT_COUNT = 0;
 
 parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera)
 {
-    parsegraph_Input* input = apr_palloc(graph->_surface->pool, sizeof(*input));
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, graph->_surface->pool)) {
+        parsegraph_die("Failed to create Input memory pool");
+    }
+    parsegraph_Input* input = apr_palloc(pool, sizeof(*input));
+    input->pool = pool;
     input->_graph = graph;
     input->_camera = camera;
 
@@ -85,7 +90,6 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->focused = 0;
 
     // A map of event.key's to a true value.
-    input->pool = graph->_surface->pool;
     input->keydowns = parsegraph_ArrayList_new(input->pool);
 
     input->zoomTouchDistance = 0;
@@ -128,6 +132,31 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->listener = 0;
     input->listenerThisArg = 0;
     return input;
+}
+
+void parsegraph_Input_destroy(parsegraph_Input* input)
+{
+    if(input->_debugLabel) {
+        parsegraph_Label_destroy(input->_debugLabel);
+    }   
+    if(input->_glyphPainter) {
+        parsegraph_GlyphPainter_destroy(input->_glyphPainter);
+    }
+    if(input->_cursorSpotlightPainter) {
+        parsegraph_SpotlightPainter_destroy(input->_cursorSpotlightPainter);
+    }
+    if(input->_caretSpotlightPainter) {
+        parsegraph_SpotlightPainter_destroy(input->_caretSpotlightPainter);
+    }
+    if(input->_caretPainter) {
+        parsegraph_BlockPainter_destroy(input->_caretPainter);
+    }
+    if(input->_cursorPainter) {
+        parsegraph_BlockPainter_destroy(input->_cursorPainter);
+    }
+    parsegraph_ArrayList_destroy(input->monitoredTouches);
+    parsegraph_ArrayList_destroy(input->keydowns);
+    apr_pool_destroy(input->pool);
 }
 
 void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy)
@@ -315,7 +344,7 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
             input
         );
 
-        parsegraph_log("Click at %f, %f\n", input->cursorScreenPos[0], input->cursorScreenPos[1]);
+        //parsegraph_log("Click at %f, %f\n", input->cursorScreenPos[0], input->cursorScreenPos[1]);
         if(parsegraph_Input_checkForNodeClick(input, input->cursorScreenPos[0], input->cursorScreenPos[1])) {
             // A significant node was clicked.
             //console.log("Node clicked.");
@@ -726,10 +755,9 @@ void parsegraph_Input_sliderListener(parsegraph_Input* input, float dx, float dy
 
 parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, float clientX, float clientY)
 {
-    float* mouseInWorld = matrixTransform2D(input->pool,
-        makeInverse3x3(input->pool, parsegraph_Camera_worldMatrix(input->_camera)),
-        clientX, clientY
-    );
+    float mouseInWorld[2];
+    parsegraph_Input_transformPos(input, clientX, clientY, mouseInWorld, mouseInWorld + 1);
+
     //console.log(clientX, clientY);
     //console.log(mouseInWorld);
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(parsegraph_Graph_world(input->_graph), mouseInWorld[0], mouseInWorld[1]);
@@ -860,15 +888,26 @@ int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_Arr
     return 1;
 }
 
+void parsegraph_Input_transformPos(parsegraph_Input* input, float sx, float sy, float* dx, float* dy)
+{
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, input->pool)) {
+        parsegraph_die("Failed to create temporary memory pool to calculate transform.");
+    }
+    float *mouseInWorldPtr = matrixTransform2D(pool,
+        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(input->_camera, pool)),
+        sx, sy
+    );
+    *dx = mouseInWorldPtr[0];
+    *dy = mouseInWorldPtr[1];
+    apr_pool_destroy(pool);
+}
+
 void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, float mouseY)
 {
     // Get the current mouse position, in world space.
-    float* mouseInWorld = matrixTransform2D(input->pool,
-        makeInverse3x3(input->pool, parsegraph_Camera_worldMatrix(input->_camera)),
-        mouseX, mouseY
-    );
-    float x = mouseInWorld[0];
-    //float y = mouseInWorld[1];
+    float x, y;
+    parsegraph_Input_transformPos(input, mouseX, mouseY, &x, &y);
 
     //if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
         float nodeSize[2];
@@ -975,13 +1014,8 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
     else if(realMonitoredTouches == 1) {
         // Get the current mouse position, in world space.
         parsegraph_Touch* touch = parsegraph_ArrayList_at(input->monitoredTouches, 0);
-        float* mouseInWorld = matrixTransform2D(input->pool,
-            makeInverse3x3(input->pool, parsegraph_Camera_worldMatrix(input->_camera)),
-            touch->x, touch->y
-        );
+        parsegraph_Input_transformPos(input, touch->x, touch->y, input->cursorWorldPos, input->cursorWorldPos + 1);
         input->has_touchdown = 1;
-        input->cursorWorldPos[0] = mouseInWorld[0];
-        input->cursorWorldPos[1] = mouseInWorld[1];
         input->cursorScreenPos[0] = touch->x;
         input->cursorScreenPos[1] = touch->y;
         //parsegraph_log("Mouse position is %f, %f %f from touch\n", input->cursorWorldPos[0], input->cursorWorldPos[1], parsegraph_Camera_scale(input->_camera));
@@ -1182,17 +1216,21 @@ void parsegraph_Input_paint(parsegraph_Input* input)
 
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    if(10000 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
+    if(100 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
         parsegraph_GlyphPainter_clear(input->_glyphPainter);
         char buf[255];
         snprintf(buf, sizeof(buf), "/proc/%d/statm", getpid());
         int memfd = open(buf, O_RDONLY);
         if(memfd >= 0) {
-            read(memfd, buf, sizeof(buf));
+            memset(buf, 0, sizeof(buf));
+            int len = read(memfd, buf, sizeof(buf));
+            //len = snprintf(buf, sizeof(buf), "%d", buf[len-1]);
             close(memfd);
             //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
             //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
-            parsegraph_Label_setTextUTF8(input->_debugLabel, buf, 28);
+            if(len > 0) {
+                parsegraph_Label_setTextUTF8(input->_debugLabel, buf, 1);
+            }
         }
         parsegraph_Label_paint(input->_debugLabel, input->_glyphPainter, 0, 0, 1);
         input->_lastFrame = now;
@@ -1291,7 +1329,9 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
     );
 
     apr_pool_t* pool = 0;
-    apr_pool_create(&pool, input->_graph->_surface->pool);
+    if(APR_SUCCESS != apr_pool_create(&pool, input->_graph->_surface->pool)) {
+        parsegraph_die("Failed to create render memory pool for Input.");
+    }
     float* scaledWorld = matrixMultiply3x3(
         pool,
         makeScale3x3(pool, 1.0/scale, 1.0/scale),

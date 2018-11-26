@@ -21,5 +21,6 @@ parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_GlyphAtl
 void parsegraph_CameraBoxPainter_clear(parsegraph_CameraBoxPainter* painter);
 void parsegraph_CameraBoxPainter_drawBox(parsegraph_CameraBoxPainter* painter, const UChar* name, int len, float* rect, float scale);
 void parsegraph_CameraBoxPainter_render(parsegraph_CameraBoxPainter* painter, float* world);
+void parsegraph_CameraBoxPainter_destroy(parsegraph_CameraBoxPainter* painter);
 
 #endif // parsegraph_CameraBoxPainter_INCLUDED

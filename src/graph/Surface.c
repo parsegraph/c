@@ -179,8 +179,10 @@ void parsegraph_Surface_destroy(parsegraph_Surface* surface)
         free(r);
         r = next;
     }
-    for(parsegraph_AnimationCallback* cb = surface->firstAnimationCallback; cb; cb = cb->next) {
+    for(parsegraph_AnimationCallback* cb = surface->firstAnimationCallback; cb;) {
+        parsegraph_AnimationCallback* next = cb->next;
         free(cb);
+        cb = next;
     }
     if(0 != pthread_mutex_unlock(&surface->lock)) {
         parsegraph_die("Failed to unlock surface after destruction");

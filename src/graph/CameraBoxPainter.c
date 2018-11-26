@@ -25,6 +25,12 @@ parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_GlyphAtl
     return painter;
 }
 
+void parsegraph_CameraBoxPainter_destroy(parsegraph_CameraBoxPainter* painter)
+{
+    parsegraph_GlyphPainter_destroy(painter->_glyphPainter);
+    parsegraph_BlockPainter_destroy(painter->_blockPainter);
+}
+
 void parsegraph_CameraBoxPainter_clear(parsegraph_CameraBoxPainter* painter)
 {
     parsegraph_GlyphPainter_clear(painter->_glyphPainter);
@@ -55,6 +61,8 @@ void parsegraph_CameraBoxPainter_drawBox(parsegraph_CameraBoxPainter* painter, c
         parsegraph_Rect_y(rect) - parsegraph_Rect_height(rect)/2,
         (painter->_fontSize/parsegraph_GlyphAtlas_fontSize(painter->_glyphAtlas))/scale
     );
+
+    parsegraph_Label_destroy(label);
 }
 
 void parsegraph_CameraBoxPainter_render(parsegraph_CameraBoxPainter* painter, float* world)

@@ -69,20 +69,20 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
+    /**
+     * Base font size.
+     */
+    parsegraph_FONT_SIZE = 60;
+
     // Font
-    parsegraph_UPSCALED_FONT_SIZE = 144;
-    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4.0;
+    parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_SIZE*2;
+    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE;
     parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
 
     /**
      * The scale at which shrunk nodes are shrunk.
      */
     parsegraph_SHRINK_SCALE = .85;
-
-    /**
-     * Base font size.
-     */
-    parsegraph_FONT_SIZE = 60;
 
     /**
      * The thickness (diameter) of the line.

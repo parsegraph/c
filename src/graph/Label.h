@@ -10,6 +10,7 @@ int _caretLine;
 int _caretPos;
 int _editable;
 apr_pool_t* pool;
+apr_pool_t* _textPool;
 int(*_onTextChangedListener)(void*, struct parsegraph_Label*);
 void* _onTextChangedListenerThisArg;
 parsegraph_GlyphAtlas* _glyphAtlas;
@@ -42,11 +43,14 @@ float parsegraph_Line_width(parsegraph_Line* line);
 float parsegraph_Line_height(parsegraph_Line* line);
 float parsegraph_Line_posAt(parsegraph_Line* line, int limit);
 parsegraph_ArrayList* parsegraph_Line_glyphs(parsegraph_Line* line);
+void parsegraph_Line_destroy(parsegraph_Line* line);
 
 struct parsegraph_GlyphPainter;
 typedef struct parsegraph_GlyphPainter parsegraph_GlyphPainter;
 
 parsegraph_Label* parsegraph_Label_new(apr_pool_t* pool, parsegraph_GlyphAtlas* glyphAtlas);
+void parsegraph_Label_clear(parsegraph_Label* label);
+void parsegraph_Label_destroy(parsegraph_Label* label);
 void parsegraph_Label_setText(parsegraph_Label* label, const UChar* name, int len);
 void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len);
 void parsegraph_Label_moveCaretDown(parsegraph_Label* label);

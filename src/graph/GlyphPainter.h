@@ -2,6 +2,7 @@
 #define parsegraph_GlyphPainter_INCLUDED
 
 #include <apr_hash.h>
+#include <apr_pools.h>
 #include "../gl.h"
 #include "../pagingbuffer.h"
 
@@ -27,8 +28,11 @@ typedef struct parsegraph_GlyphRenderData parsegraph_GlyphRenderData;
 parsegraph_GlyphRenderData* parsegraph_GlyphRenderData_new(parsegraph_GlyphPainter* painter, parsegraph_GlyphData* glyphData);
 
 struct parsegraph_GlyphPainter {
+int _id;
 parsegraph_GlyphAtlas* _glyphAtlas;
 GLuint _textProgram;
+apr_pool_t* pool;
+apr_pool_t* _renderPool;
 parsegraph_pagingbuffer* _textBuffer;
 int _maxSize;
 GLint a_position;
@@ -37,13 +41,14 @@ GLint a_backgroundColor;
 GLint a_texCoord;
 GLint u_world;
 GLint u_glyphTexture;
-float* _color;
-float* _backgroundColor;
+float _color[4];
+float _backgroundColor[4];
 apr_hash_t* _textBuffers;
 };
 typedef struct parsegraph_GlyphPainter parsegraph_GlyphPainter;
 
 parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
+void parsegraph_GlyphPainter_destroy(parsegraph_GlyphPainter* glyphPainter);
 void parsegraph_GlyphPainter_setColor(parsegraph_GlyphPainter* glyphPainter, float* color);
 void parsegraph_GlyphPainter_setBackgroundColor(parsegraph_GlyphPainter* glyphPainter, float* color);
 float parsegraph_GlyphPainter_fontSize(parsegraph_GlyphPainter* glyphPainter);

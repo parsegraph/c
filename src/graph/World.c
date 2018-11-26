@@ -11,8 +11,12 @@
 
 parsegraph_World* parsegraph_World_new(parsegraph_Graph* graph)
 {
-    apr_pool_t* pool = graph->_surface->pool;
-    parsegraph_World* world = apr_palloc(graph->_surface->pool, sizeof(*world));
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, graph->_surface->pool)) {
+        parsegraph_die("Failed to create world memory pool.");
+    }
+    parsegraph_World* world = apr_palloc(pool, sizeof(*world));
+    world->pool = pool;
 
     // World-rendered graphs.
     world->_worldPaintingDirty = 1;
@@ -28,6 +32,16 @@ parsegraph_World* parsegraph_World_new(parsegraph_Graph* graph)
     world->_graph = graph;
 
     return world;
+}
+
+void parsegraph_World_destroy(parsegraph_World* world)
+{
+    for(int i = 0; i < parsegraph_ArrayList_length(world->_worldRoots); ++i) {
+        parsegraph_Node* node = parsegraph_ArrayList_at(world->_worldRoots, i);
+        parsegraph_Node_unref(node);
+    }
+    parsegraph_ArrayList_destroy(world->_worldRoots);
+    apr_pool_destroy(world->pool);
 }
 
 parsegraph_Camera* parsegraph_World_camera(parsegraph_World* world)
@@ -49,7 +63,9 @@ void parsegraph_World_plot(parsegraph_World* world, parsegraph_Node* node, float
         parsegraph_die("Node must not be null");
     }
     if(!parsegraph_Node_localPaintGroup(node)) {
-        parsegraph_Node_setPaintGroup(node, parsegraph_PaintGroup_new(world->_graph->_surface, node, worldX, worldY, userScale));
+        parsegraph_PaintGroup* pg = parsegraph_PaintGroup_new(world->_graph->_surface, node, worldX, worldY, userScale);
+        parsegraph_Node_setPaintGroup(node, pg);
+        parsegraph_PaintGroup_unref(pg);
     }
     parsegraph_ArrayList_push(world->_worldRoots, node);
 };
@@ -62,6 +78,7 @@ int parsegraph_World_removePlot(parsegraph_World* world, parsegraph_Node* plot)
             if(world->_previousWorldPaintState) {
                 world->_previousWorldPaintState = 0;
             }
+            parsegraph_Node_unref(node);
             parsegraph_ArrayList_splice(world->_worldRoots, i, 1);
             return 1;
         }
@@ -75,14 +92,18 @@ int parsegraph_World_mouseOver(parsegraph_World* world, float x, float y)
         // Never rendered.
         return 0;
     }
-    apr_pool_t* pool = world->_graph->_surface->pool;
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, world->pool)) {
+        parsegraph_die("Failed to create temporary memory pool for mouseover.");
+    }
     //console.log("mouseover: " + x + ", " + y);
     float* mouseInWorld = matrixTransform2D(pool,
-        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(parsegraph_World_camera(world))),
+        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(parsegraph_World_camera(world), pool)),
         x, y
     );
     x = mouseInWorld[0];
     y = mouseInWorld[1];
+    apr_pool_destroy(pool);
 
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(world, x, y);
     if(world->_nodeUnderCursor == selectedNode) {

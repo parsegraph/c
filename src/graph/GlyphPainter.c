@@ -50,58 +50,40 @@ static const char* parsegraph_GlyphPainter_FragmentShader =
 "}\n";
 
 static const char* shaderName = "parsegraph_GlyphPainter";
+int parsegraph_GlyphPainter_COUNT = 0;
 
 parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
 {
     if(!glyphAtlas) {
-        fprintf(stderr, "Glyph atlas must be provided\n");
-        abort();
+        parsegraph_die("Glyph atlas must be provided.");
     }
-    apr_pool_t* pool = glyphAtlas->surface->pool;
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, glyphAtlas->surface->pool)) {
+        parsegraph_die("Failed to create GlyphPainter memory pool.");
+    }
     parsegraph_GlyphPainter* painter = apr_palloc(pool, sizeof(*painter));
+    painter->pool = pool;
 
     painter->_glyphAtlas = glyphAtlas;
 
     // Compile the shader program.
-    GLuint* textProgramId = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
-    if(textProgramId) {
-        painter->_textProgram = *textProgramId;
-    }
-    else {
-        GLuint program = glCreateProgram();
-
-        glAttachShader(
-            program, compileShader(
-                parsegraph_GlyphPainter_VertexShader, GL_VERTEX_SHADER
-            )
-        );
-
-        const char* fragProgram = parsegraph_GlyphPainter_FragmentShader;
-        glAttachShader(
-            program, compileShader(fragProgram, GL_FRAGMENT_SHADER)
-        );
-
-        glLinkProgram(program);
-        GLint st;
-        glGetProgramiv(program, GL_LINK_STATUS, &st);
-        if(st != GL_TRUE) {
-            fprintf(stderr, "'%s' shader program failed to link.\n", shaderName);
-            abort();
-        }
-
-        GLuint* progId = apr_palloc(pool, sizeof(GLuint));
-        *progId = program;
-        apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, progId);
-        painter->_textProgram = program;
-    }
+    painter->_textProgram = parsegraph_compileProgram(shaders, shaderName,
+        parsegraph_GlyphPainter_VertexShader,
+        parsegraph_GlyphPainter_FragmentShader
+    );
 
     // Prepare attribute buffers.
+    painter->_id = ++parsegraph_GlyphPainter_COUNT;
+    painter->_renderPool = 0;
+    if(APR_SUCCESS != apr_pool_create(&painter->_renderPool, painter->pool)) {
+        parsegraph_die("Failed to create GlyphPainter memory pool.");
+    }
     painter->_textBuffer = parsegraph_pagingbuffer_new(pool, painter->_textProgram);
     painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_position", 2, GL_STATIC_DRAW);
     painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_color", 4, GL_STATIC_DRAW);
     painter->a_backgroundColor = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_backgroundColor", 4, GL_STATIC_DRAW);
     painter->a_texCoord = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_texCoord", 2, GL_STATIC_DRAW);
-    painter->_textBuffers = apr_hash_make(pool);
+    painter->_textBuffers = apr_hash_make(painter->_renderPool);
 
     // Cache program locations.
     painter->u_world = glGetUniformLocation(
@@ -113,20 +95,20 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyp
 
     painter->_maxSize = 0;
 
-    painter->_color = parsegraph_Color_new(pool, 1, 1, 1, 1);
-    painter->_backgroundColor = parsegraph_Color_new(pool, 0, 0, 0, 0);
+    parsegraph_Color_SetRGBA(painter->_color, 1, 1, 1, 1);
+    parsegraph_Color_SetRGBA(painter->_backgroundColor, 0,0,0,0);
 
     return painter;
 }
 
 void parsegraph_GlyphPainter_setColor(parsegraph_GlyphPainter* glyphPainter, float* color)
 {
-    glyphPainter->_color = color;
+    parsegraph_Color_copy(glyphPainter->_color, color);
 }
 
 void parsegraph_GlyphPainter_setBackgroundColor(parsegraph_GlyphPainter* glyphPainter, float* color)
 {
-    glyphPainter->_backgroundColor = color;
+    parsegraph_Color_copy(glyphPainter->_backgroundColor, color);
 }
 
 float parsegraph_GlyphPainter_fontSize(parsegraph_GlyphPainter* glyphPainter)
@@ -141,7 +123,7 @@ parsegraph_GlyphAtlas* parsegraph_GlyphPainter_glyphAtlas(parsegraph_GlyphPainte
 
 parsegraph_GlyphRenderData* parsegraph_GlyphRenderData_new(parsegraph_GlyphPainter* painter, parsegraph_GlyphData* glyphData)
 {
-    parsegraph_GlyphRenderData* grd = apr_palloc(painter->_glyphAtlas->pool, sizeof(*grd));
+    parsegraph_GlyphRenderData* grd = apr_palloc(painter->_renderPool, sizeof(*grd));
     grd->painter = painter;
     grd->glyphData = glyphData;
     return grd;
@@ -168,8 +150,12 @@ void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegr
     if(!page) {
         page = parsegraph_PagingBuffer_addPage(painter->_textBuffer, renderText, parsegraph_GlyphRenderData_new(painter, glyphData));
         apr_hash_set(painter->_textBuffers, &glyphData->glyphPage->_id, sizeof(int), page);
-        //fprintf(stderr, "Created paging buffer page %d\n", glyphData->glyphPage->_id);
+        //parsegraph_log("Created paging buffer page %d for painter %d\n", glyphData->glyphPage->_id, painter->_id);
     }
+    else {
+        //parsegraph_log("Reused paging buffer page %d for painter %d\n", glyphData->glyphPage->_id, painter->_id);
+    }
+
 
     // Append position data.
     //parsegraph_log("Glyph Position Values: (%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n",
@@ -244,11 +230,23 @@ void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegr
     );
 }
 
+void parsegraph_GlyphPainter_destroy(parsegraph_GlyphPainter* painter)
+{
+    parsegraph_pagingbuffer_destroy(painter->_textBuffer);
+    apr_pool_destroy(painter->_renderPool);
+    apr_pool_destroy(painter->pool);
+}
+
 void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* glyphPainter)
 {
     //parsegraph_log("Clearing glyph painter\n");
     apr_hash_clear(glyphPainter->_textBuffers);
     parsegraph_pagingbuffer_clear(glyphPainter->_textBuffer);
+    apr_pool_destroy(glyphPainter->_renderPool);
+    if(APR_SUCCESS != apr_pool_create(&glyphPainter->_renderPool, glyphPainter->pool)) {
+        parsegraph_die("Failed to create GlyphPainter memory pool.");
+    }
+    glyphPainter->_textBuffers = apr_hash_make(glyphPainter->_renderPool);
     glyphPainter->_maxSize = 0;
 }
 

@@ -18,20 +18,25 @@ parsegraph_Line* parsegraph_Line_new(parsegraph_Label* label, const UChar* text,
     if(!label) {
         parsegraph_die("Label must not be null");
     }
-    parsegraph_Line* line = apr_palloc(label->pool, sizeof(*line));
+    parsegraph_Line* line = apr_palloc(label->_textPool, sizeof(*line));
     line->_label = label;
 
     // The glyphs contains the memory representation of the Unicode string represented by this line.
     //
     // Diacritics are represented as additional characters in Unicode. These characters result in a
     // unique texture rendering of the modified glyph.
-    line->_glyphs = parsegraph_ArrayList_new(label->pool);
+    line->_glyphs = parsegraph_ArrayList_new(label->_textPool);
     line->_width = 0;
     line->_height = parsegraph_GlyphAtlas_letterHeight(parsegraph_Line_glyphAtlas(line));
     if(text) {
         parsegraph_Line_appendText(line, text, len);
     }
     return line;
+}
+
+void parsegraph_Line_destroy(parsegraph_Line* line)
+{
+    parsegraph_ArrayList_destroy(line->_glyphs);
 }
 
 int parsegraph_Line_isEmpty(parsegraph_Line* line)
@@ -173,15 +178,23 @@ parsegraph_ArrayList* parsegraph_Line_glyphs(parsegraph_Line* line)
 //
 //////////////////////////////////////
 
-parsegraph_Label* parsegraph_Label_new(apr_pool_t* pool, parsegraph_GlyphAtlas* glyphAtlas)
+parsegraph_Label* parsegraph_Label_new(apr_pool_t* parentPool, parsegraph_GlyphAtlas* glyphAtlas)
 {
     if(!glyphAtlas) {
         parsegraph_die("Label requires a GlyphAtlas.");
+    }
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, parentPool)) {
+        parsegraph_die("Failed to create Label memory pool");
     }
     parsegraph_Label* label = apr_palloc(pool, sizeof(*label));
     label->pool = pool;
     label->_glyphAtlas = glyphAtlas;
     //label->_wrapWidth = 0;
+    label->_textPool = 0;
+    if(APR_SUCCESS != apr_pool_create(&label->_textPool, pool)) {
+        parsegraph_die("Failed to create Label memory pool");
+    }
     label->_lines = parsegraph_ArrayList_new(label->pool);
     label->_caretLine = 0;
     label->_caretPos = 0;
@@ -191,6 +204,17 @@ parsegraph_Label* parsegraph_Label_new(apr_pool_t* pool, parsegraph_GlyphAtlas* 
     label->_width = -1;
     label->_height = 0;
     return label;
+}
+
+void parsegraph_Label_destroy(parsegraph_Label* label)
+{
+    for(int i = 0; i < parsegraph_ArrayList_length(label->_lines); ++i) {
+        parsegraph_Line* l = parsegraph_ArrayList_at(label->_lines, i);
+        parsegraph_Line_destroy(l);
+    }
+    parsegraph_ArrayList_destroy(label->_lines);
+    apr_pool_destroy(label->_textPool);
+    apr_pool_destroy(label->pool);
 }
 
 parsegraph_GlyphAtlas* parsegraph_Label_glyphAtlas(parsegraph_Label* label)
@@ -223,6 +247,19 @@ void parsegraph_Label_forEach(parsegraph_Label* label, void(*func)(parsegraph_Li
 int parsegraph_Label_text(parsegraph_Label* label, UChar* buf, int len)
 {
     return parsegraph_Label_getText(label, buf, len);
+}
+
+void parsegraph_Label_clear(parsegraph_Label* label)
+{
+    for(int i = 0; i < parsegraph_ArrayList_length(label->_lines); ++i) {
+        parsegraph_Line* l = parsegraph_ArrayList_at(label->_lines, i);
+        parsegraph_Line_destroy(l);
+    }
+    parsegraph_ArrayList_clear(label->_lines);
+    apr_pool_destroy(label->_textPool);
+    if(APR_SUCCESS != apr_pool_create(&label->_textPool, label->pool)) {
+        parsegraph_die("Failed to create Label memory pool");
+    }
 }
 
 int parsegraph_Label_getText(parsegraph_Label* label, UChar* buf, int len)
@@ -263,7 +300,7 @@ void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int
 
 void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int len)
 {
-    parsegraph_ArrayList_clear(label->_lines);
+    parsegraph_Label_clear(label);
     label->_currentLine = 0;
     label->_currentPos = 0;
     label->_width = 0;
@@ -633,7 +670,7 @@ void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* pa
         //const char* runDirection = direction;
         //int runWidth = 0;
         int j = 0;
-        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, j);
+        parsegraph_GlyphData* glyphData = 0;
         while(parsegraph_ArrayList_length(l->_glyphs) > 0) {
             glyphData = parsegraph_ArrayList_at(l->_glyphs, j);
             const char* glyphDirection = direction;

@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "log.h"
 #include "../gl.h"
+#include "../die.h"
 #include "Rect.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,11 +93,14 @@ int parsegraph_containsAny(int viewportX, int viewportY, int viewWidth, int view
 
 void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor, int x, int y)
 {
-    apr_pool_t* pool = camera->surface->pool;
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, camera->surface->pool)) {
+        parsegraph_die("Failed to create temporary memory pool to calculate zoom location.");
+    }
 
     // Get the current mouse position, in world space.
     float* mouseInWorld = matrixTransform2D(pool,
-        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(camera)),
+        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(camera, pool)),
         x, y
     );
     //fprintf(stderr, "mouseInWorld=%f, %f\n", mouseInWorld[0], mouseInWorld[1]);
@@ -106,7 +110,7 @@ void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor,
 
     // Get the new mouse position, in world space.
     float* mouseAdjustment = matrixTransform2D(pool,
-        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(camera)),
+        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(camera, pool)),
         x, y
     );
     //parsegraph_log("mouseAdjustment=%f, %f", mouseAdjustment[0], mouseAdjustment[1]);
@@ -116,6 +120,7 @@ void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor,
         mouseAdjustment[0] - mouseInWorld[0],
         mouseAdjustment[1] - mouseInWorld[1]
     );
+    apr_pool_destroy(pool);
 };
 
 void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y)
@@ -168,7 +173,7 @@ void parsegraph_Camera_setScale(parsegraph_Camera* camera, float scale)
 
 int parsegraph_Camera_toString(parsegraph_Camera* camera, char* buf, int maxlen)
 {
-    return snprintf(buf, maxlen, "(%f, %f, %f)", parsegraph_Camera_x(camera), parsegraph_Camera_y(camera));
+    return snprintf(buf, maxlen, "(%f, %f, %f)", parsegraph_Camera_x(camera), parsegraph_Camera_y(camera), parsegraph_Camera_scale(camera));
 };
 
 void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float dy)
@@ -183,9 +188,8 @@ void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float d
     camera->_cameraY += dy;
 }
 
-float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera)
+float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera, apr_pool_t* pool)
 {
-    apr_pool_t* pool = camera->surface->pool;
     return matrixMultiply3x3(
         pool,
         makeTranslation3x3(pool, parsegraph_Camera_x(camera), parsegraph_Camera_y(camera)),
@@ -215,9 +219,8 @@ int parsegraph_Camera_canProject(parsegraph_Camera* camera)
     return displayWidth != 0 && displayHeight != 0;
 }
 
-float* parsegraph_Camera_project(parsegraph_Camera* camera)
+float* parsegraph_Camera_project(parsegraph_Camera* camera, apr_pool_t* pool)
 {
-    apr_pool_t* pool = camera->surface->pool;
     float displayWidth = parsegraph_Surface_getWidth(camera->surface);
     float displayHeight = parsegraph_Surface_getHeight(camera->surface);
 
@@ -230,7 +233,7 @@ float* parsegraph_Camera_project(parsegraph_Camera* camera)
     //fprintf(stderr, "Camera projection (%f, %f, aspect=%f)\n", camera->_width, camera->_height, camera->_aspectRatio);
 
     return matrixMultiply3x3(pool,
-        parsegraph_Camera_worldMatrix(camera),
+        parsegraph_Camera_worldMatrix(camera, pool),
         make2DProjection(pool, displayWidth, displayHeight, parsegraph_VFLIP)
     );
 }

@@ -11,6 +11,7 @@ size_t _capacity;
 typedef struct parsegraph_ArrayList parsegraph_ArrayList;
 
 parsegraph_ArrayList* parsegraph_ArrayList_new(apr_pool_t* pool);
+void parsegraph_ArrayList_destroy(parsegraph_ArrayList* al);
 void parsegraph_ArrayList_clear(parsegraph_ArrayList* al);
 size_t parsegraph_ArrayList_length(parsegraph_ArrayList* al);
 void** parsegraph_ArrayList_slice(parsegraph_ArrayList* al);

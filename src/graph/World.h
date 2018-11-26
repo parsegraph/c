@@ -11,6 +11,7 @@ struct parsegraph_Graph;
 typedef struct parsegraph_Graph parsegraph_Graph;
 
 struct parsegraph_World {
+apr_pool_t* pool;
 int _worldPaintingDirty;
 parsegraph_ArrayList* _worldRoots;
 parsegraph_Node* _nodeUnderCursor;
@@ -31,5 +32,6 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout);
 void parsegraph_World_render(parsegraph_World* world, float* worldMat);
 int parsegraph_World_mouseOver(parsegraph_World* world, float x, float y);
 void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect);
+void parsegraph_World_destroy(parsegraph_World* world);
 
 #endif // parsegraph_graph_World_INCLUDED

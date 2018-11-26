@@ -28,37 +28,10 @@ parsegraph_TexturePainter* parsegraph_TexturePainter_new(parsegraph_Surface* sur
     parsegraph_TexturePainter* painter = apr_palloc(surface->pool, sizeof(*painter));
 
     // Compile the shader program.
-    const char* shaderName = "parsegraph_TexturePainter";
-    GLuint* textureProgramId = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
-    if(textureProgramId) {
-        painter->_textureProgram = *textureProgramId;
-    }
-    else {
-        GLuint program = glCreateProgram();
-
-        glAttachShader(
-            program, compileShader(
-                parsegraph_TexturePainter_VertexShader, GL_VERTEX_SHADER
-            )
-        );
-
-        const char* fragProgram = parsegraph_TexturePainter_FragmentShader;
-        glAttachShader(
-            program, compileShader(fragProgram, GL_FRAGMENT_SHADER)
-        );
-
-        glLinkProgram(program);
-        GLint linkStatus;
-        glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-        if(linkStatus != GL_TRUE) {
-            parsegraph_die("%s shader program failed to link.", shaderName);
-        }
-
-        GLuint* progId = apr_palloc(surface->pool, sizeof(GLuint));
-        *progId = program;
-        apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, progId);
-        painter->_textureProgram = program;
-    }
+    painter->_textureProgram = parsegraph_compileProgram(shaders, "parsegraph_TexturePainter",
+        parsegraph_TexturePainter_VertexShader,
+        parsegraph_TexturePainter_FragmentShader
+    );
     painter->_texture = textureId;
     painter->_texWidth = texWidth;
     painter->_texHeight = texHeight;

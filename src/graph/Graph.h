@@ -13,6 +13,7 @@ struct parsegraph_Input;
 typedef struct parsegraph_Input parsegraph_Input;
 
 struct parsegraph_Graph {
+apr_pool_t* pool;
 parsegraph_Surface* _surface;
 parsegraph_GlyphAtlas* _glyphAtlas;
 parsegraph_World* _world;
@@ -43,5 +44,6 @@ void parsegraph_Graph_setGlyphAtlas(parsegraph_Graph* graph, parsegraph_GlyphAtl
 void parsegraph_Graph_plot(parsegraph_Graph* graph, void* arg);
 int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout);
 void parsegraph_Graph_render(parsegraph_Graph* graph);
+void parsegraph_Graph_destroy(parsegraph_Graph* graph);
 
 #endif // parsegraph_Graph_INCLUDED

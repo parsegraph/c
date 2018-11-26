@@ -53,8 +53,9 @@
 
 #define parsegraph_NCURSES
 
-// This function must be defined by applications; it is not defined here.
+// These functions must be defined by applications; they are not defined here.
 parsegraph_Surface* parsegraph_init(void*, int, int);
+void parsegraph_stop(parsegraph_Surface* surf);
 
 static volatile int quit = 0;
 
@@ -492,6 +493,10 @@ void parsegraph_Display_destroy(parsegraph_Display* disp)
 
 void parsegraph_Environment_destroy(parsegraph_Environment* env)
 {
+    if(env->surface) {
+        parsegraph_stop(env->surface);
+    }
+
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     eglMakeCurrent(env->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -536,7 +541,7 @@ void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* g
 
     float defaultScale = .25;
     parsegraph_Camera* cam = givenInput->_camera;
-    parsegraph_Camera_project(cam);
+    //parsegraph_Camera_project(cam);
     parsegraph_Camera_setDefaultOrigin(cam,
         parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
         parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
@@ -593,8 +598,10 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
         glViewport(0, 0, width, height);
         glClearColor(disp->color[0], disp->color[1], disp->color[2], 1);
         glClear(GL_COLOR_BUFFER_BIT);
-        parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
-        parsegraph_Surface_render(env->surface, 0);
+        if(env->surface) {
+            parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
+            parsegraph_Surface_render(env->surface, 0);
+        }
         glFlush();
         //glFinish();
         fb->needsRender = 0;
@@ -762,7 +769,7 @@ void process_input(parsegraph_Environment* env)
             }
             break;
         case LIBINPUT_EVENT_TOUCH_DOWN:
-            if(input) {
+            if(surface && input) {
                 struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
                 apr_pool_t* spool;
                 if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
@@ -776,11 +783,12 @@ void process_input(parsegraph_Environment* env)
                 //fprintf(stderr, "TOUCH DOWN %s\n", te->identifier);
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_touchstart(input, touches);
+                parsegraph_ArrayList_destroy(touches);
                 apr_pool_destroy(spool);
             }
             break;
         case LIBINPUT_EVENT_TOUCH_UP:
-            if(input) {
+            if(surface && input) {
                 struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
                 apr_pool_t* spool;
                 if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
@@ -792,11 +800,12 @@ void process_input(parsegraph_Environment* env)
                 //fprintf(stderr, "TOUCH END '%s' (%lld, %d) %d\n", te->identifier, te, strlen(te->identifier), sizeof(*te));
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_removeTouchListener(input, touches);
+                parsegraph_ArrayList_destroy(touches);
                 apr_pool_destroy(spool);
             }
             break;
         case LIBINPUT_EVENT_TOUCH_MOTION:
-            if(input) {
+            if(surface && input) {
                 struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
                 apr_pool_t* spool;
                 if(APR_SUCCESS != apr_pool_create(&spool, env->pool)) {
@@ -810,11 +819,12 @@ void process_input(parsegraph_Environment* env)
                 //fprintf(stderr, "TOUCH MOTION '%s'\n", te->identifier);
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_touchmove(input, touches);
+                parsegraph_ArrayList_destroy(touches);
                 apr_pool_destroy(spool);
             }
             break;
         case LIBINPUT_EVENT_TOUCH_CANCEL:
-            if(input) {
+            if(surface && input) {
                 //fprintf(stderr, "TOUCH CANCEL\n");
                 struct libinput_event_touch* lte = libinput_event_get_touch_event(ev);
                 apr_pool_t* spool;
@@ -828,6 +838,7 @@ void process_input(parsegraph_Environment* env)
                 snprintf(te->identifier, sizeof(te->identifier), "%d", libinput_event_touch_get_seat_slot(lte));
                 parsegraph_ArrayList_push(touches, te);
                 parsegraph_Input_removeTouchListener(input, touches);
+                parsegraph_ArrayList_destroy(touches);
                 apr_pool_destroy(spool);
             }
             break;
@@ -852,7 +863,9 @@ void draw_dev(parsegraph_Display* disp)
     }
 
     // Actually render this environment.
-    parsegraph_Surface_setDisplaySize(env->surface, disp->width, disp->height);
+    if(env->surface) {
+        parsegraph_Surface_setDisplaySize(env->surface, disp->width, disp->height);
+    }
     render_stuff(env, disp, disp->width, disp->height, fb);
 
     // Request a page flip.

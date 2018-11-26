@@ -5,6 +5,7 @@
 #include "Surface.h"
 #include "Rect.h"
 #include "Color.h"
+#include "../die.h"
 
 const char* parsegraph_BlockPainter_VertexShader =
 "uniform mat3 u_world;\n"
@@ -292,59 +293,21 @@ static const char* shaderName = "parsegraph_BlockPainter";
 parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders)
 {
     if(!shaders || !surface) {
-        fprintf(stderr, "A shaders object must be given.\n");
-        abort();
+        parsegraph_die("A shaders object must be given.");
+    }
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+        parsegraph_die("Failed to create BlockPainter memory pool.");
     }
 
-    parsegraph_BlockPainter* painter = apr_palloc(surface->pool, sizeof(*painter));
+    parsegraph_BlockPainter* painter = apr_palloc(pool, sizeof(*painter));
+    painter->pool = pool;
 
-    // Compile the shader program.
-    GLuint* blockProgramId = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
-    if(blockProgramId) {
-        painter->_blockProgram = *blockProgramId;
+    const char* fragProgram = parsegraph_BlockPainter_FragmentShader;
+    if(strstr((const char*)glGetString(GL_EXTENSIONS), "GL_OES_standard_derivatives")) {
+        fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
     }
-    else {
-        GLuint program = glCreateProgram();
-        glAttachShader(
-            program,
-            compileShader(
-                parsegraph_BlockPainter_VertexShader,
-                GL_VERTEX_SHADER
-            )
-        );
-
-        const char* fragProgram = parsegraph_BlockPainter_FragmentShader;
-        //fprintf(stderr, "%s\n", glGetString(GL_EXTENSIONS));
-        if(strstr((const char*)glGetString(GL_EXTENSIONS), "GL_OES_standard_derivatives")) {
-            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
-        }
-        // For development.
-  //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
-//       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
-//        fragProgram = parsegraph_BlockPainter_SquareFragmentShader;
-//fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
-
-        glAttachShader(
-            program,
-            compileShader(
-                fragProgram,
-                GL_FRAGMENT_SHADER
-            )
-        );
-
-        glLinkProgram(program);
-        GLint linkStatus;
-        glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-        if(linkStatus != GL_TRUE) {
-            fprintf(stderr, "'%s' shader program failed to link.\n", shaderName);
-            abort();
-        }
-
-        GLuint* progId = apr_palloc(surface->pool, sizeof(GLuint));
-        *progId = program;
-        apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, progId);
-        painter->_blockProgram = program;
-    }
+    painter->_blockProgram = parsegraph_compileProgram(shaders, shaderName, parsegraph_BlockPainter_VertexShader, fragProgram);
 
     // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
     painter->_blockBuffer = 0;
@@ -379,10 +342,14 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
     painter->_stride = 15*sizeof(float);
-    painter->_itemBuffer = apr_palloc(surface->pool, painter->_stride);
 
     return painter;
 };
+
+void parsegraph_BlockPainter_destroy(parsegraph_BlockPainter* painter)
+{
+    apr_pool_destroy(painter->pool);
+}
 
 float* parsegraph_BlockPainter_bounds(parsegraph_BlockPainter* painter)
 {

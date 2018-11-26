@@ -13,6 +13,11 @@ parsegraph_ArrayList* parsegraph_ArrayList_new(apr_pool_t* pool)
     return al;
 }
 
+void parsegraph_ArrayList_destroy(parsegraph_ArrayList* al)
+{
+    free(al->data);
+}
+
 void parsegraph_ArrayList_clear(parsegraph_ArrayList* al)
 {
     al->_length = 0;

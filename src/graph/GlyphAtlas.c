@@ -49,9 +49,13 @@ parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, 
 int parsegraph_GlyphAtlas_COUNT = 0;
 parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(parsegraph_Surface* surface, float fontSizePixels, UChar* fontName, int fontNameLen, const char* fillStyle)
 {
-    parsegraph_GlyphAtlas* atlas = apr_palloc(surface->pool, sizeof(*atlas));
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+        parsegraph_die("Failed to create GlyphAtlas memory pool.");
+    }
+    parsegraph_GlyphAtlas* atlas = apr_palloc(pool, sizeof(*atlas));
     atlas->surface = surface;
-    atlas->pool = surface->pool;
+    atlas->pool = pool;
 
     atlas->_id = ++parsegraph_GlyphAtlas_COUNT;
     atlas->_fontSize = fontSizePixels;
@@ -77,6 +81,12 @@ parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(parsegraph_Surface* surface, fl
     atlas->_unicode = 0;
 
     return atlas;
+}
+
+void parsegraph_GlyphAtlas_destroy(parsegraph_GlyphAtlas* atlas)
+{
+    parsegraph_GlyphAtlas_destroyFont(atlas);
+    apr_pool_destroy(atlas->pool);
 }
 
 parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas)
@@ -105,9 +115,13 @@ int parsegraph_GlyphAtlas_toString(parsegraph_GlyphAtlas* atlas, char* buf, size
 
 parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len)
 {
-    parsegraph_GlyphData* glyphData = apr_hash_get(glyphAtlas->_glyphData, &glyph, len*sizeof(glyph));
+    parsegraph_GlyphData* glyphData = apr_hash_get(glyphAtlas->_glyphData, glyph, len*sizeof(UChar));
     if(glyphData) {
+        //parsegraph_log("REUSING!!\n");
         return glyphData;
+    }
+    else {
+        //parsegraph_log("CREATING GLYPH FOR %d!!\n", glyph[0]);
     }
     int letterWidth = parsegraph_GlyphAtlas_measureText(glyphAtlas, glyph, len);
 
@@ -136,7 +150,7 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
 
     glyphData = parsegraph_GlyphData_new(glyphPage, glyph, len, glyphAtlas->_x, glyphAtlas->_y, letterWidth, letterHeight);
 
-    apr_hash_set(glyphAtlas->_glyphData, &glyphData->letter, len*sizeof(UChar), glyphData);
+    apr_hash_set(glyphAtlas->_glyphData, glyphData->letter, len*sizeof(UChar), glyphData);
     if(glyphPage->_lastGlyph) {
         glyphPage->_lastGlyph->next = glyphData;
         glyphPage->_lastGlyph = glyphData;
@@ -194,8 +208,8 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         // Accept ARGB32_Premultiplied
         const unsigned char* glyphCanvas = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, texture);
-        unsigned char* swizzled = malloc(4*1024*1024);
-        for(int i = 0; i < 4*1024*1024; i += 4) {
+        unsigned char* swizzled = malloc(4*maxTextureWidth*maxTextureWidth);
+        for(int i = 0; i < 4*maxTextureWidth*maxTextureWidth; i += 4) {
             float a = (float)glyphCanvas[i];
             float r = (float)glyphCanvas[i+1];
             float g = (float)glyphCanvas[i+2];
@@ -231,7 +245,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         glGenerateMipmap(GL_TEXTURE_2D);
 
         parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);
-        glFlush();
+        //glFlush();
         free(swizzled);
     }
 };
@@ -264,7 +278,7 @@ void parsegraph_GlyphAtlas_font(parsegraph_GlyphAtlas* glyphAtlas, UChar* buf, s
 
 int parsegraph_GlyphAtlas_maxTextureWidth(parsegraph_GlyphAtlas* glyphAtlas)
 {
-    return 1024;
+    return 512;
 }
 
 float parsegraph_GlyphAtlas_letterHeight(parsegraph_GlyphAtlas* glyphAtlas)

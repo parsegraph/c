@@ -1,5 +1,6 @@
 #include "CameraBox.h"
 #include "Graph.h"
+#include "../die.h"
 #include "Camera.h"
 #include "CameraBoxPainter.h"
 #include "gl.h"
@@ -8,8 +9,12 @@
 
 parsegraph_CameraBox* parsegraph_CameraBox_new(parsegraph_Graph* graph)
 {
-    apr_pool_t* pool = parsegraph_Graph_surface(graph)->pool;
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, parsegraph_Graph_surface(graph)->pool)) {
+        parsegraph_die("Failed to create CameraBox memory pool.");
+    }
     parsegraph_CameraBox* cbox = apr_palloc(pool, sizeof(*cbox));
+    cbox->pool = pool;
 
     // Camera boxes.
     cbox->_showCameraBoxes = 1;
@@ -22,6 +27,14 @@ parsegraph_CameraBox* parsegraph_CameraBox_new(parsegraph_Graph* graph)
     cbox->_shaders = 0;
 
     return cbox;
+}
+
+void parsegraph_CameraBox_destroy(parsegraph_CameraBox* cbox)
+{
+    if(cbox->_cameraBoxPainter) {
+        parsegraph_CameraBoxPainter_destroy(cbox->_cameraBoxPainter);
+    }
+    apr_pool_destroy(cbox->pool);
 }
 
 int parsegraph_CameraBox_needsRepaint(parsegraph_CameraBox* cbox)
@@ -72,7 +85,10 @@ void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox)
             parsegraph_CameraBoxPainter_clear(cbox->_cameraBoxPainter);
         }
         parsegraph_BlockPainter_initBuffer(cbox->_cameraBoxPainter->_blockPainter, apr_hash_count(cbox->_cameraBoxes));
-        apr_pool_t* pool = parsegraph_Graph_surface(cbox->_graph)->pool;
+        apr_pool_t* pool = 0;
+        if(APR_SUCCESS != apr_pool_create(&pool, cbox->pool)) {
+            parsegraph_die("Failed to create memory pool for CameraBox iteration.");
+        }
         float rect[4];
         parsegraph_Rect_set(rect, 0, 0, 0, 0);
         apr_hash_index_t* hi = apr_hash_first(pool, cbox->_cameraBoxes);
@@ -87,6 +103,7 @@ void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox)
             parsegraph_Rect_setHeight(rect, cameraBox->height/cameraBox->scale);
             parsegraph_CameraBoxPainter_drawBox(cbox->_cameraBoxPainter, name, u_strlen(name), rect, cameraBox->scale);
         }
+        apr_pool_destroy(pool);
         cbox->_cameraBoxDirty = 0;
     }
 }

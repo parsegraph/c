@@ -12,11 +12,16 @@
 
 parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
 {
-    parsegraph_NodePainter* painter = apr_palloc(surface->pool, sizeof(*painter));
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+        parsegraph_die("Failed to create NodePainter memory pool.");
+    }
+    parsegraph_NodePainter* painter = apr_palloc(pool, sizeof(*painter));
+    painter->pool = pool;
 
     painter->_surface = surface;
 
-    painter->_backgroundColor = parsegraph_BACKGROUND_COLOR;
+    parsegraph_Color_copy(painter->_backgroundColor, parsegraph_BACKGROUND_COLOR);
 
     painter->_blockPainter = parsegraph_BlockPainter_new(surface, shaders);
     painter->_renderBlocks = 1;
@@ -28,9 +33,18 @@ parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, 
 
     painter->_renderText = 1;
 
-    painter->_textures = parsegraph_ArrayList_new(surface->pool);
+    painter->_textures = parsegraph_ArrayList_new(painter->pool);
 
     return painter;
+}
+
+void parsegraph_NodePainter_destroy(parsegraph_NodePainter* painter)
+{
+    parsegraph_BlockPainter_destroy(painter->_blockPainter);
+    parsegraph_BlockPainter_destroy(painter->_extentPainter);
+    parsegraph_GlyphPainter_destroy(painter->_glyphPainter);
+    parsegraph_ArrayList_destroy(painter->_textures);
+    apr_pool_destroy(painter->pool);
 }
 
 float* parsegraph_NodePainter_bounds(parsegraph_NodePainter* painter)

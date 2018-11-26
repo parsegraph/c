@@ -22,9 +22,16 @@ parsegraph_Graph* parsegraph_Graph_new(parsegraph_Surface* surface)
         parsegraph_die("Surface must be explicitly provided.");
     }
 
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+        parsegraph_die("Failed to create Graph memory pool.");
+    }
+
     // Construct the graph.
-    parsegraph_Graph* graph = apr_palloc(surface->pool, sizeof(*graph));
+    parsegraph_Graph* graph = apr_palloc(pool, sizeof(*graph));
+    graph->pool = pool;
     graph->_surface = surface;
+    graph->_shaders = apr_hash_make(pool);
     graph->_glyphAtlas = 0;
     graph->_world = parsegraph_World_new(graph);
     graph->_cameraBox = parsegraph_CameraBox_new(graph);
@@ -34,8 +41,6 @@ parsegraph_Graph* parsegraph_Graph_new(parsegraph_Surface* surface)
     graph->_input = parsegraph_Input_new(graph, parsegraph_Graph_camera(graph));
     graph->_piano = parsegraph_AudioKeyboard_new(graph->_camera, 0, 0, 1);
 
-    graph->_shaders = apr_hash_make(graph->_surface->pool);
-
     graph->onScheduleRepaint = 0;
     graph->onScheduleRepaintThisArg = 0;
 
@@ -44,6 +49,16 @@ parsegraph_Graph* parsegraph_Graph_new(parsegraph_Surface* surface)
     parsegraph_Surface_addRenderer(graph->_surface, renderGraph, graph);
 
     return graph;
+}
+
+void parsegraph_Graph_destroy(parsegraph_Graph* graph)
+{
+    parsegraph_AudioKeyboard_destroy(graph->_piano);
+    parsegraph_Input_destroy(graph->_input);
+    parsegraph_Carousel_destroy(graph->_carousel);
+    parsegraph_World_destroy(graph->_world);
+    parsegraph_CameraBox_destroy(graph->_cameraBox);
+    apr_pool_destroy(graph->pool);
 }
 
 apr_hash_t* parsegraph_Graph_shaders(parsegraph_Graph* graph)
@@ -130,6 +145,9 @@ void parsegraph_Graph_plot(parsegraph_Graph* graph, void* arg)
 
 int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
 {
+    if(!graph->_glyphAtlas) {
+        return 0;
+    }
     parsegraph_GlyphAtlas* glyphAtlas = parsegraph_Graph_glyphAtlas(graph);
     //fprintf(stderr, "Painting Graph, timeout=%d\n", timeout);
     apr_hash_set(graph->_shaders, "glyphAtlas", APR_HASH_KEY_STRING, glyphAtlas);
@@ -142,7 +160,7 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
     parsegraph_Carousel_paint(graph->_carousel);
     int rv = parsegraph_World_paint(graph->_world, timeout);
 
-    parsegraph_Input_paint(graph->_input);
+    //parsegraph_Input_paint(graph->_input);
     //parsegraph_AudioKeyboard_prepare(graph->_piano, glyphAtlas, graph->_shaders);
     //parsegraph_AudioKeyboard_paint(graph->_piano);
     return rv;
@@ -150,8 +168,16 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
 
 void parsegraph_Graph_render(parsegraph_Graph* graph)
 {
+    if(!graph->_glyphAtlas) {
+        return;
+    }
     parsegraph_Camera* cam = parsegraph_Graph_camera(graph);
-    float* world = parsegraph_Camera_project(cam);
+
+    apr_pool_t* renderPool = 0;
+    if(APR_SUCCESS != apr_pool_create(&renderPool, graph->pool)) {
+        parsegraph_die("Failed to create render pool for Graph.");
+    }
+    float* world = parsegraph_Camera_project(cam, renderPool);
     parsegraph_World_render(graph->_world, world);
 
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
@@ -159,4 +185,5 @@ void parsegraph_Graph_render(parsegraph_Graph* graph)
     parsegraph_CameraBox_render(graph->_cameraBox, world);
     parsegraph_Input_render(graph->_input, world, parsegraph_Camera_scale(cam));
     //parsegraph_AudioKeyboard_render(graph->_piano, world);
+    apr_pool_destroy(renderPool);
 }

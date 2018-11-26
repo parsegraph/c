@@ -31,6 +31,7 @@ typedef struct parsegraph_Node parsegraph_Node;
 struct parsegraph_NodePainter;
 typedef struct parsegraph_NodePainter parsegraph_NodePainter;
 struct parsegraph_PaintGroup {
+    int refcount;
     parsegraph_Surface* _surface;
     apr_pool_t* pool;
     float _worldX;
@@ -49,6 +50,9 @@ struct parsegraph_PaintGroup {
     struct parsegraph_PaintGroup* _nextPaintGroup;
 };
 typedef struct parsegraph_PaintGroup parsegraph_PaintGroup;
+void parsegraph_PaintGroup_ref(parsegraph_PaintGroup* pg);
+void parsegraph_PaintGroup_unref(parsegraph_PaintGroup* pg);
+
 
 parsegraph_PaintGroup* parsegraph_PaintGroup_new(parsegraph_Surface* surface, parsegraph_Node* root, float worldX, float worldY, float userScale);
 void parsegraph_PaintGroup_destroy(parsegraph_PaintGroup* paintGroup);

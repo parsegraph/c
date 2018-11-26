@@ -24,9 +24,11 @@ struct parsegraph_BufferPageContent {
     float* data;
     int datasize;
     int index;
-    unsigned int glBuffer;
+    int has_glBuffer;
+    GLuint glBuffer;
 };
 typedef struct parsegraph_BufferPageContent parsegraph_BufferPageContent;
+void parsegraph_BufferPage_initContent(struct parsegraph_BufferPageContent* bpc);
 
 struct parsegraph_BufferPage {
     int id;

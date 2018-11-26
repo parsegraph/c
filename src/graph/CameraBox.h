@@ -17,6 +17,7 @@ struct parsegraph_GlyphAtlas;
 typedef struct parsegraph_GlyphAtlas parsegraph_GlyphAtlas;
 
 struct parsegraph_CameraBox {
+apr_pool_t* pool;
 int _showCameraBoxes;
 int _cameraBoxDirty;
 apr_hash_t* _cameraBoxes;
@@ -41,6 +42,7 @@ parsegraph_GlyphAtlas* parsegraph_CameraBox_glyphAtlas(parsegraph_CameraBox* cbo
 void parsegraph_CameraBox_prepare(parsegraph_CameraBox* cbox, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
 void parsegraph_CameraBox_setCamera(parsegraph_CameraBox* cbox, UChar* name, int len, parsegraph_Camera* camera);
 void parsegraph_CameraBox_removeCamera(parsegraph_CameraBox* cbox, UChar* name, int len);
+void parsegraph_CameraBox_destroy(parsegraph_CameraBox* cbox);
 void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox);
 void parsegraph_CameraBox_render(parsegraph_CameraBox* cbox, float* world);
 void parsegraph_CameraBox_scheduleRepaint(parsegraph_CameraBox* cbox);

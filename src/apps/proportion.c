@@ -63,9 +63,22 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_AnimationTimer_schedule(proportionApp.renderTimer);
 }
 
+void parsegraph_stop(parsegraph_Surface* surf)
+{
+    parsegraph_Surface_uninstall(surf);
+    if(proportionApp.graph) {
+        if(proportionApp.graph->_glyphAtlas) {
+            parsegraph_GlyphAtlas_destroy(proportionApp.graph->_glyphAtlas);
+        }
+        parsegraph_Graph_destroy(proportionApp.graph);
+    }   
+    parsegraph_Surface_destroy(surf);
+    apr_pool_destroy(proportionApp.pool);
+}
+
 parsegraph_Surface* parsegraph_init(void* peer, int w, int h)
 {
-    proportionApp.pool = 0;
+    memset(&proportionApp, 0, sizeof(proportionApp));
     if(APR_SUCCESS != apr_pool_create(&proportionApp.pool, 0)) {
         parsegraph_die("Failed to create proportion app memory pool");
     }

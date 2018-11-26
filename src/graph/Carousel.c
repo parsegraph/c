@@ -8,10 +8,11 @@
 
 parsegraph_Carousel* parsegraph_Carousel_new(parsegraph_Camera* camera, float* backgroundColor)
 {
-    apr_pool_t* pool = camera->surface->pool;
-
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, camera->surface->pool)) {
+        parsegraph_die("Failed to create carousel memory pool.");
+    }
     parsegraph_Carousel* carousel = apr_palloc(pool, sizeof(*carousel));
-
     carousel->pool = pool;
     carousel->_updateRepeatedly = 0;
     carousel->_showScale = 1;
@@ -47,6 +48,16 @@ parsegraph_Carousel* parsegraph_Carousel_new(parsegraph_Camera* camera, float* b
 
     carousel->_selectedPlot = 0;
     return carousel;
+}
+
+void parsegraph_Carousel_destroy(parsegraph_Carousel* carousel)
+{
+    if(carousel->_fanPainter) {
+        parsegraph_FanPainter_destroy(carousel->_fanPainter);
+    }
+    parsegraph_ArrayList_destroy(carousel->_carouselPlots);
+    parsegraph_ArrayList_destroy(carousel->_carouselCallbacks);
+    apr_pool_destroy(carousel->pool);
 }
 
 parsegraph_Camera* parsegraph_Carousel_camera(parsegraph_Carousel* carousel)
@@ -106,14 +117,16 @@ void parsegraph_Carousel_addToCarousel(parsegraph_Carousel* carousel, parsegraph
     if(!node) {
         parsegraph_die("Node must not be null");
     }
-    struct parsegraph_CarouselCallback* cb = apr_palloc(carousel->_camera->surface->pool, sizeof(*cb));
+    struct parsegraph_CarouselCallback* cb = apr_palloc(carousel->pool, sizeof(*cb));
     cb->callback = callback;
     cb->thisArg = thisArg;
     parsegraph_ArrayList_push(carousel->_carouselCallbacks, cb);
 
     parsegraph_PaintGroup* pg = parsegraph_Node_localPaintGroup(node);
     if(!pg) {
-        parsegraph_Node_setPaintGroup(node, parsegraph_PaintGroup_new(carousel->_camera->surface, node, 0, 0, 1));
+        pg = parsegraph_PaintGroup_new(carousel->_camera->surface, node, 0, 0, 1);
+        parsegraph_Node_setPaintGroup(node, pg);
+        parsegraph_PaintGroup_unref(pg);
     }
     parsegraph_ArrayList_push(carousel->_carouselPlots, node);
     //parsegraph_log("Added to carousel");
@@ -173,7 +186,7 @@ int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, fl
     // Transform client coords to world coords.
     float* mouseInWorld = matrixTransform2D(
         carousel->pool,
-        makeInverse3x3(carousel->pool, parsegraph_Camera_worldMatrix(parsegraph_Carousel_camera(carousel))),
+        makeInverse3x3(carousel->pool, parsegraph_Camera_worldMatrix(parsegraph_Carousel_camera(carousel), carousel->pool)),
         x, y
     );
     x = mouseInWorld[0];
@@ -222,10 +235,15 @@ int parsegraph_Carousel_mouseOverCarousel(parsegraph_Carousel* carousel, float x
         return 0;
     }
 
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, carousel->pool)) {
+        parsegraph_die("Failed to create Carousel mouseover pool");
+    }
+
     float* mouseInWorld = matrixTransform2D(
-        carousel->pool,
-        makeInverse3x3(carousel->pool,
-            parsegraph_Camera_worldMatrix(parsegraph_Carousel_camera(carousel))
+        pool,
+        makeInverse3x3(pool,
+            parsegraph_Camera_worldMatrix(parsegraph_Carousel_camera(carousel), pool)
         ),
         x, y
     );
@@ -410,7 +428,7 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
 
     // Paint the background highlighting fan.
     if(!carousel->_fanPainter) {
-        carousel->_fanPainter = parsegraph_FanPainter_new(carousel->pool);
+        carousel->_fanPainter = parsegraph_FanPainter_new(carousel->pool, carousel->_shaders);
     }
     else {
         parsegraph_FanPainter_clear(carousel->_fanPainter);
@@ -419,12 +437,14 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     parsegraph_FanPainter* fanPainter = carousel->_fanPainter;
     parsegraph_FanPainter_setAscendingRadius(fanPainter, parsegraph_Carousel_showScale(carousel) * fanPadding * carousel->_carouselSize);
     parsegraph_FanPainter_setDescendingRadius(fanPainter, parsegraph_Carousel_showScale(carousel) * fanPadding * 2 * carousel->_carouselSize);
+
+    float startColor[] = {1, 1, 1, 1};
+    float endColor[] = {.5, .5, .5, .4};
     parsegraph_FanPainter_selectRad(
         fanPainter,
         carousel->_carouselX, carousel->_carouselY,
         0, 3.14159 * 2.0f,
-        parsegraph_Color_new(carousel->pool, 1, 1, 1, 1),
-        parsegraph_Color_new(carousel->pool, .5, .5, .5, .4)
+        startColor, endColor
     );
 
     carousel->_carouselPaintingDirty = 0;

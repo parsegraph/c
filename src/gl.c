@@ -5,6 +5,40 @@
 #include <math.h>
 #include <stdlib.h>
 #include "graph/log.h"
+#include "die.h"
+
+GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, const char* vertexShader, const char* fragShader)
+{
+    // Compile the shader program.
+    GLuint* programID = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
+    if(programID) {
+        return *programID;
+    }
+
+    GLuint program = glCreateProgram();
+
+    glAttachShader(
+        program, compileShader(
+            vertexShader, GL_VERTEX_SHADER
+        )
+    );
+
+    glAttachShader(
+        program, compileShader(fragShader, GL_FRAGMENT_SHADER)
+    );
+
+    glLinkProgram(program);
+    GLint st;
+    glGetProgramiv(program, GL_LINK_STATUS, &st);
+    if(st != GL_TRUE) {
+        parsegraph_die("'%s' shader program failed to link.\n", shaderName);
+    }
+
+    GLuint* progId = apr_palloc(apr_hash_pool_get(shaders), sizeof(GLuint));
+    *progId = program;
+    apr_hash_set(shaders, shaderName, APR_HASH_KEY_STRING, progId);
+    return program;
+}
 
 // The following methods were copied from webglfundamentals.org:
 

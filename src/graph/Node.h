@@ -43,6 +43,7 @@ typedef struct parsegraph_Scene parsegraph_Scene;
 struct parsegraph_Node {
     apr_pool_t* pool;
     int _id;
+    int refcount;
     parsegraph_DirectionData _neighbors[6];
 
     parsegraph_PaintGroup* _paintGroup;
@@ -96,7 +97,8 @@ void(*render)(parsegraph_Scene*, float, float);
 extern int parsegraph_Node_COUNT;
 
 parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_Node* fromNode, int parentDirection);
-void parsegraph_Node_destroy(parsegraph_Node* node);
+void parsegraph_Node_ref(parsegraph_Node* node);
+void parsegraph_Node_unref(parsegraph_Node* node);
 void parsegraph_chainTab(parsegraph_Node* a, parsegraph_Node* b, parsegraph_Node** swappedOut);
 float parsegraph_Node_x(parsegraph_Node* node);
 float parsegraph_Node_y(parsegraph_Node* node);
@@ -178,7 +180,7 @@ parsegraph_Node* parsegraph_Node_connectNode(parsegraph_Node* node, int inDirect
 int parsegraph_Node_type(parsegraph_Node* node);
 void parsegraph_Node_setType(parsegraph_Node* node, int newType);
 void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* parentNode, int fromDirection);
-parsegraph_Node* parsegraph_Node_eraseNode(parsegraph_Node* node, int givenDirection);
+void parsegraph_Node_eraseNode(parsegraph_Node* node, int givenDirection);
 parsegraph_Node* parsegraph_Node_disconnectNode(parsegraph_Node* node, int givenDirection);
 int parsegraph_Node_hasChangeListener(parsegraph_Node* node);
 float parsegraph_Node_lineLengthAt(parsegraph_Node* node, int direction);

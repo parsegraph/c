@@ -21,6 +21,16 @@ parsegraph_AudioKeyboard* parsegraph_AudioKeyboard_new(parsegraph_Camera* camera
     return piano;
 }
 
+void parsegraph_AudioKeyboard_destroy(parsegraph_AudioKeyboard* piano)
+{
+    if(piano->_blackKeyPainter) {
+        parsegraph_BlockPainter_destroy(piano->_blackKeyPainter);
+    }
+    if(piano->_whiteKeyPainter) {
+        parsegraph_BlockPainter_destroy(piano->_whiteKeyPainter);
+    }
+}
+
 int parsegraph_AudioKeyboard_prepared(parsegraph_AudioKeyboard* piano)
 {
     return 1;

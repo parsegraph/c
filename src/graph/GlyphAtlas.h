@@ -89,6 +89,7 @@ parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, 
 
 // These are platform-specific.
 void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas);
+void parsegraph_GlyphAtlas_destroy(parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len);
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas);

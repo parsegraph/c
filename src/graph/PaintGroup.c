@@ -23,11 +23,24 @@ parsegraph_PaintState* parsegraph_PaintState_new(apr_pool_t* pool, parsegraph_Pa
     return ps;
 }
 
+void parsegraph_PaintState_destroy(parsegraph_PaintState* ps)
+{
+    parsegraph_ArrayList_destroy(ps->ordering);
+}
+
 parsegraph_PaintGroup* parsegraph_PaintGroup_new(parsegraph_Surface* surface, parsegraph_Node* root, float worldX, float worldY, float userScale)
 {
-    parsegraph_PaintGroup* pg = apr_palloc(surface->pool, sizeof(*pg));
+    if(!root) {
+        parsegraph_die("A real Node root must be provided when creating a PaintGroup.");
+    }
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, root->pool)) {
+        parsegraph_die("Failed to create PaintGroup memory pool.");
+    }
+    parsegraph_PaintGroup* pg = apr_palloc(pool, sizeof(*pg));
     pg->_surface = surface;
-    pg->pool = surface->pool;
+    pg->pool = pool;
+    pg->refcount = 1;
 
     pg->_id = parsegraph_PaintGroup_COUNT++;
 
@@ -35,6 +48,7 @@ parsegraph_PaintGroup* parsegraph_PaintGroup_new(parsegraph_Surface* surface, pa
 
     pg->_root = root;
     pg->_dirty = 1;
+    pg->_parent = 0;
     pg->_painter = 0;
     pg->_enabled = 1;
 
@@ -48,8 +62,38 @@ parsegraph_PaintGroup* parsegraph_PaintGroup_new(parsegraph_Surface* surface, pa
     pg->_worldX = worldX;
     pg->_worldY = worldY;
     pg->_userScale = userScale;
+    //parsegraph_log("NEW paint group %d\n", pg->_id);
 
     return pg;
+}
+
+void parsegraph_PaintGroup_ref(parsegraph_PaintGroup* pg)
+{
+    //parsegraph_log("REF paint group %d\n", pg->_id);
+    ++pg->refcount;
+}
+
+void parsegraph_PaintGroup_unref(parsegraph_PaintGroup* pg)
+{
+    //parsegraph_log("UNREF paint group %d\n", pg->_id);
+    if(--pg->refcount > 0) {
+        return;
+    }
+
+    if(pg->_previousPaintState) {
+        parsegraph_PaintState_destroy(pg->_previousPaintState);
+    }
+    if(pg->_painter) {
+        parsegraph_NodePainter_destroy(pg->_painter);
+    }   
+    if(pg->_childPaintGroups) {
+        for(int i = 0; i < parsegraph_ArrayList_length(pg->_childPaintGroups); ++i) {
+            parsegraph_PaintGroup* child = parsegraph_ArrayList_at(pg->_childPaintGroups, i);
+            //parsegraph_PaintGroup_unref(child);
+        }
+        parsegraph_ArrayList_destroy(pg->_childPaintGroups);
+    }
+    apr_pool_destroy(pg->pool);
 }
 
 void parsegraph_PaintGroup_clear(parsegraph_PaintGroup* pg)
@@ -101,7 +145,11 @@ parsegraph_Node* parsegraph_PaintGroup_nodeUnderCoords(parsegraph_PaintGroup* pg
 
 void parsegraph_PaintGroup_assignParent(parsegraph_PaintGroup* pg, parsegraph_PaintGroup* parentGroup)
 {
+    if(pg->_parent) {
+        //parsegraph_PaintGroup_unref(pg->_parent);
+    }
     pg->_parent = parentGroup;
+    //parsegraph_PaintGroup_ref(pg->_parent);
 }
 
 void parsegraph_PaintGroup_markDirty(parsegraph_PaintGroup* pg)
@@ -287,7 +335,11 @@ void parsegraph_PaintGroup_renderIteratively(parsegraph_PaintGroup* pg, float* w
 
 void parsegraph_PaintGroup_traverseBreadth(parsegraph_PaintGroup* pg, void(*callback)(void*, parsegraph_PaintGroup*, int), void* callbackThisArg)
 {
-    parsegraph_ArrayList* ordering = parsegraph_ArrayList_new(pg->pool);
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, pg->pool)) {
+        parsegraph_die("Failed to create breadth traversal memory pool.");
+    }
+    parsegraph_ArrayList* ordering = parsegraph_ArrayList_new(pool);
     parsegraph_ArrayList_push(ordering, pg);
 
     // Build the node list.
@@ -296,10 +348,13 @@ void parsegraph_PaintGroup_traverseBreadth(parsegraph_PaintGroup* pg, void(*call
         callback(callbackThisArg, paintGroup, i);
         parsegraph_ArrayList_concat(ordering, paintGroup->_childPaintGroups);
     }
+    parsegraph_ArrayList_destroy(ordering);
+    apr_pool_destroy(pool);
 }
 
 void parsegraph_PaintGroup_addChild(parsegraph_PaintGroup* paintGroup, parsegraph_PaintGroup* childPaintGroup)
 {
+    //parsegraph_PaintGroup_ref(childPaintGroup);
     parsegraph_ArrayList_push(paintGroup->_childPaintGroups, childPaintGroup);
 }
 
@@ -321,7 +376,10 @@ void parsegraph_PaintGroup_render(parsegraph_PaintGroup* pg, float* world, parse
 
     //console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
     //console.log("Rendering", this, this._painter.bounds());
-    apr_pool_t* pool = pg->pool;
+    apr_pool_t* pool = 0;
+    if(APR_SUCCESS != apr_pool_create(&pool, pg->pool)) {
+        parsegraph_die("Failed to create PaintGroup render pool.");
+    }
     parsegraph_NodePainter_render(
         pg->_painter,
         matrixMultiply3x3(pool,
@@ -330,6 +388,7 @@ void parsegraph_PaintGroup_render(parsegraph_PaintGroup* pg, float* world, parse
         ),
         pg->_userScale * (camera ? parsegraph_Camera_scale(camera) : 1)
     );
+    apr_pool_destroy(pool);
 }
 
 static void addNodeForeach(parsegraph_ArrayList* ordering, parsegraph_Node* node, int direction)
@@ -367,6 +426,8 @@ void parsegraph_foreachPaintGroupNodes(parsegraph_Node* root, void(*callback)(vo
         addNodeForeach(ordering, node, parsegraph_FORWARD);
         callback(callbackThisArg, node);
     }
+
+    parsegraph_ArrayList_destroy(ordering);
 }
 
 static void addNodeFind(parsegraph_ArrayList* ordering, parsegraph_Node* node, int direction, void(*callback)(void*, parsegraph_PaintGroup*), void* callbackThisArg)
@@ -403,4 +464,5 @@ void parsegraph_findChildPaintGroups(parsegraph_Node* root, void(*callback)(void
         addNodeFind(ordering, node, parsegraph_BACKWARD, callback, callbackThisArg);
         addNodeFind(ordering, node, parsegraph_FORWARD, callback, callbackThisArg);
     }
+    parsegraph_ArrayList_destroy(ordering);
 };
