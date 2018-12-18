@@ -1,0 +1,3 @@
+#!/bin/bash
+
+apt install libqt5gui5 libgbm-dev libpango1.0-dev libosmesa6-dev libglu1-mesa-dev libssl-dev apache2-dev libegl1-mesa-dev libncurses5-dev libicu-dev libdrm-dev libevdev-dev libpango1.0-0 libharfbuzz-dev qtbase5-dev libaprutil1-dev

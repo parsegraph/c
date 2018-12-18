@@ -23,7 +23,7 @@ AC_PROG_LIBTOOL
 # Include Apache
 AC_SUBST(httpd_CFLAGS)
 AC_SUBST(httpd_LIBS)
-httpd_CFLAGS="-I/usr/include/httpd -I/usr/include/apr-1"
+httpd_CFLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-1"
 httpd_LIBS="-lapr-1 -laprutil-1 -fPIC"
 
 # Include pthreads
@@ -37,12 +37,12 @@ PKG_CHECK_MODULES(openssl, [openssl],
     [AC_MSG_ERROR([parsegraph requires openssl-devel])]
 )
 
-PKG_CHECK_MODULES(parsegraph_common, [egl gl ncurses icu-uc icu-io icu-i18n],
+PKG_CHECK_MODULES(parsegraph_common, [apr-1 egl gl ncurses icu-uc icu-io icu-i18n],
     [],
     [AC_MSG_ERROR([parsegraph requires make httpd-devel apr-devel apr-util-devel autoconf automake libtool mesa-libEGL-devel mesa-libGL-devel ncurses-devel libicu-devel])]
 )
 
-PKG_CHECK_MODULES(parsegraph, [cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n harfbuzz],
+PKG_CHECK_MODULES(parsegraph, [cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n harfbuzz osmesa],
     [],
     [AC_MSG_ERROR([parsegraph KMS requires make httpd-devel apr-devel apr-util-devel autoconf automake libtool pango-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel mesa-libGL-devel libudev-devel libinput-devel libevdev-devel ncurses-devel libicu-devel harfbuzz-devel])]
 )
