@@ -6,6 +6,10 @@
 #include <apr_pools.h>
 #include <apr_hash.h>
 
+#ifndef HIGHP
+#define HIGHP "highp"
+#endif // HIGHP
+
 GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, const char* fragShader, const char* vertexShader);
 GLuint compileShader(const char* shaderSource, GLenum shaderType);
 float* parsegraph_generateRectangleVertices(apr_pool_t* pool, float x, float y, float w, float h);

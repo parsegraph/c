@@ -10,15 +10,20 @@ valgrind:
 	$(VALGRIND) .libs/lt-$(PROG) -- tmpdir
 .PHONY: valgrind
 
-lib_LTLIBRARIES = libparsegraph-Qt.la libparsegraph-kms.la
-
+lib_LTLIBRARIES = libparsegraph-Qt.la
 libparsegraph_Qt_la_CFLAGS = -g -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@
 libparsegraph_Qt_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @parsegraph_cxx_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_Qt_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
 
+lib_LTLIBRARIES += libparsegraph-kms.la
 libparsegraph_kms_la_CFLAGS = -g -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@ @parsegraph_CFLAGS@
 libparsegraph_kms_la_LDFLAGS = -fPIC -lm -lrt @pthread_LIBS@ @httpd_LIBS@ @parsegraph_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_kms_la_LIBADD =
+
+lib_LTLIBRARIES += libparsegraph-osmesa.la
+libparsegraph_osmesa_la_CFLAGS = -DHIGHP="\"\"" -g -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@ @parsegraph_CFLAGS@
+libparsegraph_osmesa_la_LDFLAGS = -fPIC -lm -lrt @pthread_LIBS@ @httpd_LIBS@ @parsegraph_LIBS@ @parsegraph_common_LIBS@
+libparsegraph_osmesa_la_LIBADD =
 
 nobase_include_HEADERS = \
 	die.h \
@@ -87,27 +92,20 @@ parsegraph_common_SOURCES = \
 	id.c \
 	parsegraph_math.c \
 	graph/Color.c \
-	graph/BlockPainter.c \
-	graph/GlyphPainter.c \
 	graph/LayoutPreference.c \
 	graph/LayoutState.c \
 	graph/Caret.c \
 	graph/NodeFit.c \
 	graph/NodeType.c \
-	graph/TexturePainter.c \
 	graph/Node.c \
-	graph/NodePainter.c \
 	graph/NodeList.c \
 	graph/PaintGroup.c \
 	graph/CameraBox.c \
-	graph/CameraBoxPainter.c \
 	graph/Carousel.c \
 	graph/Rect.c \
 	graph/Size.c \
-	graph/SpotlightPainter.c \
 	graph/Status.c \
 	graph/log.c \
-	graph/FanPainter.c \
 	graph/Label.c \
 	graph/NodeAlignment.c \
 	graph/NodeDirection.c \
@@ -122,10 +120,8 @@ parsegraph_common_SOURCES = \
 	alpha/Maths.c \
 	alpha/BlockIDs.c \
 	alpha/BlockStuff.c \
-	alpha/WeetPainter.c \
 	alpha/Physical.c \
 	alpha/Cam.c \
-	alpha/FacePainter.c \
 	alpha/Cluster.c \
 	alpha/GLWidget.c \
 	alpha/Input.c \
@@ -137,7 +133,16 @@ parsegraph_common_SOURCES = \
 	widgets/showDirectory.c \
 	graph/AudioKeyboard.c \
 	gl.c \
-	unicode.c
+	unicode.c \
+	graph/BlockPainter.c \
+	graph/GlyphPainter.c \
+	graph/TexturePainter.c \
+	graph/NodePainter.c \
+	graph/CameraBoxPainter.c \
+	graph/SpotlightPainter.c \
+	graph/FanPainter.c \
+	alpha/WeetPainter.c \
+	alpha/FacePainter.c
 
 libparsegraph_Qt_la_SOURCES = $(parsegraph_common_SOURCES) graph/Camera-novflip.c
 
@@ -147,6 +152,8 @@ libparsegraph_kms_la_SOURCES = $(parsegraph_common_SOURCES) \
 	graph/GlyphAtlas-pango.c \
 	timing.c \
 	timing-linux.c
+
+libparsegraph_osmesa_la_SOURCES = $(libparsegraph_kms_la_SOURCES)
 
 graph/libparsegraph-GlyphAtlas.a: graph/GlyphAtlas.cpp graph/GlyphAtlas.c graph/GlyphAtlas.h Makefile
 	gcc -fPIC -c $(libparsegraph_Qt_la_CFLAGS) -I. graph/GlyphAtlas.c -ograph/GlyphAtlas-c.o
@@ -160,7 +167,7 @@ libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
-bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion cxx_text parsegraph_kms_text cxx_dir parsegraph_kms_dir
+bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion cxx_text parsegraph_kms_text cxx_dir parsegraph_kms_dir parsegraph_osmesa_proportion parsegraph_osmesa_text
 
 parsegraph_kms_proportion_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
@@ -170,6 +177,17 @@ parsegraph_kms_proportion_LDADD = libparsegraph-kms.la
 parsegraph_kms_proportion_SOURCES = \
 	main.c apps/proportion.c
 
+parsegraph_osmesa_extra = -DHIGHP="\"\""
+
+parsegraph_osmesa_proportion_CFLAGS = \
+	$(parsegraph_osmesa_extra) \
+	$(libparsegraph_osmesa_la_CFLAGS) \
+	-I$(top_SRCDIR)
+parsegraph_osmesa_proportion_LDFLAGS = $(libparsegraph_osmesa_la_LDFLAGS)
+parsegraph_osmesa_proportion_LDADD = libparsegraph-osmesa.la
+parsegraph_osmesa_proportion_SOURCES = \
+	osmesa.c apps/proportion.c
+
 parsegraph_kms_text_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
@@ -177,6 +195,15 @@ parsegraph_kms_text_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
 parsegraph_kms_text_LDADD = libparsegraph-kms.la
 parsegraph_kms_text_SOURCES = \
 	main.c apps/text.c
+
+parsegraph_osmesa_text_CFLAGS = \
+	$(parsegraph_osmesa_extra) \
+	$(libparsegraph_osmesa_la_CFLAGS) \
+	-I$(top_SRCDIR)
+parsegraph_osmesa_text_LDFLAGS = $(libparsegraph_osmesa_la_LDFLAGS)
+parsegraph_osmesa_text_LDADD = libparsegraph-osmesa.la
+parsegraph_osmesa_text_SOURCES = \
+	osmesa.c apps/text.c
 
 parsegraph_kms_dir_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \

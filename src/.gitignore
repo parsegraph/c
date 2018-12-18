@@ -5,6 +5,8 @@ parsegraph_kms_primes
 parsegraph_kms_dir
 parsegraph_kms_text
 parsegraph_kms_proportion
+parsegraph_osmesa_text
+parsegraph_osmesa_proportion
 cxx_proportion
 cxx_parsegraph
 cxx_primes
