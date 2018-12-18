@@ -38,6 +38,7 @@ typedef struct parsegraph_TouchEvent parsegraph_TouchEvent;
 struct parsegraph_Input {
 parsegraph_ArrayList* _memoryTester;
 int _id;
+int _noInput;
 apr_pool_t* pool;
 parsegraph_Graph* _graph;
 parsegraph_Camera* _camera;
@@ -112,6 +113,7 @@ int parsegraph_Input_countTouches(parsegraph_Input* input);
 void parsegraph_Input_destroy(parsegraph_Input* input);
 void parsegraph_Input_transformPos(parsegraph_Input* input, float sx, float sy, float* dx, float* dy);
 void parsegraph_Input_setCursorShown(parsegraph_Input* input, int shown);
+void parsegraph_Input_setNoInput(parsegraph_Input* input);
 
 extern const char* parsegraph_MOVE_UPWARD_KEY;
 extern const char* parsegraph_MOVE_DOWNWARD_KEY;

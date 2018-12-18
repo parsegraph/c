@@ -41,6 +41,11 @@ const char* parsegraph_ZOOM_OUT_KEY = "ZoomOut";
 
 static int parsegraph_INPUT_COUNT = 0;
 
+void parsegraph_Input_setNoInput(parsegraph_Input* input)
+{
+    input->_noInput = 1;
+}
+
 parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera)
 {
     apr_pool_t* pool = 0;
@@ -59,6 +64,8 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->_id = ++parsegraph_INPUT_COUNT;
 
     input->attachedMouseListener = 0;
+
+    input->_noInput = 0;
 
     input->touchX = 0;
     input->touchY = 0;
@@ -1258,6 +1265,10 @@ void parsegraph_Input_paint(parsegraph_Input* input)
     parsegraph_SpotlightPainter_clear(input->_caretSpotlightPainter);
     parsegraph_SpotlightPainter_clear(input->_cursorSpotlightPainter);
 
+    if(input->_noInput) {
+        return;
+    }
+
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     if(10 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
@@ -1369,6 +1380,10 @@ int parsegraph_Input_focusedLabel(parsegraph_Input* input)
 
 void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
 {
+    if(input->_noInput) {
+        return;
+    }
+
     parsegraph_Input_paint(input);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
