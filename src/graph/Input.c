@@ -52,6 +52,8 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->_graph = graph;
     input->_camera = camera;
 
+    input->_memoryTester = parsegraph_ArrayList_new(input->pool);
+
     clock_gettime(CLOCK_REALTIME, &input->_startTime);
 
     input->_id = ++parsegraph_INPUT_COUNT;
@@ -65,6 +67,7 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->cursorWorldPos[1] = 0;
     memset(input->cursorScreenPos, 0, sizeof(float)*2);
 
+    input->_cursorShown = 1;
     input->has_mousedown = 0;
     input->has_touchdown = 0;
     input->mousedownX = 0;
@@ -136,9 +139,10 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
 
 void parsegraph_Input_destroy(parsegraph_Input* input)
 {
+    parsegraph_ArrayList_destroy(input->_memoryTester);
     if(input->_debugLabel) {
         parsegraph_Label_destroy(input->_debugLabel);
-    }   
+    }
     if(input->_glyphPainter) {
         parsegraph_GlyphPainter_destroy(input->_glyphPainter);
     }
@@ -159,12 +163,27 @@ void parsegraph_Input_destroy(parsegraph_Input* input)
     apr_pool_destroy(input->pool);
 }
 
-void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy)
+void parsegraph_Input_mousemove(parsegraph_Input* input, float x, float y, int isAbsolute)
 {
-    input->cursorScreenPos[0] += dx;
-    input->cursorScreenPos[1] += dy;
+    float dx, dy;
+    if(isAbsolute) {
+        dx = x - input->cursorScreenPos[0];
+        dy = y - input->cursorScreenPos[1];
+        input->cursorScreenPos[0] = x;
+        input->cursorScreenPos[1] = y;
+        parsegraph_Input_transformPos(input, x, y, input->cursorWorldPos, input->cursorWorldPos + 1);
+    }
+    else {
+        dx = x;
+        dy = y;
+        input->cursorScreenPos[0] += x;
+        input->cursorScreenPos[1] += y;
 
-    float scale = parsegraph_Camera_scale(input->_camera);
+        float scale = parsegraph_Camera_scale(input->_camera);
+        input->cursorWorldPos[0] += x*scale;
+        input->cursorWorldPos[1] += y*scale;
+    }
+
     if(parsegraph_Carousel_isCarouselShown(parsegraph_Graph_carousel(input->_graph))) {
         parsegraph_Input_Dispatch(input,
             parsegraph_Carousel_mouseOverCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]),
@@ -173,9 +192,6 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy)
         );
         return;
     }
-
-    input->cursorWorldPos[0] += dx*scale;
-    input->cursorWorldPos[1] += dy*scale;
 
     // Moving during a mousedown i.e. dragging (or zooming)
     if(input->attachedMouseListener) {
@@ -189,6 +205,11 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy)
         "mousemove world",
         0
     );
+}
+
+void parsegraph_Input_setCursorShown(parsegraph_Input* input, int shown)
+{
+    input->_cursorShown = shown;
 }
 
 void parsegraph_Input_mousedown(parsegraph_Input* input)
@@ -332,7 +353,7 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
     if(
         parsegraph_timediffMs(&now, &input->mousedownTime) < parsegraph_CLICK_DELAY_MILLIS
     ) {
-        //console.log("Click detected");
+        //parsegraph_log("Click detected.\n");
         if(input->isDoubleClick) {
             parsegraph_Input_afterMouseTimeout(input);
             return;
@@ -381,7 +402,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
     }
 
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
-    //parsegraph_log("Key pressed: %s\n", keyName);
+    //parsegraph_log("Input deduced key pressed: %s\n", keyName);
     if(input->selectedSlider) {
         if(strlen(keyName) == 0) {
             return;
@@ -409,6 +430,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
         }
     }
     else if(input->_focusedNode && input->focused) {
+        //parsegraph_log("Node starting to receive key '%s'\n", keyName);
         if(strlen(keyName) == 0) {
             return;
         }
@@ -447,13 +469,15 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
                 parsegraph_Node* neighbor = parsegraph_Node_nodeAt(node, parsegraph_BACKWARD);
                 if(neighbor) {
                     input->_focusedNode = neighbor;
+                    parsegraph_Node_showNodeInCamera(input->_focusedNode, input->_camera, 1);
                     input->_focusedLabel = 1;
-                    parsegraph_Graph_scheduleRepaint(node->_graph);
+                    parsegraph_Graph_scheduleRepaint(input->_graph);
                     return;
                 }
                 neighbor = parsegraph_Node_nodeAt(node, parsegraph_OUTWARD);
                 if(neighbor) {
                     input->_focusedNode = neighbor;
+                    parsegraph_Node_showNodeInCamera(input->_focusedNode, input->_camera, 1);
                     input->_focusedLabel = 1;
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     return;
@@ -467,6 +491,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
                 ) {
                     input->_focusedNode = parsegraph_Node_nodeAt(node, parsegraph_INWARD);
                     input->_focusedLabel = 1;
+                    parsegraph_Node_showNodeInCamera(input->_focusedNode, input->_camera, 1);
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     return;
                 }
@@ -475,6 +500,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
                 if(neighbor) {
                     input->_focusedNode = neighbor;
                     input->_focusedLabel = !ctrlKey;
+                    parsegraph_Node_showNodeInCamera(neighbor, input->_camera, 1);
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     return;
                 }
@@ -506,16 +532,18 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
                 parsegraph_Node* neighbor = parsegraph_Node_nodeAt(node, parsegraph_DOWNWARD);
                 if(neighbor) {
                     input->_focusedNode = neighbor;
+                    parsegraph_Node_showNodeInCamera(neighbor, input->_camera, 1);
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     input->_focusedLabel = 1;
                     return;
                 }
                 break;
             }
-            else if(!strcmp(keyName, parsegraph_MOVE_DOWNWARD_KEY)) {
+            else if(!strcmp(keyName, parsegraph_MOVE_UPWARD_KEY)) {
                 parsegraph_Node* neighbor = parsegraph_Node_nodeAt(node, parsegraph_UPWARD);
                 if(neighbor) {
                     input->_focusedNode = neighbor;
+                    parsegraph_Node_showNodeInCamera(neighbor, input->_camera, 1);
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     input->_focusedLabel = 1;
                     return;
@@ -531,6 +559,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
                     input->_focusedNode->_nextTabNode;
                 if(toNode) {
                     input->_focusedNode = toNode;
+                    parsegraph_Node_showNodeInCamera(input->_focusedNode, input->_camera, 1);
                     parsegraph_Graph_scheduleRepaint(input->_graph);
                     //event.preventDefault();
                     break;
@@ -563,6 +592,15 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
             return;
         }
     }
+
+    /*if(!strcmp(keyName, "m")) {
+        for(int i = 0; i < 10000; ++i) {
+            parsegraph_ArrayList_push(input->_memoryTester, 0);
+        }
+        for(int i = 0; i < parsegraph_ArrayList_length(input->_memoryTester); ++i) {
+            parsegraph_ArrayList_replace(input->_memoryTester, i, (void*)(long)rand());
+        }
+    }*/
 
     if(parsegraph_Input_Get(input, keyName)) {
         // Already processed.
@@ -740,7 +778,7 @@ const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const cha
     if(!strcmp(keyName, "+") || !strcmp(keyName, "=")) {
         return "ZoomIn";
     }
-    switch(keyCode) {
+/*    switch(keyCode) {
         case 13: return "Enter"; break;
         case 27: return "Escape"; break;
         case 37: return "ArrowLeft"; break;
@@ -748,6 +786,7 @@ const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const cha
         case 39: return "ArrowRight"; break;
         case 40: return "ArrowDown"; break;
     }
+*/
     return keyName;
 }
 
@@ -762,7 +801,7 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
     //console.log(mouseInWorld);
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(parsegraph_Graph_world(input->_graph), mouseInWorld[0], mouseInWorld[1]);
     if(!selectedNode) {
-        //console.log("No node found under coords:", mouseInWorld);
+        //parsegraph_log("No node found under coords: %s, %s\n", mouseInWorld[0], mouseInWorld[1]);
         return 0;
     }
 
@@ -787,17 +826,20 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
 
     // Check if the selected node has a click listener.
     if(parsegraph_Node_hasClickListener(selectedNode)) {
-        //console.log("Selected Node has click listener", selectedNode);
+        //parsegraph_log("Selected Node %d has click listener", selectedNode->_id);
         int rv = parsegraph_Node_click(selectedNode, "");
         if(rv != 0) {
             return selectedNode;
         }
     }
+    else {
+        //parsegraph_log("Selected Node %d has no click listener.", selectedNode->_id);
+    }
 
     // Check if the label was clicked.
     //console.log("Clicked");
     if(selectedNode->_realLabel && !isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_realLabel)) {
-        //console.log("Clicked label");
+        //parsegraph_log("Clicked label.\n");
         parsegraph_Label_click(selectedNode->_realLabel,
             (mouseInWorld[0] - selectedNode->_labelPos[0]) / selectedNode->_labelPos[2],
             (mouseInWorld[1] - selectedNode->_labelPos[1]) / selectedNode->_labelPos[2]
@@ -1186,7 +1228,7 @@ void parsegraph_Input_paint(parsegraph_Input* input)
     if(!input->_caretPainter) {
         input->_caretPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
     }
-    if(!input->_cursorPainter) {
+    if(input->_cursorShown && !input->_cursorPainter) {
         input->_cursorPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
     }
     if(!input->_caretSpotlightPainter) {
@@ -1209,14 +1251,16 @@ void parsegraph_Input_paint(parsegraph_Input* input)
     }
 
     parsegraph_BlockPainter_initBuffer(input->_caretPainter, 1);
-    parsegraph_BlockPainter_initBuffer(input->_cursorPainter, 1);
+    if(input->_cursorShown) {
+        parsegraph_BlockPainter_initBuffer(input->_cursorPainter, 1);
+    }
 
     parsegraph_SpotlightPainter_clear(input->_caretSpotlightPainter);
     parsegraph_SpotlightPainter_clear(input->_cursorSpotlightPainter);
 
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    if(100 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
+    if(10 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
         parsegraph_GlyphPainter_clear(input->_glyphPainter);
         char buf[255];
         snprintf(buf, sizeof(buf), "/proc/%d/statm", getpid());
@@ -1229,7 +1273,10 @@ void parsegraph_Input_paint(parsegraph_Input* input)
             //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
             //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
             if(len > 0) {
-                parsegraph_Label_setTextUTF8(input->_debugLabel, buf, 1);
+                char truebuf[1024];
+                memset(truebuf, 0, sizeof(truebuf));
+                len = snprintf(truebuf, sizeof(truebuf), "%ld %s", parsegraph_ArrayList_length(input->_memoryTester), buf);
+                parsegraph_Label_setTextUTF8(input->_debugLabel, truebuf, len-1);
             }
         }
         parsegraph_Label_paint(input->_debugLabel, input->_glyphPainter, 0, 0, 1);
@@ -1240,15 +1287,17 @@ void parsegraph_Input_paint(parsegraph_Input* input)
         int cursorSize[2];
         cursorSize[0] = parsegraph_BUD_RADIUS + parsegraph_BUD_STYLE->minWidth;
         cursorSize[1] = parsegraph_BUD_RADIUS + parsegraph_BUD_STYLE->minHeight;
-        parsegraph_BlockPainter_setBorderColor(input->_cursorPainter, parsegraph_CURSOR_BORDER_COLOR);
-        parsegraph_BlockPainter_setBackgroundColor(input->_cursorPainter, parsegraph_CURSOR_COLOR);
-        parsegraph_BlockPainter_drawBlock(input->_cursorPainter,
-            input->cursorScreenPos[0],
-            input->cursorScreenPos[1],
-            cursorSize[0], cursorSize[1],
-            parsegraph_BUD_STYLE->borderRoundness/2.0, parsegraph_BUD_STYLE->borderThickness/2.0,
-            1
-        );
+        if(input->_cursorShown) {
+            parsegraph_BlockPainter_setBorderColor(input->_cursorPainter, parsegraph_CURSOR_BORDER_COLOR);
+            parsegraph_BlockPainter_setBackgroundColor(input->_cursorPainter, parsegraph_CURSOR_COLOR);
+            parsegraph_BlockPainter_drawBlock(input->_cursorPainter,
+                input->cursorScreenPos[0],
+                input->cursorScreenPos[1],
+                cursorSize[0], cursorSize[1],
+                parsegraph_BUD_STYLE->borderRoundness/2.0, parsegraph_BUD_STYLE->borderThickness/2.0,
+                1
+            );
+        }
 
         float srad = parsegraph_min(
             parsegraph_FOCUSED_SPOTLIGHT_SCALE*cursorSize[0]/2.0,
@@ -1332,12 +1381,7 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
     if(APR_SUCCESS != apr_pool_create(&pool, input->_graph->_surface->pool)) {
         parsegraph_die("Failed to create render memory pool for Input.");
     }
-    float* scaledWorld = matrixMultiply3x3(
-        pool,
-        makeScale3x3(pool, 1.0/scale, 1.0/scale),
-        world
-    );
-    parsegraph_BlockPainter_render(input->_caretPainter, scaledWorld);
+    parsegraph_BlockPainter_render(input->_caretPainter, world);
     parsegraph_SpotlightPainter_render(input->_caretSpotlightPainter, world, 1);
 
     parsegraph_Surface* surface = parsegraph_Graph_surface(input->_graph);
@@ -1349,7 +1393,9 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
         pool, makeScale3x3(pool, screenScale, screenScale), screenWorld
     );
     parsegraph_GlyphPainter_render(input->_glyphPainter, screenTextWorld, 1);
-    parsegraph_BlockPainter_render(input->_cursorPainter, screenWorld);
+    if(input->_cursorPainter && input->_cursorShown) {
+        parsegraph_BlockPainter_render(input->_cursorPainter, screenWorld);
+    }
     parsegraph_SpotlightPainter_render(input->_cursorSpotlightPainter, screenWorld, 1);
     apr_pool_destroy(pool);
 }

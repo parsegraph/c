@@ -10,9 +10,6 @@ parsegraph_Node* showProportionTest(parsegraph_Graph* graph, int COUNT)
     if(COUNT <= 0) {
         COUNT = 30;
     }
-    //COUNT = parsegraph_min(COUNT, 100);
-    COUNT = 30;
-
     apr_pool_t* pool = graph->_surface->pool;
 
     //const char* commands[] = {"0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"};

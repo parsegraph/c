@@ -24,12 +24,27 @@ void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas)
     }
 }
 
-int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* text, int len)
+void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* text, int len, 
+    int* width, int* height, int* ascent, int* descent, int* advance)
 {
     QFontMetrics fm(*static_cast<QFont*>(glyphAtlas->_font));
-    int w = fm.size(0, QString::fromUtf16(text, len), 0, 0).width();
-    //fprintf(stderr, "Glyph width (len=%d) is %d\n", len, w);
-    return w;
+    auto str = QString::fromUtf16(text, len);
+    if(width) {
+        *width = fm.size(0, str, 0, 0).width();
+        //parsegraph_log("Glyph width (c=%x, len=%d) is %d.\n", text[0], len, *width);
+    }
+    if(advance) {
+        *advance = fm.horizontalAdvance(str);
+    }
+    if(height) {
+        *height= fm.size(0, str, 0, 0).height();
+    }
+    if(ascent) {
+        *ascent = fm.ascent();
+    }
+    if(descent) {
+        *descent = fm.descent();
+    }
 }
 
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
@@ -65,7 +80,7 @@ void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parseg
     p.setFont(*static_cast<QFont*>(glyphAtlas->_font));
     p.fillRect(glyphData->x, glyphData->y, glyphData->width, glyphData->height, Qt::black);
     p.setPen(QPen(Qt::white));
-    p.drawText(glyphData->x, glyphData->y, glyphData->width, glyphData->height, 0, QString::fromUtf16(glyphData->letter, glyphData->length), nullptr);
+    p.drawText(glyphData->x, glyphData->y + glyphData->ascent, QString::fromUtf16(glyphData->letter, glyphData->length));
     p.end();
 }
 

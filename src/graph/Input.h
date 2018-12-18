@@ -36,6 +36,7 @@ char identifier[64];
 typedef struct parsegraph_TouchEvent parsegraph_TouchEvent;
 
 struct parsegraph_Input {
+parsegraph_ArrayList* _memoryTester;
 int _id;
 apr_pool_t* pool;
 parsegraph_Graph* _graph;
@@ -44,6 +45,7 @@ void(*listener)(parsegraph_Input*, int, const char*, int, void*);
 void* listenerThisArg;
 void(*attachedMouseListener)(parsegraph_Input*, float, float);
 struct timespec mousedownTime;
+int _cursorShown;
 float touchX;
 float touchY;
 float cursorScreenPos[2];
@@ -88,7 +90,7 @@ void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float dx, float
 const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const char* keyName, int keyCode);
 void parsegraph_Input_removeMouseListener(parsegraph_Input* input);
 void parsegraph_Input_mousedown(parsegraph_Input* input);
-void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy);
+void parsegraph_Input_mousemove(parsegraph_Input* input, float dx, float dy, int isAbsolute);
 int parsegraph_Input_removeTouchListener(parsegraph_Input* input, parsegraph_ArrayList* changedTouches);
 void parsegraph_Input_afterTouchTimeout(void* data);
 void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int keyCode, int altKey, int metaKey, int ctrlKey, int shiftKey);
@@ -109,5 +111,11 @@ void parsegraph_Input_SetListener(parsegraph_Input* input, void(*listener)(parse
 int parsegraph_Input_countTouches(parsegraph_Input* input);
 void parsegraph_Input_destroy(parsegraph_Input* input);
 void parsegraph_Input_transformPos(parsegraph_Input* input, float sx, float sy, float* dx, float* dy);
+void parsegraph_Input_setCursorShown(parsegraph_Input* input, int shown);
+
+extern const char* parsegraph_MOVE_UPWARD_KEY;
+extern const char* parsegraph_MOVE_DOWNWARD_KEY;
+extern const char* parsegraph_MOVE_BACKWARD_KEY;
+extern const char* parsegraph_MOVE_FORWARD_KEY;
 
 #endif // parsegraph_Input_INCLUDED

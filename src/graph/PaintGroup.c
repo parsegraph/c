@@ -88,7 +88,7 @@ void parsegraph_PaintGroup_unref(parsegraph_PaintGroup* pg)
     }   
     if(pg->_childPaintGroups) {
         for(int i = 0; i < parsegraph_ArrayList_length(pg->_childPaintGroups); ++i) {
-            parsegraph_PaintGroup* child = parsegraph_ArrayList_at(pg->_childPaintGroups, i);
+            //parsegraph_PaintGroup* child = parsegraph_ArrayList_at(pg->_childPaintGroups, i);
             //parsegraph_PaintGroup_unref(child);
         }
         parsegraph_ArrayList_destroy(pg->_childPaintGroups);

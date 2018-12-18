@@ -1,4 +1,5 @@
-PROG = parsegraph_kms_proportion
+PROG = parsegraph_kms_dir
+
 run:
 	./$(PROG)
 .PHONY: run
@@ -6,16 +7,16 @@ run:
 VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --suppressions=suppressions.valgrind
 
 valgrind:
-	$(VALGRIND) .libs/lt-$(PROG)
+	$(VALGRIND) .libs/lt-$(PROG) -- tmpdir
 .PHONY: valgrind
 
 lib_LTLIBRARIES = libparsegraph-Qt.la libparsegraph-kms.la
 
-libparsegraph_Qt_la_CFLAGS = -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@
+libparsegraph_Qt_la_CFLAGS = -g -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@
 libparsegraph_Qt_la_LDFLAGS = -fPIC -lm @pthread_LIBS@ @httpd_LIBS@ @parsegraph_cxx_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_Qt_la_LIBADD = graph/libparsegraph-GlyphAtlas.a libparsegraph-timing.a
 
-libparsegraph_kms_la_CFLAGS = -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@ @parsegraph_CFLAGS@
+libparsegraph_kms_la_CFLAGS = -g -fPIC -Wall @pthread_CFLAGS@ @httpd_CFLAGS@ @parsegraph_common_CFLAGS@ @parsegraph_CFLAGS@
 libparsegraph_kms_la_LDFLAGS = -fPIC -lm -lrt @pthread_LIBS@ @httpd_LIBS@ @parsegraph_LIBS@ @parsegraph_common_LIBS@
 libparsegraph_kms_la_LIBADD =
 
@@ -73,7 +74,9 @@ nobase_include_HEADERS = \
 	widgets/alpha_WeetCubeWidget.h \
 	widgets/buildPrimesDemo.h \
 	widgets/showProportionTest.h \
+	widgets/buildTextDemo.h \
 	graph/AudioKeyboard.h \
+	widgets/showDirectory.h \
 	gl.h \
 	unicode.h
 
@@ -130,6 +133,8 @@ parsegraph_common_SOURCES = \
 	widgets/alpha_WeetCubeWidget.c \
 	widgets/buildPrimesDemo.c \
 	widgets/showProportionTest.c \
+	widgets/buildTextDemo.c \
+	widgets/showDirectory.c \
 	graph/AudioKeyboard.c \
 	gl.c \
 	unicode.c
@@ -155,7 +160,7 @@ libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
-bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion
+bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion cxx_text parsegraph_kms_text cxx_dir parsegraph_kms_dir
 
 parsegraph_kms_proportion_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
@@ -165,6 +170,22 @@ parsegraph_kms_proportion_LDADD = libparsegraph-kms.la
 parsegraph_kms_proportion_SOURCES = \
 	main.c apps/proportion.c
 
+parsegraph_kms_text_CFLAGS = \
+	$(libparsegraph_kms_la_CFLAGS) \
+	-I$(top_SRCDIR)
+parsegraph_kms_text_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
+parsegraph_kms_text_LDADD = libparsegraph-kms.la
+parsegraph_kms_text_SOURCES = \
+	main.c apps/text.c
+
+parsegraph_kms_dir_CFLAGS = \
+	$(libparsegraph_kms_la_CFLAGS) \
+	-I$(top_SRCDIR)
+parsegraph_kms_dir_LDFLAGS = -ldl $(libparsegraph_kms_la_LDFLAGS)
+parsegraph_kms_dir_LDADD = libparsegraph-kms.la
+parsegraph_kms_dir_SOURCES = \
+	main.c apps/dir.c
+
 parsegraph_kms_primes_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \
 	-I$(top_SRCDIR)
@@ -172,13 +193,6 @@ parsegraph_kms_primes_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS)
 parsegraph_kms_primes_LDADD = libparsegraph-kms.la
 parsegraph_kms_primes_SOURCES = \
 	main.c apps/primes.c
-
-cxx_parsegraph_CXXFLAGS = \
-	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
-cxx_parsegraph_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
-cxx_parsegraph_LDADD = libparsegraph-Qt.la
-cxx_parsegraph_SOURCES = \
-	main.cpp
 
 cxx_primes_CFLAGS = \
 	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
@@ -199,6 +213,26 @@ cxx_proportion_LDADD = libparsegraph-Qt.la
 cxx_proportion_SOURCES = \
 	main.cpp \
 	apps/proportion.c
+
+cxx_text_CFLAGS = \
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_text_CXXFLAGS = \
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_text_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_text_LDADD = libparsegraph-Qt.la
+cxx_text_SOURCES = \
+	main.cpp \
+	apps/text.c
+
+cxx_dir_CFLAGS = \
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_dir_CXXFLAGS = \
+	-fPIC $(libparsegraph_Qt_la_CFLAGS) $(parsegraph_cxx_CFLAGS) -I$(top_SRCDIR) -g
+cxx_dir_LDFLAGS = -ldl $(libparsegraph_Qt_la_LDFLAGS) @parsegraph_cxx_LIBS@
+cxx_dir_LDADD = libparsegraph-Qt.la
+cxx_dir_SOURCES = \
+	main.cpp \
+	apps/dir.c
 
 cxx_alpha_CXXFLAGS = \
 	-fPIC \

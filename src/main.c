@@ -51,10 +51,14 @@
 #include "timing.h"
 #include <apr_hash.h>
 
+// Whether curses is actually used.
 #define parsegraph_NCURSES
 
+// Whether the page is actually flipped. Comment out to debug graphical hangups.
+#define parsegraph_DUMMY_GRAPHICS
+
 // These functions must be defined by applications; they are not defined here.
-parsegraph_Surface* parsegraph_init(void*, int, int);
+parsegraph_Surface* parsegraph_init(void*, int, int, int, const char* const*);
 void parsegraph_stop(parsegraph_Surface* surf);
 
 static volatile int quit = 0;
@@ -106,6 +110,8 @@ struct timespec start;
 apr_hash_t* keyNames;
 parsegraph_Display* first_display;
 parsegraph_Display* last_display;
+int argc;
+const char* const* argv;
 };
 typedef struct parsegraph_Environment parsegraph_Environment;
 
@@ -321,7 +327,7 @@ const char* get_egl_error(int error)
 	return ename;
 }
 
-parsegraph_Environment* parsegraph_Environment_new()
+parsegraph_Environment* parsegraph_Environment_new(int argc, const char* const* argv)
 {
     apr_pool_t* pool;
     if(APR_SUCCESS != apr_pool_create(&pool, 0)) {
@@ -329,6 +335,8 @@ parsegraph_Environment* parsegraph_Environment_new()
     }
     parsegraph_Environment* env = apr_palloc(pool, sizeof(*env));
     env->pool = pool;
+    env->argc = argc;
+    env->argv = argv;
     env->surface = 0;
     env->input = 0;
     env->needInit = 1;
@@ -626,6 +634,10 @@ void init_keyNames(parsegraph_Environment* env)
     apr_hash_set(keyNames, "KEY_UP", APR_HASH_KEY_STRING, "ArrowUp");
     apr_hash_set(keyNames, "KEY_MINUS", APR_HASH_KEY_STRING, "-");
     apr_hash_set(keyNames, "KEY_UNDERSCORE", APR_HASH_KEY_STRING, "_");
+    apr_hash_set(keyNames, "KEY_BACKSPACE", APR_HASH_KEY_STRING, "Backspace");
+    apr_hash_set(keyNames, "KEY_DELETE", APR_HASH_KEY_STRING, "Delete");
+    apr_hash_set(keyNames, "KEY_SLASH", APR_HASH_KEY_STRING, "/");
+    apr_hash_set(keyNames, "KEY_BACKSLASH", APR_HASH_KEY_STRING, "\\");
     apr_hash_set(keyNames, "KEY_PLUS", APR_HASH_KEY_STRING, "+");
     apr_hash_set(keyNames, "KEY_EQUAL", APR_HASH_KEY_STRING, "=");
     apr_hash_set(keyNames, "KEY_RIGHT", APR_HASH_KEY_STRING, "ArrowRight");
@@ -663,8 +675,33 @@ void init_keyNames(parsegraph_Environment* env)
     apr_hash_set(keyNames, "KEY_X", APR_HASH_KEY_STRING, "x");
     apr_hash_set(keyNames, "KEY_Y", APR_HASH_KEY_STRING, "y");
     apr_hash_set(keyNames, "KEY_Z", APR_HASH_KEY_STRING, "z");
+    apr_hash_set(keyNames, "KEY_0", APR_HASH_KEY_STRING, "0");
+    apr_hash_set(keyNames, "KEY_1", APR_HASH_KEY_STRING, "1");
+    apr_hash_set(keyNames, "KEY_2", APR_HASH_KEY_STRING, "2");
+    apr_hash_set(keyNames, "KEY_3", APR_HASH_KEY_STRING, "3");
+    apr_hash_set(keyNames, "KEY_4", APR_HASH_KEY_STRING, "4");
+    apr_hash_set(keyNames, "KEY_5", APR_HASH_KEY_STRING, "5");
+    apr_hash_set(keyNames, "KEY_6", APR_HASH_KEY_STRING, "6");
+    apr_hash_set(keyNames, "KEY_7", APR_HASH_KEY_STRING, "7");
+    apr_hash_set(keyNames, "KEY_8", APR_HASH_KEY_STRING, "8");
+    apr_hash_set(keyNames, "KEY_9", APR_HASH_KEY_STRING, "9");
+    apr_hash_set(keyNames, "KEY_GRAVE", APR_HASH_KEY_STRING, "`");
+    apr_hash_set(keyNames, "KEY_DOT", APR_HASH_KEY_STRING, ".");
+    apr_hash_set(keyNames, "KEY_COMMA", APR_HASH_KEY_STRING, ",");
+    apr_hash_set(keyNames, "KEY_SEMICOLON", APR_HASH_KEY_STRING, ";");
+    apr_hash_set(keyNames, "KEY_COLON", APR_HASH_KEY_STRING, ":");
     apr_hash_set(keyNames, "KEY_F1", APR_HASH_KEY_STRING, "F1");
+    apr_hash_set(keyNames, "KEY_F2", APR_HASH_KEY_STRING, "F2");
+    apr_hash_set(keyNames, "KEY_F3", APR_HASH_KEY_STRING, "F3");
     apr_hash_set(keyNames, "KEY_F4", APR_HASH_KEY_STRING, "F4");
+    apr_hash_set(keyNames, "KEY_F5", APR_HASH_KEY_STRING, "F5");
+    apr_hash_set(keyNames, "KEY_F6", APR_HASH_KEY_STRING, "F6");
+    apr_hash_set(keyNames, "KEY_F7", APR_HASH_KEY_STRING, "F7");
+    apr_hash_set(keyNames, "KEY_F8", APR_HASH_KEY_STRING, "F8");
+    apr_hash_set(keyNames, "KEY_F9", APR_HASH_KEY_STRING, "F9");
+    apr_hash_set(keyNames, "KEY_F10", APR_HASH_KEY_STRING, "F10");
+    apr_hash_set(keyNames, "KEY_F11", APR_HASH_KEY_STRING, "F11");
+    apr_hash_set(keyNames, "KEY_F12", APR_HASH_KEY_STRING, "F12");
     env->keyNames = keyNames;
 }
 
@@ -683,16 +720,17 @@ key_event(parsegraph_Environment* env, struct libinput_event *ev)
     keyname = keyname ? keyname : "???";
     //parsegraph_log("KEYNAME is %s\n", keyname);
     const char* formalKeyName = apr_hash_get(env->keyNames, keyname, APR_HASH_KEY_STRING);
+    //parsegraph_log("formalKeyName is %s\n", formalKeyName);
     parsegraph_Input* input = env->input;
     if(!formalKeyName) {
         formalKeyName = keyname;
     }
 
     if(state == LIBINPUT_KEY_STATE_PRESSED) {
-        if(!strcmp(formalKeyName, "x")) {
+        /*if(!strcmp(formalKeyName, "x")) {
             quit_handler(0);
             return;
-        }
+        }*/
         if(!strcmp(formalKeyName, "c") && parsegraph_Input_Get(input, "Control")) {
             quit_handler(0);
             return;
@@ -741,7 +779,7 @@ void process_input(parsegraph_Environment* env)
             if(input) {
                 struct libinput_event_pointer* pev = libinput_event_get_pointer_event(ev);
                 parsegraph_Input_mousemove(input,
-                    libinput_event_pointer_get_dx(pev), libinput_event_pointer_get_dy(pev)
+                    libinput_event_pointer_get_dx(pev), libinput_event_pointer_get_dy(pev), 0
                 );
             }
             break;
@@ -858,7 +896,7 @@ void draw_dev(parsegraph_Display* disp)
     //parsegraph_log("Using framebuffer %d\n", fb->fb);
 
     if(env->needInit) {
-        env->surface = parsegraph_init(env, disp->width, disp->height);
+        env->surface = parsegraph_init(env, disp->width, disp->height, env->argc, env->argv);
         env->needInit = 0;
     }
 
@@ -869,7 +907,10 @@ void draw_dev(parsegraph_Display* disp)
     render_stuff(env, disp, disp->width, disp->height, fb);
 
     // Request a page flip.
-    int ret = drmModePageFlip(env->drm_fd, disp->crtc, fb->drm_fb, DRM_MODE_PAGE_FLIP_EVENT, disp);
+    int ret = 0;
+#ifndef parsegraph_DUMMY_GRAPHICS
+    ret = drmModePageFlip(env->drm_fd, disp->crtc, fb->drm_fb, DRM_MODE_PAGE_FLIP_EVENT, disp);
+#endif
     if(ret) {
         parsegraph_die("failed to page flip: %m\n");
     }
@@ -899,8 +940,10 @@ void loop(parsegraph_Environment* env)
         //parsegraph_log("BG: %d, %d, %d\n", disp->color[0], disp->color[1], disp->color[2]);
         memset(disp->color_up, 1, sizeof(disp->color_up));
 
+#ifndef parsegraph_DUMMY_GRAPHICS
         parsegraph_Framebuffer* fb = &disp->framebuffers[disp->front_fb];
         drmModeSetCrtc(env->drm_fd, disp->crtc, fb->drm_fb, 0, 0, &disp->connector->connector_id, 1, &disp->mode);
+#endif
         draw_dev(disp);
     }
 
@@ -939,9 +982,9 @@ void loop(parsegraph_Environment* env)
         // Consume terminal input.
         char c;
         while((c = getch()) != ERR) {
-            if(c == 'x') {
+            /*if(c == 'x') {
                 quit = 1;
-            }
+            }*/
         }
 #endif
 
@@ -1004,7 +1047,7 @@ int main(int argc, const char * const *argv)
     }
 
     // Create the environment.
-    env = parsegraph_Environment_new();
+    env = parsegraph_Environment_new(argc, argv);
 
 #ifdef parsegraph_NCURSES
     // Start ncurses.

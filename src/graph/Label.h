@@ -5,6 +5,8 @@
 #include <apr_pools.h>
 #include "../ArrayList.h"
 
+#define parsegraph_MAX_UNICODE_COMBINING_MARKS 255
+
 struct parsegraph_Label {
 int _caretLine;
 int _caretPos;
@@ -53,13 +55,17 @@ void parsegraph_Label_clear(parsegraph_Label* label);
 void parsegraph_Label_destroy(parsegraph_Label* label);
 void parsegraph_Label_setText(parsegraph_Label* label, const UChar* name, int len);
 void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len);
-void parsegraph_Label_moveCaretDown(parsegraph_Label* label);
-void parsegraph_Label_moveCaretUp(parsegraph_Label* label);
+int parsegraph_Label_moveCaretDown(parsegraph_Label* label);
+int parsegraph_Label_moveCaretUp(parsegraph_Label* label);
 int parsegraph_Label_moveCaretBackward(parsegraph_Label* label);
 int parsegraph_Label_moveCaretForward(parsegraph_Label* label);
 int parsegraph_Label_backspaceCaret(parsegraph_Label* label);
 float parsegraph_Label_width(parsegraph_Label* label);
 float parsegraph_Label_height(parsegraph_Label* label);
+void parsegraph_Line_paint(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale);
+void parsegraph_Line_drawLTRGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun);
+void parsegraph_Line_drawRTLGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun);
+void parsegraph_Line_drawGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun);
 void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* painter, float worldX, float worldY, float fontScale);
 int parsegraph_Line_text(parsegraph_Line* line, UChar* t, int len);
 int parsegraph_Line_getText(parsegraph_Line* line, UChar* t, int len);
@@ -75,4 +81,6 @@ int parsegraph_Label_text(parsegraph_Label* label, UChar* buf, int len);
 int parsegraph_Label_getText(parsegraph_Label* label, UChar* buf, int len);
 void parsegraph_Label_forEach(parsegraph_Label* label, void(*func)(parsegraph_Line*, void*), void* funcThisArg);
 int parsegraph_Label_textChanged(parsegraph_Label* label);
+void parsegraph_Line_appendTextUTF8(parsegraph_Line* line, const char* text, int len);
+void parsegraph_Line_insertTextUTF8(parsegraph_Line* line, int pos, const char* text, int len);
 #endif // parsegraph_Label_INCLUDED

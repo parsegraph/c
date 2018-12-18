@@ -16,17 +16,13 @@ parsegraph_AnimationTimer* renderTimer;
 parsegraph_PrimesWidget* widget;
 } primesApp;
 
+static int LOOPING_DELAY = 30000;
 static void bTimerCallback(void* data)
 {
-    int MAX_PRIME = 100;
-    int LOOPING_DELAY = 1000;
-    parsegraph_PrimesWidget_step(primesApp.widget, 10);
-    parsegraph_Graph_scheduleRepaint(primesApp.graph);
-    parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
-    if(primesApp.widget->position <= MAX_PRIME) {
-        parsegraph_TimeoutTimer_setDelay(primesApp.bTimer, LOOPING_DELAY);
-        parsegraph_TimeoutTimer_schedule(primesApp.bTimer);
-    }
+    //if(primesApp.widget->position < MAX_PRIME) {
+        //parsegraph_TimeoutTimer_setDelay(primesApp.bTimer, LOOPING_DELAY);
+        //parsegraph_TimeoutTimer_schedule(primesApp.bTimer);
+    //}
 }
 
 static void renderTimerCallback(void* data, float elapsed)
@@ -60,6 +56,15 @@ static void inputListener(parsegraph_Input* input, int affectedPaint, const char
     parsegraph_Surface_scheduleRepaint(parsegraph_Graph_surface(primesApp.graph));
 }
 
+static int clickRoot(const char* button, void* data)
+{
+    parsegraph_PrimesWidget_step(primesApp.widget, primesApp.widget->position);
+    parsegraph_Graph_scheduleRepaint(primesApp.graph);
+    parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
+    parsegraph_Node_showInCamera(parsegraph_PrimesWidget_root(primesApp.widget), parsegraph_Graph_camera(primesApp.graph), 1);
+    return 1;
+}
+
 static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
 {
     parsegraph_Graph* graph = data;
@@ -76,12 +81,14 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     //graph.plot(linear.root());
     parsegraph_PrimesWidget* primes = parsegraph_PrimesWidget_new(graph);
     primesApp.widget = primes;
-    parsegraph_Graph_plot(graph, parsegraph_PrimesWidget_root(primes));
+    parsegraph_Node* plot = parsegraph_PrimesWidget_root(primes);
+    parsegraph_Node_setClickListener(plot, clickRoot, 0);
+    parsegraph_Graph_plot(graph, plot);
 
     primesApp.bTimer = parsegraph_TimeoutTimer_new(surface);
-    parsegraph_TimeoutTimer_setDelay(primesApp.bTimer, 10);
+    parsegraph_TimeoutTimer_setDelay(primesApp.bTimer, LOOPING_DELAY);
     parsegraph_TimeoutTimer_setListener(primesApp.bTimer, bTimerCallback, 0);
-    parsegraph_TimeoutTimer_schedule(primesApp.bTimer);
+    //parsegraph_TimeoutTimer_schedule(primesApp.bTimer);
 
     /*
     var aTimer = new parsegraph_TimeoutTimer();
@@ -107,14 +114,17 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
 
 void parsegraph_stop(parsegraph_Surface* surf)
 {
+    if(primesApp.widget) {
+        parsegraph_PrimesWidget_destroy(primesApp.widget);
+    }
     if(primesApp.graph) {
         parsegraph_Graph_destroy(primesApp.graph);
-    }   
+    }
     parsegraph_Surface_destroy(surf);
     apr_pool_destroy(primesApp.pool);
 }
 
-parsegraph_Surface* parsegraph_init(void* peer, int w, int h)
+parsegraph_Surface* parsegraph_init(void* peer, int w, int h, int argc, const char* const* argv)
 {
     primesApp.pool = 0;
     if(APR_SUCCESS != apr_pool_create(&primesApp.pool, 0)) {

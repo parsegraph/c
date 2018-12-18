@@ -6,7 +6,8 @@ extern "C" {
 #include "die.h"
 #include <apr_strings.h>
 
-parsegraph_Surface* parsegraph_init(void* peer, int w, int h);
+parsegraph_Surface* parsegraph_init(void* peer, int w, int h, int argc, const char* const* argv);
+void parsegraph_stop(parsegraph_Surface* surf);
 }
 
 #include <QTime>
@@ -95,15 +96,17 @@ virtual void focusOutEvent(QFocusEvent* ev) {
     parsegraph_Input_onblur(input);
 }
 
+bool hasCursorScreenPos = false;
 float cursorScreenPos[2] = {0, 0};
 
 virtual void mouseMoveEvent(QMouseEvent* ev) {
     if(!input) {
         return;
     }
-    float dx = ev->x() - cursorScreenPos[0];
-    float dy = ev->y() - cursorScreenPos[1];
-    parsegraph_Input_mousemove(input, dx, dy);
+    if(hasCursorScreenPos) {
+        parsegraph_Input_mousemove(input, ev->x(), ev->y(), 1);
+    }
+    hasCursorScreenPos = true;
     cursorScreenPos[0] = ev->x();
     cursorScreenPos[1] = ev->y();
 }
@@ -112,8 +115,8 @@ virtual void mousePressEvent(QMouseEvent* ev) {
     if(!input) {
         return;
     }
-    if(ev->x() != cursorScreenPos[0] || ev->y() != cursorScreenPos[1]) {
-        parsegraph_Input_mousemove(input, ev->x() - cursorScreenPos[0], ev->y() - cursorScreenPos[1]);
+    if(hasCursorScreenPos && (ev->x() != cursorScreenPos[0] || ev->y() != cursorScreenPos[1])) {
+        parsegraph_Input_mousemove(input, ev->x(), ev->y(), 1);
     }
     parsegraph_Input_mousedown(input);
 }
@@ -165,6 +168,9 @@ virtual void touchEvent(QTouchEvent* ev) {
     if(parsegraph_ArrayList_length(releasedTouches) > 0) {
         parsegraph_Input_removeTouchListener(input, releasedTouches);
     }
+    parsegraph_ArrayList_destroy(pressedTouches);
+    parsegraph_ArrayList_destroy(releasedTouches);
+    parsegraph_ArrayList_destroy(movedTouches);
     apr_pool_destroy(spool);
 }
 
@@ -173,10 +179,11 @@ virtual void wheelEvent(QWheelEvent* ev) {
         return;
     }
     //fprintf(stderr, "Wheel at %d, %d\n", ev->x(), height() - ev->y());
-    parsegraph_Input_onWheel(input, -ev->angleDelta().y()/60);
+    parsegraph_Input_onWheel(input, -ev->angleDelta().y()/120);
 }
 
 public:
+struct parsegraph_Surface* surface = 0;
 
 MainWindow(QOpenGLContext* shareContext) :
     QOpenGLWindow(shareContext)
@@ -188,15 +195,21 @@ MainWindow(QOpenGLContext* shareContext) :
 
 parsegraph_Input* input = 0;
 QTime frameElapsedTime;
-struct parsegraph_Surface* surface = 0;
 GLint w = 0;
 GLint h = 0;
+parsegraph_ArrayList* argumentList = 0;
 virtual void initializeGL() {
     glEnable(GL_MULTISAMPLE);
     // Invoke global init function.
     w = width();
     h = height();
-    surface = parsegraph_init(this, w, h);
+
+    argumentList = parsegraph_ArrayList_new(pool);
+    auto qtArgs = QCoreApplication::arguments();
+    for(int i = 0; i < qtArgs.count(); ++i) {
+        parsegraph_ArrayList_push(argumentList, apr_pstrdup(pool, qtArgs[i].toUtf8().constData()));
+    }
+    surface = parsegraph_init(this, w, h, qtArgs.count(), (const char* const*)argumentList->data);
     //fprintf(stderr, "Window size: %d, %d\n", w, h);
     frameElapsedTime.start();
 }
@@ -214,6 +227,7 @@ virtual void resizeGL(int w, int h) {
 }
 virtual void paintGL() {
     parsegraph_Surface_runAnimationCallbacks(surface, ((float)frameElapsedTime.restart())/1000.0);
+    parsegraph_Surface_render(surface, 0);
     glFlush();
 }
 };
@@ -245,6 +259,8 @@ void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* i
     parsegraph_Camera_setScale(cam, defaultScale);
     input->cursorScreenPos[0] = parsegraph_Camera_x(cam);
     input->cursorScreenPos[1] = parsegraph_Camera_y(cam);
+
+    parsegraph_Input_setCursorShown(input, 0);
 }
 
 void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
@@ -298,6 +314,9 @@ int main(int argc, char**argv)
 
     rv = app.exec();
     // Destroy the pool for cleanliness.
+    if(window.surface) {
+        parsegraph_stop(window.surface);
+    }
     apr_pool_destroy(pool);
     pool = NULL;
     apr_terminate();

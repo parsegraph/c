@@ -25,5 +25,7 @@ void parsegraph_ArrayList_concat(parsegraph_ArrayList* dest, parsegraph_ArrayLis
 void* parsegraph_ArrayList_pop(parsegraph_ArrayList* al);
 void parsegraph_ArrayList_insertAll(parsegraph_ArrayList* al, int pos, parsegraph_ArrayList* src);
 void parsegraph_ArrayList_insert(parsegraph_ArrayList* al, int pos, void* val);
+void parsegraph_ArrayList_swap(parsegraph_ArrayList* al, int a, int b);
+void parsegraph_ArrayList_sort(parsegraph_ArrayList* al, int(*comparator)(void*, void*, void*), void* thisArg);
 
 #endif // parsegraph_ArrayList_INCLUDED

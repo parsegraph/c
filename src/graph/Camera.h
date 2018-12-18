@@ -41,5 +41,6 @@ float parsegraph_Camera_height(parsegraph_Camera* camera);
 int parsegraph_Camera_canProject(parsegraph_Camera* camera);
 float* parsegraph_Camera_project(parsegraph_Camera* camera, apr_pool_t* pool);
 int parsegraph_Camera_ContainsAny(parsegraph_Camera* camera, float* rect);
+int parsegraph_Camera_ContainsAll(parsegraph_Camera* camera, float* rect);
 
 #endif // parsegraph_Camera_INCLUDED

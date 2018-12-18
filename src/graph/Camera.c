@@ -251,3 +251,17 @@ int parsegraph_Camera_ContainsAny(parsegraph_Camera* camera, float* rect)
         parsegraph_Rect_height(rect)
     );
 }
+
+int parsegraph_Camera_ContainsAll(parsegraph_Camera* camera, float* rect)
+{
+    return parsegraph_containsAll(
+        -camera->_cameraX + camera->_width/(camera->_scale*2),
+        -camera->_cameraY + camera->_height/(camera->_scale*2),
+        camera->_width / camera->_scale,
+        camera->_height / camera->_scale,
+        parsegraph_Rect_x(rect),
+        parsegraph_Rect_y(rect),
+        parsegraph_Rect_width(rect),
+        parsegraph_Rect_height(rect)
+    );
+}

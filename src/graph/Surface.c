@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <GL/gl.h>
 
+static int parsegraph_Surface_COUNT = 0;
+
 parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
 {
     parsegraph_Surface* rv = malloc(sizeof(*rv));
@@ -15,6 +17,7 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
     rv->peer = peer;
 
     parsegraph_Color_copy(rv->backgroundColor, parsegraph_BACKGROUND_COLOR);
+    rv->_id = ++parsegraph_Surface_COUNT;
 
     // The identifier used to cancel a pending Render.
     rv->pendingRender = 0;
@@ -36,6 +39,9 @@ parsegraph_Surface* parsegraph_Surface_new(apr_pool_t* pool, void* peer)
     pthread_mutexattr_t mutexattr;
     if(0 != pthread_mutexattr_init(&mutexattr)) {
         parsegraph_die("Failed to initialize Surface's mutex attributes");
+    }
+    if(0 != pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_NONE)) {
+        parsegraph_die("Failed to set Surface's mutex protocol.");
     }
     if(0 != pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE)) {
         parsegraph_die("Failed to set Surface's mutex type");
@@ -91,8 +97,9 @@ void parsegraph_Surface_removeDestructor(parsegraph_Surface* surface, parsegraph
 
 parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph_Surface* surface, void(*listener)(void*, float), void* thisArg)
 {
-    if(0 != pthread_mutex_lock(&surface->lock)) {
-        parsegraph_die("Failed to lock surface to add animation callback");
+    int rv = pthread_mutex_lock(&surface->lock);
+    if(0 != rv) {
+        parsegraph_die("Failed to lock surface %d to add animation callback. %s", surface->_id, strerror(rv));
     }
     parsegraph_AnimationCallback* cb = malloc(sizeof(*cb));
     cb->listener = listener;
@@ -114,8 +121,9 @@ parsegraph_AnimationCallback* parsegraph_Surface_addAnimationCallback(parsegraph
 
 void parsegraph_Surface_removeAnimationCallback(parsegraph_Surface* surface, parsegraph_AnimationCallback* given)
 {
-    if(0 != pthread_mutex_lock(&surface->lock)) {
-        parsegraph_die("Failed to lock surface to remove animation callback");
+    int rv = pthread_mutex_lock(&surface->lock);
+    if(0 != rv) {
+        parsegraph_die("Failed to lock surface %d to add animation callback. %s", surface->_id, strerror(rv));
     }
     parsegraph_AnimationCallback* cb = surface->firstAnimationCallback;
     parsegraph_AnimationCallback* prev = 0;

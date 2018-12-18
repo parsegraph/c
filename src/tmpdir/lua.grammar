@@ -1,0 +1,68 @@
+Group main = statement+;
+
+Group statement = (
+    assign |
+    functionCall |
+    ifStatement |
+    'break' |
+    doStatement |
+    returnStatement |
+    functionDefinition |
+    variableDeclaration |
+    numericForStatement |
+    iteratorForStatement |
+    whileStatement
+    ) -';'?;
+Rule block = statement+;
+
+Rule returnStatement = 'return' {expression ','}?;
+Rule variableDeclaration = 'local' varlist;
+Rule assign = 'local'? varlist '=' {expression ','};
+
+Rule ifStatement = 'if' expression 'then' block? ('elseif' expression 'then' block?)* ('else' block?)? 'end';
+Rule doStatement = 'do' block 'end';
+Rule numericForStatement = 'for' name '=' expression ',' expression (',' expression)? 'do' block 'end';
+Rule iteratorForStatement = 'for' {name ',' } 'in' {expression ','} 'do' block 'end';
+Rule whileStatement = 'while' expression 'do' block 'end';
+
+Rule functionDefinition = 'local'? 'function' funcName '(' params? ')' block? 'end';
+Rule funcName = { name '.'} (':' name)?;
+
+Group expression =
+    binop |
+    number |
+    string |
+    functionDef |
+    functionCall |
+    notExpression |
+    lengthExpression |
+    negateExpression |
+    '...' |
+    'nil' |
+    'false' |
+    'true' |
+    variable |
+    ( '(' expression ')' ) |
+    table;
+
+Rule negateExpression = '-' expression;
+Rule notExpression = 'not' expression;
+Rule lengthExpression = '#' expression;
+
+Rule table = '{' {field -(',' | ';')}? -(';' | ',')? '}';
+Rule field = ('[' expression ']' '=' expression) | (name '=' expression) | expression;
+
+Token name = (alpha | '_') ('_' | alnum)*;
+
+Rule variable = name (('.' name) | ('[' expression ']'))*;
+
+Rule binop = expression ('or' | '+' | '-' | '*' | '/' | '%' | 'and' | '==' | '~=' | '..' | '<=' | '>=' | '>' | '<') expression;
+
+Rule prefixExpression = variable | functionCall | ( '(' expression ')' );
+Rule varlist = {variable ','};
+
+Rule functionCall = prefixExpression (':' name)? arguments;
+Rule arguments = string | ('(' {expression ','}? ')');
+
+Rule functionDef = 'function' '(' params? ')' block? 'end';
+Rule params = '...' | ({ name ',' } (-',' '...')? );

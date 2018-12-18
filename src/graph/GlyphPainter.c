@@ -83,7 +83,7 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyp
     painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_color", 4, GL_STATIC_DRAW);
     painter->a_backgroundColor = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_backgroundColor", 4, GL_STATIC_DRAW);
     painter->a_texCoord = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_texCoord", 2, GL_STATIC_DRAW);
-    painter->_textBuffers = apr_hash_make(painter->_renderPool);
+    painter->_textBuffers = apr_hash_make(pool);
 
     // Cache program locations.
     painter->u_world = glGetUniformLocation(
@@ -123,7 +123,7 @@ parsegraph_GlyphAtlas* parsegraph_GlyphPainter_glyphAtlas(parsegraph_GlyphPainte
 
 parsegraph_GlyphRenderData* parsegraph_GlyphRenderData_new(parsegraph_GlyphPainter* painter, parsegraph_GlyphData* glyphData)
 {
-    parsegraph_GlyphRenderData* grd = apr_palloc(painter->_renderPool, sizeof(*grd));
+    parsegraph_GlyphRenderData* grd = apr_palloc(painter->pool, sizeof(*grd));
     grd->painter = painter;
     grd->glyphData = glyphData;
     return grd;
@@ -240,13 +240,11 @@ void parsegraph_GlyphPainter_destroy(parsegraph_GlyphPainter* painter)
 void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* glyphPainter)
 {
     //parsegraph_log("Clearing glyph painter\n");
-    apr_hash_clear(glyphPainter->_textBuffers);
     parsegraph_pagingbuffer_clear(glyphPainter->_textBuffer);
     apr_pool_destroy(glyphPainter->_renderPool);
     if(APR_SUCCESS != apr_pool_create(&glyphPainter->_renderPool, glyphPainter->pool)) {
         parsegraph_die("Failed to create GlyphPainter memory pool.");
     }
-    glyphPainter->_textBuffers = apr_hash_make(glyphPainter->_renderPool);
     glyphPainter->_maxSize = 0;
 }
 

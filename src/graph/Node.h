@@ -40,6 +40,9 @@ typedef struct parsegraph_Style parsegraph_Style;
 struct parsegraph_Scene;
 typedef struct parsegraph_Scene parsegraph_Scene;
 
+struct parsegraph_Camera;
+typedef struct parsegraph_Camera parsegraph_Camera;
+
 struct parsegraph_Node {
     apr_pool_t* pool;
     int _id;
@@ -222,4 +225,6 @@ parsegraph_Node* parsegraph_labeledBud(apr_pool_t* pool, UChar* label, int len, 
 parsegraph_Node* parsegraph_labeledSlot(apr_pool_t* pool, UChar* label, int len, parsegraph_GlyphAtlas* glyphAtlas);
 parsegraph_Node* parsegraph_labeledBlock(apr_pool_t* pool, UChar* label, int len, parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_Node_ignoresMouse(parsegraph_Node*);
+void parsegraph_Node_showInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary);
+void parsegraph_Node_showNodeInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary);
 #endif // parsegraph_graph_Node_INCLUDED

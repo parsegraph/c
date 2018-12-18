@@ -29,13 +29,16 @@ typedef struct parsegraph_GlyphPage parsegraph_GlyphPage;
 
 struct parsegraph_GlyphData {
 parsegraph_GlyphPage* glyphPage;
-UChar letter[U16_MAX_LENGTH];
+UChar* letter;
 int length;
 int painted;
 unsigned int x;
 unsigned int y;
 unsigned int width;
 unsigned int height;
+unsigned int ascent;
+unsigned int descent;
+int advance;
 struct parsegraph_GlyphData* next;
 };
 typedef struct parsegraph_GlyphData parsegraph_GlyphData;
@@ -56,6 +59,7 @@ UChar _fontName[255];
 const char* _fillStyle;
 float _fontSize;
 apr_hash_t* _glyphData;
+int _currentRowHeight;
 };
 typedef struct parsegraph_GlyphAtlas parsegraph_GlyphAtlas;
 
@@ -85,13 +89,14 @@ UChar* parsegraph_GlyphAtlas_fontName(parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_GlyphAtlas_isNewline(parsegraph_GlyphAtlas* glyphAtlas, UChar c);
 parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas);
 
-parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, int x, int y, int width, int height, int ascent, int descent, int advance);
 
 // These are platform-specific.
 void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_GlyphAtlas_destroy(parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas);
-int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len);
+void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* text, int len, 
+    int* width, int* height, int* ascent, int* descent, int* advance);
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
 void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* texture);

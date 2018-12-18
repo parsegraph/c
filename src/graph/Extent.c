@@ -1,6 +1,7 @@
 #include <httpd.h>
 #include <math.h>
 #include "Extent.h"
+#include "../die.h"
 
 unsigned int parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
 unsigned int parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
@@ -259,21 +260,27 @@ int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, f
 
 float parsegraph_Extent_boundLengthAt(struct parsegraph_Extent* extent, unsigned int index)
 {
-    return extent->bounds[(extent->start + index) % extent->capacity].length;
+    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].length : NAN;
 }
 
 float parsegraph_Extent_boundSizeAt(struct parsegraph_Extent* extent, unsigned int index)
 {
-    return extent->bounds[(extent->start + index) % extent->capacity].size;
+    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].size : NAN;
 }
 
 void parsegraph_Extent_setBoundLengthAt(struct parsegraph_Extent* extent, unsigned int index, float length)
 {
+    if(extent->capacity == 0) {
+        parsegraph_die("Cannot set a bound length of an empty Extent.");
+    }
     extent->bounds[(extent->start + index) % extent->capacity].length = length;
 }
 
 void parsegraph_Extent_setBoundSizeAt(struct parsegraph_Extent* extent, unsigned int index, float size)
 {
+    if(extent->capacity == 0) {
+        parsegraph_die("Cannot set a bound length of an empty Extent.");
+    }
     extent->bounds[(extent->start + index) % extent->capacity].size = size;
 }
 

@@ -109,20 +109,41 @@ void parsegraph_ArrayList_concat(parsegraph_ArrayList* al, parsegraph_ArrayList*
     al->_length += srcLen;
 }
 
+void parsegraph_ArrayList_swap(parsegraph_ArrayList* al, int a, int b)
+{
+    void* tmp = al->data[a];
+    al->data[a] = al->data[b];
+    al->data[b] = tmp;
+}
+
+void parsegraph_ArrayList_sort(parsegraph_ArrayList* al, int(*comparator)(void*, void*, void*), void* thisArg)
+{
+    for(int i = 0; i < al->_length; ++i) {
+        int lowest = i;
+        for(int j = i + 1; j < al->_length; ++j) {
+            if(comparator(thisArg, al->data[lowest], al->data[j]) > 0) {
+                lowest = j;
+            }
+        }
+        if(i != lowest) {
+            parsegraph_ArrayList_swap(al, i, lowest);
+        }
+    }
+}
+
 void parsegraph_ArrayList_insert(parsegraph_ArrayList* al, int pos, void* val)
 {
-    size_t srcLen = 1;
-    while(al->_length + srcLen > al->_capacity) {
+    while(al->_length >= al->_capacity) {
         al->_capacity *= 2;
         al->data = realloc(al->data, sizeof(void*)*al->_capacity);
     }
     // Copy the tail of the list to its new location
-    if(srcLen - pos > 0) {
-        memcpy(al->data + pos + srcLen, al->data + pos, al->_length - pos);
+    if(pos < al->_length) {
+        memmove(al->data + pos + 1, al->data + pos, sizeof(void*)*(al->_length - pos));
     }
     // Copy the source data.
-    memcpy(al->data + pos, val, sizeof(void*)*srcLen);
-    al->_length += srcLen;
+    al->data[pos] = val;
+    ++al->_length;
 }
 
 void parsegraph_ArrayList_insertAll(parsegraph_ArrayList* al, int pos, parsegraph_ArrayList* src)

@@ -1,6 +1,7 @@
 #include "BlockPainter.h"
 #include "log.h"
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include "Surface.h"
 #include "Rect.h"
@@ -411,14 +412,14 @@ void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
     float cx, float cy, float width, float height, float borderRoundedness, float borderThickness, float borderScale)
 {
     if(painter->_numFaces / 2 >= painter->_numBlocks) {
-        fprintf(stderr, "BlockPainter is full and cannot draw any more blocks.\n");
-        abort();
+        parsegraph_die("BlockPainter is full and cannot draw any more blocks.");
     }
     if(!painter->_blockBuffer) {
-        fprintf(stderr, "BlockPainter.initBuffer(numBlocks) must be called first.\n");
-        abort();
+        parsegraph_die("BlockPainter.initBuffer(numBlocks) must be called first.");
     }
-    //parsegraph_log("Drawing block (%f, %f, w=%f, h=%f, border(%f, %f))\n", cx, cy, width, height, borderRoundedness, borderThickness);
+    if(isnan(cx) || isnan(cy) || isnan(width) || isnan(height) || isnan(borderRoundedness) || isnan(borderThickness) || isnan(borderScale)) {
+        parsegraph_log("Drawing block (%f, %f, w=%f, h=%f, border(%f, %f))\n", cx, cy, width, height, borderRoundedness, borderThickness);
+    }   
     parsegraph_Rect_include(painter->_bounds, cx, cy, width, height);
 
     float* buf = painter->_itemBuffer;

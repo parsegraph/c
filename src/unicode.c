@@ -73,7 +73,6 @@ parsegraph_CharProperties* parsegraph_Unicode_get(parsegraph_Unicode* unicode, c
 };
 
 
-// SemanticCodeValue:[Isolated, Initial, Medial, Final]. Use null for non-applicable.
 static UChar unicodeCursiveMapKeys[] = {
     0x627, // ALEF
     0x628, // BEH
@@ -103,9 +102,11 @@ static UChar unicodeCursiveMapKeys[] = {
     0x646, // NOON
     0x647, // HEH
     0x648, // WAW
-    0x64a // YEH
+    0x64a, // YEH
+    0
 };
 
+// SemanticCodeValue:[Isolated, Initial, Medial, Final]. Use null for non-applicable.
 static UChar unicodeCursiveMapValues[] = {
     0xfe8d, 0, 0, 0xfe8e, // ALEF
     0xfe8f, 0xfe91, 0xfe92, 0xfe90, // BEH
@@ -138,7 +139,75 @@ static UChar unicodeCursiveMapValues[] = {
     0xfef1, 0xfef3, 0xfef4, 0xfef2 // YEH,
 };
 
-UChar* parsegraph_Unicode_getCursiveMapping(parsegraph_Unicode* unicode, const char* t)
+UChar* parsegraph_Unicode_getCursiveMapping(parsegraph_Unicode* unicode, UChar v)
+{
+    for(int i = 0; unicodeCursiveMapKeys[i]; ++i) {
+        if(unicodeCursiveMapKeys[i] == v) {
+            return unicodeCursiveMapValues + 4*i;
+        }
+    }
+    return 0;
+}
+
+UChar parsegraph_Unicode_cursive(parsegraph_Unicode* u, UChar givenLetter, UChar prevLetter, UChar nextLetter)
+{
+    UChar* cursiveMapping = parsegraph_Unicode_getCursiveMapping(u, givenLetter);
+    if(!cursiveMapping) {
+        return 0;
+    }
+    UChar* prevCursiveMapping = 0;
+    if(prevLetter) {
+        prevCursiveMapping = parsegraph_Unicode_getCursiveMapping(u, prevLetter);
+    }   
+    if(!prevCursiveMapping) {
+        prevLetter = 0;
+    }
+    UChar* nextCursiveMapping = 0;
+    if(nextLetter) {
+        nextCursiveMapping = parsegraph_Unicode_getCursiveMapping(u, nextLetter);
+    }   
+    if(!nextCursiveMapping) {
+        nextLetter = 0;
+    }
+
+    if(nextLetter) {
+        if(prevLetter && prevCursiveMapping[1]) {
+            if(cursiveMapping[2]) {
+                givenLetter = cursiveMapping[2]; // medial
+            }
+            //else if(cursiveMapping[3]) {
+                //givenLetter = cursiveMapping[3]; // final
+            //}
+            else {
+                givenLetter = cursiveMapping[0]; // isolated
+            }
+        }
+        else {
+            // Next is, but previous wasn't.
+            if(cursiveMapping[1]) {
+                givenLetter = cursiveMapping[1]; // initial
+            }
+            else {
+                givenLetter = cursiveMapping[0]; // isolated
+            }
+        }
+    }
+    else if(prevLetter) {
+        if(cursiveMapping[3]) {
+            givenLetter = cursiveMapping[3]; // final
+        }
+        else {
+            givenLetter = cursiveMapping[0]; // isolated
+        }
+    }
+    else {
+        givenLetter = cursiveMapping[0]; // isolated
+    }
+
+    return givenLetter;
+}
+
+UChar* parsegraph_Unicode_getCursiveMappingUTF8(parsegraph_Unicode* unicode, const char* t)
 {
     UErrorCode uerr;
     UChar v;
@@ -146,12 +215,7 @@ UChar* parsegraph_Unicode_getCursiveMapping(parsegraph_Unicode* unicode, const c
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error while testing for RTL");
     }
-    for(int i = 0; i < sizeof(unicodeCursiveMapKeys); ++i) {
-        if(unicodeCursiveMapKeys[i] == v) {
-            return unicodeCursiveMapValues + 4*i;
-        }
-    }
-    return 0;
+    return parsegraph_Unicode_getCursiveMapping(unicode, v);
 }
 
 void parsegraph_Unicode_loadFromString(parsegraph_Unicode* unicode, const char* t)
@@ -287,7 +351,7 @@ void parsegraph_Unicode_loadFromString(parsegraph_Unicode* unicode, const char* 
     //console.log("Text received: " + t.length + " bytes, " + lines + " lines");
 }
 
-static int run_Unicode_test(parsegraph_Unicode* unicode, const char* letter, int(*iter)(UChar32, void*), void* iterData)
+static int run_UTF16_test(parsegraph_Unicode* unicode, UChar* letter, int len, int(*iter)(UChar32, void*), void* iterData)
 {
     UErrorCode uerr;
     apr_pool_t* cpool;
@@ -295,26 +359,15 @@ static int run_Unicode_test(parsegraph_Unicode* unicode, const char* letter, int
         parsegraph_die("Failed to create pool for Unicode test");
     }
 
-    // Convert from UTF-8 to UTF-16.
-    int32_t destLen;
-    u_strFromUTF8(0, 0, &destLen, letter, -1, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error while running preflight conversion to UTF16");
-    }
-    UChar* dest = apr_palloc(cpool, destLen*sizeof(UChar)+1);
-    u_strFromUTF8(dest, destLen, 0, letter, -1, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Unicode error while running conversion to UTF16");
-    }
-
     // Convert from UTF-16 to UTF-32.
     int32_t len32;
-    u_strToUTF32(0, 0, &len32, dest, destLen, &uerr);
-    if(uerr != U_ZERO_ERROR) {
+    u_strToUTF32(0, 0, &len32, letter, len, &uerr);
+    if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
         parsegraph_die("Unicode error while running preflight conversion to UTF32");
     }
+    uerr = U_ZERO_ERROR;
     UChar32* dest32 = apr_palloc(cpool, len32*sizeof(UChar32)+1);
-    u_strToUTF32(dest32, len32, 0, dest, destLen, &uerr);
+    u_strToUTF32(dest32, len32+1, 0, letter, len, &uerr);
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error while running conversion to UTF32");
     }
@@ -332,14 +385,45 @@ static int run_Unicode_test(parsegraph_Unicode* unicode, const char* letter, int
     return rv;
 }
 
+static int run_UTF8_test(parsegraph_Unicode* unicode, const char* letter, int len, int(*iter)(UChar32, void*), void* iterData)
+{
+    UErrorCode uerr;
+    apr_pool_t* cpool;
+    if(APR_SUCCESS != apr_pool_create(&cpool, unicode->pool)) {
+        parsegraph_die("Failed to create pool for Unicode test");
+    }
+
+    // Convert from UTF-8 to UTF-16.
+    int32_t destLen;
+    u_strFromUTF8(0, 0, &destLen, letter, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error while running preflight conversion to UTF16");
+    }
+    UChar* dest = apr_palloc(cpool, destLen*sizeof(UChar)+1);
+    u_strFromUTF8(dest, destLen, 0, letter, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error while running conversion to UTF16");
+    }
+
+    int rv = run_UTF16_test(unicode, dest, destLen, iter, iterData);
+
+    apr_pool_destroy(cpool);
+    return rv;
+}
+
 static int arabicIterator(UChar32 c, void* iterData)
 {
     return ublock_getCode(c) == UBLOCK_ARABIC;
 }
 
-int parsegraph_Unicode_isArabic(parsegraph_Unicode* unicode, const char* letter)
+int parsegraph_Unicode_isArabicUTF8(parsegraph_Unicode* unicode, const char* letter, int len)
 {
-    return run_Unicode_test(unicode, letter, arabicIterator, 0);
+    return run_UTF8_test(unicode, letter, len, arabicIterator, 0);
+}
+
+int parsegraph_Unicode_isArabic(parsegraph_Unicode* unicode, UChar* letter, int len)
+{
+    return run_UTF16_test(unicode, letter, len, arabicIterator, 0);
 }
 
 static int markIterator (UChar32 c, void* iterData)
@@ -348,14 +432,24 @@ static int markIterator (UChar32 c, void* iterData)
     return cat == U_NON_SPACING_MARK || cat == U_COMBINING_SPACING_MARK || cat == U_ENCLOSING_MARK;
 }
 
-int parsegraph_Unicode_isMark(parsegraph_Unicode* unicode, const char* letter)
+int parsegraph_Unicode_isMarkUTF8(parsegraph_Unicode* unicode, const char* letter, int len)
 {
-    return run_Unicode_test(unicode, letter, markIterator, 0);
+    return run_UTF8_test(unicode, letter, len, markIterator, 0);
 }
 
-int parsegraph_Unicode_isArabicDiacritic(parsegraph_Unicode* unicode, const char* letter)
+int parsegraph_Unicode_isMark(parsegraph_Unicode* unicode, UChar* letter, int len)
 {
-    return parsegraph_Unicode_isArabic(unicode, letter);
+    return run_UTF16_test(unicode, letter, len, markIterator, 0);
+}
+
+int parsegraph_Unicode_isArabicDiacriticUTF8(parsegraph_Unicode* unicode, const char* letter, int len)
+{
+    return parsegraph_Unicode_isArabicUTF8(unicode, letter, len);
+}
+
+int parsegraph_Unicode_isArabicDiacritic(parsegraph_Unicode* unicode, UChar* letter, int len)
+{
+    return parsegraph_Unicode_isArabic(unicode, letter, len);
 }
 
 void parsegraph_Unicode_load(parsegraph_Unicode* unicode, const char* dbURL)

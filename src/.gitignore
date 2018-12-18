@@ -2,8 +2,12 @@ runtest
 runtest_pagingbuffer
 parsegraph
 parsegraph_kms_primes
+parsegraph_kms_dir
+parsegraph_kms_text
 parsegraph_kms_proportion
 cxx_proportion
 cxx_parsegraph
 cxx_primes
+cxx_dir
+cxx_text
 graph/.dirstamp

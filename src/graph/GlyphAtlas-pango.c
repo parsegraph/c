@@ -58,7 +58,8 @@ void parsegraph_GlyphAtlas_destroyFont(parsegraph_GlyphAtlas* glyphAtlas)
     free(pf);
 }
 
-int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len)
+void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const UChar* glyph, int len,
+    int* width, int* height, int* ascent, int* descent, int* advance)
 {
     struct parsegraph_PangoFont* pf = glyphAtlas->_font;
     char* textutf8;
@@ -76,15 +77,30 @@ int parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const U
         parsegraph_die("Unicode error during glyph conversion to UTF8");
     }
 
-    pango_layout_set_text(pf->measure->layout, textutf8, neededLen);
+    PangoLayout* layout = pf->measure->layout;
+    pango_layout_set_text(layout, textutf8, neededLen);
 
-    int width;
-    int height;
-    pango_layout_get_pixel_size(pf->measure->layout, &width, &height);
+    int twidth;
+    int theight;
+    pango_layout_get_pixel_size(layout, &twidth, &theight);
+    if(width) {
+        *width = twidth;
+    }
+    if(advance) {
+        *advance = twidth;
+    }
+    if(height) {
+        *height = theight;
+    }
+    if(ascent) {
+        *ascent = pango_layout_get_baseline(layout);
+    }
+    if(descent) {
+        *descent = theight - pango_layout_get_baseline(layout);
+    }
     //parsegraph_log("%dx%d\n", width, height);
 
     free(textutf8);
-    return width;
 }
 
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)

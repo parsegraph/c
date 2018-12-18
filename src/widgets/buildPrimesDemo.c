@@ -20,6 +20,12 @@ parsegraph_PrimesWidget* parsegraph_PrimesWidget_new(parsegraph_Graph* graph)
     return widget;
 }
 
+void parsegraph_PrimesWidget_destroy(parsegraph_PrimesWidget* widget)
+{
+    parsegraph_Caret_destroy(widget->caret);
+    parsegraph_ArrayList_destroy(widget->knownPrimes);
+}
+
 void parsegraph_PrimesWidget_step(parsegraph_PrimesWidget* widget, int steps)
 {
     //console.log("Stepping primes widget");
@@ -46,7 +52,7 @@ void parsegraph_PrimesWidget_step(parsegraph_PrimesWidget* widget, int steps)
                 parsegraph_Caret_spawnMove(widget->caret, "u", "s", 0);
             }
             if(i % parsegraph_NATURAL_GROUP_SIZE == 0) {
-                //parsegraph_Caret_crease(widget->caret, 0);
+                parsegraph_Caret_crease(widget->caret, 0);
             }
         }
         if(isPrime) {

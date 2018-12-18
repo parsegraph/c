@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "Rect.h"
 #include "Node.h"
 #include "Status.h"
 #include "Color.h"
@@ -17,6 +18,7 @@
 #include "../timing.h"
 #include "../parsegraph_math.h"
 #include "Label.h"
+#include "Camera.h"
 
 int parsegraph_Node_COUNT = 0;
 
@@ -466,6 +468,7 @@ void parsegraph_Node_setClickListener(parsegraph_Node* node, int(*listener)(cons
         node->_clickListener = listener;
         node->_clickListenerThisArg = thisArg;
     }
+    //parsegraph_log("Set click listener for node %d.\n", node->_id);
 }
 
 void parsegraph_Node_setChangeListener(parsegraph_Node* node, void(*listener)(void*, parsegraph_Node*), void* thisArg)
@@ -505,6 +508,7 @@ int parsegraph_Node_hasClickListener(parsegraph_Node* node)
 
 int parsegraph_Node_click(parsegraph_Node* node, const char* button)
 {
+    //parsegraph_log("Node was clicked!\n");
     // Invoke the click listener.
     if(!parsegraph_Node_hasClickListener(node)) {
         return 0;
@@ -1047,6 +1051,104 @@ void parsegraph_Node_extentSize(parsegraph_Node* node, float* size)
     parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD), size, 0, 0);
 };
 
+void parsegraph_Node_showNodeInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary)
+{
+    parsegraph_CommitLayoutTraversal cl;
+    cl.root = node;
+    cl.node = node;
+    cl.timeout = 0;
+    while(0 != parsegraph_Node_commitLayoutIteratively(node, &cl));
+    float bodySize[2];
+    parsegraph_Node_absoluteSize(node, bodySize);
+
+    float bodyRect[4];
+    parsegraph_Rect_set(bodyRect,
+        parsegraph_Node_absoluteX(node),
+        parsegraph_Node_absoluteY(node),
+        bodySize[0],
+        bodySize[1]
+    );
+    //if(parsegraph_Camera_ContainsAll(cam, bodyRect)) {
+        //return;
+    //}
+
+    float nodeScale = parsegraph_Node_absoluteScale(node);
+
+    parsegraph_Surface* surface = parsegraph_Camera_surface(cam);
+    float camScale = parsegraph_Camera_scale(cam);
+    float screenWidth = parsegraph_Surface_getWidth(surface);
+    float screenHeight = parsegraph_Surface_getHeight(surface);
+
+    float scaleAdjustment;
+    int widthIsBigger = screenWidth / (bodySize[0]*nodeScale) < screenHeight / (bodySize[1]*nodeScale);
+    if(widthIsBigger) {
+        scaleAdjustment = screenWidth / (bodySize[0]*nodeScale);
+    }
+    else {
+        scaleAdjustment = screenHeight / (bodySize[1]*nodeScale);
+    }
+    if(scaleAdjustment > camScale) {
+        scaleAdjustment = camScale;
+    }
+    else {
+        parsegraph_Camera_setScale(cam, scaleAdjustment);
+    }   
+
+    float ax = parsegraph_Node_absoluteX(node);
+    float ay = parsegraph_Node_absoluteY(node);
+    parsegraph_Camera_setOrigin(cam, -ax + screenWidth/(scaleAdjustment*2), -ay + screenHeight/(scaleAdjustment*2));
+}
+
+void parsegraph_Node_showInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary)
+{
+    parsegraph_CommitLayoutTraversal cl;
+    cl.root = node;
+    cl.node = node;
+    cl.timeout = 0;
+    while(0 != parsegraph_Node_commitLayoutIteratively(node, &cl));
+    float bodySize[2];
+    parsegraph_Node_extentSize(node, bodySize);
+
+    parsegraph_Surface* surface = parsegraph_Camera_surface(cam);
+    float camScale = parsegraph_Camera_scale(cam);
+    float screenWidth = parsegraph_Surface_getWidth(surface);
+    float screenHeight = parsegraph_Surface_getHeight(surface);
+
+    float scaleAdjustment;
+    int widthIsBigger = screenWidth / bodySize[0] < screenHeight / bodySize[1];
+    if(widthIsBigger) {
+        scaleAdjustment = screenWidth / bodySize[0];
+    }
+    else {
+        scaleAdjustment = screenHeight / bodySize[1];
+    }
+    if(onlyScaleIfNecessary && scaleAdjustment > camScale) {
+        scaleAdjustment = camScale;
+    }
+    else {
+        parsegraph_Camera_setScale(cam, scaleAdjustment);
+    }   
+
+    float x, y;
+    float bv[3];
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_BACKWARD), bv, bv + 1, bv + 2);
+    x = bv[1];
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_UPWARD), bv, bv + 1, bv + 2);
+    y = bv[1];
+
+    if(widthIsBigger || scaleAdjustment < 1.0) {
+        y += (screenHeight - bodySize[1]*scaleAdjustment)/(scaleAdjustment*2);
+    }
+    if(!widthIsBigger || scaleAdjustment < 1.0) {
+        x += (screenWidth - bodySize[0]*scaleAdjustment)/(scaleAdjustment*2);
+    }
+
+    float ax = parsegraph_Node_absoluteX(node);
+    float ay = parsegraph_Node_absoluteY(node);
+    
+    parsegraph_Camera_setOrigin(cam, x - ax, y - ay);
+}
+
 void parsegraph_Node_setLayoutPreference(parsegraph_Node* node, int given)
 {
     node->_layoutPreference = given;
@@ -1210,7 +1312,7 @@ void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* fromPa
         // Clearing the parent.
         if(node->_parentDirection != parsegraph_NULL_NODE_DIRECTION) {
             if(node->_neighbors[node->_parentDirection].node) {
-                parsegraph_Node_unref(node->_neighbors[node->_parentDirection].node);
+                //parsegraph_Node_unref(node->_neighbors[node->_parentDirection].node);
             }
             node->_neighbors[node->_parentDirection].node = 0;
             node->_parentDirection = parsegraph_NULL_NODE_DIRECTION;
@@ -1380,7 +1482,7 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
             }
 
             // Found the node.
-            //parsegraph_log("Found node.\n");
+            //parsegraph_log("Found clicked node.\n");
             rv = candidate;
             goto end;
         }
@@ -1437,7 +1539,7 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
         }
     }
 
-    //parsegraph_log("Found nothing.\n");
+    //parsegraph_log("Found nothing clicked.\n");
 end:
     parsegraph_ArrayList_destroy(candidates);
     apr_pool_destroy(spool);

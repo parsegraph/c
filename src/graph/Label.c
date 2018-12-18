@@ -1,12 +1,74 @@
 #include "Label.h"
+#include "Input.h"
 #include "log.h"
-#include "die.h"
+#include "initialize.h"
+#include "../die.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <parsegraph_math.h>
 #include "graph/Rect.h"
 #include "graph/GlyphPainter.h"
+#include "../unicode.h"
 #include <unicode/uregex.h>
+
+static int isMark(const UChar* letter, int len)
+{
+    UErrorCode uerr = U_ZERO_ERROR;
+    UChar32 l32[parsegraph_MAX_UNICODE_COMBINING_MARKS + 1];
+    memset(l32, 0, sizeof(l32));
+    u_strToUTF32(l32, sizeof(l32), 0, letter, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Failed to convert glyphData letter to UTF-32 character.");
+    }
+    switch(u_charType(l32[0])) {
+    case U_NON_SPACING_MARK:
+    case U_COMBINING_SPACING_MARK:
+    case U_ENCLOSING_MARK:
+        return 1;
+    }
+    return 0;
+}
+
+static const char* getDirection(parsegraph_GlyphData* glyphData, const char* defaultDirection)
+{
+    UErrorCode uerr = U_ZERO_ERROR;
+    UChar32 l32[parsegraph_MAX_UNICODE_COMBINING_MARKS + 1];
+    memset(l32, 0, sizeof(l32));
+    u_strToUTF32(l32, sizeof(l32), 0, glyphData->letter, glyphData->length, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Failed to retrieve bidirectional data for character.");
+    }
+    switch(u_charDirection(l32[0])) {
+    case U_LEFT_TO_RIGHT:
+    case U_LEFT_TO_RIGHT_EMBEDDING:
+    case U_LEFT_TO_RIGHT_OVERRIDE:
+    case U_EUROPEAN_NUMBER:
+    case U_EUROPEAN_NUMBER_SEPARATOR:
+    case U_EUROPEAN_NUMBER_TERMINATOR:
+        // Left-to-right.
+        return "L";
+    case U_RIGHT_TO_LEFT:
+    case U_RIGHT_TO_LEFT_ARABIC:
+    case U_ARABIC_NUMBER:
+    case U_RIGHT_TO_LEFT_EMBEDDING:
+    case U_RIGHT_TO_LEFT_OVERRIDE:
+        // Right-to-left
+        return "R";
+    case U_POP_DIRECTIONAL_FORMAT:
+    case U_COMMON_NUMBER_SEPARATOR:
+    case U_OTHER_NEUTRAL:
+    case U_WHITE_SPACE_NEUTRAL:
+    case U_BOUNDARY_NEUTRAL:
+    case U_SEGMENT_SEPARATOR:
+    case U_DIR_NON_SPACING_MARK:
+    case U_BLOCK_SEPARATOR:
+        // Neutral characters
+        return defaultDirection;
+    default:
+        parsegraph_die("Unrecognized Unicode character: %d", l32);
+    }
+    return defaultDirection;
+}
 
 // Line length computation must be decoupled from character insertion for correct widths to be calculated
 // sanely.
@@ -58,34 +120,201 @@ void parsegraph_Line_remove(parsegraph_Line* line, int pos, int count)
     parsegraph_ArrayList_splice(line->_glyphs, pos, count);
 }
 
+struct parsegraph_GlyphIterator {
+parsegraph_GlyphAtlas* atlas;
+const UChar* text;
+UChar prevLetter;
+int len;
+int index;
+};
+typedef struct parsegraph_GlyphIterator parsegraph_GlyphIterator;
+
+void parsegraph_GlyphIterator_init(parsegraph_GlyphIterator* gi, parsegraph_GlyphAtlas* atlas, const UChar* text, int len)
+{
+    gi->atlas = atlas;
+    gi->index = 0;
+    if(len == -1) {
+        len = u_strlen(text);
+    }
+    gi->len = len;
+    gi->text = text;
+    gi->prevLetter = 0;
+}
+
+parsegraph_GlyphData* parsegraph_GlyphIterator_next(parsegraph_GlyphIterator* gi)
+{
+    parsegraph_Unicode* u = parsegraph_GlyphAtlas_unicode(gi->atlas);
+
+    if(gi->index >= gi->len) {
+        return 0;
+    }
+    const UChar* start = gi->text + gi->index;
+    int len = 1;
+    if(!U16_IS_SINGLE(*start)) {
+        len = 2;
+    }
+    gi->index += len;
+    if(isMark(start, len)) {
+        // Show an isolated mark.
+        //parsegraph_log("Found isolated Unicode mark character %x.\n", start[0]);
+        parsegraph_GlyphData* rv = parsegraph_GlyphAtlas_getGlyph(gi->atlas, start, len);
+        return rv;
+    }
+
+    //parsegraph_log("Found Unicode character %x.\n", start[0]);
+
+    // Form ligatures.
+    UChar givenLetter = start[0];
+    if(givenLetter == 0x627 && gi->prevLetter == 0x644) {
+        // LAM WITH ALEF.
+        if(gi->prevLetter) {
+            // Has a previous glyph, so final.
+            givenLetter = 0xfefc;
+        }
+        else {
+            // Isolated form.
+            givenLetter = 0xfefb;
+        }
+        // Skip the ligature'd character.
+        gi->prevLetter = 0x627;
+        //parsegraph_log("Found ligature %x->%x\n", gi->prevLetter, givenLetter);
+    }
+    else {
+        UChar nextLetterChar = 0;
+        for(int i = 0; gi->index + i < gi->len;) {
+            const UChar* nextLetter = gi->text + gi->index + i;
+            int len = 1;
+            if(!U16_IS_SINGLE(*nextLetter)) {
+                len = 2;
+            }
+            if(isMark(nextLetter, len)) {
+                i += len;
+                continue;
+            }
+            // given, prev, next
+            if(parsegraph_Unicode_cursive(u, nextLetter[0], givenLetter, 0)) {
+                nextLetterChar = nextLetter[0];
+            }
+            break;
+        }
+        // RTL: [ 4, 3, 2, 1]
+        //        ^-next
+        //           ^-given
+        //              ^-prev
+        UChar cursiveLetter = parsegraph_Unicode_cursive(u, givenLetter, gi->prevLetter, nextLetterChar);
+        if(cursiveLetter != 0) {
+            //parsegraph_log("Found cursive char %x->%x\n", givenLetter, cursiveLetter);
+            gi->prevLetter = givenLetter;
+            givenLetter = cursiveLetter;
+        }
+        else {
+            //parsegraph_log("Found non-cursive char %x.\n", givenLetter);
+            gi->prevLetter = 0;
+        }
+    }
+
+    // Add diacritical marks and combine ligatures.
+    int foundVirama = 0;
+    while(gi->index < gi->len) {
+        const UChar* letter = gi->text + gi->index;
+        int llen = !U16_IS_SINGLE(*letter) ? 2 : 1;
+        if(llen == 2 && gi->index == gi->len - 1) {
+            parsegraph_die("Unterminated UTF-16 character");
+        }
+
+        if(isMark(letter, llen)) {
+            foundVirama = letter[0] == 0x094d;
+            len += llen;
+            gi->index += llen;
+            //parsegraph_log("Found Unicode mark character %x.\n", letter[0]);
+            continue;
+        }
+        else if(foundVirama) {
+            foundVirama = 0;
+            len += llen;
+            gi->index += llen;
+            //parsegraph_log("Found Unicode character %x combined using Virama.\n", letter[0]);
+            continue;
+        }
+
+        // Found a non-marking character that's part of a new glyph.
+        break;
+    }
+
+    UChar* cpy = malloc(sizeof(UChar)*(len+1));
+    u_memset(cpy, 0, len+1);
+    u_strncpy(cpy, start, len+1);
+    cpy[0] = givenLetter;
+    parsegraph_GlyphData* rv = parsegraph_GlyphAtlas_getGlyph(gi->atlas, cpy, len);
+    free(cpy);
+    return rv;
+}
+
+void parsegraph_Line_appendTextUTF8(parsegraph_Line* line, const char* text, int len)
+{
+    if(len == 0) {
+        return;
+    }
+    UErrorCode uerr = U_ZERO_ERROR;
+    UChar* buf;
+    int32_t destLen;
+    u_strFromUTF8(0, 0, &destLen, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text %d (preflight) %s", len, u_errorName(uerr));
+    }
+    buf = malloc(sizeof(UChar)*(destLen+1));
+    u_memset(buf, 0, destLen+1);
+
+    uerr = U_ZERO_ERROR;
+    u_strFromUTF8(buf, destLen+1, 0, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text (conversion)");
+    }
+    parsegraph_Line_appendText(line, buf, destLen);
+    free(buf);
+}
+
 void parsegraph_Line_appendText(parsegraph_Line* line, const UChar* text, int len)
 {
     parsegraph_GlyphAtlas* atlas = parsegraph_Line_glyphAtlas(line);
     if(!atlas) {
         parsegraph_die("Line cannot add text without the label having a GlyphAtlas.");
     }
-    //var checkTimeout = parsegraph_timeout("parsegraph_Line.insertText");
 
-    for(int i = 0; i < len;) {
-        //checkTimeout();
-
-        // Retrieve letter.
-        const UChar* letter = text + i;
-        int llen = 1;
-        if(!U16_IS_SINGLE(*letter)) {
-            llen = 2;
-        }
-
-        parsegraph_GlyphData* glyphData = parsegraph_GlyphAtlas_getGlyph(atlas, letter, llen);
+    parsegraph_GlyphIterator gi;
+    parsegraph_GlyphIterator_init(&gi, atlas, text, len);
+    parsegraph_GlyphData* glyphData = 0;
+    while((glyphData = parsegraph_GlyphIterator_next(&gi)) != 0) {
         parsegraph_ArrayList_push(line->_glyphs, glyphData);
-
-        // Increment.
         line->_height = parsegraph_max(line->_height, glyphData->height);
-        line->_width += glyphData->width;
-        //parsegraph_log("%d. Line width is %f because of glyph %d\n", i, line->_width,  glyphData->width);
-        i += llen;
+        line->_width += glyphData->advance;
+        //parsegraph_log("%d. Line width is %f because of appended glyph %d.\n", i, line->_width,  glyphData->width);
     }
 };
+
+void parsegraph_Line_insertTextUTF8(parsegraph_Line* line, int pos, const char* text, int len)
+{
+    if(len == 0) {
+        return;
+    }
+    UErrorCode uerr = U_ZERO_ERROR;
+    UChar* buf;
+    int32_t destLen;
+    u_strFromUTF8(0, 0, &destLen, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text %d (preflight) %s", len, u_errorName(uerr));
+    }
+    buf = malloc(sizeof(UChar)*(destLen+1));
+    u_memset(buf, 0, destLen+1);
+
+    uerr = U_ZERO_ERROR;
+    u_strFromUTF8(buf, destLen+1, 0, text, len, &uerr);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text (conversion)");
+    }
+    parsegraph_Line_insertText(line, pos, buf, destLen);
+    free(buf);
+}
 
 void parsegraph_Line_insertText(parsegraph_Line* line, int pos, const UChar* text, int len)
 {
@@ -93,25 +322,15 @@ void parsegraph_Line_insertText(parsegraph_Line* line, int pos, const UChar* tex
     if(!atlas) {
         parsegraph_die("Line cannot add text without the label having a GlyphAtlas.");
     }
-    //var checkTimeout = parsegraph_timeout("parsegraph_Line.insertText");
 
-    for(int i = 0; i < len;) {
-        //checkTimeout();
-
-        // Retrieve letter.
-        const UChar* letter = text + i;
-        int llen = 1;
-        if(!U16_IS_SINGLE(*letter)) {
-            llen = 2;
-        }
-
-        parsegraph_GlyphData* glyphData = parsegraph_GlyphAtlas_getGlyph(atlas, letter, llen);
+    parsegraph_GlyphIterator gi;
+    parsegraph_GlyphIterator_init(&gi, atlas, text, len);
+    parsegraph_GlyphData* glyphData = 0;
+    for(int i = 0; (glyphData = parsegraph_GlyphIterator_next(&gi)) != 0; ++i) {
         parsegraph_ArrayList_insert(line->_glyphs, pos + i, glyphData);
-
-        // Increment.
         line->_height = parsegraph_max(line->_height, glyphData->height);
-        line->_width += glyphData->width;
-        i += llen;
+        line->_width += glyphData->advance;
+        //parsegraph_log("%d. Line width is %f because of inserted glyph %d.\n", i, line->_width,  glyphData->width);
     }
 };
 
@@ -279,12 +498,16 @@ int parsegraph_Label_getText(parsegraph_Label* label, UChar* buf, int len)
 
 void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len)
 {
+    if(len == 0) {
+        parsegraph_Label_setText(label, 0, 0);
+        return;
+    }
     UErrorCode uerr = U_ZERO_ERROR;
     UChar* buf;
     int32_t destLen;
     u_strFromUTF8(0, 0, &destLen, text, len, &uerr);
     if(uerr != U_ZERO_ERROR && uerr != U_BUFFER_OVERFLOW_ERROR) {
-        parsegraph_die("Unicode error during convert from UTF8 text (preflight)");
+        parsegraph_die("Unicode error during convert from UTF8 text %d (preflight) %s", len, u_errorName(uerr));
     }
     buf = malloc(sizeof(UChar)*(destLen+1));
     u_memset(buf, 0, destLen+1);
@@ -306,10 +529,13 @@ void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int le
     label->_width = 0;
     label->_height = 0;
     int startIndex = 0;
+    if(len == 0) {
+        return;
+    }
 
     UErrorCode uerr = U_ZERO_ERROR;
     URegularExpression* ws = 0;
-    ws = uregex_openC("\n", 0, 0, &uerr);
+    ws = uregex_openC("[^\\n]+", 0, 0, &uerr);
     if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error while compiling WS regex");
     }
@@ -328,40 +554,33 @@ void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int le
         if(uerr != U_ZERO_ERROR) {
             parsegraph_die("Unicode error while setting ws end");
         }
-        if(startIndex == wsStart) {
-            // Whitespace at the beginning of the string.
-            startIndex = wsEnd;
-            continue;
-        }
+        //parsegraph_log("Line: %d, %d\n", wsStart, wsEnd);
         if(startIndex > wsStart) {
             parsegraph_die("Impossible");
         }
         // Assert startIndex < wsStart, therefore the boundaries of that line are [startIndex, wsStart - 1].
 
-        const UChar* textLine = text + startIndex;
-        int len = wsStart - startIndex;
+        const UChar* textLine = text + wsStart;
+        int len = wsEnd - wsStart;
         parsegraph_Line* l = parsegraph_Line_new(label, textLine, len);
         parsegraph_ArrayList_push(label->_lines, l);
         label->_width = parsegraph_max(label->_width, parsegraph_Line_width(l));
         label->_height += parsegraph_Line_height(l);
-    }
-    if(startIndex <= len - 1) {
-        parsegraph_Line* l = parsegraph_Line_new(label, text + startIndex, len - startIndex);
-        parsegraph_ArrayList_push(label->_lines, l);
-        label->_width = parsegraph_max(label->_width, parsegraph_Line_width(l));
-        label->_height += parsegraph_Line_height(l);
+        startIndex = wsEnd;
     }
     uregex_close(ws);
 }
 
-void parsegraph_Label_moveCaretDown(parsegraph_Label* label)
+int parsegraph_Label_moveCaretDown(parsegraph_Label* label)
 {
     //console.log("Moving caret down");
+    return 0;
 }
 
-void parsegraph_Label_moveCaretUp(parsegraph_Label* label)
+int parsegraph_Label_moveCaretUp(parsegraph_Label* label)
 {
     //console.log("Moving caret up");
+    return 0;
 }
 
 int parsegraph_Label_moveCaretBackward(parsegraph_Label* label)
@@ -433,23 +652,53 @@ int parsegraph_Label_ctrlKey(parsegraph_Label* label, const char* key)
 
 int parsegraph_Label_key(parsegraph_Label* label, const char* key)
 {
-    // TODO Implement
+        
+    if(!strcmp(key, parsegraph_MOVE_FORWARD_KEY)) {
+        return parsegraph_Label_moveCaretForward(label);
+    }
+    if(!strcmp(key, parsegraph_MOVE_BACKWARD_KEY)) {
+        return parsegraph_Label_moveCaretBackward(label);
+    }
+    if(!strcmp(key, parsegraph_MOVE_DOWNWARD_KEY)) {
+        return parsegraph_Label_moveCaretDown(label);
+    }
+    if(!strcmp(key, parsegraph_MOVE_UPWARD_KEY)) {
+        return parsegraph_Label_moveCaretUp(label);
+    }
+    if(!strcmp(key, "Backspace")) {
+        return parsegraph_Label_backspaceCaret(label);
+    }
+    if(!strcmp(key, "Delete")) {
+        return parsegraph_Label_deleteCaret(label);
+    }
+    //parsegraph_log("Label received key '%s'\n", key);
+
+    while(label->_caretLine > parsegraph_ArrayList_length(label->_lines)) {
+        parsegraph_ArrayList_push(label->_lines, parsegraph_Line_new(label, 0, 0));
+    }
+    parsegraph_Line* insertLine = parsegraph_ArrayList_at(label->_lines, label->_caretLine);
+    int insertPos = parsegraph_min(label->_caretPos, parsegraph_ArrayList_length(insertLine->_glyphs));
+    if(insertPos == parsegraph_ArrayList_length(insertLine->_glyphs)) {
+        parsegraph_Line_appendTextUTF8(insertLine, key, -1);
+    }
+    else {
+        parsegraph_Line_insertTextUTF8(insertLine, insertPos, key, -1);
+    }
+
+    if(!isnan(label->_width)) {
+        label->_width = parsegraph_max(parsegraph_Line_width(insertLine), label->_width);
+        label->_height = parsegraph_max(label->_height, parsegraph_Line_height(insertLine));
+    }
+    label->_caretPos += strlen(key);
+    parsegraph_Label_textChanged(label);
+    return 1;
+
     /* 
     switch(key) {
     case "Control":
     case "Alt":
     case "Shift":
         break;
-    case "ArrowLeft":
-        return this.moveCaretBackward();
-    case "ArrowRight":
-        return this.moveCaretForward();
-    case "ArrowDown":
-        return this.moveCaretDown();
-    case "ArrowUp":
-        return this.moveCaretUp();
-    case "Delete":
-        return this.deleteCaret();
     case "Escape":
         break;
     case "PageUp":
@@ -465,9 +714,6 @@ int parsegraph_Label_key(parsegraph_Label* label, const char* key)
     case "Enter":
     case "Tab":
         break;
-    case "Backspace":
-        return this.backspaceCaret();
-    case "F1":
     case "F2":
     case "F3":
     case "F4":
@@ -535,6 +781,7 @@ void parsegraph_Label_setEditable(parsegraph_Label* label, int editable)
 
 void parsegraph_Label_click(parsegraph_Label* label, int x, int y)
 {
+    //parsegraph_log("Label clicked at pos (%d, %d).\n", x, y);
     if(y < 0 && x < 0) {
         label->_caretLine = 0;
         label->_caretPos = 0;
@@ -602,6 +849,7 @@ void parsegraph_Label_getCaretRect(parsegraph_Label* label, float* outRect)
     int x = parsegraph_Line_posAt(line, label->_caretPos);
     int cw = 5;
     int h = parsegraph_Line_height(line);
+    //parsegraph_log("Caret is %d, %d\n", cw, h);
     parsegraph_Rect_set(outRect, x + cw/2, y + h/2, cw, h);
 }
 
@@ -632,21 +880,218 @@ float parsegraph_Label_height(parsegraph_Label* label)
     return label->_height;
 }
 
-static int isMark(parsegraph_GlyphData* glyphData)
+void parsegraph_Line_drawLTRGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun)
 {
-    UChar32 l32[2];
-    UErrorCode uerr = U_ZERO_ERROR;
-    u_strToUTF32(&l32, 2, 0, glyphData->letter, glyphData->length, &uerr);
-    if(uerr != U_ZERO_ERROR) {
-        parsegraph_die("Failed to convert glyphData letter to UTF-32 character.");
+    //parsegraph_log("Drawing LTR run from %d to %d.", startRun, endRun);
+    for(int q = startRun; q <= endRun; ++q) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, q);
+        parsegraph_GlyphPainter_drawGlyph(painter, glyphData, worldPos[0] + pos[0], worldPos[1] + pos[1], fontScale);
+        pos[0] += glyphData->advance * fontScale;
     }
-    switch(u_charType(l32[0])) {
-    case U_NON_SPACING_MARK:
-    case U_COMBINING_SPACING_MARK:
-    case U_ENCLOSING_MARK:
-        return 1;
+}
+
+void parsegraph_Line_drawRTLGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun)
+{
+    float runWidth = 0;
+    for(int q = startRun; q <= endRun; ++q) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, q);
+        runWidth += glyphData->advance * fontScale;
     }
-    return 0;
+    float advance = 0;
+    for(int q = startRun; q <= endRun; ++q) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, q);
+        advance += glyphData->advance * fontScale;
+        parsegraph_GlyphPainter_drawGlyph(painter, glyphData, worldPos[0] + pos[0] + runWidth - advance, worldPos[1] + pos[1], fontScale);
+    }
+    pos[0] += runWidth;
+
+/*    //parsegraph_log("Drawing RTL run from %d to %d.", startRun, endRun);
+    parsegraph_Unicode* u = parsegraph_GlyphAtlas_unicode(l->_label->_glyphAtlas);
+    UChar* cursiveMapping;
+
+    // The neighboring, non-mark, memory-representative glyphs.
+    parsegraph_GlyphData* nextGlyph = 0;
+    parsegraph_GlyphData* prevGlyph = 0;
+
+    // q is the current glyph under iteration.
+    int q = endRun;
+
+    while(q >= startRun) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, q);
+        if(isMark(glyphData->letter, glyphData->length)) {
+            //parsegraph_log("Skipping combiner for glyph.");
+            --q;
+            continue;
+        }
+        int glyphWithMarksCharLen = glyphData->length;
+        int fullGlyphCount = 1;
+
+        // Next is in reading order.
+        if(q > startRun && endRun != startRun) {
+            prevGlyph = parsegraph_ArrayList_at(l->_glyphs, q - fullGlyphCount);
+            while(isMark(prevGlyph->letter, prevGlyph->length)) {
+                glyphWithMarksCharLen += prevGlyph->length;
+                ++fullGlyphCount;
+                prevGlyph = parsegraph_ArrayList_at(l->_glyphs, q - fullGlyphCount);
+                if(!prevGlyph) {
+                    prevGlyph = 0;
+                    break;
+                }
+            }
+            if(prevGlyph && !parsegraph_Unicode_isArabic(u, prevGlyph->letter, 1)) {
+                prevGlyph = 0;
+            }
+            else if(prevGlyph) {
+                cursiveMapping = parsegraph_Unicode_getCursiveMapping(u, prevGlyph->letter[0]);
+                if(!cursiveMapping || !cursiveMapping[2]) {
+                    // Prev glyph can't be joined to, so ignore it.
+                    prevGlyph = 0;
+                }
+            }
+        }
+        else {
+            prevGlyph = 0;
+        }
+        if(q < endRun && endRun != startRun) {
+            int nextFullGlyphCount = 1;
+            nextGlyph = 0;
+            if(q + nextFullGlyphCount < parsegraph_ArrayList_length(l->_glyphs)) {
+                nextGlyph = parsegraph_ArrayList_at(l->_glyphs, q + nextFullGlyphCount);
+            }
+            while(nextGlyph && isMark(nextGlyph->letter, nextGlyph->length)) {
+                ++nextFullGlyphCount;
+                if(q + nextFullGlyphCount < parsegraph_ArrayList_length(l->_glyphs)) {
+                    nextGlyph = parsegraph_ArrayList_at(l->_glyphs, q + nextFullGlyphCount);
+                }
+                else {
+                    nextGlyph = 0;
+                    break;
+                }
+            }
+            if(nextGlyph && !parsegraph_Unicode_isArabic(u, nextGlyph->letter, 1)) {
+                nextGlyph = 0;
+            }
+            else if(nextGlyph) {
+                cursiveMapping = parsegraph_Unicode_getCursiveMapping(u, nextGlyph->letter[0]);
+                if(!cursiveMapping || !cursiveMapping[3]) {
+                    // Next glyph can't be joined to, so ignore it.
+                    nextGlyph = 0;
+                }
+            }
+        }
+        else {
+            nextGlyph = 0;
+        }
+
+        UChar givenLetter = glyphData->letter[0];
+
+        UChar* cursiveMapping = parsegraph_Unicode_getCursiveMapping(u, givenLetter);
+
+        if(givenLetter == 0x627 && prevGlyph && givenLetter == 0x644) {
+            // LAM WITH ALEF.
+            if(prevGlyph) {
+                // Has a previous glyph, so final.
+                givenLetter = 0xfefc;
+            }
+            else {
+                givenLetter = 0xfefb;
+            }
+            // Decrement twice to skip the ligature'd character.
+            --q;
+        }
+        else if(cursiveMapping) {
+            if(nextGlyph) {
+                if(prevGlyph) {
+                    if(cursiveMapping[2]) {
+                        givenLetter = cursiveMapping[2]; // medial
+                    }
+                    else if(cursiveMapping[3]) {
+                        givenLetter = cursiveMapping[3]; // final
+                    }
+                    else {
+                        givenLetter = cursiveMapping[0]; // isolated
+                    }
+                }
+                else {
+                    // Next is, but previous wasn't.
+                    if(cursiveMapping[1]) {
+                        givenLetter = cursiveMapping[1]; // initial
+                    }
+                    else {
+                        givenLetter = cursiveMapping[0]; // isolated
+                    }
+                }
+            }
+            else if(prevGlyph) {
+                if(cursiveMapping[3]) {
+                    givenLetter = cursiveMapping[3]; // final
+                }
+                else {
+                    givenLetter = cursiveMapping[0]; // isolated
+                }
+            }
+        }
+
+        glyphData = parsegraph_GlyphAtlas_getGlyph(l->_label->_glyphAtlas, &givenLetter, 1);
+
+        if(glyphWithMarksCharLen > parsegraph_MAX_UNICODE_COMBINING_MARKS) {
+            parsegraph_die("Unicode glyph has excessive combining marks");
+        }
+        UChar glyphBuf[parsegraph_MAX_UNICODE_COMBINING_MARKS + 1];
+        u_memset(glyphBuf, 0, parsegraph_MAX_UNICODE_COMBINING_MARKS + 1);
+
+        // Add diacritics.
+        int len = 0;
+        u_strncpy(glyphBuf, &givenLetter, 1);
+        len += glyphData->length;
+        for(int i = 1; i < fullGlyphCount; ++i) {
+            parsegraph_GlyphData* gd = (parsegraph_GlyphData*)parsegraph_ArrayList_at(l->_glyphs, q + i);
+            u_strncpy(glyphBuf + len, gd->letter, gd->length);
+            len += gd->length;
+        }
+        glyphData = parsegraph_GlyphAtlas_getGlyph(l->_label->_glyphAtlas, glyphBuf, len);
+        parsegraph_GlyphPainter_drawGlyph(painter, glyphData, worldPos[0] + pos[0], worldPos[1] + pos[1], fontScale);
+        pos[0] += glyphData->advance * fontScale;
+        --q;
+    }
+*/
+}
+
+void parsegraph_Line_drawGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale, int startRun, int endRun)
+{
+    // Draw the run.
+    if(!strcmp(*direction, "L") || (!parsegraph_RIGHT_TO_LEFT && !strcmp(*direction, "WS"))) {
+        parsegraph_Line_drawLTRGlyphRun(l, painter, worldPos, pos, direction, fontScale, startRun, endRun);
+    }
+    else {
+        parsegraph_Line_drawRTLGlyphRun(l, painter, worldPos, pos, direction, fontScale, startRun, endRun);
+    }
+}
+
+void parsegraph_Line_paint(parsegraph_Line* l, parsegraph_GlyphPainter* painter, float* worldPos, float* pos, const char** direction, float fontScale)
+{
+    int startRun = 0;
+    for(int j = 0; j < parsegraph_ArrayList_length(l->_glyphs); ++j) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(l->_glyphs, j);
+        const char* glyphDirection = getDirection(glyphData, *direction);
+        //parsegraph_log("Glyphdata is %d. Length is %d\n", glyphData->letter[0], glyphData->length);
+        //parsegraph_log("Char is %d Direction is %s\n", l32[0], glyphDirection);
+        if(!strcmp(*direction, "WS") && strcmp(glyphDirection, "WS")) {
+            // Use the glyph's direction if there is none currently in use.
+            *direction = glyphDirection;
+        }
+        if(j < parsegraph_ArrayList_length(l->_glyphs) - 1 && !strcmp(*direction, glyphDirection)) {
+            //parsegraph_log("Found another character in glyph run.\n");
+            continue;
+        }
+        parsegraph_Line_drawGlyphRun(l, painter, worldPos, pos, direction, fontScale, startRun, j);
+
+        // Set the new glyph direction.
+        *direction = glyphDirection;
+        startRun = j;
+    }
+    pos[1] += parsegraph_Line_height(l) * fontScale;
+    pos[0] = 0;
 }
 
 void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* painter, float worldX, float worldY, float fontScale)
@@ -658,269 +1103,12 @@ void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* pa
         parsegraph_GlyphAtlas_toString(parsegraph_GlyphPainter_glyphAtlas(painter), g2, sizeof(g2));
         parsegraph_die("Painter must use the same glyph atlas as this label: %s, %s", g1, g2);
     }
-    float x = 0;
-    float y = 0;
-    //parsegraph_Unicode* u = parsegraph_GlyphAtlas_unicode(label->_glyphAtlas);
+    float worldPos[2] = {worldX, worldY};
+    float pos[2] = {0, 0};
     const char* direction = "WS";
 
     for(int i = 0; i < parsegraph_ArrayList_length(label->_lines); ++i) {
         parsegraph_Line* l = parsegraph_ArrayList_at(label->_lines, i);
-        int startRun = 0;
-        int endRun = startRun;
-        //const char* runDirection = direction;
-        //int runWidth = 0;
-        int j = 0;
-        parsegraph_GlyphData* glyphData = 0;
-        while(parsegraph_ArrayList_length(l->_glyphs) > 0) {
-            glyphData = parsegraph_ArrayList_at(l->_glyphs, j);
-            const char* glyphDirection = direction;
-            UErrorCode uerr = U_ZERO_ERROR;
-            UChar32 l32[2];
-            u_memset(l32, 0, 2);
-            u_strToUTF32(&l32, 2, 0, glyphData->letter, glyphData->length, &uerr);
-            if(uerr != U_ZERO_ERROR) {
-                parsegraph_die("Failed to retrieve bidirectional data for character.");
-            }
-            switch(u_charDirection(l32[0])) {
-            case U_LEFT_TO_RIGHT:
-            case U_LEFT_TO_RIGHT_EMBEDDING:
-            case U_LEFT_TO_RIGHT_OVERRIDE:
-            case U_EUROPEAN_NUMBER:
-            case U_EUROPEAN_NUMBER_SEPARATOR:
-            case U_EUROPEAN_NUMBER_TERMINATOR:
-                // Left-to-right.
-                glyphDirection = "L";
-                break;
-            case U_RIGHT_TO_LEFT:
-            case U_RIGHT_TO_LEFT_ARABIC:
-            case U_ARABIC_NUMBER:
-            case U_RIGHT_TO_LEFT_EMBEDDING:
-            case U_RIGHT_TO_LEFT_OVERRIDE:
-                // Right-to-left
-                glyphDirection = "R";
-                break;
-            case U_POP_DIRECTIONAL_FORMAT:
-            case U_COMMON_NUMBER_SEPARATOR:
-            case U_OTHER_NEUTRAL:
-            case U_WHITE_SPACE_NEUTRAL:
-            case U_BOUNDARY_NEUTRAL:
-            case U_SEGMENT_SEPARATOR:
-            case U_DIR_NON_SPACING_MARK:
-            case U_BLOCK_SEPARATOR:
-                // Neutral characters
-                glyphDirection = direction;
-                break;
-            default:
-                parsegraph_die("Unrecognized Unicode character: %d", l32);
-            }
-            //fprintf(stderr, "Glyphdata is %d. Length is %d\n", glyphData->letter[0], glyphData->length);
-            //fprintf(stderr, "Char is %d Direction is %s\n", l32[0], glyphDirection);
-            if(!strcmp(direction, "WS") && strcmp(glyphDirection, "WS")) {
-                // Use the glyph's direction if there is none currently in use.
-                direction = glyphDirection;
-            }
-            if(j < parsegraph_ArrayList_length(l->_glyphs) - 1 && !strcmp(direction, glyphDirection)) {
-                //fprintf(stderr, "Incrementing J\n");
-                ++j;
-                continue;
-            }
-            endRun = j;
-
-            // Draw the run.
-            if(!strcmp(direction, "L") || !strcmp(direction, "WS")) {
-                //console.log("Drawing LTR run from " + startRun + " to " + endRun + ".");
-                for(int q = startRun; q <= endRun; ++q) {
-                    glyphData = parsegraph_ArrayList_at(l->_glyphs, q);
-                    if(isMark(glyphData)) {
-                        continue;
-                    }
-                    int z = 1;
-                    parsegraph_GlyphData* nextGlyph = 0;
-                    if(q + z < parsegraph_ArrayList_length(l->_glyphs)) {
-                        nextGlyph = parsegraph_ArrayList_at(l->_glyphs, q + z);
-                    }
-                    while(nextGlyph && isMark(nextGlyph)) {
-                        ++z;
-                        if(q + z < parsegraph_ArrayList_length(l->_glyphs)) {
-                            nextGlyph = parsegraph_ArrayList_at(l->_glyphs, q + z);
-                        }
-                        else {
-                            nextGlyph = 0;
-                        }
-                        if(!nextGlyph) {
-                            break;
-                        }
-                    }
-
-                    if(z - i > 255) {
-                        parsegraph_die("Unicode error");
-                    }
-                    UChar glyphBuf[300];
-                    u_memset(glyphBuf, 0, 300);
-                    int len = 0;
-
-                    // Add diacritics.
-                    u_strncpy(glyphBuf, glyphData->letter, glyphData->length);
-                    len += glyphData->length;
-                    for(int i = 1; i < z; ++i) {
-                        parsegraph_GlyphData* gd = (parsegraph_GlyphData*)parsegraph_ArrayList_at(l->_glyphs, q + i);
-                        u_strncpy(glyphBuf + len, gd->letter, gd->length);
-                        len += gd->length;
-                    }
-                    glyphData = parsegraph_GlyphAtlas_getGlyph(label->_glyphAtlas, glyphBuf, len);
-                    parsegraph_GlyphPainter_drawGlyph(painter, glyphData, worldX + x, worldY + y, fontScale);
-                    x += glyphData->width * fontScale;
-                }
-            }
-/*            else {
-                //console.log("Drawing RTL run from " + startRun + " to " + endRun + ".");
-                var cursiveMapping;
-
-                // The neighboring, non-mark, memory-representative glyphs.
-                var nextGlyph = null;
-                var prevGlyph = null;
-
-                // q is the current glyph under iteration.
-                var q = endRun;
-
-                // z is the distance from q the nextGlyph.
-                var z = 1;
-                while(q >= startRun) {
-                    glyphData = l._glyphs[q];
-
-                    // Next is in reading order.
-                    if(q > startRun && endRun !== startRun) {
-                        z = 1;
-                        prevGlyph = l._glyphs[q - z];
-                        while(u.isMark(prevGlyph.letter)) {
-                            ++z;
-                            prevGlyph = l._glyphs[q - z];
-                            if(!prevGlyph) {
-                                prevGlyph = null;
-                                break;
-                            }
-                        }
-                        if(prevGlyph && !u.isArabic(prevGlyph.letter)) {
-                            prevGlyph = null;
-                        }
-                        else if(prevGlyph) {
-                            cursiveMapping = u.getCursiveMapping(prevGlyph.letter);
-                            if(!cursiveMapping[2]) {
-                                // Prev glyph can't be joined to, so ignore it.
-                                prevGlyph = null;
-                            }
-                        }
-                    }
-                    else {
-                        prevGlyph = null;
-                    }
-                    if(q < endRun && endRun !== startRun) {
-                        z = 1;
-                        nextGlyph = l._glyphs[q + z];
-                        while(u.isMark(nextGlyph.letter)) {
-                            ++z;
-                            nextGlyph = l._glyphs[q + z];
-                            if(!nextGlyph) {
-                                nextGlyph = null;
-                                break;
-                            }
-                        }
-                        if(nextGlyph && !u.isArabic(nextGlyph.letter)) {
-                            nextGlyph = null;
-                        }
-                        else if(nextGlyph) {
-                            cursiveMapping = u.getCursiveMapping(nextGlyph.letter);
-                            if(!cursiveMapping[3]) {
-                                // Next glyph can't be joined to, so ignore it.
-                                nextGlyph = null;
-                            }
-                        }
-                    }
-                    else {
-                        nextGlyph = null;
-                    }
-
-                    var namedCharData = u.get(glyphData.letter);
-                    var cursiveMapping = u.getCursiveMapping(namedCharData.codeValue);
-
-                    if(namedCharData.codeValue === 0x627 && prevGlyph && prevGlyph.letter.charCodeAt(0) === 0x644) {
-                        // LAM WITH ALEF.
-                        if(prevGlyph) {
-                            // Has a previous glyph, so final.
-                            glyphData = 0xfefc;
-                        }
-                        else {
-                            glyphData = 0xfefb;
-                        }
-                        // Decrement twice to skip the ligature'd character.
-                        --q;
-                    }
-                    else if(cursiveMapping) {
-                        if(nextGlyph) {
-                            if(prevGlyph) {
-                                if(cursiveMapping[2]) {
-                                    glyphData = cursiveMapping[2]; // medial
-                                }
-                                else if(cursiveMapping[3]) {
-                                    glyphData = cursiveMapping[3]; // final
-                                }
-                                else {
-                                    glyphData = cursiveMapping[0]; // isolated
-                                }
-                            }
-                            else {
-                                // Next is, but previous wasn't.
-                                if(cursiveMapping[1]) {
-                                    glyphData = cursiveMapping[1]; // initial
-                                }
-                                else {
-                                    glyphData = cursiveMapping[0]; // isolated
-                                }
-                            }
-                        }
-                        else if(prevGlyph) {
-                            if(cursiveMapping[3]) {
-                                glyphData = cursiveMapping[3]; // final
-                            }
-                            else {
-                                glyphData = cursiveMapping[0]; // isolated
-                            }
-                        }
-                    }
-                    if(typeof glyphData === "object") {
-                        glyphData = glyphData.letter;
-                    }
-                    if(typeof glyphData === "number") {
-                        glyphData = String.fromCharCode(glyphData);
-                    }
-                    if(typeof glyphData !== "string") {
-                        throw new Error("glyphData should be a string by now.");
-                    }
-                    // Add diacritics.
-                    for(var i = 1; i < z; ++i) {
-                        glyphData += l._glyphs[q + i].letter;
-                    }
-                    // Convert to object.
-                    glyphData = this._glyphAtlas.getGlyph(glyphData);
-
-                    painter.drawGlyph(glyphData, worldX + x, worldY + y, fontScale);
-                    x += glyphData.width * fontScale;
-                    --q;
-                }
-            }
-            */
-
-            // Set the new glyph direction.
-            direction = glyphDirection;
-            startRun = j;
-            endRun = startRun;
-            //fprintf(stderr, "Incrementing J\n");
-            ++j;
-            if(j == parsegraph_ArrayList_length(l->_glyphs)) {
-                break;
-            }
-        }
-        y += parsegraph_Line_height(l) * fontScale;
-        x = 0;
+        parsegraph_Line_paint(l, painter, worldPos, pos, &direction, fontScale);
     }
 }

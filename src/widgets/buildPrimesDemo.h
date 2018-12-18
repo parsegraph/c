@@ -18,6 +18,7 @@ parsegraph_Graph* graph;
 typedef struct parsegraph_PrimesWidget parsegraph_PrimesWidget;
 
 parsegraph_PrimesWidget* parsegraph_PrimesWidget_new(parsegraph_Graph* graph);
+void parsegraph_PrimesWidget_destroy(parsegraph_PrimesWidget* widget);
 void parsegraph_PrimesWidget_step(parsegraph_PrimesWidget* widget, int steps);
 parsegraph_Node* parsegraph_PrimesWidget_root(parsegraph_PrimesWidget* widget);
 

@@ -9,6 +9,8 @@
 
 int parsegraph_GlyphPage_COUNT = 0;
 
+#define MAX_TEXTURE_WIDTH 512
+
 parsegraph_GlyphPage* parsegraph_GlyphPage_new(parsegraph_GlyphAtlas* glyphAtlas)
 {
     parsegraph_GlyphPage* page = apr_palloc(glyphAtlas->pool, sizeof(*page));
@@ -21,14 +23,16 @@ parsegraph_GlyphPage* parsegraph_GlyphPage_new(parsegraph_GlyphAtlas* glyphAtlas
     return page;
 }
 
-parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, unsigned int x, unsigned int y, unsigned int width, unsigned int height)
+parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage,
+    const UChar* glyph, int len, int x, int y,
+    int width, int height,
+    int ascent, int descent,
+    int advance)
 {
-    if(len > U16_MAX_LENGTH) {
-        parsegraph_die("Glyph length is too large");
-    }
     parsegraph_GlyphData* glyphData = apr_palloc(glyphPage->glyphAtlas->pool, sizeof(*glyphData));
     glyphData->glyphPage = glyphPage;
-    u_memset(glyphData->letter, 0, U16_MAX_LENGTH);
+    glyphData->letter = apr_palloc(glyphPage->glyphAtlas->pool, len + 1);
+    u_memset(glyphData->letter, 0, len + 1);
     u_strncpy(glyphData->letter, glyph, len);
     glyphData->length = len;
     glyphData->painted = 0;
@@ -36,6 +40,9 @@ parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, 
     glyphData->y = y;
     glyphData->width = width;
     glyphData->height = height;
+    glyphData->ascent = ascent;
+    glyphData->descent = descent;
+    glyphData->advance = advance;
     glyphData->next = 0;
     return glyphData;
 }
@@ -73,6 +80,7 @@ parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(parsegraph_Surface* surface, fl
     atlas->_needsUpdate = 1;
 
     atlas->_glyphData = apr_hash_make(atlas->pool);
+    atlas->_currentRowHeight = 0;
 
     // Atlas working position.
     atlas->_padding = parsegraph_GlyphAtlas_fontSize(atlas) / 4;
@@ -123,7 +131,12 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     else {
         //parsegraph_log("CREATING GLYPH FOR %d!!\n", glyph[0]);
     }
-    int letterWidth = parsegraph_GlyphAtlas_measureText(glyphAtlas, glyph, len);
+    int letterWidth, letterHeight;
+    int letterAscent, letterDescent;
+    int advance;
+    parsegraph_GlyphAtlas_measureText(glyphAtlas, glyph, len,
+        &letterWidth, &letterHeight, &letterAscent, &letterDescent, &advance
+    );
 
     parsegraph_GlyphPage* glyphPage = glyphAtlas->_lastPage;
     if(!glyphPage) {
@@ -132,23 +145,29 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
         glyphAtlas->_firstPage = glyphPage;
     }
 
-    float letterHeight = parsegraph_GlyphAtlas_letterHeight(glyphAtlas);
+    if(glyphAtlas->_currentRowHeight < letterHeight) {
+        glyphAtlas->_currentRowHeight = letterHeight;
+    }
+
     int maxTextureWidth = parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas);
     if(glyphAtlas->_x + letterWidth + glyphAtlas->_padding > maxTextureWidth) {
         // Move to the next row.
         glyphAtlas->_x = glyphAtlas->_padding;
-        glyphAtlas->_y += letterHeight + glyphAtlas->_padding;
+        glyphAtlas->_y += glyphAtlas->_currentRowHeight + glyphAtlas->_padding;
+        glyphAtlas->_currentRowHeight = letterHeight;
     }
-    if(glyphAtlas->_y + letterHeight + glyphAtlas->_padding > parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas)) {
+    if(glyphAtlas->_y + glyphAtlas->_currentRowHeight + glyphAtlas->_padding > parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas)) {
         // Move to the next page.
         glyphPage = parsegraph_GlyphPage_new(glyphAtlas);
         glyphAtlas->_lastPage->next = glyphPage;
         glyphAtlas->_lastPage = glyphPage;
         glyphAtlas->_x = glyphAtlas->_padding;
         glyphAtlas->_y = glyphAtlas->_padding;
+        glyphAtlas->_currentRowHeight = letterHeight;
     }
 
-    glyphData = parsegraph_GlyphData_new(glyphPage, glyph, len, glyphAtlas->_x, glyphAtlas->_y, letterWidth, letterHeight);
+    glyphData = parsegraph_GlyphData_new(glyphPage, glyph, len, glyphAtlas->_x, glyphAtlas->_y,
+        letterWidth, letterHeight, letterAscent, letterDescent, advance);
 
     apr_hash_set(glyphAtlas->_glyphData, glyphData->letter, len*sizeof(UChar), glyphData);
     if(glyphPage->_lastGlyph) {
@@ -208,8 +227,8 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         // Accept ARGB32_Premultiplied
         const unsigned char* glyphCanvas = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, texture);
-        unsigned char* swizzled = malloc(4*maxTextureWidth*maxTextureWidth);
-        for(int i = 0; i < 4*maxTextureWidth*maxTextureWidth; i += 4) {
+        unsigned char swizzled[4*MAX_TEXTURE_WIDTH*MAX_TEXTURE_WIDTH];
+        for(int i = 0; i < 4*MAX_TEXTURE_WIDTH*MAX_TEXTURE_WIDTH; i += 4) {
             float a = (float)glyphCanvas[i];
             float r = (float)glyphCanvas[i+1];
             float g = (float)glyphCanvas[i+2];
@@ -246,7 +265,6 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         parsegraph_GlyphAtlas_destroyTexture(glyphAtlas, texture);
         //glFlush();
-        free(swizzled);
     }
 };
 
@@ -278,7 +296,7 @@ void parsegraph_GlyphAtlas_font(parsegraph_GlyphAtlas* glyphAtlas, UChar* buf, s
 
 int parsegraph_GlyphAtlas_maxTextureWidth(parsegraph_GlyphAtlas* glyphAtlas)
 {
-    return 512;
+    return MAX_TEXTURE_WIDTH;
 }
 
 float parsegraph_GlyphAtlas_letterHeight(parsegraph_GlyphAtlas* glyphAtlas)

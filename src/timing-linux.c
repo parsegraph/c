@@ -7,7 +7,7 @@
 #include <pthread.h>
 
 struct TimerData {
-void* callback;
+volatile void* callback;
 parsegraph_Surface* surface;
 timer_t timer;
 pthread_attr_t tattr;
@@ -19,16 +19,18 @@ static void
 animationhandler(void* data, float elapsed)
 {
     struct TimerData* td = data;
-    td->callback = 0;
     td->listener(td->data);
+    td->callback = 0;
 }
 
 static void
 handler(union sigval data)
 {
     struct TimerData* td = data.sival_ptr;
-    td->callback = parsegraph_Surface_addAnimationCallback(td->surface, animationhandler, td);
-    parsegraph_Surface_scheduleRepaint(td->surface);
+    if(!td->callback) {
+        td->callback = parsegraph_Surface_addAnimationCallback(td->surface, animationhandler, td);
+        parsegraph_Surface_scheduleRepaint(td->surface);
+    }
 }
 
 static struct TimerData* createTimer(parsegraph_Surface* surface, void(*listener)(void*), int durMs, void* data, int repeat)
@@ -55,9 +57,8 @@ static struct TimerData* createTimer(parsegraph_Surface* surface, void(*listener
 
     /* Start the timer */
     struct itimerspec its;
-    long long freq_nanosecs = durMs * 1000000;
-    its.it_value.tv_sec = freq_nanosecs / 1000000000;
-    its.it_value.tv_nsec = freq_nanosecs % 1000000000;
+    its.it_value.tv_sec = durMs / 1000;
+    its.it_value.tv_nsec = (durMs % 1000) * 1000000;
     if(repeat) {
         its.it_interval.tv_sec = its.it_value.tv_sec;
         its.it_interval.tv_nsec = its.it_value.tv_nsec;
@@ -82,7 +83,9 @@ void parsegraph_clearTimeout(parsegraph_Surface* surface, void* timer)
 {
     struct TimerData* td = timer;
     if(td->callback) {
-        parsegraph_Surface_removeAnimationCallback(surface, td->callback);
+        void* cb = (void*)td->callback;
+        td->callback = 0;
+        parsegraph_Surface_removeAnimationCallback(surface, cb);
     }
     if(0 != timer_delete(td->timer)) {
         parsegraph_die("Failed to end timer");

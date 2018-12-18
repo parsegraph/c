@@ -32,6 +32,7 @@ typedef struct parsegraph_AnimationCallback parsegraph_AnimationCallback;
 
 struct parsegraph_SurfaceDestructor;
 struct parsegraph_Surface {
+int _id;
 pthread_mutex_t lock;
 parsegraph_AnimationCallback* firstAnimationCallback;
 parsegraph_AnimationCallback* lastAnimationCallback;
