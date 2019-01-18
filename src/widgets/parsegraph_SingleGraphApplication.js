@@ -3,10 +3,10 @@ function parsegraph_SingleGraphApplication(guid)
     this._cameraName = "parsegraph_login_camera";
     this._guid = guid || "";
     if(window.location.protocol == "https:") {
-        this._hostname = "wss://" + location.host;
+        this._hostname = "https://" + location.host;
     }
     else {
-        this._hostname = "ws://" + location.host;
+        this._hostname = "http://" + location.host;
     }
 }
 
@@ -94,14 +94,34 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
     }
 
     if(!this._environmentProtocol && this._guid) {
-        this._environmentProtocol = new parsegraph_EnvironmentProtocol(new WebSocket(
-            this.hostname() + "/environment/live"
-        ), this._guid, function(name, obj) {
-                if(name === "initialData") {
-                    this.loadEnvironment(obj);
+        this._environmentProtocol = new EventSource(this.hostname() + '/@' + this._guid + "/live");
+        var that = this;
+        this._environmentProtocol.onmessage = function(e) {
+            try {
+                var obj = JSON.parse(e.data);
+                //console.log("Found message!", obj);
+                if(obj.type === "initialData") {
+                    that.loadEnvironment(obj);
                 }
-            }, this
-        );
+                else if(obj.type === "camera_move") {
+                    var cb = that._graph.cameraBox();
+                    cb.setCamera(obj.username, {
+                        "cameraX":obj.x,
+                        "cameraY":obj.y,
+                        "height":obj.height,
+                        "scale":obj.scale,
+                        "width":obj.width,
+                    });
+                }
+            }
+            catch(ex) {
+                console.log("Failed to read message. Error: ", ex, "Message:", e.data);
+            }
+        };
+    }
+
+    if(!this._cameraProtocol && this._guid) {
+        this._cameraProtocol = new parsegraph_CameraProtocol(this._guid, this.graph().input().camera());
     }
 };
 
@@ -450,10 +470,8 @@ parsegraph_SingleGraphApplication.prototype.onUnicodeLoaded = function() {
     this._loginWidget.setTitle(this._guid);
     graph.world().plot(this._loginWidget.root());
 
-    var cameraProtocol;
-
     this._loginWidget.setLoginListener(function(res, userLogin, node) {
-        console.log("Logged in")
+        //console.log("Logged in")
         this.onLogin(userLogin, node);
         this._loginWidget.setLogoutListener(function() {
             this.onLogout(userLogin, node);

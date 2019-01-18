@@ -10,6 +10,8 @@ function parsegraph_CameraBox(graph)
     this._gl = null;
     this._glyphAtlas = null;
     this._shaders = null;
+
+    this._numBoxes = 0;
 }
 
 parsegraph_CameraBox.prototype.needsRepaint = function()
@@ -36,6 +38,9 @@ parsegraph_CameraBox.prototype.prepare = function(gl, glyphAtlas, shaders)
 
 parsegraph_CameraBox.prototype.setCamera = function(name, camera)
 {
+    if(!(name in this._cameraBoxes)) {
+        ++this._numBoxes;
+    }
     this._cameraBoxes[name] = camera;
     this._cameraBoxDirty = true;
     this._graph.scheduleRepaint();
@@ -43,7 +48,11 @@ parsegraph_CameraBox.prototype.setCamera = function(name, camera)
 
 parsegraph_CameraBox.prototype.removeCamera = function(name)
 {
+    if(!(name in this._cameraBoxes)) {
+        return;
+    }
     delete this._cameraBoxes[name];
+    --this._numBoxes;
     this._cameraBoxDirty = true;
     this.scheduleRepaint();
 };
@@ -64,7 +73,7 @@ parsegraph_CameraBox.prototype.paint = function()
         else {
             this._cameraBoxPainter.clear();
         }
-        this._cameraBoxPainter._blockPainter.initBuffer(this._cameraBoxes.length);
+        this._cameraBoxPainter._blockPainter.initBuffer(this._numBoxes);
         var rect = new parsegraph_Rect();
         for(var name in this._cameraBoxes) {
             var cameraBox = this._cameraBoxes[name];

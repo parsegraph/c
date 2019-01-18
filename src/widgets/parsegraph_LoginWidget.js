@@ -8,8 +8,8 @@ function parsegraph_authenticate(listener, listenerThisArg)
     if(!listenerThisArg) {
         listenerThisArg = xhr;
     }
-    xhr.open("POST", "/authenticate/", true);
-    xhr.setRequestHeader("Accept", "application/json");
+    xhr.open("POST", "/authenticate", true);
+    //xhr.setRequestHeader("Accept", "application/json");
     xhr.onreadystatechange = function() {
         if(xhr.readyState !== XMLHttpRequest.DONE) {
             return;

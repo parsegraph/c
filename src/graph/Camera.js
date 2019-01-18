@@ -11,7 +11,10 @@ function parsegraph_Camera(surface)
     this._cameraY = 0;
     this._scale = 1;
 
+    this._width = 0;
+    this._height = 0;
     this._aspectRatio = 1;
+    this._changeVersion = 0;
 };
 
 parsegraph_Camera_Tests = new parsegraph_TestSuite("parsegraph_Camera");
@@ -181,8 +184,22 @@ parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
 
 parsegraph_Camera.prototype.setOrigin = function(x, y)
 {
+    if(x == this._cameraX && y == this._cameraY) {
+        return;
+    }
     this._cameraX = x;
     this._cameraY = y;
+    this.hasChanged();
+}
+
+parsegraph_Camera.prototype.changeVersion = function()
+{
+    return this._changeVersion;
+}
+
+parsegraph_Camera.prototype.hasChanged = function()
+{
+    ++this._changeVersion;
 }
 
 parsegraph_Camera.prototype.toJSON = function()
@@ -235,11 +252,15 @@ parsegraph_Camera.prototype.toString = function()
 
 parsegraph_Camera.prototype.adjustOrigin = function(x, y)
 {
+    if(x == 0 && y == 0) {
+        return;
+    }
     if(Number.isNaN(x) || Number.isNaN(y)) {
         throw new Error("Adjusted origin must not be null. (Given " + x + ", " + y + ")");
     }
     this._cameraX += x;
     this._cameraY += y;
+    this.hasChanged();
 }
 
 parsegraph_Camera.prototype.worldMatrix = function()
@@ -301,9 +322,18 @@ parsegraph_Camera.prototype.project = function()
         0, 0, this.surface().canvas().width, this.surface().canvas().height
         );
 
-    this._aspectRatio = this.surface().canvas().width / this.surface().canvas().height;
-    this._width = this.surface().canvas().width;
-    this._height = this.surface().canvas().height;
+    if(this._aspectRatio != this.surface().canvas().width / this.surface().canvas().height) {
+        this._aspectRatio = this.surface().canvas().width / this.surface().canvas().height;
+        this.hasChanged();
+    }
+    if(this._width != this.surface().canvas().width) {
+        this._width = this.surface().canvas().width;
+        this.hasChanged();
+    }
+    if(this._height != this.surface().canvas().height) {
+        this._height = this.surface().canvas().height;
+        this.hasChanged();
+    }
 
     return matrixMultiply3x3(
         this.worldMatrix(),

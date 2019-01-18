@@ -893,7 +893,7 @@ parsegraph_Input.prototype.Update = function(t)
         );
     }
     if(this.Get(parsegraph_ZOOM_IN_KEY)) {
-        console.log("Continuing to zoom out");
+        //console.log("Continuing to zoom out");
         this._updateRepeatedly = true;
         inputChangedScene = true;
         if(cam.scale() >= .01) {
@@ -1001,6 +1001,11 @@ parsegraph_Input.prototype.setFocusedNode = function(focusedNode)
 parsegraph_Input.prototype.focusedLabel = function()
 {
     return this._focusedLabel;
+}
+
+parsegraph_Input.prototype.camera = function()
+{
+    return this._camera;
 }
 
 parsegraph_Input.prototype.render = function(world)
