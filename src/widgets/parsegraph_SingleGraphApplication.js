@@ -104,6 +104,9 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
                     that.loadEnvironment(obj);
                 }
                 else if(obj.type === "camera_move") {
+                    if(userLogin.username === obj.username) {
+                        return;
+                    }
                     var cb = that._graph.cameraBox();
                     cb.setCamera(obj.username, {
                         "cameraX":obj.x,
@@ -113,6 +116,13 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
                         "width":obj.width,
                     });
                 }
+                else if(obj.type == "mouse_move") {
+                    if(userLogin.username === obj.username) {
+                        return;
+                    }
+                    var cb = that._graph.cameraBox();
+                    cb.setCameraMouse(obj.username, obj.x, obj.y);
+                }
             }
             catch(ex) {
                 console.log("Failed to read message. Error: ", ex, "Message:", e.data);
@@ -121,7 +131,7 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
     }
 
     if(!this._cameraProtocol && this._guid) {
-        this._cameraProtocol = new parsegraph_CameraProtocol(this._guid, this.graph().input().camera());
+        this._cameraProtocol = new parsegraph_InputProtocol(this._guid, this.graph().input());
     }
 };
 
@@ -402,8 +412,10 @@ parsegraph_SingleGraphApplication.prototype.onRender = function() {
     var t = alpha_GetTime();
     start = t;
     if(graph.needsRepaint()) {
+        //console.log("Repainting");
         surface.paint(50);
     }
+    //console.log("Rendering");
     surface.render();
     if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
         if(this._cameraProtocol && graph.input().UpdateRepeatedly()) {
@@ -501,10 +513,10 @@ parsegraph_SingleGraphApplication.prototype.onUnicodeLoaded = function() {
             this._graph.scheduleRepaint();
         }
         this.scheduleRender();
+        if(this._cameraProtocol) {
+            this._cameraProtocol.update();
+        }
         if(inputAffectedCamera) {
-            if(this._cameraProtocol) {
-                this._cameraProtocol.update();
-            }
             if(typeof cameraName === "string") {
                 localStorage.setItem(cameraName, JSON.stringify(this._graph.camera().toJSON()));
             }

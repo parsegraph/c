@@ -4,6 +4,8 @@ function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
         throw new Error("Refusing to fire without a non-null listener");
     }
 
+    //console.log("Sending camera");
+
     var xhr = new XMLHttpRequest();
     if(!listenerThisArg) {
         listenerThisArg = xhr;
@@ -11,6 +13,9 @@ function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
     xhr.open("POST", "/@" + envGuid, true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    xhr.onerror = function(e) {
+        alert(e.error);
+    };
     xhr.onreadystatechange = function() {
         if(xhr.readyState !== XMLHttpRequest.DONE) {
             return;
@@ -29,19 +34,60 @@ function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
     return xhr;
 }
 
-function parsegraph_CameraProtocol(envGuid, camera)
+function parsegraph_sendMouseUpdate(envGuid, input, listener, listenerThisArg)
+{
+    if(!listener) {
+        throw new Error("Refusing to fire without a non-null listener");
+    }
+
+    //console.log("Sending mouse update");
+
+    var xhr = new XMLHttpRequest();
+    if(!listenerThisArg) {
+        listenerThisArg = xhr;
+    }
+    xhr.open("POST", "/@" + envGuid, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.onerror = function(e) {
+        alert(e.error);
+    };
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState !== XMLHttpRequest.DONE) {
+            return;
+        }
+        try {
+            var resp = JSON.parse(xhr.responseText);
+            listener.call(listenerThisArg, xhr.status === 200, resp);
+        }
+        catch(ex) {
+            listener.call(listenerThisArg, ex);
+        }
+    };
+    var obj = {
+        type:"mouse_move",
+        x:input.lastMouseX(),
+        y:input.lastMouseY()
+    };
+    xhr.send(JSON.stringify(obj));
+    return xhr;
+}
+
+function parsegraph_InputProtocol(envGuid, input)
 {
     var timer = new parsegraph_TimeoutTimer();
-    timer.setDelay(50);
+    timer.setDelay(400);
 
     this._envGuid = envGuid;
-    this._camera = camera;
+    this._input = input;
+    this._camera = input.camera();
 
-    this._waiting = false;
+    this._waiting = 0;
 
+    this._lastSentMouseVersion = -1;
     this._lastSentVersion = -1;
     timer.setListener(function() {
-        if(this._waiting) {
+        if(this._waiting > 0) {
             this.scheduleUpdate();
             return;
         }
@@ -50,37 +96,63 @@ function parsegraph_CameraProtocol(envGuid, camera)
     this._timer = timer;
 }
 
-parsegraph_CameraProtocol.prototype.sendUpdate = function()
+parsegraph_InputProtocol.prototype.sendMouseUpdate = function()
 {
-    if(this._waiting) {
-        return;
+    if(this._lastSentMouseVersion != this._input.mouseVersion()) {
+        ++this._waiting;
+        this._lastSentMouseVersion = this._input.mouseVersion();
+        parsegraph_sendMouseUpdate(this._envGuid, this._input, function(res, resp) {
+            if(res === true) {
+                // Update received.
+            }
+            else if(res === false) {
+                // Bad request.
+            }
+            else {
+                // Server error.
+                console.log("Mouse update error: " + res);
+            }
+            --this._waiting;
+        }, this);
     }
+};
+
+parsegraph_InputProtocol.prototype.sendCameraUpdate = function()
+{
     if(this._lastSentVersion != this._camera.changeVersion()) {
-        this._waiting = true;
+        ++this._waiting;
         this._lastSentVersion = this._camera.changeVersion();
         parsegraph_sendCameraUpdate(this._envGuid, this._camera, function(res, resp) {
             if(res === true) {
                 // Update received.
-                this._waiting = false;
             }
             else if(res === false) {
                 // Bad request.
-                this._waiting = false;
             }
             else {
                 // Server error.
                 console.log("Camera update error: " + res);
             }
+            --this._waiting;
         }, this);
     }
 };
 
-parsegraph_CameraProtocol.prototype.update = function()
+parsegraph_InputProtocol.prototype.sendUpdate = function()
 {
-    this.scheduleUpdate();
+    if(this._waiting > 0) {
+        return;
+    }
+    this.sendCameraUpdate();
+    this.sendMouseUpdate();
 };
 
-parsegraph_CameraProtocol.prototype.scheduleUpdate = function()
+parsegraph_InputProtocol.prototype.update = function()
+{
+    this.sendUpdate();
+};
+
+parsegraph_InputProtocol.prototype.scheduleUpdate = function()
 {
     this._timer.schedule();
 };

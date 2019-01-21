@@ -1,3 +1,8 @@
+function parsegraph_timediffMs(a, b)
+{
+    return b.getTime() - a.getTime();
+}
+
 function parsegraph_timeout(name, timeoutMs)
 {
     if(arguments.length === 1) {

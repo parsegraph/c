@@ -36,12 +36,33 @@ parsegraph_CameraBox.prototype.prepare = function(gl, glyphAtlas, shaders)
     this._shaders = shaders;
 }
 
-parsegraph_CameraBox.prototype.setCamera = function(name, camera)
+parsegraph_CameraBox.prototype.setCameraMouse = function(name, x, y)
 {
     if(!(name in this._cameraBoxes)) {
         ++this._numBoxes;
+        this._cameraBoxes[name] = {};
+    }
+    this._cameraBoxes[name].mouseX = x;
+    this._cameraBoxes[name].mouseY = y;
+    this._cameraBoxes[name].when = new Date();
+    this._cameraBoxDirty = true;
+    this._graph.scheduleRepaint();
+};
+
+parsegraph_CameraBox.prototype.setCamera = function(name, camera)
+{
+    var oldMouseX, oldMouseY;
+    if(!(name in this._cameraBoxes)) {
+        ++this._numBoxes;
+    }
+    else {
+        oldMouseX = this._cameraBoxes[name].mouseX;
+        oldMouseY = this._cameraBoxes[name].mouseY;
     }
     this._cameraBoxes[name] = camera;
+    this._cameraBoxes[name].mouseX = oldMouseX;
+    this._cameraBoxes[name].mouseY = oldMouseY;
+    this._cameraBoxes[name].when = new Date();
     this._cameraBoxDirty = true;
     this._graph.scheduleRepaint();
 };
@@ -64,6 +85,8 @@ parsegraph_CameraBox.prototype.scheduleRepaint = function()
 
 parsegraph_CameraBox.prototype.paint = function()
 {
+    //console.log("Repainting camera boxes");
+    var needsRepaint = false;
     if(this._showCameraBoxes && this._cameraBoxDirty) {
         if(!this._cameraBoxPainter) {
             this._cameraBoxPainter = new parsegraph_CameraBoxPainter(
@@ -83,15 +106,16 @@ parsegraph_CameraBox.prototype.paint = function()
             rect.setY(-cameraBox.cameraY + hh/2);
             rect.setWidth(cameraBox.width/cameraBox.scale);
             rect.setHeight(cameraBox.height/cameraBox.scale);
-            this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale);
+            needsRepaint = this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale, cameraBox.mouseX, cameraBox.mouseY, cameraBox.when) || needsRepaint;
         }
-        this._cameraBoxDirty = false;
+        this._cameraBoxDirty = needsRepaint;
     }
+    return needsRepaint;
 }
 
 parsegraph_CameraBox.prototype.render = function(world)
 {
-    if(this._showCameraBoxes && !this._cameraBoxDirty) {
+    if(this._showCameraBoxes) {
         var gl = this.gl();
         gl.enable(gl.BLEND);
         gl.blendFunc(

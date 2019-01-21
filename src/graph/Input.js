@@ -45,6 +45,8 @@ function parsegraph_Input(graph, camera)
     this._spotlightPainter = null;
     this._spotlightColor = parsegraph_FOCUSED_SPOTLIGHT_COLOR;
 
+    this._mouseVersion = 0;
+
     this.lastMouseCoords = function() {
         return [lastMouseX, lastMouseY];
     };
@@ -206,16 +208,20 @@ function parsegraph_Input(graph, camera)
                         (touch.clientX - touchRecord.x) / camera.scale(),
                         (touch.clientY - touchRecord.y) / camera.scale()
                     );
-                    this.Dispatch(false, "touchmove");
+                    this.Dispatch(false, "touchmove", true);
                 }
                 else {
-                    this.Dispatch(graph.carousel().mouseOverCarousel(touch.clientX, touch.clientY), "mousemove carousel");
+                    this.Dispatch(graph.carousel().mouseOverCarousel(touch.clientX, touch.clientY), "mousemove carousel", false);
                 }
+            }
+            else {
+                this.Dispatch(false, "touchmove", false);
             }
             touchRecord.x = touch.clientX;
             touchRecord.y = touch.clientY;
             lastMouseX = touch.clientX;
             lastMouseY = touch.clientY;
+            this.mouseChanged();
         }
 
         var realMonitoredTouches = 0;
@@ -246,7 +252,7 @@ function parsegraph_Input(graph, camera)
                     zoomCenter[0],
                     zoomCenter[1]
                 );
-                this.Dispatch(false, "touchzoom");
+                this.Dispatch(false, "touchzoom", true);
             }
             zoomTouchDistance = dist;
         }
@@ -285,9 +291,10 @@ function parsegraph_Input(graph, camera)
         if(selectedSlider.hasClickListener()) {
             selectedSlider.click();
         }
-        this.Dispatch(true, "slider");
+        this.Dispatch(true, "slider", false);
         lastMouseX = mouseX;
         lastMouseY = mouseY;
+        this.mouseChanged();
 
         return true;
     };
@@ -312,6 +319,7 @@ function parsegraph_Input(graph, camera)
             monitoredTouches.push(touchRec);
             lastMouseX = touch.clientX;
             lastMouseY = touch.clientY;
+            this.mouseChanged();
 
             // Get the current mouse position, in world space.
             //alert(camera.worldMatrix());
@@ -322,7 +330,7 @@ function parsegraph_Input(graph, camera)
 
             /*if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
-                this.Dispatch(true, "touchstart");
+                this.Dispatch(true, "touchstart", false);
                 touchstartTime = null;
                 return;
             }*/
@@ -349,7 +357,7 @@ function parsegraph_Input(graph, camera)
                     2
                 )
             );
-            this.Dispatch(false, "touchzoomstart");
+            this.Dispatch(false, "touchzoomstart", false);
         }
     }, this, true);
 
@@ -390,9 +398,12 @@ function parsegraph_Input(graph, camera)
         ) {
             if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
-                this.Dispatch(true, "touchstart");
+                this.Dispatch(true, "touchstart", false);
                 touchstartTime = null;
                 return;
+            }
+            else {
+                this.Dispatch(false, "touchstart", false);
             }
         }
 
@@ -414,6 +425,7 @@ function parsegraph_Input(graph, camera)
         var deltaY = mouseY - lastMouseY;
         lastMouseX = mouseX;
         lastMouseY = mouseY;
+        this.mouseChanged();
 
         camera.adjustOrigin(
             deltaX / camera.scale(),
@@ -426,8 +438,9 @@ function parsegraph_Input(graph, camera)
         if(graph.carousel().isCarouselShown()) {
             lastMouseX = event.clientX;
             lastMouseY = event.clientY;
+            this.mouseChanged();
 
-            this.Dispatch(graph.carousel().mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel");
+            this.Dispatch(graph.carousel().mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel", false);
             return;
         }
 
@@ -440,6 +453,7 @@ function parsegraph_Input(graph, camera)
         this.Dispatch(graph.world().mouseOver(event.clientX, event.clientY), "mousemove world", false);
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
+        this.mouseChanged();
     }, this);
 
     parsegraph_addEventMethod(graph.canvas(), "mousedown", function(event) {
@@ -450,6 +464,7 @@ function parsegraph_Input(graph, camera)
 
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
+        this.mouseChanged();
 
         mousedownX = event.clientX;
         mousedownY = event.clientY;
@@ -471,7 +486,7 @@ function parsegraph_Input(graph, camera)
         // Dragging on the canvas.
         attachedMouseListener = mouseDragListener;
         //console.log("Repainting graph");
-        this.Dispatch(false, "mousedown canvas");
+        this.Dispatch(false, "mousedown canvas", true);
 
         //console.log("Setting mousedown time");
         mousedownTime = Date.now();
@@ -536,7 +551,7 @@ function parsegraph_Input(graph, camera)
             if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
                 //console.log("Node clicked.");
-                this.Dispatch(true, "mousedown node");
+                this.Dispatch(true, "mousedown node", false);
                 mousedownTime = null;
                 return;
             }
@@ -848,6 +863,16 @@ parsegraph_Input.prototype.UpdateRepeatedly = function()
     return this._updateRepeatedly || this._graph.carousel().updateRepeatedly();
 };
 
+parsegraph_Input.prototype.mouseVersion = function()
+{
+    return this._mouseVersion;
+};
+
+parsegraph_Input.prototype.mouseChanged = function()
+{
+    ++this._mouseVersion;
+};
+
 parsegraph_Input.prototype.Update = function(t)
 {
     var cam = this._camera;
@@ -1019,9 +1044,9 @@ parsegraph_Input.prototype.render = function(world)
     this._spotlightPainter.render(world);
 }
 
-parsegraph_Input.prototype.Dispatch = function()
+parsegraph_Input.prototype.Dispatch = function(affectedPaint, eventSource, inputAffectedCamera)
 {
     if(this.listener) {
-        this.listener[0].apply(this.listener[1], arguments);
+        this.listener[0].call(this.listener[1], affectedPaint, eventSource, inputAffectedCamera);
     }
 };

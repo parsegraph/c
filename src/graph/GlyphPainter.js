@@ -94,6 +94,11 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
 };
 
+parsegraph_GlyphPainter.prototype.color = function()
+{
+    return this._color;
+};
+
 parsegraph_GlyphPainter.prototype.setColor = function()
 {
     if(arguments.length > 1) {
@@ -102,6 +107,11 @@ parsegraph_GlyphPainter.prototype.setColor = function()
     else {
         this._color = arguments[0];
     }
+};
+
+parsegraph_GlyphPainter.prototype.backgroundColor = function()
+{
+    return this._backgroundColor;
 };
 
 parsegraph_GlyphPainter.prototype.setBackgroundColor = function()
