@@ -128,7 +128,6 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_JavaScriptWidget.js \
 	src/widgets/parsegraph_CameraProtocol.js \
 	src/widgets/parsegraph_ChatProtocol.js \
-	src/widgets/parsegraph_EnvironmentProtocol.js \
 	src/widgets/parsegraph_LoginWidget.js \
 	src/widgets/parsegraph_ProfileWidget.js \
 	src/widgets/parsegraph_OscillatorWidget.js \

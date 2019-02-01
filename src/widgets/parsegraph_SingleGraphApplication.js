@@ -1,3 +1,36 @@
+function parsegraph_prepopulate(envGuid, listener, listenerThisArg)
+{
+    if(!listener) {
+        throw new Error("Refusing to fire without a non-null listener");
+    }
+
+    var xhr = new XMLHttpRequest();
+    if(!listenerThisArg) {
+        listenerThisArg = xhr;
+    }
+    xhr.open("POST", "/@" + envGuid, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.onerror = function(e) {
+        alert(e.error);
+    };
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState !== XMLHttpRequest.DONE) {
+            return;
+        }
+        try {
+            var resp = JSON.parse(xhr.responseText);
+            listener.call(listenerThisArg, xhr.status === 200, resp);
+        }
+        catch(ex) {
+            listener.call(listenerThisArg, ex);
+        }
+    };
+    xhr.send(JSON.stringify({"type":"prepopulate"}));
+
+    return xhr;
+}
+
 function parsegraph_SingleGraphApplication(guid)
 {
     this._cameraName = "parsegraph_login_camera";
@@ -74,7 +107,7 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
 
     try {
         this._loginNode = node;
-        var createdNode = this.createSessionNode(graph, userLogin, node);
+        /*var createdNode = this.createSessionNode(graph, userLogin, node);
         if(!createdNode) {
             if(!node.hasNode(parsegraph_DOWNWARD)) {
                 throw new Error("Factory function does not return a node, nor did it connect one.");
@@ -87,7 +120,7 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
         else {
             node.connectNode(parsegraph_DOWNWARD, createdNode);
         }
-        this._sessionNode = createdNode;
+        this._sessionNode = createdNode;*/
     }
     catch(ex) {
         console.log("Crashed during login construction: ", ex);
@@ -99,9 +132,9 @@ parsegraph_SingleGraphApplication.prototype.onLogin = function(userLogin, node) 
         this._environmentProtocol.onmessage = function(e) {
             try {
                 var obj = JSON.parse(e.data);
-                //console.log("Found message!", obj);
+                console.log("Found message!", obj);
                 if(obj.type === "initialData") {
-                    that.loadEnvironment(obj);
+                    that.loadEnvironment(obj.root);
                 }
                 else if(obj.type === "camera_move") {
                     if(userLogin.username === obj.username) {
@@ -191,10 +224,38 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
         };
     };
 
-    var metaList = initialData.items[0].items;
-    var worldList = initialData.items[1].items;
+    var worldList = initialData.items;
     var car = new parsegraph_Caret(this._loginNode);
     car.setGlyphAtlas(this.glyphAtlas());
+    console.log(worldList);
+
+    if(worldList.length === 0) {
+        car.disconnect('d');
+        car.align('d', 'c');
+        var node = car.spawnMove('d', 'bu');
+        car.onClick(function() {
+            //console.log("Creating carousel");
+            var carousel = this.graph().carousel();
+            carousel.clearCarousel();
+            carousel.moveCarousel(
+                node.absoluteX(),
+                node.absoluteY()
+            );
+            carousel.showCarousel();
+
+            // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
+            var actionNode = new parsegraph_Node(parsegraph_BLOCK);
+            actionNode.setLabel("Prepopulate", this.glyphAtlas());
+            carousel.addToCarousel(actionNode, function() {
+                parsegraph_prepopulate(this._guid, function(success, resp) {
+                    console.log(success, resp);
+                }, this);
+            }, this);
+            this.graph().carousel().scheduleCarouselRepaint();
+        }, this);
+        car.move('u');
+        car.pull('d');
+    }
 
     for(var worldIndex = 0; worldIndex < worldList.length; ++worldIndex) {
         if(worldIndex > 0) {
@@ -212,7 +273,7 @@ parsegraph_SingleGraphApplication.prototype.loadEnvironment = function(initialDa
         car.push();
         var child = worldList[worldIndex];
         switch(child.type) {
-        case 4: // multislot
+        case "multislot":
             try {
                 var childDims = JSON.parse(child.value);
                 var subtype = childDims[0];
