@@ -85,9 +85,9 @@ parsegraph_Carousel.prototype.hideCarousel = function()
     this._hideTime = new Date();
 };
 
-parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg)
+parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg, nodeData)
 {
-    this._carouselCallbacks.push([callback, thisArg]);
+    this._carouselCallbacks.push([callback, thisArg, nodeData]);
     if(!node) {
         throw new Error("Node must not be null");
     }
@@ -195,7 +195,8 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     try {
         var callback = this._carouselCallbacks[i][0];
         var thisArg = this._carouselCallbacks[i][1];
-        callback.call(thisArg);
+        var nodeData = this._carouselCallbacks[i][2];
+        callback.call(thisArg, nodeData);
     }
     catch(ex) {
         console.log("Error occurred while running command:", ex);

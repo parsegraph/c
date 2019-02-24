@@ -29,7 +29,7 @@ function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
         }
     };
     var obj = camera.toJSON();
-    obj.type = "camera_move";
+    obj.command = "camera_move";
     xhr.send(JSON.stringify(obj));
     return xhr;
 }
@@ -65,7 +65,7 @@ function parsegraph_sendMouseUpdate(envGuid, input, listener, listenerThisArg)
         }
     };
     var obj = {
-        type:"mouse_move",
+        command:"mouse_move",
         x:input.lastMouseX(),
         y:input.lastMouseY()
     };

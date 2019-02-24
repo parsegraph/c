@@ -47,6 +47,7 @@ function parsegraph_showGraph(rootNode)
 }
 
 function parsegraph_initialize(mathMode) {
+    console.log("Initializing parsegraph. Math mode: ", mathMode);
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     parsegraph_TOUCH_SENSITIVITY = 1;

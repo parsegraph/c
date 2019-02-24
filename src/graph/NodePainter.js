@@ -665,7 +665,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     var style = node.blockStyle();
     var painter = this._blockPainter;
 
-    // Set colors if selected.
+    /*// Set colors if selected.
     if(node.isSelected()) {
         painter.setBorderColor(
             style.selectedBorderColor.premultiply(
@@ -677,7 +677,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
                 node.backdropColor()
             )
         );
-    } else {
+    } else */{
         painter.setBorderColor(
             style.borderColor.premultiply(
                 node.backdropColor()

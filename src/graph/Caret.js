@@ -1,4 +1,4 @@
-function parsegraph_Caret(nodeRoot)
+function parsegraph_Caret(nodeRoot, glyphAtlas)
 {
     if(arguments.length === 0) {
         nodeRoot = new parsegraph_Node(parsegraph_DEFAULT_NODE_TYPE);
@@ -16,7 +16,12 @@ function parsegraph_Caret(nodeRoot)
 
     this._labels = [];
 
-    this._glyphAtlas = null;
+    this._glyphAtlas = glyphAtlas ? glyphAtlas : null;
+};
+
+parsegraph_Caret.prototype.clone = function()
+{
+    return new parsegraph_Caret(this.node(), this.glyphAtlas());
 };
 
 parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
