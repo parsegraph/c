@@ -259,7 +259,7 @@ parsegraph_LoginWidget.prototype.onLogout = function(res, result)
         if(this._logoutListener) {
             this._logoutListener.call(this._logoutListenerThisArg, true, result, this._containerNode);
         }
-        window.location = "/";
+        window.location.href = '/';
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
     }
     else if(res === false) {
