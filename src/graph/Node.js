@@ -1875,37 +1875,14 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
             console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));*/
             if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
                 var e = this._neighbors[direction].extent;
-                var bv = child.extentsAt(direction).boundingValues();
                 var scale = this.scaleAt(childDirection);
-                if(lengthOffset === 0) {
-                    //console.log("lengthOffset == 0");
-                    e.setBoundLengthAt(0, Math.max(e.boundLengthAt(0), bv[0]*scale + lengthOffset));
-                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
-                }
-                else if(lengthOffset < 0) {
-                    //console.log("lengthOffset < 0");
-                    e.setBoundLengthAt(0, Math.max(
-                        e.boundLengthAt(0) + Math.abs(lengthOffset),
-                        bv[0]*scale
-                    ));
-                    e.setBoundSizeAt(0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment));
-                }
-                else {
-                    //console.log("lengthOffset > 0");
-                    e.setBoundLengthAt(
-                        0, Math.max(e.boundLengthAt(0), lengthOffset + bv[0]*scale)
-                    );
-                    e.setBoundSizeAt(
-                        0, Math.max(e.boundSizeAt(0), bv[2]*scale + sizeAdjustment)
-                    );
-                }
-                /*e.combineExtent(
+                e.combineExtent(
                     child.extentsAt(direction),
                     lengthOffset,
                     sizeAdjustment,
-                    this.scaleAt(childDirection)
+                    scale
                 );
-                e.simplify();*/
+                e.simplify();
             }
             else {
                 this._neighbors[direction].extent.combineExtent(

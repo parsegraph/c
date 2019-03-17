@@ -1801,38 +1801,14 @@ static void combineExtent(parsegraph_Node* node,
     //console.log("Size adjustment: " + sizeAdjustment);
     if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_LOOSE) {
         parsegraph_Extent* e = node->_neighbors[direction].extent;
-        float bv[3];
-        parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(child, direction), bv, bv + 1, bv + 2);
         float scale = parsegraph_Node_scaleAt(node, childDirection);
-        if(lengthOffset == 0) {
-            //parsegraph_log("lengthOffset == 0");
-            parsegraph_Extent_setBoundLengthAt(e, 0, parsegraph_max(parsegraph_Extent_boundLengthAt(e, 0), bv[0]*scale + lengthOffset));
-            parsegraph_Extent_setBoundSizeAt(e, 0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment));
-        }
-        else if(lengthOffset < 0) {
-            //console.log("lengthOffset < 0");
-            parsegraph_Extent_setBoundLengthAt(e, 0, parsegraph_max(
-                parsegraph_Extent_boundLengthAt(e, 0) + parsegraph_absf(lengthOffset),
-                bv[0]*scale
-            ));
-            parsegraph_Extent_setBoundSizeAt(e, 0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment));
-        }
-        else {
-            //console.log("lengthOffset > 0");
-            parsegraph_Extent_setBoundLengthAt(e,
-                0, parsegraph_max(parsegraph_Extent_boundLengthAt(e, 0), lengthOffset + bv[0]*scale)
-            );
-            parsegraph_Extent_setBoundSizeAt(e,
-                0, parsegraph_max(parsegraph_Extent_boundSizeAt(e, 0), bv[2]*scale + sizeAdjustment)
-            );
-        }
-        /*e.combineExtent(
-            child.extentsAt(direction),
+        parsegraph_Extent_combineExtent(e,
+            parsegraph_Node_extentsAt(child, direction),
             lengthOffset,
             sizeAdjustment,
-            this.scaleAt(childDirection)
+            scale
         );
-        e.simplify();*/
+        parsegraph_Extent_simplify(e);
     }
     else {
         parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
