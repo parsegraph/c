@@ -1546,11 +1546,12 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
         var nestedSize = nestedNode.extentSize();
+        var scale = nestedNode.scale();//this.scaleAt(parsegraph_INWARD);
 
         if(this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
             bodySize.setWidth(
-                Math.max(bodySize.width(), nestedSize.width() * nestedNode.scale())
+                Math.max(bodySize.width(), scale * nestedSize.width())
             );
 
             if(this.label()) {
@@ -1558,13 +1559,13 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
                 bodySize.setHeight(Math.max(style.minHeight,
                     bodySize.height()
                     + this.verticalPadding()
-                    + nestedSize.height() * nestedNode.scale()
+                    + scale * nestedSize.height()
                 ));
             }
             else {
                 bodySize.setHeight(
                     Math.max(bodySize.height(),
-                    nestedSize.height() * nestedNode.scale()
+                    scale * nestedSize.height()
                     + 2 * this.verticalPadding()
                 ));
             }
@@ -1576,20 +1577,19 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
                 bodySize.setWidth(
                     bodySize.width()
                     + this.horizontalPadding()
-                    + nestedNode.scale() * nestedSize.width()
+                    + scale * nestedSize.width()
                 );
             }
             else {
                 bodySize.setWidth(
-                    Math.max(bodySize.width(), nestedNode.scale() * nestedSize.width())
+                    Math.max(bodySize.width(), scale * nestedSize.width())
                 );
             }
 
             bodySize.setHeight(
                 Math.max(
                     bodySize.height(),
-                    nestedNode.scale() * nestedSize.height()
-                    + 2 * this.verticalPadding()
+                    scale * nestedSize.height() + 2 * this.verticalPadding()
                 )
             );
         }
