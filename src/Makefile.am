@@ -1,4 +1,4 @@
-PROG = parsegraph_kms_dir
+PROG = cxx_dir
 
 run:
 	./$(PROG)

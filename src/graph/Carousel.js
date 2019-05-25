@@ -185,11 +185,18 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     }
 
     var angleSpan = 2 * Math.PI / this._carouselPlots.length;
-    var mouseAngle = Math.PI + Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+    var mouseAngle = Math.atan2(y - this._carouselCoords[1], x - this._carouselCoords[0]);
+    //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i + " angleSpan = " + angleSpan);
+    if(this._carouselPlots.length == 1 && Math.abs(mouseAngle) > Math.PI/2) {
+        this.hideCarousel();
+        this.scheduleCarouselRepaint();
+        //console.log("Click occurred so far outside that it is considered its own event.");
+        return false;
+    }
+    mouseAngle += Math.PI;
     var i = Math.floor(mouseAngle / angleSpan);
 
     // Click was within a carousel caret; invoke the listener.
-    //console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i);
     var carouselPlot = this._carouselPlots[i];
     this.hideCarousel();
     try {
@@ -227,25 +234,30 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
     );
 
     if(dist < this._carouselSize*4 && dist > parsegraph_BUD_RADIUS*4) {
-        var i = Math.floor(mouseAngle / angleSpan);
-        var selectionAngle = (angleSpan/2 + i * angleSpan) - Math.PI;
-        if(i != this._selectedCarouselPlotIndex) {
-            this._selectedCarouselPlotIndex = i;
-            this._selectedCarouselPlot = this._carouselPlots[i];
-        }
-        if(this._fanPainter) {
-            this._fanPainter.setSelectionAngle(selectionAngle);
-            this._fanPainter.setSelectionSize(angleSpan);
+        if(this._carouselPlots.length > 1 || (Math.abs(mouseAngle - Math.PI) < Math.PI/2)) {
+            var i = Math.floor(mouseAngle / angleSpan);
+            //console.log(alpha_ToDegrees(mouseAngle-Math.PI) + " degrees = caret " + i + " angleSpan = " + angleSpan);
+            var selectionAngle = (angleSpan/2 + i * angleSpan) - Math.PI;
+            if(i != this._selectedCarouselPlotIndex) {
+                this._selectedCarouselPlotIndex = i;
+                this._selectedCarouselPlot = this._carouselPlots[i];
+            }
+            if(this._fanPainter) {
+                this._fanPainter.setSelectionAngle(selectionAngle);
+                this._fanPainter.setSelectionSize(angleSpan);
+            }
+            this.scheduleCarouselRepaint();
+            return true;
         }
     }
-    else if(this._fanPainter) {
+    if(this._fanPainter) {
         this._fanPainter.setSelectionAngle(null);
         this._fanPainter.setSelectionSize(null);
         this._selectedCarouselPlot = null;
         this._selectedCarouselPlotIndex = null;
+        this.scheduleCarouselRepaint();
+        return true;
     }
-    this.scheduleCarouselRepaint();
-    return true;
 };
 
 parsegraph_Carousel.prototype.showScale = function()

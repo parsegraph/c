@@ -274,7 +274,7 @@ parsegraph_Color_Tests = new parsegraph_TestSuite("parsegraph_Color");
 parsegraph_Color_Tests.addTest("parsegraph_Color.simplify", function() {
 });
 
-parsegraph_Color_Tests.addTest("parsegraph_Color.interpolate trivial", function() {
+/*parsegraph_Color_Tests.addTest("parsegraph_Color.interpolate trivial", function() {
     var r = new parsegraph_Color(0, 0, 1);
     var b = new parsegraph_Color(1, 1, 0);
     var c = r.interpolate(b, 0);
@@ -300,3 +300,4 @@ parsegraph_Color_Tests.addTest("parsegraph_Color.interpolate", function() {
         return "Colors do not interpolate properly: " + c.asRGB();
     }
 });
+*/

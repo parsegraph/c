@@ -47,7 +47,7 @@ function parsegraph_showGraph(rootNode)
 }
 
 function parsegraph_initialize(mathMode) {
-    console.log("Initializing parsegraph. Math mode: ", mathMode);
+    //console.log("Initializing parsegraph. Math mode: ", mathMode);
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     parsegraph_TOUCH_SENSITIVITY = 1;
@@ -67,6 +67,24 @@ function parsegraph_initialize(mathMode) {
 
     parsegraph_NUM_DIRECTIONS = 6;
 
+    parsegraph_HORIZONTAL_ORDER = [
+    parsegraph_BACKWARD,
+    parsegraph_FORWARD,
+    parsegraph_DOWNWARD,
+    parsegraph_UPWARD,
+    parsegraph_INWARD,
+    parsegraph_OUTWARD
+    ];
+
+    parsegraph_VERTICAL_ORDER = [
+    parsegraph_DOWNWARD,
+    parsegraph_UPWARD,
+    parsegraph_BACKWARD,
+    parsegraph_FORWARD,
+    parsegraph_INWARD,
+    parsegraph_OUTWARD
+    ];
+
     // Node Axis
     parsegraph_NULL_AXIS = 6;
     parsegraph_HORIZONTAL_AXIS = 7;
@@ -85,6 +103,10 @@ function parsegraph_initialize(mathMode) {
     parsegraph_NULL_NODE_FIT = 14;
     parsegraph_NODE_FIT_EXACT = 15;
     parsegraph_NODE_FIT_LOOSE = 16;
+
+    // Optimization hints.
+    parsegraph_FIT_LOOSE = true;
+    parsegraph_CREASE = false;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 

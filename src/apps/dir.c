@@ -204,7 +204,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
         }
         else {
             filename = app.argv[1];
-        }       
+        }
     }
     app.app = parsegraph_Directory_new(app.pool, graph, depth);
 
@@ -217,7 +217,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     loadModules(userModules);
 
     parsegraph_Directory_installFileHandler(app.app, showTextFile, 0);
-    
+
     parsegraph_Directory_show(app.app, filename);
     parsegraph_Graph_plot(graph, app.app->root);
 

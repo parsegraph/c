@@ -153,9 +153,10 @@ function parsegraph_Input(graph, camera)
         var y = event.clientY - boundingRect.top;
 
         var wheel = normalizeWheel(event);
+        //console.log("Wheel event", wheel);
 
         // Adjust the scale.
-        var numSteps = .4 * -wheel.spinY;
+        var numSteps = (wheel.spinY > 0 ? -1 : 1);
         if(numSteps > 0 || camera.scale() >= .01) {
             camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
         }

@@ -11,7 +11,6 @@ function showProportionTest(graph, COUNT)
         COUNT = 30;
     }
     COUNT = Math.min(COUNT, 100);
-    COUNT = 200;
 
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 

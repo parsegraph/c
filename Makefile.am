@@ -55,7 +55,11 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
+	src/widgets/permissions.js \
 	src/widgets/parsegraph_SingleGraphApplication.js \
+	src/widgets/parsegraph_Multislot.js \
+	src/widgets/parsegraph_Environment.js \
+	src/widgets/parsegraph_ActionCarousel.js \
 	src/ArrayList.js \
 	src/Float32List.js \
 	src/widgets/alpha_WeetCubeWidget.js \
@@ -143,6 +147,9 @@ parsegraph_WIDGET_FILES = \
 	src/widgets/parsegraph_ConvolverWidget.js \
 	src/widgets/parsegraph_WaveShaperWidget.js \
 	src/widgets/parsegraph_8BitWidget.js \
+	src/widgets/parsegraph_request.js \
+	src/widgets/parsegraph_List.js \
+	src/widgets/anthonylisp.js \
 	src/widgets/createSliderDemo.js \
 	src/widgets/showCorporateStructure.js \
 	src/widgets/showHardTest.js \

@@ -86,7 +86,7 @@ function alpha_WeetCubeWidget()
         randomFrequencyNodeCreator("sawtooth", 64, 96),
     ];
 
-    this._currentAudioMode = 0;
+    this._currentAudioMode = 2;
     /*this._audioModes = [function(audio) {
         var osc=audio.createOscillator();
         osc.type='sawtooth';
@@ -227,7 +227,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
         this.cubePainter.Clear();
     }
 
-    if(!this._audioOut) {
+    if(audio && !this._audioOut) {
         //console.log("Creating audio out");
         this._audioOut=audio.createGain();
         var compressor = audio.createDynamicsCompressor();
@@ -252,7 +252,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
             });
         }, 1000 * (audioTransition + 0.1));
     }
-    var createAudioNodes = this._audioNodes.length == 0;
+    var createAudioNodes = audio && (this._audioNodes.length == 0);
 
     var c = new alpha_Physical(this.camera);
     var az=0;
@@ -292,7 +292,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
                     this._audioNodes.push(panner);
                     this._audioNodePositions.push(this._nodesPainted);
                 }
-                else if(this._nodesPainted === this._audioNodePositions[az]) {
+                else if(audio && this._nodesPainted === this._audioNodePositions[az]) {
                     panner = this._audioNodes[az];
                     if(this._modeSwitched) {
                         this._modeAudioNodes[az].gain.linearRampToValueAtTime(0, audio.currentTime + audioTransition);
@@ -360,28 +360,32 @@ alpha_WeetCubeWidget.prototype.render = function()
     gl.clear(gl.DEPTH_BUFFER_BIT);
 
     audio = this.surface.audio();
-    var listener=audio.listener;
-    if(listener.forwardX) {
-  listener.forwardX.value = 0;
-  listener.forwardY.value = 0;
-  listener.forwardZ.value = -1;
-  listener.upX.value = 0;
-  listener.upY.value = 1;
-  listener.upZ.value = 0;
-} else {
-  listener.setOrientation(0,0,-1,0,1,0);
-}
+    if(audio) {
+        var listener=audio.listener;
+        if(listener.forwardX) {
+      listener.forwardX.value = 0;
+      listener.forwardY.value = 0;
+      listener.forwardZ.value = -1;
+      listener.upX.value = 0;
+      listener.upY.value = 1;
+      listener.upZ.value = 0;
+    } else {
+      listener.setOrientation(0,0,-1,0,1,0);
+    }
+    }
 
     var cm=this.camera.GetParent().GetModelMatrix();
     var xPos=cm[12];
     var yPos=cm[13];
     var zPos=cm[14];
-    if(listener.positionX) {
-      listener.positionX.value = xPos;
-      listener.positionY.value = yPos;
-      listener.positionZ.value = zPos;
-    } else {
-      listener.setPosition(xPos,yPos,zPos);
+    if(audio) {
+        if(listener.positionX) {
+          listener.positionX.value = xPos;
+          listener.positionY.value = yPos;
+          listener.positionZ.value = zPos;
+        } else {
+          listener.setPosition(xPos,yPos,zPos);
+        }
     }
     //console.log(xPos + ", " + yPos + ", " + zPos);
 

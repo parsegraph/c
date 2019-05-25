@@ -466,10 +466,21 @@ static void countNode(void* d, int direction)
     ++cnd->counts->numBlocks;
 }
 
+void countEachExtent(void* d, int direction)
+{
+    struct CountNodeData* cnd = d;
+    parsegraph_Extent* extent = parsegraph_Node_extentsAt(cnd->node, direction);
+    cnd->counts->numExtents += parsegraph_Extent_numBounds(extent);
+}
+
 void parsegraph_NodePainter_countNode(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, parsegraph_NodePainterCounts* counts)
 {
-    if(parsegraph_NodePainter_isExtentRenderingEnabled(nodePainter) && parsegraph_Node_isRoot(node)) {
+    struct CountNodeData cnd;
+    cnd.counts = counts;
+    cnd.node = node;
+    if(parsegraph_NodePainter_isExtentRenderingEnabled(nodePainter)) {
         ++counts->numExtents;
+        parsegraph_forEachCardinalNodeDirection(countEachExtent, &cnd);
     }
 
     if(parsegraph_Node_type(node) == parsegraph_SLIDER) {
@@ -483,9 +494,6 @@ void parsegraph_NodePainter_countNode(parsegraph_NodePainter* nodePainter, parse
         ++counts->numBlocks;
     }
     else {
-        struct CountNodeData cnd;
-        cnd.counts = counts;
-        cnd.node = node;
         parsegraph_forEachCardinalNodeDirection(countNode, &cnd);
 
         // One for the block.

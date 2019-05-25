@@ -49,6 +49,7 @@ body > div input {
 }
 </style>
 <script src="parsegraph-1.3.js"></script>
+<script src="parsegraph-widgets-1.3.js"></script>
 <script>
 
 function createScriptTextarea(url)
@@ -147,7 +148,17 @@ document.addEventListener("DOMContentLoaded", function(event) {
     parsegraph_initialize();
     var uni = new parsegraph_Unicode();
     uni.onLoad = function() {
-        var result = parsegraph_AllTests.run();
+        main.style.backgroundColor = "grey";
+        var hasFailed = false;
+        var result = parsegraph_AllTests.run(function(eventName, result) {
+            if(eventName == "TestFinished" && result.testStatus() != "Successful") {
+                hasFailed = true;
+                main.style.backgroundColor = "#844";
+            }
+            else if(!hasFailed && eventName == "TestFinished" && result.testStatus() == "Successful") {
+                main.style.backgroundColor = "green";
+            }
+        }, this);
         result.connect(main);
     };
     uni.load();

@@ -11,7 +11,7 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._renderBlocks = true;
 
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
-    this._renderExtents = false;
+    this._renderExtents = true;
 
     this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
@@ -429,11 +429,14 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         counts.numBlocks = 0;
     }
 
-    if(this.isExtentRenderingEnabled() && node.isRoot()) {
+    if(this.isExtentRenderingEnabled()) {
         if(!counts.numExtents) {
             counts.numExtents = 0;
         }
-        ++counts.numExtents;
+        parsegraph_forEachCardinalNodeDirection(function(direction) {
+            var extent = node.extentsAt(direction);
+            counts.numExtents += extent.numBounds();
+        }, this);
     }
 
     if(node.type() === parsegraph_SLIDER) {
@@ -471,7 +474,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
     var worldY = 0;
     var userScale = 1;
     if(this.isExtentRenderingEnabled() && node.isRoot()) {
-        this.paintExtent(node, worldX, worldY, userScale);
+        //this.paintExtent(node, worldX, worldY, userScale);
     }
 
     switch(node.type()) {
@@ -654,10 +657,10 @@ parsegraph_NodePainter.prototype.paintExtent = function(node, worldX, worldY, us
         });
     };
 
-    //paintDownwardExtent();
-    //paintUpwardExtent();
-    paintBackwardExtent();
-    paintForwardExtent();
+    paintDownwardExtent();
+    paintUpwardExtent();
+    //paintBackwardExtent();
+    //paintForwardExtent();
 };
 
 parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, userScale)

@@ -103,7 +103,7 @@ parsegraph_Caret.prototype.disconnect = function(inDirection)
     }
 
     if(this.node().isRoot()) {
-        throw new Error("A root node cannot be disconnected.");
+        return this.node();
     }
 
     return this.node().parentNode().disconnectNode(parsegraph_reverseNodeDirection(this.node().parentDirection()));
@@ -280,9 +280,11 @@ parsegraph_Caret.prototype.pull = function(given)
         parsegraph_getNodeDirectionAxis(given)
         == parsegraph_getNodeDirectionAxis(this.node().parentDirection())
     ) {
+        //console.log(parsegraph_nameLayoutPreference(parsegraph_PREFER_PARENT_AXIS));
         this.node().setLayoutPreference(parsegraph_PREFER_PARENT_AXIS);
     }
     else {
+        //console.log(parsegraph_nameLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS));
         this.node().setLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS);
     }
 };

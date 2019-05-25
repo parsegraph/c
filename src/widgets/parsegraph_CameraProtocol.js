@@ -1,4 +1,4 @@
-function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
+function parsegraph_sendCameraUpdate(envGuid, sessionId, camera, listener, listenerThisArg)
 {
     if(!listener) {
         throw new Error("Refusing to fire without a non-null listener");
@@ -29,12 +29,13 @@ function parsegraph_sendCameraUpdate(envGuid, camera, listener, listenerThisArg)
         }
     };
     var obj = camera.toJSON();
+    obj.guid = sessionId;
     obj.command = "camera_move";
     xhr.send(JSON.stringify(obj));
     return xhr;
 }
 
-function parsegraph_sendMouseUpdate(envGuid, input, listener, listenerThisArg)
+function parsegraph_sendMouseUpdate(envGuid, sessionId, input, listener, listenerThisArg)
 {
     if(!listener) {
         throw new Error("Refusing to fire without a non-null listener");
@@ -67,18 +68,20 @@ function parsegraph_sendMouseUpdate(envGuid, input, listener, listenerThisArg)
     var obj = {
         command:"mouse_move",
         x:input.lastMouseX(),
-        y:input.lastMouseY()
+        y:input.lastMouseY(),
+        guid:sessionId
     };
     xhr.send(JSON.stringify(obj));
     return xhr;
 }
 
-function parsegraph_InputProtocol(envGuid, input)
+function parsegraph_InputProtocol(envGuid, sessionId, input)
 {
     var timer = new parsegraph_TimeoutTimer();
     timer.setDelay(400);
 
     this._envGuid = envGuid;
+    this._sessionId = sessionId;
     this._input = input;
     this._camera = input.camera();
 
@@ -101,7 +104,7 @@ parsegraph_InputProtocol.prototype.sendMouseUpdate = function()
     if(this._lastSentMouseVersion != this._input.mouseVersion()) {
         ++this._waiting;
         this._lastSentMouseVersion = this._input.mouseVersion();
-        parsegraph_sendMouseUpdate(this._envGuid, this._input, function(res, resp) {
+        parsegraph_sendMouseUpdate(this._envGuid, this._sessionId, this._input, function(res, resp) {
             if(res === true) {
                 // Update received.
             }
@@ -122,7 +125,7 @@ parsegraph_InputProtocol.prototype.sendCameraUpdate = function()
     if(this._lastSentVersion != this._camera.changeVersion()) {
         ++this._waiting;
         this._lastSentVersion = this._camera.changeVersion();
-        parsegraph_sendCameraUpdate(this._envGuid, this._camera, function(res, resp) {
+        parsegraph_sendCameraUpdate(this._envGuid, this._sessionId, this._camera, function(res, resp) {
             if(res === true) {
                 // Update received.
             }
