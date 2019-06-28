@@ -316,7 +316,7 @@ parsegraph_World.prototype.paint = function(timeout)
             var plot = this._worldRoots[i];
             var paintGroup = plot.localPaintGroup();
             if(!paintGroup) {
-                throw new Error("Plot no longer has a paint group?!");
+                throw new Error("World root must have a paint group");
             }
             parsegraph_PAINTING_GLYPH_ATLAS = this._graph.glyphAtlas();
             var paintCompleted = paintGroup.paint(
@@ -340,7 +340,7 @@ parsegraph_World.prototype.paint = function(timeout)
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
         var paintDuration = (new Date().getTime() - parsegraph_PAINT_START.getTime());
-        //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
         parsegraph_NODES_PAINTED = 0;
         parsegraph_PAINT_START = null;
     }

@@ -88,9 +88,9 @@ parsegraph_PaintGroup.prototype.markDirty = function()
     this._previousPaintState.i = 0;
     this._previousPaintState.ordering = [this];
 
-    /*this._childPaintGroups.forEach(function(pg) {
+    this._childPaintGroups.forEach(function(pg) {
         pg.markDirty();
-    }, this);*/
+    }, this);
 };
 
 parsegraph_PaintGroup.prototype.isDirty = function()
@@ -220,6 +220,7 @@ parsegraph_PaintGroup.prototype.traverseBreadth = function(callback, callbackThi
         callback.call(callbackThisArg, paintGroup, i);
         ordering.push.apply(ordering, paintGroup._childPaintGroups);
     }
+    //console.log("Traversed " + ordering.length + " paint groups.");
 };
 
 parsegraph_PaintGroup.prototype.render = function(world, camera)
@@ -238,8 +239,8 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
         return;
     }
 
-    //console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
-    //console.log("Rendering", this, this._painter.bounds());
+    console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
+    console.log("Rendering", this, this._painter.bounds());
 
     this._painter.render(
         matrixMultiply3x3(

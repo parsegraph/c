@@ -1,3 +1,5 @@
+parsegraph_START_TIME = new Date();
+
 function parsegraph_timediffMs(a, b)
 {
     return b.getTime() - a.getTime();
@@ -6,6 +8,19 @@ function parsegraph_timediffMs(a, b)
 function parsegraph_elapsed(startTime)
 {
     return (new Date()).getTime() - startTime.getTime();
+}
+
+function parsegraph_later(cb, cbThisArg)
+{
+    var t = setTimeout(function() {
+        cb.call(cbThisArg);
+    }, 0);
+    return function() {
+        if(t) {
+            clearTimeout(t);
+            t = null;
+        }
+    };
 }
 
 function parsegraph_timeout(name, timeoutMs)

@@ -1,6 +1,6 @@
 #include "../unity.h"
 #include "../testpool.h"
-#include <alpha/Cam.c>
+#include <alpha/Cam.h>
 
 void test_alpha_Cam_new()
 {

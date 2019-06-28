@@ -1,11 +1,12 @@
 #include "../unity.h"
 #include "../testpool.h"
+#include <alpha/Cluster.h>
 
 void test_alpha_Cluster_new()
 {
     alpha_Cluster* cluster = alpha_Cluster_new(pool);
     // test version 1.0
-    var widget = new alpha_GLWidget();
+    var widget = alpha_GLWidget_new();
     var cubeman = widget.BlockTypes.Get("blank", "cubeman");
 
     var testCluster = alpha_Cluster_new(pool, widget);

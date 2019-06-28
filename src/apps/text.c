@@ -14,7 +14,7 @@
 #include "graph/Graph.h"
 #include "graph/Node.h"
 #include "graph/initialize.h"
-#include "widgets/buildTextDemo.h"
+#include "apps/buildTextDemo.h"
 #include "timing.h"
 
 struct TextAppData {

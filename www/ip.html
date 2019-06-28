@@ -52,12 +52,11 @@ body > div input {
 <script src="parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_SingleGraphApplication();
+    var sga = new parsegraph_Application();
     SGA = sga;
-    sga.createSessionNode = function(graph, userLogin) {
+    sga.start(document.body, function(graph, userLogin) {
         return showIPAddresses(graph);
-    };
-    sga.start(document.body);
+    });
 });
 </script>
 </head>

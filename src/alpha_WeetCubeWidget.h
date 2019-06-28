@@ -2,9 +2,9 @@
 #define alpha_WeetCubeWidget_INCLUDED
 
 #include <apr_pools.h>
-#include "../alpha/WeetPainter.h"
-#include "../alpha/Input.h"
-#include "../alpha/Cam.h"
+#include "alpha/WeetPainter.h"
+#include "alpha/Input.h"
+#include "alpha/Cam.h"
 
 struct alpha_WeetCubeWidget {
     apr_pool_t* pool;

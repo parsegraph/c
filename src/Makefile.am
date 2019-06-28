@@ -76,12 +76,12 @@ nobase_include_HEADERS = \
 	alpha/BlockStuff.h \
 	alpha/WeetPainter.h \
 	alpha/Physical.h \
-	widgets/alpha_WeetCubeWidget.h \
-	widgets/buildPrimesDemo.h \
-	widgets/showProportionTest.h \
-	widgets/buildTextDemo.h \
-	graph/AudioKeyboard.h \
-	widgets/showDirectory.h \
+	alpha_WeetCubeWidget.h \
+	apps/buildPrimesDemo.h \
+	apps/showProportionTest.h \
+	apps/buildTextDemo.h \
+	AudioKeyboard.h \
+	apps/showDirectory.h \
 	gl.h \
 	unicode.h
 
@@ -126,12 +126,12 @@ parsegraph_common_SOURCES = \
 	alpha/GLWidget.c \
 	alpha/Input.c \
 	alpha/CubeMan.c \
-	widgets/alpha_WeetCubeWidget.c \
-	widgets/buildPrimesDemo.c \
-	widgets/showProportionTest.c \
-	widgets/buildTextDemo.c \
-	widgets/showDirectory.c \
-	graph/AudioKeyboard.c \
+	alpha_WeetCubeWidget.c \
+	apps/buildPrimesDemo.c \
+	apps/showProportionTest.c \
+	apps/buildTextDemo.c \
+	apps/showDirectory.c \
+	AudioKeyboard.c \
 	gl.c \
 	unicode.c \
 	graph/BlockPainter.c \

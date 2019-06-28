@@ -5,7 +5,7 @@
 #include "graph/Input.h"
 #include "graph/Graph.h"
 #include "graph/initialize.h"
-#include "widgets/buildPrimesDemo.h"
+#include "apps/buildPrimesDemo.h"
 #include "timing.h"
 
 struct PrimesAppData {

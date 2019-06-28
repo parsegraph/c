@@ -14,7 +14,7 @@
 #include "graph/Input.h"
 #include "graph/Graph.h"
 #include "graph/initialize.h"
-#include "widgets/showDirectory.h"
+#include "apps/showDirectory.h"
 #include "timing.h"
 #include <sys/stat.h>
 #include <fcntl.h>

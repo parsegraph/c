@@ -1,4 +1,4 @@
-#include "widgets/showDirectory.h"
+#include "apps/showDirectory.h"
 #include <apr_strings.h>
 #include "die.h"
 #include "graph/log.h"

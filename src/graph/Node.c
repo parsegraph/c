@@ -2578,6 +2578,7 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
     parsegraph_Node* node = cl->node;
     for(;;) {
         node = node->_worldPrev;
+        //parsegraph_log("Committing layout for node %d\n", node->_id);
         if(node->_layoutState == parsegraph_NEEDS_COMMIT) {
             parsegraph_Node_commitLayout(node, bodySize);
         }

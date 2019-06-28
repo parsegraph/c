@@ -27,7 +27,7 @@ extern "C" {
 #include "alpha/WeetPainter.h"
 #include "alpha/Maths.h"
 #include "alpha/GLWidget.h"
-#include "widgets/alpha_WeetCubeWidget.h"
+#include "alpha_WeetCubeWidget.h"
 #include "graph/Surface.h"
 #include <apr_strings.h>
 

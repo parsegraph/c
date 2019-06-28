@@ -397,6 +397,11 @@ function parsegraph_Input(graph, camera)
             touchstartTime != null
             && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS
         ) {
+            var mouseInWorld = matrixTransform2D(
+                makeInverse3x3(this._camera.worldMatrix()),
+                lastMouseX, lastMouseY
+            );
+            //alert("touchend (" + lastMouseX + ", " + lastMouseY + ")=(" + Math.round(mouseInWorld[0]) + ", " + Math.round(mouseInWorld[1]) + ") [" + this._camera.width() + ", " + this._camera.height() + "]");
             if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
                 this.Dispatch(true, "touchstart", false);
@@ -931,13 +936,13 @@ parsegraph_Input.prototype.Update = function(t)
     }
     //this.Dispatch(false, "update", inputChangedScene);
 
-    var x = cam._cameraX;
-    var y = cam._cameraY;
-    var r = this._graph.world().boundingRect();
-    x = Math.max(x, r.x() - r.width()/2);
-    x = Math.min(x, r.x() + r.width()/2);
-    y = Math.max(y, r.y() - r.height()/2);
-    y = Math.min(y, r.y() + r.height()/2);
+    //var x = cam._cameraX;
+    //var y = cam._cameraY;
+    //var r = this._graph.world().boundingRect();
+    //x = Math.max(x, r.x() - r.width()/2);
+    //x = Math.min(x, r.x() + r.width()/2);
+    //y = Math.max(y, r.y() - r.height()/2);
+    //y = Math.min(y, r.y() + r.height()/2);
     //console.log("BR", x, y, r);
     //cam.setOrigin(x, y);
 

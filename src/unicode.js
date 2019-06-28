@@ -14,11 +14,13 @@ function parsegraph_Unicode() {
 };
 
 parsegraph_UNICODE_INSTANCE = null;
+parsegraph_UNICODE_STORAGE = localStorage;
 function parsegraph_defaultUnicode()
 {
     if(!parsegraph_UNICODE_INSTANCE) {
         parsegraph_UNICODE_INSTANCE = new parsegraph_Unicode();
-        parsegraph_UNICODE_INSTANCE.load.apply(parsegraph_UNICODE_INSTANCE, arguments);
+        parsegraph_UNICODE_INSTANCE.load();
+        //parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
     }
     return parsegraph_UNICODE_INSTANCE;
 }
@@ -74,6 +76,25 @@ parsegraph_Unicode.prototype.getCursiveMapping = function(t)
 };
 }
 
+(function() {
+    var i = 0;
+    UNICODE_codeValue = i++;
+    //UNICODE_characterName = i++;
+    UNICODE_generalCategory = i++;
+    //UNICODE_canonicalCombiningClasses = i++;
+    UNICODE_bidirectionalCategory = i++;
+    //UNICODE_decompositionMapping = i++;
+    //UNICODE_decimalDigitValue = i++;
+    //UNICODE_digitValue = i++;
+    //UNICODE_numericValue = i++;
+    //UNICODE_mirrored = i++;
+    //UNICODE_unicode10Name = i++;
+    //UNICODE_commentField = i++;
+    //UNICODE_uppercaseMapping = i++;
+    //UNICODE_lowercaseMapping = i++;
+    //UNICODE_titlecaseMapping = i++;
+})();
+
 parsegraph_Unicode.prototype.loadFromString = function(t)
 {
     var lines = 0;
@@ -88,36 +109,36 @@ parsegraph_Unicode.prototype.loadFromString = function(t)
             start = i + 1;
             ++lines;
 
-            var charNamedData = {
-                codeValue: parseInt(charData[0], 16),
-                characterName: charData[1],
-                generalCategory: charData[2],
-                canonicalCombiningClasses: charData[3],
-                bidirectionalCategory: charData[4],
-                decompositionMapping: charData[5],
-                decimalDigitValue: parseInt(charData[6]),
-                digitValue: parseFloat(charData[7]),
-                numericValue: charData[8],
-                mirrored: charData[9],
-                unicode10Name: charData[10],
-                commentField: charData[11],
-                uppercaseMapping: parseInt(charData[12], 16),
-                lowercaseMapping: parseInt(charData[13], 16),
-                titlecaseMapping: parseInt(charData[14], 16)
-            };
-            this.unicodeProperties[charNamedData.codeValue] = charNamedData;
+            var charNamedData = [
+                parseInt(charData[0], 16), // codeValue
+                //charData[1], // characterName
+                charData[2], // generalCategory
+                //charData[3], // canonicalCombiningClasses
+                charData[4], // bidirectionalCategory
+                //charData[5], // decompositionMapping
+                //parseInt(charData[6]), // decimalDigitValue
+                //parseFloat(charData[7]), // digitValue
+                //charData[8], // numericValue
+                //charData[9], // mirrored
+                //charData[10], // unicode10Name
+                //charData[11], // commentField
+                //parseInt(charData[12], 16), // uppercaseMapping
+                //parseInt(charData[13], 16), // lowercaseMapping
+                //parseInt(charData[14], 16) // titlecaseMapping
+            ];
+            this.unicodeProperties[charNamedData[UNICODE_codeValue]] = charNamedData;
 
             if(!(charNamedData.bidirectionalCategory in this.unicodeBidiCounts)) {
-                this.unicodeBidiCounts[charNamedData.bidirectionalCategory] = 1;
+                this.unicodeBidiCounts[charNamedData[UNICODE_bidirectionalCategory]] = 1;
             }
             else {
-                ++this.unicodeBidiCounts[charNamedData.bidirectionalCategory];
+                ++this.unicodeBidiCounts[charNamedData[UNICODE_bidirectionalCategory]];
             }
             if(!(charNamedData.generalCategory in this.unicodeCategoryCounts)) {
-                this.unicodeCategoryCounts[charNamedData.generalCategory] = 1;
+                this.unicodeCategoryCounts[charNamedData[UNICODE_generalCategory]] = 1;
             }
             else {
-                ++this.unicodeCategoryCounts[charNamedData.generalCategory];
+                ++this.unicodeCategoryCounts[charNamedData[UNICODE_generalCategory]];
             }
         }
     }
@@ -132,7 +153,7 @@ parsegraph_Unicode.prototype.isArabic = function(letter) {
     if(!data) {
         return false;
     }
-    var cv = data.codeValue;
+    var cv = data[UNICODE_codeValue];
     return cv >= 0x621 && cv <= 0x64a;
 };
 
@@ -144,7 +165,7 @@ parsegraph_Unicode.prototype.isMark = function(letter) {
     if(!data) {
         return false;
     }
-    var cat = data.generalCategory;
+    var cat = data[UNICODE_generalCategory];
     return cat === "Mn" || cat === "Mc" || cat === "Me";
 };
 
@@ -156,26 +177,67 @@ parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
     if(!data) {
         return false;
     }
-    var cv = data.codeValue;
+    var cv = data[UNICODE_codeValue];
     return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.load = function(dbURL) {
-    if(arguments.length === 0) {
+parsegraph_Unicode.prototype.load = function(dbURL, storage) {
+    if(this._loaded) {
+        return;
+    }
+    //console.log(new Error("LOADING UNICODE"));
+    if(!dbURL) {
         dbURL = "/UnicodeData.txt";
+    }
+    var storageKey = "UNICODE@" + dbURL;
+    var that = this;
+    var complete = function() {
+        //console.log("Time till unicode parsed: " + parsegraph_elapsed(parsegraph_START_TIME));
+        that._loaded = true;
+        if(that.onLoad) {
+            that.onLoad();
+        }
+        if(that._onLoad) {
+            that._onLoad.call(that._onLoadThisArg || this);
+        }
+    };
+    if(storage) {
+        var unicode = storage.getItem(storageKey);
+        if(unicode) {
+            try {
+                unicode = JSON.parse(unicode);
+                this.unicodeProperties = unicode.unicodeProperties;
+                this.unicodeBidiCounts = unicode.unicodeBidiCounts;
+                this.unicodeCategorycounts = unicode.unicodeCategorycounts;
+                complete.call(this);
+                return;
+            }
+            catch(ex) {
+                console.log("Failed to read stored Unicode data");
+                console.log(ex);
+                storage.removeItem(storageKey);
+            }
+        }
     }
     var xhr = new XMLHttpRequest();
     xhr.open("GET", dbURL);
-    var that = this;
     xhr.onreadystatechange = function() {
         if(xhr.readyState == 4 && xhr.status == 200) {
+            //console.log("Time till unicode received: " + parsegraph_elapsed(parsegraph_START_TIME));
             that.loadFromString(xhr.responseText);
-            that._loaded = true;
-            if(that.onLoad) {
-                that.onLoad();
-            }
-            if(that._onLoad) {
-                that._onLoad.call(that._onLoadThisArg || this);
+            complete.call(that);
+            if(storage) {
+                var unicodeData = {
+                    unicodeCategoryCounts:that.unicodeCategoryCounts,
+                    unicodeBidiCounts:that.unicodeBidiCounts,
+                    unicodeProperties:that.unicodeProperties,
+                };
+                try {
+                    storage.setItem(storageKey, JSON.stringify(unicodeData));
+                }
+                catch(ex) {
+                    console.log(ex);
+                }
             }
         }
         else {
@@ -183,7 +245,6 @@ parsegraph_Unicode.prototype.load = function(dbURL) {
         }
     };
     xhr.send();
-    return xhr;
 };
 
 parsegraph_Unicode.prototype.loaded = function()

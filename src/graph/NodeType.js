@@ -51,5 +51,6 @@ function parsegraph_readNodeType(given)
     }
 
     console.log("Unknown node type: " + given);
+    console.log(new Error(given));
     return parsegraph_NULL_NODE_TYPE;
 }

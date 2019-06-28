@@ -6,7 +6,7 @@
 #include "graph/Input.h"
 #include "graph/Graph.h"
 #include "graph/initialize.h"
-#include "widgets/showProportionTest.h"
+#include "apps/showProportionTest.h"
 #include "timing.h"
 
 struct ProportionAppData {

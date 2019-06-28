@@ -1,9 +1,9 @@
 #include "alpha_WeetCubeWidget.h"
-#include "../alpha/GLWidget.h"
-#include "../alpha/Physical.h"
-#include "../alpha/Maths.h"
-#include "../alpha/Cam.h"
-#include "../graph/Surface.h"
+#include "alpha/GLWidget.h"
+#include "alpha/Physical.h"
+#include "alpha/Maths.h"
+#include "alpha/Cam.h"
+#include "graph/Surface.h"
 #include <stdio.h>
 #include <stdlib.h>
 

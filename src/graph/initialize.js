@@ -105,8 +105,8 @@ function parsegraph_initialize(mathMode) {
     parsegraph_NODE_FIT_LOOSE = 16;
 
     // Optimization hints.
-    parsegraph_FIT_LOOSE = true;
-    parsegraph_CREASE = false;
+    parsegraph_FIT_LOOSE = false;
+    parsegraph_CREASE = true;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 

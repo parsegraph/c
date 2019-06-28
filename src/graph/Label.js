@@ -680,7 +680,7 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
             var glyphDirection = direction;
             var unicodeData = u.get(glyphData.letter);
             if(unicodeData) {
-                switch(unicodeData.bidirectionalCategory) {
+                switch(unicodeData[UNICODE_bidirectionalCategory]) {
                 case "L":
                 case "LRE":
                 case "LRO":
@@ -823,9 +823,9 @@ parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
                     }
 
                     var namedCharData = u.get(glyphData.letter);
-                    var cursiveMapping = u.getCursiveMapping(namedCharData.codeValue);
+                    var cursiveMapping = u.getCursiveMapping(namedCharData[UNICODE_codeValue]);
 
-                    if(namedCharData.codeValue === 0x627 && prevGlyph && prevGlyph.letter.charCodeAt(0) === 0x644) {
+                    if(namedCharData[UNICODE_codeValue] === 0x627 && prevGlyph && prevGlyph.letter.charCodeAt(0) === 0x644) {
                         // LAM WITH ALEF.
                         if(prevGlyph) {
                             // Has a previous glyph, so final.

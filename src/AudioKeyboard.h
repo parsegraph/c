@@ -1,9 +1,9 @@
 #ifndef parsegraph_AudioKeyboard_INCLUDED
 #define parsegraph_AudioKeyboard_INCLUDED
 
-#include "Camera.h"
-#include "GlyphAtlas.h"
-#include "BlockPainter.h"
+#include "graph/Camera.h"
+#include "graph/GlyphAtlas.h"
+#include "graph/BlockPainter.h"
 
 struct parsegraph_AudioKeyboard {
 parsegraph_Camera* _camera;

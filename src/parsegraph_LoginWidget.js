@@ -48,6 +48,7 @@ function parsegraph_beginUserLogin(username, password, remember, listener, liste
             listener.call(listenerThisArg, loginRequest.status === 200, loginResponse);
         }
         catch(ex) {
+            console.log(ex);
             listener.call(listenerThisArg, ex);
         }
     });
@@ -207,6 +208,7 @@ function parsegraph_passwordNode(listener, listenerThisArg)
 function parsegraph_LoginWidget(surface, graph)
 {
     this._graph = graph;
+    this._surface = surface;
 
     this._loginListener = null;
     this._loginListenerThisArg = null;
@@ -242,8 +244,13 @@ function parsegraph_LoginWidget(surface, graph)
 // Authenticate an existing session (does not expose the session to JS)
 parsegraph_LoginWidget.prototype.authenticate = function()
 {
+    this.onAuthenticate.call(this, true, {username:""});
+    //parsegraph_later(function() {
+        //this.onAuthenticate.call(this, true, {username:"dafrito"});
+    //}, this);
+    //parsegraph_authenticate(this.onAuthenticate, this);
     //if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
-        parsegraph_authenticate(this.onAuthenticate, this);
+        //parsegraph_authenticate(this.onAuthenticate, this);
     //}
 }
 
@@ -338,7 +345,7 @@ parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
     }
     else {
         // Exception.
-        console.log(res);
+        console.log("Login response", res);
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
         resNode.setLabel("An exception occurred during processing and was logged.", this._graph.glyphAtlas());
@@ -355,6 +362,22 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
     car.setGlyphAtlas(this._graph.glyphAtlas());
+
+    function toggleFullScreen() {
+      var doc = window.document;
+      var docEl = this._surface._canvas;
+
+      var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+      var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+      if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        requestFullScreen.call(docEl);
+      }
+      else {
+        cancelFullScreen.call(doc);
+      }
+    };
+
 
     car.root().setClickListener(function() {
         var node = car.root();
@@ -373,6 +396,12 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
         actionNode = new parsegraph_Node(parsegraph_BLOCK);
         actionNode.setLabel("Log out", this.glyphAtlas());
         carousel.addToCarousel(actionNode, this.logout, this);
+
+        actionNode = new parsegraph_Node(parsegraph_BLOCK);
+        actionNode.setLabel("Fullscreen", this.glyphAtlas());
+        carousel.addToCarousel(actionNode, function() {
+            toggleFullScreen.call(this);
+        }, this);
         this.graph().carousel().scheduleCarouselRepaint();
     }, this);
 
@@ -420,7 +449,7 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
     else {
         //localStorage.removeItem("parsegraph_LoginWidget_remember");
         // Exception.
-        //console.log(res);
+        console.log(res);
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
         resNode.setLabel("An exception occurred during processing and was logged.", this._graph.glyphAtlas());

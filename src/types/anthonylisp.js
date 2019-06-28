@@ -14,7 +14,7 @@ function parsegraph_lisp_expression(app, car, id, value, items)
 
     var actions = new parsegraph_ActionCarousel(app.graph());
     actions.addAction("Add expression", function() {
-        parsegraph_pushListItem(app._guid, id, "lisp::expression", "");
+        parsegraph_pushListItem(app, id, "lisp::expression", "");
     }, this);
     actions.install(car.node());
 
@@ -37,7 +37,7 @@ function parsegraph_lisp_expression(app, car, id, value, items)
     }, node);
 }
 
-parsegraph_listClasses.lisp = {
+parsegraph_listClasses["lisp"] = {
 "spawn":function(app, car, id, value, items) {
     var node = car.node();
     node.setType(parsegraph_BLOCK);
@@ -52,19 +52,19 @@ parsegraph_listClasses["lisp::expression"] = {
 "spawn":function(app, car, id, value, items) {
     var actions = new parsegraph_ActionCarousel(app.graph());
     actions.addAction("Add symbol", function() {
-        parsegraph_pushListItem(app._guid, id, "lisp::expression::symbol", "");
+        parsegraph_pushListItem(app, id, "lisp::expression::symbol", "");
     }, this);
     actions.addAction("New line", function() {
-        parsegraph_pushListItem(app._guid, id, "lisp::expression::newline", null);
+        parsegraph_pushListItem(app, id, "lisp::expression::newline", null);
     }, this);
     actions.addAction("Add quote", function() {
-        parsegraph_pushListItem(app._guid, id, "lisp::expression::quote", "");
+        parsegraph_pushListItem(app, id, "lisp::expression::quote", "");
     }, this);
     actions.addAction("Add list", function() {
-        parsegraph_pushListItem(app._guid, id, "lisp::list");
+        parsegraph_pushListItem(app, id, "lisp::list");
     }, this);
     actions.addAction("Delete", function() {
-        parsegraph_destroyListItem(app._guid, id);
+        parsegraph_destroyListItem(app, id);
     }, this);
 
     var node = car.node();
@@ -175,7 +175,7 @@ parsegraph_listClasses["lisp::expression::symbol"] = {
     }, this);
 
     parsegraph_addEventListener(submitField, "click", function() {
-        parsegraph_editItem(app._guid, id, valueField.value);
+        parsegraph_editItem(app, id, valueField.value);
     });
     actions.addAction("Edit", function() {
         if(bg.parentNode) {
@@ -198,10 +198,10 @@ parsegraph_listClasses["lisp::expression::symbol"] = {
     actions.addAction("Insert After", function() {
     }, this);
     actions.addAction("Delete", function() {
-        parsegraph_destroyListItem(app._guid, id);
+        parsegraph_destroyListItem(app, id);
     }, this);
 
-    var permissionForm = new parsegraph_PermissionsForm(app.guid(), id);
+    var permissionForm = new parsegraph_PermissionsForm(app, id);
     container.appendChild(permissionForm.container());
 
     car.replace('b');

@@ -55,14 +55,16 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
-	src/widgets/permissions.js \
-	src/widgets/parsegraph_SingleGraphApplication.js \
-	src/widgets/parsegraph_Multislot.js \
-	src/widgets/parsegraph_Environment.js \
-	src/widgets/parsegraph_ActionCarousel.js \
+	src/types/permissions.js \
+	src/app.js \
+	src/types/environment.js \
+	src/types/event_processor.js \
+	src/types/multislot.js \
+	src/types/multislot_plot.js \
+	src/parsegraph_ActionCarousel.js \
 	src/ArrayList.js \
 	src/Float32List.js \
-	src/widgets/alpha_WeetCubeWidget.js \
+	src/alpha_WeetCubeWidget.js \
 	src/timing.js \
 	src/pagingbuffer.js \
 	src/CommandClient.js \
@@ -129,43 +131,41 @@ parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
 	chmod 0444 $@
 
 parsegraph_WIDGET_FILES = \
-	src/widgets/parsegraph_JavaScriptWidget.js \
-	src/widgets/parsegraph_CameraProtocol.js \
-	src/widgets/parsegraph_ChatProtocol.js \
-	src/widgets/parsegraph_LoginWidget.js \
-	src/widgets/parsegraph_ProfileWidget.js \
-	src/widgets/parsegraph_OscillatorWidget.js \
-	src/widgets/parsegraph_AudioKeyboard.js \
-	src/widgets/parsegraph_SingleOscillatorWidget.js \
-	src/widgets/parsegraph_OnOffWidget.js \
-	src/widgets/parsegraph_EnvelopeGeneratorWidget.js \
-	src/widgets/parsegraph_FilterWidget.js \
-	src/widgets/parsegraph_SynthWidget.js \
-	src/widgets/parsegraph_SequencerWidget.js \
-	src/widgets/parsegraph_DelayWidget.js \
-	src/widgets/parsegraph_FlangerWidget.js \
-	src/widgets/parsegraph_ConvolverWidget.js \
-	src/widgets/parsegraph_WaveShaperWidget.js \
-	src/widgets/parsegraph_8BitWidget.js \
-	src/widgets/parsegraph_request.js \
-	src/widgets/parsegraph_List.js \
-	src/widgets/anthonylisp.js \
-	src/widgets/createSliderDemo.js \
-	src/widgets/showCorporateStructure.js \
-	src/widgets/showHardTest.js \
-	src/widgets/showStatements.js \
-	src/widgets/buildSelection.js \
-	src/widgets/showFunction.js \
-	src/widgets/showIPAddresses.js \
-	src/widgets/showMemoryBlocks.js \
-	src/widgets/showProportionTest.js \
-	src/widgets/showFlowchartTemplate.js \
-	src/widgets/showUlam.js \
-	src/widgets/showSpiral.js \
-	src/widgets/showCalendar.js \
-	src/widgets/buildPrimesDemo.js \
-	src/widgets/LinearWidget.js \
-	src/widgets/buildTextDemo.js
+	src/types/parsegraph_JavaScriptWidget.js \
+	src/parsegraph_CameraProtocol.js \
+	src/types/parsegraph_ChatProtocol.js \
+	src/parsegraph_LoginWidget.js \
+	src/parsegraph_ProfileWidget.js \
+	src/types/audio/parsegraph_OscillatorWidget.js \
+	src/AudioKeyboard.js \
+	src/types/audio/parsegraph_SingleOscillatorWidget.js \
+	src/types/parsegraph_OnOffWidget.js \
+	src/types/audio/parsegraph_EnvelopeGeneratorWidget.js \
+	src/types/audio/parsegraph_FilterWidget.js \
+	src/types/audio/parsegraph_SynthWidget.js \
+	src/types/audio/parsegraph_SequencerWidget.js \
+	src/types/audio/parsegraph_DelayWidget.js \
+	src/types/audio/parsegraph_FlangerWidget.js \
+	src/types/audio/parsegraph_ConvolverWidget.js \
+	src/types/audio/parsegraph_WaveShaperWidget.js \
+	src/types/audio/parsegraph_8BitWidget.js \
+	src/types/anthonylisp.js \
+	src/apps/createSliderDemo.js \
+	src/apps/showCorporateStructure.js \
+	src/apps/showHardTest.js \
+	src/apps/showStatements.js \
+	src/apps/buildSelection.js \
+	src/apps/showFunction.js \
+	src/apps/showIPAddresses.js \
+	src/apps/showMemoryBlocks.js \
+	src/apps/showProportionTest.js \
+	src/apps/showFlowchartTemplate.js \
+	src/apps/showUlam.js \
+	src/apps/showSpiral.js \
+	src/apps/showCalendar.js \
+	src/apps/buildPrimesDemo.js \
+	src/LinearWidget.js \
+	src/apps/buildTextDemo.js
 
 parsegraph-widgets-$(PACKAGE_VERSION).js: $(parsegraph_WIDGET_FILES)
 	rm -f $@

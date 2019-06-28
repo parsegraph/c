@@ -2900,6 +2900,7 @@ parsegraph_Node.prototype.separationAt = function(inDirection) {
 
 parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 {
+    //console.log("layoutWasChanged(" + (changeDirection != null ? parsegraph_nameNodeDirection(changeDirection) : "null") +")")
     // Disallow null change directions.
     if(changeDirection == parsegraph_NULL_NODE_DIRECTION) {
         throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
@@ -2935,11 +2936,10 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
         }
 
         // Recurse for the children of this node.
-        notifyChild.call(node, parsegraph_DOWNWARD);
-        notifyChild.call(node, parsegraph_UPWARD);
-        notifyChild.call(node, parsegraph_BACKWARD);
-        notifyChild.call(node, parsegraph_FORWARD);
-        notifyChild.call(node, parsegraph_INWARD);
+        var dirs = this.layoutOrder();
+        for(var i = 0; i < dirs.length; ++i) {
+            notifyChild.call(node, dirs[i]);
+        }
 
         if(node.isRoot()) {
             break;

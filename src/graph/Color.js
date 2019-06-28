@@ -1,9 +1,14 @@
 function parsegraph_Color(r, g, b, a)
 {
-    if(arguments.length === 3) {
+    if(arguments.length === 1) {
+        g = r;
+        b = r;
         a = 1;
     }
-    if(arguments.length < 3) {
+    else if(arguments.length === 3) {
+        a = 1;
+    }
+    else if(arguments.length !== 4) {
         throw new Error("Color must be given initial component values.");
     }
     this._r = Math.min(1, Math.max(0, r));
