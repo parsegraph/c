@@ -12,6 +12,13 @@ long parsegraph_timediffMs(struct timespec* a, struct timespec* b)
     return (b->tv_sec - a->tv_sec) * 1000 + (b->tv_nsec/1e6 - a->tv_nsec/1e6);
 }
 
+long parsegraph_elapsed(struct timespec* startTime)
+{
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return parsegraph_timediffMs(startTime, &now);
+}
+
 parsegraph_Timeout* parsegraph_timeout(const char* name, int timeoutMs)
 {
     parsegraph_Timeout* timer = malloc(sizeof(*timer));

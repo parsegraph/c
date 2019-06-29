@@ -14,6 +14,7 @@ struct parsegraph_Surface;
 typedef struct parsegraph_Surface parsegraph_Surface;
 
 long parsegraph_timediffMs(struct timespec* a, struct timespec* b);
+long parsegraph_elapsed(struct timespec* startTime);
 void* parsegraph_setTimeout(parsegraph_Surface*, void(*listener)(void*), int durMs, void* data);
 void parsegraph_clearTimeout(parsegraph_Surface*, void* timer);
 void parsegraph_clearInterval(parsegraph_Surface* surface, void* timer);
