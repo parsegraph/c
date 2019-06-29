@@ -276,6 +276,8 @@ void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
 
 int main(int argc, char**argv)
 {
+    parsegraph_connectLog("localhost", "28122");
+
     // Initialize the APR.
     apr_status_t rv;
     rv = apr_app_initialize(&argc, (const char* const**)&argv, NULL);
@@ -320,5 +322,7 @@ int main(int argc, char**argv)
     apr_pool_destroy(pool);
     pool = NULL;
     apr_terminate();
+
+    parsegraph_disconnectLog();
     return rv;
 }
