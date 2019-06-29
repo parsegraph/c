@@ -69,6 +69,8 @@ void parsegraph_Line_drawGlyphRun(parsegraph_Line* l, parsegraph_GlyphPainter* p
 void parsegraph_Label_paint(parsegraph_Label* label, parsegraph_GlyphPainter* painter, float worldX, float worldY, float fontScale);
 int parsegraph_Line_text(parsegraph_Line* line, UChar* t, int len);
 int parsegraph_Line_getText(parsegraph_Line* line, UChar* t, int len);
+int parsegraph_Label_length(parsegraph_Label* label);
+int parsegraph_Line_length(parsegraph_Line* line);
 int parsegraph_Label_isEmpty(parsegraph_Label* label);
 parsegraph_GlyphAtlas* parsegraph_Label_glyphAtlas(parsegraph_Label*);
 float parsegraph_Label_fontSize(parsegraph_Label*);

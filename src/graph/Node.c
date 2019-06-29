@@ -1223,6 +1223,24 @@ parsegraph_Label* parsegraph_Node_realLabel(parsegraph_Node* node)
     return node->_realLabel;
 };
 
+int parsegraph_Node_labelUTF8(parsegraph_Node* node, char* buf, int len)
+{
+    if(!parsegraph_Node_realLabel(node)) {
+        return 0;
+    }
+    int ulen = parsegraph_Label_length(parsegraph_Node_realLabel(node));
+    UChar* ubuf = malloc((1+ulen)*sizeof(UChar));
+    parsegraph_Node_label(node, ubuf, ulen+1);
+    int32_t trueLen = 0;
+    UErrorCode uerr = U_ZERO_ERROR;
+    u_strToUTF8(buf, len, &trueLen, ubuf, ulen, &uerr);
+    free(ubuf);
+    if(uerr != U_ZERO_ERROR) {
+        parsegraph_die("Unicode error during convert from UTF8 text %s", u_errorName(uerr));
+    }
+    return trueLen;
+}
+
 void parsegraph_Node_setLabelUTF8(parsegraph_Node* node, const char* text, int len, parsegraph_GlyphAtlas* glyphAtlas)
 {
     if(!node->_realLabel) {

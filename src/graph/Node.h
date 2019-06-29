@@ -201,6 +201,7 @@ void* parsegraph_Node_scene(parsegraph_Node* node);
 void parsegraph_Node_setScene(parsegraph_Node* node, void* scene);
 int parsegraph_Node_typeAt(parsegraph_Node* node, int direction);
 int parsegraph_Node_label(parsegraph_Node* node, UChar* buf, int len);
+int parsegraph_Node_labelUTF8(parsegraph_Node* node, char* buf, int len);
 parsegraph_Label* parsegraph_Node_realLabel(parsegraph_Node* node);
 void parsegraph_Node_setLabel(parsegraph_Node* node, const UChar* text, int len, parsegraph_GlyphAtlas* glyphAtlas);
 void parsegraph_Node_setLabelUTF8(parsegraph_Node* node, const char* text, int len, parsegraph_GlyphAtlas* glyphAtlas);

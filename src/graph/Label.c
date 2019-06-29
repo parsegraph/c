@@ -352,6 +352,16 @@ int parsegraph_Line_getText(parsegraph_Line* line, UChar* t, int len)
     return tpos;
 }
 
+int parsegraph_Line_length(parsegraph_Line* line)
+{
+    int tpos = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(line->_glyphs); ++i) {
+        parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(line->_glyphs, i);
+        tpos += glyphData->length;
+    }
+    return tpos;
+}
+
 int parsegraph_Line_text(parsegraph_Line* line, UChar* t, int len)
 {
     return parsegraph_Line_getText(line, t, len);
@@ -492,6 +502,19 @@ int parsegraph_Label_getText(parsegraph_Label* label, UChar* buf, int len)
         }
         int linelen = parsegraph_Line_getText(l, buf + totallen, len - totallen);
         totallen += linelen;
+    }
+    return totallen;
+}
+
+int parsegraph_Label_length(parsegraph_Label* label)
+{
+    int totallen = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(label->_lines); ++i) {
+        parsegraph_Line* l = parsegraph_ArrayList_at(label->_lines, i);
+        if(totallen > 0) {
+            totallen += 1;
+        }
+        totallen += parsegraph_Line_length(l);
     }
     return totallen;
 }
