@@ -289,7 +289,7 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
             i = savedState;
         }
         else {
-            clock_gettime(CLOCK_REALTIME, &parsegraph_PAINT_START);
+            clock_gettime(CLOCK_MONOTONIC, &parsegraph_PAINT_START);
             parsegraph_NODES_PAINTED = 0;
         }
 
@@ -325,10 +325,17 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
     }
 
     if(!world->_worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
-        //struct timespec now;
-        //clock_gettime(CLOCK_REALTIME, &now);
-        //int paintDuration = parsegraph_timediffMs(&now, &parsegraph_PAINT_START);
-        //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        long paintDuration = parsegraph_elapsed(&parsegraph_PAINT_START);
+        if(paintDuration > 0) {
+            //parsegraph_log("Painted %d nodes over %dms. (%d nodes/ms)\n",
+                //parsegraph_NODES_PAINTED,
+                //paintDuration,
+                //(parsegraph_NODES_PAINTED/(paintDuration))
+            //);
+        }
+        else {
+            //parsegraph_log("Painted %d nodes in <0ms.\n", parsegraph_NODES_PAINTED);
+        }
         parsegraph_NODES_PAINTED = 0;
     }
 
