@@ -229,4 +229,5 @@ parsegraph_Node* parsegraph_labeledBlock(apr_pool_t* pool, UChar* label, int len
 int parsegraph_Node_ignoresMouse(parsegraph_Node*);
 void parsegraph_Node_showInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary);
 void parsegraph_Node_showNodeInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary);
+void parsegraph_Node_dump(parsegraph_Node* node);
 #endif // parsegraph_graph_Node_INCLUDED

@@ -282,12 +282,12 @@ int main(int argc, char**argv)
     apr_status_t rv;
     rv = apr_app_initialize(&argc, (const char* const**)&argv, NULL);
     if(rv != APR_SUCCESS) {
-        fprintf(stderr, "Failed initializing APR. APR status of %d.\n", rv);
+        parsegraph_log("Failed initializing APR. APR status of %d.\n", rv);
         return -1;
     }
     rv = apr_pool_create(&pool, NULL);
     if(rv != APR_SUCCESS) {
-        fprintf(stderr, "Failed creating memory pool. APR status of %d.\n", rv);
+        parsegraph_log("Failed creating memory pool. APR status of %d.\n", rv);
         return -1;
     }
 

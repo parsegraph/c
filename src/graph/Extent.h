@@ -37,7 +37,7 @@ int parsegraph_Extent_prependLS(struct parsegraph_Extent*, float, float);
 unsigned int parsegraph_Extent_numBounds(struct parsegraph_Extent*);
 int parsegraph_Extent_hasBounds(struct parsegraph_Extent*);
 void parsegraph_Extent_simplify(struct parsegraph_Extent*);
-void parsegraph_Extent_dump(struct parsegraph_Extent* extent);
+void parsegraph_Extent_dump(struct parsegraph_Extent* extent, const char* title, ...);
 int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int capacity);
 
 float parsegraph_Extent_boundLengthAt(struct parsegraph_Extent* extent, unsigned int index);

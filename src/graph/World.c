@@ -275,7 +275,7 @@ struct parsegraph_GlyphAtlas* parsegraph_PAINTING_GLYPH_ATLAS = 0;
 
 int parsegraph_World_paint(parsegraph_World* world, int timeout)
 {
-    //parsegraph_log("Painting world, timeout=%d\n", timeout);
+    parsegraph_logEntercf("Graph world paints", "Painting world, timeout=%d\n", timeout);
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
 
@@ -296,6 +296,7 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
         while(i < parsegraph_ArrayList_length(world->_worldRoots)) {
             if(pastTime(timeout, &t)) {
                 world->_previousWorldPaintState = i;
+                parsegraph_logLeavef("Time's up.");
                 return 0;
             }
             parsegraph_Node* plot = parsegraph_ArrayList_at(world->_worldRoots, i);
@@ -314,6 +315,7 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
 
             if(!paintCompleted) {
                 world->_previousWorldPaintState = i;
+                parsegraph_logLeavef("Time's up.");
                 return 0;
             }
 
@@ -327,16 +329,19 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
     if(!world->_worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
         long paintDuration = parsegraph_elapsed(&parsegraph_PAINT_START);
         if(paintDuration > 0) {
-            //parsegraph_log("Painted %d nodes over %dms. (%d nodes/ms)\n",
-                //parsegraph_NODES_PAINTED,
-                //paintDuration,
-                //(parsegraph_NODES_PAINTED/(paintDuration))
-            //);
+            parsegraph_logLeavef("Painted %d nodes over %dms. (%d nodes/ms)\n",
+                parsegraph_NODES_PAINTED,
+                paintDuration,
+                (parsegraph_NODES_PAINTED/(paintDuration))
+            );
         }
         else {
-            //parsegraph_log("Painted %d nodes in <0ms.\n", parsegraph_NODES_PAINTED);
+            parsegraph_logLeavef("Painted %d nodes in <0ms.\n", parsegraph_NODES_PAINTED);
         }
         parsegraph_NODES_PAINTED = 0;
+    }
+    else {
+        parsegraph_logLeave();
     }
 
     return 1;

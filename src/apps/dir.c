@@ -116,7 +116,7 @@ static int showTextFile(parsegraph_Directory* app, parsegraph_Caret* caret, void
 
 static void loadModules(const char* path)
 {
-    parsegraph_log("Loading modules from %s", path);
+    parsegraph_log("Loading modules from %s\n", path);
     char* olddir = 0;
     {
         int n = 1;

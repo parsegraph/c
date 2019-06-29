@@ -804,14 +804,14 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
     float mouseInWorld[2];
     parsegraph_Input_transformPos(input, clientX, clientY, mouseInWorld, mouseInWorld + 1);
 
-    //parsegraph_log("Mouse (%f, %f) = World (%f, %f)\n", clientX, clientY, mouseInWorld[0], mouseInWorld[1]);
+    parsegraph_logEntercf("Mouse clicks", "Mouse clicked at screen (%f, %f) = World (%f, %f)\n", clientX, clientY, mouseInWorld[0], mouseInWorld[1]);
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(parsegraph_Graph_world(input->_graph), mouseInWorld[0], mouseInWorld[1]);
     if(!selectedNode) {
-        //parsegraph_log("No node found under coords.\n");
+        parsegraph_logLeavef("No node found under coords.\n");
         return 0;
     }
 
-    //parsegraph_log("Node %d found for coords.\n", selectedNode->_id);
+    parsegraph_log("Node %d was clicked.\n", selectedNode->_id);
 
     // Check if the selected node was a slider.
     if(parsegraph_Node_type(selectedNode) == parsegraph_SLIDER) {
@@ -820,6 +820,7 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
             input->selectedSlider = 0;
             input->attachedMouseListener = 0;
             parsegraph_Graph_scheduleRepaint(input->_graph);
+            parsegraph_logLeavef("Deselecting slider.\n");
             return 0;
         }
         //console.log("Slider node!");
@@ -827,25 +828,26 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
         input->attachedMouseListener = parsegraph_Input_sliderListener;
         parsegraph_Input_sliderListener(input, clientX, clientY);
         parsegraph_Graph_scheduleRepaint(input->_graph);
+        parsegraph_logLeavef("Slider node found.\n");
         return selectedNode;
     }
 
     // Check if the selected node has a click listener.
     if(parsegraph_Node_hasClickListener(selectedNode)) {
-        //parsegraph_log("Selected Node %d has click listener", selectedNode->_id);
+        parsegraph_log("Selected node %d has click listener.\n", selectedNode->_id);
         int rv = parsegraph_Node_click(selectedNode, "");
         if(rv != 0) {
+            parsegraph_logLeave();
             return selectedNode;
         }
     }
     else {
-        //parsegraph_log("Selected Node %d has no click listener.", selectedNode->_id);
+        parsegraph_log("Selected Node %d has no click listener.\n", selectedNode->_id);
     }
 
     // Check if the label was clicked.
-    //console.log("Clicked");
+    parsegraph_log("Clicked\n");
     if(selectedNode->_realLabel && !isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_realLabel)) {
-        //parsegraph_log("Clicked label.\n");
         parsegraph_Label_click(selectedNode->_realLabel,
             (mouseInWorld[0] - selectedNode->_labelPos[0]) / selectedNode->_labelPos[2],
             (mouseInWorld[1] - selectedNode->_labelPos[1]) / selectedNode->_labelPos[2]
@@ -855,6 +857,7 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
         input->_focusedLabel = 1;
         input->_focusedNode = selectedNode;
         parsegraph_Graph_scheduleRepaint(input->_graph);
+        parsegraph_logLeavef("Clicked label.\n");
         return selectedNode;
     }
     if(selectedNode && !parsegraph_Node_ignoresMouse(selectedNode)) {
@@ -862,10 +865,11 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
         input->_focusedNode = selectedNode;
         input->_focusedLabel = 0;
         parsegraph_Graph_scheduleRepaint(input->_graph);
-        //console.log("Selected Node has nothing", selectedNode);
+        parsegraph_logLeavef("Selected Node has nothing.\n", selectedNode);
         return selectedNode;
     }
 
+    parsegraph_logLeave();
     return 0;
 }
 

@@ -214,6 +214,7 @@ float parsegraph_Node_scale(parsegraph_Node* node)
  */
 void parsegraph_Node_setScale(parsegraph_Node* node, float scale)
 {
+    parsegraph_log("Scale set to %f\n", scale);
     node->_scale = scale;
     parsegraph_Node_layoutWasChanged(node, parsegraph_INWARD);
 }
@@ -1425,20 +1426,36 @@ int parsegraph_Node_inNodeExtents(parsegraph_Node* node, float x, float y, float
     float eSize[2];
     parsegraph_Node_extentSize(node, eSize);
 
-    if(x < userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD)) {
+    parsegraph_log("Checking node extent of size (%f, %f) at absolute X, Y origin of %f, %f\n", eSize[0], eSize[1], ax, ay);
+    if(aScale != 1) {
+        parsegraph_log("Node absolute scale is %f\n", aScale);
+    }
+    if(userScale != 1) {
+        parsegraph_log("User scale is %f\n", userScale);
+    }
+    parsegraph_log("Position to test is %f, %f\n", x, y);
+
+    const float forwardMin = userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD);
+    if(x < forwardMin) {
+        parsegraph_log("Test X value of %f is behind horizontal node minimum of %f.\n", x, forwardMin);
         return 0;
     }
-    if(x > userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD) + userScale * aScale * eSize[0]) {
+    const float forwardMax = userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD) + userScale * aScale * eSize[0];
+    if(x > forwardMax) {
+        parsegraph_log("Test X value of %f is ahead of horizontal node maximum of %f.\n", x, forwardMax);
         return 0;
     }
-    if(y < userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD)) {
+    const float vertMin = userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD);
+    if(y < vertMin) {
+        parsegraph_log("Test Y value of %f is above node vertical minimum of %f.\n", y, vertMin);
         return 0;
     }
-    if(y > userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD)
-            + userScale * aScale * eSize[1]
-    ) {
+    const float vertMax = userScale * ay - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD) + userScale * aScale * eSize[1];
+    if(y > vertMax) {
+        parsegraph_log("Test Y value of %f is beneath node vertical maximum of %f.\n", y, vertMax);
         return 0;
     }
+    parsegraph_log("Test value is in within node extent.\n");
     return 1;
 }
 
@@ -1458,7 +1475,12 @@ static void addCandidate(parsegraph_ArrayList* candidates, parsegraph_Node* node
 
 parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x, float y, float userScale)
 {
-    //parsegraph_log("nodeUnderCoords: %0.2f, %0.2f\n", x, y);
+    {
+        char buf[1024];
+        buf[0] = 0;
+        parsegraph_Node_labelUTF8(node, buf, 1023);
+        parsegraph_logEntercf("Node under world checks", "Checking from node %d (%s) for node under world coords (%f, %f)\n", node->_id, buf, x, y);
+    }
     if(userScale == NAN) {
         userScale = 1;
     }
@@ -1475,36 +1497,47 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
     parsegraph_Node FORCE_SELECT_PRIOR;
     while(parsegraph_ArrayList_length(candidates) > 0) {
         parsegraph_Node* candidate = parsegraph_ArrayList_at(candidates, parsegraph_ArrayList_length(candidates) - 1);
+        char buf[256];
+        if(!parsegraph_Node_labelUTF8(candidate, buf, 255)) {
+            buf[0] = 0;
+        }
+        if(buf[0]) {
+            parsegraph_log("Checking node %d = %s\n", candidate->_id, buf);
+        }
+        else {
+            parsegraph_log("Checking %s node %d\n", parsegraph_nameNodeType(parsegraph_Node_type(candidate)), candidate->_id);
+        }
 
         if(candidate == &FORCE_SELECT_PRIOR) {
             parsegraph_ArrayList_pop(candidates);
+            parsegraph_logLeavef("Using previously selected candidate due to setting.");
             return parsegraph_ArrayList_pop(candidates);
         }
 
         if(parsegraph_Node_inNodeBody(candidate, x, y, userScale)) {
-            //parsegraph_log("Click is in node body\n");
+            parsegraph_log("Click is in node body\n");
             if(
                 parsegraph_Node_hasNode(candidate, parsegraph_INWARD)
             ) {
                 if(parsegraph_Node_inNodeExtents(
                     parsegraph_Node_nodeAt(candidate, parsegraph_INWARD), x, y, userScale)
                 ) {
-                    //parsegraph_log("Testing inward node\n");
+                    parsegraph_log("Testing inward node\n");
                     parsegraph_ArrayList_push(candidates, &FORCE_SELECT_PRIOR);
                     parsegraph_ArrayList_push(candidates, parsegraph_Node_nodeAt(candidate, parsegraph_INWARD));
                     continue;
                 }
                 else {
-                    //parsegraph_log("Click not in inward extents\n");
+                    parsegraph_log("Click not in inward extents\n");
                 }
             }
 
             // Found the node.
             {
-                //char buf[256];
-                //buf[0] = 0;
-                //parsegraph_Node_labelUTF8(candidate, buf, 255);
-                //parsegraph_log("Found node(%s).\n", buf);
+                char buf[256];
+                buf[0] = 0;
+                parsegraph_Node_labelUTF8(candidate, buf, 255);
+                parsegraph_log("Found node(%s).\n", buf);
             }
             rv = candidate;
             goto end;
@@ -1517,7 +1550,7 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
             // Nope, so continue the search.
             continue;
         }
-        //parsegraph_log("Click is in node extent\n");
+        parsegraph_log("Click is in node extent\n");
         float ax = parsegraph_Node_absoluteX(candidate);
         float ay = parsegraph_Node_absoluteY(candidate);
 
@@ -1562,10 +1595,11 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
         }
     }
 
-    //parsegraph_log("Found nothing clicked.\n");
+    parsegraph_log("Found nothing clicked.\n");
 end:
     parsegraph_ArrayList_destroy(candidates);
     apr_pool_destroy(spool);
+    parsegraph_logLeave();
     return rv;
 }
 
@@ -1807,20 +1841,21 @@ static void combineExtent(parsegraph_Node* node,
     float sizeAdjustment)
 {
     parsegraph_Node* child = parsegraph_Node_nodeAt(node, childDirection);
-    /*console.log(
-        "combineExtent(" +
-        parsegraph_nameNodeDirection(direction) + ", " +
-        lengthAdjustment + ", " +
-        sizeAdjustment + ")"
-    );*/
+    parsegraph_log(
+        "Combining %s extent of %s child of node %d (lengthAdjustment=%f, sizeAdjustment=%f)\n",
+        parsegraph_nameNodeDirection(direction),
+        parsegraph_nameNodeDirection(childDirection),
+        node->_id,
+        lengthAdjustment,
+        sizeAdjustment
+    );
     // Calculate the new offset to this node's center.
     float lengthOffset = node->_neighbors[direction].extentOffset
         + lengthAdjustment
         - parsegraph_Node_scaleAt(node, childDirection) * parsegraph_Node_extentOffsetAt(child, direction);
 
     // Combine the two extents in the given direction.
-    //parsegraph_log("Combining %s\n", parsegraph_nameNodeDirection(direction));
-    //parsegraph_log("Length offset: %f\n", lengthOffset);
+    parsegraph_log("Length offset: %f\n", lengthOffset);
     //parsegraph_log("Size adjustment: %f\n", sizeAdjustment);
     parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
         parsegraph_Node_extentsAt(child, direction),
@@ -1835,16 +1870,15 @@ static void combineExtent(parsegraph_Node* node,
 
     // Adjust the length offset to remain positive.
     if(lengthOffset < 0) {
-        //console.log("Adjusting negative extent offset.");
+        parsegraph_log("Adjusting negative extent offset.\n");
         node->_neighbors[direction].extentOffset =
             node->_neighbors[direction].extentOffset + parsegraph_absf(lengthOffset);
     }
 
-    /*console.log(
-        "New "
-        + parsegraph_nameNodeDirection(direction)
-        + " extent offset = "
-        + this._neighbors[direction].extentOffset
+    parsegraph_log(
+        "New %s extent offset = %f\n",
+        parsegraph_nameNodeDirection(direction),
+        node->_neighbors[direction].extentOffset
     );
     this._neighbors[direction].extent.forEach(function(l, s, i) {
         console.log(i + ". length=" + l + ", size=" + s);
@@ -1874,6 +1908,7 @@ static void combineExtents(
     int alignment,
     float separation)
 {
+    parsegraph_logEnterf("Combining extents for %s child of node %d\n", parsegraph_nameNodeDirection(childDirection), node->_id);
     switch(childDirection) {
     case parsegraph_DOWNWARD:
         // Downward child.
@@ -1910,6 +1945,7 @@ static void combineExtents(
     default:
         parsegraph_abort(parsegraph_BAD_NODE_DIRECTION);
     }
+    parsegraph_logLeave();
 };
 
 /**
@@ -2303,6 +2339,8 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
         return 0;
     }
 
+    parsegraph_logEntercf("Layout commits", "Commiting layout for node %d", node->_id);
+
     // Check for invalid layout states.
     if(node->_layoutState == parsegraph_NULL_LAYOUT_STATE) {
         parsegraph_abort(parsegraph_BAD_LAYOUT_STATE);
@@ -2533,12 +2571,71 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
             );
         }
     }
+    parsegraph_Node_dump(node);
+    parsegraph_logLeave();
 
     node->_layoutState = parsegraph_COMMITTED_LAYOUT;
 
     // Needed a commit, so return true.
     return 1;
 }
+
+void parsegraph_Node_dump(parsegraph_Node* node)
+{
+    // extent.boundingValues() returns [totalLength, minSize, maxSize]
+    float backwardOffset = parsegraph_Node_extentOffsetAt(node, parsegraph_BACKWARD);
+    float totalLength, minSize, maxSize;
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_BACKWARD), &totalLength, &minSize, &maxSize);
+    if(minSize == maxSize) {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_BACKWARD),
+            "Backward extent of length %f and size %f (center at %f)", totalLength, minSize, backwardOffset
+        );
+    }
+    else {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_BACKWARD),
+            "Backward extent of length %f [min size :%f, max size:%f] (center at %f)", totalLength, minSize, maxSize, backwardOffset
+        );
+    }
+
+    float forwardOffset = parsegraph_Node_extentOffsetAt(node, parsegraph_FORWARD);
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_FORWARD), &totalLength, &minSize, &maxSize);
+    if(minSize == maxSize) {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_FORWARD),
+            "Forward extent of length %f and size %f (center at %f)", totalLength, minSize, forwardOffset
+        );
+    }
+    else {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_FORWARD),
+            "Forward extent of length %f [min size: %f, max size: %f] (center at %f)", totalLength, minSize, maxSize, forwardOffset
+        );
+    }
+
+    float downwardOffset = parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD);
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD), &totalLength, &minSize, &maxSize);
+    if(minSize == maxSize) {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD),
+            "Downward extent of length %f and size %f (center at %f)", totalLength, minSize, downwardOffset
+        );
+    }
+    else {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD),
+            "Downward extent of length %f [min size: %f, max size: %f] (center at %f)", totalLength, minSize, maxSize, downwardOffset
+        );
+    }
+
+    float upwardOffset = parsegraph_Node_extentOffsetAt(node, parsegraph_UPWARD);
+    parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_UPWARD), &totalLength, &minSize, &maxSize);
+    if(minSize == maxSize) {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_UPWARD),
+            "Upward extent of length %f and size %f (center at %f)", totalLength, minSize, upwardOffset
+        );
+    }
+    else {
+        parsegraph_Extent_dump(parsegraph_Node_extentsAt(node, parsegraph_UPWARD),
+            "Upward extent of length %f [min size:%f, max size:%f] (center at %f)", totalLength, minSize, maxSize, upwardOffset
+        );
+    }
+};
 
 /**
  * Returns the total distance from the given node, to the furthest node
@@ -2588,11 +2685,11 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
     if(cl->timeout > 0) {
         clock_gettime(CLOCK_REALTIME, &t);
     }
+    parsegraph_logEntercf("Layout commit iterations", "Working on layout commits");
     float bodySize[2];
     parsegraph_Node* node = cl->node;
     for(;;) {
         node = node->_worldPrev;
-        //parsegraph_log("Committing layout for node %d\n", node->_id);
         if(node->_layoutState == parsegraph_NEEDS_COMMIT) {
             parsegraph_Node_commitLayout(node, bodySize);
         }
@@ -2601,12 +2698,13 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
             clock_gettime(CLOCK_REALTIME, &now);
             if(parsegraph_timediffMs(&now, &t) > cl->timeout) {
                 cl->node = node;
+                parsegraph_logLeavef("Timeout.");
                 return 1;
             }
         }
         if(node == cl->root) {
             // Terminal condition reached.
-            //parsegraph_log("Commit layout took %ldms.\n", parsegraph_elapsed(&cl->startTime));
+            parsegraph_logLeavef("Commit layout took %ldms.\n", parsegraph_elapsed(&cl->startTime));
             return 0;
         }
     }

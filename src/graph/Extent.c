@@ -366,8 +366,8 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         // We have a length adjustment.
         struct parsegraph_Extent* givenCopy = parsegraph_Extent_clone(given);
         parsegraph_Extent_prependLS(givenCopy, lengthAdjustment/scale, NAN);
-        //fprintf(stderr, "Creating copy for %f, %f", lengthAdjustment, scale);
-        //parsegraph_Extent_dump(givenCopy);
+        //parsegraph_log(stderr, "Creating copy for %f, %f", lengthAdjustment, scale);
+        //parsegraph_Extent_dump(givenCopy, "Copied extent");
         struct parsegraph_Extent* result = parsegraph_Extent_combinedExtent(extent,
             givenCopy,
             0,
@@ -529,16 +529,27 @@ void parsegraph_Extent_destroy(struct parsegraph_Extent* extent)
     }
 }
 
-void parsegraph_Extent_dump(struct parsegraph_Extent* extent)
+void parsegraph_Extent_dump(struct parsegraph_Extent* extent, const char* title, ...)
 {
+    if(title) {
+        va_list ap;
+        va_start(ap, title);
+        char buf[1024];
+        vsnprintf(buf, 1024, title, ap);
+        va_end(ap);
+        parsegraph_logEnterf(buf);
+    }
     float offset = 0;
     for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
-        fprintf(stderr, "%f: [length=%f, size=%f]\n",
+        parsegraph_log("%f: [length=%f, size=%f]\n",
             offset,
             parsegraph_Extent_boundLengthAt(extent, i),
             parsegraph_Extent_boundSizeAt(extent, i)
         );
         offset += parsegraph_Extent_boundLengthAt(extent, i);
+    }
+    if(title) {
+        parsegraph_logLeave();
     }
 }
 
