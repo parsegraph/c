@@ -1799,24 +1799,14 @@ static void combineExtent(parsegraph_Node* node,
     //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
     //console.log("Length offset: " + lengthOffset);
     //console.log("Size adjustment: " + sizeAdjustment);
+    parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
+        parsegraph_Node_extentsAt(child, direction),
+        lengthOffset,
+        sizeAdjustment,
+        parsegraph_Node_scaleAt(node, childDirection)
+    );
     if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_LOOSE) {
-        parsegraph_Extent* e = node->_neighbors[direction].extent;
-        float scale = parsegraph_Node_scaleAt(node, childDirection);
-        parsegraph_Extent_combineExtent(e,
-            parsegraph_Node_extentsAt(child, direction),
-            lengthOffset,
-            sizeAdjustment,
-            scale
-        );
-        parsegraph_Extent_simplify(e);
-    }
-    else {
-        parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
-            parsegraph_Node_extentsAt(child, direction),
-            lengthOffset,
-            sizeAdjustment,
-            parsegraph_Node_scaleAt(node, childDirection)
-        );
+        parsegraph_Extent_simplify(node->_neighbors[direction].extent);
     }
 
     // Adjust the length offset to remain positive.
