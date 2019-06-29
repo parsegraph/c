@@ -1500,7 +1500,12 @@ parsegraph_Node* parsegraph_Node_nodeUnderCoords(parsegraph_Node* node, float x,
             }
 
             // Found the node.
-            //parsegraph_log("Found clicked node.\n");
+            {
+                //char buf[256];
+                //buf[0] = 0;
+                //parsegraph_Node_labelUTF8(candidate, buf, 255);
+                //parsegraph_log("Found node(%s).\n", buf);
+            }
             rv = candidate;
             goto end;
         }
