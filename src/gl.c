@@ -53,7 +53,7 @@ GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, co
  */
 GLuint compileShader(const char* shaderSource, GLenum shaderType)
 {
-  GLint shaderLen = strlen(shaderSource);
+  GLint shaderLen = 1 + strlen(shaderSource);
 
   // Create the shader object
   GLuint shader = glCreateShader(shaderType);
@@ -67,7 +67,7 @@ GLuint compileShader(const char* shaderSource, GLenum shaderType)
   // Check if it compiled
   GLint success;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
+  if (success != GL_TRUE) {
     // Something went wrong during compilation; get the error
     //
     GLchar shaderLog[4096];

@@ -1,30 +1,27 @@
 #include "FacePainter.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "../die.h"
+#include "../graph/log.h"
 
 const char* alpha_FacePainter_VertexShader =
-"uniform mat4 u_world;\n"
-"\n"
 "attribute vec4 a_position;\n"
 "attribute vec4 a_color;\n"
-"\n"
-"varying highp vec4 contentColor;\n"
-"\n"
+"varying vec4 contentColor;\n"
+"uniform mat4 u_world;\n"
 "void main() {\n"
-    "gl_Position = u_world * vec4(a_position.xyz, 1.0);"
-    "contentColor = a_color;"
-"}";
+    "gl_Position = u_world * vec4(a_position.xyz, 1.0);\n"
+    "contentColor = a_color;\n"
+"}\n";
 
 const char* alpha_FacePainter_FragmentShader =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
-""
-"varying highp vec4 contentColor;\n"
-"\n"
+"varying vec4 contentColor;\n"
 "void main() {\n"
-    "gl_FragColor = contentColor;"
-"}";
+    "gl_FragColor = contentColor;\n"
+"}\n";
 
 /**
  * Draws 3d faces in a solid color.
@@ -34,7 +31,7 @@ struct alpha_FacePainter* alpha_FacePainter_new(apr_pool_t* pool)
     struct alpha_FacePainter* painter = apr_pcalloc(pool, sizeof(*painter));
     painter->faceProgram = glCreateProgram();
     if(painter->faceProgram == 0) {
-        return 0;
+        parsegraph_die("Failed to create GL program");
     }
 
     glAttachShader(
@@ -57,7 +54,13 @@ struct alpha_FacePainter* alpha_FacePainter_new(apr_pool_t* pool)
     GLint status;
     glGetProgramiv(painter->faceProgram, GL_LINK_STATUS, &status);
     if(status != GL_TRUE) {
-        return 0;
+        parsegraph_log("GLSL version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+        GLsizei logLen;
+        char progLog[1024];
+        glGetProgramInfoLog(painter->faceProgram, 1024, &logLen, progLog);
+        parsegraph_log(alpha_FacePainter_VertexShader);
+        parsegraph_log(progLog);
+        parsegraph_die("GL program failed to compile and link");
     }
 
     // Prepare attribute buffers.

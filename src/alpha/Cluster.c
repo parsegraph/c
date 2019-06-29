@@ -45,6 +45,13 @@ alpha_Cluster* alpha_Cluster_new(apr_pool_t* pool, alpha_GLWidget* widget)
     return cluster;
 }
 
+void alpha_Cluster_destroy(alpha_Cluster* cluster)
+{
+    if(!cluster->pool) {
+        free(cluster);
+    }
+}
+
 /**
  * is this particular block in this cluster
  */

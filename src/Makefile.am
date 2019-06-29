@@ -286,9 +286,9 @@ cxx_weetcubes_SOURCES = \
 noinst_HEADERS = tests/unity.h tests/unity_internals.h tests/testpool.h
 
 check_PROGRAMS = runtest
-runtest_CFLAGS = $(libparsegraph_Qt_la_CFLAGS) -I$(top_SRCDIR)
-runtest_LDFLAGS = $(libparsegraph_Qt_la_LDFLAGS)
-runtest_LDADD = libparsegraph-Qt.la
+runtest_CFLAGS = $(libparsegraph_kms_la_CFLAGS) -I$(top_SRCDIR) -DGL_GLEXT_PROTOTYPES
+runtest_LDFLAGS = $(libparsegraph_kms_la_LDFLAGS) -lwayland-client -lwayland-egl -lEGL -lGL
+runtest_LDADD = libparsegraph-kms.la
 runtest_SOURCES = \
 	tests/graph/Extent.c \
 	tests/alpha/Maths.c \
