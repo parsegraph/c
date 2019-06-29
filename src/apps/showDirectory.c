@@ -211,8 +211,9 @@ static void recurseDirectory(parsegraph_Directory* app, apr_pool_t* pool, parseg
         int firstOfRow = 1;
         for(int i = 0; i < parsegraph_ArrayList_length(entries); ++i) {
             const char* name = parsegraph_ArrayList_at(entries, i);
+            const char* dir = "f";
             if(i == 0) {
-                parsegraph_Caret_pull(caret, "f");
+                parsegraph_Caret_pull(caret, dir);
             }
             //else if((name[0] == '/' && depth != 1) || (i > 0 && rowLen > 0 && i % ((int)rowLen) == 0)) {
             else if((i > 0 && rowLen > 0 && i % ((int)rowLen) == 0)) {
@@ -220,18 +221,18 @@ static void recurseDirectory(parsegraph_Directory* app, apr_pool_t* pool, parseg
                 parsegraph_Caret_spawnMove(caret, "d", "bu", 0);
                 parsegraph_Caret_push(caret);
                 firstOfRow = 1;
-                parsegraph_Caret_pull(caret, "f");
+                parsegraph_Caret_pull(caret, dir);
             }
             else {
                 parsegraph_Caret_pull(caret, "d");
             }
             if(name[0] == '/') {
-                parsegraph_Caret_spawnMove(caret, "f", "bu", 0);
+                parsegraph_Caret_spawnMove(caret, dir, "bu", 0);
                 recurseDirectory(app, pool, caret, parent, name + 1, depth - 1);
                 //installClickListener(app, pool, parsegraph_Caret_node(caret), parent, filename);
             }
             else {
-                parsegraph_Caret_spawnMove(caret, "f", "bu", 0);
+                parsegraph_Caret_spawnMove(caret, dir, "bu", 0);
                 parsegraph_Directory_createFileNode(app, caret, parent, name, depth - 1);
             }
             if(rowLen > 0 && firstOfRow) {
