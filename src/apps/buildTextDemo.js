@@ -1,38 +1,140 @@
-function buildTextDemo(graph, COUNT, text)
+var englishSentences = [
+"Hello.",
+"Good morning.",
+"Good evening.",
+"One, two, three.",
+"Goodbye.",
+];
+
+var russianSentences = [
+"Привет.",
+"доброе утро.",
+"Добрый вечер.",
+"один, два, три",
+"Прощай.",
+];
+
+var arabicSentences = [
+"مرحبا",
+"صباح الخير",
+"مساء الخير",
+"واحد اثنين ثلاثة",
+"إلى اللقاء",
+];
+
+var hebrewSentences = [
+"שלום",
+"בוקר טוב",
+"ערב טוב",
+"אחת שתיים שלוש",
+"לְהִתְרָאוֹת",
+];
+
+var devanagariSentences = [
+"नमस्ते",
+"शुभ प्रभात",
+"सुसंध्या",
+"एक दो तीन।",
+"अलविदा"
+];
+
+var greekSentences = [
+"γεια σας",
+"Καλημέρα.",
+"Καλό απόγευμα.",
+"ένα δύο τρία.",
+"αντιο σας"
+];
+
+var hanSentences = [
+"你好",
+"早上好",
+"晚上好",
+"一二三。",
+"再见"
+];
+
+var hangulSentences = [
+"여보세요",
+"좋은 아침.",
+"안녕하세요.",
+"하나 둘 셋",
+"안녕"
+];
+
+var japaneseSentences = [
+"こんにちは",
+"おはようございます",
+"こんばんは",
+"一二三",
+"さようなら"
+];
+
+var thaiSentences = [
+"สวัสดี",
+"สวัสดีตอนเช้า",
+"สวัสดีตอนเย็น",
+"หนึ่งสองสาม",
+"ลาก่อน"
+];
+
+var hungarianSentences = [
+"Szia.",
+"jó reggelt",
+"jó estét",
+"egy kettő három",
+"viszontlátásra."
+];
+
+var testLanguages = [
+englishSentences,
+russianSentences,
+arabicSentences,
+hebrewSentences,
+devanagariSentences,
+greekSentences,
+hanSentences,
+hangulSentences,
+japaneseSentences,
+thaiSentences,
+hungarianSentences,
+];
+
+var testLanguageNames = [
+"English",
+"Russian",
+"Arabic",
+"Hebrew",
+"Hindu",
+"Greek",
+"Chinese (simplified)",
+"Korean",
+"Japanese",
+"Thai",
+"Hungarian",
+];
+
+function buildTextDemo(app)
 {
-    if(COUNT === undefined) {
-        COUNT = 10;
-    }
-    if(text === undefined) {
-        text = "";
-    }
-
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.setGlyphAtlas(graph.glyphAtlas());
+    caret.setGlyphAtlas(app.glyphAtlas());
 
-    [
-        "क्या चल रहा हैं?",,
-        "नमस्ते",
-        "اَلْقَهْوَةُ",
-        "اَلْمِلْعَقَةُ",
-        //"هل بإمكانك مساعدتي؟",
-        //"سلام",
-        //"سلام",
-        //"بيع سلم",
-        //"مَسْجِدٌ",
-        //"سلام",
-        //"بَيْتٌ",
-        //"وَعَلَيْكُم السَّلَام",
-        //"הלו חבר."
-        //"بَيْتٌ"
-        "مَسْجِدٌ"
-    ].forEach(function(l) {
-        caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
-        caret.label(l);
-        caret.move('u');
-        caret.pull('d');
-        caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    }, this);
+    for(var i in testLanguages) {
+        caret.spawnMove("f", "u");
+        caret.push();
+        caret.pull("d");
+        caret.spawnMove("d", "b");
+        caret.label(testLanguageNames[i]);
+        var testSentences = testLanguages[i];
+        for(var j in testSentences) {
+            caret.spawnMove("d", "s");
+            caret.label(testSentences[j]);
+            caret.move("u");
+            caret.pull("d");
+            caret.move("d");
+        }
+        caret.pop();
+    }
 
     return caret.root();
 };
