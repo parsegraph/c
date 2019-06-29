@@ -804,15 +804,14 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
     float mouseInWorld[2];
     parsegraph_Input_transformPos(input, clientX, clientY, mouseInWorld, mouseInWorld + 1);
 
-    //console.log(clientX, clientY);
-    //console.log(mouseInWorld);
+    //parsegraph_log("Mouse (%f, %f) = World (%f, %f)\n", clientX, clientY, mouseInWorld[0], mouseInWorld[1]);
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(parsegraph_Graph_world(input->_graph), mouseInWorld[0], mouseInWorld[1]);
     if(!selectedNode) {
-        //parsegraph_log("No node found under coords: %s, %s\n", mouseInWorld[0], mouseInWorld[1]);
+        //parsegraph_log("No node found under coords.\n");
         return 0;
     }
 
-    //console.log("Node found for coords:", mouseInWorld, selectedNode);
+    //parsegraph_log("Node %d found for coords.\n", selectedNode->_id);
 
     // Check if the selected node was a slider.
     if(parsegraph_Node_type(selectedNode) == parsegraph_SLIDER) {
