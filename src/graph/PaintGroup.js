@@ -239,8 +239,8 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
         return;
     }
 
-    console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
-    console.log("Rendering", this, this._painter.bounds());
+    //console.log("Rendering paint group: " + this._worldX + " " + this._worldY + " " + this._userScale);
+    //console.log("Rendering", this, this._painter.bounds());
 
     this._painter.render(
         matrixMultiply3x3(
