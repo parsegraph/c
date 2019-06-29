@@ -1796,9 +1796,9 @@ static void combineExtent(parsegraph_Node* node,
         - parsegraph_Node_scaleAt(node, childDirection) * parsegraph_Node_extentOffsetAt(child, direction);
 
     // Combine the two extents in the given direction.
-    //console.log("Combining " + parsegraph_nameNodeDirection(direction) + ", " );
-    //console.log("Length offset: " + lengthOffset);
-    //console.log("Size adjustment: " + sizeAdjustment);
+    //parsegraph_log("Combining %s\n", parsegraph_nameNodeDirection(direction));
+    //parsegraph_log("Length offset: %f\n", lengthOffset);
+    //parsegraph_log("Size adjustment: %f\n", sizeAdjustment);
     parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
         parsegraph_Node_extentsAt(child, direction),
         lengthOffset,
@@ -1808,6 +1808,7 @@ static void combineExtent(parsegraph_Node* node,
     if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_LOOSE) {
         parsegraph_Extent_simplify(node->_neighbors[direction].extent);
     }
+    //parsegraph_log("Combine complete.\n");
 
     // Adjust the length offset to remain positive.
     if(lengthOffset < 0) {

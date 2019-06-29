@@ -105,6 +105,7 @@ int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int cap
         return -1;
     }
     unsigned int oldNumBounds = extent->numBounds;
+    //parsegraph_log("Extent realloc from %d to %d\n", oldCap, capacity);
 
     // Change the capacity.
     extent->capacity = capacity;
@@ -275,6 +276,7 @@ void parsegraph_Extent_setBoundLengthAt(struct parsegraph_Extent* extent, unsign
     if(extent->capacity == 0) {
         parsegraph_die("Cannot set a bound length of an empty Extent.");
     }
+    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (length=%f)\n", extent->start, index, extent->capacity, length);
     extent->bounds[(extent->start + index) % extent->capacity].length = length;
 }
 
@@ -283,6 +285,7 @@ void parsegraph_Extent_setBoundSizeAt(struct parsegraph_Extent* extent, unsigned
     if(extent->capacity == 0) {
         parsegraph_die("Cannot set a bound length of an empty Extent.");
     }
+    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (size=%f)\n", extent->start, index, extent->capacity, size);
     extent->bounds[(extent->start + index) % extent->capacity].size = size;
 }
 
@@ -415,9 +418,9 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             givenReach = givenPosition + scale * parsegraph_Extent_boundLengthAt(given, givenBound);
         }
 
-        //fprintf(stderr, "Iterating over each bound.\n");
-        //fprintf(stderr, "This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
-        //fprintf(stderr, "Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
+        //parsegraph_log("Iterating over each bound.\n");
+        //parsegraph_log("This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
+        //parsegraph_log("Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
 
         parsegraph_Extent_appendLS(result,
             fminf(thisReach, givenReach) - fmaxf(thisPosition, givenPosition),
