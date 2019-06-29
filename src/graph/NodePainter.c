@@ -82,16 +82,6 @@ void parsegraph_NodePainter_render(parsegraph_NodePainter* painter, float* world
     if(painter->_renderBlocks) {
         parsegraph_BlockPainter_render(painter->_blockPainter, world);
     }
-    glBlendFunc(
-        GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-    );
-
-    glBlendFunc(
-        GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA
-    );
-    glBlendFunc(
-        GL_DST_ALPHA, GL_SRC_ALPHA
-    );
     if(painter->_renderExtents) {
         parsegraph_BlockPainter_render(painter->_extentPainter, world);
     }
