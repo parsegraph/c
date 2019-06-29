@@ -214,6 +214,7 @@ struct parsegraph_CommitLayoutTraversal {
 parsegraph_Node* root;
 parsegraph_Node* node;
 int timeout;
+struct timespec startTime;
 };
 typedef struct parsegraph_CommitLayoutTraversal parsegraph_CommitLayoutTraversal;
 int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize);

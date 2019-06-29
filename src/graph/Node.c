@@ -2601,6 +2601,7 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
         }
         if(node == cl->root) {
             // Terminal condition reached.
+            //parsegraph_log("Commit layout took %ldms.\n", parsegraph_elapsed(&cl->startTime));
             return 0;
         }
     }
@@ -2617,6 +2618,7 @@ int parsegraph_Node_commitLayoutIteratively(parsegraph_Node* node, parsegraph_Co
     // Reset the traversal.
     cl->root = node;
     cl->node = node;
+    clock_gettime(CLOCK_MONOTONIC, &cl->startTime);
 
     // Traverse the graph depth-first, committing each node's layout in turn.
     return parsegraph_Node_continueCommitLayout(cl);
