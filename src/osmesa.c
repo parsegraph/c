@@ -163,7 +163,6 @@ render_stuff(parsegraph_Environment* env)
             parsegraph_Surface_render(env->surface, 0);
         }
         glFinish();
-        //glFinish();
         env->needsRender = 0;
     }
 }
