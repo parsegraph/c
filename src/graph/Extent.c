@@ -58,7 +58,7 @@ struct parsegraph_Extent* parsegraph_Extent_clone(struct parsegraph_Extent* orig
     clone->start = orig->start;
     clone->pool = orig->pool;
     clone->numBounds = parsegraph_Extent_numBounds(orig);
-    clone->capacity = sizeof(struct parsegraph_ExtentBound) * parsegraph_Extent_numBounds(orig);
+    clone->capacity = orig->capacity;
     //parsegraph_log("Upgrading extent capacity to %d bounds\n", orig->capacity);
     if(clone->pool) {
         clone->bounds = apr_pcalloc(orig->pool, sizeof(struct parsegraph_ExtentBound) * orig->capacity);
