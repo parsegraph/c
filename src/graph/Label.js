@@ -71,12 +71,12 @@ parsegraph_GlyphIterator.prototype.next = function()
         //              ^-prev
         var cursiveLetter = u.cursive(givenLetter, this.prevLetter, nextLetterChar);
         if(cursiveLetter != null) {
-            console.log("Found cursive char " + givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
+            //console.log("Found cursive char " + givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
             this.prevLetter = givenLetter;
             givenLetter = cursiveLetter;
         }
         else {
-            console.log("Found non-cursive char " + givenLetter.toString(16) + ".");
+            //console.log("Found non-cursive char " + givenLetter.toString(16) + ".");
             this.prevLetter = null;
         }
     }
