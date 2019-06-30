@@ -150,7 +150,7 @@ parsegraph_GlyphAtlas.prototype.has = parsegraph_GlyphAtlas.prototype.hasGlyph;
 
 function parsegraph_getGlyphTextureSize(gl)
 {
-    return Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    return Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE));
 }
 
 /**
