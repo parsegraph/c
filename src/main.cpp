@@ -55,13 +55,14 @@ virtual void keyPressEvent(QKeyEvent* ev) {
         //return;
     }
 
-    //fprintf(stderr, "Pressed %s\n", kname);
+    parsegraph_logEntercf("Key Presses", "Pressed %s\n", kname);
     parsegraph_Input_keydown(input, kname, ev->key(),
         ev->modifiers() & Qt::AltModifier,
         ev->modifiers() & Qt::MetaModifier,
         ev->modifiers() & Qt::ControlModifier,
         ev->modifiers() & Qt::ShiftModifier
     );
+    parsegraph_logLeave();
 }
 
 virtual void keyReleaseEvent(QKeyEvent* ev) {

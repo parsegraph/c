@@ -1050,6 +1050,7 @@ void parsegraph_Node_extentSize(parsegraph_Node* node, float* size)
 
     // The vertical extents have length in the vertical direction.
     parsegraph_Extent_boundingValues(parsegraph_Node_extentsAt(node, parsegraph_DOWNWARD), size, 0, 0);
+    parsegraph_log("ExtentSize=(%f, %f)", size[0], size[1]);
 };
 
 void parsegraph_Node_showNodeInCamera(parsegraph_Node* node, parsegraph_Camera* cam, int onlyScaleIfNecessary)
@@ -1435,12 +1436,15 @@ int parsegraph_Node_inNodeExtents(parsegraph_Node* node, float x, float y, float
     }
     parsegraph_log("Position to test is %f, %f\n", x, y);
 
+    parsegraph_Node_dump(node);
+
     const float forwardMin = userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD);
     if(x < forwardMin) {
         parsegraph_log("Test X value of %f is behind horizontal node minimum of %f.\n", x, forwardMin);
         return 0;
     }
     const float forwardMax = userScale * ax - userScale * aScale * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD) + userScale * aScale * eSize[0];
+    parsegraph_log("ForwardMax = %f = ax=%f - offset=%f + width=%f\n", forwardMax, ax, parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD), eSize[0]);
     if(x > forwardMax) {
         parsegraph_log("Test X value of %f is ahead of horizontal node maximum of %f.\n", x, forwardMax);
         return 0;
@@ -1811,7 +1815,7 @@ static void positionChild(parsegraph_Node* node, int childDirection, int alignme
     }
     lineLength = separation - parsegraph_Node_scaleAt(node, childDirection) * extentSize;
     node->_neighbors[childDirection].lineLength = lineLength;
-    //parsegraph_log("Line length: %f, separation: %f, extentSize: %f\n", lineLength, separation, extentSize);
+    parsegraph_log("Line length: %f, separation: %f, extentSize: %f\n", lineLength, separation, extentSize);
 
     // Set the position.
     int dirSign = parsegraph_nodeDirectionSign(childDirection);
@@ -1822,11 +1826,11 @@ static void positionChild(parsegraph_Node* node, int childDirection, int alignme
     else {
         parsegraph_Node_setPosAt(node, childDirection, dirSign * separation, alignment);
     }
-    //parsegraph_log("%s %s's position set to (%f, %f)\n",
-        //parsegraph_nameNodeDirection(childDirection),
-        //parsegraph_nameNodeType(parsegraph_Node_type(child)),
-        //node->_neighbors[childDirection].xPos, node->_neighbors[childDirection].yPos
-    //);
+    parsegraph_log("%s %s's position set to (%f, %f)\n",
+        parsegraph_nameNodeDirection(childDirection),
+        parsegraph_nameNodeType(parsegraph_Node_type(child)),
+        node->_neighbors[childDirection].xPos, node->_neighbors[childDirection].yPos
+    );
 };
 
 /**
@@ -1856,7 +1860,6 @@ static void combineExtent(parsegraph_Node* node,
 
     // Combine the two extents in the given direction.
     parsegraph_log("Length offset: %f\n", lengthOffset);
-    //parsegraph_log("Size adjustment: %f\n", sizeAdjustment);
     parsegraph_Extent_combineExtent(node->_neighbors[direction].extent,
         parsegraph_Node_extentsAt(child, direction),
         lengthOffset,
@@ -1866,7 +1869,7 @@ static void combineExtent(parsegraph_Node* node,
     if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_LOOSE) {
         parsegraph_Extent_simplify(node->_neighbors[direction].extent);
     }
-    //parsegraph_log("Combine complete.\n");
+    parsegraph_log("Combine complete.\n");
 
     // Adjust the length offset to remain positive.
     if(lengthOffset < 0) {
@@ -1875,15 +1878,11 @@ static void combineExtent(parsegraph_Node* node,
             node->_neighbors[direction].extentOffset + parsegraph_absf(lengthOffset);
     }
 
-    parsegraph_log(
+    parsegraph_Extent_dump(node->_neighbors[direction].extent,
         "New %s extent offset = %f\n",
         parsegraph_nameNodeDirection(direction),
         node->_neighbors[direction].extentOffset
     );
-    this._neighbors[direction].extent.forEach(function(l, s, i) {
-        console.log(i + ". length=" + l + ", size=" + s);
-    });
-    */
 
     // Assert the extent offset is positive.
     if(node->_neighbors[direction].extentOffset < 0) {
@@ -2339,7 +2338,7 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node, float* bodySize)
         return 0;
     }
 
-    parsegraph_logEntercf("Layout commits", "Commiting layout for node %d", node->_id);
+    parsegraph_logEntercf("Layout commits", "Committing layout for node %d", node->_id);
 
     // Check for invalid layout states.
     if(node->_layoutState == parsegraph_NULL_LAYOUT_STATE) {

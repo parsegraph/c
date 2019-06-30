@@ -227,10 +227,11 @@ int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, f
 {
     if(length == 0) {
         // Drop empty lengths.
+        parsegraph_log("Empty length given\n");
         return -1;
     }
     if(length < 0) {
-        //fprintf(stderr, "Non-positive bound lengths are not allowed, but %f was given anyway.", length);
+        parsegraph_log("Non-positive bound lengths are not allowed, but %f was given anyway.\n", length);
         return -1;
     }
 
@@ -239,7 +240,9 @@ int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, f
         if(
             (NAN == lastSize && NAN == size) || (lastSize == size)
         ) {
-            parsegraph_Extent_setBoundLengthAt(extent, parsegraph_Extent_numBounds(extent) - 1,
+            parsegraph_log("Extended bound length\n");
+            parsegraph_Extent_setBoundLengthAt(extent,
+                parsegraph_Extent_numBounds(extent) - 1,
                 parsegraph_Extent_boundLengthAt(extent, parsegraph_Extent_numBounds(extent) - 1) + length
             );
             return 0;
@@ -255,6 +258,7 @@ int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, f
         parsegraph_Extent_realloc(extent, newCap);
     }
 
+    parsegraph_log("Appending bound\n");
     ++(extent->numBounds);
     parsegraph_Extent_setBoundLengthAt(extent, parsegraph_Extent_numBounds(extent)- 1, length);
     parsegraph_Extent_setBoundSizeAt(extent, parsegraph_Extent_numBounds(extent)- 1, size);
@@ -342,6 +346,7 @@ void parsegraph_Extent_combineExtent(struct parsegraph_Extent* extent,
 
 struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Extent* extent, struct parsegraph_Extent* given, float lengthAdjustment, float sizeAdjustment, float scale)
 {
+    parsegraph_logEntercf("Extent combines", "Combining extent");
     if(isnan(lengthAdjustment)) {
         lengthAdjustment = 0;
     }
@@ -375,6 +380,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             scale
         );
         parsegraph_Extent_destroy(givenCopy);
+        parsegraph_logLeave();
         return result;
     }
 
@@ -418,9 +424,9 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             givenReach = givenPosition + scale * parsegraph_Extent_boundLengthAt(given, givenBound);
         }
 
-        //parsegraph_log("Iterating over each bound.\n");
-        //parsegraph_log("This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
-        //parsegraph_log("Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
+        parsegraph_log("Iterating over each bound.\n");
+        parsegraph_log("This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
+        parsegraph_log("Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
 
         parsegraph_Extent_appendLS(result,
             fminf(thisReach, givenReach) - fmaxf(thisPosition, givenPosition),
@@ -430,6 +436,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         if(thisReach == givenReach) {
             // This bound ends at the same position as given's
             // bound, so increment both iterators.
+            parsegraph_log("Incrementing both iterators");
             thisPosition += parsegraph_Extent_boundLengthAt(extent, thisBound);
             ++thisBound;
             givenPosition += scale * parsegraph_Extent_boundLengthAt(given, givenBound);
@@ -438,6 +445,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         else if(thisReach < givenReach) {
             // This bound ends before given's bound, so increment
             // this bound's iterator.
+            parsegraph_log("Incrementing this bound's iterators");
             thisPosition += parsegraph_Extent_boundLengthAt(extent, thisBound);
             ++thisBound;
         }
@@ -445,6 +453,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             // Assert: thisReach() > givenReach()
             // Given's bound ends before this bound, so increment
             // given's iterator.
+            parsegraph_log("Incrementing given bound's iterators");
             givenPosition += scale * parsegraph_Extent_boundLengthAt(given, givenBound);
             ++givenBound;
         }
@@ -469,6 +478,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     if(givenBound != parsegraph_Extent_numBounds(given)) {
         // Finish off given last overlapping bound to get completely
         // in sync with givens.
+        parsegraph_log("Given bound still has reach\n");
         parsegraph_Extent_appendLS(result,
             givenReach - thisReach,
             scale * parsegraph_Extent_boundSizeAt(given, givenBound) + sizeAdjustment
@@ -488,6 +498,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     else if(thisBound != parsegraph_Extent_numBounds(extent)) {
         // Finish off this extent's last overlapping bound to get completely
         // in sync with given's iterator.
+        parsegraph_log("This bound still has reach\n");
         parsegraph_Extent_appendLS(result,
             thisReach - givenReach,
             parsegraph_Extent_boundSizeAt(extent, thisBound)
@@ -504,6 +515,9 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             );
         }
     }
+
+    parsegraph_Extent_dump(result, "Result");
+    parsegraph_logLeave();
 
     return result;
 }
