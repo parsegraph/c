@@ -459,7 +459,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     }
 
     float givenReach;
-    if(givenBound >= parsegraph_Extent_numBounds(extent)) {
+    if(givenBound >= parsegraph_Extent_numBounds(given)) {
         givenReach = givenPosition;
     }
     else {
