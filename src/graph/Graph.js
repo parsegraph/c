@@ -51,7 +51,7 @@ function parsegraph_Graph()
     this._camera = this._world.camera();
     this._carousel = new parsegraph_Carousel(this._camera, this.surface().backgroundColor());
     this._input = new parsegraph_Input(this, this.camera());
-    this._piano = new parsegraph_AudioKeyboard(this._camera);
+    //this._piano = new parsegraph_AudioKeyboard(this._camera);
     this._shaders = {};
 
     // Install the graph.
