@@ -146,6 +146,7 @@ function parsegraph_GlyphRenderData(painter, glyphData)
 
 parsegraph_GlyphRenderData.prototype.renderText = function(gl, numIndices)
 {
+    //console.log("Rendering " + numIndices + " indices of page " + this.glyphData.glyphPage._id);
     gl.bindTexture(gl.TEXTURE_2D, this.glyphData.glyphPage._glyphTexture);
     gl.uniform1i(this.painter.u_glyphTexture, 0);
     gl.drawArrays(gl.TRIANGLES, 0, numIndices);
@@ -158,12 +159,17 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     }
     glyphData.painted = true;
 
+    var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+    var pagesPerRow = glTextureSize / this.glyphAtlas().pageTextureSize();
+    var pagesPerTexture = Math.pow(pagesPerRow, 2);
+
     // Select the correct buffer.
-    var page = this._textBuffers[glyphData.glyphPage._id];
+    var bufIndex = Math.floor(glyphData.glyphPage._id / pagesPerTexture);
+    var page = this._textBuffers[bufIndex];
     if(!page) {
         var grd = new parsegraph_GlyphRenderData(this, glyphData)
         page = this._textBuffer.addPage(grd.renderText, grd);
-        this._textBuffers[glyphData.glyphPage._id] = page;
+        this._textBuffers[bufIndex] = page;
     }
 
     // Append position data.
@@ -205,27 +211,29 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     }
 
     // Append texture coordinate data.
-    var textureWidth = this._glyphAtlas.maxTextureWidth();
+    var pageIndex = glyphData.glyphPage._id % pagesPerTexture;
+    var pageX = this.glyphAtlas().pageTextureSize() * (pageIndex % pagesPerRow);
+    var pageY = this.glyphAtlas().pageTextureSize() * Math.floor(pageIndex / pagesPerRow);
     page.appendData(
         this.a_texCoord,
         [
-            glyphData.x / textureWidth,
-            glyphData.y / textureWidth,
+            (pageX + glyphData.x) / glTextureSize,
+            (pageY + glyphData.y) / glTextureSize,
 
-            (glyphData.x + glyphData.width) / textureWidth,
-            glyphData.y / textureWidth,
+            (pageX + glyphData.x + glyphData.width) / glTextureSize,
+            (pageY + glyphData.y) / glTextureSize,
 
-            (glyphData.x + glyphData.width) / textureWidth,
-            (glyphData.y + glyphData.height) / textureWidth,
+            (pageX + glyphData.x + glyphData.width) / glTextureSize,
+            (pageY + glyphData.y + glyphData.height) / glTextureSize,
 
-            glyphData.x / textureWidth,
-            glyphData.y / textureWidth,
+            (pageX + glyphData.x) / glTextureSize,
+            (pageY + glyphData.y) / glTextureSize,
 
-            (glyphData.x + glyphData.width) / textureWidth,
-            (glyphData.y + glyphData.height) / textureWidth,
+            (pageX + glyphData.x + glyphData.width) / glTextureSize,
+            (pageY + glyphData.y + glyphData.height) / glTextureSize,
 
-            glyphData.x / textureWidth,
-            (glyphData.y + glyphData.height) / textureWidth
+            (pageX + glyphData.x) / glTextureSize,
+            (pageY + glyphData.y + glyphData.height) / glTextureSize
         ]
     );
 };
