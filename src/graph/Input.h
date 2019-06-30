@@ -50,6 +50,8 @@ int _cursorShown;
 float touchX;
 float touchY;
 float cursorScreenPos[2];
+float lastCursorWorldClick[2];
+float cursorWorldClick[2];
 float cursorWorldPos[2];
 int has_mousedown;
 int has_touchdown;
@@ -63,6 +65,7 @@ int _updateRepeatedly;
 parsegraph_BlockPainter* _caretPainter;
 parsegraph_BlockPainter* _cursorPainter;
 parsegraph_GlyphPainter* _glyphPainter;
+int _debugMode;
 parsegraph_Label* _debugLabel;
 float _caretPos[2];
 float _caretColor[4];
@@ -82,6 +85,8 @@ int isDoubleClick;
 void* mouseupTimeout;
 };
 typedef struct parsegraph_Input parsegraph_Input;
+
+void parsegraph_Input_switchDebugMode(parsegraph_Input* input);
 
 parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera);
 void parsegraph_Input_paint(parsegraph_Input* input);

@@ -33,6 +33,18 @@ static const char* keyToName(int key) {
     case Qt::Key_Shift: return "Shift";
     case Qt::Key_Space: return " ";
     case Qt::Key_0: return "0";
+    case Qt::Key_F12: return "F12";
+    case Qt::Key_F11: return "F11";
+    case Qt::Key_F10: return "F10";
+    case Qt::Key_F9: return "F9";
+    case Qt::Key_F8: return "F8";
+    case Qt::Key_F7: return "F7";
+    case Qt::Key_F6: return "F6";
+    case Qt::Key_F5: return "F5";
+    case Qt::Key_F4: return "F4";
+    case Qt::Key_F3: return "F3";
+    case Qt::Key_F2: return "F2";
+    case Qt::Key_F1: return "F1";
     }
     return 0;
 }

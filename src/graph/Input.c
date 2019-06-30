@@ -20,7 +20,7 @@
 
 const char* parsegraph_RESET_CAMERA_KEY = "Escape";
 const char* parsegraph_CLICK_KEY = "q";
-
+const char* parsegraph_SWITCH_DEBUG_MODE_KEY = "F11";
 const char* parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
 const char* parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
 const char* parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
@@ -70,6 +70,11 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->touchX = 0;
     input->touchY = 0;
 
+    input->lastCursorWorldClick[0] = 0;
+    input->lastCursorWorldClick[1] = 0;
+    input->cursorWorldClick[0] = 0;
+    input->cursorWorldClick[1] = 0;
+
     input->cursorWorldPos[0] = 0;
     input->cursorWorldPos[1] = 0;
     memset(input->cursorScreenPos, 0, sizeof(float)*2);
@@ -85,6 +90,7 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->_caretPainter = 0;
     input->_cursorPainter = 0;
     input->_glyphPainter = 0;
+    input->_debugMode = 0;
     input->_debugLabel = 0;
     input->_caretPos[0] = 0;
     input->_caretPos[1] = 0;
@@ -142,6 +148,15 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->listener = 0;
     input->listenerThisArg = 0;
     return input;
+}
+
+void parsegraph_Input_switchDebugMode(parsegraph_Input* input)
+{
+    ++input->_debugMode;
+    if(input->_debugMode > 2) {
+        input->_debugMode = 0;
+    }
+    parsegraph_Graph_scheduleRepaint(input->_graph);
 }
 
 void parsegraph_Input_destroy(parsegraph_Input* input)
@@ -342,6 +357,11 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
 {
     //console.log("MOUSEUP");
 
+    input->lastCursorWorldClick[0] = input->cursorWorldClick[0];
+    input->lastCursorWorldClick[1] = input->cursorWorldClick[1];
+    input->cursorWorldClick[0] = input->cursorWorldPos[0];
+    input->cursorWorldClick[1] = input->cursorWorldPos[1];
+
     if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 0)) {
         //console.log("Carousel handled event.");
         return;
@@ -410,6 +430,10 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
 
     keyName = parsegraph_Input_getproperkeyname(input, keyName, keyCode);
     //parsegraph_log("Input deduced key pressed: %s\n", keyName);
+    if(!strcmp(keyName, parsegraph_SWITCH_DEBUG_MODE_KEY)) {
+        parsegraph_Input_switchDebugMode(input);
+        return;
+    }
     if(input->selectedSlider) {
         if(strlen(keyName) == 0) {
             return;
@@ -1272,29 +1296,38 @@ void parsegraph_Input_paint(parsegraph_Input* input)
         return;
     }
 
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
-    if(10 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
+    if(input->_debugMode == 1) {
+        struct timespec now;
+        clock_gettime(CLOCK_REALTIME, &now);
+        if(10 < parsegraph_timediffMs(&input->_lastFrame, &now)) {
+            parsegraph_GlyphPainter_clear(input->_glyphPainter);
+            char buf[255];
+            snprintf(buf, sizeof(buf), "/proc/%d/statm", getpid());
+            int memfd = open(buf, O_RDONLY);
+            if(memfd >= 0) {
+                memset(buf, 0, sizeof(buf));
+                int len = read(memfd, buf, sizeof(buf));
+                close(memfd);
+                if(len > 0) {
+                    char truebuf[1024];
+                    memset(truebuf, 0, sizeof(truebuf));
+                    len = snprintf(truebuf, sizeof(truebuf), "%ld %s", parsegraph_ArrayList_length(input->_memoryTester), buf);
+                    parsegraph_Label_setTextUTF8(input->_debugLabel, truebuf, len-1);
+                }
+            }
+            parsegraph_Label_paint(input->_debugLabel, input->_glyphPainter, 0, 0, 1);
+            input->_lastFrame = now;
+        }
+    }
+    else if(input->_debugMode == 2) {
         parsegraph_GlyphPainter_clear(input->_glyphPainter);
         char buf[255];
-        snprintf(buf, sizeof(buf), "/proc/%d/statm", getpid());
-        int memfd = open(buf, O_RDONLY);
-        if(memfd >= 0) {
-            memset(buf, 0, sizeof(buf));
-            int len = read(memfd, buf, sizeof(buf));
-            //len = snprintf(buf, sizeof(buf), "%d", buf[len-1]);
-            close(memfd);
-            //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
-            //snprintf(buf, sizeof(buf), "%ld", parsegraph_timediffMs(&input->_lastFrame, &now));
-            if(len > 0) {
-                char truebuf[1024];
-                memset(truebuf, 0, sizeof(truebuf));
-                len = snprintf(truebuf, sizeof(truebuf), "%ld %s", parsegraph_ArrayList_length(input->_memoryTester), buf);
-                parsegraph_Label_setTextUTF8(input->_debugLabel, truebuf, len-1);
-            }
-        }
+        int len = snprintf(buf, 255, "(%f, %f) Dist=(%f, %f)", input->cursorWorldPos[0], input->cursorWorldPos[1], input->cursorWorldClick[0] - input->lastCursorWorldClick[0], input->cursorWorldClick[1] - input->lastCursorWorldClick[1]);
+        parsegraph_Label_setTextUTF8(input->_debugLabel, buf, len);
         parsegraph_Label_paint(input->_debugLabel, input->_glyphPainter, 0, 0, 1);
-        input->_lastFrame = now;
+    }
+    else {
+        parsegraph_Label_clear(input->_debugLabel);
     }
 
     if(!input->has_mousedown && !input->has_touchdown)  {
