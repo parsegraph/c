@@ -6,6 +6,7 @@
 #include <unicode/ustring.h>
 #include "Node.h"
 #include "ArrayList.h"
+#include "Surface.h"
 
 struct parsegraph_SavedCaret {
 char id[255];

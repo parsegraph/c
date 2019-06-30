@@ -77,6 +77,7 @@ void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox)
     if(cbox->_showCameraBoxes && cbox->_cameraBoxDirty) {
         if(!cbox->_cameraBoxPainter) {
             cbox->_cameraBoxPainter = parsegraph_CameraBoxPainter_new(
+                parsegraph_Graph_surface(cbox->_graph),
                 parsegraph_CameraBox_glyphAtlas(cbox),
                 parsegraph_CameraBox_shaders(cbox)
             );

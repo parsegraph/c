@@ -6,15 +6,13 @@
 #include "Rect.h"
 #include "Label.h"
 
-parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
+parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_Surface* surface, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
 {
-    parsegraph_Surface* surface = parsegraph_GlyphAtlas_surface(glyphAtlas);
     apr_pool_t* pool = surface->pool;
-
     parsegraph_CameraBoxPainter* painter = apr_palloc(pool, sizeof(*painter));
     painter->_pool = pool;
     painter->_blockPainter = parsegraph_BlockPainter_new(surface, shaders);
-    painter->_glyphPainter = parsegraph_GlyphPainter_new(glyphAtlas, shaders);
+    painter->_glyphPainter = parsegraph_GlyphPainter_new(pool, glyphAtlas, shaders);
 
     painter->_glyphAtlas = glyphAtlas;
     parsegraph_Color_SetRGBA(painter->_borderColor, 1, 1, 1, 0.1);

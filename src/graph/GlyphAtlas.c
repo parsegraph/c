@@ -1,6 +1,5 @@
 #include "log.h"
 #include "GlyphAtlas.h"
-#include "Surface.h"
 #include "../unicode.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -54,14 +53,13 @@ parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage,
  * http://webglfundamentals.org/webgl/lessons/webgl-text-glyphs.html
  */
 int parsegraph_GlyphAtlas_COUNT = 0;
-parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(parsegraph_Surface* surface, float fontSizePixels, UChar* fontName, int fontNameLen, const char* fillStyle)
+parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(apr_pool_t* ppool, float fontSizePixels, UChar* fontName, int fontNameLen, const char* fillStyle)
 {
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create GlyphAtlas memory pool.");
     }
     parsegraph_GlyphAtlas* atlas = apr_palloc(pool, sizeof(*atlas));
-    atlas->surface = surface;
     atlas->pool = pool;
 
     atlas->_id = ++parsegraph_GlyphAtlas_COUNT;
@@ -95,11 +93,6 @@ void parsegraph_GlyphAtlas_destroy(parsegraph_GlyphAtlas* atlas)
 {
     parsegraph_GlyphAtlas_destroyFont(atlas);
     apr_pool_destroy(atlas->pool);
-}
-
-parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas)
-{
-    return atlas->surface;
 }
 
 void parsegraph_GlyphAtlas_setUnicode(parsegraph_GlyphAtlas* atlas, parsegraph_Unicode* uni)

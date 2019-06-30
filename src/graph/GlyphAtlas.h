@@ -9,9 +9,6 @@
 struct parsegraph_Unicode;
 typedef struct parsegraph_Unicode parsegraph_Unicode;
 
-struct parsegraph_Surface;
-typedef struct parsegraph_Surface parsegraph_Surface;
-
 struct parsegraph_GlyphAtlas;
 typedef struct parsegraph_GlyphAtlas parsegraph_GlyphAtlas;
 
@@ -48,7 +45,6 @@ apr_pool_t* pool;
 int _id;
 int _needsUpdate;
 void* _font;
-parsegraph_Surface* surface;
 parsegraph_GlyphPage* _firstPage;
 parsegraph_GlyphPage* _lastPage;
 int _padding;
@@ -68,7 +64,7 @@ extern int parsegraph_GlyphAtlas_COUNT;
 
 extern parsegraph_GlyphAtlas* parsegraph_PAINTING_GLYPH_ATLAS;
 
-parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(parsegraph_Surface* surface, float fontSizePixels, UChar* fontName, int len, const char* fontStyle);
+parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(apr_pool_t* ppool, float fontSizePixels, UChar* fontName, int len, const char* fontStyle);
 void parsegraph_GlyphAtlas_setUnicode(parsegraph_GlyphAtlas* atlas, parsegraph_Unicode* uni);
 parsegraph_Unicode* parsegraph_GlyphAtlas_unicode(parsegraph_GlyphAtlas* atlas);
 int parsegraph_GlyphAtlas_toString(parsegraph_GlyphAtlas* atlas, char* buf, size_t len);
@@ -87,7 +83,6 @@ float parsegraph_GlyphAtlas_fontBaseline(parsegraph_GlyphAtlas* glyphAtlas);
 float parsegraph_GlyphAtlas_fontSize(parsegraph_GlyphAtlas* glyphAtlas);
 UChar* parsegraph_GlyphAtlas_fontName(parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_GlyphAtlas_isNewline(parsegraph_GlyphAtlas* glyphAtlas, UChar c);
-parsegraph_Surface* parsegraph_GlyphAtlas_surface(parsegraph_GlyphAtlas* atlas);
 
 parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, int x, int y, int width, int height, int ascent, int descent, int advance);
 

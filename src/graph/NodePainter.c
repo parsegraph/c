@@ -29,7 +29,7 @@ parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, 
     painter->_extentPainter = parsegraph_BlockPainter_new(surface, shaders);
     painter->_renderExtents = 0;
 
-    painter->_glyphPainter = parsegraph_GlyphPainter_new(glyphAtlas, shaders);
+    painter->_glyphPainter = parsegraph_GlyphPainter_new(pool, glyphAtlas, shaders);
 
     painter->_renderText = 1;
 

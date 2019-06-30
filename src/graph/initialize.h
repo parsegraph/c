@@ -28,7 +28,7 @@ struct parsegraph_Style {
 typedef struct parsegraph_Style parsegraph_Style;
 
 extern struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS;
-extern struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(parsegraph_Surface*);
+extern struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool);
 parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int nodeType);
 parsegraph_Style* parsegraph_style(int nodeType);
 void parsegraph_initialize(apr_pool_t* pool, int mathMode);

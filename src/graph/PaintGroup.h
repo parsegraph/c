@@ -5,6 +5,7 @@
 #include "ArrayList.h"
 #include "GlyphAtlas.h"
 #include "Node.h"
+#include "Surface.h"
 
 struct parsegraph_PaintGroup;
 typedef struct parsegraph_PaintGroup parsegraph_PaintGroup;

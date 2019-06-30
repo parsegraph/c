@@ -4,7 +4,6 @@
 #include "../gl.h"
 #include "Color.h"
 #include "GlyphAtlas.h"
-#include "Surface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,13 +51,13 @@ static const char* parsegraph_GlyphPainter_FragmentShader =
 static const char* shaderName = "parsegraph_GlyphPainter";
 int parsegraph_GlyphPainter_COUNT = 0;
 
-parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
+parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
 {
     if(!glyphAtlas) {
         parsegraph_die("Glyph atlas must be provided.");
     }
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, glyphAtlas->surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create GlyphPainter memory pool.");
     }
     parsegraph_GlyphPainter* painter = apr_palloc(pool, sizeof(*painter));
@@ -73,11 +72,6 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(parsegraph_GlyphAtlas* glyp
     );
 
     // Prepare attribute buffers.
-    painter->_id = ++parsegraph_GlyphPainter_COUNT;
-    painter->_renderPool = 0;
-    if(APR_SUCCESS != apr_pool_create(&painter->_renderPool, painter->pool)) {
-        parsegraph_die("Failed to create GlyphPainter memory pool.");
-    }
     painter->_textBuffer = parsegraph_pagingbuffer_new(pool, painter->_textProgram);
     painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_position", 2, GL_STATIC_DRAW);
     painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_color", 4, GL_STATIC_DRAW);

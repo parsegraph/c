@@ -3,6 +3,7 @@
 
 #include "BlockPainter.h"
 #include "GlyphPainter.h"
+#include "Surface.h"
 #include <unicode/ustring.h>
 
 struct parsegraph_CameraBoxPainter {
@@ -17,7 +18,7 @@ int _fontSize;
 };
 typedef struct parsegraph_CameraBoxPainter parsegraph_CameraBoxPainter;
 
-parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
+parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_Surface* surface, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
 void parsegraph_CameraBoxPainter_clear(parsegraph_CameraBoxPainter* painter);
 void parsegraph_CameraBoxPainter_drawBox(parsegraph_CameraBoxPainter* painter, const UChar* name, int len, float* rect, float scale);
 void parsegraph_CameraBoxPainter_render(parsegraph_CameraBoxPainter* painter, float* world);

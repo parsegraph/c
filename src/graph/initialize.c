@@ -37,7 +37,7 @@ float parsegraph_EXTENT_BACKGROUND_COLOR[4];
 float parsegraph_BUD_LEAF_SEPARATION;
 int parsegraph_LINE_THICKNESS;
 
-struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(parsegraph_Surface* surface)
+struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool)
 {
     const char* parsegraph_DEFAULT_FONT_NAME = "sans-serif";
 
@@ -50,7 +50,7 @@ struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(parsegraph_Surface* sur
         if(uerr != U_ZERO_ERROR) {
             parsegraph_die("Failed to convert font name to UTF-16");
         }
-        parsegraph_GLYPH_ATLAS = parsegraph_GlyphAtlas_new(surface,
+        parsegraph_GLYPH_ATLAS = parsegraph_GlyphAtlas_new(ppool,
             parsegraph_UPSCALED_FONT_SIZE, fontName16, len, "white"
         );
     }

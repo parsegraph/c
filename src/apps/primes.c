@@ -72,7 +72,7 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_Input* input = parsegraph_Graph_input(graph);
     parsegraph_Surface_install(surface, input);
 
-    parsegraph_Graph_setGlyphAtlas(graph, parsegraph_buildGlyphAtlas(surface));
+    parsegraph_Graph_setGlyphAtlas(graph, parsegraph_buildGlyphAtlas(surface->pool));
     parsegraph_GlyphAtlas_setUnicode(parsegraph_Graph_glyphAtlas(graph), uni);
 
     //int COUNT = 25;

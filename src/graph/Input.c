@@ -1276,7 +1276,7 @@ void parsegraph_Input_paint(parsegraph_Input* input)
         );
     }
     if(!input->_glyphPainter) {
-        input->_glyphPainter = parsegraph_GlyphPainter_new(input->_graph->_glyphAtlas, input->_graph->_shaders
+        input->_glyphPainter = parsegraph_GlyphPainter_new(input->pool, input->_graph->_glyphAtlas, input->_graph->_shaders
         );
     }
     if(!input->_debugLabel) {
