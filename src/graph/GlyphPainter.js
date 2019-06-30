@@ -1,6 +1,7 @@
 // TODO Test lots of glyphs; set a limit if one can be found to exist
 // TODO Add caret
 // TODO Add runs of selected text
+var parsegraph_GlyphPainter_COUNT = 0;
 
 parsegraph_GlyphPainter_VertexShader =
 "uniform mat3 u_world;\n" +
@@ -46,6 +47,7 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
         throw new Error("Glyph atlas must be provided");
     }
     this._glyphAtlas = glyphAtlas;
+    this._id = ++parsegraph_GlyphPainter_COUNT;
 
     // Compile the shader program.
     var shaderName = "parsegraph_GlyphPainter";
@@ -89,6 +91,8 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
     this.u_glyphTexture = this._gl.getUniformLocation(
         this._textProgram, "u_glyphTexture"
     );
+
+    this._maxSize = 0;
 
     this._color = parsegraph_createColor(1, 1, 1, 1);
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
@@ -134,6 +138,19 @@ parsegraph_GlyphPainter.prototype.glyphAtlas = function()
     return this._glyphAtlas;
 };
 
+function parsegraph_GlyphRenderData(painter, glyphData)
+{
+    this.painter = painter;
+    this.glyphData = glyphData;
+}
+
+parsegraph_GlyphRenderData.prototype.renderText = function(gl, numIndices)
+{
+    gl.bindTexture(gl.TEXTURE_2D, this.glyphData.glyphPage._glyphTexture);
+    gl.uniform1i(this.painter.u_glyphTexture, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, numIndices);
+};
+
 parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
     if(typeof glyphData !== "object") {
@@ -144,12 +161,9 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     // Select the correct buffer.
     var page = this._textBuffers[glyphData.glyphPage._id];
     if(!page) {
-        this._textBuffers[glyphData.glyphPage._id] = this._textBuffer.addPage(function(gl, numIndices) {
-            gl.bindTexture(gl.TEXTURE_2D, glyphData.glyphPage._glyphTexture);
-            gl.uniform1i(this.u_glyphTexture, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, numIndices);
-        }, this);
-        page = this._textBuffers[glyphData.glyphPage._id];
+        var grd = new parsegraph_GlyphRenderData(this, glyphData)
+        page = this._textBuffer.addPage(grd.renderText, grd);
+        this._textBuffers[glyphData.glyphPage._id] = page;
     }
 
     // Append position data.
@@ -166,7 +180,9 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
         ]
     );
 
-    this._maxSize = Math.max(this._maxSize, glyphData.width * fontScale);
+    if(this._maxSize < glyphData.width * fontScale) {
+        this._maxSize = glyphData.width * fontScale;
+    }
 
     // Append color data.
     for(var k = 0; k < 3 * 2; ++k) {
@@ -189,26 +205,27 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     }
 
     // Append texture coordinate data.
+    var textureWidth = this._glyphAtlas.maxTextureWidth();
     page.appendData(
         this.a_texCoord,
         [
-            glyphData.x / this._glyphAtlas.canvas().width,
-            glyphData.y / this._glyphAtlas.canvas().height,
+            glyphData.x / textureWidth,
+            glyphData.y / textureWidth,
 
-            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-            glyphData.y / this._glyphAtlas.canvas().height,
+            (glyphData.x + glyphData.width) / textureWidth,
+            glyphData.y / textureWidth,
 
-            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
+            (glyphData.x + glyphData.width) / textureWidth,
+            (glyphData.y + glyphData.height) / textureWidth,
 
-            glyphData.x / this._glyphAtlas.canvas().width,
-            glyphData.y / this._glyphAtlas.canvas().height,
+            glyphData.x / textureWidth,
+            glyphData.y / textureWidth,
 
-            (glyphData.x + glyphData.width) / this._glyphAtlas.canvas().width,
-            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height,
+            (glyphData.x + glyphData.width) / textureWidth,
+            (glyphData.y + glyphData.height) / textureWidth,
 
-            glyphData.x / this._glyphAtlas.canvas().width,
-            (glyphData.y + glyphData.height) / this._glyphAtlas.canvas().height
+            glyphData.x / textureWidth,
+            (glyphData.y + glyphData.height) / textureWidth
         ]
     );
 };
@@ -236,9 +253,7 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
     this.glyphAtlas().update(gl);
 
     // Load program.
-    this._gl.useProgram(
-        this._textProgram
-    );
+    this._gl.useProgram(this._textProgram);
 
     gl.activeTexture(gl.TEXTURE0);
 

@@ -1,7 +1,122 @@
-// Line length computation must be decoupled from character insertion for correct widths to be calculated
-// sanely.
-//
-// ... or I handle all the cases in-place.
+function parsegraph_GlyphIterator(atlas, text)
+{
+    this.atlas = atlas;
+    this.index = 0;
+    this.len = text.length;
+    this.prevLetter = null;
+    this.text = text;
+}
+
+parsegraph_GlyphIterator.prototype.next = function()
+{
+    var u = this.atlas.unicode();
+    if(this.index >= this.len) {
+        return null;
+    }
+    var start = this.text[this.index];
+    var startIndex = this.index;
+    var len = 1;
+    if(this.text.codePointAt(this.index) > 0xffff) {
+        len = 2;
+        start = this.text.substring(this.index, this.index + 2);
+    }
+    this.index += len;
+    if(u.isMark(start)) {
+        // Show an isolated mark.
+        //parsegraph_log("Found isolated Unicode mark character %x.\n", start[0]);
+        var rv = atlas.getGlyph(start);
+        return rv;
+    }
+
+    //parsegraph_log("Found Unicode character %x.\n", start[0]);
+
+    // Form ligatures.
+    var givenLetter = start.charCodeAt(0);
+    if(givenLetter === 0x627 && this.prevLetter == 0x644) {
+        // LAM WITH ALEF.
+        if(this.prevLetter) {
+            // Has a previous glyph, so final.
+            givenLetter = 0xfefc;
+        }
+        else {
+            // Isolated form.
+            givenLetter = 0xfefb;
+        }
+        // Skip the ligature'd character.
+        this.prevLetter = 0x627;
+        //parsegraph_log("Found ligature %x->%x\n", gi->prevLetter, givenLetter);
+    }
+    else {
+        var nextLetterChar = null;
+        for(var i = 0; this.index + i < this.len;) {
+            var nextLetter = this.text[this.index + i];
+            var len = 1;
+            if(nextLetter.codePointAt(0) > 0xffff) {
+                nextLetter = this.text.substring(this.index + 1, this.index + 3);
+                len = 2;
+            }
+            if(u.isMark(nextLetter)) {
+                i += len;
+                continue;
+            }
+            // given, prev, next
+            if(u.cursive(nextLetter[0], givenLetter, null)) {
+                nextLetterChar = nextLetter[0];
+            }
+            break;
+        }
+        // RTL: [ 4, 3, 2, 1]
+        //        ^-next
+        //           ^-given
+        //              ^-prev
+        var cursiveLetter = u.cursive(givenLetter, this.prevLetter, nextLetterChar);
+        if(cursiveLetter != null) {
+            console.log("Found cursive char " + givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
+            this.prevLetter = givenLetter;
+            givenLetter = cursiveLetter;
+        }
+        else {
+            console.log("Found non-cursive char " + givenLetter.toString(16) + ".");
+            this.prevLetter = null;
+        }
+    }
+
+    // Add diacritical marks and combine ligatures.
+    var foundVirama = false;
+    while(this.index < this.len) {
+        var letter = this.text[this.index];
+        var llen = 1;
+        if(this.text.codePointAt(this.index) > 0xffff) {
+            llen = 2;
+            letter = this.text.substring(this.index, this.index + 2);
+        }
+        if(llen == 2 && this.index == this.len - 1) {
+            throw new Error("Unterminated UTF-16 character");
+        }
+
+        if(u.isMark(letter)) {
+            foundVirama = letter[0].charCodeAt(0) == 0x094d;
+            len += llen;
+            this.index += llen;
+            //parsegraph_log("Found Unicode mark character %x.\n", letter[0]);
+            continue;
+        }
+        else if(foundVirama) {
+            foundVirama = 0;
+            len += llen;
+            this.index += llen;
+            //parsegraph_log("Found Unicode character %x combined using Virama.\n", letter[0]);
+            continue;
+        }
+
+        // Found a non-marking character that's part of a new glyph.
+        break;
+    }
+
+    var trueText = this.text.substring(startIndex, startIndex + len);
+    trueText = String.fromCodePoint(givenLetter) + trueText.substring(1);
+    return this.atlas.getGlyph(trueText);
+};
 
 parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
 
@@ -95,30 +210,14 @@ parsegraph_Line.prototype.appendText = function(text)
     if(!atlas) {
         throw new Error("Line cannot add text without the label having a GlyphAtlas.");
     }
-    var u = this.glyphAtlas().unicode();
-    if(!u) {
-        throw new Error("Unicode definition must be provided.");
-    }
 
-    var checkTimeout = parsegraph_timeout("parsegraph_Line.appendText");
-    while(true) {
-        checkTimeout();
-
-        // Retrieve letter.
-        var letter = fixedCharAt(text, i);
-
-        // Test for completion.
-        if(letter === null) {
-            return;
-        }
-
-        var glyphData = atlas.getGlyph(letter);
+    var gi = new parsegraph_GlyphIterator(atlas, text);
+    var glyphData = null;
+    while((glyphData = gi.next()) != null) {
+        //console.log("LETTER: " + glyphData.letter);
         this._glyphs.push(glyphData);
-
-        // Increment.
         this._height = Math.max(this._height, glyphData.height);
         this._width += glyphData.width;
-        i += letter.length;
     }
 };
 
@@ -129,30 +228,26 @@ parsegraph_Line.prototype.insertText = function(pos, text)
     if(!atlas) {
         throw new Error("Line cannot add text without the label having a GlyphAtlas.");
     }
-    var checkTimeout = parsegraph_timeout("parsegraph_Line.insertText");
 
+    var gi = new parsegraph_GlyphIterator(atlaas, text);
+    var glyphData = null;
     var spliced = [pos, 0];
-    while(true) {
-        checkTimeout();
-
-        // Retrieve letter.
-        var letter = fixedCharAt(text, i);
-
-        // Test for completion.
-        if(letter === null) {
-            break;
-        }
-
-        var glyphData = atlas.getGlyph(letter);
+    for(var i = 0; (glyphData = gi.next()) != null; ++i) {
         spliced.push(glyphData);
-
-        // Increment.
         this._height = Math.max(this._height, glyphData.height);
-        this._width += glyphData.width;
-        i += letter.length;
+        this._width += glyphData.advance;
     }
 
     this._glyphs.splice.apply(this._glyphs, spliced);
+};
+
+parsegraph_Line.prototype.length = function()
+{
+    var len = 0;
+    this._glyphs.forEach(function(glyphData) {
+        len += glyphData.letter.length;
+    });
+    return len;
 };
 
 parsegraph_Line.prototype.getText = function()
@@ -218,6 +313,8 @@ function parsegraph_Label(glyphAtlas)
     this._editable = false;
     this._onTextChangedListener = null;
     this._onTextChangedListenerThisArg = null;
+    this._width = -1;
+    this._height = 0;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()
@@ -268,6 +365,23 @@ parsegraph_Label.prototype.getText = function()
     return t;
 }
 parsegraph_Label.prototype.text = parsegraph_Label.prototype.getText;
+
+parsegraph_Label.prototype.clear = function()
+{
+    this._lines = [];
+};
+
+parsegraph_Label.prototype.length = function()
+{
+    var totallen = 0;
+    this._lines.forEach(function(l) {
+        if(totallen.length > 0) {
+            totallen += 1;
+        }
+        totallen += l.length();
+    });
+    return totallen;
+};
 
 parsegraph_Label.prototype.setText = function(text)
 {
@@ -658,249 +772,76 @@ parsegraph_Label.prototype.height = function()
     return this._height;
 };
 
+parsegraph_Line.prototype.drawLTRGlyphRun = function(painter, worldX, worldY, pos, fontScale, startRun, endRun)
+{
+    //parsegraph_log("Drawing LTR run from %d to %d.", startRun, endRun);
+    for(var q = startRun; q <= endRun; ++q) {
+        var glyphData = this._glyphs[q];
+        painter.drawGlyph(glyphData, worldX + pos[0], worldY + pos[1], fontScale);
+        pos[0] += glyphData.advance * fontScale;
+    }
+};
+
+parsegraph_Line.prototype.drawRTLGlyphRun = function(painter, worldX, worldY, pos, fontScale, startRun, endRun)
+{
+    var runWidth = 0;
+    for(var q = startRun; q <= endRun; ++q) {
+        var glyphData = this._glyphs[q];
+        runWidth += glyphData.advance * fontScale;
+    }
+    var advance = 0;
+    for(var q = startRun; q <= endRun; ++q) {
+        var glyphData = this._glyphs[q];
+        advance += glyphData.advance * fontScale;
+        painter.drawGlyph(glyphData, worldX + pos[0] + runWidth - advance, worldY + pos[1], fontScale);
+    }
+    pos[0] += runWidth;
+}
+
+parsegraph_Line.prototype.drawGlyphRun = function(painter, worldX, worldY, pos, fontScale, startRun, endRun)
+{
+    // Draw the run.
+    if(pos[2] === "L" || (!parsegraph_RIGHT_TO_LEFT && pos[2] === "WS")) {
+        this.drawLTRGlyphRun(painter, worldX, worldY, pos, fontScale, startRun, endRun);
+    }
+    else {
+        this.drawRTLGlyphRun(painter, worldX, worldY, pos, fontScale, startRun, endRun);
+    }
+};
+
+parsegraph_Line.prototype.paint = function(painter, worldX, worldY, pos, fontScale)
+{
+    var startRun = 0;
+    for(var j = 0; j < this._glyphs.length; ++j) {
+        var glyphData = this._glyphs[j];
+        var glyphDirection = this.glyphAtlas().unicode().getGlyphDirection(glyphData.letter) || pos[2];
+        if(pos[2] === "WS" && glyphDirection !== "WS") {
+            // Use the glyph's direction if there is none currently in use.
+            pos[2] = glyphDirection;
+        }
+        if(j < this._glyphs.length - 1 && pos[2] === glyphDirection) {
+            //console.log("Found another character in glyph run.\n");
+            continue;
+        }
+        this.drawGlyphRun(painter, worldX, worldY, pos, fontScale, startRun, j);
+
+        // Set the new glyph direction.
+        pos[2] = glyphDirection;
+        startRun = j;
+    }
+    pos[1] += this.height() * fontScale;
+    pos[0] = 0;
+};
+
 parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
 {
     if(this.glyphAtlas() !== painter.glyphAtlas()) {
         throw new Error("Painter must use the same glyph atlas as this label: " + this.glyphAtlas() + ", " + painter.glyphAtlas());
     }
-    var x = 0;
-    var y = 0;
-    var u = this._glyphAtlas.unicode();
-    var direction = "WS";
+    var pos = [0, 0, "WS"];
 
-    this._lines.forEach(function(l, i) {
-        var startRun = 0;
-        var endRun = startRun;
-        var runDirection = direction;
-        var runWidth = 0;
-        var j = 0;
-        var glyphData = l._glyphs[j];
-        while(l._glyphs.length > 0) {
-            glyphData = l._glyphs[j];
-            var glyphDirection = direction;
-            var unicodeData = u.get(glyphData.letter);
-            if(unicodeData) {
-                switch(unicodeData[UNICODE_bidirectionalCategory]) {
-                case "L":
-                case "LRE":
-                case "LRO":
-                case "EN":
-                case "ES":
-                case "ET":
-                    // Left-to-right.
-                    glyphDirection = "L";
-                    break;
-                case "R":
-                case "AL":
-                case "AN":
-                case "RLE":
-                case "RLO":
-                    // Right-to-left
-                    glyphDirection = "R";
-                    break;
-                case "PDF":
-                case "CS":
-                case "ON":
-                case "WS":
-                case "BN":
-                case "S":
-                case "NSM":
-                case "B":
-                    // Neutral characters
-                    glyphDirection = direction;
-                    break;
-                default:
-                    throw new Error("Unrecognized character: \\u" + glyphData.letter.charCodeAt(0).toString(16));
-                }
-            }
-            else {
-                glyphDirection = direction;
-            }
-            if(direction === "WS" && glyphDirection !== "WS") {
-                // Use the glyph's direction if there is none currently in use.
-                direction = glyphDirection;
-            }
-            if(j < l._glyphs.length - 1 && direction === glyphDirection) {
-                ++j;
-                continue;
-            }
-            endRun = j;
-
-            // Draw the run.
-            if(direction === "L" || direction === "WS") {
-                //console.log("Drawing LTR run from " + startRun + " to " + endRun + ".");
-                for(var q = startRun; q <= endRun; ++q) {
-                    glyphData = l._glyphs[q];
-                    if(u.isMark(glyphData.letter)) {
-                        continue;
-                    }
-                    z=1;
-                    var nextGlyph = l._glyphs[q + z];
-                    while(nextGlyph && u.isMark(nextGlyph.letter)) {
-                        ++z;
-                        nextGlyph = l._glyphs[q + z];
-                        if(!nextGlyph) {
-                            nextGlyph = null;
-                            break;
-                        }
-                    }
-                    // Add diacritics.
-                    glyphData = glyphData.letter;
-                    for(var i = 1; i < z; ++i) {
-                        glyphData += l._glyphs[q + i].letter;
-                    }
-                    glyphData = this._glyphAtlas.getGlyph(glyphData);
-                    painter.drawGlyph(glyphData, worldX + x, worldY + y, fontScale);
-                    x += glyphData.width * fontScale;
-                }
-            }
-            else {
-                //console.log("Drawing RTL run from " + startRun + " to " + endRun + ".");
-                var cursiveMapping;
-
-                // The neighboring, non-mark, memory-representative glyphs.
-                var nextGlyph = null;
-                var prevGlyph = null;
-
-                // q is the current glyph under iteration.
-                var q = endRun;
-
-                // z is the distance from q the nextGlyph.
-                var z = 1;
-                while(q >= startRun) {
-                    glyphData = l._glyphs[q];
-
-                    // Next is in reading order.
-                    if(q > startRun && endRun !== startRun) {
-                        z = 1;
-                        prevGlyph = l._glyphs[q - z];
-                        while(u.isMark(prevGlyph.letter)) {
-                            ++z;
-                            prevGlyph = l._glyphs[q - z];
-                            if(!prevGlyph) {
-                                prevGlyph = null;
-                                break;
-                            }
-                        }
-                        if(prevGlyph && !u.isArabic(prevGlyph.letter)) {
-                            prevGlyph = null;
-                        }
-                        else if(prevGlyph) {
-                            cursiveMapping = u.getCursiveMapping(prevGlyph.letter);
-                            if(!cursiveMapping[2]) {
-                                // Prev glyph can't be joined to, so ignore it.
-                                prevGlyph = null;
-                            }
-                        }
-                    }
-                    else {
-                        prevGlyph = null;
-                    }
-                    if(q < endRun && endRun !== startRun) {
-                        z = 1;
-                        nextGlyph = l._glyphs[q + z];
-                        while(u.isMark(nextGlyph.letter)) {
-                            ++z;
-                            nextGlyph = l._glyphs[q + z];
-                            if(!nextGlyph) {
-                                nextGlyph = null;
-                                break;
-                            }
-                        }
-                        if(nextGlyph && !u.isArabic(nextGlyph.letter)) {
-                            nextGlyph = null;
-                        }
-                        else if(nextGlyph) {
-                            cursiveMapping = u.getCursiveMapping(nextGlyph.letter);
-                            if(!cursiveMapping[3]) {
-                                // Next glyph can't be joined to, so ignore it.
-                                nextGlyph = null;
-                            }
-                        }
-                    }
-                    else {
-                        nextGlyph = null;
-                    }
-
-                    var namedCharData = u.get(glyphData.letter);
-                    var cursiveMapping = u.getCursiveMapping(namedCharData[UNICODE_codeValue]);
-
-                    if(namedCharData[UNICODE_codeValue] === 0x627 && prevGlyph && prevGlyph.letter.charCodeAt(0) === 0x644) {
-                        // LAM WITH ALEF.
-                        if(prevGlyph) {
-                            // Has a previous glyph, so final.
-                            glyphData = 0xfefc;
-                        }
-                        else {
-                            glyphData = 0xfefb;
-                        }
-                        // Decrement twice to skip the ligature'd character.
-                        --q;
-                    }
-                    else if(cursiveMapping) {
-                        if(nextGlyph) {
-                            if(prevGlyph) {
-                                if(cursiveMapping[2]) {
-                                    glyphData = cursiveMapping[2]; // medial
-                                }
-                                else if(cursiveMapping[3]) {
-                                    glyphData = cursiveMapping[3]; // final
-                                }
-                                else {
-                                    glyphData = cursiveMapping[0]; // isolated
-                                }
-                            }
-                            else {
-                                // Next is, but previous wasn't.
-                                if(cursiveMapping[1]) {
-                                    glyphData = cursiveMapping[1]; // initial
-                                }
-                                else {
-                                    glyphData = cursiveMapping[0]; // isolated
-                                }
-                            }
-                        }
-                        else if(prevGlyph) {
-                            if(cursiveMapping[3]) {
-                                glyphData = cursiveMapping[3]; // final
-                            }
-                            else {
-                                glyphData = cursiveMapping[0]; // isolated
-                            }
-                        }
-                    }
-                    if(typeof glyphData === "object") {
-                        glyphData = glyphData.letter;
-                    }
-                    if(typeof glyphData === "number") {
-                        glyphData = String.fromCharCode(glyphData);
-                    }
-                    if(typeof glyphData !== "string") {
-                        throw new Error("glyphData should be a string by now.");
-                    }
-                    // Add diacritics.
-                    for(var i = 1; i < z; ++i) {
-                        glyphData += l._glyphs[q + i].letter;
-                    }
-                    // Convert to object.
-                    glyphData = this._glyphAtlas.getGlyph(glyphData);
-
-                    painter.drawGlyph(glyphData, worldX + x, worldY + y, fontScale);
-                    x += glyphData.width * fontScale;
-                    --q;
-                }
-            }
-
-            // Set the new glyph direction.
-            direction = glyphDirection;
-            startRun = j;
-            endRun = startRun;
-            ++j;
-            if(j === l._glyphs.length) {
-                break;
-            }
-        }
-        y += l.height() * fontScale;
-        x = 0;
-    }, this);
+    for(var i = 0; i < this._lines.length; ++i) {
+        var l = this._lines[i];
+        l.paint(painter, worldX, worldY, pos, fontScale);
+    }
 };

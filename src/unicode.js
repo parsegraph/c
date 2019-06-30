@@ -76,6 +76,102 @@ parsegraph_Unicode.prototype.getCursiveMapping = function(t)
 };
 }
 
+parsegraph_Unicode.prototype.getGlyphDirection = function(text)
+{
+    var data = this.get(text);
+    if(!data) {
+        return null;
+    }
+    switch(data[UNICODE_bidirectionalCategory]) {
+        case "L":
+        case "LRE":
+        case "LRO":
+        case "EN":
+        case "ES":
+        case "ET":
+            // Left-to-right.
+            return "L";
+        case "R":
+        case "AL":
+        case "AN":
+        case "RLE":
+        case "RLO":
+            // Right-to-left
+            return "R";
+        case "PDF":
+        case "CS":
+        case "ON":
+        case "WS":
+        case "BN":
+        case "S":
+        case "NSM":
+        case "B":
+            // Neutral characters
+            return null;
+        default:
+            throw new Error("Unrecognized character: \\u" + glyphData.letter.charCodeAt(0).toString(16));
+    }
+    return null;
+};
+
+parsegraph_Unicode.prototype.cursive = function(givenLetter, prevLetter, nextLetter)
+{
+    var cursiveMapping = this.getCursiveMapping(givenLetter);
+    if(!cursiveMapping) {
+        return null;
+    }
+    var prevCursiveMapping = null;
+    if(prevLetter) {
+        prevCursiveMapping = this.getCursiveMapping(prevLetter);
+    }
+    if(!prevCursiveMapping) {
+        prevLetter = null;
+    }
+    var nextCursiveMapping = null;
+    if(nextLetter) {
+        nextCursiveMapping = this.getCursiveMapping(nextLetter);
+    }
+    if(!nextCursiveMapping) {
+        nextLetter = null;
+    }
+
+    if(nextLetter) {
+        if(prevLetter && prevCursiveMapping[1]) {
+            if(cursiveMapping[2]) {
+                givenLetter = cursiveMapping[2]; // medial
+            }
+            //else if(cursiveMapping[3]) {
+                //givenLetter = cursiveMapping[3]; // final
+            //}
+            else {
+                givenLetter = cursiveMapping[0]; // isolated
+            }
+        }
+        else {
+            // Next is, but previous wasn't.
+            if(cursiveMapping[1]) {
+                givenLetter = cursiveMapping[1]; // initial
+            }
+            else {
+                givenLetter = cursiveMapping[0]; // isolated
+            }
+        }
+    }
+    else if(prevLetter) {
+        if(cursiveMapping[3]) {
+            givenLetter = cursiveMapping[3]; // final
+        }
+        else {
+            givenLetter = cursiveMapping[0]; // isolated
+        }
+    }
+    else {
+        givenLetter = cursiveMapping[0]; // isolated
+    }
+
+    return givenLetter;
+};
+
 (function() {
     var i = 0;
     UNICODE_codeValue = i++;

@@ -64,6 +64,7 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
     painter->pool = pool;
 
     painter->_glyphAtlas = glyphAtlas;
+    painter->_id = ++parsegraph_GlyphPainter_COUNT;
 
     // Compile the shader program.
     painter->_textProgram = parsegraph_compileProgram(shaders, shaderName,
@@ -95,9 +96,19 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
     return painter;
 }
 
+float* parsegraph_GlyphPainter_color(parsegraph_GlyphPainter* glyphPainter)
+{
+    return glyphPainter->_color;
+}
+
 void parsegraph_GlyphPainter_setColor(parsegraph_GlyphPainter* glyphPainter, float* color)
 {
     parsegraph_Color_copy(glyphPainter->_color, color);
+}
+
+float* parsegraph_GlyphPainter_backgroundColor(parsegraph_GlyphPainter* glyphPainter)
+{
+    return glyphPainter->_backgroundColor;
 }
 
 void parsegraph_GlyphPainter_setBackgroundColor(parsegraph_GlyphPainter* glyphPainter, float* color)
