@@ -198,10 +198,10 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         parsegraph_GlyphAtlas_restoreProperties(glyphAtlas);
     }
     if(!glyphAtlas->_needsUpdate) {
-        //parsegraph_log("GlpyhAtlas does not need update\n");
+        //parsegraph_log("GlyphAtlas does not need update\n");
         return;
     }
-    //parsegraph_log("GlpyhAtlas is updating\n");
+    //parsegraph_log("GlyphAtlas is updating\n");
     glyphAtlas->_needsUpdate = 0;
 
     for(parsegraph_GlyphPage* page = glyphAtlas->_firstPage; page; page = page->next) {
