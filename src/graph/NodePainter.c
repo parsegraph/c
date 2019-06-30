@@ -496,7 +496,7 @@ void parsegraph_NodePainter_drawNode(parsegraph_NodePainter* nodePainter, parseg
     float worldX = 0;
     float worldY = 0;
     float userScale = 1;
-    if(parsegraph_NodePainter_isExtentRenderingEnabled(nodePainter) && parsegraph_Node_isRoot(node)) {
+    if(parsegraph_NodePainter_isExtentRenderingEnabled(nodePainter)) {
         parsegraph_NodePainter_paintExtent(nodePainter, node, worldX, worldY, userScale);
     }
 
@@ -634,7 +634,7 @@ static void paintExtent_paintBound(struct PaintBoundData* pbd)
     );
 }
 
-/*static void forEachDownwardExtent(void* data, float length, float size, int index)
+static void forEachDownwardExtent(void* data, float length, float size, int index)
 {
     struct PaintBoundData* pbd = data;
     float* rect = pbd->rect;
@@ -645,9 +645,8 @@ static void paintExtent_paintBound(struct PaintBoundData* pbd)
     paintExtent_paintBound(pbd);
     parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) + length);
 }
-*/
 
-/*static void paintExtent_paintDownwardExtent(struct PaintBoundData* pbd)
+static void paintExtent_paintDownwardExtent(struct PaintBoundData* pbd)
 {
     parsegraph_Extent* extent = parsegraph_Node_extentsAt(pbd->node, parsegraph_DOWNWARD);
     parsegraph_Node* node = pbd->node;
@@ -673,9 +672,6 @@ static void forEachUpwardExtent(void* data, float length, float size, int index)
     paintExtent_paintBound(pbd);
     parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) + length);
 }
-*/
-
-/*
 static void paintExtent_paintUpwardExtent(struct PaintBoundData* pbd)
 {
     parsegraph_Extent* extent = parsegraph_Node_extentsAt(pbd->node, parsegraph_UPWARD);
@@ -689,7 +685,6 @@ static void paintExtent_paintUpwardExtent(struct PaintBoundData* pbd)
 
     parsegraph_Extent_forEach(extent, forEachUpwardExtent, pbd);
 }
-*/
 
 static void forEachBackwardExtent(void* data, float length, float size, int index)
 {
@@ -758,8 +753,8 @@ void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, par
     pbd.worldY = worldY;
     pbd.userScale = userScale;
 
-    //paintExtent_paintDownwardExtent(&pbd);
-    //paintExtent_paintUpwardExtent(&pbd);
+    paintExtent_paintDownwardExtent(&pbd);
+    paintExtent_paintUpwardExtent(&pbd);
     paintExtent_paintBackwardExtent(&pbd);
     paintExtent_paintForwardExtent(&pbd);
 }
