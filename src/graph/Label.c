@@ -203,12 +203,12 @@ parsegraph_GlyphData* parsegraph_GlyphIterator_next(parsegraph_GlyphIterator* gi
         //              ^-prev
         UChar cursiveLetter = parsegraph_Unicode_cursive(u, givenLetter, gi->prevLetter, nextLetterChar);
         if(cursiveLetter != 0) {
-            //parsegraph_log("Found cursive char %x->%x\n", givenLetter, cursiveLetter);
+            parsegraph_log("Found cursive char %x->%x\n", givenLetter, cursiveLetter);
             gi->prevLetter = givenLetter;
             givenLetter = cursiveLetter;
         }
         else {
-            //parsegraph_log("Found non-cursive char %x.\n", givenLetter);
+            parsegraph_log("Found non-cursive char %x.\n", givenLetter);
             gi->prevLetter = 0;
         }
     }
