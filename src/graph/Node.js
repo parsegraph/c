@@ -1015,6 +1015,8 @@ parsegraph_Node.prototype.extentSize = function(outPos)
         this.extentsAt(parsegraph_DOWNWARD).boundingValues()[0]
     );
 
+    //console.log("Extent Size = " + outPos.width() + " " + outPos.height());
+
     return outPos;
 };
 
@@ -1694,9 +1696,11 @@ parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
     ) {
         return false;
     }
+    //console.log("This node is " + this._id);
+    var forwardMax = userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD) + userScale * this.absoluteScale() * this.extentSize().width();
+    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + this.extentSize().width());
     if(
-        x > userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD)
-            + userScale * this.absoluteScale() * this.extentSize().width()
+        x > forwardMax
     ) {
         return false;
     }
@@ -1712,7 +1716,7 @@ parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
         return false;
     }
 
-    //console.log("Within node extent" + this);
+    //console.log("Within extent of node " + this._id);
     return true;
 };
 
@@ -1764,7 +1768,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             }
 
             // Found the node.
-            //console.log("Found node.");
+            //console.log("Mouse under node " + candidate._id);
             return candidate;
         }
         // Not within this node, so remove it as a candidate.
