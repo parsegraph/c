@@ -20,7 +20,11 @@ void parsegraph_logMessage(const char* message);
 void parsegraph_logMessagecf(const char* category, const char* fmt, ...);
 void parsegraph_logMessagef(const char* fmt, ...);
 void parsegraph_logEnterf(const char* fmt, ...);
-void parsegraph_connectLog(const char* host, const char* port);
+int parsegraph_connectLog(const char* host, const char* port);
+void parsegraph_stopLog();
+void parsegraph_resumeLog();
+int parsegraph_isLogging();
 void parsegraph_disconnectLog();
+extern int parsegraph_DONT_LOG;
 
 #endif // parsegraph_log_INCLUDED

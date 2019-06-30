@@ -1039,7 +1039,9 @@ int main(int argc, const char * const *argv)
         parsegraph_die("This program must be run as root.");
     }
 
-    parsegraph_connectLog("localhost", "28122");
+    if(!parsegraph_connectLog("localhost", "28122")) {
+        parsegraph_stopLog();
+    }
 
     // Initialize the APR.
     apr_status_t rv;

@@ -11,6 +11,8 @@
 
 #define parsegraph_LOGBUFSIZE 524288
 
+int parsegraph_DONT_LOG = 0;
+
 static int create_and_connect(const char* node, const char* port)
 {
    struct addrinfo *result, *rp;
@@ -63,6 +65,9 @@ void(*orig_parsegraph_log_func)(const char* fmt, va_list) = 0;
 
 static void redirect_log_func(const char* msg, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, msg);
     if(orig_parsegraph_log_func) {
@@ -76,6 +81,9 @@ static void redirect_log_func(const char* msg, ...)
 
 void parsegraph_logAction(const char* scope, const char* category, const char* message)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     if(!message || *message == 0) {
         message = "";
     }
@@ -123,6 +131,9 @@ void parsegraph_logAction(const char* scope, const char* category, const char* m
 
 void parsegraph_logMessagevf(const char* fmt, va_list ap)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     char buf[parsegraph_LOGBUFSIZE];
     int true_written = vsnprintf(buf, sizeof buf, fmt, ap);
     if(true_written >= sizeof buf) {
@@ -135,14 +146,31 @@ void parsegraph_logMessagevf(const char* fmt, va_list ap)
     parsegraph_logAction("", "", buf);
 }
 
-void parsegraph_connectLog(const char* host, const char* port)
+void parsegraph_stopLog()
+{
+    parsegraph_DONT_LOG = 1;
+}
+
+int parsegraph_isLogging()
+{
+    return parsegraph_DONT_LOG == 1 ? 0 : 1;
+}
+
+void parsegraph_resumeLog()
+{
+    parsegraph_DONT_LOG = 0;
+}
+
+int parsegraph_connectLog(const char* host, const char* port)
 {
     parsegraph_disconnectLog();
     LOGFD = create_and_connect(host, port);
     if(LOGFD != -1) {
         orig_parsegraph_log_func = parsegraph_log_func;
         parsegraph_log_func = parsegraph_logMessagevf;
+        return 1;
     }
+    return 0;
 }
 
 void parsegraph_disconnectLog()
@@ -168,6 +196,9 @@ void parsegraph_logEnterc(const char* category, const char* message)
 
 void parsegraph_logEntercf(const char* category, const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -205,6 +236,9 @@ void parsegraph_logMessagec(const char* category, const char* message)
 
 void parsegraph_logMessagecf(const char* category, const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -232,6 +266,9 @@ void parsegraph_logLeavec(const char* category, const char* message)
 
 void parsegraph_logLeavecf(const char* category, const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -249,6 +286,9 @@ void parsegraph_logLeavecf(const char* category, const char* fmt, ...)
 
 void parsegraph_logLeavef(const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -266,6 +306,9 @@ void parsegraph_logLeavef(const char* fmt, ...)
 
 void parsegraph_logEnterf(const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -283,6 +326,9 @@ void parsegraph_logEnterf(const char* fmt, ...)
 
 void parsegraph_logMessagef(const char* fmt, ...)
 {
+    if(!parsegraph_isLogging()) {
+        return;
+    }
     va_list ap;
     va_start(ap, fmt);
     char buf[parsegraph_LOGBUFSIZE];
@@ -300,7 +346,9 @@ void parsegraph_logMessagef(const char* fmt, ...)
 
 void parsegraph_log_stderr(const char* fmt, va_list ap)
 {
-    vfprintf(stderr, fmt, ap);
+    if(parsegraph_isLogging()) {
+        vfprintf(stderr, fmt, ap);
+    }
 }
 
 void(*parsegraph_log_func)(const char* fmt, va_list) = parsegraph_log_stderr;
