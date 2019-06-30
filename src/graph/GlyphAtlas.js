@@ -38,7 +38,6 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._fontSize = fontSizePixels;
     this._fontName = fontName;
     this._fillStyle = fillStyle;
-    this._font = null;
 
     this._canvas = document.createElement("canvas");
     this._canvas.width = this.maxTextureWidth();
@@ -156,14 +155,15 @@ parsegraph_GlyphAtlas.prototype.has = parsegraph_GlyphAtlas.prototype.hasGlyph;
  */
 parsegraph_GlyphAtlas.prototype.update = function(gl)
 {
-    if(!this._font) {
-        this.restoreProperties();
-    }
     if(arguments.length === 0) {
         gl = this._gl;
     }
     if(!this._needsUpdate && this._gl === gl) {
+        //console.log("Dont need update");
         return;
+    }
+    else {
+        //console.log("Updating glyphAtlas");
     }
     if(this._gl !== gl) {
         this.clear();
