@@ -1237,7 +1237,10 @@ int parsegraph_Node_labelUTF8(parsegraph_Node* node, char* buf, int len)
     UErrorCode uerr = U_ZERO_ERROR;
     u_strToUTF8(buf, len, &trueLen, ubuf, ulen, &uerr);
     free(ubuf);
-    if(uerr != U_ZERO_ERROR) {
+    if(uerr == U_BUFFER_OVERFLOW_ERROR) {
+        buf[len-1] = 0;
+    }
+    else if(uerr != U_ZERO_ERROR) {
         parsegraph_die("Unicode error during convert from UTF8 text %s", u_errorName(uerr));
     }
     return trueLen;
