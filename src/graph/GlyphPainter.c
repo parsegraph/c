@@ -238,7 +238,6 @@ void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegr
 void parsegraph_GlyphPainter_destroy(parsegraph_GlyphPainter* painter)
 {
     parsegraph_pagingbuffer_destroy(painter->_textBuffer);
-    apr_pool_destroy(painter->_renderPool);
     apr_pool_destroy(painter->pool);
 }
 
@@ -246,10 +245,6 @@ void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* glyphPainter)
 {
     //parsegraph_log("Clearing glyph painter\n");
     parsegraph_pagingbuffer_clear(glyphPainter->_textBuffer);
-    apr_pool_destroy(glyphPainter->_renderPool);
-    if(APR_SUCCESS != apr_pool_create(&glyphPainter->_renderPool, glyphPainter->pool)) {
-        parsegraph_die("Failed to create GlyphPainter memory pool.");
-    }
     glyphPainter->_maxSize = 0;
 }
 

@@ -32,7 +32,6 @@ int _id;
 parsegraph_GlyphAtlas* _glyphAtlas;
 GLuint _textProgram;
 apr_pool_t* pool;
-apr_pool_t* _renderPool;
 parsegraph_pagingbuffer* _textBuffer;
 int _maxSize;
 GLint a_position;
