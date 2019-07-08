@@ -1,5 +1,3 @@
-// TODO Test lots of glyphs; set a limit if one can be found to exist
-// TODO Add caret
 // TODO Add runs of selected text
 var parsegraph_GlyphPainter_COUNT = 0;
 
