@@ -73,8 +73,6 @@ function init()
 
             //var linear = new parsegraph_LinearWidget(graph);
             //graph.plot(linear.root());
-            var primes = new parsegraph_PrimesWidget(graph);
-            graph.plot(primes.root());
 
             var defaultScale = .25;
             graph.camera().project();
@@ -83,22 +81,6 @@ function init()
                 graph.gl().drawingBufferHeight / (2 * defaultScale)
             );
             graph.camera().setScale(defaultScale);
-
-            var MAX_PRIME = 440;
-            var LOOPING_DELAY = 50;
-
-            var bTimer = new parsegraph_TimeoutTimer();
-            bTimer.setDelay(10);
-            bTimer.setListener(function() {
-                primes.step(1);
-                graph.scheduleRepaint();
-                renderTimer.schedule();
-                if(primes.position <= MAX_PRIME) {
-                    bTimer.setDelay(LOOPING_DELAY);
-                    bTimer.schedule();
-                }
-            });
-            bTimer.schedule();
 
             /*
             var aTimer = new parsegraph_TimeoutTimer();
@@ -148,7 +130,30 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    var sga = new parsegraph_Application("Primes");
+    sga.setCameraName("parsegraph_primes_camera");
+    SGA = sga;
+    var primes = null;
+    sga.setMathMode(true);
+    sga.start(document.body, function(app, userLogin, loginNode) {
+        primes = new parsegraph_PrimesWidget(app);
+        loginNode.connectNode(parsegraph_FORWARD, primes.node());
+        return primes;
+    });
+
+    var lastPrime = new Date();
+    sga.onIdle(function(timeout) {
+        var startTime = new Date();
+        var MAX_PRIME = 1024;
+        //console.log("Processing timeout: " + primes.position + " " + MAX_PRIME)
+
+        if(parsegraph_elapsed(lastPrime) > 100) {
+            primes.step(1);
+            sga.scheduleRepaint();
+            lastPrime = new Date();
+        }
+        return primes.position <= MAX_PRIME;
+    });
 });
 </script>
 </head>

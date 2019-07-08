@@ -47,7 +47,7 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
     }
 };
 
-parsegraph_PrimesWidget.prototype.root = function()
+parsegraph_PrimesWidget.prototype.node = function()
 {
     return this.caret.root();
 };
