@@ -161,6 +161,7 @@ function parsegraph_Input(graph, camera)
             camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
         }
         this.Dispatch(false, "wheel", true);
+        this.mouseChanged();
     };
     parsegraph_addEventMethod(graph.canvas(), "DOMMouseScroll", onWheel, this, false);
     parsegraph_addEventMethod(graph.canvas(), "mousewheel", onWheel, this, false);

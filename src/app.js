@@ -9,11 +9,22 @@ function parsegraph_Application(guid)
         this._hostname = "http://" + location.host;
     }
     this._world = null;
+    this._graph = null;
+
+    this._idleFunc = null;
+    this._idleFuncThisArg = null;
+    this._renderTimer = null;
+    this._mathMode = false;
 }
+
+parsegraph_Application.prototype.setMathMode = function(mathMode)
+{
+    this._mathMode = mathMode;
+};
 
 parsegraph_Application.prototype.start = function(container, initFunc, initFuncThisArg) {
     // Always immediately initialize constants for use by application objects.
-    parsegraph_initialize();
+    parsegraph_initialize(this._mathMode);
 
     // Create and globalize the graph.
     this._surface = new parsegraph_Surface();
@@ -65,7 +76,9 @@ parsegraph_Application.prototype.onLogin = function(userLogin, loginNode) {
         while(typeof worldNode.node === "function") {
             worldNode = worldNode.node();
         }
-        loginNode.connectNode(parsegraph_DOWNWARD, worldNode);
+        if(worldNode.isRoot()) {
+            loginNode.connectNode(parsegraph_DOWNWARD, worldNode);
+        }
     }
     else {
         this._world = this._initFunc.call(this._initFuncThisArg, this, userLogin, loginNode)
@@ -183,16 +196,33 @@ parsegraph_Application.prototype.onRender = function() {
     var surface = this.surface();
 
     var startTime = new Date();
-    graph.input().Update(startTime);
+    var inputChangedScene = graph.input().Update(startTime);
     var t = alpha_GetTime();
     start = t;
+
+
+    var interval = 50;
+    inputChangedScene = graph.needsRepaint() || inputChangedScene;
+    inputChangedScene = inputChangedScene || this._renderedMouse !== graph.input().mouseVersion();
     if(graph.needsRepaint()) {
         //console.log("Repainting");
-        surface.paint(50);
+        surface.paint(interval);
     }
-    //console.log("Rendering");
-    surface.render();
-    if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+    if(graph.input().UpdateRepeatedly() || inputChangedScene) {
+        //console.log("Rendering");
+        surface.render();
+        this._renderedMouse = graph.input().mouseVersion();
+    }
+    else {
+        //console.log("Avoid rerender");
+    }
+    if(this._idleFunc && parsegraph_elapsed(startTime) < interval/2) {
+        var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
+        if(r !== true) {
+            this.onIdle(null, null);
+        }
+    }
+    if(graph.input().UpdateRepeatedly() || graph.needsRepaint() || this._idleFunc) {
         if(this._cameraProtocol && graph.input().UpdateRepeatedly()) {
             this._cameraProtocol.update();
         }
@@ -204,6 +234,12 @@ parsegraph_Application.prototype.onRender = function() {
 parsegraph_Application.prototype.hostname = function()
 {
     return this._hostname;
+};
+
+parsegraph_Application.prototype.onIdle = function(idleFunc, idleFuncThisArg)
+{
+    this._idleFunc = idleFunc;
+    this._idleFuncThisArg = idleFuncThisArg;
 };
 
 parsegraph_Application.prototype.graph = function() {
