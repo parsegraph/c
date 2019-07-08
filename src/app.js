@@ -91,6 +91,7 @@ parsegraph_Application.prototype.onLogin = function(userLogin, loginNode) {
             worldNode = worldNode.node();
         }
         if(worldNode.isRoot()) {
+            //console.log("Connecting " + loginNode + " to " + worldNode);
             loginNode.connectNode(parsegraph_DOWNWARD, worldNode);
         }
     }
