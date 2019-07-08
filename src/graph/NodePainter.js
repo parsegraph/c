@@ -54,125 +54,6 @@ parsegraph_NodePainter.prototype.backgroundColor = function()
     return this._backgroundColor;
 };
 
-parsegraph_NodePainter.prototype.render = function(world, scale)
-{
-    this._gl.disable(this._gl.CULL_FACE);
-    this._gl.disable(this._gl.DEPTH_TEST);
-
-    this._gl.enable(this._gl.BLEND);
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.DST_ALPHA
-    );
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
-    if(this._renderBlocks) {
-        this._blockPainter.render(world, scale);
-    }
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
-
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
-    );
-    this._gl.blendFunc(
-        this._gl.DST_ALPHA, this._gl.SRC_ALPHA
-    );
-    if(this._renderExtents) {
-        this._extentPainter.render(world, scale);
-    }
-    this._gl.disable(this._gl.CULL_FACE);
-    this._gl.disable(this._gl.DEPTH_TEST);
-    this._gl.enable(this._gl.BLEND);
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
-
-    if(this._renderText) {
-        this._glyphPainter.render(world, scale);
-    }
-
-    this._textures.forEach(function(t) {
-        t.render(world);
-    });
-};
-
-parsegraph_NodePainter.prototype.enableExtentRendering = function()
-{
-    this._renderExtents = true;
-};
-
-parsegraph_NodePainter.prototype.disableExtentRendering = function()
-{
-    this._renderExtents = false;
-};
-
-parsegraph_NodePainter.prototype.isExtentRenderingEnabled = function()
-{
-    return this._renderExtents;
-};
-
-parsegraph_NodePainter.prototype.enableBlockRendering = function()
-{
-    this._renderBlocks = true;
-};
-
-parsegraph_NodePainter.prototype.disableBlockRendering = function()
-{
-    this._renderBlocks = false;
-};
-
-parsegraph_NodePainter.prototype.isBlockRenderingEnabled = function()
-{
-    return this._renderBlocks;
-};
-
-parsegraph_NodePainter.prototype.enableLineRendering = function()
-{
-    this._renderLines = true;
-};
-
-parsegraph_NodePainter.prototype.disableLineRendering = function()
-{
-    this._renderLines = false;
-};
-
-parsegraph_NodePainter.prototype.isLineRenderingEnabled = function()
-{
-    return this._renderLines;
-};
-
-parsegraph_NodePainter.prototype.enableTextRendering = function()
-{
-    this._renderText = true;
-};
-
-parsegraph_NodePainter.prototype.disableTextRendering = function()
-{
-    this._renderText = false;
-};
-
-parsegraph_NodePainter.prototype.isTextRenderingEnabled = function()
-{
-    return this._renderText;
-};
-
-parsegraph_NodePainter.prototype.enableSceneRendering = function()
-{
-    this._renderScenes = true;
-};
-
-parsegraph_NodePainter.prototype.disableSceneRendering = function()
-{
-    this._renderScenes = false;
-};
-
-parsegraph_NodePainter.prototype.isSceneRenderingEnabled = function()
-{
-    return this._renderScenes;
-};
-
 parsegraph_NodePainter.prototype.clear = function()
 {
     this._blockPainter.clear();
@@ -749,4 +630,123 @@ parsegraph_NodePainter.prototype.paintBlock = function(node, worldX, worldY, use
     node._labelY = labelY;
     node._labelScale = fontScale;
     label.paint(this._glyphPainter, labelX, labelY, fontScale);
+};
+
+parsegraph_NodePainter.prototype.render = function(world, scale)
+{
+    this._gl.disable(this._gl.CULL_FACE);
+    this._gl.disable(this._gl.DEPTH_TEST);
+
+    this._gl.enable(this._gl.BLEND);
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.DST_ALPHA
+    );
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
+    );
+    if(this._renderBlocks) {
+        this._blockPainter.render(world, scale);
+    }
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
+    );
+    this._gl.blendFunc(
+        this._gl.DST_ALPHA, this._gl.SRC_ALPHA
+    );
+    if(this._renderExtents) {
+        this._extentPainter.render(world, scale);
+    }
+    this._gl.disable(this._gl.CULL_FACE);
+    this._gl.disable(this._gl.DEPTH_TEST);
+    this._gl.enable(this._gl.BLEND);
+    this._gl.blendFunc(
+        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    if(this._renderText) {
+        this._glyphPainter.render(world, scale);
+    }
+
+    this._textures.forEach(function(t) {
+        t.render(world);
+    });
+};
+
+parsegraph_NodePainter.prototype.enableExtentRendering = function()
+{
+    this._renderExtents = true;
+};
+
+parsegraph_NodePainter.prototype.disableExtentRendering = function()
+{
+    this._renderExtents = false;
+};
+
+parsegraph_NodePainter.prototype.isExtentRenderingEnabled = function()
+{
+    return this._renderExtents;
+};
+
+parsegraph_NodePainter.prototype.enableBlockRendering = function()
+{
+    this._renderBlocks = true;
+};
+
+parsegraph_NodePainter.prototype.disableBlockRendering = function()
+{
+    this._renderBlocks = false;
+};
+
+parsegraph_NodePainter.prototype.isBlockRenderingEnabled = function()
+{
+    return this._renderBlocks;
+};
+
+parsegraph_NodePainter.prototype.enableLineRendering = function()
+{
+    this._renderLines = true;
+};
+
+parsegraph_NodePainter.prototype.disableLineRendering = function()
+{
+    this._renderLines = false;
+};
+
+parsegraph_NodePainter.prototype.isLineRenderingEnabled = function()
+{
+    return this._renderLines;
+};
+
+parsegraph_NodePainter.prototype.enableTextRendering = function()
+{
+    this._renderText = true;
+};
+
+parsegraph_NodePainter.prototype.disableTextRendering = function()
+{
+    this._renderText = false;
+};
+
+parsegraph_NodePainter.prototype.isTextRenderingEnabled = function()
+{
+    return this._renderText;
+};
+
+parsegraph_NodePainter.prototype.enableSceneRendering = function()
+{
+    this._renderScenes = true;
+};
+
+parsegraph_NodePainter.prototype.disableSceneRendering = function()
+{
+    this._renderScenes = false;
+};
+
+parsegraph_NodePainter.prototype.isSceneRenderingEnabled = function()
+{
+    return this._renderScenes;
 };
