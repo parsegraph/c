@@ -250,6 +250,11 @@ parsegraph_Line.prototype.length = function()
     return len;
 };
 
+parsegraph_Line.prototype.glyphCount = function()
+{
+    return this._glyphs.length;
+};
+
 parsegraph_Line.prototype.getText = function()
 {
     var t = "";
@@ -379,6 +384,15 @@ parsegraph_Label.prototype.length = function()
             totallen += 1;
         }
         totallen += l.length();
+    });
+    return totallen;
+};
+
+parsegraph_Label.prototype.glyphCount = function()
+{
+    var totallen = 0;
+    this._lines.forEach(function(l) {
+        totallen += l.glyphCount();
     });
     return totallen;
 };

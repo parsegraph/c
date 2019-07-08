@@ -1181,6 +1181,14 @@ parsegraph_Node.prototype.label = function()
     return this._label.text();
 };
 
+parsegraph_Node.prototype.glyphCount = function()
+{
+    if(!this._label) {
+        return 0;
+    }
+    return this._label.glyphCount();
+};
+
 parsegraph_Node.prototype.realLabel = function()
 {
     if(!this._label) {

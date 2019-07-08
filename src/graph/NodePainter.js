@@ -428,6 +428,9 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
     if(!counts.numBlocks) {
         counts.numBlocks = 0;
     }
+    if(!counts.numGlyphs) {
+        counts.numGlyphs = 0;
+    }
 
     if(this.isExtentRenderingEnabled()) {
         if(!counts.numExtents) {
@@ -438,6 +441,8 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
             counts.numExtents += extent.numBounds();
         }, this);
     }
+
+    counts.numGlyphs += node.glyphCount();
 
     if(node.type() === parsegraph_SLIDER) {
         if(node.parentDirection() === parsegraph_UPWARD) {
