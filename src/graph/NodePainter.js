@@ -18,6 +18,10 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._renderText = true;
 
     this._textures = [];
+
+    var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+    var pagesPerRow = glTextureSize / this._glyphPainter.glyphAtlas().pageTextureSize();
+    this._pagesPerGlyphTexture = Math.pow(pagesPerRow, 2);
 };
 
 parsegraph_NodePainter.prototype.bounds = function()
@@ -420,7 +424,7 @@ parsegraph_NodePainter.prototype.initBlockBuffer = function(counts)
 {
     this._blockPainter.initBuffer(counts.numBlocks);
     this._extentPainter.initBuffer(counts.numExtents);
-    this._glyphPainter.clear();
+    this._glyphPainter.initBuffer(counts.numGlyphs);
 };
 
 parsegraph_NodePainter.prototype.countNode = function(node, counts)
@@ -429,7 +433,7 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         counts.numBlocks = 0;
     }
     if(!counts.numGlyphs) {
-        counts.numGlyphs = 0;
+        counts.numGlyphs = {};
     }
 
     if(this.isExtentRenderingEnabled()) {
@@ -442,7 +446,7 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         }, this);
     }
 
-    counts.numGlyphs += node.glyphCount();
+    node.glyphCount(counts.numGlyphs, this._pagesPerGlyphTexture);
 
     if(node.type() === parsegraph_SLIDER) {
         if(node.parentDirection() === parsegraph_UPWARD) {

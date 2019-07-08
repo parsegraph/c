@@ -1181,12 +1181,12 @@ parsegraph_Node.prototype.label = function()
     return this._label.text();
 };
 
-parsegraph_Node.prototype.glyphCount = function()
+parsegraph_Node.prototype.glyphCount = function(counts, pagesPerTexture)
 {
     if(!this._label) {
         return 0;
     }
-    return this._label.glyphCount();
+    return this._label.glyphCount(counts, pagesPerTexture);
 };
 
 parsegraph_Node.prototype.realLabel = function()

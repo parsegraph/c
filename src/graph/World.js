@@ -309,6 +309,7 @@ parsegraph_World.prototype.paint = function(timeout)
         }
 
         while(i < this._worldRoots.length) {
+            this._graph.glyphAtlas().update(this._graph.gl());
             if(pastTime()) {
                 this._previousWorldPaintState = i;
                 return false;

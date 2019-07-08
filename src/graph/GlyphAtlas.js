@@ -46,8 +46,7 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._renderCanvas = null;
     this._renderCtx = null;
 
-    this._firstPage = null;
-    this._lastPage = null;
+    this._pages = [];
     this._needsUpdate = true;
 
     this._glyphData = {};
@@ -94,11 +93,13 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
     var letterDescent = 0;
     var advance = letterWidth;
 
-    var glyphPage = this._lastPage;
-    if(!glyphPage) {
+    var glyphPage = null;
+    if(this._pages.length === 0) {
         glyphPage = new parsegraph_GlyphPage(0);
-        this._lastPage = glyphPage;
-        this._firstPage = glyphPage;
+        this._pages.push(glyphPage);
+    }
+    else {
+        glyphPage = this._pages[this._pages.length - 1];
     }
 
     if(this._currentRowHeight < letterHeight) {
@@ -114,9 +115,8 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
     }
     if(this._y + this._currentRowHeight + this._padding > this.pageTextureSize()) {
         // Move to the next page.
-        glyphPage = new parsegraph_GlyphPage(this._lastPage._id + 1);
-        this._lastPage.next = glyphPage;
-        this._lastPage = glyphPage;
+        glyphPage = new parsegraph_GlyphPage(this._pages.length);
+        this._pages.push(glyphPage);
         this._x = this._padding;
         this._y = this._padding;
         this._currentRowHeight = letterHeight;
@@ -192,7 +192,8 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
     var pageY = 0;
     var curTexture = null;
     var pagesUpdated = 0;
-    for(var page = this._firstPage; page; page = page.next) {
+    for(var i in this._pages) {
+        var page = this._pages[i];
         //console.log("Painting page " + page._id);
         this._renderCtx.clearRect(0, 0, pageTextureSize, pageTextureSize);
         for(var glyphData = page._firstGlyph; glyphData; glyphData = glyphData.next) {
@@ -252,7 +253,8 @@ parsegraph_GlyphAtlas.prototype.clear = function()
     if(!this._gl) {
         return;
     }
-    for(var page = this._firstPage; page; page = page.next) {
+    for(var i in this._pages) {
+        var page = this._pages[i];
         if(page._glyphTexture) {
             this._gl.deleteTexture(page._glyphTexture);
         }

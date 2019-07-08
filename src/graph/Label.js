@@ -250,8 +250,19 @@ parsegraph_Line.prototype.length = function()
     return len;
 };
 
-parsegraph_Line.prototype.glyphCount = function()
+parsegraph_Line.prototype.glyphCount = function(counts, pagesPerTexture)
 {
+    if(counts) {
+        this._glyphs.forEach(function(glyphData) {
+            var bufIndex = Math.floor(glyphData.glyphPage._id / pagesPerTexture);
+            if(!(bufIndex in counts)) {
+                counts[bufIndex] = 1;
+            }
+            else {
+                ++counts[bufIndex];
+            }
+        });
+    }
     return this._glyphs.length;
 };
 
@@ -388,11 +399,11 @@ parsegraph_Label.prototype.length = function()
     return totallen;
 };
 
-parsegraph_Label.prototype.glyphCount = function()
+parsegraph_Label.prototype.glyphCount = function(counts, pagesPerTexture)
 {
     var totallen = 0;
     this._lines.forEach(function(l) {
-        totallen += l.glyphCount();
+        totallen += l.glyphCount(counts, pagesPerTexture);
     });
     return totallen;
 };
