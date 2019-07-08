@@ -150,7 +150,7 @@ parsegraph_GlyphAtlas.prototype.has = parsegraph_GlyphAtlas.prototype.hasGlyph;
 
 function parsegraph_getGlyphTextureSize(gl)
 {
-    return Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    return Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE));
 }
 
 /**
@@ -172,41 +172,58 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
         //console.log("Updating glyphAtlas");
         this._needsUpdate = false;
     }
+    var td = new Date();
+    var pageTextureSize = this.pageTextureSize();
     if(this._gl !== gl) {
         this.clear();
         this._gl = gl;
         this._glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
-        console.log("GLTEXTURESIZE=" + this._glTextureSize);
+        //console.log("GLTEXTURESIZE=" + this._glTextureSize);
         this._renderCanvas = document.createElement("canvas");
-        this._renderCanvas.width = this._glTextureSize;
-        this._renderCanvas.height = this._glTextureSize;
+        this._renderCanvas.width = pageTextureSize;
+        this._renderCanvas.height = pageTextureSize;
         this._renderCtx = this._renderCanvas.getContext("2d");
         this._renderCtx.font = this.font();
         this._renderCtx.fillStyle = this._fillStyle;
+        this._textureArray = new Uint8Array(this._glTextureSize*this._glTextureSize);
     }
 
     var pageX = 0;
     var pageY = 0;
     var curTexture = null;
+    var pagesUpdated = 0;
     for(var page = this._firstPage; page; page = page.next) {
         //console.log("Painting page " + page._id);
-        var pageTextureSize = this.pageTextureSize();
-        this._renderCtx.clearRect(pageX, pageY, pageX + pageTextureSize, pageY + pageTextureSize);
+        this._renderCtx.clearRect(0, 0, pageTextureSize, pageTextureSize);
         for(var glyphData = page._firstGlyph; glyphData; glyphData = glyphData.next) {
             this._renderCtx.fillText(
                 glyphData.letter,
-                pageX + glyphData.x,
-                pageY + glyphData.y + this.fontBaseline()
+                glyphData.x,
+                glyphData.y + this.fontBaseline()
             );
         }
 
         // Create texture.
         if(!curTexture) {
             curTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, curTexture);
+            var ut = new Date();
+            gl.texImage2D(
+                gl.TEXTURE_2D, 0, gl.ALPHA, this._glTextureSize, this._glTextureSize, 0, gl.ALPHA, gl.UNSIGNED_BYTE, this._textureArray
+            );
+            //console.log("Upload time: " + parsegraph_elapsed(ut));
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            // Prevents t-coordinate wrapping (repeating).
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         }
         page._glyphTexture = curTexture;
 
-        var needsBind = page === this._lastPage;
+        // Draw from 2D canvas.
+        gl.texSubImage2D(
+            gl.TEXTURE_2D, 0, pageX, pageY, gl.ALPHA, gl.UNSIGNED_BYTE, this._renderCanvas
+        );
         pageX += pageTextureSize;
         if(pageX >= this._glTextureSize) {
             pageY += pageTextureSize;
@@ -215,26 +232,19 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
         if(pageY >= this._glTextureSize) {
             pageY = 0;
             pageX = 0;
-            needsBind = true;
+            gl.generateMipmap(gl.TEXTURE_2D);
+            curTexture = null;
         }
-
-        if(!needsBind) {
-            continue;
-        }
-        // Draw from 2D canvas.
-        gl.bindTexture(gl.TEXTURE_2D, curTexture);
-        gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this._renderCanvas
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        // Prevents t-coordinate wrapping (repeating).
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        curTexture = null;
+        ++pagesUpdated;
     }
+    //this._renderCanvas.style.position = "absolute";
+    //this._renderCanvas.style.pointerEvents = "none";
+    //document.body.appendChild(this._renderCanvas);
+    if(curTexture) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    //console.log("GlyphAtlas updated " + pagesUpdated + " page(s) in " + parsegraph_elapsed(td) + "ms");
 };
 
 parsegraph_GlyphAtlas.prototype.clear = function()
@@ -261,7 +271,7 @@ parsegraph_GlyphAtlas.prototype.font = function()
 
 parsegraph_GlyphAtlas.prototype.pageTextureSize = function()
 {
-    return 1024;
+    return 512;
 };
 
 parsegraph_GlyphAtlas.prototype.glTextureWidth = function()

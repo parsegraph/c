@@ -118,7 +118,7 @@ function parsegraph_initialize(mathMode) {
     );
 
     // Font
-    parsegraph_UPSCALED_FONT_SIZE = 144;
+    parsegraph_UPSCALED_FONT_SIZE = 72;
     parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
     parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
 
