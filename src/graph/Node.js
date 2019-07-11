@@ -2944,10 +2944,9 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     var node = root;
     var bodySize = new parsegraph_Size();
 
-    var startTime = new Date();
-
     // Traverse the graph depth-first, committing each node's layout in turn.
     var loop = function() {
+        var startTime = new Date();
         var t;
         if(timeout !== undefined) {
             t = new Date().getTime();
