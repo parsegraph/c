@@ -30,6 +30,9 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
+    this._groupXPos = null;
+    this._groupYPos = null;
+    this._groupScale = null;
 
     this._paintGroupNext = this;
     this._paintGroupPrev = this;
@@ -361,6 +364,8 @@ parsegraph_Node.prototype.positionWasChanged = function()
 {
     this._absoluteXPos = null;
     this._absoluteYPos = null;
+    this._groupXPos = null;
+    this._groupYPos = null;
 };
 
 parsegraph_Node.prototype.absoluteX = function()
@@ -379,6 +384,82 @@ parsegraph_Node.prototype.absoluteScale = function()
 {
     this.commitAbsolutePos();
     return this._absoluteScale;
+};
+
+parsegraph_Node.prototype.commitGroupPos = function()
+{
+    if(this._groupXPos !== null) {
+        // No need for an update, so just return.
+        return;
+    }
+
+    // Retrieve a stack of nodes to determine the group position.
+    var node = this;
+    var nodeList = [];
+    while(!node.localPaintGroup()) {
+        nodeList.push(parsegraph_reverseNodeDirection(node.parentDirection()));
+        node = node.nodeParent();
+    }
+
+    // nodeList contains [directionToThis, directionToParent, ..., directionFromGroupParent];
+    this._groupXPos = 0;
+    this._groupYPos = 0;
+    var parentScale = 1.0;
+    var scale = 1.0;
+    for(var i = nodeList.length - 1; i >= 0; --i) {
+        var directionToChild = nodeList[i];
+
+        if(i !== nodeList.length - 1) {
+            this._groupXPos += node.x() * parentScale;
+            this._groupYPos += node.y() * parentScale;
+        }
+
+        parentScale = scale;
+        scale *= node.scaleAt(directionToChild);
+        node = node.nodeAt(directionToChild);
+    }
+    this._groupScale = scale;
+
+    if(this.localPaintGroup()) {
+        this.localPaintGroup().setOrigin(this.absoluteX(), this.absoluteY());
+        this.localPaintGroup().setScale(this.absoluteScale());
+    }
+    else {
+        this._groupXPos += node.x() * parentScale;
+        this._groupYPos += node.y() * parentScale;
+    }
+    /*
+    var exp = this.absoluteX();
+    var act = this.findPaintGroup().scale() * this.groupX() + this.findPaintGroup()._worldX;
+    if(exp != act) {
+        console.log("Local=(" + node.x() + ", " + node.y() + ")");
+        throw new Error("X mismatch: abs=" + exp + " versus group=" + act + " diff=" + (act - exp));
+    }
+    var exp = this.absoluteY();
+    var act = this.findPaintGroup().scale() * this.groupY() + this.findPaintGroup()._worldY;
+    if(exp != act) {
+        console.log("Local=(" + node.x() + ", " + node.y() + ")");
+        throw new Error("Y mismatch: " + act + " versus " + exp);
+    }
+    */
+};
+
+parsegraph_Node.prototype.groupX = function()
+{
+    this.commitGroupPos();
+    return this._groupXPos;
+};
+
+parsegraph_Node.prototype.groupY = function()
+{
+    this.commitGroupPos();
+    return this._groupYPos;
+};
+
+parsegraph_Node.prototype.groupScale = function()
+{
+    this.commitGroupPos();
+    return this._groupScale;
 };
 
 parsegraph_Node.prototype.setPosAt = function(inDirection, x, y)
@@ -1606,6 +1687,11 @@ parsegraph_Node.prototype.absoluteSize = function(bodySize)
     return this.size(bodySize).scaled(this.absoluteScale());
 };
 
+parsegraph_Node.prototype.groupSize = function(bodySize)
+{
+    return this.size(bodySize).scaled(this.groupScale());
+};
+
 parsegraph_Node.prototype.assignParent = function(fromNode, parentDirection)
 {
     if(arguments.length === 0 || !fromNode) {
@@ -1947,6 +2033,8 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
     // Clear the absolute point values, to be safe.
     this._absoluteXPos = null;
     this._absoluteYPos = null;
+    this._groupXPos = null;
+    this._groupYPos = null;
 
     var initExtent = function(
         inDirection,

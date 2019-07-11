@@ -38,6 +38,7 @@ parsegraph_PaintGroup.prototype.clear = function()
 
 parsegraph_PaintGroup.prototype.setOrigin = function(x, y)
 {
+    //console.log("PaintGroup origin is " + x + ", " + y);
     this._worldX = x;
     this._worldY = y;
 
@@ -234,9 +235,12 @@ parsegraph_PaintGroup.prototype.render = function(world, camera)
     }
 
     // Do not render paint groups that cannot be seen.
-    var s = this._painter.bounds();
+    var s = this._painter.bounds().clone();
+    //console.log(this._worldX, this._worldY, s);
+    s.scale(this.scale());
+    s.translate(this._worldX, this._worldY);
     if(camera && !camera.contains(s)) {
-        //console.log(this);
+        //console.log(this._id);
         return;
     }
 

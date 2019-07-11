@@ -164,6 +164,25 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
     }
 });
 
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", function() {
+    // Spawn the graph.
+    var caret = new parsegraph_Caret(parsegraph_BUD);
+    caret.node().setPaintGroup(new parsegraph_PaintGroup(caret.node()));
+    caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    caret.crease();
+    caret.shrink();
+    caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    //caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    caret.moveToRoot();
+    caret.node().commitLayoutIteratively();
+    console.log("Group X of root: " + caret.node().groupX());
+    console.log("Group X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).groupX());
+    console.log("Abs X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
+    console.log("Abs X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
+    console.log("Group X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    //console.log(caret.node().nodeAt(parsegraph_DOWNWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+});
+
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);

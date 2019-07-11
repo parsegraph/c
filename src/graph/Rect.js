@@ -33,6 +33,40 @@ parsegraph_Rect.prototype.setY = function(y)
     this._y = y;
 };
 
+parsegraph_Rect.prototype.clone = function()
+{
+    return new parsegraph_Rect(this.x(), this.y(), this.width(), this.height());
+};
+
+parsegraph_Rect.prototype.copy = function(dest)
+{
+    if(!dest) {
+        return this.clone();
+    }
+    dest.setX(this.x());
+    dest.setY(this.y());
+    dest.setWidth(this.width());
+    dest.setHeight(this.height());
+    return dest;
+};
+
+parsegraph_Rect.prototype.translate = function(x, y)
+{
+    this.setX(this.x() + x);
+    this.setY(this.y() + y);
+};
+
+parsegraph_Rect.prototype.scale = function(sx, sy)
+{
+    if(arguments.length < 2) {
+        sy = sx;
+    }
+    this.setX(this.x() * sx);
+    this.setY(this.y() * sy);
+    this.setWidth(this.width() * sx);
+    this.setHeight(this.height() * sy);
+};
+
 parsegraph_Rect.prototype.height = function()
 {
     return this._height;
