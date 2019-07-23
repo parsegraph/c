@@ -366,6 +366,9 @@ parsegraph_Node.prototype.positionWasChanged = function()
     this._absoluteYPos = null;
     this._groupXPos = null;
     this._groupYPos = null;
+    this.eachChild(function(node) {
+        node.positionWasChanged();
+    }, this);
 };
 
 parsegraph_Node.prototype.absoluteX = function()
