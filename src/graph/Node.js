@@ -3006,6 +3006,9 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 {
     //console.log("layoutWasChanged(" + (changeDirection != null ? parsegraph_nameNodeDirection(changeDirection) : "null") +")")
     // Disallow null change directions.
+    if(arguments.length === 0) {
+        changeDirection = parsegraph_INWARD;
+    }
     if(changeDirection == parsegraph_NULL_NODE_DIRECTION) {
         throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
     }
