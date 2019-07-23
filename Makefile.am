@@ -163,7 +163,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/showUlam.js \
 	src/apps/showSpiral.js \
 	src/apps/showCalendar.js \
-	src/apps/buildPrimesDemo.js \
+	src/apps/primes.js \
 	src/LinearWidget.js \
 	src/apps/buildTextDemo.js
 

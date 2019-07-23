@@ -70,10 +70,3 @@ parsegraph_PrimesModulo.prototype.value = function()
 {
     return this.frequency;
 };
-
-
-function buildPrimesDemo(COUNT)
-{
-    var widget = new parsegraph_PrimesWidget();
-    return widget.root();
-}
