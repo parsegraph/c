@@ -164,6 +164,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/showSpiral.js \
 	src/apps/showCalendar.js \
 	src/apps/primes.js \
+	src/apps/crease.js \
 	src/LinearWidget.js \
 	src/apps/buildTextDemo.js
 

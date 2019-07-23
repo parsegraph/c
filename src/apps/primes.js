@@ -1,11 +1,11 @@
-function parsegraph_PrimesWidget(graph)
+function parsegraph_PrimesWidget(app)
 {
     this.knownPrimes = [];
     this.position = 2;
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
-    this.caret.setGlyphAtlas(graph.glyphAtlas());
-    this.caret.label("1", graph.glyphAtlas());
+    this.caret.setGlyphAtlas(app.glyphAtlas());
+    this.caret.label("1");
 }
 
 parsegraph_PrimesWidget.prototype.step = function(steps)
