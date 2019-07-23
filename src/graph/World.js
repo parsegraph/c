@@ -114,7 +114,7 @@ parsegraph_World.prototype.mouseOver = function(x, y)
 {
     if(!this._camera) {
         // Never rendered.
-        return;
+        return 0;
     }
     //console.log("mouseover: " + x + ", " + y);
     var mouseInWorld = matrixTransform2D(
@@ -129,7 +129,7 @@ parsegraph_World.prototype.mouseOver = function(x, y)
         // The node under cursor is already the node under cursor, so don't
         // do anything.
         //console.log("Node was the same");
-        return false;
+        return 1;
     }
 
     if(this._nodeUnderCursor && this._nodeUnderCursor !== selectedNode) {
@@ -142,7 +142,7 @@ parsegraph_World.prototype.mouseOver = function(x, y)
     if(!selectedNode) {
         // No node was actually found.
         //console.log("No node actually found.");
-        return false;
+        return 0;
     }
 
     if(selectedNode.type() == parsegraph_SLIDER) {
@@ -155,8 +155,11 @@ parsegraph_World.prototype.mouseOver = function(x, y)
         selectedNode.setSelected(true);
         this.scheduleRepaint();
     }
+    else {
+        return 0;
+    }
 
-    return true;
+    return 2;
 };
 
 parsegraph_World.prototype.boundingRect = function(outRect)

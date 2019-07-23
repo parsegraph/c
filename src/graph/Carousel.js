@@ -215,7 +215,7 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
 parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
 {
     if(!this.isCarouselShown()) {
-        return false;
+        return 0;
     }
 
     var mouseInWorld = matrixTransform2D(
@@ -246,7 +246,7 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
                 this._fanPainter.setSelectionSize(angleSpan);
             }
             this.scheduleCarouselRepaint();
-            return true;
+            return 2;
         }
     }
     if(this._fanPainter) {
@@ -255,7 +255,7 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
         this._selectedCarouselPlot = null;
         this._selectedCarouselPlotIndex = null;
         this.scheduleCarouselRepaint();
-        return true;
+        return 0;
     }
 };
 

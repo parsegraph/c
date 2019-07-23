@@ -447,7 +447,19 @@ function parsegraph_Input(graph, camera)
             lastMouseY = event.clientY;
             this.mouseChanged();
 
-            this.Dispatch(graph.carousel().mouseOverCarousel(event.clientX, event.clientY), "mousemove carousel", false);
+            var overClickable = graph.carousel().mouseOverCarousel(event.clientX, event.clientY)
+            switch(overClickable) {
+            case 2:
+                graph.canvas().style.cursor = "pointer";
+                break;
+            case 1:
+                break;
+            case 0:
+                graph.canvas().style.cursor = "auto";
+                break;
+            }
+
+            this.Dispatch(overClickable > 0, "mousemove carousel", false);
             return;
         }
 
@@ -457,7 +469,18 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
-        this.Dispatch(graph.world().mouseOver(event.clientX, event.clientY), "mousemove world", false);
+        var overClickable = graph.world().mouseOver(event.clientX, event.clientY);
+        switch(overClickable) {
+        case 2:
+            graph.canvas().style.cursor = "pointer";
+            break;
+        case 1:
+            break;
+        case 0:
+            graph.canvas().style.cursor = "auto";
+            break;
+        }
+        this.Dispatch(overClickable > 0, "mousemove world", false);
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
         this.mouseChanged();
