@@ -124,7 +124,7 @@ parsegraph_Caret.prototype.crease = function(inDirection)
 
     // Create a new paint group for the connection.
     if(!node.localPaintGroup()) {
-        node.setPaintGroup(new parsegraph_PaintGroup(node));
+        node.setPaintGroup(true);
     }
 
     return node.localPaintGroup();
@@ -144,7 +144,7 @@ parsegraph_Caret.prototype.uncrease = function(inDirection)
     }
 
     // Remove the paint group.
-    node.setPaintGroup(null);
+    node.setPaintGroup(false);
 };
 
 parsegraph_Caret.prototype.isCreased = function(inDirection)

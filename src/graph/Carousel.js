@@ -96,9 +96,9 @@ parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg, 
         node = node.root();
     }
     if(!node.localPaintGroup()) {
-        node.setPaintGroup(new parsegraph_PaintGroup(node));
+        node.setPaintGroup(true);
     }
-    this._carouselPlots.push(node);
+    this._carouselPlots.push([node, NaN, NaN, NaN]);
     //console.log("Added to carousel");
 };
 
@@ -121,7 +121,7 @@ parsegraph_Carousel.prototype.removeFromCarousel = function(node)
         node = node.root();
     }
     for(var i in this._carouselPlots) {
-        if(this._carouselPlots[i] === node) {
+        if(this._carouselPlots[i][0] === node) {
             //console.log("removed from carousel");
             var removed = this._carouselPlots.splice(i, 1);
             this._carouselCallbacks.splice(i, 1);
@@ -197,7 +197,6 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
     var i = Math.floor(mouseAngle / angleSpan);
 
     // Click was within a carousel caret; invoke the listener.
-    var carouselPlot = this._carouselPlots[i];
     this.hideCarousel();
     try {
         var callback = this._carouselCallbacks[i][0];
@@ -298,16 +297,15 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
     }
 
     var minScale = 1;
-    this._carouselPlots.forEach(function(root, i) {
+    this._carouselPlots.forEach(function(carouselData, i) {
+        var root = carouselData[0];
         var paintGroup = root.localPaintGroup();
         root.commitLayout();
 
         // Set the origin.
         var caretRad = Math.PI + angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
-        paintGroup.setOrigin(
-            2*this._carouselSize * this._showScale * Math.cos(caretRad),
-            2*this._carouselSize * this._showScale * Math.sin(caretRad)
-        );
+        carouselData[1] = 2*this._carouselSize * this._showScale * Math.cos(caretRad);
+        carouselData[2] = 2*this._carouselSize * this._showScale * Math.sin(caretRad);
 
         // Set the scale.
         var commandSize = root.extentSize();
@@ -325,12 +323,12 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
         minScale = Math.min(minScale, this._showScale/Math.max(xShrinkFactor, yShrinkFactor));
     }, this);
 
-    this._carouselPlots.forEach(function(root, i) {
+    this._carouselPlots.forEach(function(carouselData, i) {
         if(i === this._selectedCarouselPlotIndex) {
-            root.localPaintGroup().setScale(1.25*minScale);
+            carouselData[3] = 1.25*minScale;
         }
         else {
-            root.localPaintGroup().setScale(minScale);
+            carouselData[3] = minScale;
         }
     }, this);
 };
@@ -377,12 +375,8 @@ parsegraph_Carousel.prototype.paint = function()
     //console.log("Painting the carousel");
     this.arrangeCarousel();
     for(var i in this._carouselPlots) {
-        var paintGroup = this._carouselPlots[i].localPaintGroup();
-        if(!paintGroup) {
-            throw new Error("Plot no longer has a paint group?!");
-        }
         parsegraph_PAINTING_GLYPH_ATLAS = this.glyphAtlas();
-        var paintCompleted = paintGroup.paint(
+        var paintCompleted = this._carouselPlots[i][0].paint(
             this.gl(),
             this.backgroundColor(),
             this.glyphAtlas(),
@@ -425,11 +419,16 @@ parsegraph_Carousel.prototype.render = function(world)
 
     // Render the carousel if requested.
     for(var i in this._carouselPlots) {
-        var paintGroup = this._carouselPlots[i].localPaintGroup();
-        paintGroup.render(
+        var carouselData = this._carouselPlots[i];
+        var root = carouselData[0];
+        root.render(
             matrixMultiply3x3(
-                makeTranslation3x3(this._carouselCoords[0], this._carouselCoords[1]),
-                world)
+                makeScale3x3(carouselData[3]),
+                matrixMultiply3x3(makeTranslation3x3(
+                    carouselData[1] + this._carouselCoords[0],
+                    carouselData[2] + this._carouselCoords[1]
+                ), world)
+            )
         );
     }
 };

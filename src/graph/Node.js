@@ -1,9 +1,25 @@
+parsegraph_NODES_PAINTED = 0;
+
 parsegraph_Node_COUNT = 0;
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
     this._id = parsegraph_Node_COUNT++;
 
-    this._paintGroup = null;
+    this._dirty = true;
+    this._painter = null;
+
+    // Manipulated by node.
+    this._parentPaintGroup = null;
+    this._childPaintGroups = [];
+
+    this._isPaintGroup = false;
+
+    this._previousPaintState = {
+        i: 0,
+        ordering: [this],
+        commitLayoutFunc: null
+    };
+
     this._keyListener = null;
     this._keyListenerThisArg = null;
     this._clickListener = null;
@@ -278,6 +294,11 @@ parsegraph_Node.prototype.root = function()
     return p;
 };
 
+parsegraph_Node.prototype.toString = function()
+{
+    return "[parsegraph_Node " + this._id + "]";
+};
+
 parsegraph_Node.prototype.x = function()
 {
     if(this.isRoot()) {
@@ -423,28 +444,10 @@ parsegraph_Node.prototype.commitGroupPos = function()
     }
     this._groupScale = scale;
 
-    if(this.localPaintGroup()) {
-        this.localPaintGroup().setOrigin(this.absoluteX(), this.absoluteY());
-        this.localPaintGroup().setScale(this.absoluteScale());
-    }
-    else {
+    if(!this.localPaintGroup()) {
         this._groupXPos += node.x() * parentScale;
         this._groupYPos += node.y() * parentScale;
     }
-    /*
-    var exp = this.absoluteX();
-    var act = this.findPaintGroup().scale() * this.groupX() + this.findPaintGroup()._worldX;
-    if(exp != act) {
-        console.log("Local=(" + node.x() + ", " + node.y() + ")");
-        throw new Error("X mismatch: abs=" + exp + " versus group=" + act + " diff=" + (act - exp));
-    }
-    var exp = this.absoluteY();
-    var act = this.findPaintGroup().scale() * this.groupY() + this.findPaintGroup()._worldY;
-    if(exp != act) {
-        console.log("Local=(" + node.x() + ", " + node.y() + ")");
-        throw new Error("Y mismatch: " + act + " versus " + exp);
-    }
-    */
 };
 
 parsegraph_Node.prototype.groupX = function()
@@ -473,23 +476,30 @@ parsegraph_Node.prototype.setPosAt = function(inDirection, x, y)
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 {
-    if(!this._paintGroup) {
-        this._paintGroup = paintGroup;
+    if(!this._isPaintGroup) {
+        this._isPaintGroup = paintGroup;
 
         // Parent this paint group to this node, since it now has a paint group.
         if(paintGroup && !this.isRoot()) {
             var parentsPaintGroup = this.parentNode().findPaintGroup();
             if(parentsPaintGroup) {
-                parentsPaintGroup._childPaintGroups.push(paintGroup);
-                paintGroup.assignParent(parentsPaintGroup);
+                //console.log("Found parent " + parentsPaintGroup);
+                parentsPaintGroup._childPaintGroups.push(this);
+                this.assignPaintGroupParent(parentsPaintGroup);
             }
+            else {
+                //console.log("Parent has no paint group");
+            }
+        }
+        else if(this.isRoot()) {
+            //console.log("Root has no paint group");
         }
 
         // Find the child paint groups and add them to this paint group.
         parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
-            paintGroup._childPaintGroups.push(childPaintGroup);
-            childPaintGroup.assignParent(paintGroup);
-        });
+            this._childPaintGroups.push(childPaintGroup);
+            childPaintGroup.assignPaintGroupParent(this);
+        }, this);
 
         this.layoutChanged();
         return;
@@ -502,14 +512,14 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         var parentsPaintGroup = this.parentNode().findPaintGroup();
         for(var i in parentsPaintGroup._childPaintGroups) {
             var childGroup = parentsPaintGroup._childPaintGroups[i];
-            if(childGroup !== this._paintGroup) {
+            if(childGroup !== this) {
                 // Some other child that's not us, so just continue.
                 continue;
             }
 
             // This child is our current paint group, so replace it with the new.
             if(paintGroup) {
-                parentsPaintGroup._childPaintGroups[i] = paintGroup;
+                parentsPaintGroup._childPaintGroups[i] = this;
             }
             else {
                 // The new group is no group.
@@ -520,36 +530,68 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 
     // Copy the current paint group's children, if present.
     if(paintGroup) {
-        var childGroups = paintGroup._childPaintGroups;
+        var childGroups = this._childPaintGroups;
         childGroups.push.apply(childGroups, this._paintGroup._childPaintGroups);
     }
     else {
         parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
-            paintGroup.addChild(childPaintGroup);
-        });
+            this._childPaintGroups.push(childPaintGroup);
+        }, this);
     }
 
-    this._paintGroup.clear();
-    this._paintGroup = paintGroup;
+    this.clearPaintGroups();
+    this._isPaintGroup = paintGroup;
     this.layoutChanged();
 }
+
+parsegraph_Node.prototype.clearPaintGroups = function()
+{
+    this._childPaintGroups = [];
+};
+
+parsegraph_Node.prototype.assignPaintGroupParent = function(parentGroup)
+{
+    this._parentPaintGroup = parentGroup;
+};
+
+parsegraph_Node.prototype.markDirty = function()
+{
+    this._dirty = true;
+    this._previousPaintState.commitLayoutFunc = null;
+    this._previousPaintState.i = 0;
+    this._previousPaintState.ordering = [this];
+
+    //this._childPaintGroups.forEach(function(pg) {
+        //pg.markDirty();
+    //}, this);
+};
+
+parsegraph_Node.prototype.isDirty = function()
+{
+    return this._dirty;
+};
+
+parsegraph_Node.prototype.painter = function()
+{
+    return this._painter;
+};
 
 parsegraph_Node.prototype.findPaintGroup = function()
 {
     var node = this;
     while(!node.isRoot()) {
-        if(node._paintGroup && node._paintGroup.isEnabled()) {
-            return node._paintGroup;
+        if(node._isPaintGroup) {
+            return node;
         }
         node = node.parentNode();
     }
 
-    return node._paintGroup;
+    return node;
 };
 
 parsegraph_Node.prototype.localPaintGroup = function()
 {
-    return this._paintGroup;
+    return this._isPaintGroup;
 };
 
 parsegraph_Node.prototype.graph = function()
@@ -887,7 +929,7 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     var layoutBefore = this.findEarlierLayoutSibling(inDirection);
 
     var nodeTail = node;
-    //console.log(this._id + ".connectNode(" + parsegraph_nameNodeDirection(inDirection) + ", " + node._id + ") layoutBefore=" + (layoutBefore ? layoutBefore._id : "null") + " layoutAfter=" + (layoutAfter ? layoutAfter._id : "null") + " nodeHead=" + nodeHead._id);
+    //console.log(this + ".connectNode(" + parsegraph_nameNodeDirection(inDirection) + ", " + node + ") layoutBefore=" + layoutBefore + " layoutAfter=" + layoutAfter + " nodeHead=" + nodeHead);
 
     if(layoutBefore) {
         parsegraph_connectLayout(layoutBefore, nodeHead);
@@ -909,6 +951,16 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
     // Allow alignments to be set before children are spawned.
     if(neighbor.alignmentMode == parsegraph_NULL_NODE_ALIGNMENT) {
         neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
+    }
+
+    if(!node._isPaintGroup && node._childPaintGroups.length > 0) {
+        var pg = this.findPaintGroup();
+        pg._childPaintGroups.push.apply(pg._childPaintGroups, node._childPaintGroups);
+        for(var i=0; i < node._childPaintGroups.length; ++i) {
+            var cpg = node._childPaintGroups[i];
+            cpg.assignPaintGroupParent(pg);
+        }
+        node.clearPaintGroups();
     }
 
     this.layoutWasChanged(inDirection);
@@ -3202,4 +3254,206 @@ function parsegraph_labeledBlock(label, glyphAtlas)
     var node = new parsegraph_Node(parsegraph_BLOCK);
     node.setLabel(label, glyphAtlas);
     return node;
+};
+
+parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders, timeout)
+{
+    if(!this._isPaintGroup) {
+        return;
+    }
+    if(!this.isDirty()) {
+        //console.log(this + " is not dirty");
+        return true;
+    }
+    if(!gl) {
+        throw new Error("A WebGL context must be provided.");
+    }
+
+    var t = new Date().getTime();
+    var pastTime = function() {
+        return timeout !== undefined && (new Date().getTime() - t > timeout);
+    };
+
+    // Load saved state.
+    var savedState = this._previousPaintState;
+    var i = savedState.i;
+    var ordering = savedState.ordering;
+
+    var cont;
+    if(savedState.commitLayoutFunc) {
+        cont = savedState.commitLayoutFunc();
+    }
+    else if(i === 0) {
+        cont = this.commitLayoutIteratively(timeout);
+    }
+
+    if(cont) {
+        // Timed out during commitLayout
+        savedState.commitLayoutFunc = cont;
+        return false;
+    }
+    else {
+        // Committed all layout
+        savedState.commitLayoutFunc = null;
+        savedState.skippedAny = false;
+
+    }
+
+    // Continue painting.
+    while(i < ordering.length) {
+        if(pastTime()) {
+            savedState.i = i;
+            this._dirty = true;
+            return false;
+        }
+
+        var paintGroup = ordering[i];
+        //console.log("Painting " + paintGroup + " with " + paintGroup._childPaintGroups.length + " children");
+        if(paintGroup.isDirty()) {
+            // Paint and render nodes marked for the current group.
+            if(!paintGroup._painter) {
+                paintGroup._painter = new parsegraph_NodePainter(gl, glyphAtlas, shaders);
+                paintGroup._painter.setBackground(backgroundColor);
+            }
+            var counts = {};
+            parsegraph_foreachPaintGroupNodes(paintGroup, function(node) {
+                //console.log("Counting node " + node);
+                paintGroup._painter.countNode(node, counts);
+            }, paintGroup);
+            //console.log("Glyphs: " + counts.numGlyphs);
+            paintGroup._painter.initBlockBuffer(counts);
+            parsegraph_foreachPaintGroupNodes(paintGroup, function(node) {
+                //console.log("Drawing node " + node);
+                paintGroup._painter.drawNode(node, shaders);
+                ++parsegraph_NODES_PAINTED;
+            }, paintGroup);
+        }
+        paintGroup._dirty = false;
+        ordering.push.apply(ordering, paintGroup._childPaintGroups);
+        ++i;
+    }
+
+    savedState.i = 0;
+    savedState.ordering = [];
+    this._dirty = false;
+    //console.log("Completed node painting");
+    return this._dirty;
+};
+
+parsegraph_Node.prototype.renderIteratively = function(world, camera)
+{
+    //console.log("Rendering iteratively");
+    this.traverseBreadth(function(paintGroup) {
+        //console.log("Rendering node " + paintGroup);
+        paintGroup.render(world, camera);
+    }, this);
+};
+
+parsegraph_Node.prototype.traverseBreadth = function(callback, callbackThisArg)
+{
+    var ordering = [this];
+
+    // Build the node list.
+    for(var i = 0; i < ordering.length; ++i) {
+        var paintGroup = ordering[i];
+        callback.call(callbackThisArg, paintGroup, i);
+        ordering.push.apply(ordering, paintGroup._childPaintGroups);
+    }
+    //console.log("Traversed " + ordering.length + " paint groups.");
+};
+
+parsegraph_Node.prototype.render = function(world, camera)
+{
+    if(!this.localPaintGroup()) {
+        return;
+    }
+    if(!this._painter) {
+        return;
+    }
+
+    // Do not render paint groups that cannot be seen.
+    var s = this._painter.bounds().clone();
+    s.scale(this.scale());
+    s.translate(this.absoluteX(), this.absoluteY());
+    if(camera && !camera.contains(s)) {
+        //console.log("Out of bounds: " + this);
+        return;
+    }
+
+    //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
+    //console.log("Rendering " + this, this._painter.bounds());
+
+    this._painter.render(
+        matrixMultiply3x3(
+            makeScale3x3(this.absoluteScale()),
+            matrixMultiply3x3(makeTranslation3x3(this.absoluteX(), this.absoluteY()), world)
+        ),
+        this.absoluteScale() * (camera ? camera.scale() : 1)
+    );
+};
+
+function parsegraph_foreachPaintGroupNodes(root, callback, callbackThisArg)
+{
+    // TODO Make this overwrite the current node, since it's no longer needed, and see
+    // if this increases performance.
+    var ordering = [root];
+    var addNode = function(node, direction) {
+        // Do not add the parent.
+        if(!node.isRoot() && node.parentDirection() == direction) {
+            return;
+        }
+
+        // Add the node to the ordering if it exists.
+        if(node.hasNode(direction)) {
+            var child = node.nodeAt(direction);
+
+            // Do not add nodes foreign to the given group.
+            if(!child.localPaintGroup()) {
+                ordering.push(child);
+            }
+        }
+    };
+
+    for(var i = 0; i < ordering.length; ++i) {
+        var node = ordering[i];
+        addNode(node, parsegraph_INWARD);
+        addNode(node, parsegraph_DOWNWARD);
+        addNode(node, parsegraph_UPWARD);
+        addNode(node, parsegraph_BACKWARD);
+        addNode(node, parsegraph_FORWARD);
+        callback.call(callbackThisArg, node);
+    }
+};
+
+function parsegraph_findChildPaintGroups(root, callback, callbackThisArg)
+{
+    // TODO Make this overwrite the current node, since it's no longer needed, and see
+    // if this increases performance.
+    var ordering = [root];
+    var addNode = function(node, direction) {
+        // Do not add the parent.
+        if(!node.isRoot() && node.parentDirection() == direction) {
+            return;
+        }
+
+        // Add the node to the ordering if it exists.
+        if(node.hasNode(direction)) {
+            var child = node.nodeAt(direction);
+            if(child.localPaintGroup()) {
+                callback.call(callbackThisArg, child);
+            }
+            else {
+                ordering.push(child);
+            }
+        }
+    };
+
+    for(var i = 0; i < ordering.length; ++i) {
+        var node = ordering[i];
+        addNode(node, parsegraph_INWARD);
+        addNode(node, parsegraph_DOWNWARD);
+        addNode(node, parsegraph_UPWARD);
+        addNode(node, parsegraph_BACKWARD);
+        addNode(node, parsegraph_FORWARD);
+    }
 };

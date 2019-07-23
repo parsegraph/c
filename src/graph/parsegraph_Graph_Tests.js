@@ -167,7 +167,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.node().setPaintGroup(new parsegraph_PaintGroup(caret.node()));
+    caret.node().setPaintGroup(true);
     caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     caret.crease();
     caret.shrink();

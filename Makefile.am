@@ -82,7 +82,6 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Status.js \
 	src/graph/initialize.js \
 	src/graph/log.js \
-	src/graph/PaintGroup.js \
 	src/graph/Carousel.js \
 	src/graph/CameraBox.js \
 	src/graph/Graph.js \

@@ -39,9 +39,8 @@ parsegraph_World.prototype.setCamera = function(camera)
  * rendering. The caller manages the position.
  *
  * plot(node)
- * plot(root, worldX, worldY, userScale)
  */
-parsegraph_World.prototype.plot = function(node, worldX, worldY, userScale)
+parsegraph_World.prototype.plot = function(node)
 {
     if(!node) {
         throw new Error("Node must not be null");
@@ -51,11 +50,7 @@ parsegraph_World.prototype.plot = function(node, worldX, worldY, userScale)
         node = node.root();
     }
     if(!node.localPaintGroup()) {
-        node.setPaintGroup(new parsegraph_PaintGroup(node));
-    }
-    if(arguments.length > 1) {
-        node.localPaintGroup().setOrigin(worldX, worldY);
-        node.localPaintGroup().setScale(userScale);
+        node.setPaintGroup(true);
     }
     this._worldRoots.push(node);
 };
@@ -66,7 +61,7 @@ parsegraph_World_Tests.addTest("parsegraph_World.plot", function() {
     var f = 0;
     try {
         f = 1;
-        w.plot(null, 0, 0, 1);
+        w.plot(null);
         f = 2;
     }
     catch(ex) {
@@ -83,7 +78,7 @@ parsegraph_World_Tests.addTest("world.plot with caret", function() {
     var f = 0;
     try {
         f = 1;
-        w.plot(car, 0, 0, 1);
+        w.plot(car);
         f = 2;
     }
     catch(ex) {
@@ -173,8 +168,8 @@ parsegraph_World.prototype.boundingRect = function(outRect)
         plot.commitLayoutIteratively();
 
         // Get plot extent data.
-        var nx = plot.localPaintGroup()._worldX;
-        var ny = plot.localPaintGroup()._worldY;
+        var nx = plot.absoluteX();
+        var ny = plot.absoluteY();
 
         var boundingValues = [0, 0, 0];
         plot.extentsAt(parsegraph_FORWARD).boundingValues(boundingValues);
@@ -315,12 +310,11 @@ parsegraph_World.prototype.paint = function(timeout)
                 return false;
             }
             var plot = this._worldRoots[i];
-            var paintGroup = plot.localPaintGroup();
-            if(!paintGroup) {
+            if(!plot.localPaintGroup()) {
                 throw new Error("World root must have a paint group");
             }
             parsegraph_PAINTING_GLYPH_ATLAS = this._graph.glyphAtlas();
-            var paintCompleted = paintGroup.paint(
+            var paintCompleted = plot.paint(
                 this._graph.gl(),
                 this._graph.surface().backgroundColor(),
                 this._graph.glyphAtlas(),
@@ -341,7 +335,7 @@ parsegraph_World.prototype.paint = function(timeout)
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
         var paintDuration = (new Date().getTime() - parsegraph_PAINT_START.getTime());
-        console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
         parsegraph_NODES_PAINTED = 0;
         parsegraph_PAINT_START = null;
     }
@@ -352,11 +346,6 @@ parsegraph_World.prototype.paint = function(timeout)
 parsegraph_World.prototype.render = function(world)
 {
     for(var i in this._worldRoots) {
-        var plot = this._worldRoots[i];
-        var paintGroup = plot.localPaintGroup();
-        if(!paintGroup) {
-            throw new Error("Plot no longer has a paint group?!");
-        }
-        paintGroup.renderIteratively(world, this.camera());
+        this._worldRoots[i].renderIteratively(world, this.camera());
     }
 };
