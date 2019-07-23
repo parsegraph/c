@@ -491,6 +491,7 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
             childPaintGroup.assignParent(paintGroup);
         });
 
+        this.layoutChanged();
         return;
     }
 
@@ -530,6 +531,7 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 
     this._paintGroup.clear();
     this._paintGroup = paintGroup;
+    this.layoutChanged();
 }
 
 parsegraph_Node.prototype.findPaintGroup = function()
