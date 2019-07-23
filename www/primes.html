@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var MAX_PRIME = 1024;
         //console.log("Processing timeout: " + primes.position + " " + MAX_PRIME)
 
-        if(parsegraph_elapsed(lastPrime) > 100) {
+        if(!primes.isPaused() && parsegraph_elapsed(lastPrime) > 100) {
             primes.step(1);
             sga.scheduleRepaint();
             lastPrime = new Date();

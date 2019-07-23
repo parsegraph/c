@@ -6,7 +6,18 @@ function parsegraph_PrimesWidget(app)
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
     this.caret.setGlyphAtlas(app.glyphAtlas());
     this.caret.label("1");
+
+    var carousel = new parsegraph_ActionCarousel(app.graph());
+    carousel.addAction("Pause", function() {
+        this._paused = !this._paused;
+    }, this);
+    carousel.install(this.caret.node());
 }
+
+parsegraph_PrimesWidget.prototype.isPaused = function()
+{
+    return this._paused;
+};
 
 parsegraph_PrimesWidget.prototype.step = function(steps)
 {
