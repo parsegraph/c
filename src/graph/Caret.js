@@ -130,6 +130,40 @@ parsegraph_Caret.prototype.crease = function(inDirection)
     return node.localPaintGroup();
 };
 
+parsegraph_Caret.prototype.uncrease = function(inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+
+    var node;
+    if(arguments.length === 0) {
+        node = this.node();
+    }
+    else {
+        node = this.node().nodeAt(inDirection);
+    }
+
+    // Remove the paint group.
+    node.setPaintGroup(null);
+};
+
+parsegraph_Caret.prototype.isCreased = function(inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+
+    var node;
+    if(arguments.length === 0) {
+        node = this.node();
+    }
+    else {
+        node = this.node().nodeAt(inDirection);
+    }
+
+    return !!node.localPaintGroup();
+};
+parsegraph_Caret.prototype.creased = parsegraph_Caret.prototype.isCreased;
+
 parsegraph_Caret.prototype.erase = function(inDirection)
 {
     inDirection = parsegraph_readNodeDirection(inDirection);
