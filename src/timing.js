@@ -87,6 +87,12 @@ parsegraph_AnimationTimer.prototype.setListener = function(listener, thisArg)
     this.listener = [listener, thisArg];
 };
 
+parsegraph_AnimationTimer.prototype.scheduled = function()
+{
+    return !!this.timerId;
+};
+parsegraph_AnimationTimer.prototype.isScheduled = parsegraph_AnimationTimer.prototype.scheduled;
+
 parsegraph_AnimationTimer.prototype.cancel = function()
 {
     if(!this.timerId) {
@@ -146,6 +152,12 @@ parsegraph_TimeoutTimer.prototype.setListener = function(listener, thisArg)
     this.listener = [listener, thisArg];
 };
 
+parsegraph_TimeoutTimer.prototype.scheduled = function()
+{
+    return !!this.timerId;
+};
+parsegraph_TimeoutTimer.prototype.isScheduled = parsegraph_TimeoutTimer.prototype.scheduled;
+
 parsegraph_TimeoutTimer.prototype.cancel = function()
 {
     if(this.timerId) {
@@ -195,6 +207,12 @@ parsegraph_IntervalTimer.prototype.schedule = function()
 
     this.timerId = window.setInterval(this.fire, this.delay);
 };
+
+parsegraph_IntervalTimer.prototype.scheduled = function()
+{
+    return !!this.timerId;
+};
+parsegraph_IntervalTimer.prototype.isScheduled = parsegraph_IntervalTimer.prototype.scheduled;
 
 parsegraph_IntervalTimer.prototype.setListener = function(listener, thisArg)
 {
