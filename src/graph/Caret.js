@@ -367,6 +367,8 @@ parsegraph_Caret.prototype.label = function(/* ... */)
 {
     var node, text, glyphAtlas;
     switch(arguments.length) {
+    case 0:
+        return this.node().label();
     case 1:
         node = this.node();
         text = arguments[0];
