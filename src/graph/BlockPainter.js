@@ -339,9 +339,8 @@ function parsegraph_BlockPainter(gl, shaders)
 
     // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
     this._blockBuffer = null;
-    this._numBlocks = null;
-    this._numFaces = 0;
-    this._numVertices = 0;
+    this._blockBufferNumVertices = null;
+    this._blockBufferVertexIndex = 0;
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -372,7 +371,10 @@ function parsegraph_BlockPainter(gl, shaders)
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
     this._stride = 60;
-    this._itemBuffer = new DataView(new ArrayBuffer(this._stride));
+    this._vertexBuffer = new Float32Array(this._stride / 4);
+    this._dataBufferVertexIndex = 0;
+    this._dataBufferNumVertices = 6*16;
+    this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._stride/4);
 };
 
 parsegraph_BlockPainter.prototype.bounds = function()
@@ -402,10 +404,10 @@ parsegraph_BlockPainter.prototype.setBackgroundColor = function(backgroundColor)
 
 parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
 {
-    if(this._numBlocks === numBlocks) {
+    if(this._blockBufferNumVertices/6 === numBlocks) {
         // Same number of blocks, so just reset the counters and overwrite.
-        this._numVertices = 0;
-        this._numFaces = 0;
+        this._blockBufferVertexIndex = 0;
+        this._dataBufferVertexIndex = 0;
         return;
     }
     if(this._blockBuffer) {
@@ -415,7 +417,7 @@ parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
     this._blockBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this._stride*6*numBlocks, gl.STATIC_DRAW);
-    this._numBlocks = numBlocks;
+    this._blockBufferNumVertices = numBlocks*6;
 };
 
 parsegraph_BlockPainter.prototype.clear = function()
@@ -426,19 +428,52 @@ parsegraph_BlockPainter.prototype.clear = function()
     this._gl.deleteBuffer(this._blockBuffer);
     this._blockBuffer = null;
     this._bounds = null;
-    this._numBlocks = null;
-    this._numFaces = 0;
-    this._numVertices = 0;
+    this._blockBufferNumVertices = null;
+    this._dataBufferVertexIndex = 0;
+    this._blockBufferVertexIndex = 0;
+};
+
+parsegraph_BlockPainter.prototype.writeVertex = function()
+{
+    var pos = this._dataBufferVertexIndex++ * this._stride/4;
+    this._dataBuffer.set(this._vertexBuffer, pos);
+    if(this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
+        this.flush();
+    }
+};
+
+parsegraph_BlockPainter.prototype.flush = function()
+{
+    if(this._dataBufferVertexIndex === 0) {
+        return;
+    }
+    var gl = this._gl;
+    var stride = this._stride;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
+
+    if(this._dataBufferVertexIndex + this._blockBufferVertexIndex > this._blockBufferNumVertices) {
+        throw new Error("GL buffer of " + this._blockBufferNumVertices + " vertices is full; cannot flush all " + this._dataBufferVertexIndex + " vertices because the GL buffer already has " + this._blockBufferVertexIndex + " vertices.");
+    }
+    if(this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
+        //console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._blockBufferVertexIndex + " of " + this._blockBufferNumVertices + " vertices");
+        gl.bufferSubData(gl.ARRAY_BUFFER, this._blockBufferVertexIndex*stride, this._dataBuffer);
+    }
+    else {
+        //console.log("Partial flush (" + this._blockBufferVertexIndex + "/" + this._blockBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
+        gl.bufferSubData(gl.ARRAY_BUFFER, this._blockBufferVertexIndex*stride, this._dataBuffer.slice(0, this._dataBufferVertexIndex*stride/4));
+    }
+    this._blockBufferVertexIndex += this._dataBufferVertexIndex;
+    this._dataBufferVertexIndex = 0;
 };
 
 parsegraph_BlockPainter.prototype.drawBlock = function(
     cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
 {
-    if(this._numFaces / 2 >= this._numBlocks) {
-        throw new Error("BlockPainter is full and cannot draw any more blocks.");
-    }
     if(!this._blockBuffer) {
         throw new Error("BlockPainter.initBuffer(numBlocks) must be called first.");
+    }
+    if(this._blockBufferVertexIndex >= this._blockBufferNumVertices) {
+        throw new Error("BlockPainter is full and cannot draw any more blocks.");
     }
     if(!this._bounds) {
         this._bounds = new parsegraph_Rect(cx, cy, width, height);
@@ -449,87 +484,82 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
 
     var endian = true;
 
-    var buf = this._itemBuffer;
+    var buf = this._vertexBuffer;
 
     // Append color data.
     var bg = this.backgroundColor();
-    buf.setFloat32(16, bg.r(), endian);
-    buf.setFloat32(20, bg.g(), endian);
-    buf.setFloat32(24, bg.b(), endian);
-    buf.setFloat32(28, bg.a(), endian);
+    buf[4] = bg.r();
+    buf[5] = bg.g();
+    buf[6] = bg.b();
+    buf[7] = bg.a();
 
     // Append border color data.
     var borC = this.borderColor();
-    buf.setFloat32(32, borC.r(), endian);
-    buf.setFloat32(36, borC.g(), endian);
-    buf.setFloat32(40, borC.b(), endian);
-    buf.setFloat32(44, borC.a(), endian);
+    buf[8] = borC.r();
+    buf[9] = borC.g();
+    buf[10] = borC.b();
+    buf[11] = borC.a();
 
     // Append border radius data.
     if(height < width) {
-        buf.setFloat32(48, borderScale * borderRoundedness / height, endian);
-        buf.setFloat32(52, borderScale * borderThickness / height, endian);
+        buf[12] = borderScale * borderRoundedness / height;
+        buf[13] = borderScale * borderThickness / height;
     }
     else {
         // height > width
-        buf.setFloat32(48, borderScale * borderRoundedness / width, endian);
-        buf.setFloat32(52, borderScale * borderThickness / width, endian);
+        buf[12] = borderScale * borderRoundedness / width;
+        buf[13] = borderScale * borderThickness / width;
     }
-    buf.setFloat32(56, height/width, endian);
+    buf[14] = height/width;
 
     var stride = this._stride;
     var gl = this._gl;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
-
     // Append position and texture coordinate data.
-    buf.setFloat32(0, cx - width / 2, endian);
-    buf.setFloat32(4, cy - height / 2, endian);
-    buf.setFloat32(8, 0, endian);
-    buf.setFloat32(12, 0, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+    buf[0] = cx - width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 0;
+    buf[3] = 0;
+    this.writeVertex();
 
-    buf.setFloat32(0, cx + width / 2, endian);
-    buf.setFloat32(4, cy - height / 2, endian);
-    buf.setFloat32(8, 1, endian);
-    buf.setFloat32(12, 0, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+    buf[0] = cx + width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 1;
+    buf[3] = 0;
+    this.writeVertex();
 
-    buf.setFloat32(0, cx + width / 2, endian);
-    buf.setFloat32(4, cy + height / 2, endian);
-    buf.setFloat32(8, 1, endian);
-    buf.setFloat32(12, 1, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+    buf[0] = cx + width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 1;
+    buf[3] = 1;
+    this.writeVertex();
 
-    buf.setFloat32(0, cx - width / 2, endian);
-    buf.setFloat32(4, cy - height / 2, endian);
-    buf.setFloat32(8, 0, endian);
-    buf.setFloat32(12, 0, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+    buf[0] = cx - width / 2;
+    buf[1] = cy - height / 2;
+    buf[2] = 0;
+    buf[3] = 0;
+    this.writeVertex();
 
-    buf.setFloat32(0, cx + width / 2, endian);
-    buf.setFloat32(4, cy + height / 2, endian);
-    buf.setFloat32(8, 1, endian);
-    buf.setFloat32(12, 1, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
+    buf[0] = cx + width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 1;
+    buf[3] = 1;
+    this.writeVertex();
 
-    buf.setFloat32(0, cx - width / 2, endian);
-    buf.setFloat32(4, cy + height / 2, endian);
-    buf.setFloat32(8, 0, endian);
-    buf.setFloat32(12, 1, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, this._numVertices++*stride, buf.buffer);
-
-    //console.log(this._numVertices + " verts");
-    this._numFaces += 2;
+    buf[0] = cx - width / 2;
+    buf[1] = cy + height / 2;
+    buf[2] = 0;
+    buf[3] = 1;
+    this.writeVertex();
 };
 
 parsegraph_BlockPainter.prototype.render = function(world)
 {
-    if(!this._numFaces) {
+    this.flush();
+    if(this._blockBufferVertexIndex === 0) {
         return;
     }
     var gl = this._gl;
-    //console.log("Rendering " + this._numVertices + " vertices");
 
     // Render blocks.
     gl.useProgram(this._blockProgram);
@@ -564,7 +594,7 @@ parsegraph_BlockPainter.prototype.render = function(world)
     gl.vertexAttribPointer(this.a_borderThickness,   1, gl.FLOAT, false, stride, 52);
     gl.vertexAttribPointer(this.a_aspectRatio,       1, gl.FLOAT, false, stride, 56);
 
-    gl.drawArrays(gl.TRIANGLES, 0, this._numVertices);
+    gl.drawArrays(gl.TRIANGLES, 0, this._blockBufferVertexIndex);
 
     gl.disableVertexAttribArray(this.a_position);
     gl.disableVertexAttribArray(this.a_texCoord);
