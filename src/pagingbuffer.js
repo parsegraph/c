@@ -117,6 +117,7 @@ function parsegraph_PagingBuffer(gl, program)
 
     // Contains buffer data for each page.
     this._pages = [];
+    this._currentPage = -1;
 
     this._gl = gl;
     this._program = program;
@@ -143,6 +144,12 @@ parsegraph_PagingBuffer.prototype.isEmpty = function()
 
 parsegraph_PagingBuffer.prototype.addPage = function(renderFunc, renderFuncThisArg)
 {
+    ++this._currentPage;
+
+    if(this._pages.length < this._currentPage) {
+        return;
+    }
+
     // Create a new page.
     var page = new parsegraph_BufferPage(this, renderFunc, renderFuncThisArg);
 
@@ -159,7 +166,7 @@ parsegraph_PagingBuffer.prototype.getWorkingPage = function()
     if(this._pages.length === 0) {
         throw new Error("Refusing to create a new page; call addPage()");
     }
-    return this._pages[this._pages.length - 1];
+    return this._pages[this._currentPage];
 };
 
 /**
@@ -230,6 +237,7 @@ parsegraph_PagingBuffer.prototype.clear = function()
         }, this);
         page.needsUpdate = true;
     }, this);
+    this._currentPage = -1;
 };
 
 /**
@@ -254,7 +262,11 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
     }, this);
 
     // Draw each page.
-    this._pages.forEach(function(page) {
+    this._pages.forEach(function(page, index) {
+        if(index > this._currentPage) {
+            return;
+        }
+
         var numIndices;
 
         // Prepare each vertex attribute.
