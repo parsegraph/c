@@ -3041,22 +3041,26 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
         if(timeout !== undefined) {
             t = new Date();
         }
+        var i = 0;
         while(true) {
             // Loop back to the first node, from the root.
             node = node._layoutNext;
             if(node._layoutState === parsegraph_NEEDS_COMMIT) {
                 node.commitLayout(bodySize);
             }
-            var ct = new Date();
-            var el = parsegraph_elapsed(startTime, ct);
-            if(el > 4*1000) {
-                console.log(node._id);
-            }
-            if(el > 5*1000) {
-                throw new Error("Commit Layout is taking too long");
-            }
-            if(timeout !== undefined && parsegraph_elapsed(t, ct) > timeout) {
-                return commitLayoutLoop;
+            ++i;
+            if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
+                var ct = new Date();
+                var el = parsegraph_elapsed(startTime, ct);
+                if(el > 4*1000) {
+                    console.log(node._id);
+                }
+                if(el > 5*1000) {
+                    throw new Error("Commit Layout is taking too long");
+                }
+                if(timeout !== undefined && parsegraph_elapsed(t, ct) > timeout) {
+                    return commitLayoutLoop;
+                }
             }
             if(node === root) {
                 // Terminal condition reached.
