@@ -28,6 +28,9 @@ parsegraph_PrimesWidget.prototype.step = function(steps)
         this.caret.label(this.position);
         this.caret.push();
         this.caret.pull('u');
+        if(j % parsegraph_NATURAL_GROUP_SIZE == 0) {
+            this.caret.crease();
+        }
         var isPrime = true;
         for(var i = 0; i < this.knownPrimes.length; ++i) {
             var prime = this.knownPrimes[i];
