@@ -5,9 +5,10 @@ function parsegraph_timediffMs(a, b)
     return b.getTime() - a.getTime();
 }
 
-function parsegraph_elapsed(startTime)
+function parsegraph_elapsed(startTime, ct)
 {
-    return (new Date()).getTime() - startTime.getTime();
+    ct = ct || new Date();
+    return ct.getTime() - startTime.getTime();
 }
 
 function parsegraph_later(cb, cbThisArg)
