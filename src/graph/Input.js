@@ -9,6 +9,8 @@ var parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
 var parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
 var parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
+var parsegraph_MIN_CAMERA_SCALE = .005;
+
 //var parsegraph_MOVE_UPWARD_KEY = "w";
 //var parsegraph_MOVE_DOWNWARD_KEY = "s";
 //var parsegraph_MOVE_BACKWARD_KEY = "a";
@@ -157,7 +159,7 @@ function parsegraph_Input(graph, camera)
 
         // Adjust the scale.
         var numSteps = (wheel.spinY > 0 ? -1 : 1);
-        if(numSteps > 0 || camera.scale() >= .01) {
+        if(numSteps > 0 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
             camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
         }
         this.Dispatch(false, "wheel", true);
@@ -248,7 +250,7 @@ function parsegraph_Input(graph, camera)
                 monitoredTouches[0].x, monitoredTouches[0].y,
                 monitoredTouches[1].x, monitoredTouches[1].y
             );
-            if((dist / zoomTouchDistance) > 1 || camera.scale() >= 0.01) {
+            if((dist / zoomTouchDistance) > 1 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
                 camera.zoomToPoint(
                     dist / zoomTouchDistance,
                     zoomCenter[0],
@@ -951,7 +953,7 @@ parsegraph_Input.prototype.Update = function(t)
         //console.log("Continuing to zoom out");
         this._updateRepeatedly = true;
         inputChangedScene = true;
-        if(cam.scale() >= .01) {
+        if(cam.scale() >= parsegraph_MIN_CAMERA_SCALE) {
             cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
                 this._graph.gl().drawingBufferWidth / 2,
                 this._graph.gl().drawingBufferHeight / 2
