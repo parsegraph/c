@@ -373,7 +373,7 @@ function parsegraph_BlockPainter(gl, shaders)
     this._stride = 60;
     this._vertexBuffer = new Float32Array(this._stride / 4);
     this._dataBufferVertexIndex = 0;
-    this._dataBufferNumVertices = 6*16;
+    this._dataBufferNumVertices = 6;
     this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._stride/4);
 };
 
