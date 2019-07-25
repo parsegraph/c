@@ -19,46 +19,42 @@ parsegraph_PrimesWidget.prototype.isPaused = function()
     return this._paused;
 };
 
-parsegraph_PrimesWidget.prototype.step = function(steps)
+parsegraph_PrimesWidget.prototype.step = function()
 {
     //console.log("Stepping primes widget");
     // Check if any known prime is a multiple of the current position.
-    for(var j = 0; j < steps; ++j) {
-        this.caret.spawnMove('f', 'b');
-        this.caret.label(this.position);
-        this.caret.push();
-        this.caret.pull('u');
-        if(j % parsegraph_NATURAL_GROUP_SIZE == 0) {
+    this.caret.spawnMove('f', 'b');
+    this.caret.label(this.position);
+    this.caret.push();
+    this.caret.pull('u');
+    this.caret.crease();
+    var isPrime = true;
+    for(var i = 0; i < this.knownPrimes.length; ++i) {
+        var prime = this.knownPrimes[i];
+        modulus = prime.calculate(this.position);
+        if(modulus == 0) {
+            // It's a multiple, so there's no chance for primality.
+            this.caret.spawnMove('u', 'b');
+            this.caret.label(prime.frequency);
+            isPrime = false;
+        }
+        else {
+            this.caret.spawnMove('u', 's');
+        }
+        if(i === 0) {
             this.caret.crease();
         }
-        var isPrime = true;
-        for(var i = 0; i < this.knownPrimes.length; ++i) {
-            var prime = this.knownPrimes[i];
-            modulus = prime.calculate(this.position);
-            if(modulus == 0) {
-                // It's a multiple, so there's no chance for primality.
-                this.caret.spawnMove('u', 'b');
-                this.caret.label(prime.frequency);
-                isPrime = false;
-            }
-            else {
-                this.caret.spawnMove('u', 's');
-            }
-            if(i % parsegraph_NATURAL_GROUP_SIZE == 0) {
-                this.caret.crease();
-            }
-        }
-        if(isPrime) {
-            // The position is prime, so output it and add it to the list.
-            this.caret.spawnMove('u', 'b');
-            this.caret.label(this.position);
-            this.knownPrimes.push(new parsegraph_PrimesModulo(this.position));
-        }
-        this.caret.pop();
-
-        // Advance.
-        ++(this.position);
     }
+    if(isPrime) {
+        // The position is prime, so output it and add it to the list.
+        this.caret.spawnMove('u', 'b');
+        this.caret.label(this.position);
+        this.knownPrimes.push(new parsegraph_PrimesModulo(this.position));
+    }
+    this.caret.pop();
+
+    // Advance.
+    ++(this.position);
 };
 
 parsegraph_PrimesWidget.prototype.node = function()
