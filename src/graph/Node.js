@@ -1738,9 +1738,9 @@ parsegraph_Node.prototype.isSelectedAt = function(direction)
     return this.nodeAt(direction).isSelected();
 };
 
-parsegraph_Node.prototype.sizeIn = function(direction)
+parsegraph_Node.prototype.sizeIn = function(direction, bodySize)
 {
-    var rv = this.size();
+    var rv = this.size(bodySize);
     if(parsegraph_isVerticalNodeDirection(direction)) {
         return rv.height() / 2;
     }
@@ -2102,7 +2102,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     return bodySize;
 };
 
-parsegraph_Node.prototype.commitLayout = function(bodySize)
+parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds)
 {
     // Do nothing if this node already has a layout committed.
     if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
@@ -2868,6 +2868,9 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         }
     }
 
+    if(!lineBounds) {
+        lineBounds = new parsegraph_Size();
+    }
     var addLineBounds = function(given)
     {
         if(!this.hasNode(given)) {
@@ -2886,8 +2889,9 @@ parsegraph_Node.prototype.commitLayout = function(bodySize)
         ].extentOffset;
 
         if(dirSign < 0) {
-            positiveOffset -= this.sizeIn(given) + this.lineLengthAt(given);
-            negativeOffset -= this.sizeIn(given) + this.lineLengthAt(given);
+            var lineSize = this.sizeIn(given, lineBounds)
+            positiveOffset -= lineSize + this.lineLengthAt(given);
+            negativeOffset -= lineSize + this.lineLengthAt(given);
         }
 
         if(this.nodeFit() == parsegraph_NODE_FIT_EXACT) {
@@ -3035,6 +3039,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     var root = this;
     var node = root;
     var bodySize = new parsegraph_Size();
+    var lineSize = new parsegraph_Size();
 
     // Traverse the graph depth-first, committing each node's layout in turn.
     var commitLayoutLoop = function() {
@@ -3048,7 +3053,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             // Loop back to the first node, from the root.
             node = node._layoutNext;
             if(node._layoutState === parsegraph_NEEDS_COMMIT) {
-                node.commitLayout(bodySize);
+                node.commitLayout(bodySize, lineSize);
             }
             ++i;
             if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
