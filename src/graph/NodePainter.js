@@ -22,6 +22,8 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
     var pagesPerRow = glTextureSize / this._glyphPainter.glyphAtlas().pageTextureSize();
     this._pagesPerGlyphTexture = Math.pow(pagesPerRow, 2);
+
+    this.bodySize = new parsegraph_Size();
 };
 
 parsegraph_NodePainter.prototype.bounds = function()
@@ -118,12 +120,14 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
         );
     };
 
+    var groupSize = node.groupSize(this.bodySize);
+
     // Draw the connecting line into the slider.
     switch(node.parentDirection()) {
     case parsegraph_UPWARD:
         // Draw downward connecting line into the horizontal slider.
         drawLine(
-            0, -node.groupSize().height() / 2,
+            0, -groupSize.height() / 2,
             0, 0,
             1
         );
@@ -136,8 +140,8 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
 
     // Draw the bar that the slider bud is on.
     drawLine(
-        -node.groupSize().width() / 2, 0,
-        node.groupSize().width() / 2, 0,
+        -groupSize.width() / 2, 0,
+        groupSize.width() / 2, 0,
         1.5
     );
 
@@ -151,7 +155,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
             value = 0.5;
         }
 
-        var sliderWidth = node.groupSize().width();
+        var sliderWidth = groupSize.width();
 
         if(node.isSelected()) {
             painter.setBorderColor(
@@ -182,12 +186,12 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
         if(Number.isNaN(value)) {
             value = 0;
         }
-        var thumbWidth = node.groupSize().height()/1.5;
+        var thumbWidth = groupSize.height()/1.5;
         painter.drawBlock(
             node.groupX() - sliderWidth/2 + thumbWidth/2 + (sliderWidth - thumbWidth) * value,
             node.groupY(),
-            node.groupSize().height()/1.5,
-            node.groupSize().height()/1.5,
+            groupSize.height()/1.5,
+            groupSize.height()/1.5,
             style.borderRoundness/1.5,
             style.borderThickness/1.5,
             node.groupScale()
@@ -208,7 +212,7 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
             style.fontColor
     );
 
-    var sliderWidth = node.groupSize().width();
+    var sliderWidth = groupSize.width();
     var value = node.value();
     if(value == null) {
         value = 0.5;
@@ -235,7 +239,7 @@ parsegraph_NodePainter.prototype.drawScene = function(node, shaders)
         return;
     }
 
-    var sceneSize = node.sizeWithoutPadding();
+    var sceneSize = node.sizeWithoutPadding(this.bodySize);
     var sceneX = node.groupX();
     var sceneY = node.groupY();
 
@@ -379,7 +383,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
 
 parsegraph_NodePainter.prototype.paintLines = function(node)
 {
-    var bodySize = node.size();
+    var bodySize = node.size(this.bodySize);
 
     var drawLine = function(direction) {
         if(node.parentDirection() == direction) {
@@ -581,7 +585,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
     }
 
     // Draw the block.
-    var size = node.groupSize();
+    var size = node.groupSize(this.bodySize);
     //console.log(parsegraph_nameNodeType(node.type()) + " x=" + node.groupX() + ", " + node.groupY());
     painter.drawBlock(
         node.groupX(),

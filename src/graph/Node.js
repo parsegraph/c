@@ -1779,7 +1779,9 @@ parsegraph_Node.prototype.absoluteSize = function(bodySize)
 
 parsegraph_Node.prototype.groupSize = function(bodySize)
 {
-    return this.size(bodySize).scaled(this.groupScale());
+    bodySize = this.size(bodySize);
+    bodySize.scale(this.groupScale());
+    return bodySize;
 };
 
 parsegraph_Node.prototype.assignParent = function(fromNode, parentDirection)
