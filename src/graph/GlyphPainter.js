@@ -81,7 +81,7 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
     // Background Color: 4 * 4 (four floats) : 24 - 39
     // Texcoord: 2 * 4 (two floats): 40-48
     this._stride = 48;
-    this._itemBuffer = new DataView(new ArrayBuffer(this._stride));
+    this._vertexBuffer = new Float32Array(this._stride/4);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -143,44 +143,177 @@ function parsegraph_GlyphPageRenderer(painter, textureIndex)
 {
     this._painter = painter;
     this._textureIndex = textureIndex;
-    this._numGlyphs = null;
-    this._buffer = null;
+    this._glyphBuffer = null;
+    this._glyphBufferNumVertices = null;
+    this._glyphBufferVertexIndex = 0;
+
+    this._dataBufferVertexIndex = 0;
+    this._dataBufferNumVertices = 6;
+    this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._painter._stride/4);
 }
 
 parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs)
 {
+    if(this._glyphBufferNumVertices/6 === numGlyphs) {
+        //console.log("Reusing existing buffer");
+        this._glyphBufferVertexIndex = 0;
+        this._dataBufferVertexIndex = 0;
+        return;
+    }
+    else {
+        //console.log("Recreating buffer with " + numGlyphs + " from " + this._glyphBufferNumVertices);
+    }
     var gl = this._painter._gl;
-    this._buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+    this._glyphBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this._painter._stride*6*numGlyphs, gl.STATIC_DRAW);
-    this._numGlyphs = numGlyphs;
-    this._numVertices = 0;
+    this._glyphBufferNumVertices = numGlyphs*6;
 };
 
 parsegraph_GlyphPageRenderer.prototype.clear = function()
 {
-    if(!this._buffer) {
+    if(!this._glyphBuffer) {
         return;
     }
     var gl = this._painter._gl;
-    gl.deleteBuffer(this._buffer);
-    this._buffer = null;
-    this._numVertices = null;
+    gl.deleteBuffer(this._glyphBuffer);
+    this._glyphBuffer = null;
+    this._glyphBufferNumVertices = null;
+    this._dataBufferVertexIndex = 0;
+    this._glyphBufferVertexIndex = 0;
+};
+
+parsegraph_GlyphPageRenderer.prototype.flush = function()
+{
+    if(this._dataBufferVertexIndex === 0) {
+        return;
+    }
+    var gl = this._painter._gl;
+    var stride = this._painter._stride;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
+
+    if(this._dataBufferVertexIndex + this._glyphBufferVertexIndex > this._blockBufferNumVertices) {
+        throw new Error("GL buffer of " + this._blockBufferNumVertices + " vertices is full; cannot flush all " + this._dataBufferVertexIndex + " vertices because the GL buffer already has " + this._glyphBufferVertexIndex + " vertices.");
+    }
+    if(this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
+        //console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._blockBufferVertexIndex + " of " + this._blockBufferNumVertices + " vertices");
+        gl.bufferSubData(gl.ARRAY_BUFFER, this._glyphBufferVertexIndex*stride, this._dataBuffer);
+    }
+    else {
+        //console.log("Partial flush (" + this._blockBufferVertexIndex + "/" + this._blockBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
+        gl.bufferSubData(gl.ARRAY_BUFFER, this._glyphBufferVertexIndex*stride, this._dataBuffer.slice(0, this._dataBufferVertexIndex*stride/4));
+    }
+    this._glyphBufferVertexIndex += this._dataBufferVertexIndex;
+    this._dataBufferVertexIndex = 0;
+};
+
+parsegraph_GlyphPageRenderer.prototype.writeVertex = function()
+{
+    var pos = this._dataBufferVertexIndex++ * this._painter._stride/4;
+    this._dataBuffer.set(this._painter._vertexBuffer, pos);
+    if(this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
+        this.flush();
+    }
+};
+
+parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fontScale)
+{
+    var gl = this._painter._gl;
+    var stride = this._painter._stride;
+    var glyphAtlas = this._painter.glyphAtlas();
+    var glTextureSize = parsegraph_getGlyphTextureSize(gl);
+    var pageTextureSize = glyphAtlas.pageTextureSize();
+    var pagesPerRow = glTextureSize / pageTextureSize;
+    var pagesPerTexture = Math.pow(pagesPerRow, 2);
+    var pageIndex = glyphData.glyphPage._id % pagesPerTexture;
+    var pageX = pageTextureSize * (pageIndex % pagesPerRow);
+    var pageY = pageTextureSize * Math.floor(pageIndex / pagesPerRow);
+
+    // Position: 2 * 4 (two floats) : 0-7
+    // Color: 4 * 4 (four floats) : 8-23
+    // Background Color: 4 * 4 (four floats) : 24 - 39
+    // Texcoord: 2 * 4 (two floats): 40-48
+    var buf = this._painter._vertexBuffer;
+
+    // Append color data.
+    var color = this._painter._color;
+    buf[2] = color.r();
+    buf[3] = color.g();
+    buf[4] = color.b();
+    buf[5] = color.a();
+
+    // Append background color data.
+    var bg = this._painter._backgroundColor;
+    buf[6] = bg.r();
+    buf[7] = bg.g();
+    buf[8] = bg.b();
+    buf[9] = bg.a();
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x) / glTextureSize;
+    buf[11] = (pageY + glyphData.y) / glTextureSize;
+    this.writeVertex();
+
+    // Position data.
+    buf[0] = x + glyphData.width * fontScale;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x + glyphData.width) / glTextureSize;
+    buf[11] = (pageY + glyphData.y) / glTextureSize;
+    this.writeVertex();
+
+    // Position data.
+    buf[0] = x + glyphData.width * fontScale;
+    buf[1] = y + glyphData.height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x + glyphData.width) / glTextureSize;
+    buf[11] = (pageY + glyphData.y + glyphData.height) / glTextureSize;
+    this.writeVertex();
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x) / glTextureSize;
+    buf[11] = (pageY + glyphData.y) / glTextureSize;
+    this.writeVertex();
+
+    // Position data.
+    buf[0] = x + glyphData.width * fontScale;
+    buf[1] = y + glyphData.height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x + glyphData.width) / glTextureSize;
+    buf[11] = (pageY + glyphData.y + glyphData.height) / glTextureSize;
+    this.writeVertex();
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y + glyphData.height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData.x) / glTextureSize;
+    buf[11] = (pageY + glyphData.y + glyphData.height) / glTextureSize;
+    this.writeVertex();
 };
 
 parsegraph_GlyphPageRenderer.prototype.render = function()
 {
-    if(!this._buffer) {
+    if(!this._glyphBuffer) {
         throw new Error("GlyphPageRenderer must be initialized before rendering");
     }
+    this.flush();
+    if(this._glyphBufferVertexIndex === 0) {
+        return;
+    }
     var gl = this._painter._gl;
-    //console.log("Rendering " + (this._numVertices/6) + " glyphs of glyph page " + this._glyphTexture);
     var glyphTexture = this._painter._glyphAtlas._pages[this._textureIndex]._glyphTexture;
-    //console.log(glyphTexture);
+    //console.log("Rendering " + (this._glyphBufferVertexIndex/6) + " glyphs of glyph page " + this._textureIndex);
     gl.bindTexture(gl.TEXTURE_2D, glyphTexture);
     gl.uniform1i(this._painter.u_glyphTexture, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
     // Background Color: 4 * 4 (four floats) : 24 - 39
@@ -191,7 +324,7 @@ parsegraph_GlyphPageRenderer.prototype.render = function()
     gl.vertexAttribPointer(painter.a_color, 4, gl.FLOAT, false, stride, 8);
     gl.vertexAttribPointer(painter.a_backgroundColor, 4, gl.FLOAT, false, stride, 24);
     gl.vertexAttribPointer(painter.a_texCoord, 2, gl.FLOAT, false, stride, 40);
-    gl.drawArrays(gl.TRIANGLES, 0, this._numVertices);
+    gl.drawArrays(gl.TRIANGLES, 0, this._glyphBufferVertexIndex);
 };
 
 parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScale)
@@ -214,90 +347,21 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     if(this._maxSize < glyphData.width * fontScale) {
         this._maxSize = glyphData.width * fontScale;
     }
-
-    var pageIndex = glyphData.glyphPage._id % pagesPerTexture;
-    var pageX = this.glyphAtlas().pageTextureSize() * (pageIndex % pagesPerRow);
-    var pageY = this.glyphAtlas().pageTextureSize() * Math.floor(pageIndex / pagesPerRow);
-
-    // Position: 2 * 4 (two floats) : 0-7
-    // Color: 4 * 4 (four floats) : 8-23
-    // Background Color: 4 * 4 (four floats) : 24 - 39
-    // Texcoord: 2 * 4 (two floats): 40-48
-    var endian = true;
-    var buf = this._itemBuffer;
-
-    // Append color data.
-    buf.setFloat32(8, this._color.r(), endian);
-    buf.setFloat32(12, this._color.g(), endian);
-    buf.setFloat32(16, this._color.b(), endian);
-    buf.setFloat32(20, this._color.a(), endian);
-
-    // Append background color data.
-    buf.setFloat32(24, this._backgroundColor.r(), endian);
-    buf.setFloat32(28, this._backgroundColor.g(), endian);
-    buf.setFloat32(32, this._backgroundColor.b(), endian);
-    buf.setFloat32(36, this._backgroundColor.a(), endian);
-
-    var gl = this._gl;
-    var stride = this._stride;
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, gp._buffer);
-
-    // Position data.
-    buf.setFloat32(0, x, endian);
-    buf.setFloat32(4, y, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
-
-    // Position data.
-    buf.setFloat32(0, x + glyphData.width * fontScale, endian);
-    buf.setFloat32(4, y, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x + glyphData.width) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
-
-    // Position data.
-    buf.setFloat32(0, x + glyphData.width * fontScale, endian);
-    buf.setFloat32(4, y + glyphData.height * fontScale, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x + glyphData.width) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y + glyphData.height) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
-
-    // Position data.
-    buf.setFloat32(0, x, endian);
-    buf.setFloat32(4, y, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
-
-    // Position data.
-    buf.setFloat32(0, x + glyphData.width * fontScale, endian);
-    buf.setFloat32(4, y + glyphData.height * fontScale, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x + glyphData.width) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y + glyphData.height) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
-
-    // Position data.
-    buf.setFloat32(0, x, endian);
-    buf.setFloat32(4, y + glyphData.height * fontScale, endian);
-    // Texcoord data
-    buf.setFloat32(40, (pageX + glyphData.x) / glTextureSize, endian);
-    buf.setFloat32(44, (pageY + glyphData.y + glyphData.height) / glTextureSize, endian);
-    gl.bufferSubData(gl.ARRAY_BUFFER, gp._numVertices++*stride, buf.buffer);
+    gp.drawGlyph(glyphData, x, y, fontScale);
 };
 
 parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
 {
     for(var i in numGlyphs) {
-        var gp = new parsegraph_GlyphPageRenderer(this, i);
+        var gp = this._textBuffers[i];
+        if(!gp) {
+            gp = new parsegraph_GlyphPageRenderer(this, i);
+            this._textBuffers[i] = gp;
+        }
         gp.initBuffer(numGlyphs[i]);
-        this._textBuffers[i] = gp;
+    }
+    for(var j=i+1; j < this._textBuffers.length; ++j) {
+        delete this._textBuffers[j];
     }
 };
 
