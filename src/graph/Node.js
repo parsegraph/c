@@ -552,16 +552,10 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
     }
 
     // Copy the current paint group's children, if present.
-    if(paintGroup) {
-        var childGroups = this._childPaintGroups;
-        childGroups.push.apply(childGroups, this._paintGroup._childPaintGroups);
-    }
-    else {
-        parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
-            this._childPaintGroups.push(childPaintGroup);
-        }, this);
-        this.clearPaintGroups();
-    }
+    parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
+        this._childPaintGroups.push(childPaintGroup);
+    }, this);
+    this.clearPaintGroups();
     this.layoutChanged();
 }
 
