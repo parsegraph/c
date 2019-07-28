@@ -163,6 +163,9 @@ parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs)
     else {
         //console.log("Recreating buffer with " + numGlyphs + " from " + this._glyphBufferNumVertices);
     }
+    if(this._glyphBuffer) {
+        this.clear();
+    }
     var gl = this._painter._gl;
     this._glyphBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
