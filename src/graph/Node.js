@@ -560,10 +560,8 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         parsegraph_findChildPaintGroups(this, function(childPaintGroup) {
             this._childPaintGroups.push(childPaintGroup);
         }, this);
+        this.clearPaintGroups();
     }
-
-    this.clearPaintGroups();
-    this._isPaintGroup = paintGroup;
     this.layoutChanged();
 }
 
