@@ -482,8 +482,6 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
         this._bounds.include(cx, cy, width, height);
     }
 
-    var endian = true;
-
     var buf = this._vertexBuffer;
 
     // Append color data.
