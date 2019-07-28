@@ -971,7 +971,11 @@ parsegraph_Node.prototype.connectNode = function(inDirection, node)
         neighbor.alignmentMode = parsegraph_DO_NOT_ALIGN;
     }
 
-    if(!node._isPaintGroup && node._childPaintGroups.length > 0) {
+    if(node._isPaintGroup) {
+        var pg = this.findPaintGroup();
+        pg._childPaintGroups.push(node);
+    }
+    else if(node._childPaintGroups.length > 0) {
         //console.log("Adding this node's implicit child paintgroups to the parent");
         var pg = this.findPaintGroup();
         pg._childPaintGroups.push.apply(pg._childPaintGroups, node._childPaintGroups);
