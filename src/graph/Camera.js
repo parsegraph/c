@@ -223,7 +223,6 @@ parsegraph_Camera.prototype.surface = function()
 {
     return this._surface;
 };
-parsegraph_Camera.prototype.graph = parsegraph_Camera.prototype.surface;
 
 parsegraph_Camera.prototype.scale = function()
 {

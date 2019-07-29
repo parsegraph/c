@@ -19,7 +19,7 @@ parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
 parsegraph_World.prototype.camera = function()
 {
     if(!this._camera) {
-        this._camera = new parsegraph_Camera(this._graph);
+        this._camera = new parsegraph_Camera(this._graph.surface());
     }
     return this._camera;
 };
