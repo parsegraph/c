@@ -49,6 +49,7 @@ function parsegraph_CreaseWidget(app)
                     caret.restore(id);
                     caret.move('u');
                     caret.crease();
+                    app.scheduleRepaint();
                     reinstall();
                 });
             }
@@ -57,6 +58,7 @@ function parsegraph_CreaseWidget(app)
                     caret.restore(id);
                     caret.move('u');
                     caret.uncrease();
+                    app.scheduleRepaint();
                     reinstall();
                 });
             }
