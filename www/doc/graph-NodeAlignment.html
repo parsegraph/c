@@ -1,74 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>NodeAlignment - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>NodeAlignment - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>	
-		<h2>Parsegraph NodeAlignment</h2>
-		<ol>
-		<li><a href="#parsegraph_NULL_NODE_ALIGNMENT">parsegraph_NULL_NODE_ALIGNMENT</a>
-		<li><a href="#parsegraph_DO_NOT_ALIGN">parsegraph_DO_NOT_ALIGN</a>
-		<li><a href="#parsegraph_ALIGN_NEGATIVE">parsegraph_ALIGN_NEGATIVE</a>
-		<li><a href="#parsegraph_ALIGN_CENTER">parsegraph_ALIGN_CENTER</a>
-		<li><a href="#parsegraph_ALIGN_POSITIVE">parsegraph_ALIGN_POSITIVE</a>
-		<li><a href="#parsegraph_ALIGN_HORIZONTAL">parsegraph_ALIGN_HORIZONTAL</a>
-		<li><a href="#parsegraph_ALIGN_VERTICAL">parsegraph_ALIGN_VERTICAL</a>
-		<li><a href="#parsegraph_nameNodeAlignment">parsegraph_nameNodeAlignment(given)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph NodeAlignment</h1>
-		Alignment constants used to position child nodes.
-		<h3><a name="parsegraph_NULL_NODE_ALIGNMENT">parsegraph_NULL_NODE_ALIGNMENT</h3></a>
-		Constant that refers to a null NodeAlignment value.
-		<h3><a name="parsegraph_DO_NOT_ALIGN">parsegraph_DO_NOT_ALIGN</h3></a>
-		Constant that indicates the node in the given direction should be aligned without consideration to its descendants.
-		<h3><a name="parsegraph_ALIGN_NEGATIVE">parsegraph_ALIGN_NEGATIVE</h3></a>
-		Constant that indicates the node in the given direction and its descendents should be aligned in the negative direction relative to its parent.
-		<h3><a name="parsegraph_ALIGN_CENTER">parsegraph_ALIGN_CENTER</h3></a>
-		Constant that indicates the node in the given direction and its descendents should be centrally aligned relative to its parent.
-		<h3><a name="parsegraph_ALIGN_POSITIVE">parsegraph_ALIGN_POSITIVE</h3></a>
-		Constant that indicates the node in the given direction and its descendents should be aligned in the positive direction relative to its parent.
-		<h3><a name="parsegraph_ALIGN_HORIZONTAL">parsegraph_ALIGN_HORIZONTAL</h3></a>
-		Constant that indicates the given inward Node should be aligned horizontally relative to its container's label.
-		<h3><a name="parsegraph_ALIGN_VERTICAL">parsegraph_ALIGN_VERTICAL</h3></a>
-		Constant that indicates the given inward Node should be aligned vertically relative to its container's label.
-		<h3><a name="parsegraph_nameNodeAlignment">parsegraph_nameNodeAlignment(given)</h3></a>
-		Returns a programmer-friendly string that describes the given NodeAlignment value.
-		<ul>
-		<li>Throws a new parsegraph_BAD_NODE_ALIGNMENT error if the given value is unrecognized.
-		</ul>
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-NodeAlignment">NodeAlignment</a></div>
+<h1>Parsegraph NodeAlignment</h1>
+Alignment constants used to position child nodes.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_NULL_NODE_ALIGNMENT">parsegraph_NULL_NODE_ALIGNMENT</a>
+<li><a href="#parsegraph_DO_NOT_ALIGN">parsegraph_DO_NOT_ALIGN</a>
+<li><a href="#parsegraph_ALIGN_NEGATIVE">parsegraph_ALIGN_NEGATIVE</a>
+<li><a href="#parsegraph_ALIGN_CENTER">parsegraph_ALIGN_CENTER</a>
+<li><a href="#parsegraph_ALIGN_POSITIVE">parsegraph_ALIGN_POSITIVE</a>
+<li><a href="#parsegraph_ALIGN_HORIZONTAL">parsegraph_ALIGN_HORIZONTAL</a>
+<li><a href="#parsegraph_ALIGN_VERTICAL">parsegraph_ALIGN_VERTICAL</a>
+<li><a href="#parsegraph_nameNodeAlignment">parsegraph_nameNodeAlignment(given)</a>
+</ol>
+<h3><a name="parsegraph_NULL_NODE_ALIGNMENT">parsegraph_NULL_NODE_ALIGNMENT</a></h3>
+Constant that refers to a null NodeAlignment value.
+<h3><a name="parsegraph_DO_NOT_ALIGN">parsegraph_DO_NOT_ALIGN</a></h3>
+Constant that indicates the node in the given direction should be aligned without consideration to its descendants.
+<h3><a name="parsegraph_ALIGN_NEGATIVE">parsegraph_ALIGN_NEGATIVE</a></h3>
+Constant that indicates the node in the given direction and its descendents should be aligned in the negative direction relative to its parent.
+<h3><a name="parsegraph_ALIGN_CENTER">parsegraph_ALIGN_CENTER</a></h3>
+Constant that indicates the node in the given direction and its descendents should be centrally aligned relative to its parent.
+<h3><a name="parsegraph_ALIGN_POSITIVE">parsegraph_ALIGN_POSITIVE</a></h3>
+Constant that indicates the node in the given direction and its descendents should be aligned in the positive direction relative to its parent.
+<h3><a name="parsegraph_ALIGN_HORIZONTAL">parsegraph_ALIGN_HORIZONTAL</a></h3>
+Constant that indicates the given inward Node should be aligned horizontally relative to its container's label.
+<h3><a name="parsegraph_ALIGN_VERTICAL">parsegraph_ALIGN_VERTICAL</a></h3>
+Constant that indicates the given inward Node should be aligned vertically relative to its container's label.
+<h3><a name="parsegraph_nameNodeAlignment">parsegraph_nameNodeAlignment(given)</a></h3>
+Returns a programmer-friendly string that describes the given NodeAlignment value.
+<ul>
+<li>Throws a new parsegraph_BAD_NODE_ALIGNMENT error if the given value is unrecognized.
+</ul>
+</main>

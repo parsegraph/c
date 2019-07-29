@@ -1,93 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Status - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Status - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph Status</h2>
-		<ol>
-		<li><a href="#parsegraph_NULL_STATUS">parsegraph_NULL_STATUS</a>
-		<li><a href="#parsegraph_OK">parsegraph_OK</a>
-		<li><a href="#parsegraph_BAD_STATUS">parsegraph_BAD_STATUS</a>
-		<li><a href="#parsegraph_NO_NODE_FOUND">parsegraph_NO_NODE_FOUND</a>
-		<li><a href="#parsegraph_ALREADY_OCCUPIED">parsegraph_ALREADY_OCCUPIED</a>
-		<li><a href="#parsegraph_BAD_NODE_DIRECTION">parsegraph_BAD_NODE_DIRECTION</a>
-		<li><a href="#parsegraph_BAD_NODE_CONTENT">parsegraph_BAD_NODE_CONTENT</a>
-		<li><a href="#parsegraph_BAD_AXIS">parsegraph_BAD_AXIS</a>
-		<li><a href="#parsegraph_BAD_LAYOUT_STATE">parsegraph_BAD_LAYOUT_STATE</a>
-		<li><a href="#parsegraph_BAD_NODE_ALIGNMENT">parsegraph_BAD_NODE_ALIGNMENT</a>
-		<li><a href="#parsegraph_CANNOT_AFFECT_PARENT">parsegraph_CANNOT_AFFECT_PARENT</a>
-		<li><a href="#parsegraph_OFFSET_IS_NEGATIVE">parsegraph_OFFSET_IS_NEGATIVE</a>
-		<li><a href="#parsegraph_NODE_IS_ROOT">parsegraph_NODE_IS_ROOT</a>
-		<li><a href="#parsegraph_BAD_LAYOUT_PREFERENCE">parsegraph_BAD_LAYOUT_PREFERENCE</a>
-		<li><a href="#parsegraph_nameStatus">parsegraph_nameStatus(given)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Status</h1>
-		Status constants returned by library functions.
-		<h3><a name="parsegraph_NULL_STATUS">parsegraph_NULL_STATUS</h3></a>
-		Constant that indicates a null Status.
-		<h3><a name="parsegraph_OK">parsegraph_OK</h3></a>
-		Constant that indicates success.
-		<h3><a name="parsegraph_BAD_STATUS">parsegraph_BAD_STATUS</h3></a>
-		Constant that indicates an unrecognized Status value.
-		<h3><a name="parsegraph_NO_NODE_FOUND">parsegraph_NO_NODE_FOUND</h3></a>
-		Constant that indicates the node could not be found.
-		<h3><a name="parsegraph_ALREADY_OCCUPIED">parsegraph_ALREADY_OCCUPIED</h3></a>
-		Constant that indicates the specified direction already has a node.
-		<h3><a name="parsegraph_BAD_NODE_DIRECTION">parsegraph_BAD_NODE_DIRECTION</h3></a>
-		Constant that indicates an unrecognized NodeDirection value.
-		<h3><a name="parsegraph_BAD_NODE_CONTENT">parsegraph_BAD_NODE_CONTENT</h3></a>
-		Constant that indicates that the given content is invalid for this Node.
-		<h3><a name="parsegraph_BAD_AXIS">parsegraph_BAD_AXIS</h3></a>
-		Constant that indicates an unrecognized NodeAxis value.
-		<h3><a name="parsegraph_BAD_LAYOUT_STATE">parsegraph_BAD_LAYOUT_STATE</h3></a>
-		Constant that indicates an unrecognized LayoutStatus value.
-		<h3><a name="parsegraph_BAD_NODE_ALIGNMENT">parsegraph_BAD_NODE_ALIGNMENT</h3></a>
-		Constant that indicates an unrecognized NodeAlignment value.
-		<h3><a name="parsegraph_CANNOT_AFFECT_PARENT">parsegraph_CANNOT_AFFECT_PARENT</h3></a>
-		Constant that indicates the intended operation cannot affect this Node's parent.
-		<h3><a name="parsegraph_OFFSET_IS_NEGATIVE">parsegraph_OFFSET_IS_NEGATIVE</h3></a>
-		Constant that indicates that negative offsets are not allowed.
-		<h3><a name="parsegraph_NODE_IS_ROOT">parsegraph_NODE_IS_ROOT</h3></a>
-		Constant that indicates that the given Node is a root and does not support the intended operation.
-		<h3><a name="parsegraph_BAD_LAYOUT_PREFERENCE">parsegraph_BAD_LAYOUT_PREFERENCE</h3></a>
-		Constant that indicates that the given Node is a root and does not support the intended operation.
-		<h3><a name="parsegraph_nameStatus">parsegraph_nameStatus(given)</h3></a>
-		Returns a programmer-friendly string that describes the given Status value.
-		</div>
-			<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Status">Status</a></div>
+<h1>Parsegraph Status</h1>
+Status constants returned by library functions.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_NULL_STATUS">parsegraph_NULL_STATUS</a>
+<li><a href="#parsegraph_OK">parsegraph_OK</a>
+<li><a href="#parsegraph_BAD_STATUS">parsegraph_BAD_STATUS</a>
+<li><a href="#parsegraph_NO_NODE_FOUND">parsegraph_NO_NODE_FOUND</a>
+<li><a href="#parsegraph_ALREADY_OCCUPIED">parsegraph_ALREADY_OCCUPIED</a>
+<li><a href="#parsegraph_BAD_NODE_DIRECTION">parsegraph_BAD_NODE_DIRECTION</a>
+<li><a href="#parsegraph_BAD_NODE_CONTENT">parsegraph_BAD_NODE_CONTENT</a>
+<li><a href="#parsegraph_BAD_AXIS">parsegraph_BAD_AXIS</a>
+<li><a href="#parsegraph_BAD_LAYOUT_STATE">parsegraph_BAD_LAYOUT_STATE</a>
+<li><a href="#parsegraph_BAD_NODE_ALIGNMENT">parsegraph_BAD_NODE_ALIGNMENT</a>
+<li><a href="#parsegraph_CANNOT_AFFECT_PARENT">parsegraph_CANNOT_AFFECT_PARENT</a>
+<li><a href="#parsegraph_OFFSET_IS_NEGATIVE">parsegraph_OFFSET_IS_NEGATIVE</a>
+<li><a href="#parsegraph_NODE_IS_ROOT">parsegraph_NODE_IS_ROOT</a>
+<li><a href="#parsegraph_BAD_LAYOUT_PREFERENCE">parsegraph_BAD_LAYOUT_PREFERENCE</a>
+<li><a href="#parsegraph_nameStatus">parsegraph_nameStatus(given)</a>
+</ol>
+<h3><a name="parsegraph_NULL_STATUS">parsegraph_NULL_STATUS</a></h3>
+Constant that indicates a null Status.
+<h3><a name="parsegraph_OK">parsegraph_OK</a></h3>
+Constant that indicates success.
+<h3><a name="parsegraph_BAD_STATUS">parsegraph_BAD_STATUS</a></h3>
+Constant that indicates an unrecognized Status value.
+<h3><a name="parsegraph_NO_NODE_FOUND">parsegraph_NO_NODE_FOUND</a></h3>
+Constant that indicates the node could not be found.
+<h3><a name="parsegraph_ALREADY_OCCUPIED">parsegraph_ALREADY_OCCUPIED</a></h3>
+Constant that indicates the specified direction already has a node.
+<h3><a name="parsegraph_BAD_NODE_DIRECTION">parsegraph_BAD_NODE_DIRECTION</a></h3>
+Constant that indicates an unrecognized NodeDirection value.
+<h3><a name="parsegraph_BAD_NODE_CONTENT">parsegraph_BAD_NODE_CONTENT</a></h3>
+Constant that indicates that the given content is invalid for this Node.
+<h3><a name="parsegraph_BAD_AXIS">parsegraph_BAD_AXIS</a></h3>
+Constant that indicates an unrecognized NodeAxis value.
+<h3><a name="parsegraph_BAD_LAYOUT_STATE">parsegraph_BAD_LAYOUT_STATE</a></h3>
+Constant that indicates an unrecognized LayoutStatus value.
+<h3><a name="parsegraph_BAD_NODE_ALIGNMENT">parsegraph_BAD_NODE_ALIGNMENT</a></h3>
+Constant that indicates an unrecognized NodeAlignment value.
+<h3><a name="parsegraph_CANNOT_AFFECT_PARENT">parsegraph_CANNOT_AFFECT_PARENT</a></h3>
+Constant that indicates the intended operation cannot affect this Node's parent.
+<h3><a name="parsegraph_OFFSET_IS_NEGATIVE">parsegraph_OFFSET_IS_NEGATIVE</a></h3>
+Constant that indicates that negative offsets are not allowed.
+<h3><a name="parsegraph_NODE_IS_ROOT">parsegraph_NODE_IS_ROOT</a></h3>
+Constant that indicates that the given Node is a root and does not support the intended operation.
+<h3><a name="parsegraph_BAD_LAYOUT_PREFERENCE">parsegraph_BAD_LAYOUT_PREFERENCE</a></h3>
+Constant that indicates that the given Node is a root and does not support the intended operation.
+<h3><a name="parsegraph_nameStatus">parsegraph_nameStatus(given)</a></h3>
+Returns a programmer-friendly string that describes the given Status value.
+</main>

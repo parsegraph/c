@@ -1,438 +1,398 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Node - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Node - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>	
-		<h2>parsegraph_Node</h2>
-		<ol>
-		<li>new <a href="#parsegraph_Node">parsegraph_Node(newType)</li></a>
-		<li>new <a href="#parsegraph_Node">parsegraph_Node(newType, fromNode, parentDirection)</li></a>
-		<li><a href="#parsegraph_chainTab">parsegraph_chainTab(a, b, swappedOut)</a>
-		<li><a href="#parsegraph_chainAllTabs">parsegraph_chainAllTabs()</a>
-		<li><a href="#.x">.x()</a>
-		<li><a href="#.y">.y()</a>
-		<li><a href="#.scale">.scale()</a>
-		<li><a href="#.setScale">.setScale(scale)</a>
-		<li><a href="#.setRightToLeft">.setRightToLeft(val)</a>
-		<li><a href="#.rightToLeft">.rightToLeft()</a>
-		<li><a href="#.commitAbsolutePos">.commitAbsolutePos()</a>
-		<li><a href="#.positionWasChanged">.positionWasChanged()</a>
-		<li><a href="#.absoluteX">.absoluteX()</a>
-		<li><a href="#.absoluteY">.absoluteY()</a>
-		<li><a href="#.absoluteScale">.absoluteScale()</a>
-		<li><a href="#.setPosAt">.setPosAt(inDirection, x, y)</a>
-		<li><a href="#.setPaintGroup">.setPaintGroup(paintGroup)</a>
-		<li><a href="#.findPaintGroup">.findPaintGroup()</a>
-		<li><a href="#.localPaintGroup">.localPaintGroup()</a>
-		<li><a href="#.graph">.graph()</a>
-		<li><a href="#.backdropColor">.backdropColor()</a>
-		<li><a href="#.setClickListener">.setClickListener(listener, thisArg)</a>
-		<li><a href="#.setChangeListener">.setChangeListener(listener, thisArg)</a>
-		<li><a href="#.isClickable">.isClickable()</a>
-		<li><a href="#.setIgnoreMouse">.setIgnoreMouse()</a>
-		<li><a href="#.ignoresMouse">.ignoresMouse()</a>
-		<li><a href="#.hasClickListener">.hasClickListener()</a>
-		<li><a href="#.hasChangeListener">.hasChangeListener()</a>
-		<li><a href="#.valueChanged">.valueChanged()</a>
-		<li><a href="#.click">.click()</a>
-		<li><a href="#.setKeyListener">.setKeyListener(listener, thisArg)</a>
-		<li><a href="#.hasKeyListener">.hasKeyListener()</a>
-		<li><a href="#.key">.key()</a>
-		<li><a href="#.nodeFit">.nodeFit()</a>
-		<li><a href="#.setNodeFit">.setNodeFit()</a>
-		<li><a href="#.isRoot">.isRoot()</a>
-		<li><a href="#.parentDirection">.parentDirection()</a>
-		<li><a href="#.nodeParent">.nodeParent()</a>
-		<li><a href="#.parentNode">.parentNode()</a>
-		<li><a href="#.parent">.parent()</a>
-		<li><a href="#.hasNode">.hasNode(atDirection)</a>
-		<li><a href="#.hasNodes">.hasNodes(axis)</a>
-		<li><a href="#.hasChildAt">.hasChildAt(direction)</a>
-		<li><a href="#.hasAnyNodes">.hasAnyNodes()</a>
-		<li><a href="#.nodeAt">.nodeAt(atDirection)</a>
-		<li><a href="#.traverse">.traverse(filterFunc, actionFunc, thisArg, timeout)</a>
-		<li><a href="#.spawnNode">.spawnNode(spawnDirection, newType)</a>
-		<li><a href="#.connectNode">.connectNode(inDirection, node)</a>
-		<li><a href="#.eraseNode">.eraseNode(givenDirection)</a>
-		<li><a href="#.disconnectNode">.disconnectNode(inDirection)</a>
-		<li><a href="#.disconnectNode">.disconnectNode()</a>
-		<li><a href="#.eachChild">.eachChild(visitor, visitorThisArg)</a>
-		<li><a href="#.scaleAt">.scaleAt(direction)</a>
-		<li><a href="#.lineLengthAt">.lineLengthAt(direction)</a>
-		<li><a href="#.extentSize">.extentSize(outPos)</a>
-		<li><a href="#.setLayoutPreference">.setLayoutPreference(given)</a>
-		<li><a href="#.setNodeAlignmentMode">.setNodeAlignmentMode(newAlignmentMode)</a>
-		<li><a href="#.setNodeAlignmentMode">.setNodeAlignmentMode(inDirection, newAlignmentMode)</a>
-		<li><a href="#.nodeAlignmentMode">.nodeAlignmentMode(inDirection)</a>
-		<li><a href="#.type">.type()</a>
-		<li><a href="#.setType">.setType(newType)</a>
-		<li><a href="#.value">.value()</a>
-		<li><a href="#.setValue">.setValue(newValue, report)</a>
-		<li><a href="#.scene">.scene()</a>
-		<li><a href="#.setScene">.setScene(scene)</a>
-		<li><a href="#.typeAt">.typeAt(direction)</a>
-		<li><a href="#.label">.label()</a>
-		<li><a href="#.realLabel">.realLabel()</a>
-		<li><a href="#setLabel">setLabel(text, glyphAtlas)</a>
-		<li><a href="#.blockStyle">.blockStyle()</a>
-		<li><a href="#.setBlockStyle">.setBlockStyle(style)</a>
-		<li><a href="#.isSelectedAt">.isSelectedAt(direction)</a>
-		<li><a href="#.sizeIn">.sizeIn(direction)</a>
-		<li><a href="#.brightnessColor">.brightnessColor()</a>
-		<li><a href="#.setBrightnessColor">.setBrightnessColor(brightnessColor)</a>
-		<li><a href="#.borderThickness">.borderThickness()</a>
-		<li><a href="#.size">.size(bodySize)</a>
-		<li><a href="#.absoluteSize">.absoluteSize(bodySize)</a>
-		<li><a href="#.assignParent">.assignParent(fromNode, parentDirection)</a>
-		<li><a href="#.isSelected">.isSelected()</a>
-		<li><a href="#.setSelected">.setSelected(selected)</a>
-		<li><a href="#.horizontalPadding">.horizontalPadding()</a>
-		<li><a href="#.verticalPadding">.verticalPadding()</a>
-		<li><a href="#.verticalSeparation">.verticalSeparation(direction)</a>
-		<li><a href="#.horizontalSeparation">.horizontalSeparation(direction)</a>
-		<li><a href="#.inNodeBody">.inNodeBody(x, y, userScale)</a>
-		<li><a href="#.inNodeExtents">.inNodeExtents(x, y, userScale)</a>
-		<li><a href="#.nodeUnderCoords">.nodeUnderCoords(x, y, userScale)</a>
-		<li><a href="#.sizeWithoutPadding">.sizeWithoutPadding(bodySize)</a>
-		<li><a href="#.commitLayout">.commitLayout(bodySize)</a>
-		<li><a href="#parsegraph_findConsecutiveLength">parsegraph_findConsecutiveLength(node, inDirection)</a>
-		<li><a href="#.commitLayoutIteratively">.commitLayoutIteratively(timeout)</a>
-		<li><a href="#.separationAt">.separationAt(inDirection)</a>
-		<li><a href="#.layoutHasChanged">.layoutHasChanged(changeDirection)</a>
-		<li><a href="#.canonicalLayoutPreference">.canonicalLayoutPreference()</a>
-		<li><a href="#.destroy">.destroy()</a>
-		<li><a href="#.dumpExtentBoundingRect">.dumpExtentBoundingRect()</a>
-		<li><a href="#parsegraph_labeledBud">parsegraph_labeledBud(label, glyphAtlas)</a>
-		<li><a href="#parsegraph_labeledSlot">parsegraph_labeledSlot(label, glyphAtlas)</a>
-		<li><a href="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</a>
-		</li>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Node</h1>
-		The node represents a single element in a graph.
-		
-		<h3>new <a name="#parsegraph_Node">parsegraph_Node()</h3></a>
-		Creates a new Node of the given type, optionally connected to the given parent.
-		<p>
-		<ul>
-		<li>parsegraph_Node(newType) creates a new root node; the node will have no parent.</li>
-		<li>parsegraph_Node(newType, parentNode, parentDirection) creates a node connected to the given node in the given direction.</li>
-		</ul>
-		
-		<h3><a name="parsegraph_chainTab">parsegraph_chainTab(a, b, swappedOut)</h3></a>
-		Make a's next tab node b, and link the previous tab nodes accordingly. If swappedOut is given as an array, then its first and second elements are set to the original values of [a's next tab node, b's previous tab node].
-		<h3><a name="parsegraph_chainAllTabs">parsegraph_chainAllTabs()</h3></a>
-		Given a variable amount of nodes as arguments, chain the tab positions so that the nodes form a closed loop.
-		<h3><a name=".x">.x()</h3></a>
-		Returns the node's position relative to its parent. If the node is a root node, then 0 is returned.
-		<h3><a name=".y">.y()</h3></a>
-		Same as parsegraph_Node.prototype.x(), but for the Y-coordinate.
-		<h3><a name=".scale">.scale()</h3></a>
-		Returns the scale of this node.
-		<h3><a name=".setScale">.setScale(scale)</h3></a>
-		Sets the scale of this node.
-		<p>
-		This value is commutative with child scales.
-		<p>
-		Calling this function will change the layout.
-		<h3><a name=".setRightToLeft">.setRightToLeft(val)</h3></a>
-		This sets whether the node's forward and backward nodes will be reversed.
-		<p>
-		<ul><li>If rightToLeft() == true, parsegraph_FORWARD goes to the left.
-		<li>If rightToLeft() == false, parsegraph_FORWARD goes to the right.
-		</ul>
-		<h3><a name=".rightToLeft">.rightToLeft()</h3></a>
-		Returns whether this node's forward direction will be in the right-to-left direction.
-		<h3><a name=".commitAbsolutePos">.commitAbsolutePos()</h3></a>
-		Computes and saves the absolute position of this node.
-		<h3><a name=".positionWasChanged">.positionWasChanged()</h3></a>
-		Clears the absolute position, so that it must be recomputed using commitAbsolutePos().
-		<h3><a name=".absoluteX">.absoluteX()</h3></a>
-		Returns the absolute X-coordinate of the center of this node. The absolute position will be
-		computed if necessary.
-		<h3><a name=".absoluteY">.absoluteY()</h3></a>
-		Same as absoluteX(), but for the Y-coordinate.
-		<h3><a name=".absoluteScale">.absoluteScale()</h3></a>
-		Same as absoluteX(), but for the scale of the node.
-		<h3><a name=".setPosAt">.setPosAt(inDirection, x, y)</h3></a>
-		Directly sets the position of the node in the given direction, relative to this node.
-		<h3><a name=".setPaintGroup">.setPaintGroup(paintGroup)</h3></a>
-		Sets this node's paint group to the given value, removing this node from any previous paint group if necessary. This node and its descendents will be rendered as part of the given paint group.
-		<h3><a name=".findPaintGroup">.findPaintGroup()</h3></a>
-		Returns the node's paint group. If this node does not have a paint group, then
-		the parent's is returned.
-		<h3><a name=".localPaintGroup">.localPaintGroup()</h3></a>
-		Directly returns the paint group set on this node, if any is set.
-		<h3><a name=".graph">.graph()</h3></a>
-		Returns the graph that contains the node.
-		<h3><a name=".backdropColor">.backdropColor()</h3></a>
-		Returns the color that should be used as the background color for inward nodes.
-		<h3><a name=".setClickListener">.setClickListener(listener, thisArg)</h3></a>
-		Sets this node's click listener to the given value or clearing it if listener is null.
-		<h3><a name=".setChangeListener">.setChangeListener(listener, thisArg)</h3></a>
-		Sets this node's change listener to the given value or clearing it if listener is null.
-		<h3><a name=".isClickable">.isClickable()</h3></a>
-		Returns whether this node will receive mouse events.
-		<h3><a name=".setIgnoreMouse">.setIgnoreMouse(value)</h3></a>
-		Sets whether this node will ignore mouse events. This does not override the click listener.
-		<h3><a name=".ignoresMouse">.ignoresMouse()</h3></a>
-		Returns whether this node will ignore mouse events.
-		<h3><a name=".hasClickListener">.hasClickListener()</h3></a>
-		Returns whether this Node has a click listener.
-		<h3><a name=".hasChangeListener">.hasChangeListener()</h3></a>
-		Returns whether this Node has a change listener.
-		<h3><a name=".valueChanged">.valueChanged()</h3></a>
-		Invokes the change listener for this node.
-		<h3><a name=".click">.click()</h3></a>
-		Invokes the click listener on this node.
-		<p>
-		Does nothing if no click listener is present.
-		<h3><a name=".setKeyListener">.setKeyListener(listener, thisArg)</h3></a>
-		Sets this node's listener for key events to the given listener function.
-		<h3><a name=".hasKeyListener">.hasKeyListener()</h3></a>
-		Returns whether this Node has a listener to respond to key events.
-		<h3><a name=".key">.key()</h3></a>
-		Invokes the key listener on this node.
-		<p>
-		Does nothing if no key listener is present.
-		<h3><a name=".nodeFit">.nodeFit()</h3></a>
-		Returns the node fit for this node. Either parsegraph_NODE_FIT_EXACT or parsegraph_NODE_FIT_LOOSE.
-		<p>
-		Node fit affects how the separation is computed between nodes. Exact fit means that the nodes will be separated with minimal space between them. Loose fit causes the node's extent to be simplified after combining - this results in a looser fit because interlocking areas are treated as straight edges.
-		<h3><a name=".setNodeFit">.setNodeFit(nodeFit)</h3></a>
-		Sets the node fit to the given value. See nodeFit() for details.
-		<h3><a name=".isRoot">.isRoot()</h3></a>
-		Returns whether this node is a root node.
-		<h3><a name=".parentDirection">.parentDirection()</h3></a>
-		Returns the direction of this node's parent.
-		<h3><a name=".nodeParent">.nodeParent()</h3></a>
-		Returns this node's parent.
-		<p>
-		Throws parsegraph_NODE_IS_ROOT if this node is a root node.
-		<h3><a name=".parentNode">.parentNode()</h3></a>
-		Synonym for .nodeParent().
-		<h3><a name=".parent">.parent()</h3></a>
-		Synonym for .nodeParent().
-		<h3><a name=".hasNode">.hasNode(atDirection)</h3></a>
-		Returns whether this node has a node in the given direction.
-		<p>
-		Returns false if the given direction is NULL_NODE_DIRECTION.
-		<h3><a name=".hasNodes">.hasNodes(axis)</h3></a>
-		Returns an array of node directions that indicate a node
-		in that direction. The directions are filtered by the given
-		axis.
-		<p>
-		Nodes in both directions:
-		[negative node direction, positive node direction]
-		<p>
-		 Node in negative direction:
-		 [negative node direction, parsegraph_NULL_NODE_DIRECTION]
-		<p>
-		 Node in positive direction:
-		 [parsegraph_NULL_NODE_DIRECTION, positive node direction]
-		<p>
-		 Node in no directions:
-		 [parsegraph_NULL_NODE_DIRECTION, parsegraph_NULL_NODE_DIRECTION]
-		 */
-		<h3><a name=".hasChildAt">.hasChildAt(direction)</h3></a>
-		Returns whether this node has a child node in the given direction.
-		<p>
-		See also nodeAt(), which returns true for the parent as well.
-		<h3><a name=".hasAnyNodes">.hasAnyNodes()</h3></a>
-		Returns whether this node has any downward, upward, forward, backward nodes.
-		<h3><a name=".nodeAt">.nodeAt(atDirection)</h3></a>
-		Returns the node in the given direction, or null if no such node exists.
-		<h3><a name=".traverse">.traverse(filterFunc, actionFunc, thisArg, timeout)</h3></a>
-		Iterates over this node and its children, calling actionFunc whenever
-		filterFunc is true.
-		<h3><a name=".spawnNode">.spawnNode(spawnDirection, newType)</h3></a>
-		Spawns a new node of the given type in the given direction. The new node is returned.
-		<p>
-		The direction must not already contain a node; an error is thrown otherwise.
-		<h3><a name=".connectNode">.connectNode(inDirection, node)</h3></a>
-		Connects the given node to this node in the given direction. The connected node is returned.
-		<p>
-		The direction must not already contain a node; an error is thrown otherwise.
-		<h3><a name=".eraseNode">.eraseNode(givenDirection)</h3></a>
-		Synonym for .disconnectNode().
-		<h3><a name=".disconnectNode">.disconnectNode(inDirection)</h3></a>
-		Removes and returns the node in the given direction.
-		<p>
-		Does nothing if no node is in the given direction.
-		<h3><a name=".disconnectNode">.disconnectNode()</h3></a>
-		Removes and returns this node from its parent. If this node is a root, an error is thrown.
-		<h3><a name=".eachChild">.eachChild(visitor, visitorThisArg)</h3></a>
-		Invokes the specified visitor for each child of this node.
-		<h3><a name=".scaleAt">.scaleAt(direction)</h3></a>
-		Returns the parent-relative scale of the node in the given direction.
-		<h3><a name=".lineLengthAt">.lineLengthAt(direction)</h3></a>
-		Returns the computed length of the connecting line in the given direction.
-		<p>
-		The result is unspecified if there is no node in that direction.
-		<h3><a name=".extentsAt">.extentsAt(atDirection)</h3></a>
-		Returns the computed extents of the node in the given direction.
-		<p>
-		The result is unspecified if there is no node in that direction.
-		<h3><a name=".extentOffsetAt">.extentOffsetAt(atDirection)</h3></a>
-		Returns the offset of this node's extents in the specified direction.
-		<h3><a name=".extentSize">.extentSize(outPos)</h3></a>
-		Returns a new parsegraph_Size object that represents the size of this node's extents. This is
-		equivalent to a bounding box that will cover this node and its descendents.
-		<p>
-		outPos is optionally a parsegraph_Size object that will be used instead of creating a new object.
-		<h3><a name=".setLayoutPreference">.setLayoutPreference(given)</h3></a>
-		Sets the layout preference of this node to the given value. This value is used in determining the order of child layout. Because the first axis laid out will be closest to the parent, the second axis must separate not only from the parent, but from the first axis, which may cause it to be further separated. This can cause rendered graphs to appear like a part is popped out.
-		<p>
-		Caret uses this method to implement pull().
-		<h3><a name=".setNodeAlignmentMode">.setNodeAlignmentMode(newAlignmentMode)</h3></a>
-		Sets this node's alignment node for its parent. The node must have a parent, because alignment is always set on the parent.
-		<h3><a name=".setNodeAlignmentMode">.setNodeAlignmentMode(inDirection, newAlignmentMode)</h3></a>
-		Aligns the child in the given direction using the given node alignment mode.
-		<p>
-		The alignment can be set and changed before a node is present.
-		<h3><a name=".nodeAlignmentMode">.nodeAlignmentMode(inDirection)</h3></a>
-		Returns the alignment used for the given direction.
-		<h3><a name=".type">.type()</h3></a>
-		Returns this node's type.
-		<h3><a name=".setType">.setType(newType)</h3></a>
-		Sets this node's type to the new value. The style is changed as well.
-		<p>
-		This method changes the layout.
-		<h3><a name=".value">.value()</h3></a>
-		Returns this node's value.
-		<h3><a name=".setValue">.setValue(newValue, report)</h3></a>
-		Sets this node's value to the new value, invoking the change listener if report is true.
-		<h3><a name=".scene">.scene()</h3></a>
-		Returns this node's scene, if one is set.
-		<h3><a name=".setScene">.setScene(scene)</h3></a>
-		Sets this node's scene to the given value.
-		<h3><a name=".typeAt">.typeAt(direction)</h3></a>
-		Returns the type of the node in the given direction.
-		<h3><a name=".label">.label()</h3></a>
-		Returns the text of this node's label, or null if this node does not have a label.
-		<h3><a name=".realLabel">.realLabel()</h3></a>
-		Directly returns the parsegraph_Label for this node.
-		<h3><a name="setLabel">setLabel(text, glyphAtlas)</h3></a>
-		Sets this node's label's text to the specified value. If the node does not already have a
-		label, one is created. Note that labels require glyph atlases to be created, so one must
-		be provided the first time setLabel() is called.
-		<h3><a name=".blockStyle">.blockStyle()</h3></a>
-		Return this node's style.
-		<h3><a name=".setBlockStyle">.setBlockStyle(style)</h3></a>
-		Sets this node's style.
-		<h3><a name=".isSelectedAt">.isSelectedAt(direction)</h3></a>
-		Returns whether the node in the given direction is selected. Returns false if there is no node in the given direction.
-		<h3><a name=".sizeIn">.sizeIn(direction)</h3></a>
-		Returns the node's size in the given direction, from its center to that direction's extreme value still within this node.
-		<h3><a name=".brightnessColor">.brightnessColor()</h3></a>
-		Returns the color used for highlighting this node.
-		<h3><a name=".setBrightnessColor">.setBrightnessColor(brightnessColor)</h3></a>
-		Sets the color used for highlighting this node to the given parsegraph_Color value.
-		<h3><a name=".borderThickness">.borderThickness()</h3></a>
-		Returns the border thickness used for this node, as given by the style.
-		<h3><a name=".size">.size(bodySize)</h3></a>
-		Returns the local size of this node. If bodySize is given, it must be a parsegraph_Size that will be populated with this node's size.
-		<h3><a name=".absoluteSize">.absoluteSize(bodySize)</h3></a>
-		Returns the absolute size of this node.
-		<h3><a name=".assignParent">.assignParent(fromNode, parentDirection)</h3></a>
-		Directly sets the parent of this node to the given node in the given parent direction.
-		<h3><a name=".isSelected">.isSelected()</h3></a>
-		Returns whether this node is selected.
-		<h3><a name=".setSelected">.setSelected(selected)</h3></a>
-		Sets whether this node is selected.
-		<h3><a name=".horizontalPadding">.horizontalPadding()</h3></a>
-		Returns the padding between the central content of the node and its border, as given by the style.
-		<h3><a name=".verticalPadding">.verticalPadding()</h3></a>
-		Returns the padding between the central content of the node and its border, as given by the style.
-		<h3><a name=".verticalSeparation">.verticalSeparation(direction)</h3></a>
-		Returns the minimum vertical separation for the given direction.
-		<p>
-		Buds use a special separation, so the node in the given direction should be the same as the one that will be painted and rendered if the value is to be trusted.
-		<h3><a name=".horizontalSeparation">.horizontalSeparation(direction)</h3></a>
-		Same as .verticalSeparation(direction), but for the horizontal axis.
-		<h3><a name=".inNodeBody">.inNodeBody(x, y, userScale)</h3></a>
-		Returns true if the coordinates are in the node.
-		<h3><a name=".inNodeExtents">.inNodeExtents(x, y, userScale)</h3></a>
-		Returns true if the coordinates are in the node or its extent.
-		<h3><a name=".nodeUnderCoords">.nodeUnderCoords(x, y, userScale)</h3></a>
-		Searches for the node that contains the given position. First tests against
-		the body, and if that fails, tests against the extent.
-		<p>
-		The deepest node under the given coordinates is returned, or null otherwise.
-		<h3><a name=".sizeWithoutPadding">.sizeWithoutPadding(bodySize)</h3></a>
-		Returns the size of this node, based on this node's type and label.
-		<p>
-		Sliders appear like blocks, though they render buds and their own lines internally.
-		Scenes also appear like boxes.
-		Consequently, since these types work like blocks, there is no special code for them here.
-		<h3><a name=".commitLayout">.commitLayout(bodySize)</h3></a>
-		Sets the position, calculates extents, and clears the needs commit flag.
-		<p>
-		If bodySize is given, it must be a parsegraph_Size that will be used during calculations.
-		<h3><a name="parsegraph_findConsecutiveLength">parsegraph_findConsecutiveLength(node, inDirection)</h3></a>
-		Returns the total distance from the given node, to the furthest node
-		found in the given direction.
-		<p>
-		The result is in node-space; the scale of child nodes is applied.
-		<h3><a name=".commitLayoutIteratively">.commitLayoutIteratively(timeout)</h3></a>
-		Commits the layout of this node and its descendents.
-		<p>
-		Returns a function that, if calculations for all nodes is not complete by the given timeout
-		(in milliseconds like new Date().getTime()), will continue the layout operation. If the
-		layout completed, null is returned, or will eventually be returned by the given function
-		if enough invocations are made.
-		<h3><a name=".separationAt">.separationAt(inDirection)</h3></a>
-		Returns the separation between this node and the node
-		in the given direction.
-		<p>
-		Throws NO_NODE_FOUND if no node is in the given direction.
-		<h3><a name=".layoutHasChanged">.layoutHasChanged(changeDirection)</h3></a>
-		Indicate that the layout was changed and thus needs an layout commit.
-		<h3><a name=".canonicalLayoutPreference">.canonicalLayoutPreference()</h3></a>
-		From this node's layout preference, compute either parsegraph_PREFER_PARENT_AXIS or parsegraph_PREFER_PERPENDICULAR_AXIS.
-		<h3><a name=".destroy">.destroy()</h3></a>
-		Removes all children, clears the layout state and parent direction, and resets the scale.
-		<h3><a name=".dumpExtentBoundingRect">.dumpExtentBoundingRect()</h3></a>
-		Dumps each node's extents.
-		<h3><a name="parsegraph_labeledBud">parsegraph_labeledBud(label, glyphAtlas)</h3></a>
-		Creates and returns a new labeled bud that uses the given glyph atlas.
-		<h3><a name="parsegraph_labeledSlot">parsegraph_labeledSlot(label, glyphAtlas)</h3></a>
-		Creates and returns a new labeled slot that uses the given glyph atlas.
-		<h3><a name="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</h3></a>
-		Creates and returns a new labeled block that uses the given glyph atlas.
-		</div>
-			<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Node">Node</a></div>
+<h1>Parsegraph Node</h1>
+The node represents a single element in a graph.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_Node">new parsegraph_Node(newType)</li></a>
+<li><a href="#parsegraph_Node">new parsegraph_Node(newType, fromNode, parentDirection)</li></a>
+<li><a href="#parsegraph_chainTab">parsegraph_chainTab(a, b, swappedOut)</a>
+<li><a href="#parsegraph_chainAllTabs">parsegraph_chainAllTabs()</a>
+<li><a href="#.x">.x()</a>
+<li><a href="#.y">.y()</a>
+<li><a href="#.scale">.scale()</a>
+<li><a href="#.setScale">.setScale(scale)</a>
+<li><a href="#.setRightToLeft">.setRightToLeft(val)</a>
+<li><a href="#.rightToLeft">.rightToLeft()</a>
+<li><a href="#.commitAbsolutePos">.commitAbsolutePos()</a>
+<li><a href="#.positionWasChanged">.positionWasChanged()</a>
+<li><a href="#.absoluteX">.absoluteX()</a>
+<li><a href="#.absoluteY">.absoluteY()</a>
+<li><a href="#.absoluteScale">.absoluteScale()</a>
+<li><a href="#.setPosAt">.setPosAt(inDirection, x, y)</a>
+<li><a href="#.setPaintGroup">.setPaintGroup(paintGroup)</a>
+<li><a href="#.findPaintGroup">.findPaintGroup()</a>
+<li><a href="#.localPaintGroup">.localPaintGroup()</a>
+<li><a href="#.graph">.graph()</a>
+<li><a href="#.backdropColor">.backdropColor()</a>
+<li><a href="#.setClickListener">.setClickListener(listener, thisArg)</a>
+<li><a href="#.setChangeListener">.setChangeListener(listener, thisArg)</a>
+<li><a href="#.isClickable">.isClickable()</a>
+<li><a href="#.setIgnoreMouse">.setIgnoreMouse()</a>
+<li><a href="#.ignoresMouse">.ignoresMouse()</a>
+<li><a href="#.hasClickListener">.hasClickListener()</a>
+<li><a href="#.hasChangeListener">.hasChangeListener()</a>
+<li><a href="#.valueChanged">.valueChanged()</a>
+<li><a href="#.click">.click()</a>
+<li><a href="#.setKeyListener">.setKeyListener(listener, thisArg)</a>
+<li><a href="#.hasKeyListener">.hasKeyListener()</a>
+<li><a href="#.key">.key()</a>
+<li><a href="#.nodeFit">.nodeFit()</a>
+<li><a href="#.setNodeFit">.setNodeFit()</a>
+<li><a href="#.isRoot">.isRoot()</a>
+<li><a href="#.parentDirection">.parentDirection()</a>
+<li><a href="#.nodeParent">.nodeParent()</a>
+<li><a href="#.parentNode">.parentNode()</a>
+<li><a href="#.parent">.parent()</a>
+<li><a href="#.hasNode">.hasNode(atDirection)</a>
+<li><a href="#.hasNodes">.hasNodes(axis)</a>
+<li><a href="#.hasChildAt">.hasChildAt(direction)</a>
+<li><a href="#.hasAnyNodes">.hasAnyNodes()</a>
+<li><a href="#.nodeAt">.nodeAt(atDirection)</a>
+<li><a href="#.traverse">.traverse(filterFunc, actionFunc, thisArg, timeout)</a>
+<li><a href="#.spawnNode">.spawnNode(spawnDirection, newType)</a>
+<li><a href="#.connectNode">.connectNode(inDirection, node)</a>
+<li><a href="#.eraseNode">.eraseNode(givenDirection)</a>
+<li><a href="#.disconnectNode">.disconnectNode(inDirection)</a>
+<li><a href="#.disconnectNode">.disconnectNode()</a>
+<li><a href="#.eachChild">.eachChild(visitor, visitorThisArg)</a>
+<li><a href="#.scaleAt">.scaleAt(direction)</a>
+<li><a href="#.lineLengthAt">.lineLengthAt(direction)</a>
+<li><a href="#.extentSize">.extentSize(outPos)</a>
+<li><a href="#.setLayoutPreference">.setLayoutPreference(given)</a>
+<li><a href="#.setNodeAlignmentMode">.setNodeAlignmentMode(newAlignmentMode)</a>
+<li><a href="#.setNodeAlignmentMode">.setNodeAlignmentMode(inDirection, newAlignmentMode)</a>
+<li><a href="#.nodeAlignmentMode">.nodeAlignmentMode(inDirection)</a>
+<li><a href="#.type">.type()</a>
+<li><a href="#.setType">.setType(newType)</a>
+<li><a href="#.value">.value()</a>
+<li><a href="#.setValue">.setValue(newValue, report)</a>
+<li><a href="#.scene">.scene()</a>
+<li><a href="#.setScene">.setScene(scene)</a>
+<li><a href="#.typeAt">.typeAt(direction)</a>
+<li><a href="#.label">.label()</a>
+<li><a href="#.realLabel">.realLabel()</a>
+<li><a href="#setLabel">setLabel(text, glyphAtlas)</a>
+<li><a href="#.blockStyle">.blockStyle()</a>
+<li><a href="#.setBlockStyle">.setBlockStyle(style)</a>
+<li><a href="#.isSelectedAt">.isSelectedAt(direction)</a>
+<li><a href="#.sizeIn">.sizeIn(direction)</a>
+<li><a href="#.brightnessColor">.brightnessColor()</a>
+<li><a href="#.setBrightnessColor">.setBrightnessColor(brightnessColor)</a>
+<li><a href="#.borderThickness">.borderThickness()</a>
+<li><a href="#.size">.size(bodySize)</a>
+<li><a href="#.absoluteSize">.absoluteSize(bodySize)</a>
+<li><a href="#.assignParent">.assignParent(fromNode, parentDirection)</a>
+<li><a href="#.isSelected">.isSelected()</a>
+<li><a href="#.setSelected">.setSelected(selected)</a>
+<li><a href="#.horizontalPadding">.horizontalPadding()</a>
+<li><a href="#.verticalPadding">.verticalPadding()</a>
+<li><a href="#.verticalSeparation">.verticalSeparation(direction)</a>
+<li><a href="#.horizontalSeparation">.horizontalSeparation(direction)</a>
+<li><a href="#.inNodeBody">.inNodeBody(x, y, userScale)</a>
+<li><a href="#.inNodeExtents">.inNodeExtents(x, y, userScale)</a>
+<li><a href="#.nodeUnderCoords">.nodeUnderCoords(x, y, userScale)</a>
+<li><a href="#.sizeWithoutPadding">.sizeWithoutPadding(bodySize)</a>
+<li><a href="#.commitLayout">.commitLayout(bodySize)</a>
+<li><a href="#parsegraph_findConsecutiveLength">parsegraph_findConsecutiveLength(node, inDirection)</a>
+<li><a href="#.commitLayoutIteratively">.commitLayoutIteratively(timeout)</a>
+<li><a href="#.separationAt">.separationAt(inDirection)</a>
+<li><a href="#.layoutHasChanged">.layoutHasChanged(changeDirection)</a>
+<li><a href="#.canonicalLayoutPreference">.canonicalLayoutPreference()</a>
+<li><a href="#.destroy">.destroy()</a>
+<li><a href="#.dumpExtentBoundingRect">.dumpExtentBoundingRect()</a>
+<li><a href="#parsegraph_labeledBud">parsegraph_labeledBud(label, glyphAtlas)</a>
+<li><a href="#parsegraph_labeledSlot">parsegraph_labeledSlot(label, glyphAtlas)</a>
+<li><a href="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</a>
+</li>
+</ol>
+</div>
+<h3><a name="parsegraph_Node">new parsegraph_Node(nodeType, [parentNode, parentDirection])</a></h3>
+Creates a new Node of the given type, optionally connected to the given parent.
+<p>
+<ul>
+<li>parsegraph_Node(newType) creates a new root node; the node will have no parent.</li>
+<li>parsegraph_Node(newType, parentNode, parentDirection) creates a node connected to the given node in the given direction.</li>
+</ul>
+<h3><a name="parsegraph_chainTab">parsegraph_chainTab(a, b, swappedOut)</a></h3>
+Make a's next tab node b, and link the previous tab nodes accordingly. If swappedOut is given as an array, then its first and second elements are set to the original values of [a's next tab node, b's previous tab node].
+<h3><a name="parsegraph_chainAllTabs">parsegraph_chainAllTabs()</a></h3>
+Given a variable amount of nodes as arguments, chain the tab positions so that the nodes form a closed loop.
+<h3><a name=".x">.x()</a></h3>
+Returns the node's horizontal position relative to its parent. If the node is a root node, then 0 is returned.
+<h3><a name=".y">.y()</a></h3>
+Same as parsegraph_Node.prototype.x(), but for the vertical coordinate.
+<h3><a name=".scale">.scale()</a></h3>
+Returns the scale of this node.
+<h3><a name=".setScale">.setScale(scale)</a></h3>
+Sets the scale of this node.
+<p>
+This value is commutative with child scales.
+<p>
+Calling this function will change the layout.
+<h3><a name=".setRightToLeft">.setRightToLeft(val)</a></h3>
+This sets whether the node's forward and backward nodes will be reversed.
+<p>
+<ul><li>If rightToLeft() == true, parsegraph_FORWARD goes to the left.
+<li>If rightToLeft() == false, parsegraph_FORWARD goes to the right.
+</ul>
+<h3><a name=".rightToLeft">.rightToLeft()</a></h3>
+Returns whether this node's forward direction will be in the right-to-left direction.
+<h3><a name=".commitAbsolutePos">.commitAbsolutePos()</a></h3>
+Computes and saves the absolute position of this node.
+<h3><a name=".positionWasChanged">.positionWasChanged()</a></h3>
+Clears the absolute position, so that it must be recomputed using commitAbsolutePos().
+<h3><a name=".absoluteX">.absoluteX()</a></h3>
+Returns the absolute X-coordinate of the center of this node. The absolute position will be
+computed if necessary.
+<h3><a name=".absoluteY">.absoluteY()</a></h3>
+Same as absoluteX(), but for the Y-coordinate.
+<h3><a name=".absoluteScale">.absoluteScale()</a></h3>
+Same as absoluteX(), but for the scale of the node.
+<h3><a name=".setPosAt">.setPosAt(inDirection, x, y)</a></h3>
+Directly sets the position of the node in the given direction, relative to this node.
+<h3><a name=".setPaintGroup">.setPaintGroup(paintGroup)</a></h3>
+Sets this node's paint group to the given value, removing this node from any previous paint group if necessary. This node and its descendents will be rendered as part of the given paint group.
+<h3><a name=".findPaintGroup">.findPaintGroup()</a></h3>
+Returns the node's paint group. If this node does not have a paint group, then
+the parent's is returned.
+<h3><a name=".localPaintGroup">.localPaintGroup()</a></h3>
+Directly returns the paint group set on this node, if any is set.
+<h3><a name=".graph">.graph()</a></h3>
+Returns the graph that contains the node.
+<h3><a name=".backdropColor">.backdropColor()</a></h3>
+Returns the color that should be used as the background color for inward nodes.
+<h3><a name=".setClickListener">.setClickListener(listener, thisArg)</a></h3>
+Sets this node's click listener to the given value or clearing it if listener is null.
+<h3><a name=".setChangeListener">.setChangeListener(listener, thisArg)</a></h3>
+Sets this node's change listener to the given value or clearing it if listener is null.
+<h3><a name=".isClickable">.isClickable()</a></h3>
+Returns whether this node will receive mouse events.
+<h3><a name=".setIgnoreMouse">.setIgnoreMouse(value)</a></h3>
+Sets whether this node will ignore mouse events. This does not override the click listener.
+<h3><a name=".ignoresMouse">.ignoresMouse()</a></h3>
+Returns whether this node will ignore mouse events.
+<h3><a name=".hasClickListener">.hasClickListener()</a></h3>
+Returns whether this Node has a click listener.
+<h3><a name=".hasChangeListener">.hasChangeListener()</a></h3>
+Returns whether this Node has a change listener.
+<h3><a name=".valueChanged">.valueChanged()</a></h3>
+Invokes the change listener for this node.
+<h3><a name=".click">.click()</a></h3>
+Invokes the click listener on this node.
+<p>
+Does nothing if no click listener is present.
+<h3><a name=".setKeyListener">.setKeyListener(listener, thisArg)</a></h3>
+Sets this node's listener for key events to the given listener function.
+<h3><a name=".hasKeyListener">.hasKeyListener()</a></h3>
+Returns whether this Node has a listener to respond to key events.
+<h3><a name=".key">.key()</a></h3>
+Invokes the key listener on this node.
+<p>
+Does nothing if no key listener is present.
+<h3><a name=".nodeFit">.nodeFit()</a></h3>
+Returns the node fit for this node. Either parsegraph_NODE_FIT_EXACT or parsegraph_NODE_FIT_LOOSE.
+<p>
+Node fit affects how the separation is computed between nodes. Exact fit means that the nodes will be separated with minimal space between them. Loose fit causes the node's extent to be simplified after combining - this results in a looser fit because interlocking areas are treated as straight edges.
+<h3><a name=".setNodeFit">.setNodeFit(nodeFit)</a></h3>
+Sets the node fit to the given value. See nodeFit() for details.
+<h3><a name=".isRoot">.isRoot()</a></h3>
+Returns whether this node is a root node.
+<h3><a name=".parentDirection">.parentDirection()</a></h3>
+Returns the direction of this node's parent.
+<h3><a name=".nodeParent">.nodeParent()</a></h3>
+Returns this node's parent.
+<p>
+Throws parsegraph_NODE_IS_ROOT if this node is a root node.
+<h3><a name=".parentNode">.parentNode()</a></h3>
+Synonym for .nodeParent().
+<h3><a name=".parent">.parent()</a></h3>
+Synonym for .nodeParent().
+<h3><a name=".hasNode">.hasNode(atDirection)</a></h3>
+Returns whether this node has a node in the given direction.
+<p>
+Returns false if the given direction is NULL_NODE_DIRECTION.
+<h3><a name=".hasNodes">.hasNodes(axis)</a></h3>
+Returns an array of node directions that indicate a node
+in that direction. The directions are filtered by the given
+axis.
+<p>
+Nodes in both directions:
+[negative node direction, positive node direction]
+<p>
+ Node in negative direction:
+ [negative node direction, parsegraph_NULL_NODE_DIRECTION]
+<p>
+ Node in positive direction:
+ [parsegraph_NULL_NODE_DIRECTION, positive node direction]
+<p>
+ Node in no directions:
+ [parsegraph_NULL_NODE_DIRECTION, parsegraph_NULL_NODE_DIRECTION]
+ */
+<h3><a name=".hasChildAt">.hasChildAt(direction)</a></h3>
+Returns whether this node has a child node in the given direction.
+<p>
+See also nodeAt(), which returns true for the parent as well.
+<h3><a name=".hasAnyNodes">.hasAnyNodes()</a></h3>
+Returns whether this node has any downward, upward, forward, backward nodes.
+<h3><a name=".nodeAt">.nodeAt(atDirection)</a></h3>
+Returns the node in the given direction, or null if no such node exists.
+<h3><a name=".traverse">.traverse(filterFunc, actionFunc, thisArg, timeout)</a></h3>
+Iterates over this node and its children, calling actionFunc whenever
+filterFunc is true.
+<h3><a name=".spawnNode">.spawnNode(spawnDirection, newType)</a></h3>
+Spawns a new node of the given type in the given direction. The new node is returned.
+<p>
+The direction must not already contain a node; an error is thrown otherwise.
+<h3><a name=".connectNode">.connectNode(inDirection, node)</a></h3>
+Connects the given node to this node in the given direction. The connected node is returned.
+<p>
+The direction must not already contain a node; an error is thrown otherwise.
+<h3><a name=".eraseNode">.eraseNode(givenDirection)</a></h3>
+Synonym for .disconnectNode().
+<h3><a name=".disconnectNode">.disconnectNode(inDirection)</a></h3>
+Removes and returns the node in the given direction.
+<p>
+Does nothing if no node is in the given direction.
+<h3><a name=".disconnectNode">.disconnectNode()</a></h3>
+Removes and returns this node from its parent. If this node is a root, an error is thrown.
+<h3><a name=".eachChild">.eachChild(visitor, visitorThisArg)</a></h3>
+Invokes the specified visitor for each child of this node.
+<h3><a name=".scaleAt">.scaleAt(direction)</a></h3>
+Returns the parent-relative scale of the node in the given direction.
+<h3><a name=".lineLengthAt">.lineLengthAt(direction)</a></h3>
+Returns the computed length of the connecting line in the given direction.
+<p>
+The result is unspecified if there is no node in that direction.
+<h3><a name=".extentsAt">.extentsAt(atDirection)</a></h3>
+Returns the computed extents of the node in the given direction.
+<p>
+The result is unspecified if there is no node in that direction.
+<h3><a name=".extentOffsetAt">.extentOffsetAt(atDirection)</a></h3>
+Returns the offset of this node's extents in the specified direction.
+<h3><a name=".extentSize">.extentSize(outPos)</a></h3>
+Returns a new parsegraph_Size object that represents the size of this node's extents. This is
+equivalent to a bounding box that will cover this node and its descendents.
+<p>
+outPos is optionally a parsegraph_Size object that will be used instead of creating a new object.
+<h3><a name=".setLayoutPreference">.setLayoutPreference(given)</a></h3>
+Sets the layout preference of this node to the given value. This value is used in determining the order of child layout. Because the first axis laid out will be closest to the parent, the second axis must separate not only from the parent, but from the first axis, which may cause it to be further separated. This can cause rendered graphs to appear like a part is popped out.
+<p>
+Caret uses this method to implement pull().
+<h3><a name=".setNodeAlignmentMode">.setNodeAlignmentMode(newAlignmentMode)</a></h3>
+Sets this node's alignment node for its parent. The node must have a parent, because alignment is always set on the parent.
+<h3><a name=".setNodeAlignmentMode">.setNodeAlignmentMode(inDirection, newAlignmentMode)</a></h3>
+Aligns the child in the given direction using the given node alignment mode.
+<p>
+The alignment can be set and changed before a node is present.
+<h3><a name=".nodeAlignmentMode">.nodeAlignmentMode(inDirection)</a></h3>
+Returns the alignment used for the given direction.
+<h3><a name=".type">.type()</a></h3>
+Returns this node's type.
+<h3><a name=".setType">.setType(newType)</a></h3>
+Sets this node's type to the new value. The style is changed as well.
+<p>
+This method changes the layout.
+<h3><a name=".value">.value()</a></h3>
+Returns this node's value.
+<h3><a name=".setValue">.setValue(newValue, report)</a></h3>
+Sets this node's value to the new value, invoking the change listener if report is true.
+<h3><a name=".scene">.scene()</a></h3>
+Returns this node's scene, if one is set.
+<h3><a name=".setScene">.setScene(scene)</a></h3>
+Sets this node's scene to the given value.
+<h3><a name=".typeAt">.typeAt(direction)</a></h3>
+Returns the type of the node in the given direction.
+<h3><a name=".label">.label()</a></h3>
+Returns the text of this node's label, or null if this node does not have a label.
+<h3><a name=".realLabel">.realLabel()</a></h3>
+Directly returns the parsegraph_Label for this node.
+<h3><a name="setLabel">setLabel(text, glyphAtlas)</a></h3>
+Sets this node's label's text to the specified value. If the node does not already have a
+label, one is created. Note that labels require glyph atlases to be created, so one must
+be provided the first time setLabel() is called.
+<h3><a name=".blockStyle">.blockStyle()</a></h3>
+Return this node's style.
+<h3><a name=".setBlockStyle">.setBlockStyle(style)</a></h3>
+Sets this node's style.
+<h3><a name=".isSelectedAt">.isSelectedAt(direction)</a></h3>
+Returns whether the node in the given direction is selected. Returns false if there is no node in the given direction.
+<h3><a name=".sizeIn">.sizeIn(direction)</a></h3>
+Returns the node's size in the given direction, from its center to that direction's extreme value still within this node.
+<h3><a name=".brightnessColor">.brightnessColor()</a></h3>
+Returns the color used for highlighting this node.
+<h3><a name=".setBrightnessColor">.setBrightnessColor(brightnessColor)</a></h3>
+Sets the color used for highlighting this node to the given parsegraph_Color value.
+<h3><a name=".borderThickness">.borderThickness()</a></h3>
+Returns the border thickness used for this node, as given by the style.
+<h3><a name=".size">.size(bodySize)</a></h3>
+Returns the local size of this node. If bodySize is given, it must be a parsegraph_Size that will be populated with this node's size.
+<h3><a name=".absoluteSize">.absoluteSize(bodySize)</a></h3>
+Returns the absolute size of this node.
+<h3><a name=".assignParent">.assignParent(fromNode, parentDirection)</a></h3>
+Directly sets the parent of this node to the given node in the given parent direction.
+<h3><a name=".isSelected">.isSelected()</a></h3>
+Returns whether this node is selected.
+<h3><a name=".setSelected">.setSelected(selected)</a></h3>
+Sets whether this node is selected.
+<h3><a name=".horizontalPadding">.horizontalPadding()</a></h3>
+Returns the padding between the central content of the node and its border, as given by the style.
+<h3><a name=".verticalPadding">.verticalPadding()</a></h3>
+Returns the padding between the central content of the node and its border, as given by the style.
+<h3><a name=".verticalSeparation">.verticalSeparation(direction)</a></h3>
+Returns the minimum vertical separation for the given direction.
+<p>
+Buds use a special separation, so the node in the given direction should be the same as the one that will be painted and rendered if the value is to be trusted.
+<h3><a name=".horizontalSeparation">.horizontalSeparation(direction)</a></h3>
+Same as .verticalSeparation(direction), but for the horizontal axis.
+<h3><a name=".inNodeBody">.inNodeBody(x, y, userScale)</a></h3>
+Returns true if the coordinates are in the node.
+<h3><a name=".inNodeExtents">.inNodeExtents(x, y, userScale)</a></h3>
+Returns true if the coordinates are in the node or its extent.
+<h3><a name=".nodeUnderCoords">.nodeUnderCoords(x, y, userScale)</a></h3>
+Searches for the node that contains the given position. First tests against
+the body, and if that fails, tests against the extent.
+<p>
+The deepest node under the given coordinates is returned, or null otherwise.
+<h3><a name=".sizeWithoutPadding">.sizeWithoutPadding(bodySize)</a></h3>
+Returns the size of this node, based on this node's type and label.
+<p>
+Sliders appear like blocks, though they render buds and their own lines internally.
+Scenes also appear like boxes.
+Consequently, since these types work like blocks, there is no special code for them here.
+<h3><a name=".commitLayout">.commitLayout(bodySize)</a></h3>
+Sets the position, calculates extents, and clears the needs commit flag.
+<p>
+If bodySize is given, it must be a parsegraph_Size that will be used during calculations.
+<h3><a name="parsegraph_findConsecutiveLength">parsegraph_findConsecutiveLength(node, inDirection)</a></h3>
+Returns the total distance from the given node, to the furthest node
+found in the given direction.
+<p>
+The result is in node-space; the scale of child nodes is applied.
+<h3><a name=".commitLayoutIteratively">.commitLayoutIteratively(timeout)</a></h3>
+Commits the layout of this node and its descendents.
+<p>
+Returns a function that, if calculations for all nodes is not complete by the given timeout
+(in milliseconds like new Date().getTime()), will continue the layout operation. If the
+layout completed, null is returned, or will eventually be returned by the given function
+if enough invocations are made.
+<h3><a name=".separationAt">.separationAt(inDirection)</a></h3>
+Returns the separation between this node and the node
+in the given direction.
+<p>
+Throws NO_NODE_FOUND if no node is in the given direction.
+<h3><a name=".layoutHasChanged">.layoutHasChanged(changeDirection)</a></h3>
+Indicate that the layout was changed and thus needs an layout commit.
+<h3><a name=".canonicalLayoutPreference">.canonicalLayoutPreference()</a></h3>
+From this node's layout preference, compute either parsegraph_PREFER_PARENT_AXIS or parsegraph_PREFER_PERPENDICULAR_AXIS.
+<h3><a name=".destroy">.destroy()</a></h3>
+Removes all children, clears the layout state and parent direction, and resets the scale.
+<h3><a name=".dumpExtentBoundingRect">.dumpExtentBoundingRect()</a></h3>
+Dumps each node's extents.
+<h3><a name="parsegraph_labeledBud">parsegraph_labeledBud(label, glyphAtlas)</a></h3>
+Creates and returns a new labeled bud that uses the given glyph atlas.
+<h3><a name="parsegraph_labeledSlot">parsegraph_labeledSlot(label, glyphAtlas)</a></h3>
+Creates and returns a new labeled slot that uses the given glyph atlas.
+<h3><a name="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</a></h3>
+Creates and returns a new labeled block that uses the given glyph atlas.
+</main>

@@ -1,79 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>CameraBox - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>CameraBox - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph CameraBox</h2>
-		<ol>
-		<li>new <a href="#parsegraph_CameraBox">parsegraph_CameraBox(graph)</a>
-		<li><a href="#.needsRepaint">.needsRepaint()</a>
-		<li><a href="#.gl">.gl()</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.prepare">.prepare(gl, glyphAtlas, shaders)</a>
-		<li><a href="#.setCamera">.setCamera(name, camera)</a>
-		<li><a href="#.removeCamera">.removeCamera(name)</a>
-		<li><a href="#.paint">.paint()</a>
-		<li><a href="#.render">.render(world)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph CameraBox</h1>
-		<h3>new <a name="parsegraph_CameraBox">parsegraph_CameraBox(graph)</h3></a>
-		Creates a new CameraBox component for the given Graph.
-		<h3><a name=".needsRepaint">.needsRepaint()</h3></a>
-		Returns true if this component needs repainting.
-		<h3><a name=".gl">.gl()</h3></a>
-		Returns the GL rendering context used by this component.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns the glyph atlas used by this component.
-		<h3><a name=".prepare">.prepare(gl, glyphAtlas, shaders)</h3></a>
-		Prepares this component for rendering with the given GL rendering arguments.
-		<h3><a name=".setCamera">.setCamera(name, camera)</h3></a>
-		Sets the specified camera box to the given camera object with the following fields:
-		<table>
-		<tr><th>Field name</tr>
-		<tr><td>scale</tr>
-		<tr><td>width</tr>
-		<tr><td>height</tr>
-		</table>
-		<h3><a name=".removeCamera">.removeCamera(name)</h3></a>
-		Removes the specified camera box.
-		<h3><a name=".paint">.paint()</h3></a>
-		Paints all camera boxes.
-		<h3><a name=".render">.render(world)</h3></a>
-		Renders all painted camera boxes using the given matrix
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-CameraBox">CameraBox</a></div>
+<h1>Parsegraph CameraBox</h1>
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_CameraBox">new parsegraph_CameraBox(graph)</a>
+<li><a href="#.needsRepaint">.needsRepaint()</a>
+<li><a href="#.gl">.gl()</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.prepare">.prepare(gl, glyphAtlas, shaders)</a>
+<li><a href="#.setCamera">.setCamera(name, camera)</a>
+<li><a href="#.removeCamera">.removeCamera(name)</a>
+<li><a href="#.paint">.paint()</a>
+<li><a href="#.render">.render(world)</a>
+</ol>
+<h3><a name="parsegraph_CameraBox">new parsegraph_CameraBox(graph)</a></h3>
+Creates a new CameraBox component for the given Graph.
+<h3><a name=".needsRepaint">.needsRepaint()</a></h3>
+Returns true if this component needs repainting.
+<h3><a name=".gl">.gl()</a></h3>
+Returns the GL rendering context used by this component.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns the glyph atlas used by this component.
+<h3><a name=".prepare">.prepare(gl, glyphAtlas, shaders)</a></h3>
+Prepares this component for rendering with the given GL rendering arguments.
+<h3><a name=".setCamera">.setCamera(name, camera)</a></h3>
+Sets the specified camera box to the given camera object with the following fields:
+<table>
+<tr><th>Field name</tr>
+<tr><td>scale</tr>
+<tr><td>width</tr>
+<tr><td>height</tr>
+</table>
+<h3><a name=".removeCamera">.removeCamera(name)</a></h3>
+Removes the specified camera box.
+<h3><a name=".paint">.paint()</a></h3>
+Paints all camera boxes.
+<h3><a name=".render">.render(world)</a></h3>
+Renders all painted camera boxes using the given matrix
+</main>

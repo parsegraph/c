@@ -1,82 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Parsegraph GlyphPainter</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Parsegraph GlyphPainter - <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-			<h2>Table of Contents</h2>
-		<h2>Parsegraph GlyphPainter</h2>
-		<ol>
-		<li>new <a href="#parsegraph_GlyphPainter">parsegraph_GlyphPainter(gl, glyphAtlas, shaders)</a>
-		<li><a href="#.setColor">.setColor(color)</a>
-		<li><a href="#.setColor">.setColor(...)</a>
-		<li><a href="#.setBackgroundColor">.setBackgroundColor(color)</a>
-		<li><a href="#.setBackgroundColor">.setBackgroundColor(...)</a>
-		<li><a href="#.fontSize">.fontSize()</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.drawGlyph">.drawGlyph(glyphData, x, y, fontScale)</a>
-		<li><a href="#.clear">.clear()</a>
-		<li><a href="#.render">.render(world, scale)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph GlyphPainter</h1>
-		Draws 3d faces in a solid color.
-		<h3>new <a name="parsegraph_GlyphPainter">parsegraph_GlyphPainter(gl, glyphAtlas, shaders)</h3></a>
-		Creates a new painter using the rendering arguments.
-		<p>
-		The GL context is used immediately to create the shader program.
-		<ul>
-		<li>Throws an Error if glyphAtlas is null.
-		</ul>
-		<h3><a name=".setColor">.setColor(color)</h3></a>
-		Sets the current font color to the given Color value.
-		<h3><a name=".setColor">.setColor(...)</h3></a>
-		Sets the current font color to the specified Color value.
-		<h3><a name=".setBackgroundColor">.setBackgroundColor(color)</h3></a>
-		Sets the current font highlight color to the specified Color value.
-		<h3><a name=".setBackgroundColor">.setBackgroundColor(...)</h3></a>
-		Sets the current font highlight color to the specified Color value.
-		<h3><a name=".fontSize">.fontSize()</h3></a>
-		Returns this painter's glyph atlas's current font size.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns this painter's glyph atlas.
-		<h3><a name=".drawGlyph">.drawGlyph(glyphData, x, y, fontScale)</h3></a>
-		Draws the specified glyph at the given world coordinates and scale.
-		<h3><a name=".clear">.clear()</h3></a>
-		Clears all buffers.
-		<h3><a name=".render">.render(world, scale)</h3></a>
-		Renders all drawn glyphs using the specified matrix and scale.
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-GlyphPainter">GlyphPainter</a></div>
+<h1>Parsegraph GlyphPainter</h1>
+Draws glyph faces in a solid color.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_GlyphPainter">new parsegraph_GlyphPainter(gl, glyphAtlas, shaders)</a>
+<li><a href="#.setColor">.setColor(color)</a>
+<li><a href="#.setColor">.setColor(...)</a>
+<li><a href="#.setBackgroundColor">.setBackgroundColor(color)</a>
+<li><a href="#.setBackgroundColor">.setBackgroundColor(...)</a>
+<li><a href="#.fontSize">.fontSize()</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.drawGlyph">.drawGlyph(glyphData, x, y, fontScale)</a>
+<li><a href="#.clear">.clear()</a>
+<li><a href="#.render">.render(world, scale)</a>
+</ol>
+<h3><a name="parsegraph_GlyphPainter">new parsegraph_GlyphPainter(gl, glyphAtlas, shaders)</a></h3>
+Creates a new painter using the rendering arguments.
+<p>
+The GL context is used immediately to create the shader program.
+<ul>
+<li>Throws an Error if glyphAtlas is null.
+</ul>
+<h3><a name=".setColor">.setColor(color)</a></h3>
+Sets the current font color to the given Color value.
+<h3><a name=".setColor">.setColor(...)</a></h3>
+Sets the current font color to the specified Color value.
+<h3><a name=".setBackgroundColor">.setBackgroundColor(color)</a></h3>
+Sets the current font highlight color to the specified Color value.
+<h3><a name=".setBackgroundColor">.setBackgroundColor(...)</a></h3>
+Sets the current font highlight color to the specified Color value.
+<h3><a name=".fontSize">.fontSize()</a></h3>
+Returns this painter's glyph atlas's current font size.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns this painter's glyph atlas.
+<h3><a name=".drawGlyph">.drawGlyph(glyphData, x, y, fontScale)</a></h3>
+Draws the specified glyph at the given world coordinates and scale.
+<h3><a name=".clear">.clear()</a></h3>
+Clears all buffers.
+<h3><a name=".render">.render(world, scale)</a></h3>
+Renders all drawn glyphs using the specified matrix and scale.
+</main>

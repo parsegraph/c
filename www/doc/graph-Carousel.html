@@ -1,115 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Parsegraph Carousel</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Parsegraph - Carosel <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph Carousel</h2>
-		<ol>
-		<li>new <a href="#parsegraph_Carousel">parsegraph_Carousel()</a>
-		<li><a href="#.needsRepaint">.needsRepaint()</a>
-		<li><a href="#.prepare">.prepare(gl, glyphAtlas, shaders)</a>
-		<li><a href="#.gl">.gl()</a>
-		<li><a href="#.moveCarousel">.moveCarousel(worldX, worldY)</a>
-		<li><a href="#.setCarouselSize">.setCarouselSize(size)</a>
-		<li><a href="#.showCarousel">.showCarousel()</a>
-		<li><a href="#.isCarouselShown">.isCarouselShown()</a>
-		<li><a href="#.hideCarousel">.hideCarousel()</a>
-		<li><a href="#.addToCarousel">.addToCarousel(node, callback, thisArg)</a>
-		<li><a href="#.clearCarousel">.clearCarousel()</a>
-		<li><a href="#.removeFromCarousel">.removeFromCarousel(node)</a>
-		<li><a href="#.clickCarousel">.clickCarousel(x, y, asDown)</a>
-		<li><a href="#.mouseOverCarousel">.mouseOverCarousel(x, y)</a>
-		<li><a href="#.arrangeCarousel">.arrangeCarousel()</a>
-		<li><a href="#.scheduleCarouselRepaint">.scheduleCarouselRepaint()</a>
-		<li><a href="#.paint">.paint()</a>
-		<li><a href="#.backgroundColor">.backgroundColor()</a>
-		<li><a href="#.setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.render">.render(world)</a>
-		<li><a href="#.setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Carousel</h1>
-		Visual graph menu component.
-		<h3>new <a name="parsegraph_Carousel">parsegraph_Carousel()</h3></a>
-		Creates a new, unprepared Carousel centered at the origin.
-		<h3><a name=".needsRepaint">.needsRepaint()</h3></a>
-		Returns whether this Carousel needs paint() to be called before render().
-		<h3><a name=".prepare">.prepare(gl, glyphAtlas, shaders)</h3></a>
-		Sets up the Carousel for rendering with the given rendering arguments.
-		<h3><a name=".gl">.gl()</h3></a>
-		Returns the prepared GL context used for rendering.
-		<h3><a name=".moveCarousel">.moveCarousel(worldX, worldY)</h3></a>
-		Sets the origin of this Carousel to the specified position.
-		<h3><a name=".setCarouselSize">.setCarouselSize(size)</h3></a>
-		Directly sets the carousel's size to the given value.
-		<h3><a name=".showCarousel">.showCarousel()</h3></a>
-		Sets the Carousel to be shown.
-		<h3><a name=".isCarouselShown">.isCarouselShown()</h3></a>
-		Returns true if the Carousel is set to be shown.
-		<h3><a name=".hideCarousel">.hideCarousel()</h3></a>
-		Sets the Carousel to be hidden.
-		<h3><a name=".addToCarousel">.addToCarousel(node, callback, thisArg)</h3></a>
-		Adds the given node to the carousel.
-		<h3><a name=".clearCarousel">.clearCarousel()</h3></a>
-		Removes all this Carousel's plots and callbacks.
-		<h3><a name=".removeFromCarousel">.removeFromCarousel(node)</h3></a>
-		Removes the given node from the Carousel, returning it if found.
-		<h3><a name=".clickCarousel">.clickCarousel(x, y, asDown)</h3></a>
-		Receives a click event on the carousel, in client coordinates.
-		<h3><a name=".mouseOverCarousel">.mouseOverCarousel(x, y)</h3></a>
-		Receives a mouseover event on the carousel, in client coordinates.
-		<h3><a name=".arrangeCarousel">.arrangeCarousel()</h3></a>
-		Arranges each carousel caret in a spiral.
-		<h3><a name=".scheduleCarouselRepaint">.scheduleCarouselRepaint()</h3></a>
-		Calls this Carousel's repaint scheduler and marks this Carousel as needing a repaint.
-		<h3><a name=".paint">.paint()</h3></a>
-		Paints the plotted graphs and selection frame for this Carousel.
-		<h3><a name=".render">.render(world)</h3></a>
-		Renders this painted Carousel using the given world matrix.
-		<h3><a name=".backgroundColor">.backgroundColor()</h3></a>
-		Returns the parsegraph_Color used as the background.
-		<h3><a name=".setBackgroundColor">.setBackgroundColor(backgroundColor)</h3></a>
-		Changes the parsegraph_Color used as the background.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns the GlyphAtlas for this carousel.
-		<h3><a name=".render">.render(world)</h3></a>
-		Renders this painted Carousel using the given world matrix.
-		<h3><a name=".setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</h3></a>
-		Sets the hook to be called when the carousel needs to be repainted.
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Carousel">Carousel</a></div>
+<h1>Parsegraph Carousel</h1>
+Visual graph menu component.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_Carousel">new parsegraph_Carousel()</a>
+<li><a href="#.needsRepaint">.needsRepaint()</a>
+<li><a href="#.prepare">.prepare(gl, glyphAtlas, shaders)</a>
+<li><a href="#.gl">.gl()</a>
+<li><a href="#.moveCarousel">.moveCarousel(worldX, worldY)</a>
+<li><a href="#.setCarouselSize">.setCarouselSize(size)</a>
+<li><a href="#.showCarousel">.showCarousel()</a>
+<li><a href="#.isCarouselShown">.isCarouselShown()</a>
+<li><a href="#.hideCarousel">.hideCarousel()</a>
+<li><a href="#.addToCarousel">.addToCarousel(node, callback, thisArg)</a>
+<li><a href="#.clearCarousel">.clearCarousel()</a>
+<li><a href="#.removeFromCarousel">.removeFromCarousel(node)</a>
+<li><a href="#.clickCarousel">.clickCarousel(x, y, asDown)</a>
+<li><a href="#.mouseOverCarousel">.mouseOverCarousel(x, y)</a>
+<li><a href="#.arrangeCarousel">.arrangeCarousel()</a>
+<li><a href="#.scheduleCarouselRepaint">.scheduleCarouselRepaint()</a>
+<li><a href="#.paint">.paint()</a>
+<li><a href="#.backgroundColor">.backgroundColor()</a>
+<li><a href="#.setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.render">.render(world)</a>
+<li><a href="#.setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a>
+</ol>
+<h3><a name="parsegraph_Carousel">new parsegraph_Carousel()</a></h3>
+Creates a new, unprepared Carousel centered at the origin.
+<h3><a name=".needsRepaint">.needsRepaint()</a></h3>
+Returns whether this Carousel needs paint() to be called before render().
+<h3><a name=".prepare">.prepare(gl, glyphAtlas, shaders)</a></h3>
+Sets up the Carousel for rendering with the given rendering arguments.
+<h3><a name=".gl">.gl()</a></h3>
+Returns the prepared GL context used for rendering.
+<h3><a name=".moveCarousel">.moveCarousel(worldX, worldY)</a></h3>
+Sets the origin of this Carousel to the specified position.
+<h3><a name=".setCarouselSize">.setCarouselSize(size)</a></h3>
+Directly sets the carousel's size to the given value.
+<h3><a name=".showCarousel">.showCarousel()</a></h3>
+Sets the Carousel to be shown.
+<h3><a name=".isCarouselShown">.isCarouselShown()</a></h3>
+Returns true if the Carousel is set to be shown.
+<h3><a name=".hideCarousel">.hideCarousel()</a></h3>
+Sets the Carousel to be hidden.
+<h3><a name=".addToCarousel">.addToCarousel(node, callback, thisArg)</a></h3>
+Adds the given node to the carousel.
+<h3><a name=".clearCarousel">.clearCarousel()</a></h3>
+Removes all this Carousel's plots and callbacks.
+<h3><a name=".removeFromCarousel">.removeFromCarousel(node)</a></h3>
+Removes the given node from the Carousel, returning it if found.
+<h3><a name=".clickCarousel">.clickCarousel(x, y, asDown)</a></h3>
+Receives a click event on the carousel, in client coordinates.
+<h3><a name=".mouseOverCarousel">.mouseOverCarousel(x, y)</a></h3>
+Receives a mouseover event on the carousel, in client coordinates.
+<h3><a name=".arrangeCarousel">.arrangeCarousel()</a></h3>
+Arranges each carousel caret in a spiral.
+<h3><a name=".scheduleCarouselRepaint">.scheduleCarouselRepaint()</a></h3>
+Calls this Carousel's repaint scheduler and marks this Carousel as needing a repaint.
+<h3><a name=".paint">.paint()</a></h3>
+Paints the plotted graphs and selection frame for this Carousel.
+<h3><a name=".render">.render(world)</a></h3>
+Renders this painted Carousel using the given world matrix.
+<h3><a name=".backgroundColor">.backgroundColor()</a></h3>
+Returns the parsegraph_Color used as the background.
+<h3><a name=".setBackgroundColor">.setBackgroundColor(backgroundColor)</a></h3>
+Changes the parsegraph_Color used as the background.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns the GlyphAtlas for this carousel.
+<h3><a name=".render">.render(world)</a></h3>
+Renders this painted Carousel using the given world matrix.
+<h3><a name=".setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a></h3>
+Sets the hook to be called when the carousel needs to be repainted.
+</main>

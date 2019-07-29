@@ -1,158 +1,122 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Extent - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Extent - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph Extent</h2>
-		<ol>
-		<li><a href="parsegraph_DEFAULT_EXTENT_BOUNDS">parsegraph_DEFAULT_EXTENT_BOUNDS<a>
-		<li>new <a href="#parsegraph_Extent">parsegraph_Extent()<a>
-		<li>new <a href="#parsegraph_Extent">parsegraph_Extent(copy)<a>
-		<li><a href="#parsegraph_NUM_EXTENT_BOUND_COMPONENTS"a>parsegraph_NUM_EXTENT_BOUND_COMPONENTa>
-		<li><a href="#.forEach">.forEach(func, thisArg)<a>
-		<li><a href="#.clone">.clone()<a>
-		<li><a href="#.clear">.clear()<a>
-		<li><a href="#.numBounds">.numBounds()<a>
-		<li><a href="#.hasBounds">.hasBounds()<a>
-		<li><a href="#.boundLengthAt">.boundLengthAt(index)<a>
-		<li><a href="#.boundSizeAt">.boundSizeAt(index)<a>
-		<li><a href="#.setBoundLengthAt">.setBoundLengthAt(index, length)<a>
-		<li><a href="#.setBoundSizeAt">.setBoundSizeAt(index, size)<a>
-		<li><a href="#.realloc">.realloc(capacity)<a>
-		<li><a href="#.prependLS">.prependLS(length, size)<a>
-		<li><a href="#.boundCapacity">.boundCapacity()<a>
-		<li><a href="#.appendLS">.appendLS(length, size)<a>
-		<li><a href="#.prependSL">.prependSL(size, length)<a>
-		<li><a href="#.appendSL">.appendSL(size, length)<a>
-		<li><a href="#.adjustSize">.adjustSize(adjustment)<a>
-		<li><a href="#.simplify">.simplify()<a>
-		<li><a href="#.sizeAt">.sizeAt(offset)<a>
-		<li><a href="#.combineBound">.combineBound(newBoundStart, newBoundLength, newBoundSize)<a>
-		<li><a href=".copyFrom">.copyFrom(from)<a>
-		<li><a href=".combineExtent">.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)<a>
-		<li><a href=".combinedExtent">.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)<a>
-		<li><a href=".scale">.scale(factor)<a>
-		<li><a href=".separation">.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)<a>
-		<li><a href="#.boundingValues">.boundingValues(outVal)</a>
-		<li><a href="#.equals">.equals(other)</a>
-		<li><a href="#.dump">.dump(message)</a>
-		<li><a href="#.toDom">.toDom(message)</a>
-		<li><a href="#parsegraph_createExtent">parsegraph_createExtent(copy)</a>
-		<li><a href="#parsegraph_checkExtentsEqual">parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Extent</h1>
-		Represents a list of bounds. Each bound is comprised of a length
-		and a size. The extent always extends in the positive direction.
-		<p>
-		An extent is used to represent each forward, backward, upward, and downward
-		side of a graph. The four extents represent the combine bounding picture of
-		the graph.
-		<h3><a name="parsegraph_DEFAULT_EXTENT_BOUNDS">parsegraph_DEFAULT_EXTENT_BOUNDS</h3></a>
-		Initial extent bound capacity.
-		<h3>new <a name="parsegraph_Extent">parsegraph_Extent()</h3></a>
-		Creates a new, empty bounds array.
-		<h3>new <a name="parsegraph_Extent">parsegraph_Extent(copy)</h3></a>
-		Copy another extent's array.
-		<h3><a name="parsegraph_NUM_EXTENT_BOUND_COMPONENTS">parsegraph_NUM_EXTENT_BOUND_COMPONENTS</h3></a>
-		The number of components per extent bound.
-		<h3><a name=".forEach">.forEach(func, thisArg)</h3></a>
-		Iterates over the extent, calling the given function for each
-		bound.
-		<pre>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Extent">Extent</a></div>
+<h1>Parsegraph Extent</h1>
+Represents a list of bounds. Each bound is comprised of a length and a size. The extent always extends in the positive direction.
+<p>
+An extent is used to represent each forward, backward, upward, and downward side of a graph. The four extents represent the combine bounding picture of the graph.
+<h3>Contents</h3>
+<ol>
+<li><a href="parsegraph_DEFAULT_EXTENT_BOUNDS">parsegraph_DEFAULT_EXTENT_BOUNDS<a>
+<li><a href="#parsegraph_Extent">new parsegraph_Extent()<a>
+<li><a href="#parsegraph_Extent">new parsegraph_Extent(copy)<a>
+<li><a href="#parsegraph_NUM_EXTENT_BOUND_COMPONENTS"a>parsegraph_NUM_EXTENT_BOUND_COMPONENTa>
+<li><a href="#.forEach">.forEach(func, thisArg)<a>
+<li><a href="#.clone">.clone()<a>
+<li><a href="#.clear">.clear()<a>
+<li><a href="#.numBounds">.numBounds()<a>
+<li><a href="#.hasBounds">.hasBounds()<a>
+<li><a href="#.boundLengthAt">.boundLengthAt(index)<a>
+<li><a href="#.boundSizeAt">.boundSizeAt(index)<a>
+<li><a href="#.setBoundLengthAt">.setBoundLengthAt(index, length)<a>
+<li><a href="#.setBoundSizeAt">.setBoundSizeAt(index, size)<a>
+<li><a href="#.realloc">.realloc(capacity)<a>
+<li><a href="#.prependLS">.prependLS(length, size)<a>
+<li><a href="#.boundCapacity">.boundCapacity()<a>
+<li><a href="#.appendLS">.appendLS(length, size)<a>
+<li><a href="#.prependSL">.prependSL(size, length)<a>
+<li><a href="#.appendSL">.appendSL(size, length)<a>
+<li><a href="#.adjustSize">.adjustSize(adjustment)<a>
+<li><a href="#.simplify">.simplify()<a>
+<li><a href="#.sizeAt">.sizeAt(offset)<a>
+<li><a href="#.combineBound">.combineBound(newBoundStart, newBoundLength, newBoundSize)<a>
+<li><a href=".copyFrom">.copyFrom(from)<a>
+<li><a href=".combineExtent">.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)<a>
+<li><a href=".combinedExtent">.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)<a>
+<li><a href=".scale">.scale(factor)<a>
+<li><a href=".separation">.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)<a>
+<li><a href="#.boundingValues">.boundingValues(outVal)</a>
+<li><a href="#.equals">.equals(other)</a>
+<li><a href="#.dump">.dump(message)</a>
+<li><a href="#.toDom">.toDom(message)</a>
+<li><a href="#parsegraph_createExtent">parsegraph_createExtent(copy)</a>
+<li><a href="#parsegraph_checkExtentsEqual">parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)</a>
+</ol>
+<h3><a name="parsegraph_DEFAULT_EXTENT_BOUNDS">parsegraph_DEFAULT_EXTENT_BOUNDS</a></h3>
+Initial extent bound capacity.
+<h3><a name="parsegraph_Extent">new parsegraph_Extent()</a></h3>
+Creates a new, empty bounds array.
+<h3><a name="parsegraph_Extent">new parsegraph_Extent(copy)</a></h3>
+Copy another extent's array.
+<h3><a name="parsegraph_NUM_EXTENT_BOUND_COMPONENTS">parsegraph_NUM_EXTENT_BOUND_COMPONENTS</a></h3>
+The number of components per extent bound.
+<h3><a name=".forEach">.forEach(func, thisArg)</a></h3>
+Iterates over the extent, calling the given function for each
+bound.
+<pre>
 extent.forEach(function(length, size, i) {}, this);
-		</pre>
-		<h3><a name=".clone">.clone()</h3></a>
-		Returns a new extent that is a copy of this one.
-		<h3><a name=".clear">.clear()</h3></a>
-		Sets the size of this extent to zero.
-		<h3><a name=".numBounds">.numBounds()</h3></a>
-		Returns the number of bounds in this extent.
-		<h3><a name=".hasBounds">.hasBounds()</h3></a>
-		Returns whehter this extent's size is positive and non-zero.
-		<h3><a name=".boundLengthAt">.boundLengthAt(index)</h3></a>
-		Returns the length of the specified bound.
-		<h3><a name=".boundSizeAt">.boundSizeAt(index)</h3></a>
-		Returns the size of the specified bound.
-		<h3><a name=".setBoundLengthAt">.setBoundLengthAt(index, length)</h3></a>
-		Sets the length of the specified bound to the given value.
-		<h3><a name=".setBoundSizeAt">.setBoundSizeAt(index, size)</h3></a>
-		Sets the size of the specified bound to the given value.
-		<h3><a name=".realloc">.realloc(capacity)</h3></a>
-		Reallocates the extent to the new capacity.
-		<p>
-		Throws an error if the given capacity is smaller than the current capacity.
-		<h3><a name=".prependLS">.prependLS(length, size)</h3></a>
-		Prepends a new bound of the given dimensions to this extent.
-		<p>
-		Throws an error if length is NaN. NaN sizes represent empty spaces.
-		<h3><a name=".boundCapacity">.boundCapacity()</h3></a>
-		Returns this extent's capacity. Guaranteed to be &gt;= .numBounds().
-		<h3><a name=".appendLS">.appendLS(length, size)</h3></a>
-		Appends a new bound of the given dimensions to this extent.
-		<h3><a name=".prependSL">.prependSL(size, length)</h3></a>
-		Prepends a new bound of the given dimensions to this extent.
-		<h3><a name=".appendSL">.appendSL(size, length)</h3></a>
-		Appends a new bound of the given dimensions to this extent.
-		<h3><a name=".adjustSize">.adjustSize(adjustment)</h3></a>
-		Adds the given size adjustment to all bounds of this extent.
-		<h3><a name=".simplify">.simplify()</h3></a>
-		Converts this extent into a single bound that is the rectangular union of all bounds
-		of this extent.
-		<h3><a name=".sizeAt">.sizeAt(offset)</h3></a>
-		Returns the size at the given positional offset.
-		<h3><a name=".combineBound">.combineBound(newBoundStart, newBoundLength, newBoundSize)</h3></a>
-		Combines the defined bound into this extent.
-		<h3><a name=".copyFrom">.copyFrom(from)</h3></a>
-		Moves the bounds from the given extent into this extent.
-		<h3><a name=".combineExtent">.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)</h3></a>
-		Combine the given extent into this extent, such that this extent exactly covers both its
-		original bounds and the bounds of the given extent. The given extent can be transformed
-		using lengthAdjustment, sizeAdjustment, and scale.
-		<h3><a name=".combinedExtent">.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)</h3></a>
-		Returns a new Extent that exactly covers both this extent and the given extent, transformed
-		by the given parameters.
-		<h3><a name=".scale">.scale(factor)</h3></a>
-		Scales all bound's size and length by the given factor.
-		<h3><a name=".separation">.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)</h3></a>
-		Returns the minimum value that guarantees no overlap between the two extents.
-		<p>
-		Positive position adjustment requires this bound to be adjusted:
-		<pre>
- (this)
+</pre>
+<h3><a name=".clone">.clone()</a></h3>
+Returns a new extent that is a copy of this one.
+<h3><a name=".clear">.clear()</a></h3>
+Sets the size of this extent to zero.
+<h3><a name=".numBounds">.numBounds()</a></h3>
+Returns the number of bounds in this extent.
+<h3><a name=".hasBounds">.hasBounds()</a></h3>
+Returns whehter this extent's size is positive and non-zero.
+<h3><a name=".boundLengthAt">.boundLengthAt(index)</a></h3>
+Returns the length of the specified bound.
+<h3><a name=".boundSizeAt">.boundSizeAt(index)</a></h3>
+Returns the size of the specified bound.
+<h3><a name=".setBoundLengthAt">.setBoundLengthAt(index, length)</a></h3>
+Sets the length of the specified bound to the given value.
+<h3><a name=".setBoundSizeAt">.setBoundSizeAt(index, size)</a></h3>
+Sets the size of the specified bound to the given value.
+<h3><a name=".realloc">.realloc(capacity)</a></h3>
+Reallocates the extent to the new capacity.
+<p>
+Throws an error if the given capacity is smaller than the current capacity.
+<h3><a name=".prependLS">.prependLS(length, size)</a></h3>
+Prepends a new bound of the given dimensions to this extent.
+<p>
+Throws an error if length is NaN. NaN sizes represent empty spaces.
+<h3><a name=".boundCapacity">.boundCapacity()</a></h3>
+Returns this extent's capacity. Guaranteed to be &gt;= .numBounds().
+<h3><a name=".appendLS">.appendLS(length, size)</a></h3>
+Appends a new bound of the given dimensions to this extent.
+<h3><a name=".prependSL">.prependSL(size, length)</a></h3>
+Prepends a new bound of the given dimensions to this extent.
+<h3><a name=".appendSL">.appendSL(size, length)</a></h3>
+Appends a new bound of the given dimensions to this extent.
+<h3><a name=".adjustSize">.adjustSize(adjustment)</a></h3>
+Adds the given size adjustment to all bounds of this extent.
+<h3><a name=".simplify">.simplify()</a></h3>
+Converts this extent into a single bound that is the rectangular union of all bounds
+of this extent.
+<h3><a name=".sizeAt">.sizeAt(offset)</a></h3>
+Returns the size at the given positional offset.
+<h3><a name=".combineBound">.combineBound(newBoundStart, newBoundLength, newBoundSize)</a></h3>
+Combines the defined bound into this extent.
+<h3><a name=".copyFrom">.copyFrom(from)</a></h3>
+Moves the bounds from the given extent into this extent.
+<h3><a name=".combineExtent">.combineExtent(given, lengthAdjustment, sizeAdjustment, scale)</a></h3>
+Combine the given extent into this extent, such that this extent exactly covers both its
+original bounds and the bounds of the given extent. The given extent can be transformed
+using lengthAdjustment, sizeAdjustment, and scale.
+<h3><a name=".combinedExtent">.combinedExtent(given, lengthAdjustment, sizeAdjustment, scale)</a></h3>
+Returns a new Extent that exactly covers both this extent and the given extent, transformed
+by the given parameters.
+<h3><a name=".scale">.scale(factor)</a></h3>
+Scales all bound's size and length by the given factor.
+<h3><a name=".separation">.separation(given, positionAdjustment, allowAxisOverlap, givenScale, axisMinimum)</a></h3>
+Returns the minimum value that guarantees no overlap between the two extents.
+<p>
+Positive position adjustment requires this bound to be adjusted:
+<pre>
+(this)
  <--*--->
     |
     <--|------->
-    (given)
+(given)
 </pre>
 <p>Negative position adjustment requires the given bound to be adjusted:
 <pre>
@@ -161,28 +125,22 @@ extent.forEach(function(length, size, i) {}, this);
              |
           <--*-->
      (this)
-		</pre>
-		The position adjustment is in this extent's space. So if the given scale is 0.5, the
-		given extent's length and size are adjusted by that amount.
-		<h3><a name=".boundingValues">.boundingValues(outVal)</h3></a>
-		Computes and returns <code>[totalLength, minSize, maxSize]</code>.
-		<h3><a name=".equals">.equals(other)</h3></a>
-		Returns true if all this extent is component-wise equal with the given bound.
-		<h3><a name=".dump">.dump(message)</h3></a>
-		Logs each bound of this extent using parsegraph_log, using the given optional message as the
-		title.
-		<h3><a name=".toDom">.toDom(message)</h3></a>
-		Creates a HTML table describing this Extent.
-		<h3><a name="parsegraph_createExtent">parsegraph_createExtent(copy)</h3></a>
-		Alias for <code>new parsegraph_Extent(copy)</code>.
-		<h3><a name="parsegraph_checkExtentsEqual">parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)</h3></a>
-		Returns true if the caret's node in the given direction is equal to the given <code>expected</code> extent, false otherwise.
-		<p>
-		If false and resultDom is given, then HTML elements are appended describing the difference between the actual extent in the caret node's given direction and the expected extent.
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+</pre>
+The position adjustment is in this extent's space. So if the given scale is 0.5, the
+given extent's length and size are adjusted by that amount.
+<h3><a name=".boundingValues">.boundingValues(outVal)</a></h3>
+Computes and returns <code>[totalLength, minSize, maxSize]</code>.
+<h3><a name=".equals">.equals(other)</a></h3>
+Returns true if all this extent is component-wise equal with the given bound.
+<h3><a name=".dump">.dump(message)</a></h3>
+Logs each bound of this extent using parsegraph_log, using the given optional message as the
+title.
+<h3><a name=".toDom">.toDom(message)</a></h3>
+Creates a HTML table describing this Extent.
+<h3><a name="parsegraph_createExtent">parsegraph_createExtent(copy)</a></h3>
+Alias for <code>new parsegraph_Extent(copy)</code>.
+<h3><a name="parsegraph_checkExtentsEqual">parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)</a></h3>
+Returns true if the caret's node in the given direction is equal to the given <code>expected</code> extent, false otherwise.
+<p>
+If false and resultDom is given, then HTML elements are appended describing the difference between the actual extent in the caret node's given direction and the expected extent.
+</main>

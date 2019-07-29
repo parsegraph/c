@@ -1,92 +1,63 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>World - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>World - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph World</h2>
-		<ol>
-		<li><a href="#parsegraph_World">parsegraph_World(graph)</a>
-		<li><a href="#.camera">.camera()</a>
-		<li><a href="#.setCamera">.setCamera(camera)</a>
-		<li><a href="#.plot">.plot(node, worldX, worldY, userScale)</a>
-		<li><a href="#.removePlot">.removePlot(plot)</a>
-		<li><a href="#.mouseOver">.mouseOver(x, y)</a>
-		<li><a href="#.boundingRect">.boundingRect(outRect)</a>
-		<li><a href="#.scheduleRepaint">.scheduleRepaint()</a>
-		<li><a href="#.nodeUnderCursor">.nodeUnderCursor()</a>
-		<li><a href="#.nodeUnderCoords">.nodeUnderCoords(x, y)</a>
-		<li><a href="#.needsRepaint">.needsRepaint()</a>
-		<li><a href="#.paint">.paint(timeout)</a>
-		<li><a href="#.render">.render(world)</a>
-		</ol>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph World</h1>
-		A World object contains a number of rendered graphs.
-		<h3><a name="parsegraph_World">parsegraph_World(graph)</h3></a>
-		Creates a new World object using the given graph.
-		<h3><a name=".camera">.camera()</h3></a>
-		Returns the Camera used for this World, creating it if it does not yet exist.
-		<h3><a name=".setCamera">.setCamera(camera)</h3></a>
-		Directly sets the Camera used for this World.
-		<h3><a name=".plot">.plot(node, worldX, worldY, userScale)</h3></a>
-		Plots the given Node at the given coordinates.
-		<ul>
-		<li>If the given object is actually a Caret, then its root node is used.
-		<li>Throws if the given object is null.
-		<li>If the world position is not given, (0, 0) is assumed.
-		</ul>
-		<p>
-		The paint group is returned. Passing a paint group directly is the
-		preferred method. The position of the graph is the one used when
-		rendering. The caller manages the position.
-		<p>
-		<h3><a name=".removePlot">.removePlot(plot)</h3></a>
-		Removes the given plotted Node from this World.
-		<h3><a name=".mouseOver">.mouseOver(x, y)</h3></a>
-		Receives a mouseover event at the given coordinates, in client space.
-		<p>
-		Returns true if this event processing requires a graph repaint.
-		<h3><a name=".boundingRect">.boundingRect(outRect)</h3></a>
-		Returns a new parsegraph_Rect (or sets the values of the given Rect) to the bounding rectangle for all the plotted graphs in this World.
-		<h3><a name=".scheduleRepaint">.scheduleRepaint()</h3></a>
-		Marks this World as dirty.
-		<h3><a name=".nodeUnderCursor">.nodeUnderCursor()</h3></a>
-		Directly returns the last node under the cursor.
-		<h3><a name=".nodeUnderCoords">.nodeUnderCoords(x, y)</h3></a>
-		Tests whether the given position, in world space, is within a node.
-		<h3><a name=".needsRepaint">.needsRepaint()</h3></a>
-		Returns true if this World needs paint() to be called.
-		<h3><a name=".paint">.paint(timeout)</h3></a>
-		Paints for the given time interval, in milliseconds.
-		<p>
-		If false is returned, painting did not complete.
-		<h3><a name=".render">.render(world)</h3></a>
-		Renders the painted scene to the GL context.
-		<ul>
-		<li>Throws if any root node does not have a paint group.
-		</ul>
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-World">World</a></div>
+<h1>Parsegraph World</h1>
+A World object contains a number of rendered graphs.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_World">parsegraph_World(graph)</a>
+<li><a href="#.camera">.camera()</a>
+<li><a href="#.setCamera">.setCamera(camera)</a>
+<li><a href="#.plot">.plot(node, worldX, worldY, userScale)</a>
+<li><a href="#.removePlot">.removePlot(plot)</a>
+<li><a href="#.mouseOver">.mouseOver(x, y)</a>
+<li><a href="#.boundingRect">.boundingRect(outRect)</a>
+<li><a href="#.scheduleRepaint">.scheduleRepaint()</a>
+<li><a href="#.nodeUnderCursor">.nodeUnderCursor()</a>
+<li><a href="#.nodeUnderCoords">.nodeUnderCoords(x, y)</a>
+<li><a href="#.needsRepaint">.needsRepaint()</a>
+<li><a href="#.paint">.paint(timeout)</a>
+<li><a href="#.render">.render(world)</a>
+</ol>
+<h3><a name="parsegraph_World">parsegraph_World(graph)</a></h3>
+Creates a new World object using the given graph.
+<h3><a name=".camera">.camera()</a></h3>
+Returns the Camera used for this World, creating it if it does not yet exist.
+<h3><a name=".setCamera">.setCamera(camera)</a></h3>
+Directly sets the Camera used for this World.
+<h3><a name=".plot">.plot(node, worldX, worldY, userScale)</a></h3>
+Plots the given Node at the given coordinates.
+<ul>
+<li>If the given object is actually a Caret, then its root node is used.
+<li>Throws if the given object is null.
+<li>If the world position is not given, (0, 0) is assumed.
+</ul>
+<p>
+The paint group is returned. Passing a paint group directly is the
+preferred method. The position of the graph is the one used when
+rendering. The caller manages the position.
+<h3><a name=".removePlot">.removePlot(plot)</a></h3>
+Removes the given plotted Node from this World.
+<h3><a name=".mouseOver">.mouseOver(x, y)</a></h3>
+Receives a mouseover event at the given coordinates, in client space.
+<p>
+Returns true if this event processing requires a graph repaint.
+<h3><a name=".boundingRect">.boundingRect(outRect)</a></h3>
+Returns a new parsegraph_Rect (or sets the values of the given Rect) to the bounding rectangle for all the plotted graphs in this World.
+<h3><a name=".scheduleRepaint">.scheduleRepaint()</a></h3>
+Marks this World as dirty.
+<h3><a name=".nodeUnderCursor">.nodeUnderCursor()</a></h3>
+Directly returns the last node under the cursor.
+<h3><a name=".nodeUnderCoords">.nodeUnderCoords(x, y)</a></h3>
+Tests whether the given position, in world space, is within a node.
+<h3><a name=".needsRepaint">.needsRepaint()</a></h3>
+Returns true if this World needs paint() to be called.
+<h3><a name=".paint">.paint(timeout)</a></h3>
+Paints for the given time interval, in milliseconds.
+<p>
+If false is returned, painting did not complete.
+<h3><a name=".render">.render(world)</a></h3>
+Renders the painted scene to the GL context.
+<ul>
+<li>Throws if any root node does not have a paint group.
+</ul>
+</main>

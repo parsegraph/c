@@ -1,182 +1,154 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Label - Parsegraph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Label - Parsegraph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph Label</h2>
-		<ol>
-		<li><a href="#parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</a>
-		</ol>
-		<h2>parsegraph_Line</h2>
-		<ol>
-		<li>new <a href="#parsegraph_Line">parsegraph_Line(label, text)</a>
-		<li><a href="#.isEmpty">isEmpty()</a>
-		<li><a href="#.glyphAtlas">glyphAtlas()</a>
-		<li><a href="#.remove">remove(pos, count)</a>
-		<li><a href="#.appendText">appendText(text)</a>
-		<li><a href="#.insertText">insertText(pos, text)</a>
-		<li><a href="#.getText">getText()</a>
-		<li><a href="#.text">text()</a>
-		<li><a href="#.linePos">linePos()</a>
-		<li><a href="#.label">label()</a>
-		<li><a href="#.width">width()</a>
-		<li><a href="#.height">height()</a>
-		<li><a href="#.posAt">posAt(limit)</a>
-		<li><a href="#.glyphs">glyphs()</a>
-		</ol>
-		<h2>parsegraph_Label</h2>
-		<ol>
-		<li>new <a href="#parsegraph_Label">parsegraph_Label(glyphAtlas)</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.isEmpty">.isEmpty()</a>
-		<li><a href="#.forEach">.forEach(func, funcThisArg)</a>
-		<li><a href="#.getText">.getText()</a>
-		<li><a href="#.text">.text()</a>
-		<li><a href="#.setText">.setText(text)</a>
-		<li><a href="#.moveCaretDown">.moveCaretDown(world)</a>
-		<li><a href="#.moveCaretUp">.moveCaretUp(world)</a>
-		<li><a href="#.moveCaretBackward">.moveCaretBackward(world)</a>
-		<li><a href="#.moveCaretForward">.moveCaretForward(world)</a>
-		<li><a href="#.backspaceCaret">.backspaceCaret()</a>
-		<li><a href="#.deleteCaret">.deleteCaret()</a>
-		<li><a href="#.ctrlKey">.ctrlKey(key)</a>
-		<li><a href="#.key">.key(key)</a>
-		<li><a href="#.onTextChanged">.onTextChanged(listener, listenerThisArg)</a>
-		<li><a href="#.textChanged">.textChanged()</a>
-		<li><a href="#.editable">.editable()</a>
-		<li><a href="#.setEditable">.setEditable(editable)</a>
-		<li><a href="#.click">.click(x, y)</a>
-		<li><a href="#.lineAt">.lineAt(n)</a>
-		<li><a href="#.caretLine">.caretLine()</a>
-		<li><a href="#.caretPos">.caretPos()</a>
-		<li><a href="#.getCaretRect">.getCaretRect(outRect)</a>
-		<li><a href="#.glyphPos">.glyphPos()</a>
-		<li><a href="#.fontSize">.fontSize()</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.width">.width()</a>
-		<li><a href="#.height">.height()</a>
-		<li><a href="#.paint">.paint(painter, worldX, worldY, fontScale)</a>
-		</ol>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Label</h1>
-		<h3><a name="parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</h3></a>
-		<h2>parsegraph_Line</h2>
-		<h3>new <a name="parsegraph_Line">parsegraph_Line(label, text)</h3></a>
-		Constructs a new glyph-run using the given text.
-		<h3>.<a name="isEmpty">isEmpty()</h3></a>
-		Returns whether the length of this line is zero.
-		<h3>.<a name="glyphAtlas">glyphAtlas()</h3></a>
-		Returns this line's label's glyph atlas.
-		<h3><a name=".remove">.remove(pos, count)</h3></a>
-		Removes <code>code</code> characters from the zero-indexed given glyph position.
-		<h3><a name=".appendText">.appendText(text)</h3></a>
-		Appends the given text to this line.
-		<h3><a name=".insertText">.insertText(pos, text)</h3></a>
-		Inserts the given text into this line at the specified zero-index glyph position.
-		<h3><a name=".getText">.getText()</h3></a>
-		Returns a string representing the text contained by this line.
-		<h3><a name=".text">.text()</h3></a>
-		Alias for .getText().
-		<h3><a name=".linePos">.linePos()</h3></a>
-		Directly returns this line's position.
-		<h3><a name=".label">.label()</h3></a>
-		Directly returns this line's owning label.
-		<h3><a name=".width">.width()</h3></a>
-		Directly returns this line's computed width.
-		<h3><a name=".height">.height()</h3></a>
-		Directly returns this line's computed width.
-		<h3><a name=".posAt">.posAt(limit)</h3></a>
-		Returns the horizontal offset of the glyph at the given zero-indexed position.
-		<h3><a name=".glyphs">.glyphs()</h3></a>
-		Directly returns the glyph array used by this line.
-		<h2>parsegraph_Label</h2>
-		<h3>new <a name="parsegraph_Label">parsegraph_Label(glyphAtlas)</h3></a>
-		Constructs a new unwrapped, non-editable label using the given glyph atlas.
-		<p>
-		Throws an error if no glyphAtlas is given.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns the glyph atlas used by this label.
-		<h3><a name=".isEmpty">.isEmpty()</h3></a>
-		Returns true if all lines of this label are empty, or if this label contains no lines.
-		<h3><a name=".forEach">.forEach(func, funcThisArg)</h3></a>
-		Calls func for each line of this label.
-		<h3><a name=".getText">.getText()</h3></a>
-		Returns the text of all lines of this label, concatenated using newlines.
-		<h3><a name=".text">.text()</h3></a>
-		Alias for .getText().
-		<h3><a name=".setText">.setText(text)</h3></a>
-		Sets this label's lines to the given text. Any existing text is removed.
-		<h3><a name=".moveCaretDown">.moveCaretDown(world)</h3></a>
-		NYI
-		<h3><a name=".moveCaretUp">.moveCaretUp(world)</h3></a>
-		NYI
-		<h3><a name=".moveCaretBackward">.moveCaretBackward(world)</h3></a>
-		Moves the caret backward in the current line, or shifts it to the previous line if needed.
-		<h3><a name=".moveCaretForward">.moveCaretForward(world)</h3></a>
-		Moves the caret forward in the current line, or shifts it to the next line if needed.
-		<h3><a name=".backspaceCaret">.backspaceCaret()</h3></a>
-		Removes the character before the caret's position in the current line, shifting to the
-		previous line if needed.
-		<h3><a name=".deleteCaret">.deleteCaret()</h3></a>
-		Removes the character after the caret's position in the current line, shifting the
-		next line if needed.
-		<h3><a name=".ctrlKey">.ctrlKey(key)</h3></a>
-		Handles a control-key-pressed event of the given name.
-		<h3><a name=".key">.key(key)</h3></a>
-		Handles a key-pressed event of the given name.
-		<p>
-		By default, a printable character is inserted into the current line at the caret's position.
-		<h3><a name=".onTextChanged">.onTextChanged(listener, listenerThisArg)</h3></a>
-		Sets this label's listener for events that change the label's text.
-		<h3><a name=".textChanged">.textChanged()</h3></a>
-		Invokes this label's listener.
-		<h3><a name=".editable">.editable()</h3></a>
-		Returns whether this label is editable using user events.
-		<h3><a name=".setEditable">.setEditable(editable)</h3></a>
-		Sets whether this label is editable using user events.
-		<h3><a name=".click">.click(x, y)</h3></a>
-		Handles a mouse-clicked event using the specified coordinates, local to this label's origin.
-		<h3><a name=".lineAt">.lineAt(n)</h3></a>
-		Returns the line at the given zero-indexed offset.
-		<h3><a name=".caretLine">.caretLine()</h3></a>
-		Returns the line index of this label's caret.
-		<h3><a name=".caretPos">.caretPos()</h3></a>
-		Returns the character index of this label's caret in the current line.
-		<h3><a name=".getCaretRect">.getCaretRect(outRect)</h3></a>
-		Returns a rectangle (or uses outRect if given) covering the caret's current glyph position
-		<h3><a name=".glyphPos">.glyphPos()</h3></a>
-		Alias for .caretPos().
-		<h3><a name=".fontSize">.fontSize()</h3></a>
-		Returns this label's glyph atlas's reported font size.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns this label's glyph atlas.
-		<h3><a name=".width">.width()</h3></a>
-		Returns the minimum width that will cover all lines of this label.
-		<h3><a name=".height">.height()</h3></a>
-		Directly returns the height of this label.
-		<h3><a name=".paint">.paint(painter, worldX, worldY, fontScale)</h3></a>
-		Paints this label's text using the given glyph painter and world coordinates.
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Label">Label</a></div>
+<h1>Parsegraph Label</h1>
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</a>
+</ol>
+<h2>parsegraph_Line</h2>
+<ol>
+<li><a href="#parsegraph_Line">new parsegraph_Line(label, text)</a>
+<li><a href="#.isEmpty">isEmpty()</a>
+<li><a href="#.glyphAtlas">glyphAtlas()</a>
+<li><a href="#.remove">remove(pos, count)</a>
+<li><a href="#.appendText">appendText(text)</a>
+<li><a href="#.insertText">insertText(pos, text)</a>
+<li><a href="#.getText">getText()</a>
+<li><a href="#.text">text()</a>
+<li><a href="#.linePos">linePos()</a>
+<li><a href="#.label">label()</a>
+<li><a href="#.width">width()</a>
+<li><a href="#.height">height()</a>
+<li><a href="#.posAt">posAt(limit)</a>
+<li><a href="#.glyphs">glyphs()</a>
+</ol>
+<h2>parsegraph_Label</h2>
+<ol>
+<li><a href="#parsegraph_Label">new parsegraph_Label(glyphAtlas)</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.isEmpty">.isEmpty()</a>
+<li><a href="#.forEach">.forEach(func, funcThisArg)</a>
+<li><a href="#.getText">.getText()</a>
+<li><a href="#.text">.text()</a>
+<li><a href="#.setText">.setText(text)</a>
+<li><a href="#.moveCaretDown">.moveCaretDown(world)</a>
+<li><a href="#.moveCaretUp">.moveCaretUp(world)</a>
+<li><a href="#.moveCaretBackward">.moveCaretBackward(world)</a>
+<li><a href="#.moveCaretForward">.moveCaretForward(world)</a>
+<li><a href="#.backspaceCaret">.backspaceCaret()</a>
+<li><a href="#.deleteCaret">.deleteCaret()</a>
+<li><a href="#.ctrlKey">.ctrlKey(key)</a>
+<li><a href="#.key">.key(key)</a>
+<li><a href="#.onTextChanged">.onTextChanged(listener, listenerThisArg)</a>
+<li><a href="#.textChanged">.textChanged()</a>
+<li><a href="#.editable">.editable()</a>
+<li><a href="#.setEditable">.setEditable(editable)</a>
+<li><a href="#.click">.click(x, y)</a>
+<li><a href="#.lineAt">.lineAt(n)</a>
+<li><a href="#.caretLine">.caretLine()</a>
+<li><a href="#.caretPos">.caretPos()</a>
+<li><a href="#.getCaretRect">.getCaretRect(outRect)</a>
+<li><a href="#.glyphPos">.glyphPos()</a>
+<li><a href="#.fontSize">.fontSize()</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.width">.width()</a>
+<li><a href="#.height">.height()</a>
+<li><a href="#.paint">.paint(painter, worldX, worldY, fontScale)</a>
+</ol>
+<h3><a name="parsegraph_RESET_CAMERA_KEY">parsegraph_RESET_CAMERA_KEY</a></h3>
+<h2>parsegraph_Line</h2>
+<h3>new <a name="parsegraph_Line">parsegraph_Line(label, text)</a></h3>
+Constructs a new glyph-run using the given text.
+<h3><a name="isEmpty">.isEmpty()</a></h3>
+Returns whether the length of this line is zero.
+<h3><a name="glyphAtlas">.glyphAtlas()</a></h3>
+Returns this line's label's glyph atlas.
+<h3><a name=".remove">.remove(pos, count)</a></h3>
+Removes <code>code</code> characters from the zero-indexed given glyph position.
+<h3><a name=".appendText">.appendText(text)</a></h3>
+Appends the given text to this line.
+<h3><a name=".insertText">.insertText(pos, text)</a></h3>
+Inserts the given text into this line at the specified zero-index glyph position.
+<h3><a name=".getText">.getText()</a></h3>
+Returns a string representing the text contained by this line.
+<h3><a name=".text">.text()</a></h3>
+Alias for .getText().
+<h3><a name=".linePos">.linePos()</a></h3>
+Directly returns this line's position.
+<h3><a name=".label">.label()</a></h3>
+Directly returns this line's owning label.
+<h3><a name=".width">.width()</a></h3>
+Directly returns this line's computed width.
+<h3><a name=".height">.height()</a></h3>
+Directly returns this line's computed width.
+<h3><a name=".posAt">.posAt(limit)</a></h3>
+Returns the horizontal offset of the glyph at the given zero-indexed position.
+<h3><a name=".glyphs">.glyphs()</a></h3>
+Directly returns the glyph array used by this line.
+<h2>parsegraph_Label</h2>
+<h3>new <a name="parsegraph_Label">parsegraph_Label(glyphAtlas)</a></h3>
+Constructs a new unwrapped, non-editable label using the given glyph atlas.
+<p>
+Throws an error if no glyphAtlas is given.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns the glyph atlas used by this label.
+<h3><a name=".isEmpty">.isEmpty()</a></h3>
+Returns true if all lines of this label are empty, or if this label contains no lines.
+<h3><a name=".forEach">.forEach(func, funcThisArg)</a></h3>
+Calls func for each line of this label.
+<h3><a name=".getText">.getText()</a></h3>
+Returns the text of all lines of this label, concatenated using newlines.
+<h3><a name=".text">.text()</a></h3>
+Alias for .getText().
+<h3><a name=".setText">.setText(text)</a></h3>
+Sets this label's lines to the given text. Any existing text is removed.
+<h3><a name=".moveCaretDown">.moveCaretDown(world)</a></h3>
+NYI
+<h3><a name=".moveCaretUp">.moveCaretUp(world)</a></h3>
+NYI
+<h3><a name=".moveCaretBackward">.moveCaretBackward(world)</a></h3>
+Moves the caret backward in the current line, or shifts it to the previous line if needed.
+<h3><a name=".moveCaretForward">.moveCaretForward(world)</a></h3>
+Moves the caret forward in the current line, or shifts it to the next line if needed.
+<h3><a name=".backspaceCaret">.backspaceCaret()</a></h3>
+Removes the character before the caret's position in the current line, shifting to the previous line if needed.
+<h3><a name=".deleteCaret">.deleteCaret()</a></h3>
+Removes the character after the caret's position in the current line, shifting the
+next line if needed.
+<h3><a name=".ctrlKey">.ctrlKey(key)</a></h3>
+Handles a control-key-pressed event of the given name.
+<h3><a name=".key">.key(key)</a></h3>
+Handles a key-pressed event of the given name.
+<p>
+By default, a printable character is inserted into the current line at the caret's position.
+<h3><a name=".onTextChanged">.onTextChanged(listener, listenerThisArg)</a></h3>
+Sets this label's listener for events that change the label's text.
+<h3><a name=".textChanged">.textChanged()</a></h3>
+Invokes this label's listener.
+<h3><a name=".editable">.editable()</a></h3>
+Returns whether this label is editable using user events.
+<h3><a name=".setEditable">.setEditable(editable)</a></h3>
+Sets whether this label is editable using user events.
+<h3><a name=".click">.click(x, y)</a></h3>
+Handles a mouse-clicked event using the specified coordinates, local to this label's origin.
+<h3><a name=".lineAt">.lineAt(n)</a></h3>
+Returns the line at the given zero-indexed offset.
+<h3><a name=".caretLine">.caretLine()</a></h3>
+Returns the line index of this label's caret.
+<h3><a name=".caretPos">.caretPos()</a></h3>
+Returns the character index of this label's caret in the current line.
+<h3><a name=".getCaretRect">.getCaretRect(outRect)</a></h3>
+Returns a rectangle (or uses outRect if given) covering the caret's current glyph position
+<h3><a name=".glyphPos">.glyphPos()</a></h3>
+Alias for .caretPos().
+<h3><a name=".fontSize">.fontSize()</a></h3>
+Returns this label's glyph atlas's reported font size.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns this label's glyph atlas.
+<h3><a name=".width">.width()</a></h3>
+Returns the minimum width that will cover all lines of this label.
+<h3><a name=".height">.height()</a></h3>
+Directly returns the height of this label.
+<h3><a name=".paint">.paint(painter, worldX, worldY, fontScale)</a></h3>
+Paints this label's text using the given glyph painter and world coordinates.
+</main>

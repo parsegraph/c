@@ -1,113 +1,71 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Parsegraph Graph</title>
-<link rel=stylesheet type=text/css href="../../../doc/rainback.css">
-</head>
-<body>
-	<div class="grid">
-		<div class="logo">
-		<nav class="toc" style="clear: none; ">
-		<p style="text-align: center">
-		<a href=/><img id=logo src="../../../doc/nav-side-logo.png"></img></a>
-		</p>
-		</nav>
-		</div>
-		<div class="block title">
-		<h1><h1>Parsegraph Graph <a href="index.html">Graph-js</a></h1>
-		</h1>
-		</div>
-		<div class="slot toctitle">
-		<h2>Table of Contents</h2>
-		<h2>Parsegraph Graph</h2>
-		<ol>
-		<li>new <a href="#parsegraph_Graph">parsegraph_Graph(surface)</a>
-		<li><a href="#.shaders">.shaders()</a>
-		<li><a href="#.cameraBox">.cameraBox()</a>
-		<li><a href="#.world">.world()</a>
-		<li><a href="#.carousel">.carousel()</a>
-		<li><a href="#.camera">.camera()</a>
-		<li><a href="#.surface">.surface()</a>
-		<li><a href="#.gl">.gl()</a>
-		<li><a href="#.container">.container()</a>
-		<li><a href="#.canvas">.canvas()</a>
-		<li><a href="#.input">.input()</a>
-		<li><a href="#.scheduleRepaint">.scheduleRepaint()</a>
-		<li><a href="#.setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a>
-		<li><a href="#.needsRepaint">.needsRepaint()</a>
-		<li><a href="#.glyphAtlas">.glyphAtlas()</a>
-		<li><a href="#.setGlyphAtlas">.setGlyphAtlas(glyphAtlas)</a>
-		<li><a href="#.plot">.plot()</a>
-		<li><a href="#.paint">.paint(timeout)</a>
-		<li><a href="#.render">.render()</a>
-		</ol>
-		</div>
-		<div class="block linksearch" style="font-size: 15px; width: 100%;">
-			<div class=links>
-			<a href=/login><span class="alphabud" style="background-color: greenyellow">Log in</span></a> 
-        <a href=/signup><span class="alphabud" style="background-color: gold">Sign up</span></a> 
-        <a href="/import"><span class="alphabud" style="align-content: right">Import</span></a>
-       <form id=search action="/search" style="width: %; float:right; display: inline-block;">
-
-        <input name=q></input> <input type=submit value=Search></input>
-        </form>
-         
-    	</div>
-		</div>
-		<div class="block content">
-		<h1>Parsegraph Graph</h1>
-		Renders an interactive parsegraph in an HTML canvas.
-		<p>
-		Use graph.container() to add it to the DOM.
-		<h3>new <a name="parsegraph_Graph">parsegraph_Graph(surface)</h3></a>
-		Creates a new Graph using the given surface, creating one if necessary.
-		<h3><a name=".shaders">.shaders()</h3></a>
-		Returns the map of compiled shader and GL objects used by this graph and its components.
-		<h3><a name=".cameraBox">.cameraBox()</h3></a>
-		Returns the CameraBox used by this graph.
-		<h3><a name=".world">.world()</h3></a>
-		Returns the World used by this graph.
-		<h3><a name=".carousel">.carousel()</h3></a>
-		Returns the Carousel used by this graph.
-		<h3><a name=".camera">.camera()</h3></a>
-		Returns the Camera used by this graph.
-		<h3><a name=".surface">.surface()</h3></a>
-		Returns the Surface used by this graph.
-		<h3><a name=".gl">.gl()</h3></a>
-		Returns the GL rendering context used by this graph.
-		<h3><a name=".container">.container()</h3></a>
-		Returns the HTML div container of the canvas used by this graph.
-		<h3><a name=".canvas">.canvas()</h3></a>
-		Returns the canvas used by this graph.
-		<h3><a name=".input">.input()</h3></a>
-		Returns the Input used by this graph.
-		<h3><a name=".scheduleRepaint">.scheduleRepaint()</h3></a>
-		Schedules a repaint. The onScheduleRepaint callback is responsible for making this
-		happen.
-		<p>
-		The previous world paint state is cleared if this is called; this can be used to reset
-		a paint in progress.
-		<h3><a name=".setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</h3></a>
-		Sets the hook to be called when the graph is scheduled to be repainted.
-		<h3><a name=".needsRepaint">.needsRepaint()</h3></a>
-		Returns true if any graph component needs a repaint.
-		<h3><a name=".glyphAtlas">.glyphAtlas()</h3></a>
-		Returns this graph's glyph atlas.
-		<h3><a name=".setGlyphAtlas">.setGlyphAtlas(glyphAtlas)</h3></a>
-		Directly sets this graph's glyph atlas.
-		<h3><a name=".plot">.plot()</h3></a>
-		Passes the given arguments to this graph's World.
-		<h3><a name=".paint">.paint(timeout)</h3></a>
-		Paints the graph up to the given time, in milliseconds.
-		<p>
-		Returns true if the graph completed painting.
-		<h3><a name=".render">.render()</h3></a>
-		Renders this graph in the given Surface.
-		</div>
-		<div class="footer slot style="display: inline-block; "">
-    	&copy; 2018 <a href='https://rainback.com'>Rainback, Inc.</a> All rights reserved. <a href=/contact><span class="bud">Contact Us</span></a>
-		</div>
-	</div>
-		
-</body>
-</html>
+<main>
+<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Graph">Graph</a></div>
+<h1>Parsegraph Graph</h1>
+Renders an interactive parsegraph in an HTML canvas.
+<p>
+Use graph.container() to add it to the DOM.
+<h3>Contents</h3>
+<ol>
+<li><a href="#parsegraph_Graph">new parsegraph_Graph(surface)</a>
+<li><a href="#.shaders">.shaders()</a>
+<li><a href="#.cameraBox">.cameraBox()</a>
+<li><a href="#.world">.world()</a>
+<li><a href="#.carousel">.carousel()</a>
+<li><a href="#.camera">.camera()</a>
+<li><a href="#.surface">.surface()</a>
+<li><a href="#.gl">.gl()</a>
+<li><a href="#.container">.container()</a>
+<li><a href="#.canvas">.canvas()</a>
+<li><a href="#.input">.input()</a>
+<li><a href="#.scheduleRepaint">.scheduleRepaint()</a>
+<li><a href="#.setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a>
+<li><a href="#.needsRepaint">.needsRepaint()</a>
+<li><a href="#.glyphAtlas">.glyphAtlas()</a>
+<li><a href="#.setGlyphAtlas">.setGlyphAtlas(glyphAtlas)</a>
+<li><a href="#.plot">.plot()</a>
+<li><a href="#.paint">.paint(timeout)</a>
+<li><a href="#.render">.render()</a>
+</ol>
+<h3><a name="parsegraph_Graph">new parsegraph_Graph(surface)</a></h3>
+Creates a new Graph using the given surface, creating one if necessary.
+<h3><a name=".shaders">.shaders()</a></h3>
+Returns the map of compiled shader and GL objects used by this graph and its components.
+<h3><a name=".cameraBox">.cameraBox()</a></h3>
+Returns the CameraBox used by this graph.
+<h3><a name=".world">.world()</a></h3>
+Returns the World used by this graph.
+<h3><a name=".carousel">.carousel()</a></h3>
+Returns the Carousel used by this graph.
+<h3><a name=".camera">.camera()</a></h3>
+Returns the Camera used by this graph.
+<h3><a name=".surface">.surface()</a></h3>
+Returns the Surface used by this graph.
+<h3><a name=".gl">.gl()</a></h3>
+Returns the GL rendering context used by this graph.
+<h3><a name=".container">.container()</a></h3>
+Returns the HTML div container of the canvas used by this graph.
+<h3><a name=".canvas">.canvas()</a></h3>
+Returns the canvas used by this graph.
+<h3><a name=".input">.input()</a></h3>
+Returns the Input used by this graph.
+<h3><a name=".scheduleRepaint">.scheduleRepaint()</a></h3>
+Schedules a repaint. The onScheduleRepaint callback is responsible for making this happen.
+<p>
+The previous world paint state is cleared if this is called; this can be used to reset a paint in progress.
+<h3><a name=".setOnScheduleRepaint">.setOnScheduleRepaint(func, thisArg)</a></h3>
+Sets the hook to be called when the graph is scheduled to be repainted.
+<h3><a name=".needsRepaint">.needsRepaint()</a></h3>
+Returns true if any graph component needs a repaint.
+<h3><a name=".glyphAtlas">.glyphAtlas()</a></h3>
+Returns this graph's glyph atlas.
+<h3><a name=".setGlyphAtlas">.setGlyphAtlas(glyphAtlas)</a></h3>
+Directly sets this graph's glyph atlas.
+<h3><a name=".plot">.plot()</a></h3>
+Passes the given arguments to this graph's World.
+<h3><a name=".paint">.paint(timeout)</a></h3>
+Paints the graph up to the given time, in milliseconds.
+<p>
+Returns true if the graph completed painting.
+<h3><a name=".render">.render()</a></h3>
+Renders this graph in the given Surface.
+</main>
