@@ -77,6 +77,16 @@ parsegraph_Surface.prototype.resize = function(w, h)
     this.container().style.height = typeof h === "number" ? (h + "px") : h;
 };
 
+parsegraph_Surface.prototype.getWidth = function()
+{
+    return this.container().clientWidth;
+};
+
+parsegraph_Surface.prototype.getHeight = function()
+{
+    return this.container().clientHeight;
+};
+
 /**
  * Returns the container that holds the canvas for this graph.
  */
@@ -127,8 +137,8 @@ parsegraph_Surface.prototype.backgroundColor = function()
  */
 parsegraph_Surface.prototype.canProject = function()
 {
-    var displayWidth = this.container().clientWidth;
-    var displayHeight = this.container().clientHeight;
+    var displayWidth = this.getWidth();
+    var displayHeight = this.getHeight();
 
     return displayWidth != 0 && displayHeight != 0;
 };
