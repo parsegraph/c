@@ -12,12 +12,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._childPaintGroups = [];
 
     this._isPaintGroup = false;
-
-    this._previousPaintState = {
-        i: 0,
-        ordering: [this],
-        commitLayoutFunc: null
-    };
+    this._previousPaintState = null;
 
     this._keyListener = null;
     this._keyListenerThisArg = null;
@@ -49,8 +44,6 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._groupYPos = null;
     this._groupScale = null;
 
-    this._paintGroupNext = this;
-    this._paintGroupPrev = this;
     this._layoutPrev = this;
     this._layoutNext = this;
 
@@ -387,13 +380,18 @@ parsegraph_Node.prototype.markDirty = function()
 {
     //console.log(this + " marked dirty");
     this._dirty = true;
-    this._previousPaintState.commitLayoutFunc = null;
-    this._previousPaintState.i = 0;
-    this._previousPaintState.ordering = [this];
-
-    //this._childPaintGroups.forEach(function(pg) {
-        //pg.markDirty();
-    //}, this);
+    if(!this._previousPaintState) {
+        this._previousPaintState = {
+            i: 0,
+            ordering: [this],
+            commitLayoutFunc: null
+        };
+    }
+    else {
+        this._previousPaintState.commitLayoutFunc = null;
+        this._previousPaintState.i = 0;
+        this._previousPaintState.ordering = [this];
+    }
 };
 
 parsegraph_Node.prototype.isDirty = function()
@@ -2831,6 +2829,9 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     };
 
     // Load saved state.
+    if(!this._previousPaintState) {
+        this.markDirty();
+    }
     var savedState = this._previousPaintState;
     var i = savedState.i;
     var ordering = savedState.ordering;
