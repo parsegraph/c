@@ -1,4 +1,16 @@
-// These are additional tests for graph's layout.
+parsegraph_Node_Tests = new parsegraph_TestSuite("parsegraph_Node");
+
+parsegraph_Node_Tests.addTest("parsegraph_Node.setClickListener", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.setClickListener(function() {
+    });
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node.setKeyListener", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.setKeyListener(function() {
+    });
+});
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph", function() {
     var caret = new parsegraph_Caret(parsegraph_SLOT);
@@ -175,11 +187,11 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
     //caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     caret.moveToRoot();
     caret.node().commitLayoutIteratively();
-    console.log("Group X of root: " + caret.node().groupX());
-    console.log("Group X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).groupX());
-    console.log("Abs X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
-    console.log("Abs X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
-    console.log("Group X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    //console.log("Group X of root: " + caret.node().groupX());
+    //console.log("Group X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).groupX());
+    //console.log("Abs X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
+    //console.log("Abs X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
+    //console.log("Group X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
     //console.log(caret.node().nodeAt(parsegraph_DOWNWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
 });
 
@@ -1272,6 +1284,563 @@ parsegraph_Graph_Tests.addTest("Label test", function() {
     var car = new parsegraph_Caret('b');
     car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     car.label('No time');
-
     car.root().commitLayoutIteratively();
+});
+
+function parsegraph_simpleGraph(container, node, glyphAtlas)
+{
+    if(node.root && !glyphAtlas) {
+        glyphAtlas = node.glyphAtlas();
+        node = node.root();
+    }
+    var graph = new parsegraph_Graph();
+    graph.surface().resize(500, 500);
+    graph.setGlyphAtlas(glyphAtlas);
+    container.appendChild(graph.surface().container());
+    graph.plot(node);
+    graph.scheduleRepaint();
+    var timer = new parsegraph_AnimationTimer();
+    timer.setListener(function() {
+        node.showInCamera(graph.camera(), true);
+        graph.surface().paint();
+        graph.surface().render();
+    });
+    graph.input().SetListener(function() {
+        timer.schedule();
+    });
+    timer.schedule();
+}
+
+parsegraph_Graph_Tests.addTest("Intra-group move test", function(out) {
+    var car = new parsegraph_Caret('b');
+    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+
+    var bnode = car.spawn('d', 'b');
+    car.pull('d');
+
+    var anode = car.spawnMove('f', 'u');
+    var mnode = car.spawn('d', 'b');
+    car.root().commitLayoutIteratively();
+    var ax = anode.groupX();
+
+    var gx = mnode.groupX();
+
+    var ns = parsegraph_copyStyle('b');
+    var increase = 100;
+    ns.minWidth += increase;
+    bnode.setBlockStyle(ns);
+    car.root().commitLayoutIteratively();
+    mnode.positionChanged();
+    if(ax === anode.groupX()) {
+        parsegraph_simpleGraph(out, car);
+        throw new Error("Bud must move when another node grows in size.");
+    }
+    if(gx + increase/2 !== mnode.groupX()) {
+        parsegraph_simpleGraph(out, car);
+        throw new Error("Node must be moved when another node grows in size. (expected " + (gx + increase/2) + " versus actual " + mnode.groupX() + ")");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    var atlas = parsegraph_buildGlyphAtlas();
+    n.setLabel("No time", atlas);
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading spawned", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+});
+
+function makeChild() {
+    var car = new parsegraph_Caret(parsegraph_BLOCK);
+    car.spawnMove('f', 'b');
+    car.spawnMove('i', 'b');
+    car.spawnMove('f', 's');
+    return car.root();
+};
+
+function makeChild2() {
+    var car = new parsegraph_Caret(parsegraph_SLOT);
+    car.spawnMove('i', 'b');
+    car.spawnMove('f', 's');
+    car.spawnMove('i', 'b');
+    car.spawnMove('f', 'b');
+    return car.root();
+};
+
+parsegraph_Node_Tests.addTest("parsegraph_Node lisp test", function(out) {
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.push();
+    car.spawnMove('f', 's');
+    car.spawnMove('f', 's');
+    car.pop();
+    car.spawnMove('d', 'u');
+    car.push();
+    car.spawnMove('f', 's');
+    car.push();
+    car.spawnMove('f', 's');
+    car.spawnMove('i', 'b');
+    car.spawnMove('d', 'u');
+    car.spawnMove('f', 'b');
+    car.spawnMove('i', 's');
+    car.spawnMove('f', 's');
+    car.pop();
+    car.pull('f');
+    car.spawnMove('d', 'u');
+    car.connect('f', makeChild2());
+    car.spawnMove('d', 'u');
+    car.connect('f', makeChild2());
+    car.pop();
+    car.spawnMove('d', 'u');
+    car.root().commitLayoutIteratively();
+    //parsegraph_getLayoutNodes(car.root());
+    var g = new parsegraph_Graph();
+    g.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+    out.appendChild(g.surface().container());
+    g.plot(car.root());
+    g.scheduleRepaint();
+    g.input().SetListener(function() {
+        g.surface().paint();
+        g.surface().render();
+    });
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node lisp test simplified", function(out) {
+    var root = new parsegraph_Node(parsegraph_BUD);
+    root._id = "root";
+
+    var a = new parsegraph_Node(parsegraph_BLOCK);
+    a._id = "a";
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b._id = "b";
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    c._id = "c";
+
+    var chi = new parsegraph_Node(parsegraph_BUD);
+    chi._id = "chi";
+
+    chi.connectNode(parsegraph_FORWARD, c);
+
+    a.connectNode(parsegraph_DOWNWARD, chi);
+    a.connectNode(parsegraph_FORWARD, b);
+    //console.log("LISP TEST");
+    //console.log(parsegraph_getLayoutNodes(a));
+    root.connectNode(parsegraph_FORWARD, a);
+
+    root.commitLayoutIteratively();
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node layout preference test", function(out) {
+    var root = new parsegraph_Node(parsegraph_BUD);
+    root._id = "root";
+
+    var a = new parsegraph_Node(parsegraph_BLOCK);
+    a._id = "a";
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b._id = "b";
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    c._id = "c";
+
+    var chi = new parsegraph_Node(parsegraph_BUD);
+    chi._id = "chi";
+
+    chi.connectNode(parsegraph_FORWARD, c);
+
+    //console.log("cur a", parsegraph_nameLayoutPreference(a._layoutPreference));
+    a.connectNode(parsegraph_DOWNWARD, chi);
+    a.connectNode(parsegraph_FORWARD, b);
+    root.connectNode(parsegraph_FORWARD, a);
+    a.setLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS);
+
+    //console.log("new a", parsegraph_nameLayoutPreference(a._layoutPreference));
+    var r = parsegraph_getLayoutNodes(root)[0];
+    if(r !== c) {
+        throw new Error("Expected c, got " + r._id);
+    }
+
+    root.commitLayoutIteratively();
+
+    root.disconnectNode(parsegraph_FORWARD);
+    if(a._layoutPreference !== parsegraph_PREFER_VERTICAL_AXIS) {
+        throw new Error("a layoutPreference was not VERT but " + parsegraph_nameLayoutPreference(a._layoutPreference));
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    if(n._layoutNext != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._layoutPrev != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    if(b._layoutNext != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._layoutPrev != b) {
+        throw new Error("Next sanity");
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._layoutPrev != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._layoutPrev != n) {
+        return false;
+    }
+    if(n._layoutNext != b) {
+        return false;
+    }
+    if(b._layoutNext != n) {
+        return false;
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n._id = "n";
+    if(n._layoutNext != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._layoutPrev != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b._id = "b";
+    if(b._layoutNext != b) {
+        throw new Error("Previous sanity");
+    }
+    if(b._layoutPrev != b) {
+        throw new Error("Next sanity");
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._layoutPrev != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._layoutPrev != n) {
+        throw new Error("Next connected sanity");
+    }
+    if(n._layoutNext != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._layoutNext != n) {
+        throw new Error("Next connected sanity");
+    }
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    c._id = "c";
+    n.connectNode(parsegraph_BACKWARD, c);
+
+    var nodes = parsegraph_getLayoutNodes(n);
+    if(nodes[0] != c) {
+        throw new Error("First node is not C");
+    }
+    if(nodes[1] != b) {
+        throw new Error("Second node is not B");
+    }
+    if(nodes[2] != n) {
+        throw new Error("Third node is not n");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings and disconnected", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n._id = "n";
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b._id = "b";
+
+    var inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+    inner._id = "inner";
+    if(b._layoutPrev != inner) {
+        return "B layoutBefore isn't inner";
+    }
+    if(inner._layoutPrev != b) {
+        return "Inner layoutBefore isn't B";
+    }
+
+    n.connectNode(parsegraph_FORWARD, b);
+    if(n._layoutPrev != b) {
+        throw new Error("Next connected sanity");
+    }
+    if(b._layoutPrev != inner) {
+        throw new Error("N layoutBefore wasn't B");
+    }
+    if(inner._layoutPrev != n) {
+        throw new Error("N layoutBefore wasn't B");
+    }
+    if(n._layoutNext != inner) {
+        throw new Error("N layoutBefore wasn't B");
+    }
+    if(inner._layoutNext != b) {
+        throw new Error("N layoutBefore wasn't B");
+    }
+    if(b._layoutNext != n) {
+        throw new Error("N layoutBefore wasn't B");
+    }
+    //console.log("LNS");
+    //console.log(parsegraph_getLayoutNodes(n));
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    c._id = "c";
+    n.connectNode(parsegraph_BACKWARD, c);
+    //console.log("PLNS");
+    //console.log(parsegraph_getLayoutNodes(n));
+
+    var nodes = parsegraph_getLayoutNodes(n);
+    if(nodes[0] != c) {
+        throw new Error("First node is not C");
+    }
+    if(nodes[1] != inner) {
+        throw new Error("Second node is not inner");
+    }
+    if(nodes[2] != b) {
+        throw new Error("Third node is not b");
+    }
+    if(nodes[3] != n) {
+        throw new Error("Third node is not n");
+    }
+    if(b !== n.disconnectNode(parsegraph_FORWARD)) {
+        throw new Error("Not even working properly");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with multiple siblings and disconnected 2", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n._id = "n";
+    if(n._layoutNext != n) {
+        throw new Error("Previous sanity");
+    }
+    if(n._layoutPrev != n) {
+        throw new Error("Next sanity");
+    }
+
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b._id = "b";
+    parsegraph_testLayoutNodes([b]);
+
+    var inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+    inner._id = "inner";
+    parsegraph_testLayoutNodes([inner, b]);
+
+    n.connectNode(parsegraph_FORWARD, b);
+    parsegraph_testLayoutNodes([inner, b, n]);
+    var c = new parsegraph_Node(parsegraph_BLOCK);
+    c._id = "c";
+    n.connectNode(parsegraph_BACKWARD, c);
+    parsegraph_testLayoutNodes([c, inner, b, n]);
+    if(c !== n.disconnectNode(parsegraph_BACKWARD)) {
+        throw new Error("Not even working properly");
+    }
+    parsegraph_testLayoutNodes([c], "disconnected");
+    parsegraph_testLayoutNodes([inner, b, n], "finished");
+});
+
+function parsegraph_testLayoutNodes(expected, name)
+{
+    var node = expected[expected.length - 1];
+    var nodes = parsegraph_getLayoutNodes(node);
+    for(var i = 0; i < expected.length; ++i) {
+        if(nodes[i] != expected[i]) {
+            //console.log("TESTLAYOUTNODES");
+            //console.log(nodes);
+            throw new Error((name ? name : "") + " index " + i + ": Node " + (expected[i] ? expected[i]._id : "null") + " expected, not " + (nodes[i] ? nodes[i]._id : "null"));
+        }
+    }
+}
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading deeply connected", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    n._id = "n";
+    parsegraph_testLayoutNodes([n], "deeply conn 1");
+    var b = n.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+    b._id = "b";
+    parsegraph_testLayoutNodes([b, n], "deeply conn 2");
+    var c = b.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    c._id = "c";
+    parsegraph_testLayoutNodes([c, b, n], "deeply conn 3");
+    var d = b.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+    d._id = "d";
+    parsegraph_testLayoutNodes([c, d, b, n], "deeply conn 4");
+
+    if(n._layoutNext !== c) {
+        throw new Error("Previous sanity 1: got " + n._layoutNext._id + " expected " + c._id);
+    }
+    if(d._layoutNext !== b) {
+        throw new Error("Previous sanity 2");
+    }
+    if(c._layoutNext !== d) {
+        throw new Error("Previous sanity 3");
+    }
+    if(b._layoutNext !== n) {
+        throw new Error("Previous sanity 4");
+    }
+});
+
+parsegraph_Node_Tests.AddTest("Right-to-left test", function() {
+    var node = new parsegraph_Node(parsegraph_BUD);
+    node.setRightToLeft(true);
+});
+
+parsegraph_Node_Tests.AddTest("Disconnect trivial test", function() {
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.node().commitLayoutIteratively();
+    var originalRoot = car.node();
+    car.spawnMove('f', 'b');
+    car.node().commitLayoutIteratively();
+    var newRoot = car.node();
+    car.disconnect();
+    originalRoot.commitLayoutIteratively();
+    newRoot.commitLayoutIteratively();
+});
+
+parsegraph_Node_Tests.AddTest("Disconnect simple test", function() {
+    //console.log("DISCONNECT SIMPLE TEST");
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.node().commitLayoutIteratively();
+    var originalRoot = car.node();
+    var midRoot = car.spawnMove('f', 'b');
+    car.spawnMove('f', 'b');
+    // *=[]=[] <--newRoot == car
+    // ^oldRoot
+    car.node().commitLayoutIteratively();
+    var newRoot = car.node();
+    if(originalRoot._layoutNext != newRoot) {
+        console.log("originalRoot", originalRoot);
+        console.log("midRoot", midRoot);
+        console.log("layoutAfter of originalRoot", originalRoot._layoutNext);
+        console.log("newRoot", newRoot);
+        throw new Error("Original's previous should be newroot");
+    }
+    //console.log("Doing disconnect");
+    car.disconnect();
+    newRoot.commitLayoutIteratively();
+    if(originalRoot._layoutNext != midRoot) {
+        console.log("originalRoot", originalRoot);
+        console.log("midRoot", midRoot);
+        console.log("layoutAfter of originalRoot", originalRoot._layoutNext);
+        console.log("newRoot", newRoot);
+        throw new Error("layoutAfter is invalid");
+    }
+    originalRoot.commitLayoutIteratively();
+});
+
+parsegraph_Node_Tests.AddTest("Disconnect simple test, reversed", function() {
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.node().commitLayoutIteratively();
+    var originalRoot = car.node();
+    var midRoot = car.spawnMove('f', 'b');
+    car.spawnMove('f', 'b');
+    car.node().commitLayoutIteratively();
+    var newRoot = car.node();
+    car.disconnect();
+    originalRoot.commitLayoutIteratively();
+    newRoot.commitLayoutIteratively();
+    if(originalRoot._layoutNext != midRoot) {
+        throw new Error("layoutAfter is invalid");
+    }
+});
+
+function parsegraph_getLayoutNodes(node)
+{
+    var list = [];
+    var orig = node;
+    var start = new Date();
+    do {
+        node = node._layoutNext;
+        //console.log(node._id);
+        for(var i = 0; i < list.length; ++i) {
+            if(list[i] == node) {
+                console.log(list);
+                throw new Error("Layout list has loop");
+            }
+        }
+        list.push(node);
+        if(parsegraph_elapsed(start) > 5000) {
+            throw new Error("Infinite loop");
+        }
+    } while(orig != node);
+    return list;
+}
+
+parsegraph_Node_Tests.AddTest("Disconnect complex test", function() {
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.node().commitLayoutIteratively();
+    var originalRoot = car.node();
+    car.spawnMove('f', 'b');
+    car.push();
+    //console.log("NODE WITH CHILD", car.node());
+    car.spawnMove('d', 'u');
+    //console.log("MOST DOWNWARD NODE OF CHILD", car.node());
+    car.pop();
+    car.spawnMove('f', 'b');
+    car.node().commitLayoutIteratively();
+    var newRoot = car.node();
+    var newLastNode = newRoot.nodeAt(parsegraph_BACKWARD);
+    //console.log("Doing complex disc", originalRoot);
+    //console.log(parsegraph_getLayoutNodes(originalRoot));
+    car.disconnect();
+    //console.log("COMPLEX DISCONNECT DONE");
+    //console.log(parsegraph_getLayoutNodes(originalRoot));
+    //newRoot.commitLayoutIteratively();
+    originalRoot.commitLayoutIteratively();
+});
+
+parsegraph_Node_Tests.AddTest("Proportion pull test", function() {
+    var atlas = parsegraph_buildGlyphAtlas();
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    car.setGlyphAtlas(atlas);
+    car.node().commitLayoutIteratively();
+    var originalRoot = car.node();
+    originalRoot._id = "ROOT";
+    //car.spawn('b', 'u');
+    //car.spawn('f', 'u');
+
+/*    car.spawnMove('d', 'b');
+    car.push();
+    car.spawnMove('b', 'u');
+    car.spawnMove('d', 'u');
+    car.spawnMove('d', 's');
+    car.label('2');
+    car.pop();
+
+    car.push();
+    car.spawnMove('f', 'u');
+    car.spawnMove('d', 'u');
+    car.spawnMove('d', 's');
+    car.label('2');
+    car.pop();
+
+    car.pull('d');
+    */
+
+    car.spawnMove('d', 'b');
+    car.node()._id = "CENTER BLOCK";
+    car.push();
+    car.spawnMove('b', 'u');
+    car.node()._id = "DOWN BUD";
+    //car.spawnMove('d', 's');
+    //car.label('1');
+    car.pop();
+
+    //car.push();
+    //car.spawnMove('f', 'u');
+    //car.spawnMove('d', 's');
+    //car.label('1');
+    //car.pop();
+
+    //console.log("Proportion test start");
+    car.pull('d');
+
+    //car.spawnMove('d', 's');
+
+    try {
+        originalRoot.commitLayoutIteratively();
+        //console.log("Proportion test SUCCESS");
+    }
+    finally {
+        //console.log("Proportion test finished");
+    }
 });
