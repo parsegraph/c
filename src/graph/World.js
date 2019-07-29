@@ -293,6 +293,7 @@ parsegraph_World.prototype.paint = function(timeout)
     };
 
     if(this._worldPaintingDirty) {
+        //console.log("World needs repaint");
         // Restore the last state.
         var i = 0;
         var savedState;
@@ -334,6 +335,9 @@ parsegraph_World.prototype.paint = function(timeout)
             ++i;
         }
         this._worldPaintingDirty = false;
+    }
+    else {
+        //console.log("World does not need repaint");
     }
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
