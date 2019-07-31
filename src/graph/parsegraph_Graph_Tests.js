@@ -176,16 +176,47 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", function() {
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - PaintGroup sanity", function() {
+    console.log("parsegraph_Graph - Block with forward creased bud");
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.node().setPaintGroup(true);
-    caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+
+    var node = caret.node();
+    if(node._paintGroupNext !== node) {
+        throw new Error("Node's paint group next is not itself");
+    }
+    var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    if(creased._paintGroupNext !== creased._paintGroupNext) {
+        throw new Error("Child's paint group next is not null");
+    }
+    caret.crease();
+    if(creased._paintGroupNext !== node) {
+        throw new Error("Child's paint group next is not node ");
+    }
+});
+
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud", function() {
+    console.log("parsegraph_Graph - Block with forward creased bud");
+    // Spawn the graph.
+    var caret = new parsegraph_Caret(parsegraph_BUD);
+    var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     caret.crease();
     caret.shrink();
-    caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    var grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     //caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     caret.moveToRoot();
+    if(creased._layoutNext !== grandchild) {
+        throw new Error("Creased layout next must be " + grandchild + " but was " + creased._layoutNext);
+    }
+    if(grandchild._layoutNext !== creased) {
+        throw new Error("Grandchilds layout next must be " + creased + " but was " + grandchild._layoutNext);
+    }
+    if(creased._paintGroupNext !== caret.root()) {
+        throw new Error(creased + "'s next paint group must be the root but was " + creased._paintGroupNext);
+    }
+    if(caret.root()._paintGroupNext !== creased) {
+        throw new Error(caret.root()+ "'s next paint group must be " + creased + " but was " + caret.root()._paintGroupNext);
+    }
     caret.node().commitLayoutIteratively();
     //console.log("Group X of root: " + caret.node().groupX());
     //console.log("Group X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).groupX());
@@ -1740,6 +1771,32 @@ parsegraph_Node_Tests.AddTest("Disconnect simple test, reversed", function() {
     newRoot.commitLayoutIteratively();
     if(originalRoot._layoutNext != midRoot) {
         throw new Error("layoutAfter is invalid");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with crease", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    n.connectNode(parsegraph_FORWARD, b);
+    b.setPaintGroup(true);
+    if(b._layoutNext !== b) {
+        throw new Error("Crease must remove that node from its parents layout chain (child)");
+    }
+    if(n._layoutNext !== n) {
+        throw new Error("Crease must remove that node from its parents layout chain (parent)");
+    }
+});
+
+parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading connected with creased child", function() {
+    var n = new parsegraph_Node(parsegraph_BLOCK);
+    var b = new parsegraph_Node(parsegraph_BLOCK);
+    b.setPaintGroup(true);
+    n.connectNode(parsegraph_FORWARD, b);
+    if(b._layoutNext !== b) {
+        throw new Error("Crease must remove that node from its parents layout chain (child)");
+    }
+    if(n._layoutNext !== n) {
+        throw new Error("Crease must remove that node from its parents layout chain (parent)");
     }
 });
 
