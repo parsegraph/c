@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         return primes;
     });
 
+    var totalStart = new Date();
     var lastPrime = new Date();
     sga.onIdle(function(timeout) {
         var startTime = new Date();
@@ -29,6 +30,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
             primes.step(1);
             sga.scheduleRepaint();
             lastPrime = new Date();
+        }
+        if(primes.position > MAX_PRIME) {
+            console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
         }
         return primes.position <= MAX_PRIME;
     });
