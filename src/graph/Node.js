@@ -5,52 +5,15 @@ function parsegraph_Node(newType, fromNode, parentDirection)
 {
     this._id = parsegraph_Node_COUNT++;
 
-    this._dirty = true;
-    this._painter = null;
-
-    // Manipulated by node.
-    this._paintGroupNext = this;
-    this._paintGroupPrev = this;
-
-    this._isPaintGroup = false;
-    this._previousPaintState = null;
-
-    this._keyListener = null;
-    this._keyListenerThisArg = null;
-    this._clickListener = null;
-    this._clickListenerThisArg = null;
-    this._changeListener = null;
-    this._changeListenerThisArg = null;
+    // Appearance
     this._type = newType;
     this._style = parsegraph_style(this._type);
-    this._label = null;
-    this._labelX = null;
-    this._labelY = null;
     this._rightToLeft = parsegraph_RIGHT_TO_LEFT;
-
-    this._value = null;
     this._selected = false;
-    this._ignoresMouse = true;
-
-    this._prevTabNode = null;
-    this._nextTabNode = null;
-
+    this._scale = 1.0;
     this._scene = null;
 
-    this._scale = 1.0;
-    this._absoluteXPos = null;
-    this._absoluteYPos = null;
-    this._absoluteScale = null;
-    this._groupXPos = null;
-    this._groupYPos = null;
-    this._groupScale = null;
-
-    this._layoutPrev = this;
-    this._layoutNext = this;
-
-    // Check if a parent node was provided.
-    this._layoutState = parsegraph_NEEDS_COMMIT;
-    this._nodeFit = parsegraph_NODE_FIT_LOOSE;
+    // Layout
     this._neighbors = [];
     for(var i = 0; i < parsegraph_NUM_DIRECTIONS; ++i) {
         this._neighbors.push({
@@ -66,7 +29,45 @@ function parsegraph_Node(newType, fromNode, parentDirection)
             node: null
         });
     }
+    this._nodeFit = parsegraph_NODE_FIT_LOOSE;
+    this._layoutState = parsegraph_NEEDS_COMMIT;
+    this._absoluteXPos = null;
+    this._absoluteYPos = null;
+    this._absoluteScale = null;
+    this._groupXPos = null;
+    this._groupYPos = null;
+    this._groupScale = null;
+    this._layoutPrev = this;
+    this._layoutNext = this;
 
+    // Paint groups.
+    this._dirty = true;
+    this._painter = null;
+    this._paintGroupNext = this;
+    this._paintGroupPrev = this;
+    this._isPaintGroup = false;
+    this._previousPaintState = null;
+
+    // Event listeners
+    this._ignoresMouse = true;
+    this._keyListener = null;
+    this._keyListenerThisArg = null;
+    this._clickListener = null;
+    this._clickListenerThisArg = null;
+    this._changeListener = null;
+    this._changeListenerThisArg = null;
+    this._prevTabNode = null;
+    this._nextTabNode = null;
+
+    // Labels.
+    this._label = null;
+    this._labelX = null;
+    this._labelY = null;
+
+    // User data
+    this._value = null;
+
+    // Check if a parent node was provided.
     if(fromNode != null) {
         // A parent node was provided; this node is a child.
         fromNode.connectNode(parentDirection, this);
