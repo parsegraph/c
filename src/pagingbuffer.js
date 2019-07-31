@@ -146,7 +146,8 @@ parsegraph_PagingBuffer.prototype.addPage = function(renderFunc, renderFuncThisA
 {
     ++this._currentPage;
 
-    if(this._pages.length < this._currentPage) {
+    if(this._currentPage < this._pages.length) {
+        // Reuse the page.
         return;
     }
 
