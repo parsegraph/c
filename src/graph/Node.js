@@ -684,7 +684,8 @@ parsegraph_Node.prototype.hasAnyNodes = function()
     return this.hasChildAt(parsegraph_DOWNWARD)
         || this.hasChildAt(parsegraph_UPWARD)
         || this.hasChildAt(parsegraph_FORWARD)
-        || this.hasChildAt(parsegraph_BACKWARD);
+        || this.hasChildAt(parsegraph_BACKWARD)
+        || this.hasChildAt(parsegraph_INWARD);
 };
 
 parsegraph_Node.prototype.nodeAt = function(atDirection)
