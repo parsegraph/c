@@ -1290,7 +1290,7 @@ parsegraph_Node.prototype.isSelected = function()
 
 parsegraph_Node.prototype.setSelected = function(selected)
 {
-    //console.log(new Error("Setsel"));
+    //console.log(new Error("setSelected(" + selected + ")"));
     this._selected = selected;
 };
 
