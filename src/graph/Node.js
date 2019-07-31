@@ -692,63 +692,6 @@ parsegraph_Node.prototype.nodeAt = function(atDirection)
     return this._neighbors[atDirection].node;
 };
 
-parsegraph_Node.prototype.traverse = function(filterFunc, actionFunc, thisArg, timeout)
-{
-    // First, exit immediately if this node doesn't pass the given filter.
-    if(!filterFunc.call(thisArg, this)) {
-        return;
-    }
-
-    var ordering = [this];
-
-    var addNode = function(node, direction) {
-        // Do not add the parent.
-        if(!node.isRoot() && node.parentDirection() == direction) {
-            return;
-        }
-        // Add the node to the ordering if it exists and needs a layout.
-        if(node.hasNode(direction)) {
-            var child = node.nodeAt(direction);
-            if(filterFunc.call(thisArg, child)) {
-                ordering.push(child);
-            }
-        }
-    };
-
-    // Build the node list.
-    for(var i = 0; i < ordering.length; ++i) {
-        var node = ordering[i];
-        addNode(node, parsegraph_INWARD);
-        addNode(node, parsegraph_DOWNWARD);
-        addNode(node, parsegraph_UPWARD);
-        addNode(node, parsegraph_BACKWARD);
-        addNode(node, parsegraph_FORWARD);
-    }
-
-    // Execute the action on allowed nodes.
-    var i = ordering.length - 1;
-    var traverseLoop = function() {
-        var t = new Date().getTime();
-        var pastTime = function() {
-            return timeout !== undefined && (new Date().getTime() - t > timeout);
-        };
-
-        while(true) {
-            if(i < 0) {
-                // Indicate completion.
-                return null;
-            }
-            actionFunc.call(thisArg, ordering[i]);
-            --i;
-            if(pastTime()) {
-                return traverseLoop;
-            }
-        }
-    }
-
-    return traverseLoop();
-};
-
 parsegraph_Node.prototype.spawnNode = function(spawnDirection, newType)
 {
     var created = this.connectNode(spawnDirection, new parsegraph_Node(newType));
