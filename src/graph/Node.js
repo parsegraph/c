@@ -264,7 +264,7 @@ parsegraph_Node.prototype.absoluteScale = function()
 parsegraph_Node.prototype.commitGroupPos = function()
 {
     if(this._groupXPos !== null) {
-        // No need for an update, so just return.
+        //console.log(this + " does not need a position update.");
         return;
     }
 
