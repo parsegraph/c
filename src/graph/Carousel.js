@@ -300,7 +300,7 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
     this._carouselPlots.forEach(function(carouselData, i) {
         var root = carouselData[0];
         var paintGroup = root.localPaintGroup();
-        root.commitLayout();
+        root.commitLayoutIteratively();
 
         // Set the origin.
         var caretRad = Math.PI + angleSpan/2 + (i / this._carouselPlots.length) * (2 * Math.PI);
