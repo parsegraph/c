@@ -3,55 +3,10 @@
 <head>
 <title>Memory Piers - Parsegraph</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-}
-
-.parsegraph_Surface {
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-}
-
-div {
-    text-align: center;
-    position: absolute;
-}
-
-.controls {
-    margin: auto;
-    position: absolute;
-    pointer-events: none;
-    width: 100%;
-}
-
-.controls > form button {
-    pointer-events: auto;
-}
-
-@media only screen and (max-width: 980px) {
-
-.controls {
-    display: none;
-}
-
-body > div {
-    width: 100%;
-}
-
-body > div input {
-    clear: left;
-}
-
-}
-</style>
-<script src="parsegraph-1.3.js"></script>
-<script src="parsegraph-widgets-1.3.js"></script>
+<link rel="stylesheet" type="text/css" href="/environment.css"/>
+<script src="/parsegraph-1.3.js"></script>
+<script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-
 function init()
 {
     try {
@@ -66,7 +21,7 @@ function init()
         var uni = new parsegraph_Unicode();
         uni.onLoad = function() {
             graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
-            graph.plot(showMemoryBlocks(graph, 200));
+            graph.plot(showMemoryBlocks(graph, 100));
             main.appendChild(surface.container());
 
             if(localStorage.getItem("parsegraph_piers_camera") != null) {
@@ -83,7 +38,7 @@ function init()
             renderTimer.setListener(function() {
                 graph.input().Update(new Date());
                 if(graph.needsRepaint()) {
-                    surface.paint(50);
+                    surface.paint(30);
                 }
                 surface.render();
                 if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
@@ -114,7 +69,31 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    var sga = new parsegraph_Application("Memory Piers");
+    sga.setCameraName("parsegraph_piers_camera");
+    SGA = sga;
+    var piers;
+    var MAX_SIZE = 400;
+    sga.start(document.body, function(app, userLogin, loginNode) {
+        piers = new parsegraph_MemoryPiers(app, MAX_SIZE);
+        loginNode.connectNode(parsegraph_FORWARD, piers.node());
+        return piers;
+    });
+
+    var totalStart = new Date();
+    var lastStep = new Date();
+    sga.onIdle(function(timeout) {
+        if(parsegraph_elapsed(lastStep) <= 50) {
+            return true;
+        }
+        var callAgain = piers.step();
+        sga.scheduleRepaint();
+        lastStep = new Date();
+        if(!callAgain) {
+            console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
+        }
+        return callAgain;
+    });
 });
 </script>
 </head>
