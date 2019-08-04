@@ -156,7 +156,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/buildSelection.js \
 	src/apps/showFunction.js \
 	src/apps/showIPAddresses.js \
-	src/apps/showMemoryBlocks.js \
+	src/apps/piers.js \
 	src/apps/showProportionTest.js \
 	src/apps/showFlowchartTemplate.js \
 	src/apps/showUlam.js \
