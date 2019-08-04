@@ -438,7 +438,12 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 
         // Remove the paint group's entry in the parent.
         //console.log("Node " + this + " is not a root, so adding paint groups.");
-        parsegraph_connectPaintGroup(paintGroupLast, this._paintGroupNext);
+        if(paintGroupLast !== this) {
+            parsegraph_connectPaintGroup(paintGroupLast, this._paintGroupNext);
+        }
+        else {
+            parsegraph_connectPaintGroup(this._paintGroupPrev, this._paintGroupNext);
+        }
         this._paintGroupNext = this;
         this._paintGroupPrev = this;
     }
