@@ -47,6 +47,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._paintGroupPrev = this;
     this._isPaintGroup = false;
     this._previousPaintState = null;
+    this._currentPaintGroup = null;
 
     // Event listeners
     this._ignoresMouse = true;
@@ -471,15 +472,24 @@ parsegraph_Node.prototype.painter = function()
 
 parsegraph_Node.prototype.findPaintGroup = function()
 {
-    var node = this;
-    while(!node.isRoot()) {
-        if(node._isPaintGroup) {
-            return node;
+    if(!this._currentPaintGroup) {
+        var node = this;
+        while(!node.isRoot()) {
+            if(node._isPaintGroup) {
+                break;
+            }
+            if(node._currentPaintGroup) {
+                this._currentPaintGroup = node._currentPaintGroup;
+                return this._currentPaintGroup;
+            }
+            node = node.parentNode();
         }
-        node = node.parentNode();
+        this._currentPaintGroup = node;
     }
-
-    return node;
+    else {
+        //console.log("Returning cached paint group " + this._currentPaintGroup._id + " for node " + this._id);
+    }
+    return this._currentPaintGroup;
 };
 
 parsegraph_Node.prototype.localPaintGroup = function()
@@ -2611,6 +2621,7 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 
         // Set the needs layout flag.
         node._layoutState = parsegraph_NEEDS_COMMIT;
+        node._currentPaintGroup = null;
 
         node.findPaintGroup().markDirty();
 
