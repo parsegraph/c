@@ -31,6 +31,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     }
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
     this._layoutState = parsegraph_NEEDS_COMMIT;
+    this._absoluteVersion = 0;
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
@@ -166,10 +167,16 @@ parsegraph_Node.prototype.rightToLeft = function()
 
 parsegraph_Node.prototype.commitAbsolutePos = function()
 {
-    if(this._absoluteXPos !== null) {
+    if(this._absoluteXPos !== null
+        && (!this.isRoot()
+            && this._absoluteVersion === this.parentNode().findPaintGroup()._absoluteVersion
+    )) {
         // No need for an update, so just return.
         return;
     }
+    this._absoluteXPos = null;
+    this._absoluteYPos = null;
+    this._absoluteScale = null;
 
     // Retrieve a stack of nodes to determine the absolute position.
     var node = this;
@@ -212,42 +219,44 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
     this._absoluteXPos += node.x() * parentScale;
     this._absoluteYPos += node.y() * parentScale;
     this._absoluteScale = scale;
-
-    this.eachChild(function(node, dir) {
-        node.positionWasChanged();
-    }, this);
-};
-
-parsegraph_Node.prototype.positionWasChanged = function()
-{
-    this._absoluteXPos = null;
-    this._absoluteYPos = null;
-    this._groupXPos = null;
-    this._groupYPos = null;
-    if(this.localPaintGroup() && !this.isRoot()) {
-        return;
+    if(!this.isRoot()) {
+        this._absoluteVersion = this.parentNode().findPaintGroup()._absoluteVersion;
     }
-    this.eachChild(function(node, cdir) {
-        node.positionWasChanged();
-    }, this);
 };
-parsegraph_Node.prototype.positionHasChanged = parsegraph_Node.prototype.positionWasChanged;
-parsegraph_Node.prototype.positionChanged = parsegraph_Node.prototype.positionWasChanged;
+
+parsegraph_Node.prototype.needsCommit = function()
+{
+    return this._layoutState === parsegraph_NEEDS_COMMIT;
+};
+
+parsegraph_Node.prototype.needsPosition = function()
+{
+    return this.needsCommit() || this._groupXPos === null;
+};
 
 parsegraph_Node.prototype.absoluteX = function()
 {
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     this.commitAbsolutePos();
     return this._absoluteXPos;
 };
 
 parsegraph_Node.prototype.absoluteY = function()
 {
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     this.commitAbsolutePos();
     return this._absoluteYPos;
 };
 
 parsegraph_Node.prototype.absoluteScale = function()
 {
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     this.commitAbsolutePos();
     return this._absoluteScale;
 };
@@ -262,16 +271,30 @@ parsegraph_Node.prototype.commitGroupPos = function()
     // Retrieve a stack of nodes to determine the group position.
     var node = this;
     var nodeList = [];
-    while(!node.localPaintGroup() && !node.isRoot()) {
+    var parentScale = 1.0;
+    var scale = 1.0;
+    while(true) {
+        if(node.isRoot() || node.localPaintGroup()) {
+            this._groupXPos = 0;
+            this._groupYPos = 0;
+            break;
+        }
+
+        var par = node.nodeParent();
+        if(par._groupXPos !== null) {
+            // Just use the parent's position to start.
+            this._groupXPos = par._groupXPos;
+            this._groupYPos = par._groupYPos;
+            scale = par._groupScale * node.scale();
+            parentScale = par._groupScale;
+            break;
+        }
+
         nodeList.push(parsegraph_reverseNodeDirection(node.parentDirection()));
         node = node.nodeParent();
     }
 
     // nodeList contains [directionToThis, directionToParent, ..., directionFromGroupParent];
-    this._groupXPos = 0;
-    this._groupYPos = 0;
-    var parentScale = 1.0;
-    var scale = 1.0;
     for(var i = nodeList.length - 1; i >= 0; --i) {
         var directionToChild = nodeList[i];
 
@@ -295,19 +318,25 @@ parsegraph_Node.prototype.commitGroupPos = function()
 
 parsegraph_Node.prototype.groupX = function()
 {
-    this.commitGroupPos();
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     return this._groupXPos;
 };
 
 parsegraph_Node.prototype.groupY = function()
 {
-    this.commitGroupPos();
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     return this._groupYPos;
 };
 
 parsegraph_Node.prototype.groupScale = function()
 {
-    this.commitGroupPos();
+    if(this.findPaintGroup().needsPosition()) {
+        this.commitLayoutIteratively();
+    }
     return this._groupScale;
 };
 
@@ -1621,12 +1650,6 @@ parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds, bv)
     // Begin the layout.
     this._layoutState = parsegraph_IN_COMMIT;
 
-    // Clear the absolute point values, to be safe.
-    this._absoluteXPos = null;
-    this._absoluteYPos = null;
-    this._groupXPos = null;
-    this._groupYPos = null;
-
     var initExtent = function(
         inDirection,
         length,
@@ -2507,6 +2530,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
         return;
     }
 
+    var layoutPhase = 1;
     var rootPaintGroup = this;
     var paintGroup = null;
     var root = null;
@@ -2519,48 +2543,102 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     // Traverse the graph depth-first, committing each node's layout in turn.
     var commitLayoutLoop = function() {
         var startTime = new Date();
-        var t;
-        if(timeout !== undefined) {
-            t = new Date();
-        }
-        //console.log(paintGroupOrdering.length);
         var i = 0;
-        while(true) {
+        var pastTime = function(val) {
+            ++i;
+            if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
+                var ct = new Date();
+                var el = parsegraph_elapsed(startTime, ct);
+                if(el > 4*1000) {
+                    console.log(val);
+                }
+                if(el > 5*1000) {
+                    throw new Error("Commit Layout is taking too long");
+                }
+                if(timeout !== undefined && parsegraph_elapsed(startTime, ct) > timeout) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        // Commit layout for all nodes.
+        while(layoutPhase === 1) {
             if(paintGroup === null) {
                 paintGroup = rootPaintGroup._paintGroupNext;
                 root = paintGroup;
                 node = root;
             }
-            if(root._layoutState === parsegraph_NEEDS_COMMIT) {
+            if(pastTime(paintGroup._id)) {
+                return commitLayoutLoop;
+            }
+            if(root.needsCommit()) {
                 do {
                     // Loop back to the first node, from the root.
                     node = node._layoutNext;
-                    if(node._layoutState === parsegraph_NEEDS_COMMIT) {
+                    if(node.needsCommit()) {
                         node.commitLayout(bodySize, lineSize, bv);
+                        node._currentPaintGroup = paintGroup;
                     }
-                    ++i;
-                    if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
-                        var ct = new Date();
-                        var el = parsegraph_elapsed(startTime, ct);
-                        if(el > 4*1000) {
-                            console.log(node._id);
-                        }
-                        if(el > 5*1000) {
-                            throw new Error("Commit Layout is taking too long");
-                        }
-                        if(timeout !== undefined && parsegraph_elapsed(t, ct) > timeout) {
-                            return commitLayoutLoop;
-                        }
+                    if(pastTime(node._id)) {
+                        return commitLayoutLoop;
                     }
                 } while(node !== root);
             }
             if(paintGroup === rootPaintGroup) {
-                return null;
+                //console.log("Commit layout done");
+                ++layoutPhase;
+                paintGroup = null;
+                break;
             }
             paintGroup = paintGroup._paintGroupNext;
             root = paintGroup;
             node = root;
         }
+        // Calculate position.
+        while(layoutPhase === 2) {
+            //console.log("Now in layout phase 2");
+            if(paintGroup === null) {
+                paintGroup = rootPaintGroup;
+                root = paintGroup;
+                node = root;
+            }
+            //console.log("Processing position for ", paintGroup);
+            if(pastTime(paintGroup._id)) {
+                return commitLayoutLoop;
+            }
+            if(paintGroup.needsPosition() || node) {
+                if(!node) {
+                    //console.log(paintGroup + " needs a position update");
+                    node = paintGroup;
+                }
+                do {
+                    // Loop from the root to the last node.
+                    node._absoluteXPos = null;
+                    node._groupXPos = null;
+                    node.commitGroupPos();
+                    node = node._layoutPrev;
+                    if(pastTime(node._id)) {
+                        return commitLayoutLoop;
+                    }
+                } while(node !== root);
+            }
+            else {
+                //console.log(paintGroup);
+                //console.log(paintGroup + " does not need a position update.");
+            }
+            ++paintGroup._absoluteVersion;
+            paintGroup._absoluteXPos = null;
+            paintGroup.commitAbsolutePos();
+            paintGroup = paintGroup._paintGroupPrev;
+            if(paintGroup === rootPaintGroup) {
+                //console.log("Commit layout done");
+                ++layoutPhase;
+                break;
+            }
+            root = paintGroup;
+            node = null;
+        }
+        return null;
     };
 
     return commitLayoutLoop();
@@ -2609,9 +2687,6 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
         if(!this.hasNode(direction)) {
             return;
         }
-
-        // Recurse the layout change to the affected node.
-        this.nodeAt(direction).positionWasChanged();
     };
 
     var node = this;
@@ -2621,6 +2696,7 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 
         // Set the needs layout flag.
         node._layoutState = parsegraph_NEEDS_COMMIT;
+        node._groupXPos = null;
         node._currentPaintGroup = null;
 
         node.findPaintGroup().markDirty();

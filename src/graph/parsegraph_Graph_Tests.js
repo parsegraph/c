@@ -1359,7 +1359,6 @@ parsegraph_Graph_Tests.addTest("Intra-group move test", function(out) {
     ns.minWidth += increase;
     bnode.setBlockStyle(ns);
     car.root().commitLayoutIteratively();
-    mnode.positionChanged();
     if(ax === anode.groupX()) {
         parsegraph_simpleGraph(out, car);
         throw new Error("Bud must move when another node grows in size.");
