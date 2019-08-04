@@ -224,6 +224,51 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bu
     //console.log(caret.node().nodeAt(parsegraph_DOWNWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
 });
 
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud, uncreased", function() {
+    // Spawn the graph.
+    var caret = new parsegraph_Caret(parsegraph_BUD);
+    var root = caret.root();
+    var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    caret.crease();
+    caret.shrink();
+    var grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    creased.setPaintGroup(false);
+    if(creased._paintGroupPrev !== creased) {
+        throw new Error("Creased's previous paint group must be reset");
+    }
+    if(creased._paintGroupNext !== creased) {
+        throw new Error("Creased's next paint group must be reset");
+    }
+    if(root._paintGroupNext !== root) {
+        throw new Error("Root's next paint group must be reset");
+    }
+    if(root._paintGroupPrev !== root) {
+        throw new Error("Root's previous paint group must be reset");
+    }
+});
+
+parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud, removed", function() {
+    // Spawn the graph.
+    var caret = new parsegraph_Caret(parsegraph_BUD);
+    var root = caret.root();
+    var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    caret.shrink();
+    var grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    creased.disconnectNode();
+    if(creased._paintGroupPrev !== creased) {
+        throw new Error("Creased's previous paint group must be reset");
+    }
+    if(creased._paintGroupNext !== creased) {
+        throw new Error("Creased's next paint group must be reset");
+    }
+    if(root._paintGroupNext !== root) {
+        throw new Error("Root's next paint group must be reset");
+    }
+    if(root._paintGroupPrev !== root) {
+        throw new Error("Root's previous paint group must be reset");
+    }
+});
+
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
@@ -1280,6 +1325,35 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T la
     }
 });
 
+parsegraph_Graph_Tests.addTest("Creased forward buds", function() {
+    console.log("Creased forward buds");
+    var car = new parsegraph_Caret('b');
+    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+    var root = car.root();
+    root._id = "root";
+    var bnode = car.spawnMove('f', 'u');
+    bnode._id = "bnode";
+    car.crease();
+    console.log("root next: " + root._paintGroupNext._id);
+    console.log("bnode next: " + bnode._paintGroupNext._id);
+    var cnode = car.spawnMove('f', 'u');
+    cnode._id = "cnode";
+    car.crease();
+    console.log("root next: " + root._paintGroupNext._id);
+    console.log("bnode next: " + bnode._paintGroupNext._id);
+    console.log("cnode next: " + cnode._paintGroupNext._id);
+    if(root._layoutNext !== root) {
+        throw new Error("root's next layout node must be itself but was " + root._layoutNext);
+    }
+    if(root._paintGroupNext !== cnode) {
+        console.log(root);
+        console.log(bnode);
+        console.log(cnode);
+        throw new Error("root's next paint group must be cnode but was " + root._paintGroupNext);
+    }
+    car.root().commitLayoutIteratively();
+});
+
 parsegraph_Graph_Tests.addTest("Centrally aligned back-and-forth", function() {
     var car = new parsegraph_Caret('b');
     car.spawnMove('d', 'bu');
@@ -1367,6 +1441,23 @@ parsegraph_Graph_Tests.addTest("Intra-group move test", function(out) {
         parsegraph_simpleGraph(out, car);
         throw new Error("Node must be moved when another node grows in size. (expected " + (gx + increase/2) + " versus actual " + mnode.groupX() + ")");
     }
+});
+
+parsegraph_Graph_Tests.addTest("Absolute position test", function(out) {
+    var car = new parsegraph_Caret(parsegraph_BLOCK);
+    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+    var bnode = car.spawnMove('f', 'b');
+    car.spawnMove('f', 'b');
+    car.root().commitLayoutIteratively();
+    car.crease();
+    //console.log("bnode", bnode.absoluteX(), bnode.absoluteY());
+    //console.log("bnode", bnode.groupX(), bnode.groupY(), bnode.groupScale());
+    var bstyle = parsegraph_copyStyle('b');
+    bstyle.minWidth += 100;
+    bnode.setBlockStyle(bstyle);
+    car.root().commitLayoutIteratively();
+    //console.log("bnode", bnode.groupX(), bnode.groupY(), bnode.groupScale());
+    //console.log("bnode", bnode.absoluteX(), bnode.absoluteY());
 });
 
 parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
