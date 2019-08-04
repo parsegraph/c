@@ -213,6 +213,14 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
 
         parentScale = scale;
         scale *= node.scaleAt(directionToChild);
+        if(node._absoluteXPos === null) {
+            node._absoluteXPos = this._absoluteXPos;
+            node._absoluteYPos = this._absoluteYPos;
+            node._absoluteScale = scale;
+            if(!node.isRoot()) {
+                node._absoluteVersion = node.parentNode().findPaintGroup()._absoluteVersion;
+            }
+        }
         node = node.nodeAt(directionToChild);
     }
 
