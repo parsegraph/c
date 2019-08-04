@@ -1,73 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Memory Piers - Parsegraph</title>
+<title>Memory Piers - Rainback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" type="text/css" href="/environment.css"/>
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-function init()
-{
-    try {
-        parsegraph_initialize();
-
-        var main = document.body;
-
-        var surface = new parsegraph_Surface();
-        var graph = new parsegraph_Graph(surface);
-        GRAPH = graph;
-
-        var uni = new parsegraph_Unicode();
-        uni.onLoad = function() {
-            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
-            graph.plot(showMemoryBlocks(graph, 100));
-            main.appendChild(surface.container());
-
-            if(localStorage.getItem("parsegraph_piers_camera") != null) {
-                try {
-                    var parsegraph_piers_camera = JSON.parse(localStorage.getItem("parsegraph_piers_camera"));
-                    graph.camera().restore(parsegraph_piers_camera);
-                } catch(e) {
-                    console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-                }
-            }
-
-            // Schedule the repaint.
-            var renderTimer = new parsegraph_AnimationTimer();
-            renderTimer.setListener(function() {
-                graph.input().Update(new Date());
-                if(graph.needsRepaint()) {
-                    surface.paint(30);
-                }
-                surface.render();
-                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                    renderTimer.schedule();
-                }
-            });
-            graph.input().SetListener(function(affectedPaint) {
-                if(affectedPaint) {
-                    graph.scheduleRepaint();
-                }
-                renderTimer.schedule();
-            });
-            renderTimer.schedule();
-            graph.onScheduleRepaint = function() {
-                renderTimer.schedule();
-            };
-
-            surface.addRenderer(function() {
-                localStorage.setItem("parsegraph_piers_camera", JSON.stringify(graph.camera().toJSON()));
-            });
-        };
-        uni.load();
-        parsegraph_UNICODE_INSTANCE = uni;
-    } catch(ex) {
-        alert("Init: " + parsegraph_writeError(ex));
-        throw ex;
-    }
-}
-
 document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_Application("Memory Piers");
     sga.setCameraName("parsegraph_piers_camera");

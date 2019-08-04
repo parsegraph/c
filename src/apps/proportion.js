@@ -10,7 +10,6 @@ function showProportionTest(graph, COUNT)
     if(COUNT === undefined) {
         COUNT = 30;
     }
-    COUNT = Math.min(COUNT, 100);
 
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
 
