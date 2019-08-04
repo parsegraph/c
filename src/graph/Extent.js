@@ -273,6 +273,31 @@ parsegraph_Extent.prototype.copyFrom = function(from)
     from.clear();
 };
 
+parsegraph_Extent.prototype.combineExtentAndSimplify = function(given, lengthAdjustment, sizeAdjustment, scale, bv)
+{
+    if(!bv) {
+        bv = [null, null, null];
+    }
+    given.boundingValues(bv);
+    var givenLength = bv[0];
+    var givenMaxSize = bv[2];
+    this.boundingValues(bv);
+    var thisLength = bv[0];
+    var thisMaxSize = bv[2];
+    this.clear();
+    var combinedLength;
+    if(lengthAdjustment < 0) {
+        combinedLength = Math.max(thisLength-lengthAdjustment, givenLength*scale);
+    }
+    else {
+        combinedLength = Math.max(thisLength, givenLength*scale+lengthAdjustment);
+    }
+    this.appendLS(
+        combinedLength,
+        Math.max(thisMaxSize, givenMaxSize*scale+sizeAdjustment)
+    );
+};
+
 parsegraph_Extent.prototype.combineExtent = function(
     given,
     lengthAdjustment,

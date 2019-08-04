@@ -1588,7 +1588,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     return bodySize;
 };
 
-parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds)
+parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds, bv)
 {
     // Do nothing if this node already has a layout committed.
     if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
@@ -1852,23 +1852,23 @@ parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds)
             console.log("Size adjustment: " + sizeAdjustment);
             console.log("ExtentOffset : " + this._neighbors[direction].extentOffset);
             console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));*/
+            var e = this._neighbors[direction].extent;
+            var scale = this.scaleAt(childDirection);
             if(this.nodeFit() == parsegraph_NODE_FIT_LOOSE) {
-                var e = this._neighbors[direction].extent;
-                var scale = this.scaleAt(childDirection);
+                e.combineExtentAndSimplify(
+                    child.extentsAt(direction),
+                    lengthOffset,
+                    sizeAdjustment,
+                    scale,
+                    bv
+                );
+            }
+            else {
                 e.combineExtent(
                     child.extentsAt(direction),
                     lengthOffset,
                     sizeAdjustment,
                     scale
-                );
-                e.simplify();
-            }
-            else {
-                this._neighbors[direction].extent.combineExtent(
-                    child.extentsAt(direction),
-                    lengthOffset,
-                    sizeAdjustment,
-                    this.scaleAt(childDirection)
                 );
             }
 
@@ -2528,6 +2528,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     var node = null;
     var bodySize = new parsegraph_Size();
     var lineSize = new parsegraph_Size();
+    var bv = [null, null, null];
     var j = null;
 
     // Traverse the graph depth-first, committing each node's layout in turn.
@@ -2550,7 +2551,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                     // Loop back to the first node, from the root.
                     node = node._layoutNext;
                     if(node._layoutState === parsegraph_NEEDS_COMMIT) {
-                        node.commitLayout(bodySize, lineSize);
+                        node.commitLayout(bodySize, lineSize, bv);
                     }
                     ++i;
                     if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
