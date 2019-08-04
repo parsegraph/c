@@ -216,7 +216,7 @@ parsegraph_Application.prototype.onRender = function() {
     else {
         //console.log("Avoid rerender");
     }
-    if(this._idleFunc && parsegraph_elapsed(startTime) < interval/2) {
+    if(this._idleFunc && parsegraph_elapsed(startTime) < interval) {
         var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
         if(r !== true) {
             this.onIdle(null, null);
