@@ -2408,11 +2408,7 @@ parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds, bv)
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
         var nestedSize = nestedNode.extentSize();
-        if(
-            this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL
-            && nestedNode.scale() * nestedSize.width() <
-            bodySize.width() - 2 * (this.horizontalPadding() + this.borderThickness())
-        ) {
+        if(this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             this.setPosAt(parsegraph_INWARD,
                 nestedNode.scale() * (
                     nestedNode.extentOffsetAt(parsegraph_DOWNWARD)
@@ -2427,11 +2423,8 @@ parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds, bv)
                 )
             );
         }
-        else if(
-            this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_HORIZONTAL
-            && nestedNode.scale() * nestedSize.height() <
-            bodySize.height() - 2 * (this.verticalPadding() + this.borderThickness())
-        ) {
+        else {
+            //console.log(this.horizontalPadding(), this.borderThickness());
             this.setPosAt(parsegraph_INWARD,
                 bodySize.width() / 2
                 - this.horizontalPadding()
@@ -2445,28 +2438,6 @@ parsegraph_Node.prototype.commitLayout = function(bodySize, lineBounds, bv)
                 nestedNode.scale() * (
                     nestedNode.extentOffsetAt(parsegraph_FORWARD)
                     - nestedSize.height() / 2
-                )
-            );
-        }
-        else {
-            this.setPosAt(parsegraph_INWARD,
-                bodySize.width() / 2
-                - this.horizontalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.width()
-                    + nestedNode.extentOffsetAt(
-                        parsegraph_DOWNWARD
-                    )
-                ),
-                bodySize.height() / 2
-                - this.verticalPadding()
-                - this.borderThickness()
-                + nestedNode.scale() * (
-                    - nestedSize.height()
-                    + nestedNode.extentOffsetAt(
-                        parsegraph_FORWARD
-                    )
                 )
             );
         }
