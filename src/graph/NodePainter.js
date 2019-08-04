@@ -415,6 +415,10 @@ parsegraph_NodePainter.prototype.paintLines = function(node)
 
         var parentScale = node.groupScale();
         var scale = directionData.node.groupScale();
+        if(typeof scale !== "number" || Number.isNaN(scale)) {
+            console.log(directionData.node);
+            throw new Error(directionData.node + "'s groupScale must be a number but was " + scale);
+        }
 
         var thickness = parsegraph_LINE_THICKNESS * scale * directionData.node.scale();
         //console.log(thickness, scale);
