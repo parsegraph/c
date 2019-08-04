@@ -7,7 +7,6 @@
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-
 function init()
 {
     try {
@@ -27,7 +26,7 @@ function init()
             graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
             graph.glyphAtlas().setUnicode(uni);
 
-            var COUNT = 100;
+            var COUNT = 400;
             main.appendChild(surface.container());
 
             // Look at alignment here first.
@@ -79,7 +78,31 @@ function init()
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    init();
+    var sga = new parsegraph_Application("Proportion");
+    sga.setCameraName("parsegraph_proportion_camera");
+    SGA = sga;
+    var proportion;
+    var MAX_SIZE = 800;
+    sga.start(document.body, function(app, userLogin, loginNode) {
+        proportion = new parsegraph_ProportionWidget(app, MAX_SIZE);
+        loginNode.connectNode(parsegraph_DOWNWARD, proportion.node());
+        return proportion;
+    });
+
+    var totalStart = new Date();
+    var lastStep = new Date();
+    sga.onIdle(function(timeout) {
+        if(parsegraph_elapsed(lastStep) <= 50) {
+            return true;
+        }
+        var callAgain = proportion.step();
+        sga.scheduleRepaint();
+        lastStep = new Date();
+        if(!callAgain) {
+            console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
+        }
+        return callAgain;
+    });
 });
 </script>
 </head>

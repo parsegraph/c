@@ -5,17 +5,49 @@
  *
  * Presently, COUNT cannot be more than 100. It defaults to 10.
  */
-function showProportionTest(graph, COUNT)
+function parsegraph_ProportionWidget(app, maxSize)
 {
-    if(COUNT === undefined) {
-        COUNT = 30;
-    }
+    this.app = app;
+    this.caret = new parsegraph_Caret("b");
+    this.caret.setGlyphAtlas(app.glyphAtlas());
+    this._maxSize = maxSize || 100;
+    this._count = 0;
+}
+
+parsegraph_ProportionWidget.prototype.node = function()
+{
+    return this.caret.root();
+};
+
+parsegraph_ProportionWidget.prototype.size = function()
+{
+    return this._count;
+};
+
+parsegraph_ProportionWidget.prototype.step = function()
+{
+    var caret = this.caret;
+
+    var spawnRow = function(dir) {
+        caret.push();
+        caret.spawnMove(dir, 'bud');
+        for(var j = 0; j < this._maxSize - this._count - 1; ++j) {
+            caret.spawnMove('d', 'bud');
+            if(j === 0) {
+                caret.crease();
+            }
+        }
+        caret.spawnMove('d', 'slot');
+        caret.label(this._maxSize - this._count);
+        caret.pop();
+    };
+    spawnRow.call(this, 'b');
+    spawnRow.call(this, 'f');
+
+    caret.pull('d');
+    caret.spawnMove('d', 'block');
 
     var commands = ["0 Copy", "1 Cut", "2 Paste", "3 Delete", "Open", "New"];
-
-    var caret = new parsegraph_Caret(parsegraph_BLOCK);
-    caret.setGlyphAtlas(graph.glyphAtlas());
-    var selectedNode;
 
     var commandStyle = parsegraph_copyStyle(parsegraph_BLOCK);
     commandStyle.backgroundColor = new parsegraph_Color(.4, 1, .4, 1);
@@ -25,85 +57,51 @@ function showProportionTest(graph, COUNT)
     commandItemStyle.backgroundColor = new parsegraph_Color(1, 0, 0, 1);
     commandItemStyle.borderColor = new parsegraph_Color(0, .5, 0, 1);
 
-    /**
-     * Attaches commands at the current position.
-     */
-    var attachCommands = function() {
-        caret.onClick(function() {
-            var carousel = graph.carousel();
-            //console.log("OnClick!");
-            if(carousel().isCarouselShown() && selectedNode == this) {
+    // Attach commands for this block.
+    var graph = this.app.graph();
+    caret.onClick(function() {
+        var carousel = graph.carousel();
+        //console.log("OnClick!");
+        if(carousel.isCarouselShown() && selectedNode == this) {
+            carousel.clearCarousel();
+            carousel.hideCarousel();
+            carousel.scheduleCarouselRepaint();
+            selectedNode = null;
+            return;
+        }
+        selectedNode = this;
+        carousel.clearCarousel();
+
+        var i = 0;
+        commands.forEach(function(command) {
+            var commandCaret = new parsegraph_Caret(parsegraph_BLOCK);
+            commandCaret.setGlyphAtlas(caret.glyphAtlas());
+
+            commandCaret.node().setBlockStyle(commandStyle);
+            commandCaret.label(command);
+            if(++i == 3) {
+                commandCaret.spawnMove('d', 's');
+                commandCaret.node().setBlockStyle(commandItemStyle);
+                commandCaret.label(command);
+                commandCaret.move('u');
+            }
+            carousel.addToCarousel(commandCaret.root(), function() {
+                //console.log("Clicked " + command + commandCaret.root().isSelected());
                 carousel.clearCarousel();
                 carousel.hideCarousel();
                 carousel.scheduleCarouselRepaint();
                 selectedNode = null;
-                return;
-            }
-            selectedNode = this;
-            carousel.clearCarousel();
-
-            var i = 0;
-            commands.forEach(function(command) {
-                var commandCaret = new parsegraph_Caret(parsegraph_BLOCK);
-
-                commandCaret.node().setBlockStyle(commandStyle);
-                commandCaret.label(command);
-                if(++i == 3) {
-                    commandCaret.spawnMove('d', 's');
-                    commandCaret.node().setBlockStyle(commandItemStyle);
-                    commandCaret.label(command);
-                    commandCaret.move('u');
-                }
-                carousel.addToCarousel(commandCaret.root(), function() {
-                    //console.log("Clicked " + command + commandCaret.root().isSelected());
-                    carousel.clearCarousel();
-                    carousel.hideCarousel();
-                    carousel.scheduleCarouselRepaint();
-                    selectedNode = null;
-                }, this);
             }, this);
+        }, this);
 
-            carousel.showCarousel();
-            carousel.setCarouselSize(Math.max(
-                selectedNode.size().width(),
-                selectedNode.size().height()
-            ));
-            carousel.moveCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
-            carousel.scheduleCarouselRepaint();
-        });
-    };
-
-    // Attach the commands to the root.
-    attachCommands();
-
-    for(var i = 0; i < COUNT; ++i) {
-        var spawnRow = function(dir) {
-            caret.push();
-            caret.spawnMove(dir, 'bud');
-            for(var j = 0; j < COUNT - i - 1; ++j) {
-                caret.spawnMove('d', 'bud');
-                if(j === 0) {
-                    caret.crease();
-                }
-            }
-            caret.spawnMove('d', 'slot');
-            caret.label(COUNT - i);
-            caret.pop();
-        };
-        spawnRow('b');
-        spawnRow('f');
-
-        caret.pull('d');
-        caret.spawnMove('d', 'block');
-
-        // Attach commands for this block.
-        attachCommands();
-    }
-
-    caret.moveToRoot();
-    caret.spawnMove('u', 'bud');
-    caret.spawn('b', 'bud');
-    caret.spawn('f', 'bud');
-
-    return caret.root();
-}
+        carousel.showCarousel();
+        carousel.setCarouselSize(Math.max(
+            selectedNode.size().width(),
+            selectedNode.size().height()
+        ));
+        carousel.moveCarousel(selectedNode.absoluteX(), selectedNode.absoluteY());
+        carousel.scheduleCarouselRepaint();
+    });
+    ++this._count;
+    return this._count < this._maxSize;
+};
