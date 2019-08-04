@@ -177,7 +177,6 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
 });
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - PaintGroup sanity", function() {
-    console.log("parsegraph_Graph - Block with forward creased bud");
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
@@ -196,7 +195,6 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - PaintGroup sanity", function(
 });
 
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud", function() {
-    console.log("parsegraph_Graph - Block with forward creased bud");
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
