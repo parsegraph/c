@@ -201,8 +201,7 @@ parsegraph_Application.prototype.onRender = function() {
     var t = alpha_GetTime();
     start = t;
 
-
-    var interval = 600;
+    var interval = 45;
     inputChangedScene = graph.needsRepaint() || inputChangedScene;
     inputChangedScene = inputChangedScene || this._renderedMouse !== graph.input().mouseVersion();
     if(graph.needsRepaint()) {
