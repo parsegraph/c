@@ -116,6 +116,9 @@ parsegraph_World.prototype.mouseOver = function(x, y)
         // Never rendered.
         return 0;
     }
+    if(!this.readyForInput()) {
+        return 1;
+    }
     //console.log("mouseover: " + x + ", " + y);
     var mouseInWorld = matrixTransform2D(
         makeInverse3x3(this.camera().worldMatrix()),
@@ -255,6 +258,17 @@ parsegraph_World.prototype.scheduleRepaint = function()
 parsegraph_World.prototype.nodeUnderCursor = function()
 {
     return this._nodeUnderCursor;
+};
+
+parsegraph_World.prototype.readyForInput = function()
+{
+    // Test if there is a node under the given coordinates.
+    for(var i = this._worldRoots.length - 1; i >= 0; --i) {
+        if(this._worldRoots[i].needsCommit()) {
+            return false;
+        }
+    }
+    return true;
 };
 
 /**

@@ -68,6 +68,9 @@ function parsegraph_Input(graph, camera)
     this.keydowns = {};
 
     var checkForNodeClick = function(clientX, clientY) {
+        if(!graph.world().readyForInput()) {
+            return null;
+        }
         var mouseInWorld = matrixTransform2D(
             makeInverse3x3(this._camera.worldMatrix()),
             clientX, clientY
@@ -471,6 +474,9 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
+        if(!graph.world().readyForInput()) {
+            return null;
+        }
         var overClickable = graph.world().mouseOver(event.clientX, event.clientY);
         switch(overClickable) {
         case 2:
@@ -564,6 +570,10 @@ function parsegraph_Input(graph, camera)
             return;
         }
         attachedMouseListener = null;
+
+        if(!graph.world().readyForInput()) {
+            return null;
+        }
 
         if(
             mousedownTime != null
