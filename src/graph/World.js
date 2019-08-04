@@ -355,7 +355,7 @@ parsegraph_World.prototype.paint = function(timeout)
     }
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
-        var paintDuration = (new Date().getTime() - parsegraph_PAINT_START.getTime());
+        var paintDuration = parsegraph_elapsed(parsegraph_PAINT_START);
         //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
         parsegraph_NODES_PAINTED = 0;
         parsegraph_PAINT_START = null;
