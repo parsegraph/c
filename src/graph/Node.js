@@ -2968,6 +2968,9 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
     //console.log("Rendering iteratively");
     var paintGroup = this;
     do {
+        if(!paintGroup.localPaintGroup() && !paintGroup.isRoot()) {
+            throw new Error("Paint group chain must not refer to a non-paint group");
+        }
         //console.log("Rendering node " + paintGroup);
         paintGroup.render(world, camera);
         paintGroup = paintGroup._paintGroupPrev;
