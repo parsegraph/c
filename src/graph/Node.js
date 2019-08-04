@@ -1,6 +1,6 @@
 parsegraph_NODES_PAINTED = 0;
-
 parsegraph_Node_COUNT = 0;
+
 function parsegraph_Node(newType, fromNode, parentDirection)
 {
     this._id = parsegraph_Node_COUNT++;
