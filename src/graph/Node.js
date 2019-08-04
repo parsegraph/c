@@ -283,6 +283,7 @@ parsegraph_Node.prototype.commitGroupPos = function()
         scale *= node.scaleAt(directionToChild);
         node = node.nodeAt(directionToChild);
     }
+    //console.log("Assigning scale for " + this + " to " + scale);
     this._groupScale = scale;
 
     if(!this.localPaintGroup()) {
@@ -389,7 +390,9 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         else {
             this.parentNode().removeFromLayout(parsegraph_reverseNodeDirection(this.parentDirection()));
             var paintGroupFirst = this.findFirstPaintGroup();
+            //console.log("First paint group of " + this._id + " is " + paintGroupFirst._id);
             var parentsPaintGroup = this.parentNode().findPaintGroup();
+            //console.log("Parent paint group of " + this._id + " is " + parentsPaintGroup._id);
             parsegraph_connectPaintGroup(parentsPaintGroup._paintGroupPrev, paintGroupFirst);
             parsegraph_connectPaintGroup(this, parentsPaintGroup);
         }
@@ -1523,7 +1526,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
     if(this.hasNode(parsegraph_INWARD)) {
         var nestedNode = this.nodeAt(parsegraph_INWARD);
         var nestedSize = nestedNode.extentSize();
-        var scale = nestedNode.scale();//this.scaleAt(parsegraph_INWARD);
+        var scale = nestedNode.scale();
 
         if(this.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
@@ -2513,6 +2516,7 @@ var parsegraph_findConsecutiveLength = function(node, inDirection)
 
 parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
 {
+    //console.log("Committing layout");
     if(!this.isRoot()) {
         return this.parentNode().commitLayoutIteratively();
     }
@@ -2656,7 +2660,6 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
             );
         }
         else {
-            // Completed.
             break;
         }
     }
@@ -2919,6 +2922,7 @@ parsegraph_Node.prototype.render = function(world, camera)
 
     // Do not render paint groups that cannot be seen.
     var s = this._painter.bounds().clone();
+    //console.log(this.absoluteX(), this.absoluteY(), this.scale());
     s.scale(this.scale());
     s.translate(this.absoluteX(), this.absoluteY());
     if(camera && !camera.contains(s)) {
