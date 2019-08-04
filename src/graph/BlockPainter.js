@@ -481,6 +481,27 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
     else {
         this._bounds.include(cx, cy, width, height);
     }
+    if(typeof cx !== "number" || Number.isNaN(cx)) {
+        throw new Error("cx must be a number, but was " + cx);
+    }
+    if(typeof cy !== "number" || Number.isNaN(cy)) {
+        throw new Error("cy must be a number, but was " + cy);
+    }
+    if(typeof width !== "number" || Number.isNaN(width)) {
+        throw new Error("width must be a number, but was " + width);
+    }
+    if(typeof height !== "number" || Number.isNaN(height)) {
+        throw new Error("height must be a number, but was " + height);
+    }
+    if(typeof borderRoundedness !== "number" || Number.isNaN(borderRoundedness)) {
+        throw new Error("borderRoundedness must be a number, but was " + borderRoundedness);
+    }
+    if(typeof borderThickness !== "number" || Number.isNaN(borderThickness)) {
+        throw new Error("borderThickness must be a number, but was " + borderThickness);
+    }
+    if(typeof borderScale !== "number" || Number.isNaN(borderScale)) {
+        throw new Error("borderScale must be a number, but was " + borderScale);
+    }
 
     var buf = this._vertexBuffer;
 
