@@ -65,6 +65,8 @@ function parsegraph_initialize(mathMode) {
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = false;
 
+    parsegraph_IDLE_MARGIN = 10;
+
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;
     parsegraph_INWARD = 0;

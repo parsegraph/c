@@ -238,20 +238,17 @@ parsegraph_Application.prototype.onRender = function() {
     else {
         //console.log("Avoid rerender");
     }
+    interval = interval - parsegraph_IDLE_MARGIN;
     if(this._idleFunc
         && parsegraph_elapsed(startTime) < interval
         && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
     ) {
-        var idleTime;
-        if(this._burstIdle) {
-            idleTime = new Date();
-        }
         do {
             var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
             if(r !== true) {
                 this.onIdle(null, null);
             }
-        } while(this._burstIdle && interval - parsegraph_elapsed(idleTime) > 0 && this._idleFunc);
+        } while(this._burstIdle && interval - parsegraph_elapsed(startTime) > 0 && this._idleFunc);
         if(this._idleFunc && this._governor) {
             this._lastIdle = new Date();
         }
