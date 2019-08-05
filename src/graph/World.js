@@ -271,6 +271,15 @@ parsegraph_World.prototype.readyForInput = function()
     return true;
 };
 
+parsegraph_World.prototype.commitLayout = function()
+{
+    // Test if there is a node under the given coordinates.
+    for(var i = this._worldRoots.length - 1; i >= 0; --i) {
+        this._worldRoots[i].commitLayoutIteratively();
+    }
+    return true;
+};
+
 /**
  * Tests whether the given position, in world space, is within a node.
  */
