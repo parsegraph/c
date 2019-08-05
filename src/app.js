@@ -15,6 +15,10 @@ function parsegraph_Application(guid)
     this._idleFuncThisArg = null;
     this._renderTimer = null;
     this._mathMode = false;
+
+    this._governor = null;
+    this._burstIdle = null;
+    this._interval = null;
 }
 
 parsegraph_Application.prototype.setMathMode = function(mathMode)
@@ -22,9 +26,27 @@ parsegraph_Application.prototype.setMathMode = function(mathMode)
     this._mathMode = mathMode;
 };
 
+parsegraph_Application.prototype.setGovernor = function(governor)
+{
+    this._governor = governor;
+};
+
+parsegraph_Application.prototype.setBurstIdle = function(burstIdle)
+{
+    this._burstIdle = burstIdle;
+};
+
+parsegraph_Application.prototype.setInterval = function(interval)
+{
+    this._interval = interval;
+};
+
 parsegraph_Application.prototype.start = function(container, initFunc, initFuncThisArg) {
     // Always immediately initialize constants for use by application objects.
     parsegraph_initialize(this._mathMode);
+    this._governor = this._governor === null ? parsegraph_GOVERNOR : this._governor;
+    this._burstIdle = this._burstIdle === null ? parsegraph_BURST_IDLE : this._burstIdle;
+    this._interval = this._interval === null ? parsegraph_INTERVAL : this._interval;
 
     // Create and globalize the graph.
     this._surface = new parsegraph_Surface();
@@ -201,7 +223,7 @@ parsegraph_Application.prototype.onRender = function() {
     var t = alpha_GetTime();
     start = t;
 
-    var interval = 45;
+    var interval = this._interval;
     inputChangedScene = graph.needsRepaint() || inputChangedScene;
     inputChangedScene = inputChangedScene || this._renderedMouse !== graph.input().mouseVersion();
     if(graph.needsRepaint()) {
@@ -216,10 +238,22 @@ parsegraph_Application.prototype.onRender = function() {
     else {
         //console.log("Avoid rerender");
     }
-    if(this._idleFunc && parsegraph_elapsed(startTime) < interval) {
-        var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
-        if(r !== true) {
-            this.onIdle(null, null);
+    if(this._idleFunc
+        && parsegraph_elapsed(startTime) < interval
+        && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
+    ) {
+        var idleTime;
+        if(this._burstIdle) {
+            idleTime = new Date();
+        }
+        do {
+            var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
+            if(r !== true) {
+                this.onIdle(null, null);
+            }
+        } while(this._burstIdle && interval - parsegraph_elapsed(idleTime) > 0 && this._idleFunc);
+        if(this._idleFunc && this._governor) {
+            this._lastIdle = new Date();
         }
     }
     if(graph.input().UpdateRepeatedly() || graph.needsRepaint() || this._idleFunc) {

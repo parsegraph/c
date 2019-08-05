@@ -53,6 +53,15 @@ function parsegraph_initialize(mathMode) {
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
 
+    // How long painting is done, and optionally, how fast idle loops will render.
+    parsegraph_INTERVAL = 40;
+
+    // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
+    parsegraph_GOVERNOR = true;
+
+    // Where the idle loop is called multiple times per frame if time remains.
+    parsegraph_BURST_IDLE = false;
+
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = false;
 
