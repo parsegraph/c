@@ -54,7 +54,7 @@ function parsegraph_initialize(mathMode) {
     parsegraph_MOUSE_SENSITIVITY = 1;
 
     // How long painting is done, and optionally, how fast idle loops will render.
-    parsegraph_INTERVAL = 40;
+    parsegraph_INTERVAL = 30;
 
     // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
     parsegraph_GOVERNOR = true;
