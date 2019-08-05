@@ -366,7 +366,9 @@ parsegraph_World.prototype.paint = function(timeout)
 
 parsegraph_World.prototype.render = function(world)
 {
+    var cleanlyRendered = true;
     for(var i in this._worldRoots) {
-        this._worldRoots[i].renderIteratively(world, this.camera());
+        cleanlyRendered = this._worldRoots[i].renderIteratively(world, this.camera()) && cleanlyRendered;
     }
+    return cleanlyRendered;
 };

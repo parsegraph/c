@@ -32,6 +32,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._nodeFit = parsegraph_NODE_FIT_LOOSE;
     this._layoutState = parsegraph_NEEDS_COMMIT;
     this._absoluteVersion = 0;
+    this._absoluteDirty = true;
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
@@ -167,8 +168,7 @@ parsegraph_Node.prototype.rightToLeft = function()
 
 parsegraph_Node.prototype.commitAbsolutePos = function()
 {
-    if(this._absoluteXPos !== null
-        && (!this.isRoot()
+    if(!this._absoluteDirty && (!this.isRoot()
             && this._absoluteVersion === this.parentNode().findPaintGroup()._absoluteVersion
     )) {
         // No need for an update, so just return.
@@ -191,7 +191,7 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
         }
 
         var par = node.nodeParent();
-        if(par._absoluteXPos !== null) {
+        if(!par._absoluteDirty) {
             // Just use the parent's absolute position to start.
             this._absoluteXPos = par._absoluteXPos;
             this._absoluteYPos = par._absoluteYPos;
@@ -213,10 +213,11 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
 
         parentScale = scale;
         scale *= node.scaleAt(directionToChild);
-        if(node._absoluteXPos === null) {
+        if(node._absoluteDirty) {
             node._absoluteXPos = this._absoluteXPos;
             node._absoluteYPos = this._absoluteYPos;
             node._absoluteScale = scale;
+            node._absoluteDirty = false;
             if(!node.isRoot()) {
                 node._absoluteVersion = node.parentNode().findPaintGroup()._absoluteVersion;
             }
@@ -227,6 +228,7 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
     this._absoluteXPos += node.x() * parentScale;
     this._absoluteYPos += node.y() * parentScale;
     this._absoluteScale = scale;
+    this._absoluteDirty = false;
     if(!this.isRoot()) {
         this._absoluteVersion = this.parentNode().findPaintGroup()._absoluteVersion;
     }
@@ -2626,7 +2628,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 }
                 do {
                     // Loop from the root to the last node.
-                    node._absoluteXPos = null;
+                    node._absoluteDirty = true;
                     node._groupXPos = null;
                     node.commitGroupPos();
                     node = node._layoutPrev;
@@ -2640,7 +2642,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 //console.log(paintGroup + " does not need a position update.");
             }
             ++paintGroup._absoluteVersion;
-            paintGroup._absoluteXPos = null;
+            paintGroup._absoluteDirty = true;
             paintGroup.commitAbsolutePos();
             paintGroup = paintGroup._paintGroupPrev;
             if(paintGroup === rootPaintGroup) {
@@ -2975,14 +2977,16 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
 {
     //console.log("Rendering iteratively");
     var paintGroup = this;
+    var cleanlyRendered = false;
     do {
         if(!paintGroup.localPaintGroup() && !paintGroup.isRoot()) {
             throw new Error("Paint group chain must not refer to a non-paint group");
         }
         //console.log("Rendering node " + paintGroup);
-        paintGroup.render(world, camera);
+        cleanlyRendered = paintGroup.render(world, camera) && cleanlyRendered;
         paintGroup = paintGroup._paintGroupPrev;
     } while(paintGroup !== this);
+    return cleanlyRendered;
 };
 
 parsegraph_Node.prototype.render = function(world, camera)
@@ -2991,17 +2995,20 @@ parsegraph_Node.prototype.render = function(world, camera)
         return;
     }
     if(!this._painter) {
-        return;
+        return false;
+    }
+    if(this._absoluteXPos === null) {
+        return false;
     }
 
     // Do not render paint groups that cannot be seen.
     var s = this._painter.bounds().clone();
     //console.log(this.absoluteX(), this.absoluteY(), this.scale());
     s.scale(this.scale());
-    s.translate(this.absoluteX(), this.absoluteY());
+    s.translate(this._absoluteXPos, this._absoluteYPos);
     if(camera && !camera.contains(s)) {
         //console.log("Out of bounds: " + this);
-        return;
+        return !this._absoluteDirty;
     }
 
     //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
@@ -3009,9 +3016,11 @@ parsegraph_Node.prototype.render = function(world, camera)
 
     this._painter.render(
         matrixMultiply3x3(
-            makeScale3x3(this.absoluteScale()),
-            matrixMultiply3x3(makeTranslation3x3(this.absoluteX(), this.absoluteY()), world)
+            makeScale3x3(this._absoluteScale),
+            matrixMultiply3x3(makeTranslation3x3(this._absoluteXPos, this._absoluteYPos), world)
         ),
-        this.absoluteScale() * (camera ? camera.scale() : 1)
+        this._absoluteScale * (camera ? camera.scale() : 1)
     );
+
+    return !this._absoluteDirty;
 };

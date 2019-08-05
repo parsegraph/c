@@ -175,7 +175,9 @@ parsegraph_Graph.prototype.paint = function(timeout)
 parsegraph_Graph.prototype.render = function()
 {
     var world = this.camera().project();
-    this._world.render(world);
+    if(!this._world.render(world)) {
+        this.scheduleRepaint();
+    }
 
     var gl = this.gl();
     gl.blendFunc(
