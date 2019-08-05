@@ -104,6 +104,7 @@ The node represents a single element in a graph.
 <li><a href="#parsegraph_labeledBud">parsegraph_labeledBud(label, glyphAtlas)</a>
 <li><a href="#parsegraph_labeledSlot">parsegraph_labeledSlot(label, glyphAtlas)</a>
 <li><a href="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</a>
+<li><a href="#.render">render(world, camera)</a>
 </li>
 </ol>
 </div>
@@ -395,4 +396,12 @@ Creates and returns a new labeled bud that uses the given glyph atlas.
 Creates and returns a new labeled slot that uses the given glyph atlas.
 <h3><a name="parsegraph_labeledBlock">parsegraph_labeledBlock(label, glyphAtlas)</a></h3>
 Creates and returns a new labeled block that uses the given glyph atlas.
+<h3><a name=".renderIteratively">.renderIteratively(world, camera)</a></h3>
+Renders a paint group node and all of its descendent paint groups.
+<p>
+Returns true if all nodes were cleanly rendered, false if any were dirty.
+<h3><a name=".render">.render(world, camera)</a></h3>
+Renders a paint group node.
+<p>
+Returns true if the node was cleanly rendered, false if it was dirty.
 </main>

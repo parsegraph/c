@@ -57,6 +57,8 @@ Paints for the given time interval, in milliseconds.
 If false is returned, painting did not complete.
 <h3><a name=".render">.render(world)</a></h3>
 Renders the painted scene to the GL context.
+<p>
+Returns true if all world roots were cleanly rendered, false if any were dirty.
 <ul>
 <li>Throws if any root node does not have a paint group.
 </ul>
