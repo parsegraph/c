@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Week - Parsegraph</title>
+<title>Week - Rainback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="sga.css">
-<script src="parsegraph-1.3.js"></script>
-<script src="parsegraph-widgets-1.3.js"></script>
+<link rel="stylesheet" type="text/css" href="/environment.css"/>
+<script src="/parsegraph-1.3.js"></script>
+<script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-
-SGA = null;
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_SingleGraphApplication();
+    var sga = new parsegraph_Application("Week");
+    sga.setCameraName("parsegraph_week_camera");
     SGA = sga;
-    sga.createSessionNode = function(graph, userLogin, node) {
+    sga.start(document.body, function(graph, userLogin, node) {
         var car = new parsegraph_Caret(parsegraph_BUD);
         car.setGlyphAtlas(graph.glyphAtlas());
         [
@@ -32,8 +31,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             car.pull('d');
         }, this);
         return car.root();
-    };
-    sga.start(document.body);
+    });
 });
 </script>
 </head>

@@ -158,6 +158,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/showIPAddresses.js \
 	src/apps/piers.js \
 	src/apps/proportion.js \
+	src/apps/chess.js \
 	src/apps/showFlowchartTemplate.js \
 	src/apps/showUlam.js \
 	src/apps/showSpiral.js \

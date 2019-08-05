@@ -20,17 +20,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
     });
 
     var totalStart = new Date();
-    var lastPrime = new Date();
+    var MAX_PRIME = 3000;
+    sga.setBurstIdle(true);
     sga.onIdle(function(timeout) {
-        var startTime = new Date();
-        var MAX_PRIME = 2000;
-        //console.log("Processing timeout: " + primes.position + " " + MAX_PRIME)
-
-        if(!primes.isPaused() && parsegraph_elapsed(lastPrime) > 50) {
-            primes.step(1);
-            sga.scheduleRepaint();
-            lastPrime = new Date();
+        //console.log("Processing primes: " + primes.position + " of " + MAX_PRIME)
+        if(!primes.isPaused() && primes.position <= MAX_PRIME) {
+            primes.step();
         }
+        sga.scheduleRepaint();
         if(primes.position > MAX_PRIME) {
             console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
         }

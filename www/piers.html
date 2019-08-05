@@ -20,14 +20,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     });
 
     var totalStart = new Date();
-    var lastStep = new Date();
     sga.onIdle(function(timeout) {
-        if(parsegraph_elapsed(lastStep) <= 50) {
-            return true;
-        }
         var callAgain = piers.step();
         sga.scheduleRepaint();
-        lastStep = new Date();
         if(!callAgain) {
             console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
         }
