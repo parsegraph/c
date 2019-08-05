@@ -2992,7 +2992,7 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
 parsegraph_Node.prototype.render = function(world, camera)
 {
     if(!this.localPaintGroup()) {
-        return;
+        throw new Error("Cannot render a node that is not a paint group");
     }
     if(!this._painter) {
         return false;
