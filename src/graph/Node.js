@@ -189,9 +189,10 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
     if(!this._absoluteDirty && (!this.isRoot()
             && this._absoluteVersion === this.parentNode().findPaintGroup()._absoluteVersion
     )) {
-        // No need for an update, so just return.
+        //console.log(this + " does not need an absolute version update, so just return.");
         return;
     }
+    //console.log(this + " needs an absolute version update");
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
