@@ -16,6 +16,9 @@ function parsegraph_Extent(copy)
     this._start = 0;
 
     this._offset = 0;
+    this._totalLength = null;
+    this._minSize = null;
+    this._maxSize = null;
 }
 
 parsegraph_Extent.prototype.setOffset = function(offset) {
@@ -43,6 +46,7 @@ parsegraph_Extent.prototype.clone = function() {
 
 parsegraph_Extent.prototype.clear = function() {
     this._numBounds = 0;
+    this.invalidateBoundingValues();
 };
 
 parsegraph_Extent.prototype.numBounds = function() {
@@ -61,12 +65,20 @@ parsegraph_Extent.prototype.boundSizeAt = function(index) {
     return this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity()) + 1];
 };
 
+parsegraph_Extent.prototype.invalidateBoundingValues = function() {
+    this._minSize = null;
+    this._maxSize = null;
+    this._totalLength = null;
+};
+
 parsegraph_Extent.prototype.setBoundLengthAt = function(index, length) {
     this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity())] = length;
+    this.invalidateBoundingValues();
 };
 
 parsegraph_Extent.prototype.setBoundSizeAt = function(index, size) {
     this._bounds[parsegraph_NUM_EXTENT_BOUND_COMPONENTS * ((this._start + index) % this.boundCapacity()) + 1] = size;
+    this.invalidateBoundingValues();
 };
 
 parsegraph_Extent.prototype.realloc = function(capacity)
@@ -281,6 +293,7 @@ parsegraph_Extent.prototype.copyFrom = function(from)
     this._numBounds = from._numBounds;
     this._bounds = from._bounds;
     from.clear();
+    this.invalidateBoundingValues();
 };
 
 parsegraph_Extent.prototype.combineExtentAndSimplify = function(given, lengthAdjustment, sizeAdjustment, scale, bv)
@@ -489,6 +502,7 @@ parsegraph_Extent.prototype.combinedExtent = function(
             getGivenSize.call(this)
         );
         while(getGivenNextBound.call(this)) {
+            ++combinedIteration;
             result.appendLS(
                 scale * given.boundLengthAt(givenBound),
                 getGivenSize.call(this)
@@ -503,13 +517,14 @@ parsegraph_Extent.prototype.combinedExtent = function(
             getThisSize.call(this)
         );
         while(getThisNextBound.call(this)) {
+            ++combinedIteration;
             result.appendLS(
                 this.boundLengthAt(thisBound),
                 getThisSize.call(this)
             );
         }
     }
-
+    //console.log("Combined after " + combinedIteration + "iterations");
     return result;
 }
 
@@ -723,6 +738,15 @@ parsegraph_Extent.prototype.separation = function(
 
 parsegraph_Extent.prototype.boundingValues = function(outVal)
 {
+    if(!outVal) {
+        outVal = [null, null, null];
+    }
+    if(this._minSize !== null) {
+        outVal[0] = this._totalLength;
+        outVal[1] = this._minSize;
+        outVal[2] = this._maxSize;
+        return outVal;
+    }
     var totalLength = 0;
     var minSize = NaN;
     var maxSize = NaN;
@@ -746,12 +770,12 @@ parsegraph_Extent.prototype.boundingValues = function(outVal)
         }
     }
 
-    if(!outVal) {
-        outVal = [null, null, null];
-    }
     outVal[0] = totalLength;
     outVal[1] = minSize;
     outVal[2] = maxSize;
+    this._minSize = minSize;
+    this._maxSize = maxSize;
+    this._totalLength = totalLength;
     return outVal;
 };
 
