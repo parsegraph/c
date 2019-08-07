@@ -264,7 +264,8 @@ parsegraph_World.prototype.readyForInput = function()
 {
     // Test if there is a node under the given coordinates.
     for(var i = this._worldRoots.length - 1; i >= 0; --i) {
-        if(this._worldRoots[i].needsCommit()) {
+        var root = this._worldRoots[i];
+        if(root.needsCommit() || root.isDirty()) {
             return false;
         }
     }
