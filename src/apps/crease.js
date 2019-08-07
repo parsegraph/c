@@ -11,7 +11,7 @@ function parsegraph_CreaseWidget(app)
         var reinstall;
         var timer = new parsegraph_AnimationTimer();
         //timer.setDelay(15);
-        var startTime;
+        var startTime = new Date();
         timer.setListener(function() {
             var s = parsegraph_copyStyle(parsegraph_BLOCK);
             if(id === "Center") {
@@ -29,6 +29,7 @@ function parsegraph_CreaseWidget(app)
                 uninstall();
             }
             var carousel = new parsegraph_ActionCarousel(app.graph());
+            node.setValue(timer);
             if(timer.scheduled()) {
                 carousel.addAction("Stop", function() {
                     timer.cancel();
@@ -40,7 +41,6 @@ function parsegraph_CreaseWidget(app)
             }
             else {
                 carousel.addAction("Grow", function() {
-                    startTime = new Date();
                     timer.schedule();
                     reinstall();
                 });
@@ -69,7 +69,6 @@ function parsegraph_CreaseWidget(app)
                     break;
                 }
                 for(var n = node; n; n = n.nodeAt(dir)) {
-                    console.log(n);
                     n.setPaintGroup(creased);
                 }
                 app.scheduleRepaint();
@@ -88,26 +87,57 @@ function parsegraph_CreaseWidget(app)
         uninstall = reinstall();
     };
 
+    var creasables = [];
+    var size = 50;
     caret.pull('d');
+
     caret.push();
-    var size = 100;
     for(var i = 0; i < size; ++i) {
         caret.spawnMove('d', 'b');
         addActions("Center");
+        caret.node()._id = "Center " + i;
+        creasables.push(caret.node());
     }
     caret.pop();
     caret.push();
     for(var i = 0; i < size; ++i) {
         caret.spawnMove('b', 'b');
         addActions("Backward");
+        caret.node()._id = "Backward " + i;
+        creasables.push(caret.node());
     }
     caret.pop();
     caret.push();
     for(var i = 0; i < size; ++i) {
         caret.spawnMove('f', 'b');
         addActions("Forward");
+        caret.node()._id = "Forward " + i;
+        creasables.push(caret.node());
     }
     caret.pop();
+
+    var rootActions = new parsegraph_ActionCarousel(app.graph());
+    rootActions.addAction("Crease random", function() {
+        for(var i in creasables) {
+            var n = creasables[i];
+            n.setPaintGroup(Math.random() > .5);
+        }
+        app.scheduleRepaint();
+    });
+    rootActions.addAction("Grow all", function() {
+        for(var i in creasables) {
+            var n = creasables[i];
+            if(Math.random() > .5) {
+                console.log("Scheduled");
+                n.value().schedule();
+            }
+            else {
+                n.value().cancel();
+            }
+        }
+        app.scheduleRepaint();
+    });
+    rootActions.install(caret.node());
 };
 
 parsegraph_CreaseWidget.prototype.node = function()
