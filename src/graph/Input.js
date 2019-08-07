@@ -475,21 +475,24 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
-        if(graph.world().readyForInput()) {
-            var overClickable = graph.world().mouseOver(event.clientX, event.clientY);
-            switch(overClickable) {
-            case 2:
-                graph.canvas().style.cursor = "pointer";
-                break;
-            case 1:
-                break;
-            case 0:
-                graph.canvas().style.cursor = "auto";
-                break;
-            }
+        var overClickable;
+        if(!graph.world().paint(parsegraph_INPUT_LAYOUT_TIME)) {
+            //console.log("Couldn't commit layout in time");
+            overClickable = 1;
         }
         else {
-            overClickable = 1;
+            overClickable = graph.world().mouseOver(event.clientX, event.clientY);
+        }
+        switch(overClickable) {
+        case 2:
+            graph.canvas().style.cursor = "pointer";
+            break;
+        case 1:
+            //console.log("World not ready");
+            break;
+        case 0:
+            graph.canvas().style.cursor = "auto";
+            break;
         }
         this.Dispatch(overClickable > 0, "mousemove world", false);
         lastMouseX = event.clientX;
