@@ -638,38 +638,24 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
 {
     this._gl.disable(this._gl.CULL_FACE);
     this._gl.disable(this._gl.DEPTH_TEST);
-
     this._gl.enable(this._gl.BLEND);
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.DST_ALPHA
-    );
     this._gl.blendFunc(
         this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
     );
     if(this._renderBlocks) {
         this._blockPainter.render(world, scale);
     }
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
-
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
-    );
-    this._gl.blendFunc(
-        this._gl.DST_ALPHA, this._gl.SRC_ALPHA
-    );
     if(this._renderExtents) {
+        this._gl.blendFunc(
+            this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
+        );
         this._extentPainter.render(world, scale);
     }
-    this._gl.disable(this._gl.CULL_FACE);
-    this._gl.disable(this._gl.DEPTH_TEST);
-    this._gl.enable(this._gl.BLEND);
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
 
     if(this._renderText) {
+        this._gl.blendFunc(
+            this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
+        );
         this._glyphPainter.render(world, scale);
     }
 
