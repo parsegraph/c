@@ -1497,7 +1497,7 @@ parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
     return true;
 };
 
-parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
+parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale, extentSize)
 {
     if(
         x < userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD)
@@ -1505,8 +1505,9 @@ parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
         return false;
     }
     //console.log("This node is " + this._id);
-    var forwardMax = userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD) + userScale * this.absoluteScale() * this.extentSize().width();
-    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + this.extentSize().width());
+    extentSize = this.extentSize(extentSize);
+    var forwardMax = userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD) + userScale * this.absoluteScale() * extentSize.width();
+    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + extentSize.width());
     if(
         x > forwardMax
     ) {
@@ -1519,7 +1520,7 @@ parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale)
     }
     if(
         y > userScale * this.absoluteY() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_FORWARD)
-            + userScale * this.absoluteScale() * this.extentSize().height()
+            + userScale * this.absoluteScale() * extentSize.height()
     ) {
         return false;
     }
@@ -1535,6 +1536,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         userScale = 1;
     }
 
+    var extentSize = new parsegraph_Size();
     var candidates = [this];
 
     var addCandidate = function(node, direction) {
@@ -1564,7 +1566,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             if(
                 candidate.hasNode(parsegraph_INWARD)
             ) {
-                if(candidate.nodeAt(parsegraph_INWARD).inNodeExtents(x, y, userScale)) {
+                if(candidate.nodeAt(parsegraph_INWARD).inNodeExtents(x, y, userScale, extentSize)) {
                     //console.log("Testing inward node");
                     candidates.push(FORCE_SELECT_PRIOR);
                     candidates.push(candidate.nodeAt(parsegraph_INWARD));
@@ -1583,7 +1585,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
         candidates.pop();
 
         // Test if the click is within any child.
-        if(!candidate.inNodeExtents(x, y, userScale)) {
+        if(!candidate.inNodeExtents(x, y, userScale, extentSize)) {
             // Nope, so continue the search.
             //console.log("Click is not in node extents.");
             continue;
