@@ -7,6 +7,8 @@ function parsegraph_nameNodeFit(given)
             return "NODE_FIT_EXACT";
         case parsegraph_NODE_FIT_LOOSE:
             return "NODE_FIT_LOOSE";
+        case parsegraph_NODE_FIT_NAIVE:
+            return "NODE_FIT_NAIVE";
     }
     throw new Error("Unknown node fit: " + given);
 }

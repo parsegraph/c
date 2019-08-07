@@ -117,6 +117,7 @@ function parsegraph_initialize(mathMode) {
     parsegraph_NULL_NODE_FIT = 14;
     parsegraph_NODE_FIT_EXACT = 15;
     parsegraph_NODE_FIT_LOOSE = 16;
+    parsegraph_NODE_FIT_NAIVE = 17;
 
     // Optimization hints.
     parsegraph_FIT_LOOSE = false;

@@ -9,8 +9,8 @@ function parsegraph_NeighborData(owner, dir)
     this.alignmentOffset = 0;
     this.separation = 0;
     this.lineLength = 0;
-    this.xPos = 0;
-    this.yPos = 0;
+    this.xPos = null;
+    this.yPos = null;
     this.node = null;
 }
 
@@ -1760,6 +1760,11 @@ parsegraph_Node.prototype.commitLayout = function(cld)
 
     // Begin the layout.
     this._layoutState = parsegraph_IN_COMMIT;
+
+    if(this._nodeFit === parsegraph_NODE_FIT_NAIVE && (this.isRoot() || this.x() !== null)) {
+        this._layoutState = parsegraph_COMMITTED_LAYOUT;
+        return;
+    }
 
     var initExtent = function(
         inDirection,

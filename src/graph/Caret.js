@@ -363,6 +363,15 @@ parsegraph_Caret.prototype.fitLoose = function()
     node.setNodeFit(parsegraph_NODE_FIT_LOOSE);
 };
 
+parsegraph_Caret.prototype.fitNaive = function()
+{
+    var node = this.node();
+    if(arguments.length > 0) {
+        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+    }
+    node.setNodeFit(parsegraph_NODE_FIT_NAIVE);
+};
+
 parsegraph_Caret.prototype.label = function(/* ... */)
 {
     var node, text, glyphAtlas;
