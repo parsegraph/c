@@ -1326,7 +1326,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T la
 });
 
 parsegraph_Graph_Tests.addTest("Creased forward buds", function() {
-    console.log("Creased forward buds");
+    //console.log("Creased forward buds");
     var car = new parsegraph_Caret('b');
     car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     var root = car.root();
@@ -1334,15 +1334,15 @@ parsegraph_Graph_Tests.addTest("Creased forward buds", function() {
     var bnode = car.spawnMove('f', 'u');
     bnode._id = "bnode";
     car.crease();
-    console.log("root next: " + root._paintGroupNext._id);
-    console.log("bnode next: " + bnode._paintGroupNext._id);
+    //console.log("root next: " + root._paintGroupNext._id);
+    //console.log("bnode next: " + bnode._paintGroupNext._id);
     var cnode = car.spawnMove('f', 'u');
     cnode._id = "cnode";
     car.crease();
-    console.log("root next: " + root._paintGroupNext._id);
-    console.log("bnode next: " + bnode._paintGroupNext._id);
-    console.log("cnode next: " + cnode._paintGroupNext._id);
     if(root._layoutNext !== root) {
+        console.log("root next: " + root._paintGroupNext._id);
+        console.log("bnode next: " + bnode._paintGroupNext._id);
+        console.log("cnode next: " + cnode._paintGroupNext._id);
         throw new Error("root's next layout node must be itself but was " + root._layoutNext);
     }
     if(root._paintGroupNext !== cnode) {
