@@ -465,6 +465,9 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         }
 
         this.layoutChanged();
+        for(var n = this._layoutNext; n !== this; n = n._layoutNext) {
+            n._currentPaintGroup = this;
+        }
         return;
     }
 
@@ -485,6 +488,11 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         }
         this._paintGroupNext = this;
         this._paintGroupPrev = this;
+
+        var pg = this.parentNode().findPaintGroup();
+        for(var n = pg._layoutNext; n !== pg; n = n._layoutNext) {
+            n._currentPaintGroup = pg;
+        }
     }
     else {
         // Retain the paint groups for this implied paint group.
