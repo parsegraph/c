@@ -65,6 +65,9 @@ function parsegraph_initialize(mathMode) {
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = false;
 
+    // How many milliseconds to commit a layout if an input event is detected.
+    parsegraph_INPUT_LAYOUT_TIME = 500;
+
     parsegraph_IDLE_MARGIN = 0;
 
     // Node Direction

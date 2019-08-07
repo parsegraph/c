@@ -68,7 +68,9 @@ function parsegraph_Input(graph, camera)
     this.keydowns = {};
 
     var checkForNodeClick = function(clientX, clientY) {
-        graph.world().commitLayout();
+        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
+            return null;
+        }
         var mouseInWorld = matrixTransform2D(
             makeInverse3x3(this._camera.worldMatrix()),
             clientX, clientY
@@ -473,17 +475,21 @@ function parsegraph_Input(graph, camera)
         }
 
         // Just a mouse moving over the (focused) canvas.
-        graph.world().commitLayout();
-        var overClickable = graph.world().mouseOver(event.clientX, event.clientY);
-        switch(overClickable) {
-        case 2:
-            graph.canvas().style.cursor = "pointer";
-            break;
-        case 1:
-            break;
-        case 0:
-            graph.canvas().style.cursor = "auto";
-            break;
+        if(graph.world().readyForInput()) {
+            var overClickable = graph.world().mouseOver(event.clientX, event.clientY);
+            switch(overClickable) {
+            case 2:
+                graph.canvas().style.cursor = "pointer";
+                break;
+            case 1:
+                break;
+            case 0:
+                graph.canvas().style.cursor = "auto";
+                break;
+            }
+        }
+        else {
+            overClickable = 1;
         }
         this.Dispatch(overClickable > 0, "mousemove world", false);
         lastMouseX = event.clientX;
@@ -568,7 +574,9 @@ function parsegraph_Input(graph, camera)
         }
         attachedMouseListener = null;
 
-        graph.world().commitLayout();
+        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
+            return;
+        }
 
         if(
             mousedownTime != null

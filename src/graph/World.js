@@ -272,12 +272,15 @@ parsegraph_World.prototype.readyForInput = function()
     return true;
 };
 
-parsegraph_World.prototype.commitLayout = function()
+parsegraph_World.prototype.commitLayout = function(timeout)
 {
+    var completed = true;
     for(var i = this._worldRoots.length - 1; i >= 0; --i) {
-        this._worldRoots[i].commitLayoutIteratively();
+        if(this._worldRoots[i].commitLayoutIteratively(timeout)) {
+            completed = false;
+        }
     }
-    return true;
+    return completed;
 };
 
 /**
