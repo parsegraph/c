@@ -348,13 +348,10 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
             if(node.parentDirection() == direction) {
                 return;
             }
-            var directionData = node._neighbors[direction];
-            // Do not draw lines unless there is a node.
-            if(!directionData.node) {
-                return;
+            if(node.hasNode(direction)) {
+                // One for the line
+                ++counts.numBlocks;
             }
-            // One for the line
-            ++counts.numBlocks;
         }, this);
 
         // One for the block.
@@ -389,11 +386,11 @@ parsegraph_NodePainter.prototype.paintLines = function(node)
         if(node.parentDirection() == direction) {
             return;
         }
-        var directionData = node._neighbors[direction];
-        // Do not draw lines unless there is a node.
-        if(!directionData.node) {
+        if(!node.hasNode(direction)) {
+            // Do not draw lines unless there is a node.
             return;
         }
+        var directionData = node.neighborAt(direction);
 
         var selectedColor = parsegraph_SELECTED_LINE_COLOR.premultiply(
             this.backgroundColor()
@@ -615,8 +612,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
     );
     if(node.hasNode(parsegraph_INWARD)) {
         var nestedNode = node.nodeAt(parsegraph_INWARD);
-        var nestedSize = nestedNode.extentSize();
-        var nodeSize = node.sizeWithoutPadding();
+        var nodeSize = node.sizeWithoutPadding(this.bodySize);
         if(node.nodeAlignmentMode(parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
             labelX = node.groupX() - fontScale * label.width()/2;
@@ -632,9 +628,9 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
         labelX = node.groupX() - fontScale * label.width()/2;
         labelY = node.groupY() - fontScale * label.height()/2;
     }
-    node._labelX = labelX;
-    node._labelY = labelY;
-    node._labelScale = fontScale;
+    node._label._x = labelX;
+    node._label._y = labelY;
+    node._label._scale = fontScale;
     label.paint(this._glyphPainter, labelX, labelY, fontScale);
 };
 

@@ -331,6 +331,10 @@ function parsegraph_Label(glyphAtlas)
     this._onTextChangedListenerThisArg = null;
     this._width = -1;
     this._height = 0;
+
+    this._x = null;
+    this._y = null;
+    this._scale = null;
 }
 
 parsegraph_Label.prototype.glyphAtlas = function()

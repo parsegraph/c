@@ -14,7 +14,17 @@ function parsegraph_Extent(copy)
     }
 
     this._start = 0;
+
+    this._offset = 0;
 }
+
+parsegraph_Extent.prototype.setOffset = function(offset) {
+    this._offset = offset;
+};
+
+parsegraph_Extent.prototype.offset = function() {
+    return this._offset;
+};
 
 parsegraph_Extent.prototype.forEach = function(func, thisArg) {
     for(var i = 0; i < this._numBounds; ++i) {

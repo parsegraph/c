@@ -273,7 +273,6 @@ parsegraph_World.prototype.readyForInput = function()
 
 parsegraph_World.prototype.commitLayout = function()
 {
-    // Test if there is a node under the given coordinates.
     for(var i = this._worldRoots.length - 1; i >= 0; --i) {
         this._worldRoots[i].commitLayoutIteratively();
     }
@@ -357,6 +356,7 @@ parsegraph_World.prototype.paint = function(timeout)
 
             ++i;
         }
+        //console.log("Done painting");
         this._worldPaintingDirty = false;
     }
     else {

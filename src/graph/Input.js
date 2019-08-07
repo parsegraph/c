@@ -111,14 +111,15 @@ function parsegraph_Input(graph, camera)
 
         // Check if the label was clicked.
         //console.log("Clicked");
-        if(selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable()) {
+        var selectedLabel = selectedNode._label;
+        if(selectedLabel && !Number.isNaN(selectedLabel._x) && selectedLabel.editable()) {
             //console.log("Clicked label");
-            selectedNode._label.click(
-                (mouseInWorld[0] - selectedNode._labelX) / selectedNode._labelScale,
-                (mouseInWorld[1] - selectedNode._labelY) / selectedNode._labelScale
+            selectedLabel.click(
+                (mouseInWorld[0] - selectedLabel._x) / selectedLabel._scale,
+                (mouseInWorld[1] - selectedLabel._y) / selectedLabel._scale
             );
-            console.log(selectedNode._label.caretLine());
-            console.log(selectedNode._label.caretPos());
+            console.log(selectedLabel.caretLine());
+            console.log(selectedLabel.caretPos());
             this._focusedLabel = true;
             this._focusedNode = selectedNode;
             this._graph.scheduleRepaint();
@@ -1033,12 +1034,12 @@ parsegraph_Input.prototype.paint = function()
     }
 
     var cr = label.getCaretRect();
-    if(this._focusedNode._labelX != null && this._focusedNode._labelY != null) {
+    if(label._x != null && label._y != null) {
         this._caretPainter.drawBlock(
-            this._focusedNode._labelX + cr.x() * this._focusedNode._labelScale,
-            this._focusedNode._labelY + cr.y() * this._focusedNode._labelScale,
-            this._focusedNode._labelScale * cr.width(),
-            this._focusedNode._labelScale * cr.height(),
+            label._x + cr.x() * label._scale,
+            label._y + cr.y() * label._scale,
+            label._scale * cr.width(),
+            label._scale * cr.height(),
             0.01,
             0.02,
             1
@@ -1056,7 +1057,7 @@ parsegraph_Input.prototype.setFocusedNode = function(focusedNode)
     this._focusedNode = focusedNode;
     var selectedNode = this._focusedNode;
     //console.log("Clicked");
-    this._focusedLabel = selectedNode && selectedNode._label && !Number.isNaN(selectedNode._labelX) && selectedNode._label.editable();
+    this._focusedLabel = selectedNode && selectedNode._label && !Number.isNaN(selectedNode._label._x) && selectedNode._label.editable();
 };
 
 parsegraph_Input.prototype.focusedLabel = function()
