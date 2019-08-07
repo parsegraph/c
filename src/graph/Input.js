@@ -9,7 +9,7 @@ var parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
 var parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
 var parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
-var parsegraph_MIN_CAMERA_SCALE = .0025;
+var parsegraph_MIN_CAMERA_SCALE = .00125;
 
 //var parsegraph_MOVE_UPWARD_KEY = "w";
 //var parsegraph_MOVE_DOWNWARD_KEY = "s";
