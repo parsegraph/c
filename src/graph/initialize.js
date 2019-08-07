@@ -54,7 +54,7 @@ function parsegraph_initialize(mathMode) {
     parsegraph_MOUSE_SENSITIVITY = 1;
 
     // How long painting is done, and optionally, how fast idle loops will render.
-    parsegraph_INTERVAL = 30;
+    parsegraph_INTERVAL = 10;
 
     // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
     parsegraph_GOVERNOR = true;
@@ -65,7 +65,7 @@ function parsegraph_initialize(mathMode) {
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = false;
 
-    parsegraph_IDLE_MARGIN = 10;
+    parsegraph_IDLE_MARGIN = 0;
 
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;

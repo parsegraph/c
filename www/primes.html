@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     var totalStart = new Date();
     var MAX_PRIME = 3000;
+    sga.setGovernor(false);
     sga.setBurstIdle(true);
     sga.onIdle(function(timeout) {
         //console.log("Processing primes: " + primes.position + " of " + MAX_PRIME)
