@@ -334,6 +334,81 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", fun
     }
 });
 
+parsegraph_Graph_Tests.addTest("nodeAt returns parent", function() {
+    // Build the graph.
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+    caret.move('d');
+    if(caret.node().nodeAt(parsegraph_UPWARD) === null) {
+        throw new Error("nodeAt must return parent if possible");
+    }
+    caret.move('u');
+    caret.node().commitLayoutIteratively();
+    caret.moveToRoot();
+});
+
+parsegraph_Graph_Tests.addTest("Multiple crease still creates valid paint group chain", function() {
+    console.log("Multiple crease");
+    var caret = new parsegraph_Caret(parsegraph_BUD);
+    caret.node()._id = "Multiple crease root";
+    var first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    first._id = "first";
+    var second = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    second._id = "second";
+    var third = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    third._id = "third";
+    var fourth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    fourth._id = "fourth";
+    var fifth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+    fifth._id = "fifth";
+    caret.root().commitLayoutIteratively();
+    first.setPaintGroup(true);
+    third.setPaintGroup(true);
+    var pgs = parsegraph_dumpPaintGroups(caret.root());
+    if(pgs[0] !== third) {
+        console.log(pgs);
+        throw new Error("First paint group must be " + third + " but was " + pgs[0]);
+    }
+    if(pgs[1] !== first) {
+        console.log(pgs);
+        throw new Error("Second paint group must be " + first + " but was " + pgs[1]);
+    }
+    if(pgs[2] !== caret.root()) {
+        console.log(pgs);
+        throw new Error("Third paint group must be " + caret.root() + " but was " + pgs[2]);
+    }
+    console.log("Multiple crease DONE");
+ });
+
+parsegraph_Graph_Tests.addTest("Fancy crease", function() {
+    // Build the graph.
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.node()._id = "root";
+    var first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    first._id = "first";
+    var second = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    caret.push();
+    second._id = "second";
+    var third = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    third._id = "third";
+    var fourth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+    fourth._id = "fourth";
+    caret.pop();
+    var n = caret.node();
+    while(n) {
+        n.setPaintGroup(true);
+        n = n.nodeAt(parsegraph_DOWNWARD);
+    }
+    caret.root().commitLayoutIteratively();
+    second.setPaintGroup(false);
+    caret.moveToRoot();
+    caret.root().commitLayoutIteratively();
+    if(caret.root().needsCommit()) {
+        throw new Error("Failed to fully commit layout");
+    }
+    //console.log(parsegraph_dumpPaintGroups(caret.root()));
+});
+
 parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with downward bud", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
