@@ -224,14 +224,36 @@ parsegraph_Application.prototype.onRender = function() {
     start = t;
 
     var interval = this._interval;
-    inputChangedScene = graph.needsRepaint() || inputChangedScene;
-    inputChangedScene = inputChangedScene || this._renderedMouse !== graph.input().mouseVersion();
+    if(inputChangedScene) {
+        //console.log("Input changed scene");
+    }
+    if(!inputChangedScene) {
+        inputChangedScene = graph.needsRepaint();
+        if(inputChangedScene) {
+            if(graph.world().needsRepaint()) {
+                //console.log("World needs repaint");
+            }
+            else {
+                //console.log("Graph needs repaint");
+            }
+        }
+    }
+    if(!inputChangedScene) {
+        inputChangedScene = this._renderedMouse !== graph.input().mouseVersion();
+        if(inputChangedScene) {
+            //console.log("Mouse changed scene");
+        }
+    }
+    if(!inputChangedScene) {
+        if(graph.input().UpdateRepeatedly()) {
+            //console.log("Input updating repeatedly");
+        }
+    }
     if(graph.needsRepaint()) {
         //console.log("Repainting");
         surface.paint(interval);
     }
     if(graph.input().UpdateRepeatedly() || inputChangedScene) {
-        //console.log("Rendering");
         surface.render();
         this._renderedMouse = graph.input().mouseVersion();
     }
@@ -244,6 +266,7 @@ parsegraph_Application.prototype.onRender = function() {
         && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
     ) {
         do {
+            //console.log("Idling");
             var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
             if(r !== true) {
                 this.onIdle(null, null);
