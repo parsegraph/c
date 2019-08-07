@@ -815,6 +815,9 @@ parsegraph_Node.prototype.nodeAt = function(atDirection)
 {
     var n = this._neighbors[atDirection];
     if(!n) {
+        if(this._parentNeighbor && this.parentDirection() === atDirection) {
+            return this._parentNeighbor.owner;
+        }
         return null;
     }
     return n.node;
