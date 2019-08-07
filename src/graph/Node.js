@@ -1998,7 +1998,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
                 sizeAdjustment + ")"
             );*/
             // Calculate the new offset to this node's center.
-            var lengthOffset = this.extentOffsetAt(direction);
+            var lengthOffset = this.extentOffsetAt(direction)
                 + lengthAdjustment
                 - this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
