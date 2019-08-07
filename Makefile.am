@@ -160,7 +160,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/proportion.js \
 	src/apps/chess.js \
 	src/apps/showFlowchartTemplate.js \
-	src/apps/showUlam.js \
+	src/apps/ulam.js \
 	src/apps/showSpiral.js \
 	src/apps/showCalendar.js \
 	src/apps/primes.js \
