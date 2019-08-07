@@ -26,6 +26,19 @@ parsegraph_BlockPainter_VertexShader =
     "aspectRatio = a_aspectRatio;" +
 "}";
 
+parsegraph_BlockPainter_VertexShader_Simple =
+"uniform mat3 u_world;\n" +
+"\n" +
+"attribute vec2 a_position;\n" +
+"attribute vec4 a_color;\n" +
+"\n" +
+"varying highp vec4 contentColor;\n" +
+"\n" +
+"void main() {\n" +
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
+    "contentColor = a_color;" +
+"}";
+
 // Derived from https://thebookofshaders.com/07/
 parsegraph_BlockPainter_FragmentShader =
 "#ifdef GL_ES\n" +
@@ -109,6 +122,17 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
     // Map the two calculated indicators to their colors.
     "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);" +
     "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
+"}";
+
+parsegraph_BlockPainter_FragmentShader_Simple =
+"#ifdef GL_ES\n" +
+"precision mediump float;\n" +
+"#endif\n" +
+"" +
+"varying highp vec4 contentColor;\n" +
+"\n" +
+"void main() {\n" +
+    "gl_FragColor = contentColor;" +
 "}";
 
 // Derived from https://thebookofshaders.com/07/
@@ -343,9 +367,7 @@ function parsegraph_BlockPainter(gl, shaders)
     this._blockBufferVertexIndex = 0;
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this._blockProgram, "u_world"
-    );
+    this.u_world = this._gl.getUniformLocation(this._blockProgram, "u_world");
 
     // Setup initial uniform values.
     this._backgroundColor = parsegraph_createColor(1, 1, 1, .15);
@@ -375,6 +397,35 @@ function parsegraph_BlockPainter(gl, shaders)
     this._dataBufferVertexIndex = 0;
     this._dataBufferNumVertices = 6;
     this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._stride/4);
+
+    // Compile the shader program.
+    var shaderName = "parsegraph_BlockPainter_Simple";
+    if(!shaders[shaderName]) {
+        var program = gl.createProgram();
+        gl.attachShader(
+            program,
+            compileShader(gl, parsegraph_BlockPainter_VertexShader_Simple, gl.VERTEX_SHADER)
+        );
+
+        var fragProgram = parsegraph_BlockPainter_FragmentShader_Simple;
+        gl.attachShader(
+            program,
+            compileShader(gl, fragProgram, gl.FRAGMENT_SHADER)
+        );
+
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(
+            program, gl.LINK_STATUS
+        )) {
+            throw new Error("'" + shaderName + "' shader program failed to link.");
+        }
+
+        shaders[shaderName] = program;
+    }
+    this._blockProgramSimple = shaders[shaderName];
+    this.simple_u_world = this._gl.getUniformLocation(this._blockProgramSimple, "u_world");
+    this.simple_a_position = this._gl.getAttribLocation(this._blockProgramSimple, "a_position");
+    this.simple_a_color = this._gl.getAttribLocation(this._blockProgramSimple, "a_color");
 };
 
 parsegraph_BlockPainter.prototype.bounds = function()
@@ -572,25 +623,32 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
     this.writeVertex();
 };
 
-parsegraph_BlockPainter.prototype.render = function(world)
+parsegraph_BlockPainter.prototype.render = function(world, scale)
 {
     this.flush();
     if(this._blockBufferVertexIndex === 0) {
         return;
     }
     var gl = this._gl;
+    var usingSimple = scale < .05;
 
-    // Render blocks.
-    gl.useProgram(this._blockProgram);
-    gl.uniformMatrix3fv(this.u_world, false, world);
-
-    gl.enableVertexAttribArray(this.a_position);
-    gl.enableVertexAttribArray(this.a_texCoord);
-    gl.enableVertexAttribArray(this.a_color);
-    gl.enableVertexAttribArray(this.a_borderColor);
-    gl.enableVertexAttribArray(this.a_borderRoundedness);
-    gl.enableVertexAttribArray(this.a_borderThickness);
-    gl.enableVertexAttribArray(this.a_aspectRatio);
+    if(usingSimple) {
+        gl.useProgram(this._blockProgramSimple);
+        gl.uniformMatrix3fv(this.simple_u_world, false, world);
+        gl.enableVertexAttribArray(this.simple_a_position);
+        gl.enableVertexAttribArray(this.simple_a_color);
+    }
+    else {
+        gl.useProgram(this._blockProgram);
+        gl.uniformMatrix3fv(this.u_world, false, world);
+        gl.enableVertexAttribArray(this.a_position);
+        gl.enableVertexAttribArray(this.a_texCoord);
+        gl.enableVertexAttribArray(this.a_color);
+        gl.enableVertexAttribArray(this.a_borderColor);
+        gl.enableVertexAttribArray(this.a_borderRoundedness);
+        gl.enableVertexAttribArray(this.a_borderThickness);
+        gl.enableVertexAttribArray(this.a_aspectRatio);
+    }
 
     var stride = this._stride;
     if(!this._blockBuffer) {
@@ -605,21 +663,33 @@ parsegraph_BlockPainter.prototype.render = function(world)
     // BorRound: 1 * 4 (one float)   48-51
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
-    gl.vertexAttribPointer(this.a_position,          2, gl.FLOAT, false, stride, 0);
-    gl.vertexAttribPointer(this.a_texCoord,          2, gl.FLOAT, false, stride, 8);
-    gl.vertexAttribPointer(this.a_color,             4, gl.FLOAT, false, stride, 16);
-    gl.vertexAttribPointer(this.a_borderColor,       4, gl.FLOAT, false, stride, 32);
-    gl.vertexAttribPointer(this.a_borderRoundedness, 1, gl.FLOAT, false, stride, 48);
-    gl.vertexAttribPointer(this.a_borderThickness,   1, gl.FLOAT, false, stride, 52);
-    gl.vertexAttribPointer(this.a_aspectRatio,       1, gl.FLOAT, false, stride, 56);
+    if(usingSimple) {
+        gl.vertexAttribPointer(this.simple_a_position,          2, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(this.simple_a_color,             4, gl.FLOAT, false, stride, 16);
+    }
+    else {
+        gl.vertexAttribPointer(this.a_position,          2, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(this.a_texCoord,          2, gl.FLOAT, false, stride, 8);
+        gl.vertexAttribPointer(this.a_color,             4, gl.FLOAT, false, stride, 16);
+        gl.vertexAttribPointer(this.a_borderColor,       4, gl.FLOAT, false, stride, 32);
+        gl.vertexAttribPointer(this.a_borderRoundedness, 1, gl.FLOAT, false, stride, 48);
+        gl.vertexAttribPointer(this.a_borderThickness,   1, gl.FLOAT, false, stride, 52);
+        gl.vertexAttribPointer(this.a_aspectRatio,       1, gl.FLOAT, false, stride, 56);
+    }
 
     gl.drawArrays(gl.TRIANGLES, 0, this._blockBufferVertexIndex);
 
-    gl.disableVertexAttribArray(this.a_position);
-    gl.disableVertexAttribArray(this.a_texCoord);
-    gl.disableVertexAttribArray(this.a_color);
-    gl.disableVertexAttribArray(this.a_borderColor);
-    gl.disableVertexAttribArray(this.a_borderRoundedness);
-    gl.disableVertexAttribArray(this.a_borderThickness);
-    gl.disableVertexAttribArray(this.a_aspectRatio);
+    if(usingSimple) {
+        gl.disableVertexAttribArray(this.simple_a_position);
+        gl.disableVertexAttribArray(this.simple_a_color);
+    }
+    else {
+        gl.disableVertexAttribArray(this.a_position);
+        gl.disableVertexAttribArray(this.a_texCoord);
+        gl.disableVertexAttribArray(this.a_color);
+        gl.disableVertexAttribArray(this.a_borderColor);
+        gl.disableVertexAttribArray(this.a_borderRoundedness);
+        gl.disableVertexAttribArray(this.a_borderThickness);
+        gl.disableVertexAttribArray(this.a_aspectRatio);
+    }
 };
