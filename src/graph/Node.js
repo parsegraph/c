@@ -796,6 +796,17 @@ parsegraph_Node.prototype.hasAnyNodes = function()
         || this.hasChildAt(parsegraph_INWARD);
 };
 
+function parsegraph_dumpPaintGroups(node)
+{
+    var pgs = [];
+    var pg = node;
+    do {
+        pg = pg._paintGroupNext;
+        pgs.push(pg);
+    } while(pg !== node);
+    return pgs;
+}
+
 parsegraph_Node.prototype.nodeAt = function(atDirection)
 {
     var n = this._neighbors[atDirection];
