@@ -1246,6 +1246,7 @@ parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignm
             arguments[0]
         );
     }
+    this.ensureNeighbor(inDirection);
     this._neighbors[inDirection].alignmentMode = newAlignmentMode;
     this.layoutWasChanged(inDirection);
 };
