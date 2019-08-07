@@ -2671,7 +2671,7 @@ var parsegraph_findConsecutiveLength = function(node, inDirection)
 parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
 {
     if(!this.isRoot()) {
-        return this.parentNode().commitLayoutIteratively();
+        return this.parentNode().commitLayoutIteratively(timeout);
     }
 
     // Avoid needless work if possible.
