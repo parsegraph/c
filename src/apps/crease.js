@@ -5,18 +5,22 @@ function parsegraph_CreaseWidget(app)
     this._root = caret.root();
 
     var addActions = function(id) {
-        caret.label(id);
-        caret.save(id);
+        var node = caret.node();
+        node.setLabel(id, app.glyphAtlas());
         var uninstall = null;
         var reinstall;
         var timer = new parsegraph_AnimationTimer();
         //timer.setDelay(15);
         var startTime;
         timer.setListener(function() {
-            caret.restore(id);
             var s = parsegraph_copyStyle(parsegraph_BLOCK);
-            s.horizontalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
-            caret.node().setBlockStyle(s);
+            if(id === "Center") {
+                s.verticalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
+            }
+            else {
+                s.horizontalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
+            }
+            node.setBlockStyle(s);
             app.scheduleRepaint();
             timer.schedule();
         });
@@ -28,9 +32,8 @@ function parsegraph_CreaseWidget(app)
             if(timer.scheduled()) {
                 carousel.addAction("Stop", function() {
                     timer.cancel();
-                    caret.restore(id);
                     var s = parsegraph_copyStyle(parsegraph_BLOCK);
-                    caret.node().setBlockStyle(s);
+                    node.setBlockStyle(s);
                     app.scheduleRepaint();
                     reinstall();
                 });
@@ -42,52 +45,69 @@ function parsegraph_CreaseWidget(app)
                     reinstall();
                 });
             }
-            caret.restore(id);
-            caret.move('u');
-            if(!caret.isCreased()) {
-                carousel.addAction("Crease", function() {
-                    caret.restore(id);
-                    caret.move('u');
-                    caret.crease();
-                    app.scheduleRepaint();
-                    reinstall();
-                });
-            }
-            else {
-                carousel.addAction("Uncrease", function() {
-                    caret.restore(id);
-                    caret.move('u');
-                    caret.uncrease();
-                    app.scheduleRepaint();
-                    reinstall();
-                });
-            }
-            caret.move('d');
-            var uninstallCarousel = carousel.install(caret.node());
+            carousel.addAction("Crease", function() {
+                node.setPaintGroup(true);
+                app.scheduleRepaint();
+                reinstall();
+            });
+            carousel.addAction("Uncrease", function() {
+                node.setPaintGroup(false);
+                app.scheduleRepaint();
+                reinstall();
+            });
+            var changeCrease = function(creased) {
+                var dir;
+                switch(id) {
+                case "Center":
+                    dir = parsegraph_DOWNWARD;
+                    break;
+                case "Forward":
+                    dir = parsegraph_FORWARD;
+                    break;
+                case "Backward":
+                    dir = parsegraph_BACKWARD;
+                    break;
+                }
+                for(var n = node; n; n = n.nodeAt(dir)) {
+                    console.log(n);
+                    n.setPaintGroup(creased);
+                }
+                app.scheduleRepaint();
+            };
+            carousel.addAction("Crease all", function() {
+                changeCrease(true);
+            });
+            carousel.addAction("Uncrease all", function() {
+                changeCrease(false);
+            });
+            var uninstallCarousel = carousel.install(node);
             return function() {
                 uninstallCarousel();
             };
         };
-        caret.move('u');
-        if(id !== "Center") {
-            caret.crease();
-        }
-        caret.move('d');
         uninstall = reinstall();
     };
 
     caret.pull('d');
-    caret.spawnMove('d', 'b');
-    addActions("Center");
-    caret.move('u');
-    caret.spawnMove('b', 'u');
-    caret.spawnMove('d', 'b');
-    addActions("Backward");
-    caret.move('u');
-    caret.move('f');
-    caret.spawnMove('f', 'u');
-    caret.spawnMove('d', 'b');
-    addActions("Forward");
+    caret.push();
+    var size = 100;
+    for(var i = 0; i < size; ++i) {
+        caret.spawnMove('d', 'b');
+        addActions("Center");
+    }
+    caret.pop();
+    caret.push();
+    for(var i = 0; i < size; ++i) {
+        caret.spawnMove('b', 'b');
+        addActions("Backward");
+    }
+    caret.pop();
+    caret.push();
+    for(var i = 0; i < size; ++i) {
+        caret.spawnMove('f', 'b');
+        addActions("Forward");
+    }
+    caret.pop();
 };
 
 parsegraph_CreaseWidget.prototype.node = function()
