@@ -244,6 +244,7 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
         node = node.nodeAt(directionToChild);
     }
 
+    //console.log(this + " has absolute pos " + this._absoluteXPos + ", " + this._absoluteYPos);
     this._absoluteXPos += node.x() * parentScale;
     this._absoluteYPos += node.y() * parentScale;
     this._absoluteScale = scale;
@@ -431,6 +432,7 @@ function parsegraph_connectPaintGroup(a, b)
 {
     a._paintGroupNext = b;
     b._paintGroupPrev = a;
+    //console.log("Connecting paint groups " + a + " to " + b);
 };
 
 parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
@@ -442,7 +444,7 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
     this.ensureExtended();
 
     if(paintGroup) {
-        // Node is becoming a paint group.
+        //console.log(this + " is becoming a paint group.");
         this._extended.isPaintGroup = true;
 
         if(this.isRoot()) {
@@ -451,9 +453,9 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         else {
             this.parentNode().removeFromLayout(parsegraph_reverseNodeDirection(this.parentDirection()));
             var paintGroupFirst = this.findFirstPaintGroup();
-            //console.log("First paint group of " + this._id + " is " + paintGroupFirst._id);
+            //console.log("First paint group of " + this + " is " + paintGroupFirst);
             var parentsPaintGroup = this.parentNode().findPaintGroup();
-            //console.log("Parent paint group of " + this._id + " is " + parentsPaintGroup._id);
+            //console.log("Parent paint group of " + this + " is " + parentsPaintGroup);
             parsegraph_connectPaintGroup(parentsPaintGroup._paintGroupPrev, paintGroupFirst);
             parsegraph_connectPaintGroup(this, parentsPaintGroup);
         }
@@ -464,7 +466,7 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
 
     this._extended.isPaintGroup = false;
 
-    //console.log("Node " + this + " is no longer a paint group.");
+    //console.log(this + " is no longer a paint group.");
     if(!this.isRoot()) {
         var paintGroupLast = this.findLastPaintGroup();
         this.parentNode().insertIntoLayout(parsegraph_reverseNodeDirection(this.parentDirection()));
@@ -1249,6 +1251,7 @@ parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignm
     }
     this.ensureNeighbor(inDirection);
     this._neighbors[inDirection].alignmentMode = newAlignmentMode;
+    //console.log(parsegraph_nameNodeAlignment(newAlignmentMode));
     this.layoutWasChanged(inDirection);
 };
 
@@ -2677,7 +2680,8 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
 
     // Avoid needless work if possible.
     if(this._layoutState === parsegraph_COMMITTED_LAYOUT) {
-        return;
+        //console.log("No layout to do");
+        return null;
     }
 
     var layoutPhase = 1;
@@ -2743,7 +2747,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 } while(node !== root);
             }
             if(paintGroup === rootPaintGroup) {
-                //console.log("Commit layout done");
+                //console.log("Commit layout phase 1 done");
                 ++layoutPhase;
                 paintGroup = null;
                 break;
@@ -2766,11 +2770,12 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             }
             //console.log("Processing position for ", paintGroup);
             if(pastTime(paintGroup._id)) {
+                //console.log("Ran out of time");
                 return commitLayoutLoop;
             }
             if(paintGroup.needsPosition() || node) {
+                //console.log(paintGroup + " needs a position update");
                 if(!node) {
-                    //console.log(paintGroup + " needs a position update");
                     node = paintGroup;
                 }
                 do {
@@ -2780,12 +2785,12 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                     node.commitGroupPos();
                     node = node._layoutPrev;
                     if(pastTime(node._id)) {
+                        //console.log("Ran out of time");
                         return commitLayoutLoop;
                     }
                 } while(node !== root);
             }
             else {
-                //console.log(paintGroup);
                 //console.log(paintGroup + " does not need a position update.");
             }
             ++paintGroup._absoluteVersion;
@@ -2793,7 +2798,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             paintGroup.commitAbsolutePos();
             paintGroup = paintGroup._paintGroupPrev;
             if(paintGroup === rootPaintGroup) {
-                //console.log("Commit layout done");
+                //console.log("Commit layout phase 2 done");
                 ++layoutPhase;
                 break;
             }
@@ -3042,12 +3047,12 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     }
 
     if(cont) {
-        // Timed out during commitLayout
+        //console.log("Timed out during commitLayout");
         savedState.commitLayoutFunc = cont;
         return false;
     }
     else {
-        // Committed all layout
+        //console.log("Committed all layout");
         savedState.commitLayoutFunc = null;
         savedState.paintGroup = this;
 
@@ -3057,6 +3062,7 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     while(true) {
         if(pastTime()) {
             this._extended.dirty = true;
+            //console.log("Painting timed out");
             return false;
         }
 
@@ -3104,6 +3110,7 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
     //console.log("Rendering iteratively");
     var paintGroup = this;
     var cleanlyRendered = true;
+    var nodesRendered = 0;
     do {
         if(!paintGroup.localPaintGroup() && !paintGroup.isRoot()) {
             throw new Error("Paint group chain must not refer to a non-paint group");
@@ -3111,7 +3118,9 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
         //console.log("Rendering node " + paintGroup);
         cleanlyRendered = paintGroup.render(world, camera) && cleanlyRendered;
         paintGroup = paintGroup._paintGroupPrev;
+        ++nodesRendered;
     } while(paintGroup !== this);
+    //console.log(nodesRendered + " paint groups rendered");
     return cleanlyRendered;
 };
 
