@@ -11,7 +11,7 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._renderBlocks = true;
 
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
-    this._renderExtents = true;
+    this._renderExtents = false;
 
     this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
@@ -361,8 +361,8 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
 
 parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
 {
-    if(this.isExtentRenderingEnabled() && node.isRoot()) {
-        //this.paintExtent(node);
+    if(this.isExtentRenderingEnabled() && !node.isRoot()) {
+        this.paintExtent(node);
     }
 
     switch(node.type()) {
