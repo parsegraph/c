@@ -12,9 +12,24 @@ document.addEventListener("DOMContentLoaded", function(event) {
     sga.setCameraName("parsegraph_ulam_camera");
     SGA = sga;
     sga.setMathMode(true);
-    var COUNT = 100;
+    var ulam;
+    var COUNT = 300;
+    sga.setBurstIdle(true);
+    sga.setInterval(40);
+    var startTime = new Date();
     sga.start(document.body, function(app, userLogin, loginNode) {
-        return showUlam(app, COUNT);
+        ulam = new parsegraph_Ulam(app, COUNT);
+        loginNode.connectNode(parsegraph_DOWNWARD, ulam.node());
+        return ulam;
+    });
+    sga.onIdle(function() {
+        if(!ulam.inProgress()) {
+            console.log("Done in " + parsegraph_elapsed(startTime) + "ms");
+            return;
+        }
+        ulam.step();
+        sga.scheduleRepaint();
+        return true;
     });
 });
 </script>
