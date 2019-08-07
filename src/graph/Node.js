@@ -202,6 +202,10 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
     var nodeList = [];
     var parentScale = 1.0;
     var scale = 1.0;
+    var neededVersion;
+    if(!this.isRoot()) {
+        neededVersion = this.parentNode().findPaintGroup()._absoluteVersion;
+    }
     while(true) {
         if(node.isRoot()) {
             this._absoluteXPos = 0;
@@ -210,7 +214,7 @@ parsegraph_Node.prototype.commitAbsolutePos = function()
         }
 
         var par = node.nodeParent();
-        if(!par._absoluteDirty) {
+        if(!par._absoluteDirty && par._absoluteVersion === neededVersion) {
             // Just use the parent's absolute position to start.
             this._absoluteXPos = par._absoluteXPos;
             this._absoluteYPos = par._absoluteYPos;
