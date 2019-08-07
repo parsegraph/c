@@ -3107,7 +3107,7 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
 
     savedState.paintGroup = null;
     //console.log("Completed node painting");
-    return this._extended.dirty;
+    return true;
 };
 
 parsegraph_Node.prototype.renderIteratively = function(world, camera)
