@@ -165,7 +165,7 @@ function parsegraph_initialize(mathMode) {
 
     // Configures graphs to appear grid-like; I call it 'math-mode'.
     if(mathMode) {
-        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*30;
+        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*40;
         parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
         parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
         parsegraph_VERTICAL_SEPARATION_PADDING = 2;
