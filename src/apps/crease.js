@@ -2,7 +2,14 @@ function parsegraph_CreaseWidget(app)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.setGlyphAtlas(app.glyphAtlas());
+
     this._root = caret.root();
+    var rs = parsegraph_copyStyle(parsegraph_BUD);
+    rs.minWidth *= 20;
+    rs.minHeight *= 20;
+    rs.borderRoundness *= 18;
+    rs.borderThickness *= 20;
+    this._root.setBlockStyle(rs);
 
     var addActions = function(id) {
         var node = caret.node();
