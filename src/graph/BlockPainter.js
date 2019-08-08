@@ -303,6 +303,8 @@ parsegraph_BlockPainter_CurlyFragmentShader =
     "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
 "}";
 
+parsegraph_BlockPainter_COUNT = 0;
+
 function parsegraph_BlockPainter(gl, shaders)
 {
     this._gl = gl;
@@ -312,6 +314,7 @@ function parsegraph_BlockPainter(gl, shaders)
     if(!shaders) {
         throw new Error("A shaders object must be given");
     }
+    this._id = parsegraph_BlockPainter_COUNT++;
 
     // Compile the shader program.
     var shaderName = "parsegraph_BlockPainter";
@@ -426,6 +429,8 @@ function parsegraph_BlockPainter(gl, shaders)
     this.simple_u_world = this._gl.getUniformLocation(this._blockProgramSimple, "u_world");
     this.simple_a_position = this._gl.getAttribLocation(this._blockProgramSimple, "a_position");
     this.simple_a_color = this._gl.getAttribLocation(this._blockProgramSimple, "a_color");
+
+    this._maxSize = 0;
 };
 
 parsegraph_BlockPainter.prototype.bounds = function()
@@ -482,6 +487,7 @@ parsegraph_BlockPainter.prototype.clear = function()
     this._blockBufferNumVertices = null;
     this._dataBufferVertexIndex = 0;
     this._blockBufferVertexIndex = 0;
+    this._maxSize = 0;
 };
 
 parsegraph_BlockPainter.prototype.writeVertex = function()
@@ -621,6 +627,13 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
     buf[2] = 0;
     buf[3] = 1;
     this.writeVertex();
+
+    this._maxSize = Math.max(this._maxSize, Math.max(width, height));
+};
+
+parsegraph_BlockPainter.prototype.toString = function()
+{
+    return "[parsegraph_BlockPainter " + this._id + "]";
 };
 
 parsegraph_BlockPainter.prototype.render = function(world, scale)
@@ -630,7 +643,8 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         return;
     }
     var gl = this._gl;
-    var usingSimple = scale < .05;
+    var usingSimple = (this._maxSize * scale) < 5;
+    //console.log(this._id, this._maxSize * scale, usingSimple);
 
     if(usingSimple) {
         gl.useProgram(this._blockProgramSimple);
