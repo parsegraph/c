@@ -2135,7 +2135,6 @@ parsegraph_Node.prototype.commitLayout = function(cld)
         direction,
         allowAxisOverlap)
     {
-        allowAxisOverlap = true;
         if(!this.hasNode(direction)) {
             return;
         }
@@ -2254,7 +2253,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             }
 
             // Layout that node.
-            if(layoutSingle.call(this, firstAxisDirection, false)) {
+            if(layoutSingle.call(this, firstAxisDirection, this.nodeFit() === parsegraph_NODE_FIT_EXACT)) {
                 this._layoutState = parsegraph_NEEDS_COMMIT;
                 return true;
             }
