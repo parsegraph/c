@@ -13,9 +13,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     SGA = sga;
     sga.setMathMode(true);
     var ulam;
-    var COUNT = 320;
+    var COUNT = 100000;
     sga.setBurstIdle(true);
-    sga.setInterval(40);
     var startTime = new Date();
     sga.start(document.body, function(app, userLogin, loginNode) {
         ulam = new parsegraph_Ulam(app, COUNT);
@@ -23,13 +22,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
         return ulam;
     });
     sga.onIdle(function() {
-        if(!ulam.inProgress()) {
-            console.log("Done in " + parsegraph_elapsed(startTime) + "ms");
-            return;
-        }
-        ulam.step();
+        var callAgain = ulam.step();
         sga.scheduleRepaint();
-        return true;
+        if(!callAgain) {
+            console.log("Done in " + parsegraph_elapsed(startTime) + "ms");
+        }
+        return callAgain;
     });
 });
 </script>
