@@ -770,7 +770,10 @@ parsegraph_Node.prototype.hasNode = function(atDirection)
     if(atDirection == parsegraph_NULL_NODE_DIRECTION) {
         return false;
     }
-    return this._neighbors[atDirection] && this._neighbors[atDirection].node;
+    if(this._neighbors[atDirection] && this._neighbors[atDirection].node) {
+        return true;
+    }
+    return !this.isRoot() && this.parentDirection() === atDirection;
 };
 
 parsegraph_Node.prototype.hasNodes = function(axis)
