@@ -801,6 +801,7 @@ parsegraph_Node.prototype.hasChildAt = function(direction)
 {
     return this.hasNode(direction) && this.parentDirection() != direction;
 };
+parsegraph_Node.prototype.hasChild = parsegraph_Node.prototype.hasChildAt;
 
 parsegraph_Node.prototype.hasAnyNodes = function()
 {
