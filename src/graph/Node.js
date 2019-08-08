@@ -2588,7 +2588,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
 
     var addLineBounds = function(given)
     {
-        if(!this.hasNode(given)) {
+        if(!this.hasChild(given)) {
             return;
         }
 
