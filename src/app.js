@@ -265,6 +265,7 @@ parsegraph_Application.prototype.onRender = function() {
         && parsegraph_elapsed(startTime) < interval
         && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
     ) {
+        //console.log("Idle looping");
         do {
             //console.log("Idling");
             var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
