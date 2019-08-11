@@ -293,7 +293,7 @@ parsegraph_Camera.prototype.canProject = function()
     return displayWidth != 0 && displayHeight != 0;
 };
 
-parsegraph_Camera.prototype.project = function()
+parsegraph_Camera.prototype.projectionMatrix = function()
 {
     if(!this.canProject()) {
         throw new Error(
@@ -334,12 +334,17 @@ parsegraph_Camera.prototype.project = function()
         this.hasChanged();
     }
 
+    return make2DProjection(
+        this.surface().gl().drawingBufferWidth,
+        this.surface().gl().drawingBufferHeight
+    );
+};
+
+parsegraph_Camera.prototype.project = function()
+{
     return matrixMultiply3x3(
         this.worldMatrix(),
-        make2DProjection(
-            this.surface().gl().drawingBufferWidth,
-            this.surface().gl().drawingBufferHeight
-        )
+        this.projectionMatrix()
     );
 };
 
