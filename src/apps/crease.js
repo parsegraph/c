@@ -2,6 +2,7 @@ function parsegraph_CreaseWidget(app)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.setGlyphAtlas(app.glyphAtlas());
+    this.app = app;
 
     this._root = caret.root();
     var rs = parsegraph_copyStyle(parsegraph_BUD);
@@ -16,50 +17,31 @@ function parsegraph_CreaseWidget(app)
         node.setLabel(id, app.glyphAtlas());
         var uninstall = null;
         var reinstall;
-        var timer = new parsegraph_AnimationTimer();
-        //timer.setDelay(15);
-        var startTime = new Date();
-        timer.setListener(function() {
-            var s = parsegraph_copyStyle(parsegraph_BLOCK);
-            if(id === "Center") {
-                s.verticalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
-            }
-            else {
-                s.horizontalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
-            }
-            node.setBlockStyle(s);
-            app.scheduleRepaint();
-            timer.schedule();
-        });
         reinstall = function() {
             if(uninstall) {
                 uninstall();
             }
             var carousel = new parsegraph_ActionCarousel(app.graph());
-            node.setValue(timer);
-            if(timer.scheduled()) {
+            if(node.value()) {
                 carousel.addAction("Stop", function() {
-                    timer.cancel();
+                    node.setValue(false);
                     var s = parsegraph_copyStyle(parsegraph_BLOCK);
                     node.setBlockStyle(s);
-                    app.scheduleRepaint();
                     reinstall();
                 });
             }
             else {
                 carousel.addAction("Grow", function() {
-                    timer.schedule();
+                    node.setValue(new Date());
                     reinstall();
                 });
             }
             carousel.addAction("Crease", function() {
                 node.setPaintGroup(true);
-                app.scheduleRepaint();
                 reinstall();
             });
             carousel.addAction("Uncrease", function() {
                 node.setPaintGroup(false);
-                app.scheduleRepaint();
                 reinstall();
             });
             var changeCrease = function(creased) {
@@ -78,7 +60,6 @@ function parsegraph_CreaseWidget(app)
                 for(var n = node; n; n = n.nodeAt(dir)) {
                     n.setPaintGroup(creased);
                 }
-                app.scheduleRepaint();
             };
             carousel.addAction("Crease all", function() {
                 changeCrease(true);
@@ -94,7 +75,7 @@ function parsegraph_CreaseWidget(app)
         uninstall = reinstall();
     };
 
-    var creasables = [];
+    this.creasables = [];
     var size = 50;
     caret.pull('d');
 
@@ -103,7 +84,7 @@ function parsegraph_CreaseWidget(app)
         caret.spawnMove('d', 'b');
         addActions("Center");
         caret.node()._id = "Center " + i;
-        creasables.push(caret.node());
+        this.creasables.push(caret.node());
     }
     caret.pop();
     caret.push();
@@ -111,7 +92,7 @@ function parsegraph_CreaseWidget(app)
         caret.spawnMove('b', 'b');
         addActions("Backward");
         caret.node()._id = "Backward " + i;
-        creasables.push(caret.node());
+        this.creasables.push(caret.node());
     }
     caret.pop();
     caret.push();
@@ -119,36 +100,46 @@ function parsegraph_CreaseWidget(app)
         caret.spawnMove('f', 'b');
         addActions("Forward");
         caret.node()._id = "Forward " + i;
-        creasables.push(caret.node());
+        this.creasables.push(caret.node());
     }
     caret.pop();
 
     var rootActions = new parsegraph_ActionCarousel(app.graph());
     rootActions.addAction("Crease random", function() {
-        for(var i in creasables) {
-            var n = creasables[i];
+        for(var i in this.creasables) {
+            var n = this.creasables[i];
             n.setPaintGroup(Math.random() > .5);
         }
-        app.scheduleRepaint();
-    });
+    }, this);
     rootActions.addAction("Grow all", function() {
-        for(var i in creasables) {
-            var n = creasables[i];
-            if(Math.random() > .5) {
-                console.log("Scheduled");
-                n.value().schedule();
-            }
-            else {
-                n.value().cancel();
-            }
+        for(var i in this.creasables) {
+            var n = this.creasables[i];
+            n.setValue(Math.random() > .5 ? new Date() : false);
         }
-        app.scheduleRepaint();
-    });
+    }, this);
     rootActions.install(caret.node());
+};
+
+parsegraph_CreaseWidget.prototype.tick = function()
+{
+    for(var i = 0; i < this.creasables.length; ++i) {
+        var node = this.creasables[i];
+        if(!node.value()) {
+            continue;
+        }
+        var startTime = node.value();
+        var s = parsegraph_copyStyle(parsegraph_BLOCK);
+        if(node.parentDirection() === parsegraph_UPWARD) {
+            s.verticalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
+        }
+        else {
+            s.horizontalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
+        }
+        node.setBlockStyle(s);
+    }
 };
 
 parsegraph_CreaseWidget.prototype.node = function()
 {
     return this._root;
-};
-
+}

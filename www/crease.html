@@ -12,8 +12,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_Application("Crease");
     sga.setCameraName("parsegraph_crease_camera");
     SGA = sga;
+    var crease;
     sga.start(document.body, function(app, userLogin, loginNode) {
-        return new parsegraph_CreaseWidget(app);
+        crease = new parsegraph_CreaseWidget(app);
+        return crease;
+    });
+    sga.onIdle(function(timeout) {
+        crease.tick();
+        sga.scheduleRepaint();
+        return true;
     });
 });
 </script>
