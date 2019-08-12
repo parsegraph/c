@@ -166,7 +166,7 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
         Math.pow(Math.abs(x - this._carouselCoords[0]), 2) +
         Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
     );
-    if(dist < this._carouselSize * .75) {
+    if(dist < this._carouselSize * .75/this._camera.scale()) {
         if(asDown) {
             //console.log("Down events within the inner region are treated as 'cancel.'");
             this.hideCarousel();
@@ -177,7 +177,7 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
         //console.log("Up events within the inner region are ignored.");
         return false;
     }
-    else if(dist > this._carouselSize * 4) {
+    else if(dist > this._carouselSize * 4/this._camera.scale()) {
         this.hideCarousel();
         this.scheduleCarouselRepaint();
         //console.log("Click occurred so far outside that it is considered its own event.");
@@ -232,7 +232,7 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y)
         Math.pow(Math.abs(y - this._carouselCoords[1]), 2)
     );
 
-    if(dist < this._carouselSize*4 && dist > parsegraph_BUD_RADIUS*4) {
+    if(dist < this._carouselSize*4/this._camera.scale() && dist > parsegraph_BUD_RADIUS*4/this._camera.scale()) {
         if(this._carouselPlots.length > 1 || (Math.abs(mouseAngle - Math.PI) < Math.PI/2)) {
             var i = Math.floor(mouseAngle / angleSpan);
             //console.log(alpha_ToDegrees(mouseAngle-Math.PI) + " degrees = caret " + i + " angleSpan = " + angleSpan);
@@ -397,7 +397,7 @@ parsegraph_Carousel.prototype.paint = function()
     this._fanPainter.setAscendingRadius(this.showScale() * fanPadding * this._carouselSize);
     this._fanPainter.setDescendingRadius(this.showScale() * fanPadding * 2 * this._carouselSize);
     this._fanPainter.selectRad(
-        this._carouselCoords[0], this._carouselCoords[1],
+        0, 0,
         0, Math.PI * 2,
         parsegraph_createColor(1, 1, 1, 1),
         parsegraph_createColor(.5, .5, .5, .4)
@@ -415,6 +415,12 @@ parsegraph_Carousel.prototype.render = function(world)
         this.paint();
     }
 
+    world = matrixMultiply3x3(
+        makeScale3x3(1/this._camera.scale()),
+        makeTranslation3x3(this._carouselCoords[0], this._carouselCoords[1]),
+        world
+    );
+
     this._fanPainter.render(world);
 
     // Render the carousel if requested.
@@ -425,8 +431,8 @@ parsegraph_Carousel.prototype.render = function(world)
             matrixMultiply3x3(
                 makeScale3x3(carouselData[3]),
                 matrixMultiply3x3(makeTranslation3x3(
-                    carouselData[1] + this._carouselCoords[0],
-                    carouselData[2] + this._carouselCoords[1]
+                    carouselData[1],
+                    carouselData[2]
                 ), world)
             )
         );
