@@ -133,6 +133,7 @@ function parsegraph_initialize(mathMode) {
     );
 
     // Font
+    parsegraph_FONT_SIZE = 72;
     parsegraph_UPSCALED_FONT_SIZE = 72;
     parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
     parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
@@ -141,11 +142,6 @@ function parsegraph_initialize(mathMode) {
      * The scale at which shrunk nodes are shrunk.
      */
     parsegraph_SHRINK_SCALE = .85;
-
-    /**
-     * Base font size.
-     */
-    parsegraph_FONT_SIZE = 72;
 
     /**
      * The thickness (diameter) of the line.
