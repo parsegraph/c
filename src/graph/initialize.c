@@ -37,6 +37,10 @@ float parsegraph_EXTENT_BACKGROUND_COLOR[4];
 float parsegraph_BUD_LEAF_SEPARATION;
 int parsegraph_LINE_THICKNESS;
 
+int parsegraph_LAYOUT_ORDER_MAX;
+int parsegraph_VERTICAL_ORDER[7];
+int parsegraph_HORIZONTAL_ORDER[7];
+
 struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool)
 {
     const char* parsegraph_DEFAULT_FONT_NAME = "sans-serif";
@@ -64,19 +68,58 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
 
+    // How long painting is done, and optionally, how fast idle loops will render.
+    parsegraph_INTERVAL = 10;
+
+    // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
+    parsegraph_GOVERNOR = 1;
+
+    // Where the idle loop is called multiple times per frame if time remains.
+    parsegraph_BURST_IDLE = 1;
+
     // Whether Node's forward and backward are switched.
     parsegraph_RIGHT_TO_LEFT = 0;
 
+    // How many milliseconds to commit a layout if an input event is detected.
+    parsegraph_INPUT_LAYOUT_TIME = 500;
+
+    parsegraph_IDLE_MARGIN = 0;
+
+    parsegraph_LAYOUT_ORDER_MAX = 5;
+
+    parsegraph_HORIZONTAL_ORDER[0] = parsegraph_BACKWARD;
+    parsegraph_HORIZONTAL_ORDER[1] = parsegraph_FORWARD;
+    parsegraph_HORIZONTAL_ORDER[2] = parsegraph_DOWNWARD;
+    parsegraph_HORIZONTAL_ORDER[3] = parsegraph_UPWARD;
+    parsegraph_HORIZONTAL_ORDER[4] = parsegraph_INWARD;
+    parsegraph_HORIZONTAL_ORDER[5] = parsegraph_OUTWARD;
+    parsegraph_HORIZONTAL_ORDER[6] = parsegraph_NULL_NODE_DIRECTION;
+
+    parsegraph_VERTICAL_ORDER[0] = parsegraph_DOWNWARD;
+    parsegraph_VERTICAL_ORDER[1] = parsegraph_UPWARD;
+    parsegraph_VERTICAL_ORDER[2] = parsegraph_BACKWARD;
+    parsegraph_VERTICAL_ORDER[3] = parsegraph_FORWARD;
+    parsegraph_VERTICAL_ORDER[4] = parsegraph_INWARD;
+    parsegraph_VERTICAL_ORDER[5] = parsegraph_OUTWARD;
+    parsegraph_VERTICAL_ORDER[6] = parsegraph_NULL_NODE_DIRECTION;
+
+    // Optimization hints.
+    parsegraph_FIT_LOOSE = false;
+    parsegraph_CREASE = true;
+
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
-    /**
-     * Base font size.
-     */
-    parsegraph_FONT_SIZE = 60;
+    // Background
+    parsegraph_Color_SetRGBA(parsegraph_BACKGROUND_COLOR,
+        0, 47.0/255.0, 57.0/255.0, 1
+        //256.0/255.0, 1, 1, 1
+        //45.0/255.0, 84.0/255.0, 127.0/255.0, 1
+    );
 
     // Font
-    parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_SIZE*2;
-    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE;
+    parsegraph_FONT_SIZE = 72;
+    parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_SIZE;
+    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
     parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
 
     /**
@@ -103,7 +146,7 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 
     // Configures graphs to appear grid-like; I call it 'math-mode'.
     if(mathMode) {
-        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*30;
+        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*40;
         parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
         parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
         parsegraph_VERTICAL_SEPARATION_PADDING = 2;
@@ -137,7 +180,7 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_BUD_STYLE->horizontalSeparation = 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING;
 
     parsegraph_SLIDER_STYLE = apr_palloc(pool, sizeof(parsegraph_Style));
-    parsegraph_SLIDER_STYLE->minWidth = 2*parsegraph_BUD_RADIUS*24;
+    parsegraph_SLIDER_STYLE->minWidth = 2*parsegraph_BUD_RADIUS*64;
     parsegraph_SLIDER_STYLE->minHeight = 2*parsegraph_BUD_RADIUS*3;
     parsegraph_SLIDER_STYLE->horizontalPadding = parsegraph_BUD_RADIUS/2;
     parsegraph_SLIDER_STYLE->verticalPadding = parsegraph_BUD_RADIUS/2;
@@ -231,9 +274,9 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
         parsegraph_SLOT_STYLE->borderColor[3] = 1;
     }
 
-    parsegraph_Color_SetRGBA(parsegraph_EXTENT_BORDER_COLOR, 1, 1, 0, .2);
+    parsegraph_Color_SetRGBA(parsegraph_EXTENT_BORDER_COLOR, 1, 1, 0, .1);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;
-    parsegraph_Color_SetRGBA(parsegraph_EXTENT_BACKGROUND_COLOR, 1, 0, 0, .1);
+    parsegraph_Color_SetRGBA(parsegraph_EXTENT_BACKGROUND_COLOR, 1, 0, 0, .5);
 
     parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;

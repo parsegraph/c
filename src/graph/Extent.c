@@ -16,22 +16,33 @@ struct parsegraph_Extent* parsegraph_Extent_new(apr_pool_t* pool)
     else {
         extent = malloc(sizeof(*extent));
     }
-    extent->start = 0;
     extent->pool = pool;
     extent->numBounds = 0;
-    extent->capacity = 0;
     extent->bounds = 0;
+    extent->capacity = 0;
+
+    extent->start = 0;
+
+    extent->_offset = 0;
+    extent->_hasBoundingValues = 0;
+    extent->_totalLength = 0;
+    extent->_minSize = 0;
+    extent->_maxSize = 0;
+
     return extent;
 }
 
-/**
- * Iterates over the extent, calling the given function for each
- * bound.
- *
- * Example:
- * extent.forEach(function(length, size, i) {}, this);
- */
-void parsegraph_Extent_forEach(struct parsegraph_Extent* extent, void(*func)(void*, float, float, int), void* thisArg)
+void parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset)
+{
+    extent->_offset = offset;
+}
+
+float parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset)
+{
+    extent->_offset = offset;
+}
+
+void parsegraph_Extent_forEach(parsegraph_Extent* extent, void(*func)(void*, float, float, int), void* thisArg)
 {
     if(!thisArg) {
         thisArg = extent;
@@ -46,18 +57,19 @@ void parsegraph_Extent_forEach(struct parsegraph_Extent* extent, void(*func)(voi
     }
 };
 
-struct parsegraph_Extent* parsegraph_Extent_clone(struct parsegraph_Extent* orig)
+parsegraph_Extent* parsegraph_Extent_clone(parsegraph_Extent* orig)
 {
-    struct parsegraph_Extent* clone;
+    parsegraph_Extent* clone;
     if(orig->pool) {
         clone = apr_pcalloc(orig->pool, sizeof(*clone));
     }
     else {
         clone = malloc(sizeof(*clone));
     }
+    clone->_offset = orig->_offset;
+    clone->numBounds = parsegraph_Extent_numBounds(orig);
     clone->start = orig->start;
     clone->pool = orig->pool;
-    clone->numBounds = parsegraph_Extent_numBounds(orig);
     clone->capacity = orig->capacity;
     //parsegraph_log("Upgrading extent capacity to %d bounds\n", orig->capacity);
     if(clone->pool) {
@@ -69,10 +81,16 @@ struct parsegraph_Extent* parsegraph_Extent_clone(struct parsegraph_Extent* orig
     if(orig->bounds) {
         memcpy(clone->bounds, orig->bounds, sizeof(struct parsegraph_ExtentBound) * parsegraph_Extent_numBounds(clone));
     }
+    clone->_hasBoundingValues = orig->_hasBoundingValues;
+    if(orig->_hasBoundingValues) {
+        clone->_minSize = orig->_minSize;
+        clone->_maxSize = orig->_maxSize;
+        clone->_totalLength = orig->_totalLength;
+    }
     return clone;
 }
 
-void parsegraph_Extent_clear(struct parsegraph_Extent* extent)
+void parsegraph_Extent_clear(parsegraph_Extent* extent)
 {
     extent->start = 0;
     extent->numBounds = 0;
@@ -83,26 +101,57 @@ unsigned int parsegraph_Extent_numBounds(parsegraph_Extent* extent)
     return extent->numBounds;
 }
 
-int parsegraph_Extent_hasBounds(struct parsegraph_Extent* extent)
+int parsegraph_Extent_hasBounds(parsegraph_Extent* extent)
 {
     return parsegraph_Extent_numBounds(extent) > 0;
 }
 
-int parsegraph_Extent_boundCapacity(struct parsegraph_Extent* extent)
+float parsegraph_Extent_boundLengthAt(parsegraph_Extent* extent, unsigned int index)
 {
-    return extent->capacity;
+    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].length : NAN;
 }
 
-int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int capacity)
+float parsegraph_Extent_boundSizeAt(parsegraph_Extent* extent, unsigned int index)
+{
+    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].size : NAN;
+}
+
+void parsegraph_Extent_invalidateBoundingValues(parsegraph_Extent* extent)
+{
+    extent->_hasBoundingValues = 0;
+    extent->_minSize = 0;
+    extent->_maxSize = 0;
+    extent->_totalLength = 0;
+}
+
+void parsegraph_Extent_setBoundLengthAt(parsegraph_Extent* extent, unsigned int index, float length)
+{
+    if(extent->capacity == 0) {
+        parsegraph_die("Cannot set a bound length of an empty Extent.");
+    }
+    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (length=%f)\n", extent->start, index, extent->capacity, length);
+    extent->bounds[(extent->start + index) % extent->capacity].length = length;
+}
+
+void parsegraph_Extent_setBoundSizeAt(parsegraph_Extent* extent, unsigned int index, float size)
+{
+    if(extent->capacity == 0) {
+        parsegraph_die("Cannot set a bound length of an empty Extent.");
+    }
+    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (size=%f)\n", extent->start, index, extent->capacity, size);
+    extent->bounds[(extent->start + index) % extent->capacity].size = size;
+}
+
+int parsegraph_Extent_realloc(parsegraph_Extent* extent, unsigned int capacity)
 {
     if(capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
-        capacity  = parsegraph_DEFAULT_EXTENT_BOUNDS;
+        capacity = parsegraph_DEFAULT_EXTENT_BOUNDS;
     }
-    struct parsegraph_ExtentBound* oldBounds = extent->bounds;
+    parsegraph_ExtentBound* oldBounds = extent->bounds;
     unsigned int oldCap = extent->capacity;
     if(oldCap >= capacity) {
         // TODO This could shrink.
-        return -1;
+        parsegraph_die("Cannot shrink Extent capacity");
     }
     unsigned int oldNumBounds = extent->numBounds;
     //parsegraph_log("Extent realloc from %d to %d\n", oldCap, capacity);
@@ -116,7 +165,7 @@ int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int cap
         extent->bounds = malloc(sizeof(struct parsegraph_ExtentBound) * capacity);
     }
     if(!extent->bounds) {
-        return -1;
+        parsegraph_die("Failed to allocate extent bounds");
     }
 
     if(oldBounds) {
@@ -149,7 +198,7 @@ int parsegraph_Extent_realloc(struct parsegraph_Extent* extent, unsigned int cap
     return 0;
 }
 
-int parsegraph_Extent_prependLS(struct parsegraph_Extent* extent, float length, float size)
+int parsegraph_Extent_prependLS(parsegraph_Extent* extent, float length, float size)
 {
     if(length == 0) {
         // Drop empty lengths.
@@ -157,15 +206,16 @@ int parsegraph_Extent_prependLS(struct parsegraph_Extent* extent, float length, 
     }
     // Do not allow negative length values.
     if(length < 0) {
-        //fprintf(stderr, "Non-positive bound lengths are not allowed, but %f was given anyway.", length);
-        return -1;
+        parsegraph_die("Non-positive bound lengths are not allowed, but %f was given anyway.", length);
+    }
+    if(isnan(length)) {
+        parsegraph_die("Length must not be NaN");
     }
 
     if(parsegraph_Extent_numBounds(extent) > 0) {
         float frontSize = parsegraph_Extent_boundSizeAt(extent, 0);
-        if(
-            (isnan(frontSize) && isnan(size)) || (frontSize == size)
-        ) {
+        if((isnan(frontSize) && isnan(size)) || (frontSize == size)) {
+            // Extent the first bound.
             parsegraph_Extent_setBoundLengthAt(extent, 0,
                 parsegraph_Extent_boundLengthAt(extent, 0) + length
             );
@@ -196,12 +246,99 @@ int parsegraph_Extent_prependLS(struct parsegraph_Extent* extent, float length, 
     return 0;
 }
 
-float parsegraph_Extent_sizeAt(struct parsegraph_Extent* extent, float offset)
+int parsegraph_Extent_boundCapacity(parsegraph_Extent* extent)
+{
+    return extent->capacity;
+}
+
+int parsegraph_Extent_appendLS(parsegraph_Extent* extent, float length, float size)
+{
+    if(isnan(length)) {
+        parsegraph_die("Length must not be NaN");
+    }
+    if(length == 0) {
+        // Drop empty lengths.
+        //parsegraph_log("Empty length given\n");
+        return -1;
+    }
+    if(length < 0) {
+        parsegraph_die("Non-positive bound lengths are not allowed, but %f was given anyway.\n", length);
+    }
+
+    if(parsegraph_Extent_numBounds(extent) > 0) {
+        float lastSize = parsegraph_Extent_boundSizeAt(extent, parsegraph_Extent_numBounds(extent) - 1);
+        if((isnan(lastSize) && isnan(size)) || (lastSize == size)) {
+            //parsegraph_log("Extended bound length\n");
+            parsegraph_Extent_setBoundLengthAt(extent,
+                parsegraph_Extent_numBounds(extent) - 1,
+                parsegraph_Extent_boundLengthAt(extent, parsegraph_Extent_numBounds(extent) - 1) + length
+            );
+            return 0;
+        }
+    }
+
+    if(parsegraph_Extent_boundCapacity(extent) == parsegraph_Extent_numBounds(extent)) {
+        // Completely full, so expand.
+        unsigned int newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
+        if(extent->capacity > 0) {
+            newCap = 2 * extent->capacity;
+        }
+        parsegraph_Extent_realloc(extent, newCap);
+    }
+
+    //parsegraph_log("Appending bound\n");
+    ++(extent->numBounds);
+    parsegraph_Extent_setBoundLengthAt(extent, parsegraph_Extent_numBounds(extent)- 1, length);
+    parsegraph_Extent_setBoundSizeAt(extent, parsegraph_Extent_numBounds(extent)- 1, size);
+    return 0;
+}
+
+int parsegraph_Extent_prependSL(parsegraph_Extent* extent, float size, float length)
+{
+    return parsegraph_Extent_prependLS(extent, length, size);
+}
+
+int parsegraph_Extent_appendSL(parsegraph_Extent* extent, float size, float length)
+{
+    return parsegraph_Extent_appendLS(extent, length, size);
+}
+
+void parsegraph_Extent_adjustSize(parsegraph_Extent* extent, float adjustment)
+{
+    // Adjust the size of each bound.
+    for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
+        float size = parsegraph_Extent_boundSizeAt(extent, i);
+        // Ignore empty sizes.
+        if(!isnan(size)) {
+            parsegraph_Extent_setBoundSizeAt(extent, i, size + adjustment);
+        }
+    }
+}
+
+void parsegraph_Extent_simplify(parsegraph_Extent* extent)
+{
+    float totalLength = 0;
+    float maxSize = NAN;
+    for(int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
+        totalLength += parsegraph_Extent_boundLengthAt(extent, i);
+
+        float size = parsegraph_Extent_boundSizeAt(extent, i);
+        if(isnan(maxSize)) {
+            maxSize = size;
+        }
+        else if(!isnan(size)) {
+            maxSize = fmaxf(maxSize, size);
+        }
+    }
+    parsegraph_Extent_clear(extent);
+    parsegraph_Extent_appendLS(extent, totalLength, maxSize);
+}
+
+float parsegraph_Extent_sizeAt(parsegraph_Extent* extent, float offset)
 {
     // Do not allow negative offsets.
     if(offset < 0) {
-        //fprintf(stderr, "Offset is negative.");
-        return NAN;
+        parsegraph_die("Offset is negative.");
     }
 
     // Determine the bound at the given offset.
@@ -223,77 +360,7 @@ float parsegraph_Extent_sizeAt(struct parsegraph_Extent* extent, float offset)
     return parsegraph_Extent_boundSizeAt(extent, i);
 }
 
-int parsegraph_Extent_appendLS(struct parsegraph_Extent* extent, float length, float size)
-{
-    if(length == 0) {
-        // Drop empty lengths.
-        parsegraph_log("Empty length given\n");
-        return -1;
-    }
-    if(length < 0) {
-        parsegraph_log("Non-positive bound lengths are not allowed, but %f was given anyway.\n", length);
-        return -1;
-    }
-
-    if(parsegraph_Extent_numBounds(extent) > 0) {
-        float lastSize = parsegraph_Extent_boundSizeAt(extent, parsegraph_Extent_numBounds(extent) - 1);
-        if(
-            (NAN == lastSize && NAN == size) || (lastSize == size)
-        ) {
-            parsegraph_log("Extended bound length\n");
-            parsegraph_Extent_setBoundLengthAt(extent,
-                parsegraph_Extent_numBounds(extent) - 1,
-                parsegraph_Extent_boundLengthAt(extent, parsegraph_Extent_numBounds(extent) - 1) + length
-            );
-            return 0;
-        }
-    }
-
-    if(parsegraph_Extent_boundCapacity(extent) == parsegraph_Extent_numBounds(extent)) {
-        // Completely full, so expand.
-        unsigned int newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
-        if(extent->capacity > 0) {
-            newCap = 2 * extent->capacity;
-        }
-        parsegraph_Extent_realloc(extent, newCap);
-    }
-
-    parsegraph_log("Appending bound\n");
-    ++(extent->numBounds);
-    parsegraph_Extent_setBoundLengthAt(extent, parsegraph_Extent_numBounds(extent)- 1, length);
-    parsegraph_Extent_setBoundSizeAt(extent, parsegraph_Extent_numBounds(extent)- 1, size);
-    return 0;
-}
-
-float parsegraph_Extent_boundLengthAt(struct parsegraph_Extent* extent, unsigned int index)
-{
-    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].length : NAN;
-}
-
-float parsegraph_Extent_boundSizeAt(struct parsegraph_Extent* extent, unsigned int index)
-{
-    return extent->capacity > 0 ? extent->bounds[(extent->start + index) % extent->capacity].size : NAN;
-}
-
-void parsegraph_Extent_setBoundLengthAt(struct parsegraph_Extent* extent, unsigned int index, float length)
-{
-    if(extent->capacity == 0) {
-        parsegraph_die("Cannot set a bound length of an empty Extent.");
-    }
-    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (length=%f)\n", extent->start, index, extent->capacity, length);
-    extent->bounds[(extent->start + index) % extent->capacity].length = length;
-}
-
-void parsegraph_Extent_setBoundSizeAt(struct parsegraph_Extent* extent, unsigned int index, float size)
-{
-    if(extent->capacity == 0) {
-        parsegraph_die("Cannot set a bound length of an empty Extent.");
-    }
-    //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (size=%f)\n", extent->start, index, extent->capacity, size);
-    extent->bounds[(extent->start + index) % extent->capacity].size = size;
-}
-
-void parsegraph_Extent_combineBound(struct parsegraph_Extent* extent,
+void parsegraph_Extent_combineBound(parsegraph_Extent* extent,
     float newBoundStart,
     float newBoundLength,
     float newBoundSize)
@@ -303,18 +370,14 @@ void parsegraph_Extent_combineBound(struct parsegraph_Extent* extent,
     parsegraph_Extent_appendLS(added, newBoundLength, newBoundSize);
 
     // Copy the combined result into this extent.
-    //fprintf(stderr, "Calling combinedExtent. %f, %d", NAN, (int)NAN);
+    //parsegraph_log("Calling combinedExtent. %f, %d", NAN, (int)NAN);
     struct parsegraph_Extent* combined = parsegraph_Extent_combinedExtent(extent, added, newBoundStart, NAN, NAN);
     parsegraph_Extent_copyFrom(extent, combined);
     parsegraph_Extent_destroy(combined);
-
     parsegraph_Extent_destroy(added);
 }
 
-/**
- * Moves the given extent into this extent.
- */
-void parsegraph_Extent_copyFrom(struct parsegraph_Extent* extent, struct parsegraph_Extent* from)
+void parsegraph_Extent_copyFrom(parsegraph_Extent* extent, parsegraph_Extent* from)
 {
     if(!extent->pool) {
         free(extent->bounds);
@@ -324,29 +387,58 @@ void parsegraph_Extent_copyFrom(struct parsegraph_Extent* extent, struct parsegr
     extent->capacity = from->capacity;
     extent->bounds = from->bounds;
     extent->numBounds = from->numBounds;
+    if(from->_hasBoundingValues) {
+        extent->_hasBoundingValues = 1;
+        extent->_minSize = from->_minSize;
+        extent->_maxSize = from->_maxSize;
+        extent->_totalLength = from->_totalLength;
+    }
+    else {
+        parsegraph_Extent_invalidateBoundingValues(extent);
+    }
 
     from->bounds = 0;
     from->start = 0;
     from->numBounds = 0;
     from->capacity = 0;
-};
+}
 
-void parsegraph_Extent_combineExtent(struct parsegraph_Extent* extent,
-    struct parsegraph_Extent* given,
+void parsegraph_Extent_combineExtentAndSimplify(parsegraph_Extent* extent,
+    parsegraph_Extent* given,
+    float lengthAdjustment,
+    float sizeAdjustment,
+    float scale)
+{
+    float givenLength, givenMaxSize, thisLength, thisMaxSize;
+    parsegraph_Extent_boundingValues(given, &givenLength, 0, &givenMaxSize);
+    parsegraph_Extent_boundingValues(extent, &thisLength, 0, &thisMaxSize);
+    parsegraph_Extent_clear(extent);
+    float combinedLength;
+    if(lengthAdjustment < 0) {
+        combinedLength = parsegraph_max(thisLength-lengthAdjustment, givenLength*scale);
+    }
+    else {
+        combinedLength = parsegraph_max(thisLength, givenLength*scale+lengthAdjustment);
+    }
+    parsegraph_Extent_appendLS(extent, combinedLength, parsegraph_max(thisMaxSize, givenMaxSize*scale+sizeAdjustment);
+}
+
+void parsegraph_Extent_combineExtent(parsegraph_Extent* extent,
+    parsegraph_Extent* given,
     float lengthAdjustment,
     float sizeAdjustment,
     float scale)
 {
     // Combine the extent into this one, creating a new extent in the process.
-    struct parsegraph_Extent* result = parsegraph_Extent_combinedExtent(extent, given, lengthAdjustment, sizeAdjustment, scale);
+    parsegraph_Extent* result = parsegraph_Extent_combinedExtent(extent, given, lengthAdjustment, sizeAdjustment, scale);
 
     // Copy the combined result into this extent.
     parsegraph_Extent_copyFrom(extent, result);
 }
 
-struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Extent* extent, struct parsegraph_Extent* given, float lengthAdjustment, float sizeAdjustment, float scale)
+parsegraph_Extent* parsegraph_Extent_combinedExtent(parsegraph_Extent* extent, parsegraph_Extent* given, float lengthAdjustment, float sizeAdjustment, float scale)
 {
-    parsegraph_logEntercf("Extent combines", "Combining extent");
+    //parsegraph_logEntercf("Extent combines", "Combining extent");
     if(isnan(lengthAdjustment)) {
         lengthAdjustment = 0;
     }
@@ -357,7 +449,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         scale = 1.0;
     }
     if(lengthAdjustment < 0) {
-        struct parsegraph_Extent* result = parsegraph_Extent_combinedExtent(given,
+        parsegraph_Extent* result = parsegraph_Extent_combinedExtent(given,
             extent,
             -lengthAdjustment/scale,
             -sizeAdjustment/scale,
@@ -380,7 +472,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             scale
         );
         parsegraph_Extent_destroy(givenCopy);
-        parsegraph_logLeave();
+        //parsegraph_logLeave();
         return result;
     }
 
@@ -390,7 +482,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     float givenPosition = 0;
 
     // Create the aggregate result.
-    struct parsegraph_Extent* result = parsegraph_Extent_new(extent->pool);
+    parsegraph_Extent* result = parsegraph_Extent_new(extent->pool);
 
     // Iterate over each bound.
     while(givenBound != parsegraph_Extent_numBounds(given) && thisBound != parsegraph_Extent_numBounds(extent)) {
@@ -424,9 +516,9 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             givenReach = givenPosition + scale * parsegraph_Extent_boundLengthAt(given, givenBound);
         }
 
-        parsegraph_log("Iterating over each bound.\n");
-        parsegraph_log("This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
-        parsegraph_log("Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
+        //parsegraph_log("Iterating over each bound.\n");
+        //parsegraph_log("This reach: %f, size: %f, pos: %f\n", thisReach, thisSize, thisPosition);
+        //parsegraph_log("Given reach: %f, size: %f, pos: %f\n", givenReach, givenSize, givenPosition);
 
         parsegraph_Extent_appendLS(result,
             fminf(thisReach, givenReach) - fmaxf(thisPosition, givenPosition),
@@ -436,7 +528,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         if(thisReach == givenReach) {
             // This bound ends at the same position as given's
             // bound, so increment both iterators.
-            parsegraph_log("Incrementing both iterators");
+            //parsegraph_log("Incrementing both iterators");
             thisPosition += parsegraph_Extent_boundLengthAt(extent, thisBound);
             ++thisBound;
             givenPosition += scale * parsegraph_Extent_boundLengthAt(given, givenBound);
@@ -445,7 +537,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         else if(thisReach < givenReach) {
             // This bound ends before given's bound, so increment
             // this bound's iterator.
-            parsegraph_log("Incrementing this bound's iterators");
+            //parsegraph_log("Incrementing this bound's iterators");
             thisPosition += parsegraph_Extent_boundLengthAt(extent, thisBound);
             ++thisBound;
         }
@@ -453,7 +545,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
             // Assert: thisReach() > givenReach()
             // Given's bound ends before this bound, so increment
             // given's iterator.
-            parsegraph_log("Incrementing given bound's iterators");
+            //parsegraph_log("Incrementing given bound's iterators");
             givenPosition += scale * parsegraph_Extent_boundLengthAt(given, givenBound);
             ++givenBound;
         }
@@ -478,7 +570,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     if(givenBound != parsegraph_Extent_numBounds(given)) {
         // Finish off given last overlapping bound to get completely
         // in sync with givens.
-        parsegraph_log("Given bound still has reach\n");
+        //parsegraph_log("Given bound still has reach\n");
         parsegraph_Extent_appendLS(result,
             givenReach - thisReach,
             scale * parsegraph_Extent_boundSizeAt(given, givenBound) + sizeAdjustment
@@ -498,7 +590,7 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
     else if(thisBound != parsegraph_Extent_numBounds(extent)) {
         // Finish off this extent's last overlapping bound to get completely
         // in sync with given's iterator.
-        parsegraph_log("This bound still has reach\n");
+        //parsegraph_log("This bound still has reach\n");
         parsegraph_Extent_appendLS(result,
             thisReach - givenReach,
             parsegraph_Extent_boundSizeAt(extent, thisBound)
@@ -516,13 +608,13 @@ struct parsegraph_Extent* parsegraph_Extent_combinedExtent(struct parsegraph_Ext
         }
     }
 
-    parsegraph_Extent_dump(result, "Result");
-    parsegraph_logLeave();
+    //parsegraph_Extent_dump(result, "Result");
+    //parsegraph_logLeave();
 
     return result;
 }
 
-void parsegraph_Extent_scale(struct parsegraph_Extent* extent, float factor)
+void parsegraph_Extent_scale(parsegraph_Extent* extent, float factor)
 {
     for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
         float length = parsegraph_Extent_boundLengthAt(extent, i);
@@ -534,71 +626,7 @@ void parsegraph_Extent_scale(struct parsegraph_Extent* extent, float factor)
     }
 };
 
-void parsegraph_Extent_destroy(struct parsegraph_Extent* extent)
-{
-    parsegraph_Extent_clear(extent);
-    if(!extent->pool) {
-        free(extent->bounds);
-        free(extent);
-    }
-}
-
-void parsegraph_Extent_dump(struct parsegraph_Extent* extent, const char* title, ...)
-{
-    if(title) {
-        va_list ap;
-        va_start(ap, title);
-        char buf[1024];
-        vsnprintf(buf, 1024, title, ap);
-        va_end(ap);
-        parsegraph_logEnterf(buf);
-    }
-    float offset = 0;
-    for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
-        parsegraph_log("%f: [length=%f, size=%f]\n",
-            offset,
-            parsegraph_Extent_boundLengthAt(extent, i),
-            parsegraph_Extent_boundSizeAt(extent, i)
-        );
-        offset += parsegraph_Extent_boundLengthAt(extent, i);
-    }
-    if(title) {
-        parsegraph_logLeave();
-    }
-}
-
-void parsegraph_Extent_adjustSize(struct parsegraph_Extent* extent, float adjustment)
-{
-    // Adjust the size of each bound.
-    for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
-        float size = parsegraph_Extent_boundSizeAt(extent, i);
-        // Ignore empty sizes.
-        if(!isnan(size)) {
-            parsegraph_Extent_setBoundSizeAt(extent, i, size + adjustment);
-        }
-    }
-}
-
-void parsegraph_Extent_simplify(struct parsegraph_Extent* extent)
-{
-    float totalLength = 0;
-    float maxSize = NAN;
-    for(int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
-        totalLength += parsegraph_Extent_boundLengthAt(extent, i);
-
-        float size = parsegraph_Extent_boundSizeAt(extent, i);
-        if(isnan(maxSize)) {
-            maxSize = size;
-        }
-        else if(!isnan(size)) {
-            maxSize = fmaxf(maxSize, size);
-        }
-    }
-    parsegraph_Extent_clear(extent);
-    parsegraph_Extent_appendLS(extent, totalLength, maxSize);
-}
-
-float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
+float parsegraph_Extent_separation(parsegraph_Extent* extent,
     struct parsegraph_Extent* given,
     float positionAdjustment,
     int allowAxisOverlap,
@@ -617,7 +645,7 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
     if(isnan(givenScale)) {
         givenScale = 1.0;
     }
-    //fprintf(stderr, "Separation(positionAdjustment=%f)\n", positionAdjustment);
+    //parsegraph_log("Separation(positionAdjustment=%f)\n", positionAdjustment);
 
     unsigned int thisBound = 0;
     unsigned int givenBound = 0;
@@ -654,7 +682,7 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
         }
     }
     else {
-        // Positive positionAdjustment.
+        // Positive position adjustment.
         while(
             thisBound != parsegraph_Extent_numBounds(extent)
             && thisPosition + parsegraph_Extent_boundLengthAt(extent, thisBound) <= positionAdjustment
@@ -675,9 +703,9 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
     // While the iterators still have bounds in both extents.
     while(givenBound != parsegraph_Extent_numBounds(given) && thisBound != parsegraph_Extent_numBounds(extent)) {
         // Calculate the separation between these bounds.
-        //fprintf(stderr, "Separating\n");
-        //fprintf(stderr, "This bound size: %f\n", parsegraph_Extent_boundSizeAt(extent, thisBound));
-        //fprintf(stderr, "Given bound size: %f\n", givenScale * parsegraph_Extent_boundSizeAt(given, givenBound));
+        //parsegraph_log("Separating\n");
+        //parsegraph_log("This bound size: %f\n", parsegraph_Extent_boundSizeAt(extent, thisBound));
+        //parsegraph_log("Given bound size: %f\n", givenScale * parsegraph_Extent_boundSizeAt(given, givenBound));
         float thisSize = parsegraph_Extent_boundSizeAt(extent, thisBound);
         float givenSize = givenScale * parsegraph_Extent_boundSizeAt(given, givenBound);
         float boundSeparation;
@@ -702,7 +730,7 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
         }
         if(boundSeparation > extentSeparation) {
             extentSeparation = boundSeparation;
-            //fprintf(stderr, "Found new separation of %f.\n", extentSeparation);
+            //parsegraph_log("Found new separation of %f.\n", extentSeparation);
         }
 
         // Increment the iterators to the next testing point.
@@ -756,44 +784,44 @@ float parsegraph_Extent_separation(struct parsegraph_Extent* extent,
     return extentSeparation;
 }
 
-void parsegraph_Extent_boundingValues(struct parsegraph_Extent* extent, float* totalLength, float* minSize, float* maxSize)
+void parsegraph_Extent_boundingValues(parsegraph_Extent* extent, float* totalLength, float* minSize, float* maxSize)
 {
+    if(!extent->_hasBoundingValues) {
+        extent->_hasBoundingValues = 1;
+        extent->_totalLength = 0;
+        extent->_minSize = NAN;
+        extent->_maxSize = NAN;
+
+        for(unsigned int iter = 0; iter != parsegraph_Extent_numBounds(extent); ++iter) {
+            extent->_totalLength = extent->_totalLength + parsegraph_Extent_boundLengthAt(extent, iter);
+            float size = parsegraph_Extent_boundSizeAt(extent, iter);
+            if(isnan(extent->_minSize)) {
+                extent->_minSize = size;
+            }
+            else if(!isnan(size)) {
+                extent->_minSize = fminf(extent->_minSize, size);
+            }
+
+            if(isnan(extent->_maxSize)) {
+                extent->_maxSize = size;
+            }
+            else if(!isnan(size)) {
+                extent->_maxSize = fmaxf(extent->_maxSize, size);
+            }
+        }
+    }
     if(totalLength) {
-        *totalLength = 0;
+        *totalLength = extent->_totalLength;
     }
     if(minSize) {
-        *minSize = NAN;
+        *minSize = extent->_minSize;
     }
     if(maxSize) {
-        *maxSize = NAN;
-    }
-
-    for(unsigned int iter = 0; iter != parsegraph_Extent_numBounds(extent); ++iter) {
-        if(totalLength) {
-            *totalLength = (*totalLength + parsegraph_Extent_boundLengthAt(extent, iter));
-        }
-        float size = parsegraph_Extent_boundSizeAt(extent, iter);
-        if(minSize) {
-            if(isnan(*minSize)) {
-                *minSize = size;
-            }
-            else if(!isnan(size)) {
-                *minSize = fminf(*minSize, size);
-            }
-        }
-
-        if(maxSize) {
-            if(isnan(*maxSize)) {
-                *maxSize = size;
-            }
-            else if(!isnan(size)) {
-                *maxSize = fmaxf(*maxSize, size);
-            }
-        }
+        *maxSize = extent->_maxSize;
     }
 }
 
-int parsegraph_Extent_equals(struct parsegraph_Extent* extent, struct parsegraph_Extent* other)
+int parsegraph_Extent_equals(parsegraph_Extent* extent, struct parsegraph_Extent* other)
 {
     // Exit quickly if we are comparing with ourselves.
     if(extent == other) {
@@ -825,4 +853,37 @@ int parsegraph_Extent_equals(struct parsegraph_Extent* extent, struct parsegraph
         }
     }
     return 1;
+}
+
+void parsegraph_Extent_dump(parsegraph_Extent* extent, const char* title, ...)
+{
+    if(title) {
+        va_list ap;
+        va_start(ap, title);
+        char buf[1024];
+        vsnprintf(buf, 1024, title, ap);
+        va_end(ap);
+        parsegraph_logEnterf(buf);
+    }
+    float offset = 0;
+    for(unsigned int i = 0; i < parsegraph_Extent_numBounds(extent); ++i) {
+        parsegraph_log("%f: [length=%f, size=%f]\n",
+            offset,
+            parsegraph_Extent_boundLengthAt(extent, i),
+            parsegraph_Extent_boundSizeAt(extent, i)
+        );
+        offset += parsegraph_Extent_boundLengthAt(extent, i);
+    }
+    if(title) {
+        parsegraph_logLeave();
+    }
+}
+
+void parsegraph_Extent_destroy(parsegraph_Extent* extent)
+{
+    parsegraph_Extent_clear(extent);
+    if(!extent->pool) {
+        free(extent->bounds);
+        free(extent);
+    }
 }

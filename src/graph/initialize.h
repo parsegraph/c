@@ -45,6 +45,7 @@ extern float parsegraph_MAX_PRESS_RELEASE_DELAY;
 extern float parsegraph_BACKGROUND_COLOR[4];
 
 // Font
+extern float parsegraph_FONT_SIZE;
 extern float parsegraph_UPSCALED_FONT_SIZE;
 extern float parsegraph_RENDERED_FONT_SIZE;
 extern int parsegraph_WRAP_WIDTH;
@@ -53,11 +54,6 @@ extern int parsegraph_WRAP_WIDTH;
  * The scale at which shrunk nodes are shrunk.
  */
 extern float parsegraph_SHRINK_SCALE;
-
-/**
- * Base font size.
- */
-extern float parsegraph_FONT_SIZE;
 
 /**
  * The thickness (diameter) of the line.
@@ -97,5 +93,17 @@ extern float parsegraph_EXTENT_BORDER_ROUNDEDNESS;
 extern float parsegraph_EXTENT_BORDER_THICKNESS;
 
 extern int parsegraph_NATURAL_GROUP_SIZE;
+
+extern int parsegraph_INTERVAL;
+extern int parsegraph_GOVERNOR;
+extern int parsegraph_BURST_IDLE;
+extern int parsegraph_RIGHT_TO_LEFT;
+extern int parsegraph_INPUT_LAYOUT_TIME;
+extern int parsegraph_IDLE_MARGIN;
+extern int parsegraph_FIT_LOOSE;
+extern int parsegraph_CREASE;
+extern int* parsegraph_VERTICAL_ORDER;
+extern int* parsegraph_HORIZONTAL_ORDER;
+extern int parsegraph_LAYOUT_ORDER_MAX;
 
 #endif // parsegraph_initialize_INCLUDED
