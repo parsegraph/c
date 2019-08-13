@@ -13,24 +13,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     SGA = sga;
     sga.start(document.body, function(app, userLogin, node) {
         var surface = app.surface();
-        var audio = surface.audio();
-        node.setNodeFit(parsegraph_NODE_FIT_EXACT);
-        var oscillatorWidget = new parsegraph_SingleOscillatorWidget(app, audio.destination);
-        var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-        myList.spawnNode(parsegraph_FORWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_FORWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_BACKWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_BACKWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_UPWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_BACKWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_UPWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_BACKWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_UPWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_BACKWARD, parsegraph_BUD)
-        .spawnNode(parsegraph_UPWARD, parsegraph_BUD)
-        .connectNode(parsegraph_BACKWARD, oscillatorWidget.node());
+        node.connectNode(parsegraph_DOWNWARD, new parsegraph_SingleOscillatorWidget(app).node());
     });
 });
 </script>
