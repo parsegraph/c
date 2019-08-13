@@ -5,20 +5,25 @@ parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
 function parsegraph_Extent(copy)
 {
     if(copy !== undefined && copy._bounds) {
+        this._offset = copy._offset;
         this._numBounds = copy._numBounds;
         this._bounds = new Float32Array(copy._bounds);
+        this._start = copy._start;
+        if(copy._minSize !== null) {
+            this._minSize = copy._minSize;
+            this._maxSize = copy._maxSize;
+            this._totalLength = copy._totalLength;
+        }
     }
     else {
+        this._start = 0;
+        this._offset = 0;
         this._numBounds = 0;
         this._bounds = null;
+        this._minSize = null;
+        this._maxSize = null;
+        this._totalLength = null;
     }
-
-    this._start = 0;
-
-    this._offset = 0;
-    this._totalLength = null;
-    this._minSize = null;
-    this._maxSize = null;
 }
 
 parsegraph_Extent.prototype.setOffset = function(offset) {
