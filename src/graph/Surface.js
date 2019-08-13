@@ -52,7 +52,7 @@ parsegraph_Surface.prototype.setAudio = function(audio)
     this._audio = audio;
 };
 
-parsegraph_Surface.prototype.audio = function()
+parsegraph_Surface.prototype.startAudio = function()
 {
     if(!this._audio) {
         try {
@@ -65,6 +65,11 @@ parsegraph_Surface.prototype.audio = function()
             throw new Error("AudioContext is not supported");
         }
     }
+    return this.audio();
+};
+
+parsegraph_Surface.prototype.audio = function()
+{
     return this._audio;
 };
 

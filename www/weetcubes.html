@@ -57,10 +57,12 @@ document.addEventListener("click", function(event) {
 if(inited) {
     return;
 }
+inited = true;
 
 parsegraph_initialize();
 
 var surface = new parsegraph_Surface();
+surface.startAudio();
 document.body.appendChild(surface.container());
 
 var widget = new alpha_WeetCubeWidget(surface);
