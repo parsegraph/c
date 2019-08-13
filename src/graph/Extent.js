@@ -35,6 +35,9 @@ parsegraph_Extent.prototype.offset = function() {
 };
 
 parsegraph_Extent.prototype.forEach = function(func, thisArg) {
+    if(arguments.length === 1 || thisArg === undefined) {
+        thisArg = this;
+    }
     for(var i = 0; i < this._numBounds; ++i) {
         func.call(
             thisArg,
