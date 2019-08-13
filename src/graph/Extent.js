@@ -145,6 +145,15 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
         throw new Error(str);
     }
 
+    if(this.numBounds() > 0) {
+        var frontSize = this.boundSizeAt(0);
+        if((Number.isNaN(frontSize) && Number.isNaN(size)) || (frontSize === size)) {
+            // Extent the first bound.
+            this.setBoundLengthAt(0, this.boundLengthAt(0) + length);
+            return;
+        }
+    }
+
     if(this.boundCapacity() == this.numBounds()) {
         // Completely full, so expand.
         var newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
