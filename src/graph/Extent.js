@@ -92,7 +92,7 @@ parsegraph_Extent.prototype.setBoundSizeAt = function(index, size) {
 parsegraph_Extent.prototype.realloc = function(capacity)
 {
     if(capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
-        capacity  = parsegraph_DEFAULT_EXTENT_BOUNDS;
+        capacity = parsegraph_DEFAULT_EXTENT_BOUNDS;
     }
     var oldBounds = this._bounds;
     var oldCap = this.boundCapacity();
