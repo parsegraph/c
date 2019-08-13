@@ -39,7 +39,6 @@ nobase_include_HEADERS = \
 	graph/GlyphAtlas.h \
 	graph/NodeType.h \
 	graph/NodePainter.h \
-	graph/PaintGroup.h \
 	graph/NodeList.h \
 	graph/Rect.h \
 	graph/Size.h \
@@ -99,7 +98,6 @@ parsegraph_common_SOURCES = \
 	graph/NodeType.c \
 	graph/Node.c \
 	graph/NodeList.c \
-	graph/PaintGroup.c \
 	graph/CameraBox.c \
 	graph/Carousel.c \
 	graph/Rect.c \
