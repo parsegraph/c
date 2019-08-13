@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     sga.setCameraName("parsegraph_calendar_camera");
     SGA = sga;
     sga.start(document.body, function(app, userLogin, loginNode) {
-        //node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
         var cal = new parsegraph_CalendarWidget(app.glyphAtlas());
         return cal.createCalendar(new Date(), 1, 40);
     });
