@@ -702,4 +702,3 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         gl.disableVertexAttribArray(this.a_aspectRatio);
     }
 };
-
