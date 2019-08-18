@@ -499,11 +499,11 @@ void parsegraph_BlockPainter_flush(parsegraph_BlockPainter* painter)
     }
     if(painter->_dataBufferVertexIndex >= painter->_dataBufferNumVertices) {
         parsegraph_log("Writing %d vertices to offset %d of %d vertices", painter->_dataBufferNumVertices, painter->_blockBufferVertexIndex, painter->_blockBufferNumVertices);
-        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, painter->_dataBufferNumVertices, painter->_dataBuffer);
+        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, stride*painter->_dataBufferNumVertices, painter->_dataBuffer);
     }
     else {
         parsegraph_log("Partial flush (%d/%d from %d)", painter->_blockBufferVertexIndex, painter->_blockBufferNumVertices, painter->_dataBufferVertexIndex*stride/4);
-        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, painter->_dataBufferVertexIndex*stride/sizeof(float), painter->_dataBuffer);
+        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, stride*painter->_dataBufferVertexIndex, painter->_dataBuffer);
     }
     if(GL_NO_ERROR != glGetError()) {
         parsegraph_die("GL error while flushing block painter buffer\n");
