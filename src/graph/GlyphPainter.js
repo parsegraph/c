@@ -28,7 +28,7 @@ parsegraph_GlyphPainter_FragmentShader =
 "\n" +
 "void main() {\n" +
     //"gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
-    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).r;" +
+    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).a;" +
     "if(backgroundColor.a == 0.0) {" +
         "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
     "}" +
