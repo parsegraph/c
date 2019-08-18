@@ -629,7 +629,6 @@ void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* wor
         return;
     }
     int usingSimple = (painter->_maxSize * scale) < 5;
-    usingSimple = 1;
     parsegraph_log("BlockPainter %d %f %d %d\n", painter->_id, painter->_maxSize * scale, usingSimple, painter->_blockBufferVertexIndex);
 
     if(usingSimple) {
