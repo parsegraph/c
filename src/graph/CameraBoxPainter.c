@@ -11,7 +11,7 @@ parsegraph_CameraBoxPainter* parsegraph_CameraBoxPainter_new(parsegraph_Surface*
     apr_pool_t* pool = surface->pool;
     parsegraph_CameraBoxPainter* painter = apr_palloc(pool, sizeof(*painter));
     painter->_pool = pool;
-    painter->_blockPainter = parsegraph_BlockPainter_new(surface, shaders);
+    painter->_blockPainter = parsegraph_BlockPainter_new(pool, shaders);
     painter->_glyphPainter = parsegraph_GlyphPainter_new(pool, glyphAtlas, shaders);
 
     painter->_glyphAtlas = glyphAtlas;
@@ -63,8 +63,8 @@ void parsegraph_CameraBoxPainter_drawBox(parsegraph_CameraBoxPainter* painter, c
     parsegraph_Label_destroy(label);
 }
 
-void parsegraph_CameraBoxPainter_render(parsegraph_CameraBoxPainter* painter, float* world)
+void parsegraph_CameraBoxPainter_render(parsegraph_CameraBoxPainter* painter, float* world, float scale)
 {
-    parsegraph_BlockPainter_render(painter->_blockPainter, world);
-    parsegraph_GlyphPainter_render(painter->_glyphPainter, world, 1.0);
+    parsegraph_BlockPainter_render(painter->_blockPainter, world, scale);
+    parsegraph_GlyphPainter_render(painter->_glyphPainter, world, scale);
 }

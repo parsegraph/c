@@ -9,7 +9,7 @@ typedef struct parsegraph_Input parsegraph_Input;
 
 struct apr_pool_t;
 struct parsegraph_SurfacePainter {
-void(*painter)(void*, void*);
+void(*painter)(void*, void*, int);
 void* data;
 struct parsegraph_SurfacePainter* next;
 };
@@ -70,9 +70,9 @@ void parsegraph_Surface_runAnimationCallbacks(parsegraph_Surface* surface, float
 void parsegraph_Surface_destroy(parsegraph_Surface* surface);
 void parsegraph_Surface_setDisplaySize(parsegraph_Surface* surface, float w, float h);
 
-void parsegraph_Surface_addPainter(parsegraph_Surface* surface, void(*painter)(void*, void*), void* data);
+void parsegraph_Surface_addPainter(parsegraph_Surface* surface, void(*painter)(void*, void*, int), void* data);
 void parsegraph_Surface_addRenderer(parsegraph_Surface* surface, void(*renderer)(void*, void*), void* data);
-void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg);
+void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg, int timeout);
 void parsegraph_Surface_setBackground(parsegraph_Surface* surface, float* bg);
 float* parsegraph_Surface_backgroundColor(parsegraph_Surface* surface);
 int parsegraph_Surface_canProject(parsegraph_Surface* surface);

@@ -74,7 +74,7 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(name, rect, scale, mous
     return interp > 0;
 };
 
-parsegraph_CameraBoxPainter.prototype.render = function(world) {
-    this._blockPainter.render(world);
-    this._glyphPainter.render(world);
+parsegraph_CameraBoxPainter.prototype.render = function(world, scale) {
+    this._blockPainter.render(world, scale);
+    this._glyphPainter.render(world, scale);
 };

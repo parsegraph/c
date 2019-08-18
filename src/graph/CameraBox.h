@@ -44,7 +44,7 @@ void parsegraph_CameraBox_setCamera(parsegraph_CameraBox* cbox, UChar* name, int
 void parsegraph_CameraBox_removeCamera(parsegraph_CameraBox* cbox, UChar* name, int len);
 void parsegraph_CameraBox_destroy(parsegraph_CameraBox* cbox);
 void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox);
-void parsegraph_CameraBox_render(parsegraph_CameraBox* cbox, float* world);
+void parsegraph_CameraBox_render(parsegraph_CameraBox* cbox, float* world, float scale);
 void parsegraph_CameraBox_scheduleRepaint(parsegraph_CameraBox* cbox);
 apr_hash_t* parsegraph_CameraBox_shaders(parsegraph_CameraBox* cbox);
 

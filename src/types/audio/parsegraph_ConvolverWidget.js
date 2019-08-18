@@ -31,8 +31,8 @@ function parsegraph_ConvolverWidget(graph)
     this._reversed = false;
 
     var audio = graph.surface().audio();
-    this._convolver = audio.createConvolver();
-    this.refresh();
+    //this._convolver = audio.createConvolver();
+    //this.refresh();
 }
 
 parsegraph_ConvolverWidget.prototype.refresh = function()

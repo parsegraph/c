@@ -2,9 +2,9 @@
 #include "Color.h"
 #include "../die.h"
 #include "../timing.h"
-#include "PaintGroup.h"
 #include "initialize.h"
 #include <math.h>
+#include <stdlib.h>
 
 parsegraph_Carousel* parsegraph_Carousel_new(parsegraph_Camera* camera, float* backgroundColor)
 {
@@ -52,6 +52,7 @@ parsegraph_Carousel* parsegraph_Carousel_new(parsegraph_Camera* camera, float* b
 
 void parsegraph_Carousel_destroy(parsegraph_Carousel* carousel)
 {
+    parsegraph_Carousel_clearCarousel(carousel);
     if(carousel->_fanPainter) {
         parsegraph_FanPainter_destroy(carousel->_fanPainter);
     }
@@ -122,19 +123,26 @@ void parsegraph_Carousel_addToCarousel(parsegraph_Carousel* carousel, parsegraph
     cb->thisArg = thisArg;
     parsegraph_ArrayList_push(carousel->_carouselCallbacks, cb);
 
-    parsegraph_PaintGroup* pg = parsegraph_Node_localPaintGroup(node);
-    if(!pg) {
-        pg = parsegraph_PaintGroup_new(carousel->_camera->surface, node, 0, 0, 1);
-        parsegraph_Node_setPaintGroup(node, pg);
-        parsegraph_PaintGroup_unref(pg);
+    if(!parsegraph_Node_localPaintGroup(node)) {
+        parsegraph_Node_setPaintGroup(node, 1);
     }
-    parsegraph_ArrayList_push(carousel->_carouselPlots, node);
+
+    parsegraph_CarouselPlot* carouselPlot = malloc(sizeof(parsegraph_CarouselPlot));
+    carouselPlot->node = node;
+    carouselPlot->x = 0;
+    carouselPlot->y = 0;
+    carouselPlot->scale = 0;
+    parsegraph_ArrayList_push(carousel->_carouselPlots, carouselPlot);
     //parsegraph_log("Added to carousel");
 }
 
 void parsegraph_Carousel_clearCarousel(parsegraph_Carousel* carousel)
 {
     //console.log("carousel cleared");
+    for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
+        parsegraph_CarouselPlot* carouselPlot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        free(carouselPlot);
+    }
     parsegraph_ArrayList_clear(carousel->_carouselPlots);
     parsegraph_ArrayList_clear(carousel->_carouselCallbacks);
     carousel->_selectedCarouselPlot = 0;
@@ -147,15 +155,20 @@ int parsegraph_Carousel_removeFromCarousel(parsegraph_Carousel* carousel, parseg
         parsegraph_die("Node must not be null");
     }
 
-    int rem = parsegraph_ArrayList_remove(carousel->_carouselPlots, node);
-    if(rem >= 0) {
-        parsegraph_ArrayList_splice(carousel->_carouselCallbacks, rem, 1);
-        if(carousel->_selectedCarouselPlot == node) {
-            carousel->_selectedCarouselPlot = 0;
-            carousel->_selectedCarouselPlotIndex = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
+        parsegraph_CarouselPlot* carouselPlot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        if(carouselPlot->node == node) {
+            parsegraph_ArrayList_splice(carousel->_carouselPlots, i, 1);
+            if(carousel->_selectedCarouselPlot == carouselPlot) {
+                carousel->_selectedCarouselPlot = 0;
+                carousel->_selectedCarouselPlotIndex = -1;
+            }
+            free(carouselPlot);
+            return 1;
         }
     }
-    return rem;
+
+    return 0;
 }
 
 int parsegraph_Carousel_updateRepeatedly(parsegraph_Carousel* carousel)
@@ -196,7 +209,7 @@ int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, fl
         powf(absf(x - carousel->_carouselX), 2) +
         powf(absf(y - carousel->_carouselY), 2)
     );
-    if(dist < carousel->_carouselSize * .75) {
+    if(dist < carousel->_carouselSize * .75/parsegraph_Camera_scale(carousel->_camera)) {
         if(asDown) {
             //console.log("Down events within the inner region are treated as 'cancel.'");
             parsegraph_Carousel_hideCarousel(carousel);
@@ -207,7 +220,7 @@ int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, fl
         //console.log("Up events within the inner region are ignored.");
         return 0;
     }
-    else if(dist > carousel->_carouselSize * 4) {
+    else if(dist > carousel->_carouselSize * 4/parsegraph_Camera_scale(carousel->_camera)) {
         parsegraph_Carousel_hideCarousel(carousel);
         parsegraph_Carousel_scheduleCarouselRepaint(carousel);
         //console.log("Click occurred so far outside that it is considered its own event.");
@@ -257,7 +270,8 @@ int parsegraph_Carousel_mouseOverCarousel(parsegraph_Carousel* carousel, float x
         powf(absf(y - carousel->_carouselY), 2)
     );
 
-    if(dist < carousel->_carouselSize*4 && dist > parsegraph_BUD_RADIUS*4) {
+    float camScale = parsegraph_Camera_scale(carousel->_camera);
+    if(dist < carousel->_carouselSize*4/camScale && dist > parsegraph_BUD_RADIUS*4/camScale) {
         float i = floorf(mouseAngle / angleSpan);
         float selectionAngle = (angleSpan/2 + i * angleSpan) - 3.14159;
         if(i != carousel->_selectedCarouselPlotIndex) {
@@ -268,15 +282,17 @@ int parsegraph_Carousel_mouseOverCarousel(parsegraph_Carousel* carousel, float x
             parsegraph_FanPainter_setSelectionAngle(carousel->_fanPainter, selectionAngle);
             parsegraph_FanPainter_setSelectionSize(carousel->_fanPainter, angleSpan);
         }
+        parsegraph_Carousel_scheduleCarouselRepaint(carousel);
+        return 2;
     }
     else if(carousel->_fanPainter) {
         parsegraph_FanPainter_setSelectionAngle(carousel->_fanPainter, 0);
         parsegraph_FanPainter_setSelectionSize(carousel->_fanPainter, 0);
         carousel->_selectedCarouselPlotIndex = -1;
         carousel->_selectedCarouselPlot = 0;
+        parsegraph_Carousel_scheduleCarouselRepaint(carousel);
     }
-    parsegraph_Carousel_scheduleCarouselRepaint(carousel);
-    return 1;
+    return 0;
 }
 
 int parsegraph_Carousel_showScale(parsegraph_Carousel* carousel)
@@ -320,18 +336,14 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
 
     float minScale = 1;
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
-        parsegraph_Node* root = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
-        parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(root);
-        float bodySize[2];
-        parsegraph_Node_commitLayout(root, bodySize);
+        parsegraph_CarouselPlot* carouselData= parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        parsegraph_Node* root = carouselData->node;
+        parsegraph_Node_commitLayoutIteratively(root, 0);
 
         // Set the origin.
         float caretRad = 3.14159 + angleSpan/2.0f + (i / numPlots) * (2.0f * 3.14159);
-        parsegraph_PaintGroup_setOrigin(
-            paintGroup,
-            2*carousel->_carouselSize * carousel->_showScale * cosf(caretRad),
-            2*carousel->_carouselSize * carousel->_showScale * sinf(caretRad)
-        );
+        carouselData->x = 2*carousel->_carouselSize * carousel->_showScale * cosf(caretRad);
+        carouselData->y = 2*carousel->_carouselSize * carousel->_showScale * sinf(caretRad);
 
         // Set the scale.
         float extentSize[2];
@@ -355,13 +367,12 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
     }
 
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
-        parsegraph_Node* root = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
-        parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(root);
+        parsegraph_CarouselPlot* carouselData = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
         if(i == carousel->_selectedCarouselPlotIndex) {
-            parsegraph_PaintGroup_setScale(paintGroup, 1.25f*minScale);
+            carouselData->scale = 1.25f*minScale;
         }
         else {
-            parsegraph_PaintGroup_setScale(paintGroup, minScale);
+            carouselData->scale = minScale;
         }
     }
 }
@@ -410,13 +421,10 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     //console.log("Painting the carousel");
     parsegraph_Carousel_arrangeCarousel(carousel);
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
-        parsegraph_Node* plot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
-        parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(plot);
-        if(!paintGroup) {
-            parsegraph_die("Plot must have a paint group.");
-        }
+        parsegraph_CarouselPlot* carouselData = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        parsegraph_Node* paintGroup = carouselData->node;
         parsegraph_PAINTING_GLYPH_ATLAS = parsegraph_Carousel_glyphAtlas(carousel);
-        parsegraph_PaintGroup_paint(
+        parsegraph_Node_paint(
             paintGroup,
             parsegraph_Carousel_backgroundColor(carousel),
             parsegraph_Carousel_glyphAtlas(carousel),
@@ -442,7 +450,7 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     float endColor[] = {.5, .5, .5, .4};
     parsegraph_FanPainter_selectRad(
         fanPainter,
-        carousel->_carouselX, carousel->_carouselY,
+        0, 0,
         0, 3.14159 * 2.0f,
         startColor, endColor
     );
@@ -459,18 +467,24 @@ void parsegraph_Carousel_render(parsegraph_Carousel* carousel, float* world)
         parsegraph_Carousel_paint(carousel);
     }
 
+    float dest[9];
+    float trans[9];
+    makeTranslation3x3I(trans, carousel->_carouselX, carousel->_carouselY);
+    matrixMultiply3x3I(dest, trans, world);
+    makeScale3x3I(trans, 1/parsegraph_Camera_scale(carousel->_camera), 1/parsegraph_Camera_scale(carousel->_camera));
+    matrixMultiply3x3I(dest, trans, dest);
+    world = dest;
+
     parsegraph_FanPainter_render(carousel->_fanPainter, world);
 
     // Render the carousel if requested.
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
-        parsegraph_Node* plot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
-        parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(plot);
-        parsegraph_PaintGroup_render(paintGroup,
-            matrixMultiply3x3(carousel->pool,
-                makeTranslation3x3(carousel->pool, carousel->_carouselX, carousel->_carouselY),
-                world
-            ),
-            carousel->_camera
-        );
+        parsegraph_CarouselPlot* carouselPlot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        parsegraph_Node* root = carouselPlot->node;
+        makeTranslation3x3I(trans, carouselPlot->x, carouselPlot->y);
+        matrixMultiply3x3I(dest, trans, world);
+        makeScale3x3I(trans, carouselPlot->scale, carouselPlot->scale);
+        matrixMultiply3x3I(dest, trans, dest);
+        parsegraph_Node_renderIteratively(root, dest, carousel->_camera);
     }
 }

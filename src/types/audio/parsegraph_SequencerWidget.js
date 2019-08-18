@@ -206,8 +206,8 @@ function parsegraph_SequencerWidget(graph)
     this._numSteps = 32;
     this._maxBpm = 2000;
     this._bpm = this._maxBpm / 2;
-    var audio = this._graph.surface().audio();
-    this._sink = audio.createGain();
+    //var audio = this._graph.surface().audio();
+    //this._sink = audio.createGain();
     this._detuneScale = 300;
 };
 

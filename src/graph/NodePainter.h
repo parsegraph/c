@@ -5,11 +5,16 @@
 #include "GlyphPainter.h"
 #include "ArrayList.h"
 #include "Node.h"
-#include "Surface.h"
+
+struct parsegraph_NodePainterCounts {
+int numBlocks;
+int numExtents;
+parsegraph_ArrayList* numGlyphs;
+};
+typedef struct parsegraph_NodePainterCounts parsegraph_NodePainterCounts;
 
 struct parsegraph_NodePainter {
 apr_pool_t* pool;
-parsegraph_Surface* _surface;
 float _backgroundColor[4];
 parsegraph_BlockPainter* _blockPainter;
 int _renderBlocks;
@@ -20,18 +25,14 @@ int _renderText;
 parsegraph_ArrayList* _textures;
 int _renderLines;
 int _renderScenes;
+int _pagesPerGlyphTexture;
+parsegraph_NodePainterCounts _counts;
 };
 typedef struct parsegraph_NodePainter parsegraph_NodePainter;
 
-struct parsegraph_NodePainterCounts {
-int numBlocks;
-int numExtents;
-};
-typedef struct parsegraph_NodePainterCounts parsegraph_NodePainterCounts;
-
 void parsegraph_NodePainterCounts_reset(parsegraph_NodePainterCounts* npc);
 
-parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
+parsegraph_NodePainter* parsegraph_NodePainter_new(apr_pool_t* ppool, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders);
 float* parsegraph_NodePainter_bounds(parsegraph_NodePainter* painter);
 parsegraph_GlyphPainter* parsegraph_NodePainter_glyphPainter(parsegraph_NodePainter* painter);
 void parsegraph_NodePainter_setBackground(parsegraph_NodePainter* painter, float* color);
@@ -52,6 +53,7 @@ int parsegraph_NodePainter_isTextRenderingEnabled(parsegraph_NodePainter* painte
 void parsegraph_NodePainter_enableSceneRendering(parsegraph_NodePainter* painter);
 void parsegraph_NodePainter_disableSceneRendering(parsegraph_NodePainter* painter);
 int parsegraph_NodePainter_isSceneRenderingEnabled(parsegraph_NodePainter* painter);
+void parsegraph_NodePainter_resetCounts(parsegraph_NodePainter* painter);
 void parsegraph_NodePainter_clear(parsegraph_NodePainter* painter);
 void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* painter, parsegraph_Node* node, float worldX, float worldY, float userScale);
 void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale, apr_hash_t* shaders);

@@ -11,7 +11,7 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
     this._renderBlocks = true;
 
     this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
-    this._renderExtents = false;
+    //this._renderExtents = true;
 
     this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
 
@@ -348,8 +348,8 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
             if(node.parentDirection() == direction) {
                 return;
             }
-            if(node.hasNode(direction)) {
-                // One for the line
+            if(node.hasChild(direction)) {
+                // Count one for the line
                 ++counts.numBlocks;
             }
         }, this);
@@ -386,7 +386,7 @@ parsegraph_NodePainter.prototype.paintLines = function(node)
         if(node.parentDirection() == direction) {
             return;
         }
-        if(!node.hasNode(direction)) {
+        if(!node.hasChild(direction)) {
             // Do not draw lines unless there is a node.
             return;
         }
@@ -639,23 +639,17 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     this._gl.disable(this._gl.CULL_FACE);
     this._gl.disable(this._gl.DEPTH_TEST);
     this._gl.enable(this._gl.BLEND);
-    this._gl.blendFunc(
-        this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-    );
     if(this._renderBlocks) {
+        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
         this._blockPainter.render(world, scale);
     }
     if(this._renderExtents) {
-        this._gl.blendFunc(
-            this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA
-        );
+        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA);
         this._extentPainter.render(world, scale);
     }
 
     if(this._renderText) {
-        this._gl.blendFunc(
-            this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
-        );
+        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
         this._glyphPainter.render(world, scale);
     }
 

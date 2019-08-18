@@ -23,7 +23,10 @@ parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface)
     camera->_scale = 1;
     memset(camera->_defaultCameraPos, 0, sizeof(float)*2);
 
+    camera->_width = 0;
+    camera->_height = 0;
     camera->_aspectRatio = 1;
+    camera->_changeVersion = 0;
 
     return camera;
 };
@@ -131,6 +134,32 @@ void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y)
     //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
     camera->_cameraX = x;
     camera->_cameraY = y;
+    parsegraph_Camera_hasChanged(camera);
+}
+
+int parsegraph_Camera_changeVersion(parsegraph_Camera* camera)
+{
+    return camera->_changeVersion;
+}
+
+void parsegraph_Camera_hasChanged(parsegraph_Camera* camera)
+{
+    ++camera->_changeVersion;
+}
+
+void parsegraph_Camera_saveState(parsegraph_Camera* camera, parsegraph_CameraState* dest)
+{
+    dest->cameraX = camera->_cameraX;
+    dest->cameraY = camera->_cameraY;
+    dest->scale = camera->_scale;
+    dest->width = camera->_width;
+    dest->height = camera->_height;
+}
+
+void parsegraph_Camera_restoreState(parsegraph_Camera* camera, parsegraph_CameraState* src)
+{
+    parsegraph_Camera_setOrigin(camera, src->cameraX, src->cameraY);
+    parsegraph_Camera_setScale(camera, src->scale);
 }
 
 void parsegraph_Camera_setDefaultOrigin(parsegraph_Camera* camera, float x, float y)
@@ -186,6 +215,7 @@ void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float d
     //parsegraph_log("Adjusting Camera origin (%f, %f) by (%f, %f)\n", camera->_cameraX, camera->_cameraY, dx, dy);
     camera->_cameraX += dx;
     camera->_cameraY += dy;
+    parsegraph_Camera_hasChanged(camera);
 }
 
 float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera, apr_pool_t* pool)
@@ -196,6 +226,15 @@ float* parsegraph_Camera_worldMatrix(parsegraph_Camera* camera, apr_pool_t* pool
         makeScale3x3(pool, parsegraph_Camera_scale(camera), parsegraph_Camera_scale(camera))
     );
 };
+
+void parsegraph_Camera_worldMatrixI(parsegraph_Camera* camera, float* dest)
+{
+    float scale[9];
+    makeScale3x3I(scale, parsegraph_Camera_scale(camera), parsegraph_Camera_scale(camera));
+    float trans[9];
+    makeTranslation3x3I(trans, parsegraph_Camera_x(camera), parsegraph_Camera_y(camera)),
+    matrixMultiply3x3I(dest, trans, scale);
+}
 
 float parsegraph_Camera_aspectRatio(parsegraph_Camera* camera)
 {
@@ -219,8 +258,17 @@ int parsegraph_Camera_canProject(parsegraph_Camera* camera)
     return displayWidth != 0 && displayHeight != 0;
 }
 
-float* parsegraph_Camera_project(parsegraph_Camera* camera, apr_pool_t* pool)
+void parsegraph_Camera_projectionMatrix(parsegraph_Camera* camera, float* dest)
 {
+    if(!parsegraph_Camera_canProject(camera)) {
+        parsegraph_die(
+            "Camera cannot create a projection matrix because the "
+            "target canvas has no size. Use canProject() to handle."
+        );
+    }
+
+    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+    // Lookup the size the browser is displaying the canvas.
     float displayWidth = parsegraph_Surface_getWidth(camera->surface);
     float displayHeight = parsegraph_Surface_getHeight(camera->surface);
 
@@ -230,15 +278,20 @@ float* parsegraph_Camera_project(parsegraph_Camera* camera, apr_pool_t* pool)
     camera->_aspectRatio = displayWidth / displayHeight;
     camera->_width = displayWidth;
     camera->_height = displayHeight;
-    //fprintf(stderr, "Camera projection (%f, %f, aspect=%f)\n", camera->_width, camera->_height, camera->_aspectRatio);
 
-    return matrixMultiply3x3(pool,
-        parsegraph_Camera_worldMatrix(camera, pool),
-        make2DProjection(pool, displayWidth, displayHeight, parsegraph_VFLIP)
-    );
+    make2DProjectionI(dest, displayWidth, displayHeight, parsegraph_VFLIP);
 }
 
-int parsegraph_Camera_ContainsAny(parsegraph_Camera* camera, float* rect)
+void parsegraph_Camera_project(parsegraph_Camera* camera, float* dest)
+{
+    float projectionMatrix[9];
+    parsegraph_Camera_projectionMatrix(camera, projectionMatrix);
+    float worldMatrix[9];
+    parsegraph_Camera_worldMatrixI(camera, worldMatrix);
+    matrixMultiply3x3I(dest, worldMatrix, projectionMatrix);
+}
+
+int parsegraph_Camera_containsAny(parsegraph_Camera* camera, float* rect)
 {
     return parsegraph_containsAny(
         -camera->_cameraX + camera->_width/(camera->_scale*2),
@@ -252,7 +305,7 @@ int parsegraph_Camera_ContainsAny(parsegraph_Camera* camera, float* rect)
     );
 }
 
-int parsegraph_Camera_ContainsAll(parsegraph_Camera* camera, float* rect)
+int parsegraph_Camera_containsAll(parsegraph_Camera* camera, float* rect)
 {
     return parsegraph_containsAll(
         -camera->_cameraX + camera->_width/(camera->_scale*2),

@@ -138,13 +138,13 @@ parsegraph_AudioKeyboard.prototype.setScale = function(scale)
     }
 };
 
-parsegraph_AudioKeyboard.prototype.render = function(world)
+parsegraph_AudioKeyboard.prototype.render = function(world, scale)
 {
     this._gl.blendFunc(
         this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA
     );
     //this._gl.disable(this._gl.DEPTH_TEST);
     //this._gl.disable(this._gl.BLEND);
-    this._whiteKeyPainter.render(world);
-    this._blackKeyPainter.render(world);
+    this._whiteKeyPainter.render(world, scale);
+    this._blackKeyPainter.render(world, scale);
 };

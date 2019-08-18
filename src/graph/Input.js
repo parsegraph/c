@@ -67,7 +67,7 @@ function parsegraph_Input(graph, camera)
     // A map of event.key's to a true value.
     this.keydowns = {};
 
-    var checkForNodeClick = function(clientX, clientY) {
+    var checkForNodeClick = function(clientX, clientY, onlySlider) {
         if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
             return null;
         }
@@ -87,8 +87,8 @@ function parsegraph_Input(graph, camera)
 
         // Check if the selected node was a slider.
         if(selectedNode.type() == parsegraph_SLIDER) {
-            if(selectedNode === selectedSlider) {
-                console.log("Removing");
+            if(!onlySlider && selectedNode === selectedSlider) {
+                //console.log(new Error("Removing slider listener"));
                 selectedSlider = null;
                 attachedMouseListener = null;
                 this._graph.scheduleRepaint();
@@ -100,6 +100,10 @@ function parsegraph_Input(graph, camera)
             sliderListener.call(this, clientX, clientY);
             this._graph.scheduleRepaint();
             return selectedNode;
+        }
+
+        if(onlySlider) {
+            return null;
         }
 
         // Check if the selected node has a click listener.
@@ -120,8 +124,8 @@ function parsegraph_Input(graph, camera)
                 (mouseInWorld[0] - selectedLabel._x) / selectedLabel._scale,
                 (mouseInWorld[1] - selectedLabel._y) / selectedLabel._scale
             );
-            console.log(selectedLabel.caretLine());
-            console.log(selectedLabel.caretPos());
+            //console.log(selectedLabel.caretLine());
+            //console.log(selectedLabel.caretPos());
             this._focusedLabel = true;
             this._focusedNode = selectedNode;
             this._graph.scheduleRepaint();
@@ -527,7 +531,15 @@ function parsegraph_Input(graph, camera)
             this._spotlightPainter.clear();
         }
 
-        // Dragging on the canvas.
+        //console.log("Checking for slider");
+        if(checkForNodeClick.call(this, lastMouseX, lastMouseY, true)) {
+            //console.log("Slider clicked.");
+            this.Dispatch(true, "mousedown node", false);
+            mousedownTime = Date.now();
+            return;
+        }
+
+        //console.log("Dragging on the canvas.");
         attachedMouseListener = mouseDragListener;
         //console.log("Repainting graph");
         this.Dispatch(false, "mousedown canvas", true);
@@ -595,7 +607,6 @@ function parsegraph_Input(graph, camera)
                 parsegraph_CLICK_DELAY_MILLIS/5
             );
 
-            // test! 12
             if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
                 // A significant node was clicked.
                 //console.log("Node clicked.");
@@ -645,6 +656,7 @@ function parsegraph_Input(graph, camera)
         }
 
         var keyName = getproperkeyname(event);
+        //console.log("Keydown " + selectedSlider);
         if(selectedSlider) {
             if(event.key.length === 0) {
                 return;
@@ -687,7 +699,7 @@ function parsegraph_Input(graph, camera)
             }
             else if(this._focusedNode.hasKeyListener() && this._focusedNode.key(event.key) !== false
             ) {
-                console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
+                //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
                 this._focusedNode.layoutWasChanged();
                 this._graph.scheduleRepaint();
                 return;
@@ -746,7 +758,7 @@ function parsegraph_Input(graph, camera)
                     }
                     neighbor = node.nodeAt(parsegraph_OUTWARD);
                     if(neighbor) {
-                        console.log("Going outward");
+                        //console.log("Going outward");
                         skipHorizontalInward = true;
                         node = neighbor;
                         continue;
@@ -789,8 +801,8 @@ function parsegraph_Input(graph, camera)
                     break;
                 case "Tab":
                     var toNode = event.shiftKey ?
-                        this._focusedNode._prevTabNode :
-                        this._focusedNode._nextTabNode;
+                        this._focusedNode._extended.prevTabNode :
+                        this._focusedNode._extended.nextTabNode;
                     if(toNode) {
                         this._focusedNode = toNode;
                         this._graph.scheduleRepaint();
@@ -1081,15 +1093,15 @@ parsegraph_Input.prototype.camera = function()
     return this._camera;
 }
 
-parsegraph_Input.prototype.render = function(world)
+parsegraph_Input.prototype.render = function(world, scale)
 {
     var gl = this._graph.gl();
     gl.disable(gl.CULL_FACE);
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.BLEND);
-    this._caretPainter.render(world);
+    this._caretPainter.render(world, scale);
     gl.enable(gl.BLEND);
-    this._spotlightPainter.render(world);
+    this._spotlightPainter.render(world, scale);
 }
 
 parsegraph_Input.prototype.Dispatch = function(affectedPaint, eventSource, inputAffectedCamera)

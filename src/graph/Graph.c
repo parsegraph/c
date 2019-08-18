@@ -4,10 +4,11 @@
 #include "World.h"
 #include "Carousel.h"
 #include "die.h"
+#include "log.h"
 
-static void paintGraph(void* d, void* rd)
+static void paintGraph(void* d, void* rd, int timeout)
 {
-    parsegraph_Graph_paint(d, (int)(long)rd);
+    parsegraph_Graph_paint(d, timeout);
 }
 
 static void renderGraph(void* d, void* rd)
@@ -173,17 +174,19 @@ void parsegraph_Graph_render(parsegraph_Graph* graph)
     }
     parsegraph_Camera* cam = parsegraph_Graph_camera(graph);
 
-    apr_pool_t* renderPool = 0;
-    if(APR_SUCCESS != apr_pool_create(&renderPool, graph->pool)) {
-        parsegraph_die("Failed to create render pool for Graph.");
-    }
-    float* world = parsegraph_Camera_project(cam, renderPool);
+    float world[9];
+    parsegraph_log("Rendering Parsegraph at origin (%f, %f) with scale=%f\n",
+        parsegraph_Camera_x(cam),
+        parsegraph_Camera_y(cam),
+        parsegraph_Camera_scale(cam)
+    );
+    parsegraph_Camera_project(cam, world);
     parsegraph_World_render(graph->_world, world);
 
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     parsegraph_Carousel_render(graph->_carousel, world);
-    parsegraph_CameraBox_render(graph->_cameraBox, world);
-    parsegraph_Input_render(graph->_input, world, parsegraph_Camera_scale(cam));
-    //parsegraph_AudioKeyboard_render(graph->_piano, world);
-    apr_pool_destroy(renderPool);
+    float scale = parsegraph_Camera_scale(cam);
+    parsegraph_CameraBox_render(graph->_cameraBox, world, scale);
+    parsegraph_Input_render(graph->_input, world, scale);
+    //parsegraph_AudioKeyboard_render(graph->_piano, world, scale);
 }

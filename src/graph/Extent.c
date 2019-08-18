@@ -37,9 +37,9 @@ void parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset)
     extent->_offset = offset;
 }
 
-float parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset)
+float parsegraph_Extent_offset(parsegraph_Extent* extent)
 {
-    extent->_offset = offset;
+    return extent->_offset;
 }
 
 void parsegraph_Extent_forEach(parsegraph_Extent* extent, void(*func)(void*, float, float, int), void* thisArg)
@@ -147,7 +147,7 @@ int parsegraph_Extent_realloc(parsegraph_Extent* extent, unsigned int capacity)
     if(capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
         capacity = parsegraph_DEFAULT_EXTENT_BOUNDS;
     }
-    parsegraph_ExtentBound* oldBounds = extent->bounds;
+    struct parsegraph_ExtentBound* oldBounds = extent->bounds;
     unsigned int oldCap = extent->capacity;
     if(oldCap >= capacity) {
         // TODO This could shrink.
@@ -415,12 +415,12 @@ void parsegraph_Extent_combineExtentAndSimplify(parsegraph_Extent* extent,
     parsegraph_Extent_clear(extent);
     float combinedLength;
     if(lengthAdjustment < 0) {
-        combinedLength = parsegraph_max(thisLength-lengthAdjustment, givenLength*scale);
+        combinedLength = fmaxf(thisLength-lengthAdjustment, givenLength*scale);
     }
     else {
-        combinedLength = parsegraph_max(thisLength, givenLength*scale+lengthAdjustment);
+        combinedLength = fmaxf(thisLength, givenLength*scale+lengthAdjustment);
     }
-    parsegraph_Extent_appendLS(extent, combinedLength, parsegraph_max(thisMaxSize, givenMaxSize*scale+sizeAdjustment);
+    parsegraph_Extent_appendLS(extent, combinedLength, fmaxf(thisMaxSize, givenMaxSize*scale+sizeAdjustment));
 }
 
 void parsegraph_Extent_combineExtent(parsegraph_Extent* extent,

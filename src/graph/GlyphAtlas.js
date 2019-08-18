@@ -107,13 +107,13 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
     }
 
     var pageTextureSize = this.pageTextureSize();
-    if(this._x + letterWidth + this._padding > this.pageTextureSize()) {
+    if(this._x + letterWidth + this._padding > pageTextureSize) {
         // Move to the next row.
         this._x = this._padding;
         this._y += this._currentRowHeight + this._padding;
         this._currentRowHeight = letterHeight;
     }
-    if(this._y + this._currentRowHeight + this._padding > this.pageTextureSize()) {
+    if(this._y + this._currentRowHeight + this._padding > pageTextureSize) {
         // Move to the next page.
         glyphPage = new parsegraph_GlyphPage(this._pages.length);
         this._pages.push(glyphPage);
@@ -274,11 +274,6 @@ parsegraph_GlyphAtlas.prototype.font = function()
 parsegraph_GlyphAtlas.prototype.pageTextureSize = function()
 {
     return 512;
-};
-
-parsegraph_GlyphAtlas.prototype.glTextureWidth = function()
-{
-    return this._glTextureWidth;
 };
 
 parsegraph_GlyphAtlas.prototype.letterHeight = function()

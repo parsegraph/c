@@ -4,6 +4,7 @@
 #include <apr_pools.h>
 
 float* parsegraph_Rect_new(apr_pool_t* pool);
+void parsegraph_Rect_copyFrom(float* dest, float* src);
 float* parsegraph_createRect(apr_pool_t* pool, float, float, float, float);
 void parsegraph_Rect_destroy(float*, apr_pool_t* pool);
 void parsegraph_Rect_setIdentity(float* rect);
@@ -21,5 +22,7 @@ float parsegraph_Rect_vMax(float* rect);
 float parsegraph_Rect_hMin(float* rect);
 float parsegraph_Rect_hMax(float* rect);
 void parsegraph_Rect_include(float* rect, float bx, float by, float bwidth, float bheight);
+void parsegraph_Rect_translate(float* rect, float x, float y);
+void parsegraph_Rect_scale(float* rect, float sx, float sy);
 
 #endif // parsegraph_Rect_INCLUDED

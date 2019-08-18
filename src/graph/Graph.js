@@ -185,6 +185,6 @@ parsegraph_Graph.prototype.render = function()
     );
     this._carousel.render(world);
     this._cameraBox.render(world);
-    this._input.render(world);
+    this._input.render(world, this.camera().scale());
     //this._piano.render(world);
 };

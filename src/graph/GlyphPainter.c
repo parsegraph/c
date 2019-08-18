@@ -4,12 +4,11 @@
 #include "../gl.h"
 #include "Color.h"
 #include "GlyphAtlas.h"
+#include <math.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-// TODO Test lots of glyphs; set a limit if one can be found to exist
-// TODO Add caret
 // TODO Add runs of selected text
 
 static const char* parsegraph_GlyphPainter_VertexShader =
@@ -72,23 +71,23 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
         parsegraph_GlyphPainter_FragmentShader
     );
 
-    // Prepare attribute buffers.
-    painter->_textBuffer = parsegraph_pagingbuffer_new(pool, painter->_textProgram);
-    painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_position", 2, GL_STATIC_DRAW);
-    painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_color", 4, GL_STATIC_DRAW);
-    painter->a_backgroundColor = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_backgroundColor", 4, GL_STATIC_DRAW);
-    painter->a_texCoord = parsegraph_pagingbuffer_defineAttrib(painter->_textBuffer, "a_texCoord", 2, GL_STATIC_DRAW);
-    painter->_textBuffers = apr_hash_make(pool);
+    painter->_textBuffers = parsegraph_ArrayList_new(pool);
+    painter->_maxSize = 0;
+
+    // Position: 2 * 4 (two floats) : 0-7
+    // Color: 4 * 4 (four floats) : 8-23
+    // Background Color: 4 * 4 (four floats) : 24 - 39
+    // Texcoord: 2 * 4 (two floats): 40-48
+    painter->_stride = sizeof(float)*(2+4+4+2);
+    painter->_vertexBuffer = apr_palloc(painter->pool, painter->_stride);
 
     // Cache program locations.
-    painter->u_world = glGetUniformLocation(
-        painter->_textProgram, "u_world"
-    );
-    painter->u_glyphTexture = glGetUniformLocation(
-        painter->_textProgram, "u_glyphTexture"
-    );
-
-    painter->_maxSize = 0;
+    painter->u_world = glGetUniformLocation(painter->_textProgram, "u_world");
+    painter->u_glyphTexture = glGetUniformLocation(painter->_textProgram, "u_glyphTexture");
+    painter->a_position = glGetAttribLocation(painter->_textProgram, "a_position");
+    painter->a_color = glGetAttribLocation(painter->_textProgram, "a_color");
+    painter->a_backgroundColor = glGetAttribLocation(painter->_textProgram, "a_backgroundColor");
+    painter->a_texCoord = glGetAttribLocation(painter->_textProgram, "a_texCoord");
 
     parsegraph_Color_SetRGBA(painter->_color, 1, 1, 1, 1);
     parsegraph_Color_SetRGBA(painter->_backgroundColor, 0,0,0,0);
@@ -126,23 +125,195 @@ parsegraph_GlyphAtlas* parsegraph_GlyphPainter_glyphAtlas(parsegraph_GlyphPainte
     return glyphPainter->_glyphAtlas;
 }
 
-parsegraph_GlyphRenderData* parsegraph_GlyphRenderData_new(parsegraph_GlyphPainter* painter, parsegraph_GlyphData* glyphData)
+parsegraph_GlyphPageRenderer* parsegraph_GlyphPageRenderer_new(parsegraph_GlyphPainter* painter, int textureIndex)
 {
-    parsegraph_GlyphRenderData* grd = apr_palloc(painter->pool, sizeof(*grd));
-    grd->painter = painter;
-    grd->glyphData = glyphData;
-    return grd;
+    parsegraph_GlyphPageRenderer* pageRender;
+    pageRender = apr_palloc(painter->pool, sizeof(*pageRender));
+    pageRender->_painter = painter;
+    pageRender->_textureIndex = textureIndex;
+    pageRender->_glyphBuffer = 0;
+    pageRender->_glyphBufferNumVertices = 0;
+    pageRender->_glyphBufferVertexIndex = 0;
+    pageRender->_dataBufferVertexIndex = 0;
+    pageRender->_dataBufferNumVertices = 6;
+    pageRender->_dataBuffer = apr_palloc(painter->pool, sizeof(float)*(pageRender->_dataBufferNumVertices*painter->_stride/sizeof(float)));
+    return pageRender;
 }
 
-static void renderText(void* glyphDataPtr, int numIndices)
+void parsegraph_GlyphPageRenderer_initBuffer(parsegraph_GlyphPageRenderer* pageRender, int numGlyphs)
 {
-    parsegraph_GlyphRenderData* grd = glyphDataPtr;
-    //parsegraph_log("Rendering %d indices of glyph page\n", numIndices);
-    parsegraph_GlyphPainter* glyphPainter = grd->painter;
-    parsegraph_GlyphData* glyphData = grd->glyphData;
-    glBindTexture(GL_TEXTURE_2D, glyphData->glyphPage->_glyphTexture);
-    glUniform1i(glyphPainter->u_glyphTexture, 0);
-    glDrawArrays(GL_TRIANGLES, 0, numIndices);
+    if(pageRender->_glyphBufferNumVertices/6 == numGlyphs) {
+        //parsegraph_log("Reusing existing buffer\n");
+        pageRender->_glyphBufferVertexIndex = 0;
+        pageRender->_dataBufferVertexIndex = 0;
+        return;
+    }
+    else {
+        //parsegraph_log("Recreating buffer with %d from %d\n", numGlyphs, pageRender->_glyphBufferNumVertices);
+    }
+    if(pageRender->_glyphBuffer) {
+        parsegraph_GlyphPageRenderer_clear(pageRender);
+    }
+    glGenBuffers(1, &pageRender->_glyphBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, pageRender->_glyphBuffer);
+    glBufferData(GL_ARRAY_BUFFER, pageRender->_painter->_stride*6*numGlyphs, 0, GL_STATIC_DRAW);
+    pageRender->_glyphBufferNumVertices = numGlyphs*6;
+}
+
+void parsegraph_GlyphPageRenderer_clear(parsegraph_GlyphPageRenderer* pageRender)
+{
+    if(!pageRender->_glyphBuffer) {
+        return;
+    }
+    glDeleteBuffers(1, &pageRender->_glyphBuffer);
+    pageRender->_glyphBuffer = 0;
+    pageRender->_glyphBufferNumVertices = 0;
+    pageRender->_dataBufferVertexIndex = 0;
+    pageRender->_glyphBufferVertexIndex = 0;
+}
+
+void parsegraph_GlyphPageRenderer_flush(parsegraph_GlyphPageRenderer* pageRender)
+{
+    if(pageRender->_dataBufferVertexIndex == 0) {
+        return;
+    }
+    int stride = pageRender->_painter->_stride;
+    glBindBuffer(GL_ARRAY_BUFFER, pageRender->_glyphBuffer);
+
+    if(pageRender->_dataBufferVertexIndex + pageRender->_glyphBufferVertexIndex > pageRender->_glyphBufferNumVertices) {
+        parsegraph_die("GL buffer of %d vertices is full; cannot flush all %d vertices because the GL buffer already has %d vertices.\n", pageRender->_glyphBufferNumVertices, pageRender->_dataBufferVertexIndex, pageRender->_glyphBufferVertexIndex);
+    }
+    if(pageRender->_dataBufferVertexIndex >= pageRender->_dataBufferNumVertices) {
+        glBufferSubData(GL_ARRAY_BUFFER, pageRender->_glyphBufferVertexIndex*stride, pageRender->_dataBufferNumVertices*stride, pageRender->_dataBuffer);
+    }
+    else {
+        glBufferSubData(GL_ARRAY_BUFFER, pageRender->_glyphBufferVertexIndex*stride, pageRender->_dataBufferVertexIndex*stride, pageRender->_dataBuffer);
+    }
+    pageRender->_glyphBufferVertexIndex += pageRender->_dataBufferVertexIndex;
+    pageRender->_dataBufferVertexIndex = 0;
+}
+
+void parsegraph_GlyphPageRenderer_writeVertex(parsegraph_GlyphPageRenderer* pageRender)
+{
+    int stride = pageRender->_painter->_stride;
+    int pos = pageRender->_dataBufferVertexIndex++ * stride/sizeof(float);
+    memcpy(pageRender->_dataBuffer + pos, pageRender->_painter->_vertexBuffer, stride);
+    if(pageRender->_dataBufferVertexIndex >= pageRender->_dataBufferNumVertices) {
+        parsegraph_GlyphPageRenderer_flush(pageRender);
+    }
+}
+
+void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRender, parsegraph_GlyphData* glyphData, float x, float y, float fontScale)
+{
+    parsegraph_GlyphAtlas* glyphAtlas = parsegraph_GlyphPainter_glyphAtlas(pageRender->_painter);
+    int glTextureSize = parsegraph_getGlyphTextureSize();
+    int pageTextureSize = parsegraph_GlyphAtlas_pageTextureSize(glyphAtlas);
+    int pagesPerRow = glTextureSize / pageTextureSize;
+    int pagesPerTexture = (int)pow(pagesPerRow, 2);
+    int pageIndex = glyphData->glyphPage->_id % pagesPerTexture;
+    int pageX = pageTextureSize * (pageIndex % pagesPerRow);
+    int pageY = pageTextureSize * (int)floor(pageIndex / pagesPerRow);
+
+    // Position: 2 * 4 (two floats) : 0-7
+    // Color: 4 * 4 (four floats) : 8-23
+    // Background Color: 4 * 4 (four floats) : 24 - 39
+    // Texcoord: 2 * 4 (two floats): 40-48
+    float* buf = pageRender->_painter->_vertexBuffer;
+
+    // Append color data.
+    float* color = pageRender->_painter->_color;
+    buf[2] = color[0];
+    buf[3] = color[1];
+    buf[4] = color[2];
+    buf[5] = color[3];
+
+    // Append background color data.
+    float* bg = pageRender->_painter->_backgroundColor;
+    buf[6] = bg[0];
+    buf[7] = bg[1];
+    buf[8] = bg[2];
+    buf[9] = bg[3];
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x) / glTextureSize;
+    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+
+    // Position data.
+    buf[0] = x + glyphData->width * fontScale;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+
+    // Position data.
+    buf[0] = x + glyphData->width * fontScale;
+    buf[1] = y + glyphData->height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x) / glTextureSize;
+    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+
+    // Position data.
+    buf[0] = x + glyphData->width * fontScale;
+    buf[1] = y + glyphData->height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+
+    // Position data.
+    buf[0] = x;
+    buf[1] = y + glyphData->height * fontScale;
+    // Texcoord data
+    buf[10] = (pageX + glyphData->x) / glTextureSize;
+    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    parsegraph_GlyphPageRenderer_writeVertex(pageRender);
+}
+
+void parsegraph_GlyphPageRenderer_render(parsegraph_GlyphPageRenderer* pageRender)
+{
+    if(!pageRender->_glyphBuffer) {
+        parsegraph_die("GlyphPageRenderer must be initialized before rendering\n");
+    }
+    parsegraph_GlyphPageRenderer_flush(pageRender);
+    if(pageRender->_glyphBufferVertexIndex == 0) {
+        return;
+    }
+    GLuint glyphTexture = ((parsegraph_GlyphPage*)parsegraph_ArrayList_at(pageRender->_painter->_glyphAtlas->_pages, pageRender->_textureIndex))->_glyphTexture;
+    //parsegraph_log("Rendering %d glyphs of glyph page %d\n", pageRender->_glyphBufferVertexIndex/6, pageRender->_textureIndex);
+    glBindTexture(GL_TEXTURE_2D, glyphTexture);
+    glUniform1i(pageRender->_painter->u_glyphTexture, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, pageRender->_glyphBuffer);
+    // Position: 2 * 4 (two floats) : 0-7
+    // Color: 4 * 4 (four floats) : 8-23
+    // Background Color: 4 * 4 (four floats) : 24 - 39
+    // Texcoord: 2 * 4 (two floats): 40-48
+    parsegraph_GlyphPainter* painter = pageRender->_painter;
+    int stride = painter->_stride;
+    glVertexAttribPointer(painter->a_position, 2, GL_FLOAT, 0, stride, 0);
+    glVertexAttribPointer(painter->a_color, 4, GL_FLOAT, 0, stride, (void*)8);
+    glVertexAttribPointer(painter->a_backgroundColor, 4, GL_FLOAT, 0, stride, (void*)24);
+    glVertexAttribPointer(painter->a_texCoord, 2, GL_FLOAT, 0, stride, (void*)40);
+    glDrawArrays(GL_TRIANGLES, 0, pageRender->_glyphBufferVertexIndex);
+}
+
+void parsegraph_GlyphPageRenderer_destroy(parsegraph_GlyphPageRenderer* pageRender)
+{
+    parsegraph_GlyphPageRenderer_clear(pageRender);
 }
 
 void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegraph_GlyphData* glyphData, float x, float y, float fontScale)
@@ -150,133 +321,91 @@ void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegr
     //fprintf(stderr, "Drawing glyph with letter %c at (%f, %f), [w=%d, h=%d]\n", glyphData->letter[0], x, y, glyphData->width, glyphData->height);
     glyphData->painted = 1;
 
-    // Select the correct buffer.
-    parsegraph_BufferPage* page = apr_hash_get(painter->_textBuffers, &glyphData->glyphPage->_id, sizeof(int));
-    if(!page) {
-        page = parsegraph_PagingBuffer_addPage(painter->_textBuffer, renderText, parsegraph_GlyphRenderData_new(painter, glyphData));
-        apr_hash_set(painter->_textBuffers, &glyphData->glyphPage->_id, sizeof(int), page);
-        //parsegraph_log("Created paging buffer page %d for painter %d\n", glyphData->glyphPage->_id, painter->_id);
+    int glTextureSize = parsegraph_getGlyphTextureSize();
+    int pagesPerRow = glTextureSize / parsegraph_GlyphAtlas_pageTextureSize(painter->_glyphAtlas);
+    int pagesPerTexture = (int)pow(pagesPerRow, 2);
+
+    int pageId = (int)floorf(glyphData->glyphPage->_id/pagesPerTexture);
+    parsegraph_GlyphPageRenderer* gp = parsegraph_ArrayList_at(painter->_textBuffers, pageId);
+    if(!gp) {
+        parsegraph_die("GlyphPageRenderer must be available when drawing glyph.");
     }
-    else {
-        //parsegraph_log("Reused paging buffer page %d for painter %d\n", glyphData->glyphPage->_id, painter->_id);
-    }
-
-
-    // Append position data.
-    //parsegraph_log("Glyph Position Values: (%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n(%f, %f)\n",
-        //x, y,
-        //x + glyphData->width * fontScale, y,
-        //x + glyphData->width * fontScale, y + glyphData->height * fontScale,
-        //x, y,
-        //x + glyphData->width * fontScale, y + glyphData->height * fontScale,
-        //x, y + glyphData->height * fontScale
-    //);
-    parsegraph_BufferPage_appendData(page,
-        painter->a_position,
-        12,
-        x, y,
-        x + glyphData->width * fontScale, y,
-        x + glyphData->width * fontScale, y + glyphData->height * fontScale,
-
-        x, y,
-        x + glyphData->width * fontScale, y + glyphData->height * fontScale,
-        x, y + glyphData->height * fontScale
-    );
 
     if(painter->_maxSize < glyphData->width * fontScale) {
         painter->_maxSize = glyphData->width * fontScale;
     }
+    parsegraph_GlyphPageRenderer_drawGlyph(gp, glyphData, x, y, fontScale);
+}
 
-    // Append color data.
-    //parsegraph_log("%f, %f, %f, %f", painter->_color[0],
-    //painter->_color[1],
-    //painter->_color[2],
-    //painter->_color[3]);
-    for(int k = 0; k < 3 * 2; ++k) {
-        parsegraph_BufferPage_appendData(page,
-            painter->a_color, 4,
-            painter->_color[0],
-            painter->_color[1],
-            painter->_color[2],
-            painter->_color[3]
-        );
+void parsegraph_GlyphPainter_initBuffer(parsegraph_GlyphPainter* painter, parsegraph_ArrayList* numGlyphs)
+{
+    int numGlyphLength = parsegraph_ArrayList_length(numGlyphs);
+    int gpl = parsegraph_ArrayList_length(painter->_textBuffers);
+    int i = 0;
+    parsegraph_log("Initializing GlyphPainter with %d pages", numGlyphLength);
+    for(; i < numGlyphLength; ++i) {
+        parsegraph_GlyphPageRenderer* gp;
+        if(i >= gpl) {
+            gp = parsegraph_GlyphPageRenderer_new(painter, i);
+            parsegraph_ArrayList_push(painter->_textBuffers, gp);
+        }
+        else {
+            gp = parsegraph_ArrayList_at(painter->_textBuffers, i);
+        }
+        parsegraph_GlyphPageRenderer_initBuffer(gp, (int)(long)parsegraph_ArrayList_at(numGlyphs, i));
     }
-    for(int k = 0; k < 3 * 2; ++k) {
-        parsegraph_BufferPage_appendData(page,
-            painter->a_backgroundColor, 4,
-            painter->_backgroundColor[0],
-            painter->_backgroundColor[1],
-            painter->_backgroundColor[2],
-            painter->_backgroundColor[3]
-        );
+    for(int j=i+1; j < gpl; ++j) {
+        parsegraph_GlyphPageRenderer* gp = parsegraph_ArrayList_at(painter->_textBuffers, j);
+        parsegraph_GlyphPageRenderer_destroy(gp);
     }
-
-    // Append texture coordinate data.
-    float textureWidth = parsegraph_GlyphAtlas_maxTextureWidth(painter->_glyphAtlas);
-    parsegraph_BufferPage_appendData(page,
-        painter->a_texCoord, 12,
-        (float)glyphData->x / textureWidth,
-        (float)glyphData->y / textureWidth,
-
-        ((float)glyphData->x + (float)glyphData->width) / textureWidth,
-        (float)glyphData->y / textureWidth,
-
-        ((float)glyphData->x + (float)glyphData->width) / textureWidth,
-        ((float)glyphData->y + (float)glyphData->height) / textureWidth,
-
-        (float)glyphData->x / textureWidth,
-        (float)glyphData->y / textureWidth,
-
-        ((float)glyphData->x + (float)glyphData->width) / textureWidth,
-        ((float)glyphData->y + (float)glyphData->height) / textureWidth,
-
-        (float)glyphData->x / textureWidth,
-        ((float)glyphData->y + (float)glyphData->height) / textureWidth
-    );
+    if(gpl-(i+1) > 0) {
+        parsegraph_ArrayList_splice(painter->_textBuffers, i+1, gpl-(i+1));
+    }
 }
 
 void parsegraph_GlyphPainter_destroy(parsegraph_GlyphPainter* painter)
 {
-    parsegraph_pagingbuffer_destroy(painter->_textBuffer);
     apr_pool_destroy(painter->pool);
 }
 
-void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* glyphPainter)
+void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* painter)
 {
-    //parsegraph_log("Clearing glyph painter\n");
-    parsegraph_pagingbuffer_clear(glyphPainter->_textBuffer);
-    glyphPainter->_maxSize = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(painter->_textBuffers); ++i) {
+        parsegraph_GlyphPageRenderer* gp = parsegraph_ArrayList_at(painter->_textBuffers, i);
+        parsegraph_GlyphPageRenderer_clear(gp);
+    }
+    parsegraph_ArrayList_clear(painter->_textBuffers);
+    painter->_maxSize = 0;
 }
 
 void parsegraph_GlyphPainter_render(parsegraph_GlyphPainter* painter, float* world, float scale)
 {
-    //fprintf(stderr, "%f\n", scale);
-    //fprintf(stderr, "Max scale of a single largest glyph would be: %f\n", painter->_maxSize*scale);
+    //parsegraph_log("scale=%f\n", scale);
+    //parsegraph_log("Max scale of a single largest glyph would be: %f\n", (painter->_maxSize*scale));
     if(scale < .1 && painter->_maxSize*scale < 2) {
-        //parsegraph_log("Not drawing glyphs because the scale is too small to see them\n");
         return;
     }
 
     if(painter->_maxSize / (world[0]/world[8]) < 1) {
-        //parsegraph_log("Not drawing glyphs because the world matrix is too small to see them\n");
         return;
     }
 
-    parsegraph_GlyphAtlas_update(parsegraph_GlyphPainter_glyphAtlas(painter));
-
     // Load program.
     glUseProgram(painter->_textProgram);
-
     glActiveTexture(GL_TEXTURE0);
+    glUniformMatrix3fv(painter->u_world, 1, 0, world);
 
-    // Render text.
-    glUniformMatrix3fv(
-        painter->u_world,
-        1,
-        0,
-        world
-    );
-    //fprintf(stderr, "Rendering glyphs\n");
-    parsegraph_pagingbuffer_renderPages(painter->_textBuffer);
-    //fprintf(stderr, "Done rendering glyphs\n");
+    // Render glyphs for each page.
+    glEnableVertexAttribArray(painter->a_position);
+    glEnableVertexAttribArray(painter->a_texCoord);
+    glEnableVertexAttribArray(painter->a_color);
+    glEnableVertexAttribArray(painter->a_backgroundColor);
+    for(int i = 0; i < parsegraph_ArrayList_length(painter->_textBuffers); ++i) {
+        parsegraph_GlyphPageRenderer* gp = parsegraph_ArrayList_at(painter->_textBuffers, i);
+        parsegraph_GlyphPageRenderer_render(gp);
+    }
+    glDisableVertexAttribArray(painter->a_position);
+    glDisableVertexAttribArray(painter->a_texCoord);
+    glDisableVertexAttribArray(painter->a_color);
+    glDisableVertexAttribArray(painter->a_backgroundColor);
 }

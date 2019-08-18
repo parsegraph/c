@@ -102,6 +102,8 @@ parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camer
     input->_caretSpotlightPainter = 0;
     parsegraph_Color_copy(input->_spotlightColor, parsegraph_FOCUSED_SPOTLIGHT_COLOR);
 
+    input->_mouseVersion = 0;
+
     // Whether the container is focused and not blurred.
     input->focused = 0;
 
@@ -441,13 +443,13 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
 
         long diff = 1;
         if(!strcmp(keyName, parsegraph_MOVE_BACKWARD_KEY)) {
-            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)parsegraph_max(0, (long)parsegraph_Node_value(input->selectedSlider) - diff), 1);
+            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)parsegraph_max(0, (long)parsegraph_Node_value(input->selectedSlider) - diff), 1, 0, 0);
             parsegraph_Node_layoutWasChanged(input->selectedSlider, parsegraph_INWARD);
             parsegraph_Graph_scheduleRepaint(input->_graph);
             return;
         }
         if(!strcmp(keyName, parsegraph_MOVE_FORWARD_KEY)) {
-            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)parsegraph_min(1, (long)parsegraph_Node_value(input->selectedSlider) + diff), 1);
+            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)parsegraph_min(1, (long)parsegraph_Node_value(input->selectedSlider) + diff), 1, 0, 0);
             parsegraph_Node_layoutWasChanged(input->selectedSlider, parsegraph_INWARD);
             parsegraph_Graph_scheduleRepaint(input->_graph);
             return;
@@ -465,8 +467,8 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
         if(strlen(keyName) == 0) {
             return;
         }
-        if(input->_focusedNode->_realLabel && ctrlKey) {
-            if(parsegraph_Label_ctrlKey(input->_focusedNode->_realLabel, keyName)) {
+        if(input->_focusedNode->_label && ctrlKey) {
+            if(parsegraph_Label_ctrlKey(input->_focusedNode->_label, keyName)) {
                 //console.log("LAYOUT CHANGED");
                 parsegraph_Node_layoutWasChanged(input->_focusedNode, parsegraph_INWARD);
                 parsegraph_Graph_scheduleRepaint(input->_graph);
@@ -480,7 +482,7 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
             parsegraph_Graph_scheduleRepaint(input->_graph);
             return;
         }
-        else if(input->_focusedNode->_realLabel && parsegraph_Label_editable(input->_focusedNode->_realLabel) && parsegraph_Label_key(input->_focusedNode->_realLabel, keyName)) {
+        else if(input->_focusedNode->_label && parsegraph_Label_editable(input->_focusedNode->_label) && parsegraph_Label_key(input->_focusedNode->_label, keyName)) {
             //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
             parsegraph_Node_layoutWasChanged(input->_focusedNode, parsegraph_INWARD);
             parsegraph_Graph_scheduleRepaint(input->_graph);
@@ -586,8 +588,8 @@ void parsegraph_Input_keydown(parsegraph_Input* input, const char* keyName, int 
             }
             else if(!strcmp(keyName, "Tab")) {
                 parsegraph_Node* toNode = shiftKey ?
-                    input->_focusedNode->_prevTabNode :
-                    input->_focusedNode->_nextTabNode;
+                    input->_focusedNode->_extended->prevTabNode :
+                    input->_focusedNode->_extended->nextTabNode;
                 if(toNode) {
                     input->_focusedNode = toNode;
                     parsegraph_Node_showNodeInCamera(input->_focusedNode, input->_camera, 1);
@@ -871,8 +873,8 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
 
     // Check if the label was clicked.
     parsegraph_log("Clicked\n");
-    if(selectedNode->_realLabel && !isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_realLabel)) {
-        parsegraph_Label_click(selectedNode->_realLabel,
+    if(selectedNode->_label && !isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_label)) {
+        parsegraph_Label_click(selectedNode->_label,
             (mouseInWorld[0] - selectedNode->_labelPos[0]) / selectedNode->_labelPos[2],
             (mouseInWorld[1] - selectedNode->_labelPos[1]) / selectedNode->_labelPos[2]
         );
@@ -991,11 +993,11 @@ void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, floa
         parsegraph_Node_absoluteSize(input->selectedSlider, nodeSize);
         if(x <= parsegraph_Node_absoluteX(input->selectedSlider) - nodeWidth / 2) {
             // To the left!
-            parsegraph_Node_setValue(input->selectedSlider, 0, 1);
+            parsegraph_Node_setValue(input->selectedSlider, 0, 1, 0, 0);
         }
         else if(x >= parsegraph_Node_absoluteX(input->selectedSlider) + nodeWidth / 2) {
             // To the right!
-            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)1, 1);
+            parsegraph_Node_setValue(input->selectedSlider, (void*)(long)1, 1, 0, 0);
         }
         else {
             // In between.
@@ -1005,7 +1007,7 @@ void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, floa
             //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
             parsegraph_Node_setValue(input->selectedSlider, (void*)(long)(
                 100*((nodeWidth/2 + x - parsegraph_Node_absoluteX(input->selectedSlider)) / nodeWidth)
-            ), 1);
+            ), 1, 0, 0);
         }
         parsegraph_Node_layoutWasChanged(input->selectedSlider, parsegraph_INWARD);
     //}
@@ -1119,7 +1121,17 @@ int parsegraph_Input_UpdateRepeatedly(parsegraph_Input* input)
     return input->_updateRepeatedly || parsegraph_Carousel_updateRepeatedly(parsegraph_Graph_carousel(input->_graph));
 }
 
-int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
+int parsegraph_Input_mouseVersion(parsegraph_Input* input)
+{
+    return input->_mouseVersion;
+};
+
+void parsegraph_Input_mouseChanged(parsegraph_Input* input)
+{
+    ++input->_mouseVersion;
+}
+
+int parsegraph_Input_Update(parsegraph_Input* input, struct timespec* inputTime)
 {
     parsegraph_Camera* cam = input->_camera;
 
@@ -1153,7 +1165,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         parsegraph_Input_Get(input, parsegraph_MOVE_BACKWARD_KEY)
     ) {
         input->_updateRepeatedly = 1;
-        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed;
+        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_BACKWARD_KEY, inputTime) * xSpeed;
         float y = parsegraph_Camera_y(cam);
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
@@ -1161,7 +1173,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
 
     if(parsegraph_Input_Get(input, parsegraph_MOVE_FORWARD_KEY)) {
         input->_updateRepeatedly = 1;
-        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed;
+        float x = parsegraph_Camera_x(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_FORWARD_KEY, inputTime) * -xSpeed;
         float y = parsegraph_Camera_y(cam);
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
@@ -1170,7 +1182,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
     if(parsegraph_Input_Get(input, parsegraph_MOVE_UPWARD_KEY)) {
         input->_updateRepeatedly = 1;
         float x = parsegraph_Camera_x(cam);
-        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, t) * ySpeed;
+        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_UPWARD_KEY, inputTime) * ySpeed;
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
@@ -1178,7 +1190,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
     if(parsegraph_Input_Get(input, parsegraph_MOVE_DOWNWARD_KEY)) {
         input->_updateRepeatedly = 1;
         float x = parsegraph_Camera_x(cam);
-        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed;
+        float y = parsegraph_Camera_y(cam) + parsegraph_Input_Elapsed(input, parsegraph_MOVE_DOWNWARD_KEY, inputTime) * -ySpeed;
         parsegraph_Camera_setOrigin(cam, x, y);
         inputChangedScene = 1;
     }
@@ -1187,7 +1199,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         input->_updateRepeatedly = 1;
         inputChangedScene = 1;
         parsegraph_Camera_zoomToPoint(cam,
-            powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, t)),
+            powf(1.1, -scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_OUT_KEY, inputTime)),
             input->cursorScreenPos[0],
             input->cursorScreenPos[1]
         );
@@ -1198,7 +1210,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec t)
         inputChangedScene = 1;
         //if(parsegraph_Camera_scale(cam) >= .01) {
             parsegraph_Camera_zoomToPoint(cam,
-            powf(1.1, scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, t)),
+            powf(1.1, scaleSpeed * parsegraph_Input_Elapsed(input, parsegraph_ZOOM_IN_KEY, inputTime)),
                 input->cursorScreenPos[0],
                 input->cursorScreenPos[1]
             );
@@ -1235,7 +1247,7 @@ int parsegraph_Input_Get(parsegraph_Input* input, const char* key)
     return 0;
 };
 
-float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct timespec t)
+float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct timespec* inputTime)
 {
 	struct parsegraph_KeyDown* kd = 0;
 	for(int i = 0; i < parsegraph_ArrayList_length(input->keydowns); ++i) {
@@ -1249,10 +1261,10 @@ float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct 
         return 0;
     }
     struct timespec* v = &kd->when;
-    float elapsed = (float)parsegraph_timediffMs(v, &t);
+    float elapsed = (float)parsegraph_timediffMs(v, inputTime);
     elapsed /= 1000.0;
     //parsegraph_log("%s elapsed for %f seconds (then=%d.%d versus now=%d.%d).\n", key, elapsed, v->tv_sec, v->tv_nsec, t.tv_sec, t.tv_nsec);
-	kd->when = t;
+	kd->when = *inputTime;
 
     return elapsed;
 }
@@ -1260,18 +1272,18 @@ float parsegraph_Input_Elapsed(parsegraph_Input* input, const char* key, struct 
 void parsegraph_Input_paint(parsegraph_Input* input)
 {
     if(!input->_caretPainter) {
-        input->_caretPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
+        input->_caretPainter = parsegraph_BlockPainter_new(input->pool, input->_graph->_shaders);
     }
     if(input->_cursorShown && !input->_cursorPainter) {
-        input->_cursorPainter = parsegraph_BlockPainter_new(input->_graph->_surface, input->_graph->_shaders);
+        input->_cursorPainter = parsegraph_BlockPainter_new(input->pool, input->_graph->_shaders);
     }
     if(!input->_caretSpotlightPainter) {
-        input->_caretSpotlightPainter = parsegraph_SpotlightPainter_new(input->_graph->_surface,
+        input->_caretSpotlightPainter = parsegraph_SpotlightPainter_new(input->pool,
             input->_graph->_shaders
         );
     }
     if(!input->_cursorSpotlightPainter) {
-        input->_cursorSpotlightPainter = parsegraph_SpotlightPainter_new(input->_graph->_surface,
+        input->_cursorSpotlightPainter = parsegraph_SpotlightPainter_new(input->pool,
             input->_graph->_shaders
         );
     }
@@ -1362,7 +1374,7 @@ void parsegraph_Input_paint(parsegraph_Input* input)
         return;
     }
 
-    parsegraph_Label* label = input->_focusedNode->_realLabel;
+    parsegraph_Label* label = input->_focusedNode->_label;
     if(!label || !parsegraph_Label_editable(label) || !input->_focusedLabel) {
         float s[2];
         parsegraph_Node_absoluteSize(input->_focusedNode, s);
@@ -1406,7 +1418,7 @@ void parsegraph_Input_setFocusedNode(parsegraph_Input* input, parsegraph_Node* f
     input->_focusedNode = focusedNode;
     parsegraph_Node* selectedNode = input->_focusedNode;
     //console.log("Clicked");
-    input->_focusedLabel = selectedNode && selectedNode->_realLabel && isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_realLabel);
+    input->_focusedLabel = selectedNode && selectedNode->_label && isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_label);
 }
 
 int parsegraph_Input_focusedLabel(parsegraph_Input* input)
@@ -1432,22 +1444,23 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
     if(APR_SUCCESS != apr_pool_create(&pool, input->_graph->_surface->pool)) {
         parsegraph_die("Failed to create render memory pool for Input.");
     }
-    parsegraph_BlockPainter_render(input->_caretPainter, world);
-    parsegraph_SpotlightPainter_render(input->_caretSpotlightPainter, world, 1);
+    parsegraph_BlockPainter_render(input->_caretPainter, world, scale);
+    parsegraph_SpotlightPainter_render(input->_caretSpotlightPainter, world, scale);
 
     parsegraph_Surface* surface = parsegraph_Graph_surface(input->_graph);
     float displayWidth = parsegraph_Surface_getWidth(surface);
     float displayHeight = parsegraph_Surface_getHeight(surface);
-    float* screenWorld = make2DProjection(input->pool, displayWidth, displayHeight, parsegraph_VFLIP);
+    float screenWorld[9];
+    make2DProjectionI(screenWorld, displayWidth, displayHeight, parsegraph_VFLIP);
     float screenScale = .1;
     float* screenTextWorld = matrixMultiply3x3(
         pool, makeScale3x3(pool, screenScale, screenScale), screenWorld
     );
-    parsegraph_GlyphPainter_render(input->_glyphPainter, screenTextWorld, 1);
+    parsegraph_GlyphPainter_render(input->_glyphPainter, screenTextWorld, scale);
     if(input->_cursorPainter && input->_cursorShown) {
-        parsegraph_BlockPainter_render(input->_cursorPainter, screenWorld);
+        parsegraph_BlockPainter_render(input->_cursorPainter, screenWorld, scale);
     }
-    parsegraph_SpotlightPainter_render(input->_cursorSpotlightPainter, screenWorld, 1);
+    parsegraph_SpotlightPainter_render(input->_cursorSpotlightPainter, screenWorld, scale);
     apr_pool_destroy(pool);
 }
 

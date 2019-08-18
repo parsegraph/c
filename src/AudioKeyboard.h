@@ -6,6 +6,7 @@
 #include "graph/BlockPainter.h"
 
 struct parsegraph_AudioKeyboard {
+apr_pool_t* pool;
 parsegraph_Camera* _camera;
 float _worldX;
 float _worldY;
@@ -24,7 +25,7 @@ void parsegraph_AudioKeyboard_prepare(parsegraph_AudioKeyboard* piano, parsegrap
 void parsegraph_AudioKeyboard_paint(parsegraph_AudioKeyboard* piano);
 void parsegraph_AudioKeyboard_setOrigin(parsegraph_AudioKeyboard* piano, float x, float y);
 void parsegraph_AudioKeyboard_setScale(parsegraph_AudioKeyboard* piano, float scale);
-void parsegraph_AudioKeyboard_render(parsegraph_AudioKeyboard* piano, float* world);
+void parsegraph_AudioKeyboard_render(parsegraph_AudioKeyboard* piano, float* world, float scale);
 void parsegraph_AudioKeyboard_destroy(parsegraph_AudioKeyboard* piano);
 
 #endif // parsegraph_AudioKeyboard_INCLUDED

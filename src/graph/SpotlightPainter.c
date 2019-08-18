@@ -38,10 +38,10 @@ const char* parsegraph_SpotlightPainter_FragmentShader =
 
 static const char* shaderName = "parsegraph_SpotlightPainter";
 
-parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders)
+parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(apr_pool_t* ppool, apr_hash_t* shaders)
 {
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create SpotlightPainter memory pool.");
     }
     parsegraph_SpotlightPainter* painter = apr_palloc(pool, sizeof(*painter));

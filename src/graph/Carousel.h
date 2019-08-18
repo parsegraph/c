@@ -15,6 +15,14 @@ void(*callback)(void*);
 void* thisArg;
 };
 
+struct parsegraph_CarouselPlot {
+parsegraph_Node* node;
+float x;
+float y;
+float scale;
+};
+typedef struct parsegraph_CarouselPlot parsegraph_CarouselPlot;
+
 struct parsegraph_Carousel {
 apr_pool_t* pool;
 float _backgroundColor[4];
@@ -23,7 +31,7 @@ parsegraph_Camera* _camera;
 parsegraph_ArrayList* _carouselPlots;
 parsegraph_ArrayList* _carouselCallbacks;
 
-parsegraph_Node* _selectedCarouselPlot;
+parsegraph_CarouselPlot* _selectedCarouselPlot;
 int _selectedCarouselPlotIndex;
 
 float _carouselX;

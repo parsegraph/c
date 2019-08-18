@@ -5,9 +5,10 @@ extern "C" {
 #include "graph/Input.h"
 #include "die.h"
 #include <apr_strings.h>
+#include "app.h"
 
-parsegraph_Surface* parsegraph_init(void* peer, int w, int h, int argc, const char* const* argv);
-void parsegraph_stop(parsegraph_Surface* surf);
+void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode);
+void parsegraph_stop(parsegraph_Application* app);
 }
 
 #include <QTime>
@@ -18,6 +19,8 @@ void parsegraph_stop(parsegraph_Surface* surf);
 #include <QMouseEvent>
 
 static apr_pool_t* pool;
+
+static void onInit(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode);
 
 class MainWindow : public QOpenGLWindow {
 
@@ -196,7 +199,9 @@ virtual void wheelEvent(QWheelEvent* ev) {
 }
 
 public:
+struct parsegraph_Application* app = 0;
 struct parsegraph_Surface* surface = 0;
+struct parsegraph_Input* input = 0;
 
 MainWindow(QOpenGLContext* shareContext) :
     QOpenGLWindow(shareContext)
@@ -206,24 +211,23 @@ MainWindow(QOpenGLContext* shareContext) :
     });
 }
 
-parsegraph_Input* input = 0;
 QTime frameElapsedTime;
 GLint w = 0;
 GLint h = 0;
-parsegraph_ArrayList* argumentList = 0;
 virtual void initializeGL() {
     glEnable(GL_MULTISAMPLE);
     // Invoke global init function.
     w = width();
     h = height();
 
-    argumentList = parsegraph_ArrayList_new(pool);
+    parsegraph_ArrayList* argumentList = parsegraph_ArrayList_new(pool);
     auto qtArgs = QCoreApplication::arguments();
     for(int i = 0; i < qtArgs.count(); ++i) {
         parsegraph_ArrayList_push(argumentList, apr_pstrdup(pool, qtArgs[i].toUtf8().constData()));
     }
-    surface = parsegraph_init(this, w, h, qtArgs.count(), (const char* const*)argumentList->data);
-    //fprintf(stderr, "Window size: %d, %d\n", w, h);
+    app = parsegraph_Application_new(pool, 0);
+    parsegraph_Application_start(app, this, w, h, argumentList, onInit, 0);
+    //parsegraph_log("Window size: %d, %d\n", w, h);
     frameElapsedTime.start();
 }
 virtual void resizeGL(int w, int h) {
@@ -231,35 +235,45 @@ virtual void resizeGL(int w, int h) {
     float dy = h - this->h;
     this->w = w;
     this->h = h;
-    parsegraph_Surface_setDisplaySize(surface, w, h);
+    if(surface) {
+        parsegraph_Surface_setDisplaySize(surface, w, h);
+    }
     if(input) {
         float scale = parsegraph_Camera_scale(input->_camera);
         parsegraph_Camera_adjustOrigin(input->_camera, 0.5*dx/scale, 0.5*dy/scale);
     }
-    parsegraph_Surface_scheduleRepaint(surface);
+    if(app) {
+        parsegraph_Application_scheduleRepaint(app);
+    }
 }
 virtual void paintGL() {
+    parsegraph_logEntercf("GL Paints", "Painting GL\n");
+    if(!surface) {
+        parsegraph_logLeave();
+        return;
+    }
     parsegraph_Surface_runAnimationCallbacks(surface, ((float)frameElapsedTime.restart())/1000.0);
     parsegraph_Surface_render(surface, 0);
     glFlush();
+    parsegraph_logLeave();
 }
 };
 
-extern "C" {
-
-void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
+static void onClose(void* data, parsegraph_Application* app)
 {
-    MainWindow* win = (MainWindow*)surface->peer;
-    win->update();
+    parsegraph_stop(app);
 }
 
-void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* input)
+static void onInit(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode)
 {
+    parsegraph_Surface* surface = parsegraph_Application_surface(app);
     MainWindow* win = static_cast<MainWindow*>(surface->peer);
-    if(win->input) {
-        parsegraph_Surface_uninstall(surface);
-        return;
+    win->surface = surface;
+    if(win->w) {
+        parsegraph_Surface_setDisplaySize(surface, win->w, win->h);
     }
+    parsegraph_Application_setOnClose(app, onClose, win);
+    parsegraph_Input* input = parsegraph_Application_input(app);
     win->input = input;
 
     float defaultScale = .25;
@@ -274,15 +288,15 @@ void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* i
     input->cursorScreenPos[1] = parsegraph_Camera_y(cam);
 
     parsegraph_Input_setCursorShown(input, 0);
+    parsegraph_init(data, app, login, loginNode);
 }
 
-void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
+extern "C" {
+
+void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
 {
-    MainWindow* win = static_cast<MainWindow*>(surface->peer);
-    if(!win->input) {
-        return;
-    }
-    win->input = 0;
+    MainWindow* win = (MainWindow*)surface->peer;
+    win->update();
 }
 
 }
@@ -306,7 +320,7 @@ int main(int argc, char**argv)
         return -1;
     }
 
-    QGuiApplication app(argc, argv);
+    QGuiApplication mainApp(argc, argv);
 
     QSurfaceFormat format;
     format.setSamples(4);
@@ -329,11 +343,9 @@ int main(int argc, char**argv)
     window.resize(640, 480);
     window.show();
 
-    rv = app.exec();
+    rv = mainApp.exec();
     // Destroy the pool for cleanliness.
-    if(window.surface) {
-        parsegraph_stop(window.surface);
-    }
+    parsegraph_Application_close(window.app);
     apr_pool_destroy(pool);
     pool = NULL;
     apr_terminate();

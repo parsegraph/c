@@ -23,9 +23,9 @@ static const char* parsegraph_TexturePainter_FragmentShader =
     "gl_FragColor = texture2D(u_texture, texCoord.st);\n"
 "}\n";
 
-parsegraph_TexturePainter* parsegraph_TexturePainter_new(parsegraph_Surface* surface, int textureId, float texWidth, float texHeight, apr_hash_t* shaders)
+parsegraph_TexturePainter* parsegraph_TexturePainter_new(apr_pool_t* ppool, int textureId, float texWidth, float texHeight, apr_hash_t* shaders)
 {
-    parsegraph_TexturePainter* painter = apr_palloc(surface->pool, sizeof(*painter));
+    parsegraph_TexturePainter* painter = apr_palloc(ppool, sizeof(*painter));
 
     // Compile the shader program.
     painter->_textureProgram = parsegraph_compileProgram(shaders, "parsegraph_TexturePainter",
@@ -37,7 +37,7 @@ parsegraph_TexturePainter* parsegraph_TexturePainter_new(parsegraph_Surface* sur
     painter->_texHeight = texHeight;
 
     // Prepare attribute buffers.
-    painter->_buffer = parsegraph_pagingbuffer_new(surface->pool, painter->_textureProgram);
+    painter->_buffer = parsegraph_pagingbuffer_new(ppool, painter->_textureProgram);
     painter->a_position = parsegraph_pagingbuffer_defineAttrib(painter->_buffer, "a_position", 2, 0);
     painter->a_color = parsegraph_pagingbuffer_defineAttrib(painter->_buffer, "a_color", 4, 0);
     painter->a_backgroundColor = parsegraph_pagingbuffer_defineAttrib(painter->_buffer, "a_backgroundColor", 4, 0);

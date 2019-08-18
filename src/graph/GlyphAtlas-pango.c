@@ -40,7 +40,7 @@ void* parsegraph_GlyphAtlas_createFont(parsegraph_GlyphAtlas* glyphAtlas)
     struct parsegraph_PangoFont* pf = malloc(sizeof(struct parsegraph_PangoFont));
     pf->_font = pango_font_description_from_string(textutf8);
     glyphAtlas->_font = pf;
-    pf->measure = parsegraph_GlyphAtlas_createTexture(glyphAtlas);
+    pf->measure = parsegraph_GlyphAtlas_createTexture(glyphAtlas, 100, 100);
     free(textutf8);
     return pf;
 }
@@ -103,13 +103,13 @@ void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const 
     free(textutf8);
 }
 
-void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
+void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas, int width, int height)
 {
     struct parsegraph_PangoTexture* rv = malloc(sizeof(*rv));
-    int maxTextureWidth = parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas);
-    rv->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, maxTextureWidth, maxTextureWidth);
+    rv->surface = cairo_image_surface_create(CAIRO_FORMAT_A8, width, height);
 
     rv->cr = cairo_create(rv->surface);
+    parsegraph_GlyphAtlas_clearTexture(glyphAtlas, rv);
     cairo_set_source_rgb(rv->cr, 0, 0, 0);
     cairo_paint(rv->cr);
 
@@ -117,6 +117,13 @@ void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
     pango_layout_set_font_description(rv->layout, ((struct parsegraph_PangoFont*)glyphAtlas->_font)->_font);
 
     return rv;
+}
+
+void parsegraph_GlyphAtlas_clearTexture(parsegraph_GlyphAtlas* glyphAtlas, void* data)
+{
+    struct parsegraph_PangoTexture* texture = data;
+    cairo_set_source_rgb(texture->cr, 0, 0, 0);
+    cairo_paint(texture->cr);
 }
 
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* data)

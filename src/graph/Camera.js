@@ -348,10 +348,25 @@ parsegraph_Camera.prototype.project = function()
     );
 };
 
-parsegraph_Camera.prototype.contains = function(s)
+parsegraph_Camera.prototype.containsAny = function(s)
 {
     var camera = this;
     return parsegraph_containsAny(
+        -camera.x() + camera.width()/(camera.scale()*2),
+        -camera.y() + camera.height()/(camera.scale()*2),
+        camera.width() / camera.scale(),
+        camera.height() / camera.scale(),
+        s.x(),
+        s.y(),
+        s.width(),
+        s.height()
+    );
+};
+
+parsegraph_Camera.prototype.containsAll = function(s)
+{
+    var camera = this;
+    return parsegraph_containsAll(
         -camera.x() + camera.width()/(camera.scale()*2),
         -camera.y() + camera.height()/(camera.scale()*2),
         camera.width() / camera.scale(),

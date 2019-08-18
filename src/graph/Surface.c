@@ -216,7 +216,7 @@ float parsegraph_Surface_getHeight(parsegraph_Surface* surface)
     return surface->displayHeight;
 }
 
-void parsegraph_Surface_addPainter(parsegraph_Surface* surface, void(*painterFunc)(void*, void*), void* data)
+void parsegraph_Surface_addPainter(parsegraph_Surface* surface, void(*painterFunc)(void*, void*, int), void* data)
 {
     parsegraph_SurfacePainter* painter = malloc(sizeof(*painter));
     painter->painter = painterFunc;
@@ -248,10 +248,10 @@ void parsegraph_Surface_addRenderer(parsegraph_Surface* surface, void(*rendererF
     }
 }
 
-void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg)
+void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg, int timeout)
 {
     for(parsegraph_SurfacePainter* painter = surface->first_painter; painter; painter = painter->next) {
-        painter->painter(painter->data, arg);
+        painter->painter(painter->data, arg, timeout);
     }
 }
 

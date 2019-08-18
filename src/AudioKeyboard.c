@@ -5,6 +5,7 @@
 parsegraph_AudioKeyboard* parsegraph_AudioKeyboard_new(parsegraph_Camera* camera, float worldX, float worldY, float userScale)
 {
     parsegraph_AudioKeyboard* piano = apr_palloc(camera->surface->pool, sizeof(*piano));
+    piano->pool = camera->surface->pool;
     piano->_camera = camera;
 
     piano->_worldX = 0;
@@ -53,7 +54,7 @@ void parsegraph_AudioKeyboard_paint(parsegraph_AudioKeyboard* piano)
     float black[] = {0, 0, 0, 1};
     float blackBorder[] = {2*highlight, 2*highlight, 2*highlight, 1};
     if(!piano->_whiteKeyPainter) {
-        piano->_whiteKeyPainter = parsegraph_BlockPainter_new(piano->_camera->surface, piano->_shaders);
+        piano->_whiteKeyPainter = parsegraph_BlockPainter_new(piano->pool, piano->_shaders);
         parsegraph_BlockPainter_setBorderColor(piano->_whiteKeyPainter, whiteBorder);
         parsegraph_BlockPainter_setBackgroundColor(piano->_whiteKeyPainter, white);
     }
@@ -61,7 +62,7 @@ void parsegraph_AudioKeyboard_paint(parsegraph_AudioKeyboard* piano)
         parsegraph_BlockPainter_clear(piano->_whiteKeyPainter);
     }
     if(!piano->_blackKeyPainter) {
-        piano->_blackKeyPainter = parsegraph_BlockPainter_new(piano->_camera->surface, piano->_shaders);
+        piano->_blackKeyPainter = parsegraph_BlockPainter_new(piano->pool, piano->_shaders);
         parsegraph_BlockPainter_setBorderColor(piano->_blackKeyPainter, blackBorder);
         parsegraph_BlockPainter_setBackgroundColor(piano->_blackKeyPainter, black);
     }
@@ -153,11 +154,11 @@ void parsegraph_AudioKeyboard_setScale(parsegraph_AudioKeyboard* piano, float sc
     }
 }
 
-void parsegraph_AudioKeyboard_render(parsegraph_AudioKeyboard* piano, float* world)
+void parsegraph_AudioKeyboard_render(parsegraph_AudioKeyboard* piano, float* world, float scale)
 {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glDisable(GL_DEPTH_TEST);
     //glDisable(GL_BLEND);
-    parsegraph_BlockPainter_render(piano->_whiteKeyPainter, world);
-    parsegraph_BlockPainter_render(piano->_blackKeyPainter, world);
+    parsegraph_BlockPainter_render(piano->_whiteKeyPainter, world, scale);
+    parsegraph_BlockPainter_render(piano->_blackKeyPainter, world, scale);
 }

@@ -5,7 +5,6 @@
 #include <apr_hash.h>
 #include "../gl.h"
 #include "../pagingbuffer.h"
-#include "Surface.h"
 
 struct parsegraph_SpotlightPainter {
 apr_pool_t* pool;
@@ -23,6 +22,6 @@ void parsegraph_SpotlightPainter_clear(parsegraph_SpotlightPainter* painter);
 void parsegraph_SpotlightPainter_destroy(parsegraph_SpotlightPainter* painter);
 void parsegraph_SpotlightPainter_drawRectSpotlight(parsegraph_SpotlightPainter* painter, float cx, float cy, float w, float h, float* color);
 void parsegraph_SpotlightPainter_drawSpotlight(parsegraph_SpotlightPainter* painter, float cx, float cy, float radius, float* color);
-parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders);
+parsegraph_SpotlightPainter* parsegraph_SpotlightPainter_new(apr_pool_t* ppool, apr_hash_t* shaders);
 
 #endif // parsegraph_SpotlightPainter_INCLUDED

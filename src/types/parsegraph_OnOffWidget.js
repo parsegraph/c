@@ -57,12 +57,6 @@ parsegraph_OnOffWidget.prototype.node = function()
         var car = new parsegraph_Caret(parsegraph_SLOT);
         car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
-        var brownStyle = parsegraph_copyStyle(parsegraph_SLOT);
-        brownStyle.backgroundColor = new parsegraph_Color(0.4, 0.1, 0, 1);
-        brownStyle.borderColor = new parsegraph_Color(0.4, 0.1, 0, 1);
-        brownStyle.fontColor = new parsegraph_Color(1, 0.5, 0.5, 1);
-        brownStyle.borderColor = new parsegraph_Color(1, 1, 1, 1);
-        car.node().setBlockStyle(brownStyle);
         car.node().setIgnoreMouse(true);
         car.shrink();
 

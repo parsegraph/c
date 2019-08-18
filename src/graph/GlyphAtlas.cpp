@@ -47,20 +47,24 @@ void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const 
     }
 }
 
-void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas)
+void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas, int width, int height)
 {
-    int maxTextureWidth = parsegraph_GlyphAtlas_maxTextureWidth(glyphAtlas);
-    auto img = new QImage(maxTextureWidth, maxTextureWidth, QImage::Format_ARGB32_Premultiplied);
+    auto img = new QImage(width, height, QImage::Format_Alpha8);
+    parsegraph_GlyphAtlas_clearTexture(glyphAtlas, img);
+    return img;
+}
+
+void parsegraph_GlyphAtlas_clearTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
+{
+    auto img = static_cast<QImage*>(texture);
     QPainter p;
     if(!p.begin(img)) {
         parsegraph_die("Failed to create texture");
     }
     p.setBackground(Qt::black);
     p.setPen(QPen(Qt::white));
-    p.fillRect(0, 0, maxTextureWidth, maxTextureWidth, Qt::black);
+    p.fillRect(0, 0, img->width(), img->height(), Qt::black);
     p.end();
-
-    return img;
 }
 
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture)

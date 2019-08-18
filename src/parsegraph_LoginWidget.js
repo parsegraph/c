@@ -289,7 +289,6 @@ parsegraph_LoginWidget.prototype.login = function()
 // Create new user.
 parsegraph_LoginWidget.prototype.createNewUser = function()
 {
-    var loginRequest = new XMLHttpRequest();
     var username = this._usernameField._label.getText();
     var password = this._passwordField.value();
     parsegraph_createNewUser(username, password, this.onLogin, this);
@@ -632,5 +631,4 @@ parsegraph_LoginWidget.prototype.toggleRemember = function()
         //localStorage.removeItem("parsegraph_LoginWidget_remember");
     }
     this._graph.scheduleRepaint();
-    return false;
 };

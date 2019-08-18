@@ -79,13 +79,11 @@ parsegraph_Application.prototype.onLogout = function() {
         this._world = null;
     }
     this._userLogin = null;
-    this._sessionNode = null;
     this._loginNode = null;
 
 };
 
 parsegraph_Application.prototype.onLogin = function(userLogin, loginNode) {
-    var graph = this.graph();
     this._userLogin = userLogin;
     this._loginNode = loginNode;
 

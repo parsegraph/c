@@ -3,12 +3,12 @@
 
 // Node Direction
 #define parsegraph_NULL_NODE_DIRECTION -1
-#define parsegraph_FORWARD 0
-#define parsegraph_BACKWARD 1
+#define parsegraph_INWARD 0
+#define parsegraph_OUTWARD 1
 #define parsegraph_DOWNWARD 2
 #define parsegraph_UPWARD 3
-#define parsegraph_INWARD 4
-#define parsegraph_OUTWARD 5
+#define parsegraph_BACKWARD 4
+#define parsegraph_FORWARD 5
 #define parsegraph_NUM_DIRECTIONS 6
 
 // Node Axis

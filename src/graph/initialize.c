@@ -36,6 +36,13 @@ float parsegraph_EXTENT_BORDER_THICKNESS;
 float parsegraph_EXTENT_BACKGROUND_COLOR[4];
 float parsegraph_BUD_LEAF_SEPARATION;
 int parsegraph_LINE_THICKNESS;
+int parsegraph_FIT_LOOSE;
+int parsegraph_CREASE;
+int parsegraph_INPUT_LAYOUT_TIME;
+int parsegraph_GOVERNOR;
+int parsegraph_IDLE_MARGIN;
+int parsegraph_BURST_IDLE;
+int parsegraph_INTERVAL;
 
 int parsegraph_LAYOUT_ORDER_MAX;
 int parsegraph_VERTICAL_ORDER[7];
@@ -104,8 +111,8 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_VERTICAL_ORDER[6] = parsegraph_NULL_NODE_DIRECTION;
 
     // Optimization hints.
-    parsegraph_FIT_LOOSE = false;
-    parsegraph_CREASE = true;
+    parsegraph_FIT_LOOSE = 0;
+    parsegraph_CREASE = 1;
 
     parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 

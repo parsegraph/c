@@ -1,13 +1,13 @@
 parsegraph_SingleOscillatorWidget_COUNT = 0;
-function parsegraph_SingleOscillatorWidget(graph, sink)
+function parsegraph_SingleOscillatorWidget(graph)
 {
     this._id = parsegraph_SingleOscillatorWidget_COUNT++;
     this._graph = graph;
-    this._audio = this._graph.surface().audio();
+    this._audio = null;
     this._containerNode = null;
     this._osc = null;
     this._gain = null;
-    this._sink = sink;
+    this._sink = null;
     this._minFrequency = 16;
     this._frequencyRange = 2000;
     this._maxTremoloFreq = 40;
@@ -24,11 +24,6 @@ parsegraph_SingleOscillatorWidget.prototype.node = function()
         var car = new parsegraph_Caret(parsegraph_BLOCK);
         car.setGlyphAtlas(this._graph.glyphAtlas());
         car.node().setIgnoreMouse(true);
-        var brownStyle = parsegraph_copyStyle(parsegraph_SLOT);
-        brownStyle.backgroundColor = new parsegraph_Color(0.4, 0.1, 0, 1);
-        brownStyle.borderColor = new parsegraph_Color(1, 1, 1, 1);
-        brownStyle.fontColor = new parsegraph_Color(1, 0.5, 0.5, 1);
-        car.node().setBlockStyle(brownStyle);
         this._containerNode = car.root();
         car.label("Single Oscillator");
         car.spawnMove('i', 'u', 'v');
@@ -76,10 +71,6 @@ parsegraph_SingleOscillatorWidget.prototype.node = function()
         car.push();
         car.spawnMove('d', 's');
         car.label("Frequency");
-        var silverStyle = parsegraph_copyStyle(parsegraph_SLOT);
-        silverStyle.backgroundColor = new parsegraph_Color(0.8, 0.6, 0.2, 1);
-        silverStyle.borderColor = new parsegraph_Color(1, 1, 1, 1);
-        car.node().setBlockStyle(silverStyle);
         car.spawnMove('i', 'sli', 'v');
         this._freqSlider = car.node();
         this._freqSlider.setValue(0.05);
@@ -102,10 +93,6 @@ parsegraph_SingleOscillatorWidget.prototype.node = function()
         car.move('d');
         car.spawnMove('d', 's');
         car.label("Tremolo");
-        var silverStyle = parsegraph_copyStyle(parsegraph_SLOT);
-        silverStyle.backgroundColor = new parsegraph_Color(0.4, 0.8, 0.2, 1);
-        silverStyle.borderColor = new parsegraph_Color(1, 1, 1, 1);
-        car.node().setBlockStyle(silverStyle);
         car.spawnMove('i', 'sli', 'v');
         this._tremoloSlider = car.node();
         this._tremoloSlider.setValue(0.3);
@@ -131,10 +118,6 @@ parsegraph_SingleOscillatorWidget.prototype.node = function()
         car.move('d');
         car.spawnMove('d', 's');
         car.label("Warble");
-        var silverStyle = parsegraph_copyStyle(parsegraph_SLOT);
-        silverStyle.backgroundColor = new parsegraph_Color(0.8, 0.8, 0.4, 1);
-        silverStyle.borderColor = new parsegraph_Color(1, 1, 1, 1);
-        car.node().setBlockStyle(silverStyle);
         car.spawnMove('i', 'sli', 'v');
         this._warbleSlider = car.node();
         this._warbleSlider.setValue(0.3);
@@ -211,6 +194,12 @@ parsegraph_SingleOscillatorWidget.prototype.audioOut = function()
 
 parsegraph_SingleOscillatorWidget.prototype.play = function()
 {
+    if(!this._audio) {
+        this._audio = this._graph.surface().startAudio();
+    }
+    if(!this._sink) {
+        this._sink = this._graph.surface().audio().destination;
+    }
     if(!this._osc) {
         // Create the node if needed.
         this.audioOut();

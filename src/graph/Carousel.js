@@ -299,7 +299,6 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
     var minScale = 1;
     this._carouselPlots.forEach(function(carouselData, i) {
         var root = carouselData[0];
-        var paintGroup = root.localPaintGroup();
         root.commitLayoutIteratively();
 
         // Set the origin.
@@ -427,7 +426,7 @@ parsegraph_Carousel.prototype.render = function(world)
     for(var i in this._carouselPlots) {
         var carouselData = this._carouselPlots[i];
         var root = carouselData[0];
-        root.render(
+        root.renderIteratively(
             matrixMultiply3x3(
                 makeScale3x3(carouselData[3]),
                 matrixMultiply3x3(makeTranslation3x3(

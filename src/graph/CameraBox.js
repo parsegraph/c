@@ -113,15 +113,13 @@ parsegraph_CameraBox.prototype.paint = function()
     return needsRepaint;
 }
 
-parsegraph_CameraBox.prototype.render = function(world)
+parsegraph_CameraBox.prototype.render = function(world, scale)
 {
     if(this._showCameraBoxes) {
         var gl = this.gl();
         gl.enable(gl.BLEND);
-        gl.blendFunc(
-            gl.SRC_ALPHA, gl.DST_ALPHA
-        );
-        this._cameraBoxPainter.render(world);
+        gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
+        this._cameraBoxPainter.render(world, scale);
     }
 };
 

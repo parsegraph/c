@@ -15,6 +15,25 @@ float* parsegraph_Rect_new(apr_pool_t* pool)
     return rv;
 }
 
+void parsegraph_Rect_copyFrom(float* dest, float* src)
+{
+    parsegraph_Rect_set(dest, src[0], src[1], src[2], src[3]);
+}
+
+void parsegraph_Rect_translate(float* rect, float x, float y)
+{
+    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) + x);
+    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) + y);
+}
+
+void parsegraph_Rect_scale(float* rect, float sx, float sy)
+{
+    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) * sx);
+    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) * sy);
+    parsegraph_Rect_setWidth(rect, parsegraph_Rect_width(rect) * sx);
+    parsegraph_Rect_setHeight(rect, parsegraph_Rect_height(rect) * sy);
+}
+
 float* parsegraph_createRect(apr_pool_t* pool, float x, float y, float width, float height)
 {
     float* rect = parsegraph_Rect_new(pool);

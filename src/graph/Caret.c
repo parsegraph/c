@@ -3,7 +3,6 @@
 #include "LayoutPreference.h"
 #include "id.h"
 #include "NodeFit.h"
-#include "PaintGroup.h"
 #include "Surface.h"
 #include "../die.h"
 #include "Status.h"
@@ -126,7 +125,7 @@ parsegraph_Node* parsegraph_Caret_disconnect(parsegraph_Caret* caret, const char
     return parsegraph_Node_disconnectNode(parsegraph_Node_parentNode(parsegraph_Caret_node(caret)), parsegraph_reverseNodeDirection(parsegraph_Node_parentDirection(parsegraph_Caret_node(caret))));
 }
 
-parsegraph_PaintGroup* parsegraph_Caret_crease(parsegraph_Caret* caret, const char* inDirection)
+void parsegraph_Caret_crease(parsegraph_Caret* caret, const char* inDirection)
 {
     // Interpret the given direction for ease-of-use.
     parsegraph_Node* node;
@@ -140,13 +139,46 @@ parsegraph_PaintGroup* parsegraph_Caret_crease(parsegraph_Caret* caret, const ch
 
     // Create a new paint group for the connection.
     if(!parsegraph_Node_localPaintGroup(node)) {
-        parsegraph_PaintGroup* pg = parsegraph_PaintGroup_new(caret->surface, node, 0, 0, 1);
-        parsegraph_Node_setPaintGroup(node, pg);
-        parsegraph_PaintGroup_unref(pg);
+        parsegraph_Node_setPaintGroup(node, 1);
+    }
+}
+
+void parsegraph_Caret_uncrease(parsegraph_Caret* caret, const char* inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    parsegraph_Node* node;
+    if(!inDirection) {
+        node = parsegraph_Caret_node(caret);
+    }
+    else {
+        int inDirectionVal = parsegraph_readNodeDirection(inDirection);
+        node = parsegraph_Node_nodeAt(parsegraph_Caret_node(caret), inDirectionVal);
+    }
+
+    // Remove the paint group.
+    parsegraph_Node_setPaintGroup(node, 0);
+}
+
+int parsegraph_Caret_isCreased(parsegraph_Caret* caret, const char* inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    int readDirection = parsegraph_readNodeDirection(inDirection);
+
+    parsegraph_Node* node;
+    if(!inDirection) {
+        node = parsegraph_Caret_node(caret);
+    }
+    else {
+        node = parsegraph_Node_nodeAt(parsegraph_Caret_node(caret), readDirection);
     }
 
     return parsegraph_Node_localPaintGroup(node);
-};
+}
+
+int parsegraph_Caret_creased(parsegraph_Caret* caret, const char* inDirection)
+{
+    return parsegraph_Caret_isCreased(caret, inDirection);
+}
 
 void parsegraph_Caret_erase(parsegraph_Caret* caret, const char* inDirection)
 {
@@ -154,7 +186,7 @@ void parsegraph_Caret_erase(parsegraph_Caret* caret, const char* inDirection)
     parsegraph_Node_eraseNode(parsegraph_Caret_node(caret), inDirectionVal);
 };
 
-void parsegraph_Caret_onClick(parsegraph_Caret* caret, int(*clickListener)(const char*, void*), void* thisArg)
+void parsegraph_Caret_onClick(parsegraph_Caret* caret, int(*clickListener)(parsegraph_Node*, const char*, void*), void* thisArg)
 {
     parsegraph_Node_setClickListener(parsegraph_Caret_node(caret), clickListener, thisArg);
 }
@@ -164,7 +196,7 @@ void parsegraph_Caret_onChange(parsegraph_Caret* caret, void(*changeListener)(vo
     parsegraph_Node_setChangeListener(parsegraph_Caret_node(caret), changeListener, thisArg);
 }
 
-void parsegraph_Caret_onKey(parsegraph_Caret* caret, int(*keyListener)(const char*, void*), void* thisArg)
+void parsegraph_Caret_onKey(parsegraph_Caret* caret, int(*keyListener)(parsegraph_Node*, const char*, void*), void* thisArg)
 {
     parsegraph_Node_setKeyListener(parsegraph_Caret_node(caret), keyListener, thisArg);
 }
@@ -220,7 +252,7 @@ const char* parsegraph_Caret_save(parsegraph_Caret* caret, const char* id)
     }
 
     sc = apr_palloc(caret->pool, sizeof(*sc));
-    strncpy(sc->id, id ? id : buf, 254);
+    strncpy(sc->id, id ? id : buf, 255);
     sc->node = parsegraph_Caret_node(caret);
     parsegraph_ArrayList_push(caret->_savedNodes, sc);
     return sc->id;
@@ -272,10 +304,11 @@ void parsegraph_Caret_pop(parsegraph_Caret* caret)
     parsegraph_ArrayList_pop(caret->_nodes);
 };
 
-void parsegraph_Caret_spawnMove(parsegraph_Caret* caret, const char* inDirection, const char* newContent, const char* newAlignmentMode)
+parsegraph_Node* parsegraph_Caret_spawnMove(parsegraph_Caret* caret, const char* inDirection, const char* newContent, const char* newAlignmentMode)
 {
     parsegraph_Caret_spawn(caret, inDirection, newContent, newAlignmentMode);
     parsegraph_Caret_move(caret, inDirection);
+    return parsegraph_Caret_node(caret);
 }
 
 void parsegraph_Caret_replace(parsegraph_Caret* caret, const char* arg1, const char* arg2)
@@ -414,11 +447,6 @@ void parsegraph_Caret_deselect(parsegraph_Caret* caret, const char* inDir)
         node = parsegraph_Node_nodeAt(node, parsegraph_readNodeDirection(inDir));
     }
     parsegraph_Node_setSelected(node, 0);
-};
-
-parsegraph_Graph* parsegraph_Caret_graph(parsegraph_Caret* caret)
-{
-    return parsegraph_Node_graph(parsegraph_Caret_node(caret));
 };
 
 parsegraph_Node* parsegraph_Caret_root(parsegraph_Caret* caret)

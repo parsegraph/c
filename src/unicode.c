@@ -497,4 +497,4 @@ void parsegraph_Unicode_setOnLoad(parsegraph_Unicode* unicode, void(*onLoad)(voi
     }
     unicode->onLoad = onLoad;
     unicode->onLoadThisArg = onLoadThisArg;
-};
+}

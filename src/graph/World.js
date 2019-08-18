@@ -30,16 +30,6 @@ parsegraph_World.prototype.setCamera = function(camera)
 };
 
 
-/**
- * Plots the given paint group, or creates one if constructor
- * arguments are given.
- *
- * The paint group is returned. Passing a paint group directly is the
- * preferred method. The position of the graph is the one used when
- * rendering. The caller manages the position.
- *
- * plot(node)
- */
 parsegraph_World.prototype.plot = function(node)
 {
     if(!node) {
@@ -89,9 +79,6 @@ parsegraph_World_Tests.addTest("world.plot with caret", function() {
     }
 });
 
-/**
- *
- */
 parsegraph_World.prototype.removePlot = function(plot)
 {
     for(var i in this._worldRoots) {

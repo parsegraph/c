@@ -1,4 +1,4 @@
-PROG = cxx_dir
+PROG = cxx_proportion
 
 run:
 	./$(PROG)
@@ -82,7 +82,9 @@ nobase_include_HEADERS = \
 	AudioKeyboard.h \
 	apps/showDirectory.h \
 	gl.h \
-	unicode.h
+	unicode.h \
+	parsegraph_LoginWidget.h \
+	app.h
 
 parsegraph_common_SOURCES = \
 	die.c \
@@ -140,7 +142,10 @@ parsegraph_common_SOURCES = \
 	graph/SpotlightPainter.c \
 	graph/FanPainter.c \
 	alpha/WeetPainter.c \
-	alpha/FacePainter.c
+	alpha/FacePainter.c \
+	parsegraph_PasswordNode.c \
+	parsegraph_LoginWidget.c \
+	app.c
 
 libparsegraph_Qt_la_SOURCES = $(parsegraph_common_SOURCES) graph/Camera-novflip.c
 
@@ -165,7 +170,8 @@ libparsegraph-timing.a: timing.cpp timing.c timing.h Makefile
 	ar rc libparsegraph-timing.a timing-c.o timing-cxx.o
 	ranlib libparsegraph-timing.a
 
-bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion cxx_text parsegraph_kms_text cxx_dir parsegraph_kms_dir parsegraph_osmesa_proportion parsegraph_osmesa_text
+bin_PROGRAMS = parsegraph_kms_proportion cxx_proportion parsegraph_osmesa_proportion
+#bin_PROGRAMS = parsegraph_kms_proportion parsegraph_kms_primes cxx_alpha cxx_weetcubes cxx_primes cxx_proportion cxx_text parsegraph_kms_text cxx_dir parsegraph_kms_dir parsegraph_osmesa_proportion parsegraph_osmesa_text
 
 parsegraph_kms_proportion_CFLAGS = \
 	$(libparsegraph_kms_la_CFLAGS) \

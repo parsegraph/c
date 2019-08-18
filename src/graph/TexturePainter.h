@@ -3,7 +3,6 @@
 
 #include "../gl.h"
 #include "../pagingbuffer.h"
-#include "Surface.h"
 #include <apr_hash.h>
 
 struct parsegraph_TexturePainter {
@@ -23,7 +22,7 @@ float _backgroundColor[4];
 };
 typedef struct parsegraph_TexturePainter parsegraph_TexturePainter;
 
-parsegraph_TexturePainter* parsegraph_TexturePainter_new(parsegraph_Surface* surface, int textureId, float texWidth, float texHeight, apr_hash_t* shaders);
+parsegraph_TexturePainter* parsegraph_TexturePainter_new(apr_pool_t* ppool, int textureId, float texWidth, float texHeight, apr_hash_t* shaders);
 int parsegraph_TexturePainter_texture(parsegraph_TexturePainter* painter);
 void parsegraph_TexturePainter_drawWholeTexture(parsegraph_TexturePainter* painter, float x, float y, float width, float height, float scale);
 void parsegraph_TexturePainter_drawTexture(parsegraph_TexturePainter* painter,

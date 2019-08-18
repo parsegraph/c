@@ -10,6 +10,8 @@ const char* parsegraph_nameNodeFit(int given)
             return "NODE_FIT_EXACT";
         case parsegraph_NODE_FIT_LOOSE:
             return "NODE_FIT_LOOSE";
+        case parsegraph_NODE_FIT_NAIVE:
+            return "NODE_FIT_NAIVE";
     }
     parsegraph_log("Unknown node fit: %d", given);
     return 0;

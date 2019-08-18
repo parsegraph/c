@@ -28,7 +28,7 @@ parsegraph_GlyphPainter_FragmentShader =
 "\n" +
 "void main() {\n" +
     //"gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
-    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).a;" +
+    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).r;" +
     "if(backgroundColor.a == 0.0) {" +
         "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
     "}" +
@@ -146,7 +146,6 @@ function parsegraph_GlyphPageRenderer(painter, textureIndex)
     this._glyphBuffer = null;
     this._glyphBufferNumVertices = null;
     this._glyphBufferVertexIndex = 0;
-
     this._dataBufferVertexIndex = 0;
     this._dataBufferNumVertices = 6;
     this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._painter._stride/4);
@@ -195,15 +194,15 @@ parsegraph_GlyphPageRenderer.prototype.flush = function()
     var stride = this._painter._stride;
     gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
 
-    if(this._dataBufferVertexIndex + this._glyphBufferVertexIndex > this._blockBufferNumVertices) {
-        throw new Error("GL buffer of " + this._blockBufferNumVertices + " vertices is full; cannot flush all " + this._dataBufferVertexIndex + " vertices because the GL buffer already has " + this._glyphBufferVertexIndex + " vertices.");
+    if(this._dataBufferVertexIndex + this._glyphBufferVertexIndex > this._glyphBufferNumVertices) {
+        throw new Error("GL buffer of " + this._glyphBufferNumVertices + " vertices is full; cannot flush all " + this._dataBufferVertexIndex + " vertices because the GL buffer already has " + this._glyphBufferVertexIndex + " vertices.");
     }
     if(this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
-        //console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._blockBufferVertexIndex + " of " + this._blockBufferNumVertices + " vertices");
+        //console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._glyphBufferVertexIndex + " of " + this._glyphBufferNumVertices + " vertices");
         gl.bufferSubData(gl.ARRAY_BUFFER, this._glyphBufferVertexIndex*stride, this._dataBuffer);
     }
     else {
-        //console.log("Partial flush (" + this._blockBufferVertexIndex + "/" + this._blockBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
+        //console.log("Partial flush (" + this._glyphBufferVertexIndex + "/" + this._glyphBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
         gl.bufferSubData(gl.ARRAY_BUFFER, this._glyphBufferVertexIndex*stride, this._dataBuffer.slice(0, this._dataBufferVertexIndex*stride/4));
     }
     this._glyphBufferVertexIndex += this._dataBufferVertexIndex;
@@ -222,7 +221,6 @@ parsegraph_GlyphPageRenderer.prototype.writeVertex = function()
 parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
     var gl = this._painter._gl;
-    var stride = this._painter._stride;
     var glyphAtlas = this._painter.glyphAtlas();
     var glTextureSize = parsegraph_getGlyphTextureSize(gl);
     var pageTextureSize = glyphAtlas.pageTextureSize();

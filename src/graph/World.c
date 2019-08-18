@@ -3,11 +3,12 @@
 #include "World.h"
 #include "Node.h"
 #include "Graph.h"
-#include "PaintGroup.h"
 #include "parsegraph_math.h"
 #include "../die.h"
 #include "graph/Rect.h"
 #include "timing.h"
+
+int parsegraph_NODES_PAINTED;
 
 parsegraph_World* parsegraph_World_new(parsegraph_Graph* graph)
 {
@@ -21,6 +22,8 @@ parsegraph_World* parsegraph_World_new(parsegraph_Graph* graph)
     // World-rendered graphs.
     world->_worldPaintingDirty = 1;
     world->_worldRoots = parsegraph_ArrayList_new(pool);
+
+    world->_testPainter = 0;
 
     // The node currently under the cursor.
     world->_nodeUnderCursor = 0;
@@ -63,9 +66,7 @@ void parsegraph_World_plot(parsegraph_World* world, parsegraph_Node* node, float
         parsegraph_die("Node must not be null");
     }
     if(!parsegraph_Node_localPaintGroup(node)) {
-        parsegraph_PaintGroup* pg = parsegraph_PaintGroup_new(world->_graph->_surface, node, worldX, worldY, userScale);
-        parsegraph_Node_setPaintGroup(node, pg);
-        parsegraph_PaintGroup_unref(pg);
+        parsegraph_Node_setPaintGroup(node, 1);
     }
     parsegraph_ArrayList_push(world->_worldRoots, node);
 };
@@ -92,29 +93,28 @@ int parsegraph_World_mouseOver(parsegraph_World* world, float x, float y)
         // Never rendered.
         return 0;
     }
-    apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, world->pool)) {
-        parsegraph_die("Failed to create temporary memory pool for mouseover.");
+    if(parsegraph_World_readyForInput(world)) {
+        return 1;
     }
-    //console.log("mouseover: " + x + ", " + y);
-    float* mouseInWorld = matrixTransform2D(pool,
-        makeInverse3x3(pool, parsegraph_Camera_worldMatrix(parsegraph_World_camera(world), pool)),
-        x, y
-    );
+    //parsegraph_log("mouseover: %f, %f\n", x, y);
+    float mouseInWorld[2];
+    float worldMatrix[9];
+    parsegraph_Camera_worldMatrixI(parsegraph_World_camera(world), worldMatrix);
+    makeInverse3x3I(worldMatrix, worldMatrix);
+    matrixTransform2DI(mouseInWorld, worldMatrix, x, y);
     x = mouseInWorld[0];
     y = mouseInWorld[1];
-    apr_pool_destroy(pool);
 
     parsegraph_Node* selectedNode = parsegraph_World_nodeUnderCoords(world, x, y);
     if(world->_nodeUnderCursor == selectedNode) {
         // The node under cursor is already the node under cursor, so don't
         // do anything.
-        //console.log("Node was the same");
-        return 0;
+        //parsegraph_log("Node was the same\n");
+        return 1;
     }
 
     if(world->_nodeUnderCursor && world->_nodeUnderCursor != selectedNode) {
-        //console.log("Node is changing, so repainting.");
+        //parsegraph_log("Node is changing, so repainting.\n");
         parsegraph_Node_setSelected(world->_nodeUnderCursor, 0);
         parsegraph_World_scheduleRepaint(world);
     }
@@ -122,22 +122,25 @@ int parsegraph_World_mouseOver(parsegraph_World* world, float x, float y)
     world->_nodeUnderCursor = selectedNode;
     if(!selectedNode) {
         // No node was actually found.
-        //console.log("No node actually found.");
+        //parsegraph_log("No node actually found.\n");
         return 0;
     }
 
     if(parsegraph_Node_type(selectedNode) == parsegraph_SLIDER) {
-        //console.log("Selecting slider and repainting");
+        //parsegraph_log("Selecting slider and repainting\n");
         parsegraph_Node_setSelected(selectedNode, 1);
         parsegraph_World_scheduleRepaint(world);
     }
     else if(parsegraph_Node_hasClickListener(selectedNode) && !parsegraph_Node_isSelected(selectedNode)) {
-        //console.log("Selecting node and repainting");
+        //parsegraph_log("Selecting node and repainting\n");
         parsegraph_Node_setSelected(selectedNode, 1);
         parsegraph_World_scheduleRepaint(world);
     }
+    else {
+        return 0;
+    }
 
-    return 1;
+    return 2;
 }
 
 void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect)
@@ -145,16 +148,11 @@ void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect)
     memset(outRect, 0, sizeof(float)*4);
     for(int i = 0; i < parsegraph_ArrayList_length(world->_worldRoots); ++i) {
         parsegraph_Node* plot = parsegraph_ArrayList_at(world->_worldRoots, i);
-        parsegraph_CommitLayoutTraversal clt;
-        clt.timeout = 0;
-        clt.root = plot;
-        clt.node = plot;
-        parsegraph_Node_commitLayoutIteratively(plot, &clt);
+        parsegraph_Node_commitLayoutIteratively(plot, 0);
 
         // Get plot extent data.
-        parsegraph_PaintGroup* pg = parsegraph_Node_localPaintGroup(plot);
-        float nx = pg->_worldX;
-        float ny = pg->_worldY;
+        float nx = parsegraph_Node_absoluteX(plot);
+        float ny = parsegraph_Node_absoluteY(plot);
 
         float boundingValues[3];
         boundingValues[0] = 0;
@@ -230,6 +228,32 @@ parsegraph_Node* parsegraph_World_nodeUnderCursor(parsegraph_World* world)
     return world->_nodeUnderCursor;
 };
 
+int parsegraph_World_readyForInput(parsegraph_World* world)
+{
+    // Test if there is a node under the given coordinates.
+    for(int i = parsegraph_ArrayList_length(world->_worldRoots) - 1; i >= 0; --i) {
+        parsegraph_Node* root = parsegraph_ArrayList_at(world->_worldRoots, i);
+        if(parsegraph_Node_needsCommit(root) || parsegraph_Node_isDirty(root)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int parsegraph_World_commitLayout(parsegraph_World* world, long timeout)
+{
+    int completed = 1;
+    for(int i = parsegraph_ArrayList_length(world->_worldRoots) - 1; i >= 0; --i) {
+        parsegraph_Node* root = parsegraph_ArrayList_at(world->_worldRoots, i);
+        parsegraph_CommitLayoutTraversal cl;
+        cl.timeout = timeout;
+        if(0 != parsegraph_Node_commitLayoutIteratively(root, &cl)) {
+            completed = 0;
+        }
+    }
+    return completed;
+}
+
 /**
  * Tests whether the given position, in world space, is within a node.
  */
@@ -275,7 +299,7 @@ struct parsegraph_GlyphAtlas* parsegraph_PAINTING_GLYPH_ATLAS = 0;
 
 int parsegraph_World_paint(parsegraph_World* world, int timeout)
 {
-    parsegraph_logEntercf("Graph world paints", "Painting world, timeout=%d\n", timeout);
+    parsegraph_logEntercf("Graph world paints", "Painting world (dirty=%d), timeout=%d\n", world->_worldPaintingDirty, timeout);
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
 
@@ -300,12 +324,11 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
                 return 0;
             }
             parsegraph_Node* plot = parsegraph_ArrayList_at(world->_worldRoots, i);
-            parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(plot);
-            if(!paintGroup) {
+            if(!parsegraph_Node_localPaintGroup(plot)) {
                 parsegraph_die("Plot no longer has a paint group?!");
             }
             parsegraph_PAINTING_GLYPH_ATLAS = parsegraph_Graph_glyphAtlas(world->_graph);
-            int paintCompleted = parsegraph_PaintGroup_paint(paintGroup,
+            int paintCompleted = parsegraph_Node_paint(plot,
                 parsegraph_Surface_backgroundColor(parsegraph_Graph_surface(world->_graph)),
                 parsegraph_Graph_glyphAtlas(world->_graph),
                 world->_graph->_shaders,
@@ -347,14 +370,26 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
     return 1;
 }
 
-void parsegraph_World_render(parsegraph_World* world, float* worldMat)
+int parsegraph_World_render(parsegraph_World* world, float* worldMat)
 {
+    parsegraph_log("World renders", "Rendering parsegraph world.\n");
+    int cleanlyRendered = 1;
+
+    if(!world->_testPainter) {
+        world->_testPainter = parsegraph_BlockPainter_new(world->pool, world->_graph->_shaders);
+    }
+    parsegraph_BlockPainter_initBuffer(world->_testPainter, 1);
+    parsegraph_BlockPainter_drawBlock(world->_testPainter, 0, 0, 50, 50, 0, 0, 1);
+    float screenWorld[9];
+    parsegraph_Surface* surface = parsegraph_Graph_surface(world->_graph);
+    float displayWidth = parsegraph_Surface_getWidth(surface);
+    float displayHeight = parsegraph_Surface_getHeight(surface);
+    make2DProjectionI(screenWorld, displayWidth, displayHeight, parsegraph_VFLIP);
+    parsegraph_BlockPainter_render(world->_testPainter, screenWorld, 1);
+
     for(int i = 0; i < parsegraph_ArrayList_length(world->_worldRoots); ++i) {
         parsegraph_Node* plot = parsegraph_ArrayList_at(world->_worldRoots, i);
-        parsegraph_PaintGroup* paintGroup = parsegraph_Node_localPaintGroup(plot);
-        if(!paintGroup) {
-            parsegraph_die("Plot no longer has a paint group?!");
-        }
-        parsegraph_PaintGroup_renderIteratively(paintGroup, worldMat, parsegraph_World_camera(world));
+        cleanlyRendered = parsegraph_Node_renderIteratively(plot, worldMat, parsegraph_World_camera(world)) && cleanlyRendered;
     }
+    return cleanlyRendered;
 }

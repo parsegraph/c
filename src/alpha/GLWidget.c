@@ -15,7 +15,7 @@ static void renderWidget(void* widgetPtr, void* renderData)
     alpha_GLWidget_render(widgetPtr, rd->width, rd->height);
 }
 
-static void paintWidget(void* widgetPtr, void* renderData)
+static void paintWidget(void* widgetPtr, void* renderData, int timeout)
 {
     alpha_GLWidget_paint(widgetPtr);
 }

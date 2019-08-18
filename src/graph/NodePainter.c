@@ -10,23 +10,21 @@
 #include "../parsegraph_math.h"
 #include "Rect.h"
 
-parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
+parsegraph_NodePainter* parsegraph_NodePainter_new(apr_pool_t* ppool, parsegraph_GlyphAtlas* glyphAtlas, apr_hash_t* shaders)
 {
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create NodePainter memory pool.");
     }
     parsegraph_NodePainter* painter = apr_palloc(pool, sizeof(*painter));
     painter->pool = pool;
 
-    painter->_surface = surface;
-
     parsegraph_Color_copy(painter->_backgroundColor, parsegraph_BACKGROUND_COLOR);
 
-    painter->_blockPainter = parsegraph_BlockPainter_new(surface, shaders);
+    painter->_blockPainter = parsegraph_BlockPainter_new(pool, shaders);
     painter->_renderBlocks = 1;
 
-    painter->_extentPainter = parsegraph_BlockPainter_new(surface, shaders);
+    painter->_extentPainter = parsegraph_BlockPainter_new(pool, shaders);
     painter->_renderExtents = 0;
 
     painter->_glyphPainter = parsegraph_GlyphPainter_new(pool, glyphAtlas, shaders);
@@ -34,6 +32,12 @@ parsegraph_NodePainter* parsegraph_NodePainter_new(parsegraph_Surface* surface, 
     painter->_renderText = 1;
 
     painter->_textures = parsegraph_ArrayList_new(painter->pool);
+
+    int glTextureSize = parsegraph_getGlyphTextureSize();
+    float pagesPerRow = glTextureSize / parsegraph_GlyphAtlas_pageTextureSize(parsegraph_GlyphPainter_glyphAtlas(painter->_glyphPainter));
+    painter->_pagesPerGlyphTexture = (int)powf(pagesPerRow, 2);
+
+    painter->_counts.numGlyphs = parsegraph_ArrayList_new(painter->pool);
 
     return painter;
 }
@@ -71,28 +75,19 @@ void parsegraph_NodePainter_render(parsegraph_NodePainter* painter, float* world
 {
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-
     glEnable(GL_BLEND);
-    glBlendFunc(
-        GL_SRC_ALPHA, GL_DST_ALPHA
-    );
-    glBlendFunc(
-        GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-    );
+
     if(painter->_renderBlocks) {
-        parsegraph_BlockPainter_render(painter->_blockPainter, world);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        parsegraph_BlockPainter_render(painter->_blockPainter, world, scale);
     }
     if(painter->_renderExtents) {
-        parsegraph_BlockPainter_render(painter->_extentPainter, world);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+        parsegraph_BlockPainter_render(painter->_extentPainter, world, scale);
     }
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(
-        GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-    );
 
     if(painter->_renderText) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         parsegraph_GlyphPainter_render(painter->_glyphPainter, world, scale);
     }
 
@@ -175,6 +170,22 @@ void parsegraph_NodePainter_disableSceneRendering(parsegraph_NodePainter* painte
 int parsegraph_NodePainter_isSceneRenderingEnabled(parsegraph_NodePainter* painter)
 {
     return painter->_renderScenes;
+}
+
+void parsegraph_NodePainter_resetCounts(parsegraph_NodePainter* painter)
+{
+    parsegraph_NodePainterCounts* counts = &painter->_counts;
+    counts->numBlocks = 0;
+    counts->numExtents = 0;
+    int maxPage = parsegraph_GlyphAtlas_maxPage(parsegraph_GlyphPainter_glyphAtlas(painter->_glyphPainter))/painter->_pagesPerGlyphTexture;
+    for(int i = 0; i <= maxPage; ++i) {
+        if(parsegraph_ArrayList_length(counts->numGlyphs) <= i) {
+            parsegraph_ArrayList_push(counts->numGlyphs, 0);
+        }
+        else {
+            parsegraph_ArrayList_replace(counts->numGlyphs, i, 0);
+        }
+    }
 }
 
 void parsegraph_NodePainter_clear(parsegraph_NodePainter* painter)
@@ -414,7 +425,7 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    parsegraph_TexturePainter* p = parsegraph_TexturePainter_new(nodePainter->_surface,
+    parsegraph_TexturePainter* p = parsegraph_TexturePainter_new(nodePainter->pool,
         (long)apr_hash_get(shaders, "framebufferTexture", APR_HASH_KEY_STRING), sceneSize[0], sceneSize[1], shaders
     );
     parsegraph_TexturePainter_drawWholeTexture(p,
@@ -423,17 +434,11 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
     parsegraph_ArrayList_push(nodePainter->_textures, p);
 }
 
-void parsegraph_NodePainterCounts_reset(parsegraph_NodePainterCounts* counts)
-{
-    counts->numBlocks = 0;
-    counts->numExtents = 0;
-}
-
 void parsegraph_NodePainter_initBlockBuffer(parsegraph_NodePainter* nodePainter, parsegraph_NodePainterCounts* counts)
 {
     parsegraph_BlockPainter_initBuffer(nodePainter->_blockPainter, counts->numBlocks);
     parsegraph_BlockPainter_initBuffer(nodePainter->_extentPainter, counts->numExtents);
-    parsegraph_GlyphPainter_clear(nodePainter->_glyphPainter);
+    parsegraph_GlyphPainter_initBuffer(nodePainter->_glyphPainter, counts->numGlyphs);
 }
 
 struct CountNodeData {
@@ -447,13 +452,10 @@ static void countNode(void* d, int direction)
     if(parsegraph_Node_parentDirection(cnd->node) == direction) {
         return;
     }
-    parsegraph_DirectionData* directionData = &cnd->node->_neighbors[direction];
-    if(!directionData->node) {
-        // Do not count lines unless there is a node.
-        return;
+    if(parsegraph_Node_hasChild(cnd->node, direction)) {
+        // Count one for the line.
+        ++cnd->counts->numBlocks;
     }
-    // Count one for the line.
-    ++cnd->counts->numBlocks;
 }
 
 void countEachExtent(void* d, int direction)
@@ -472,6 +474,8 @@ void parsegraph_NodePainter_countNode(parsegraph_NodePainter* nodePainter, parse
         ++counts->numExtents;
         parsegraph_forEachCardinalNodeDirection(countEachExtent, &cnd);
     }
+
+    parsegraph_Node_glyphCount(node, counts->numGlyphs, nodePainter->_pagesPerGlyphTexture);
 
     if(parsegraph_Node_type(node) == parsegraph_SLIDER) {
         if(parsegraph_Node_parentDirection(node) == parsegraph_UPWARD) {
@@ -533,7 +537,10 @@ static void paintLines_drawLine(void* data, int direction)
     if(parsegraph_Node_parentDirection(node) == direction) {
         return;
     }
-    parsegraph_DirectionData* directionData = &node->_neighbors[direction];
+    if(!parsegraph_Node_hasChildAt(node, direction)) {
+        return;
+    }
+    parsegraph_NeighborData* directionData = node->_neighbors[direction];
     // Do not draw lines unless there is a node.
     if(!directionData->node) {
         return;
@@ -799,7 +806,7 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     );
 
     // Draw the label.
-    parsegraph_Label* label = node->_realLabel;
+    parsegraph_Label* label = node->_label;
     if(!label) {
         return;
     }

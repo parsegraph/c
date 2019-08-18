@@ -203,12 +203,12 @@ parsegraph_GlyphData* parsegraph_GlyphIterator_next(parsegraph_GlyphIterator* gi
         //              ^-prev
         UChar cursiveLetter = parsegraph_Unicode_cursive(u, givenLetter, gi->prevLetter, nextLetterChar);
         if(cursiveLetter != 0) {
-            parsegraph_log("Found cursive char %x->%x\n", givenLetter, cursiveLetter);
+            //parsegraph_log("Found cursive char %x->%x\n", givenLetter, cursiveLetter);
             gi->prevLetter = givenLetter;
             givenLetter = cursiveLetter;
         }
         else {
-            parsegraph_log("Found non-cursive char %x.\n", givenLetter);
+            //parsegraph_log("Found non-cursive char %x.\n", givenLetter);
             gi->prevLetter = 0;
         }
     }
@@ -362,6 +362,20 @@ int parsegraph_Line_length(parsegraph_Line* line)
     return tpos;
 }
 
+int parsegraph_Line_glyphCount(parsegraph_Line* line, parsegraph_ArrayList* counts, int pagesPerTexture)
+{
+    if(counts) {
+        for(int i = 0; i < parsegraph_ArrayList_length(line->_glyphs); ++i) {
+            parsegraph_GlyphData* glyphData = parsegraph_ArrayList_at(line->_glyphs, i);
+            int bufIndex = (int)floorf(glyphData->glyphPage->_id / pagesPerTexture);
+            parsegraph_ArrayList_replace(counts, bufIndex,
+                (void*)(long)(((int)(long)parsegraph_ArrayList_at(counts, bufIndex)) + 1)
+            );
+        }
+    }
+    return parsegraph_ArrayList_length(line->_glyphs);
+}
+
 int parsegraph_Line_text(parsegraph_Line* line, UChar* t, int len)
 {
     return parsegraph_Line_getText(line, t, len);
@@ -432,6 +446,8 @@ parsegraph_Label* parsegraph_Label_new(apr_pool_t* parentPool, parsegraph_GlyphA
     label->_onTextChangedListenerThisArg = 0;
     label->_width = -1;
     label->_height = 0;
+    label->_x = NAN;
+    label->_y = NAN;
     return label;
 }
 
@@ -519,9 +535,23 @@ int parsegraph_Label_length(parsegraph_Label* label)
     return totallen;
 }
 
+int parsegraph_Label_glyphCount(parsegraph_Label* label, parsegraph_ArrayList* counts, int pagesPerTexture)
+{
+    int totallen = 0;
+    for(int i = 0; i < parsegraph_ArrayList_length(label->_lines); ++i) {
+        parsegraph_Line* l = parsegraph_ArrayList_at(label->_lines, i);
+        totallen += parsegraph_Line_glyphCount(l, counts, pagesPerTexture);
+    }
+    return totallen;
+}
+
 void parsegraph_Label_setTextUTF8(parsegraph_Label* label, const char* text, int len)
 {
     if(len == 0) {
+        parsegraph_Label_setText(label, 0, 0);
+        return;
+    }
+    if(text == 0 || strlen(text) == 0) {
         parsegraph_Label_setText(label, 0, 0);
         return;
     }
@@ -551,6 +581,9 @@ void parsegraph_Label_setText(parsegraph_Label* label, const UChar* text, int le
     label->_currentPos = 0;
     label->_width = 0;
     label->_height = 0;
+    if(text == 0 || len == 0 || (len == -1 && u_strlen(text) == 0)) {
+        return;
+    }
     int startIndex = 0;
     if(len == 0) {
         return;

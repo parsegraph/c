@@ -65,7 +65,7 @@ char* filename;
 struct parsegraph_Directory* app;
 };
 
-static int clickListener(const char* name, void* dataPtr)
+static int clickListener(parsegraph_Node* node, const char* name, void* dataPtr)
 {
     //parsegraph_log("CLICKED HERE\n");
     struct FilenameEntry* e = dataPtr;

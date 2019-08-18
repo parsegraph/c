@@ -102,8 +102,8 @@ extern int parsegraph_INPUT_LAYOUT_TIME;
 extern int parsegraph_IDLE_MARGIN;
 extern int parsegraph_FIT_LOOSE;
 extern int parsegraph_CREASE;
-extern int* parsegraph_VERTICAL_ORDER;
-extern int* parsegraph_HORIZONTAL_ORDER;
+extern int parsegraph_VERTICAL_ORDER[];
+extern int parsegraph_HORIZONTAL_ORDER[];
 extern int parsegraph_LAYOUT_ORDER_MAX;
 
 #endif // parsegraph_initialize_INCLUDED

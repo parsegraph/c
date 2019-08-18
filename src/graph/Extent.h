@@ -29,7 +29,7 @@ extern unsigned int parsegraph_NUM_EXTENT_BOUND_COMPONENTS;
 
 parsegraph_Extent* parsegraph_Extent_new(apr_pool_t* pool);
 void parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset);
-float parsegraph_Extent_setOffset(parsegraph_Extent* extent, float offset);
+float parsegraph_Extent_offset(parsegraph_Extent* extent);
 void parsegraph_Extent_forEach(parsegraph_Extent* extent, void(*func)(void*, float, float, int), void* thisArg);
 parsegraph_Extent* parsegraph_Extent_clone(parsegraph_Extent*);
 void parsegraph_Extent_clear(parsegraph_Extent* extent);

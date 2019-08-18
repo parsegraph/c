@@ -76,10 +76,8 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._paintGroupNext = this;
     this._paintGroupPrev = this;
 
-    // Event listeners
-    this._extended = null;
-
     // Internal data.
+    this._extended = null;
     this._label = null;
 
     // Check if a parent node was provided.
@@ -99,15 +97,15 @@ function parsegraph_chainTab(a, b, swappedOut)
     a.ensureExtended();
     b.ensureExtended();
     if(swappedOut) {
-        swappedOut[0] = a ? a._nextTabNode : null;
-        swappedOut[1] = b ? b._prevTabNode : null;
+        swappedOut[0] = a ? a._extended.nextTabNode : null;
+        swappedOut[1] = b ? b._extended.prevTabNode : null;
     }
     //console.log(a, b);
     if(a) {
-        a._nextTabNode = b;
+        a._extended.nextTabNode = b;
     }
     if(b) {
-        b._prevTabNode = a;
+        b._extended.prevTabNode = a;
     }
 }
 
@@ -130,6 +128,14 @@ function parsegraph_chainAllTabs()
 parsegraph_Node.prototype.neighborAt = function(dir)
 {
     return this._neighbors[dir];
+};
+
+parsegraph_Node.prototype.ensureNeighbor = function(inDirection)
+{
+    if(!this.neighborAt(inDirection)) {
+        this._neighbors[inDirection] = new parsegraph_NeighborData(this, inDirection);
+    }
+    return this.neighborAt(inDirection);
 };
 
 parsegraph_Node.prototype.root = function()
@@ -531,6 +537,7 @@ parsegraph_Node.prototype.ensureExtended = function()
         //console.log(new Error("Extending"));
         this._extended = new parsegraph_ExtendedNode();
     }
+    return this._extended;
 };
 
 parsegraph_Node.prototype.markDirty = function()
@@ -607,6 +614,7 @@ parsegraph_Node.prototype.backdropColor = function()
         }
         node = node.parentNode();
     }
+    throw new Error("Unreachable");
 };
 
 parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
@@ -616,15 +624,15 @@ parsegraph_Node.prototype.setClickListener = function(listener, thisArg)
             this._extended.clickListener = null;
             this._extended.clickListenerThisArg = null;
         }
+        return;
     }
-    else {
-        if(!thisArg) {
-            thisArg = this;
-        }
-        this.ensureExtended();
-        this._extended.clickListener = listener;
-        this._extended.clickListenerThisArg = thisArg;
+    if(!thisArg) {
+        thisArg = this;
     }
+    this.ensureExtended();
+    this._extended.clickListener = listener;
+    this._extended.clickListenerThisArg = thisArg;
+    //console.log("Set click listener for node " + this._id);
 };
 
 parsegraph_Node.prototype.setChangeListener = function(listener, thisArg)
@@ -634,15 +642,15 @@ parsegraph_Node.prototype.setChangeListener = function(listener, thisArg)
             this._extended.changeListener = null;
             this._extended.changeListenerThisArg = null;
         }
+        return;
     }
-    else {
-        if(!thisArg) {
-            thisArg = this;
-        }
-        this.ensureExtended();
-        this._extended.changeListener = listener;
-        this._extended.changeListenerThisArg = thisArg;
+    if(!thisArg) {
+        thisArg = this;
     }
+    this.ensureExtended();
+    this._extended.changeListener = listener;
+    this._extended.changeListenerThisArg = thisArg;
+    //console.log("Set change listener for node " + this._id);
 };
 
 parsegraph_Node.prototype.isClickable = function()
@@ -686,7 +694,7 @@ parsegraph_Node.prototype.valueChanged = function()
     if(!this.hasChangeListener()) {
         return;
     }
-    return this._extended.changeListener.apply(this._extended.changeListenerThisArg, arguments);
+    this._extended.changeListener.apply(this._extended.changeListenerThisArg, arguments);
 };
 
 parsegraph_Node.prototype.click = function()
@@ -855,6 +863,8 @@ function parsegraph_connectLayout(a, b)
 
 parsegraph_Node.prototype.connectNode = function(inDirection, node)
 {
+    //console.log("Connecting " + node + " to " + this + " in the " + parsegraph_nameNodeDirection(inDirection) + " direction.");
+
     // Ensure the node can be connected in the given direction.
     if(inDirection == parsegraph_OUTWARD) {
         throw new Error("By rule, nodes cannot be spawned in the outward direction.");
@@ -931,7 +941,7 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     if(!this.hasNode(inDirection)) {
         return;
     }
-
+    // Disconnect the node.
     var neighbor = this._neighbors[inDirection];
     var disconnected = neighbor.node;
 
@@ -942,7 +952,6 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     parsegraph_connectPaintGroup(paintGroupFirst._paintGroupPrev, disconnected._paintGroupNext);
     parsegraph_connectPaintGroup(disconnected, paintGroupFirst);
 
-    // Disconnect the node.
     neighbor.node = null;
     disconnected.assignParent(null);
 
@@ -966,6 +975,16 @@ parsegraph_Node.prototype.disconnectNode = function(inDirection)
     this.layoutWasChanged(inDirection);
 
     return disconnected;
+};
+
+parsegraph_Node.prototype.eraseNode = function(givenDirection) {
+    if(!this.hasNode(givenDirection)) {
+        return;
+    }
+    if(!this.isRoot() && givenDirection == this.parentDirection()) {
+        throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
+    }
+    this.disconnectNode(givenDirection);
 };
 
 parsegraph_Node.prototype.findEarlierLayoutSibling = function(inDirection)
@@ -1047,16 +1066,6 @@ parsegraph_Node.prototype.findLayoutHead = function(excludeThisNode)
     return deeplyLinked;
 }
 
-parsegraph_Node.prototype.eraseNode = function(givenDirection) {
-    if(!this.hasNode(givenDirection)) {
-        return;
-    }
-    if(!this.isRoot() && givenDirection == this.parentDirection()) {
-        throw parsegraph_createException(parsegraph_CANNOT_AFFECT_PARENT);
-    }
-    return this.disconnectNode(givenDirection);
-};
-
 parsegraph_Node.prototype.eachChild = function(visitor, visitorThisArg)
 {
     var dirs = this.layoutOrder();
@@ -1066,10 +1075,9 @@ parsegraph_Node.prototype.eachChild = function(visitor, visitorThisArg)
             continue;
         }
         var node = this.nodeAt(dir);
-        if(!node) {
-            continue;
+        if(node) {
+            visitor.call(visitorThisArg, node, dir);
         }
-        visitor.call(visitorThisArg, node, dir);
     }
 };
 
@@ -1101,7 +1109,7 @@ parsegraph_Node.prototype.extentOffsetAt = function(atDirection)
 
 parsegraph_Node.prototype.setExtentOffsetAt = function(atDirection, offset)
 {
-    return this.extentsAt(atDirection).setOffset(offset);
+    this.extentsAt(atDirection).setOffset(offset);
 };
 
 parsegraph_Node.prototype.extentSize = function(outPos)
@@ -1219,6 +1227,48 @@ parsegraph_Node.prototype.setLayoutPreference = function(given)
     this.layoutWasChanged(parsegraph_INWARD);
 };
 
+parsegraph_Node.prototype.showNodeInCamera = function(cam, onlyScaleIfNecessary)
+{
+    this.commitLayoutIteratively();
+    var bodySize = this.absoluteSize();
+
+    var bodyRect = new parsegraph_Rect(
+        parsegraph_Node_absoluteX(node),
+        parsegraph_Node_absoluteY(node),
+        bodySize[0],
+        bodySize[1]
+    );
+    //if(cam.ContainsAll(bodyRect)) {
+        //return;
+    //}
+
+    var nodeScale = this.absoluteScale();
+
+    var surface = cam.surface();
+    var camScale = cam.scale();
+    var screenWidth = surface.getWidth();
+    var screenHeight = surface.getHeight();
+
+    var scaleAdjustment;
+    var widthIsBigger = screenWidth / (bodySize[0]*nodeScale) < screenHeight / (bodySize[1]*nodeScale);
+    if(widthIsBigger) {
+        scaleAdjustment = screenWidth / (bodySize[0]*nodeScale);
+    }
+    else {
+        scaleAdjustment = screenHeight / (bodySize[1]*nodeScale);
+    }
+    if(scaleAdjustment > camScale) {
+        scaleAdjustment = camScale;
+    }
+    else {
+        cam.setScale(scaleAdjustment);
+    }
+
+    var ax = this.absoluteX();
+    var ay = this.absoluteY();
+    cam.setOrigin(-ax + screenWidth/(scaleAdjustment*2), -ay + screenHeight/(scaleAdjustment*2));
+};
+
 parsegraph_Node.prototype.showInCamera = function(cam, onlyScaleIfNecessary)
 {
     this.commitLayoutIteratively();
@@ -1263,14 +1313,6 @@ parsegraph_Node.prototype.showInCamera = function(cam, onlyScaleIfNecessary)
     cam.setOrigin(x - ax, y - ay);
 };
 
-parsegraph_Node.prototype.ensureNeighbor = function(inDirection)
-{
-    if(!this.neighborAt(inDirection)) {
-        this._neighbors[inDirection] = new parsegraph_NeighborData(this, inDirection);
-    }
-    return this.neighborAt(inDirection);
-};
-
 parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignmentMode)
 {
     if(arguments.length === 1) {
@@ -1279,8 +1321,7 @@ parsegraph_Node.prototype.setNodeAlignmentMode = function(inDirection, newAlignm
             arguments[0]
         );
     }
-    this.ensureNeighbor(inDirection);
-    this._neighbors[inDirection].alignmentMode = newAlignmentMode;
+    this.ensureNeighbor(inDirection).alignmentMode = newAlignmentMode;
     //console.log(parsegraph_nameNodeAlignment(newAlignmentMode));
     this.layoutWasChanged(inDirection);
 };
@@ -1329,13 +1370,15 @@ parsegraph_Node.prototype.scene = function()
 
 parsegraph_Node.prototype.setScene = function(scene)
 {
-    this.ensureExtended();
-    this._extended.scene = scene;
+    this.ensureExtended().scene = scene;
     this.layoutWasChanged(parsegraph_INWARD);
 };
 
 parsegraph_Node.prototype.typeAt = function(direction)
 {
+    if(!this.hasNode(direction)) {
+        return parsegraph_NULL_NODE_TYPE;
+    }
     return this.nodeAt(direction).type();
 };
 
@@ -1357,9 +1400,6 @@ parsegraph_Node.prototype.glyphCount = function(counts, pagesPerTexture)
 
 parsegraph_Node.prototype.realLabel = function()
 {
-    if(!this._label) {
-        return null;
-    }
     return this._label;
 };
 
@@ -1426,6 +1466,7 @@ parsegraph_Node.prototype.size = function(bodySize)
     bodySize = this.sizeWithoutPadding(bodySize);
     bodySize[0] += 2 * this.horizontalPadding() + 2 * this.borderThickness();
     bodySize[1] += 2 * this.verticalPadding() + 2 * this.borderThickness();
+    //console.log("Calculated " + parsegraph_nameNodeType(this.type()) + " node size of (" + bodySize[0] + ", " + bodySize[1] + ")");
     return bodySize;
 };
 
@@ -1459,10 +1500,7 @@ parsegraph_Node.prototype.isSelected = function()
 parsegraph_Node.prototype.setSelected = function(selected)
 {
     //console.log(new Error("setSelected(" + selected + ")"));
-    if(!this._extended) {
-        this._extended = new parsegraph_ExtendedNode();
-    }
-    this._extended.selected = selected;
+    this.ensureExtended().selected = selected;
 };
 
 parsegraph_Node.prototype.horizontalPadding = function()
@@ -1498,68 +1536,68 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
 parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
 {
     var s = this.size();
-    if(
-        x < userScale * this.absoluteX()
-            - userScale * this.absoluteScale() * s.width()/2
-    ) {
+    var ax = this.absoluteX();
+    var ay = this.absoluteY();
+    var aScale = this.absoluteScale();
+    if(x < userScale * ax - userScale * aScale * s.width()/2) {
         //console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
         return false;
     }
-    if(
-        x > userScale * this.absoluteX()
-            + userScale * this.absoluteScale() * s.width()/2
-    ) {
+    if(x > userScale * ax + userScale * aScale * s.width()/2) {
         //console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
         return false;
     }
-    if(
-        y < userScale * this.absoluteY()
-            - userScale * this.absoluteScale() * s.height()/2
-    ) {
+    if(y < userScale * ay - userScale * aScale * s.height()/2) {
         //console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
         return false;
     }
-    if(
-        y > userScale * this.absoluteY()
-            + userScale * this.absoluteScale() * s.height()/2
-    ) {
+    if(y > userScale * ay + userScale * aScale * s.height()/2) {
         //console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
         return false;
     }
-
     //console.log("Within node body" + this);
     return true;
 };
 
 parsegraph_Node.prototype.inNodeExtents = function(x, y, userScale, extentSize)
 {
-    if(
-        x < userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD)
-    ) {
-        return false;
-    }
-    //console.log("This node is " + this._id);
+    var ax = this.absoluteX();
+    var ay = this.absoluteY();
+    var aScale = this.absoluteScale();
     extentSize = this.extentSize(extentSize);
-    var forwardMax = userScale * this.absoluteX() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_DOWNWARD) + userScale * this.absoluteScale() * extentSize.width();
-    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + extentSize.width());
-    if(
-        x > forwardMax
-    ) {
-        return false;
-    }
-    if(
-        y < userScale * this.absoluteY() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_FORWARD)
-    ) {
-        return false;
-    }
-    if(
-        y > userScale * this.absoluteY() - userScale * this.absoluteScale() * this.extentOffsetAt(parsegraph_FORWARD)
-            + userScale * this.absoluteScale() * extentSize.height()
-    ) {
-        return false;
-    }
 
-    //console.log("Within extent of node " + this._id);
+    //console.log("Checking node extent of size (" + extentSize[0] + ", " + extentSize[1] + ") at absolute X, Y origin of " + ax + ", " + ay");
+    if(aScale != 1) {
+        //console.log("Node absolute scale is " + aScale);
+    }
+    if(userScale != 1) {
+        //console.log("User scale is " + userScale);
+    }
+    //console.log("Position to test is (" + x + ", " + y + ")");
+
+    //this.dump();
+    var forwardMin = userScale * ax - userScale * aScale * this.extentOffsetAt(parsegraph_DOWNWARD);
+    if(x < forwardMin) {
+        //console.log("Test X value of " + x + " is behind horizontal node minimum of " + forwardMin + ".");
+        return false;
+    }
+    var forwardMax = userScale * ax - userScale * aScale * this.extentOffsetAt(parsegraph_DOWNWARD) + userScale * aScale * extentSize.width();
+    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + extentSize.width());
+    if(x > forwardMax) {
+        //console.log("Test X value of " + x + " is ahead of horizontal node maximum of " + forwardMax + ".");
+        return false;
+    }
+    var vertMin = userScale * ay - userScale * aScale * this.extentOffsetAt(parsegraph_FORWARD);
+    if(y < vertMin) {
+        //console.log("Test Y value of " + y + " is above node vertical minimum of " + vertMin + ".");
+        return false;
+    }
+    var vertMax = userScale * ay - userScale * aScale * this.extentOffsetAt(parsegraph_FORWARD) + userScale * aScale * extentSize.height();
+    if(y > vertMax) {
+        //console.log("Test Y value of " + y + " is beneath node vertical maximum of " + vertMax + ".");
+        return false;
+    }
+    //console.log("Test value is in within node extent.");
     return true;
 };
 
@@ -1589,6 +1627,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
     var FORCE_SELECT_PRIOR = {};
     while(candidates.length > 0) {
         var candidate = candidates[candidates.length - 1];
+        //console.log("Checking node " + candidate._id + " = " + candidate.label());
 
         if(candidate === FORCE_SELECT_PRIOR) {
             candidates.pop();
@@ -1597,9 +1636,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
 
         if(candidate.inNodeBody(x, y, userScale)) {
             //console.log("Click is in node body");
-            if(
-                candidate.hasNode(parsegraph_INWARD)
-            ) {
+            if(candidate.hasNode(parsegraph_INWARD)) {
                 if(candidate.nodeAt(parsegraph_INWARD).inNodeExtents(x, y, userScale, extentSize)) {
                     //console.log("Testing inward node");
                     candidates.push(FORCE_SELECT_PRIOR);
@@ -1680,8 +1717,9 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
             //console.log(new Error("Creating size"));
             bodySize = new parsegraph_Size();
         }
-        bodySize[0] = this._label.width() * (style.fontSize / this._label.glyphAtlas().fontSize());
-        bodySize[1] = this._label.height() * (style.fontSize / this._label.glyphAtlas().fontSize());
+        var scaling = style.fontSize / this._label.glyphAtlas().fontSize();
+        bodySize[0] = this._label.width() * scaling;
+        bodySize[1] = this._label.height() * scaling;
         if(Number.isNaN(bodySize[0]) || Number.isNaN(bodySize[1])) {
             throw new Error("Label returned a NaN size.");
         }
@@ -1707,17 +1745,15 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
 
             if(this.label()) {
                 // Allow for the content's size.
-                bodySize.setHeight(Math.max(style.minHeight,
-                    bodySize.height()
-                    + this.verticalPadding()
-                    + scale * nestedSize.height()
+                bodySize.setHeight(Math.max(
+                    style.minHeight,
+                    bodySize.height() + this.verticalPadding() + scale * nestedSize.height()
                 ));
             }
             else {
-                bodySize.setHeight(
-                    Math.max(bodySize.height(),
-                    scale * nestedSize.height()
-                    + 2 * this.verticalPadding()
+                bodySize.setHeight(Math.max(
+                    bodySize.height(),
+                    scale * nestedSize.height() + 2 * this.verticalPadding()
                 ));
             }
         }
@@ -2179,9 +2215,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
         // Add padding and ensure the child is not separated less than
         // it would be if the node was not offset by alignment.
         child.size(firstSize);
-        if(
-            parsegraph_getNodeDirectionAxis(direction) == parsegraph_VERTICAL_AXIS
-        ) {
+        if(parsegraph_getNodeDirectionAxis(direction) == parsegraph_VERTICAL_AXIS) {
             separationFromChild = Math.max(
                 separationFromChild,
                 this.scaleAt(direction) * (firstSize.height() / 2) + bodySize.height() / 2
@@ -2224,6 +2258,9 @@ parsegraph_Node.prototype.commitLayout = function(cld)
         secondDirection,
         allowAxisOverlap)
     {
+        if(firstDirection === secondDirection && firstDirection != parsegraph_NULL_NODE_DIRECTION) {
+            throw new Error("Bad node direction");
+        }
         // Change the node direction to null if there is no node in that
         // direction.
         if(!this.hasNode(firstDirection)) {
@@ -2257,7 +2294,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             }
 
             // Layout that node.
-            if(layoutSingle.call(this, firstAxisDirection, this.nodeFit() === parsegraph_NODE_FIT_EXACT)) {
+            if(layoutSingle.call(this, firstAxisDirection, false)) {
                 this._layoutState = parsegraph_NEEDS_COMMIT;
                 return true;
             }
@@ -2293,8 +2330,6 @@ parsegraph_Node.prototype.commitLayout = function(cld)
         separationBetweenChildren *= this.scaleAt(firstDirection);
 
         //console.log("Separation between children=" + separationBetweenChildren);
-
-        var separationFromSecond = this.extentsAt(secondDirection);
 
         /*
         var firstExtent = this.extentsAt(firstDirection);
@@ -2725,7 +2760,6 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     var root = null;
     var node = null;
     var cld = new parsegraph_CommitLayoutData();
-    var j = null;
 
     // Traverse the graph depth-first, committing each node's layout in turn.
     var commitLayoutLoop = function() {
@@ -3174,10 +3208,9 @@ parsegraph_Node.prototype.render = function(world, camera)
 
     // Do not render paint groups that cannot be seen.
     var s = painter.bounds().clone();
-    //console.log(this.absoluteX(), this.absoluteY(), this.scale());
     s.scale(this.scale());
     s.translate(this._absoluteXPos, this._absoluteYPos);
-    if(camera && !camera.contains(s)) {
+    if(camera && !camera.containsAny(s)) {
         //console.log("Out of bounds: " + this);
         return !this._absoluteDirty;
     }

@@ -6,7 +6,7 @@ function parsegraph_DelayWidget(graph)
     this._containerNode = null;
     this._listeners = [];
     this._maxDelay = 5;
-    this._delay = graph.surface().audio().createDelay(this._maxDelay);
+    //this._delay = graph.surface().audio().createDelay(this._maxDelay);
 };
 
 parsegraph_DelayWidget.prototype.audioNode = function()

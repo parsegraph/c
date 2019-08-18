@@ -4,6 +4,7 @@
 #define parsegraph_NULL_NODE_FIT 14
 #define parsegraph_NODE_FIT_EXACT 15
 #define parsegraph_NODE_FIT_LOOSE 16
+#define parsegraph_NODE_FIT_NAIVE 17
 
 const char* parsegraph_nameNodeFit(int given);
 

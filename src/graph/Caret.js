@@ -126,8 +126,6 @@ parsegraph_Caret.prototype.crease = function(inDirection)
     if(!node.localPaintGroup()) {
         node.setPaintGroup(true);
     }
-
-    return node.localPaintGroup();
 };
 
 parsegraph_Caret.prototype.uncrease = function(inDirection)

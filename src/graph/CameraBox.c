@@ -109,12 +109,12 @@ void parsegraph_CameraBox_paint(parsegraph_CameraBox* cbox)
     }
 }
 
-void parsegraph_CameraBox_render(parsegraph_CameraBox* cbox, float* world)
+void parsegraph_CameraBox_render(parsegraph_CameraBox* cbox, float* world, float scale)
 {
     if(cbox->_showCameraBoxes && !cbox->_cameraBoxDirty) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-        parsegraph_CameraBoxPainter_render(cbox->_cameraBoxPainter, world);
+        parsegraph_CameraBoxPainter_render(cbox->_cameraBoxPainter, world, scale);
     }
 }
 

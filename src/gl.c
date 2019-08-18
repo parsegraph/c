@@ -246,10 +246,15 @@ float* matrixCopy3x3(apr_pool_t* pool, float* src)
     return dest;
 }
 
-float* matrixMultiply3x3(apr_pool_t* pool, float* m, float* b)
+float* matrixMultiply3x3(apr_pool_t* pool, float* a, float* b)
 {
-    float* a= matrixCopy3x3(pool, m);
+    float* rv = matrixCopy3x3(pool, a);
+    matrixMultiply3x3I(rv, a, b);
+    return rv;
+}
 
+void matrixMultiply3x3I(float* rv, float* a, float* b)
+{
     float mult[] = {
         a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
         a[0] * b[1] + a[1] * b[4] + a[2] * b[7],
@@ -261,9 +266,7 @@ float* matrixMultiply3x3(apr_pool_t* pool, float* m, float* b)
         a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
         a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
     };
-    memcpy(a, mult, sizeof(float)*9);
-
-    return a;
+    memcpy(rv, mult, sizeof(float)*9);
 }
 
 float* matrixTransform2D(apr_pool_t* pool, float* world, float x, float y)
@@ -275,9 +278,14 @@ float* matrixTransform2D(apr_pool_t* pool, float* world, float x, float y)
     else {
         rv = malloc(sizeof(float)*2);
     }
+    matrixTransform2DI(rv, world, x, y);
+    return rv;
+}
+
+void matrixTransform2DI(float* rv, float* world, float x, float y)
+{
     rv[0] = world[0] * x + world[1] * y + world[2];
     rv[1] = world[3] * x + world[4] * y + world[5];
-    return rv;
 }
 
 float* makeTranslation3x3(apr_pool_t* pool, float tx, float ty)
@@ -289,13 +297,18 @@ float* makeTranslation3x3(apr_pool_t* pool, float tx, float ty)
     else {
         rv = malloc(sizeof(float)*9);
     }
+    makeTranslation3x3I(rv, tx, ty);
+    return rv;
+}
+
+void makeTranslation3x3I(float* rv, float tx, float ty)
+{
     float cop[] = {
         1, 0, 0,
         0, 1, 0,
         tx, ty, 1
     };
     memcpy(rv, cop, sizeof(float)*9);
-    return rv;
 }
 
 float* makeRotation3x3(apr_pool_t* pool, float angleInRadians)
@@ -330,19 +343,35 @@ float* makeScale3x3(apr_pool_t* pool, float sx, float sy)
     else {
         rv = malloc(sizeof(float)*9);
     }
+    makeScale3x3I(rv, sx, sy);
+    return rv;
+}
 
+void makeScale3x3I(float* rv, float sx, float sy)
+{
     float cop[] = {
         sx, 0, 0,
         0, sy, 0,
         0, 0, 1
     };
     memcpy(rv, cop, sizeof(float)*9);
+}
 
+float* makeInverse3x3(apr_pool_t* pool, float* input)
+{
+    float* rv;
+    if(pool) {
+        rv = apr_palloc(pool, sizeof(float)*9);
+    }
+    else {
+        rv = malloc(sizeof(float)*9);
+    }
+    makeInverse3x3I(rv, input);
     return rv;
 }
 
 // http://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
-float* makeInverse3x3(apr_pool_t* pool, float* input)
+void makeInverse3x3I(float* rv, float* input)
 {
     //var m = function(col, row) {
         //return input[row * 3 + col];
@@ -365,14 +394,6 @@ float* makeInverse3x3(apr_pool_t* pool, float* input)
                 input[3] * (input[1] * input[8] - input[7] * input[2]) +
                 input[6] * (input[1] * input[5] - input[4] * input[2]);
     float invdet = 1 / det;
-
-    float* rv;
-    if(pool) {
-        rv = apr_palloc(pool, sizeof(float)*9);
-    }
-    else {
-        rv = malloc(sizeof(float)*9);
-    }
 
 //    return [
 //        (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) * invdet,
@@ -397,7 +418,6 @@ float* makeInverse3x3(apr_pool_t* pool, float* input)
         (input[0] * input[4] - input[1] * input[3]) * invdet
     };
     memcpy(rv, cop, sizeof(float)*9);
-    return rv;
 }
 
 void midPoint(float x1, float y1, float x2, float y2, float* midX, float* midY)
@@ -408,12 +428,6 @@ void midPoint(float x1, float y1, float x2, float y2, float* midX, float* midY)
 
 float* make2DProjection(apr_pool_t* pool, float width, float height, int flipVertical)
 {
-    if(!flipVertical) {
-        flipVertical = 1;
-    }
-    else {
-        flipVertical = -1;
-    }
     float* rv;
     if(pool) {
         rv = apr_palloc(pool, sizeof(float)*9);
@@ -421,14 +435,25 @@ float* make2DProjection(apr_pool_t* pool, float width, float height, int flipVer
     else {
         rv = malloc(sizeof(float)*9);
     }
+    make2DProjectionI(rv, width, height, flipVertical);
+    return rv;
+}
+
+void make2DProjectionI(float* rv, float width, float height, int flipVertical)
+{
+    if(!flipVertical) {
+        flipVertical = 1;
+    }
+    else {
+        flipVertical = -1;
+    }
     float cop[] = {
         2 / width, 0, 0,
         0, -2 / (flipVertical * height), 0,
         -1, flipVertical, 1
     };
     memcpy(rv, cop, sizeof(float)*9);
-    return rv;
-};
+}
 
 float* subtractVectors3D(apr_pool_t* pool, float* a, float* b) {
     float* rv;

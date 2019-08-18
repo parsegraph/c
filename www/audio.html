@@ -22,51 +22,56 @@ function updateUnsel() {
     }
 }
 
+function enableAudio() {
+    var audio = surface.startAudio();
+
+    var compressor = audio.createDynamicsCompressor();
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.reduction.value = -20;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_Application();
     SGA = sga;
     sga.start(document.body, function(graph, userLogin, node) {
         var surface = this.surface();
-        var audio = surface.audio();
         node.setNodeFit(parsegraph_NODE_FIT_EXACT);
         var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
         node.setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
         myList.setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
 
-        var compressor = audio.createDynamicsCompressor();
-        compressor.threshold.value = -50;
-        compressor.knee.value = 40;
-        compressor.ratio.value = 12;
-        compressor.reduction.value = -20;
-        compressor.attack.value = 0;
-        compressor.release.value = 0.25;
         var bit = new parsegraph_8BitWidget(graph);
-        var sink = bit.audioNode();
+        //var sink = bit.audioNode();
 
         var waveShaperWidget = new parsegraph_WaveShaperWidget(graph);
-        var bqf = audio.createBiquadFilter();
+        /*var bqf = audio.createBiquadFilter();
         bqf.type = "highpass";
         bqf.frequency.value = 1000;
         bqf.gain.value = 25;
         sink.connect(bqf);
         bqf.connect(waveShaperWidget.audioNode());
-        waveShaperWidget.audioNode().connect(compressor);
+        waveShaperWidget.audioNode().connect(compressor);*/
 
         var convolverWidget = new parsegraph_ConvolverWidget(graph);
-        var convolverNode = convolverWidget._convolver;
+        //var convolverNode = convolverWidget._convolver;
 
-        compressor.connect(convolverNode);
+        //compressor.connect(convolverNode);
 
         var delayWidget = new parsegraph_DelayWidget(graph);
-        var delay = delayWidget.audioNode();
-        convolverNode.connect(delay);
-        delayGain = audio.createGain();
+        //var delay = delayWidget.audioNode();
+        //convolverNode.connect(delay);
+        /*delayGain = audio.createGain();
         delay.connect(delayGain);
         delayGain.gain.value = 0.1;
         delayGain.connect(convolverNode);
 
         convolverNode.connect(audio.destination);
         delayGain.connect(audio.destination);
+        */
 
         /*for(var i = 1; i <= 2; ++i) {
             var dl = audio.createDelay(.2*i);
@@ -76,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             dl.connect(audio.destination);
         }*/
 
-        var oscillatorWidget = new parsegraph_SingleOscillatorWidget(graph, sink);
+        var oscillatorWidget = new parsegraph_SingleOscillatorWidget(graph);
 
         var car = new parsegraph_Caret(myList);
         car.setGlyphAtlas(this._graph.glyphAtlas());
@@ -99,12 +104,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
         car.pull(parsegraph_FORWARD);
 
         var sequencerWidget = new parsegraph_SequencerWidget(graph);
-        sequencerWidget.output().connect(sink);
+        //sequencerWidget.output().connect(sink);
         car.connect(parsegraph_DOWNWARD, sequencerWidget.node());
         sequencerWidget.useSynthesizer(synth);
 
         var filterWidget = new parsegraph_FilterWidget(graph);
-        filterWidget.load(bqf);
+        //filterWidget.load(bqf);
         car.spawnMove('u', 'u').connectNode(parsegraph_FORWARD, filterWidget.node());
 
         car.spawnMove('b', 'u');
@@ -119,6 +124,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         car.connect(parsegraph_DOWNWARD, bit.node());
         car.pop();
         car.connect(parsegraph_UPWARD, convolverWidget.node());
+        //car.connect(parsegraph_BACKWARD, new parsegraph_Node(parsegraph_BUD));
         car.connect(parsegraph_BACKWARD, oscillatorWidget.node());
 
         var isFiltering = true;

@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-#include "Surface.h"
 #include "Rect.h"
 #include "Color.h"
 #include "../die.h"
+#include <apr_strings.h>
 
 const char* parsegraph_BlockPainter_VertexShader =
 "uniform mat3 u_world;\n"
@@ -34,6 +34,19 @@ const char* parsegraph_BlockPainter_VertexShader =
     "texCoord = a_texCoord;\n"
     "borderThickness = a_borderThickness;\n"
     "aspectRatio = a_aspectRatio;\n"
+"}";
+
+const char* parsegraph_BlockPainter_VertexShader_Simple =
+"uniform mat3 u_world;\n"
+"\n"
+"attribute vec2 a_position;\n"
+"attribute vec4 a_color;\n"
+"\n"
+"varying " HIGHP " vec4 contentColor;\n"
+"\n"
+"void main() {\n"
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);"
+    "contentColor = a_color;"
 "}";
 
 // Derived from https://thebookofshaders.com/07/
@@ -77,6 +90,17 @@ const char* parsegraph_BlockPainter_FragmentShader =
     // Map the two calculated indicators to their colors.
     "gl_FragColor = vec4(borderColor.rgb, borderColor.a * inBorder);\n"
     "gl_FragColor = mix(gl_FragColor, contentColor, inContent);\n"
+"}";
+
+const char* parsegraph_BlockPainter_FragmentShader_Simple =
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"\n"
+"varying " HIGHP " vec4 contentColor;\n"
+"\n"
+"void main() {\n"
+    "gl_FragColor = contentColor;"
 "}";
 
 // Same as above, but using a better antialiasing technique.
@@ -291,18 +315,22 @@ const char* parsegraph_BlockPainter_CurlyFragmentShader =
 
 static const char* shaderName = "parsegraph_BlockPainter";
 
-parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface, apr_hash_t* shaders)
+int parsegraph_BlockPainter_COUNT = 0;
+
+parsegraph_BlockPainter* parsegraph_BlockPainter_new(apr_pool_t* ppool, apr_hash_t* shaders)
 {
-    if(!shaders || !surface) {
+    if(!shaders) {
         parsegraph_die("A shaders object must be given.");
     }
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create BlockPainter memory pool.");
     }
 
     parsegraph_BlockPainter* painter = apr_palloc(pool, sizeof(*painter));
     painter->pool = pool;
+    painter->_id = ++parsegraph_BlockPainter_COUNT;
+    painter->_string = 0;
 
     const char* fragProgram = parsegraph_BlockPainter_FragmentShader;
     if(strstr((const char*)glGetString(GL_EXTENSIONS), "GL_OES_standard_derivatives")) {
@@ -312,14 +340,11 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface
 
     // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
     painter->_blockBuffer = 0;
-    painter->_numBlocks = 0;
-    painter->_numFaces = 0;
-    painter->_numVertices = 0;
+    painter->_blockBufferNumVertices = 0;
+    painter->_blockBufferVertexIndex = 0;
 
     // Cache program locations.
-    painter->u_world = glGetUniformLocation(
-        painter->_blockProgram, "u_world"
-    );
+    painter->u_world = glGetUniformLocation(painter->_blockProgram, "u_world");
 
     // Setup initial uniform values.
     parsegraph_Color_SetRGBA(painter->_backgroundColor, 1, 1, 1, .15);
@@ -343,9 +368,20 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(parsegraph_Surface* surface
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
     painter->_stride = 15*sizeof(float);
+    painter->_vertexBuffer = apr_palloc(painter->pool, painter->_stride);
+    painter->_dataBufferVertexIndex = 0;
+    painter->_dataBufferNumVertices = 6;
+    painter->_dataBuffer = apr_palloc(painter->pool, painter->_dataBufferNumVertices*painter->_stride);
+
+    painter->_blockProgramSimple = parsegraph_compileProgram(shaders, shaderName, parsegraph_BlockPainter_VertexShader, parsegraph_BlockPainter_FragmentShader_Simple);
+    painter->simple_u_world = glGetUniformLocation(painter->_blockProgramSimple, "u_world");
+    painter->simple_a_position = glGetAttribLocation(painter->_blockProgramSimple, "a_position");
+    painter->simple_a_color = glGetAttribLocation(painter->_blockProgramSimple, "a_color");
+
+    painter->_maxSize = 0;
 
     return painter;
-};
+}
 
 void parsegraph_BlockPainter_destroy(parsegraph_BlockPainter* painter)
 {
@@ -375,25 +411,36 @@ float* parsegraph_BlockPainter_backgroundColor(parsegraph_BlockPainter* painter)
 void parsegraph_BlockPainter_setBackgroundColor(parsegraph_BlockPainter* painter, float* backgroundColor)
 {
     parsegraph_Color_copy(painter->_backgroundColor, backgroundColor);
-};
+}
 
 void parsegraph_BlockPainter_initBuffer(parsegraph_BlockPainter* painter, unsigned int numBlocks)
 {
-    if(painter->_numBlocks == numBlocks) {
+    parsegraph_logEntercf("Painter initialization", "Initializing BlockPainter with %d blocks.", numBlocks);
+    if(painter->_blockBufferNumVertices/6 == numBlocks) {
         // Same number of blocks, so just reset the counters and overwrite.
-        painter->_numVertices = 0;
-        painter->_numFaces = 0;
+        painter->_blockBufferVertexIndex = 0;
+        painter->_dataBufferVertexIndex = 0;
+        parsegraph_logLeavef("Painter can reuse existing buffers.\n");
         return;
     }
     if(painter->_blockBuffer) {
         parsegraph_BlockPainter_clear(painter);
     }
     glGenBuffers(1, &painter->_blockBuffer);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while creating GL buffer for block painter\n");
+    }
     glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while binding GL buffer for block painter\n");
+    }
     glBufferData(GL_ARRAY_BUFFER, painter->_stride*6*numBlocks, 0, GL_STATIC_DRAW);
-    painter->_numBlocks = numBlocks;
-    //parsegraph_log("BlockPainter has buffer of %d blocks", numBlocks);
-};
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while creating GL buffer for block painter\n");
+    }
+    painter->_blockBufferNumVertices = numBlocks*6;
+    parsegraph_logLeavef("Painter recreated buffers.\n");
+}
 
 void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter)
 {
@@ -401,34 +448,105 @@ void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter)
         return;
     }
     glDeleteBuffers(1, &painter->_blockBuffer);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while deleting GL buffer for block painter\n");
+    }
     painter->_blockBuffer = 0;
     parsegraph_Rect_set(painter->_bounds, 0, 0, 0, 0);
-    painter->_numBlocks = 0;
-    painter->_numFaces = 0;
-    painter->_numVertices = 0;
-};
+    painter->_blockBufferNumVertices = 0;
+    painter->_dataBufferVertexIndex = 0;
+    painter->_blockBufferVertexIndex = 0;
+    painter->_maxSize = 0;
+}
 
-void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
-    float cx, float cy, float width, float height, float borderRoundedness, float borderThickness, float borderScale)
+void parsegraph_BlockPainter_writeVertex(parsegraph_BlockPainter* painter)
 {
-    if(painter->_numFaces / 2 >= painter->_numBlocks) {
-        parsegraph_die("BlockPainter is full and cannot draw any more blocks.");
+    int pos = painter->_dataBufferVertexIndex++ * painter->_stride/sizeof(float);
+    memcpy(painter->_dataBuffer + pos, painter->_vertexBuffer, painter->_stride);
+    if(painter->_dataBufferVertexIndex >= painter->_dataBufferNumVertices) {
+        parsegraph_BlockPainter_flush(painter);
     }
+    //parsegraph_log("Data buffer vertex index of %s is now %d\n", parsegraph_BlockPainter_toString(painter), painter->_dataBufferVertexIndex);
+}
+
+void parsegraph_BlockPainter_flush(parsegraph_BlockPainter* painter)
+{
+    if(painter->_dataBufferVertexIndex == 0) {
+        //parsegraph_log("BlockPainter has no vertices to flush.\n");
+        return;
+    }
+    int stride = painter->_stride;
+    glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while binding GL buffer for block painter\n");
+    }
+
+    if(painter->_dataBufferVertexIndex + painter->_blockBufferVertexIndex > painter->_blockBufferNumVertices) {
+        parsegraph_die("GL buffer of %d vertices is full; cannot flush all %d vertices because the GL buffer already has %d vertices.", painter->_blockBufferNumVertices, painter->_dataBufferVertexIndex, painter->_blockBufferVertexIndex);
+    }
+    if(painter->_dataBufferVertexIndex >= painter->_dataBufferNumVertices) {
+        parsegraph_log("Writing %d vertices to offset %d of %d vertices", painter->_dataBufferNumVertices, painter->_blockBufferVertexIndex, painter->_blockBufferNumVertices);
+        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, painter->_dataBufferNumVertices, painter->_dataBuffer);
+    }
+    else {
+        parsegraph_log("Partial flush (%d/%d from %d)", painter->_blockBufferVertexIndex, painter->_blockBufferNumVertices, painter->_dataBufferVertexIndex*stride/4);
+        glBufferSubData(GL_ARRAY_BUFFER, painter->_blockBufferVertexIndex*stride, painter->_dataBufferVertexIndex*stride/sizeof(float), painter->_dataBuffer);
+    }
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while flushing block painter buffer\n");
+    }
+    painter->_blockBufferVertexIndex += painter->_dataBufferVertexIndex;
+    painter->_dataBufferVertexIndex = 0;
+    //parsegraph_log("Block buffer vertex index of %s is now %d.\n", parsegraph_BlockPainter_toString(painter), painter->_blockBufferVertexIndex);
+}
+
+void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter, float cx, float cy, float width, float height, float borderRoundedness, float borderThickness, float borderScale)
+{
     if(!painter->_blockBuffer) {
         parsegraph_die("BlockPainter.initBuffer(numBlocks) must be called first.");
     }
-    if(isnan(cx) || isnan(cy) || isnan(width) || isnan(height) || isnan(borderRoundedness) || isnan(borderThickness) || isnan(borderScale)) {
-        parsegraph_log("Drawing block (%f, %f, w=%f, h=%f, border(%f, %f))\n", cx, cy, width, height, borderRoundedness, borderThickness);
-    }   
+    if(painter->_blockBufferVertexIndex >= painter->_blockBufferNumVertices) {
+        parsegraph_die("BlockPainter is full and cannot draw any more blocks.");
+    }
     parsegraph_Rect_include(painter->_bounds, cx, cy, width, height);
+    if(isnan(cx)) {
+        parsegraph_die("cx must be a number, but was NaN");
+    }
+    if(isnan(cy)) {
+        parsegraph_die("cy must be a number, but was NaN");
+    }
+    if(isnan(width)) {
+        parsegraph_die("width must be a number, but was NaN");
+    }
+    if(isnan(height)) {
+        parsegraph_die("height must be a number, but was NaN");
+    }
+    if(isnan(borderRoundedness)) {
+        parsegraph_die("borderRoundedness must be a number, but was NaN");
+    }
+    if(isnan(borderThickness)) {
+        parsegraph_die("borderThickness must be a number, but was NaN");
+    }
+    if(isnan(borderScale)) {
+        parsegraph_die("borderScale must be a number, but was NaN");
+    }
+    parsegraph_log("Drawing block of size %fx%f centered at world position (%f, %f).\n", width, height, cx, cy);
 
-    float* buf = painter->_itemBuffer;
+    float* buf = painter->_vertexBuffer;
 
     // Append color data.
-    memcpy(buf + 4, parsegraph_BlockPainter_backgroundColor(painter), sizeof(float)*4);
+    float* bg = parsegraph_BlockPainter_backgroundColor(painter);
+    buf[4] = bg[0];
+    buf[5] = bg[1];
+    buf[6] = bg[2];
+    buf[7] = bg[3];
 
     // Append border color data.
-    memcpy(buf + 8, parsegraph_BlockPainter_borderColor(painter), sizeof(float)*4);
+    float* borC = parsegraph_BlockPainter_borderColor(painter);
+    buf[8] = borC[0];
+    buf[9] = borC[1];
+    buf[10] = borC[2];
+    buf[11] = borC[3];
 
     // Append border radius data.
     if(height < width) {
@@ -442,76 +560,103 @@ void parsegraph_BlockPainter_drawBlock(parsegraph_BlockPainter* painter,
     }
     buf[14] = height/width;
 
-    float stride = painter->_stride;
-
-    glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
-
     // Append position and texture coordinate data.
     buf[0] = cx - width / 2;
     buf[1] = cy - height / 2;
     buf[2] = 0;
     buf[3] = 0;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
     buf[0] = cx + width / 2;
     buf[1] = cy - height / 2;
     buf[2] = 1;
     buf[3] = 0;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
     buf[0] = cx + width / 2;
     buf[1] = cy + height / 2;
     buf[2] = 1;
     buf[3] = 1;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
     buf[0] = cx - width / 2;
     buf[1] = cy - height / 2;
     buf[2] = 0;
     buf[3] = 0;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
     buf[0] = cx + width / 2;
     buf[1] = cy + height / 2;
     buf[2] = 1;
     buf[3] = 1;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
     buf[0] = cx - width / 2;
     buf[1] = cy + height / 2;
     buf[2] = 0;
     buf[3] = 1;
-    glBufferSubData(GL_ARRAY_BUFFER, painter->_numVertices++*stride, stride, buf);
+    parsegraph_BlockPainter_writeVertex(painter);
 
-    //printf("%d verts\n", painter->_numVertices);
-    painter->_numFaces += 2;
+    painter->_maxSize = fmaxf(painter->_maxSize, fmaxf(width, height));
+}
+
+const char* parsegraph_BlockPainter_toString(parsegraph_BlockPainter* painter)
+{
+    if(!painter->_string) {
+        painter->_string = apr_psprintf(painter->pool, "[parsegraph_BlockPainter %d]", painter->_id);
+    }
+    return painter->_string;
 };
 
-void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* world)
+void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* world, float scale)
 {
-    if(!painter->_numFaces) {
+    parsegraph_BlockPainter_flush(painter);
+    if(painter->_blockBufferVertexIndex == 0) {
+        parsegraph_log("This painter %s has no vertices.\n", parsegraph_BlockPainter_toString(painter));
         return;
     }
-    //printf("Rendering %d vertices\n", painter->_numVertices);
+    int usingSimple = (painter->_maxSize * scale) < 5;
+    usingSimple = 1;
+    parsegraph_log("BlockPainter %d %f %d %d\n", painter->_id, painter->_maxSize * scale, usingSimple, painter->_blockBufferVertexIndex);
 
-    // Render blocks.
-    glUseProgram(painter->_blockProgram);
-    glUniformMatrix3fv(painter->u_world, 1, 0, world);
+    if(usingSimple) {
+        glUseProgram(painter->_blockProgramSimple);
+        if(GL_NO_ERROR != glGetError()) {
+            parsegraph_die("GL error while using GL program for block painter\n");
+        }
+        glUniformMatrix3fv(painter->simple_u_world, 1, 0, world);
+        if(GL_NO_ERROR != glGetError()) {
+            parsegraph_die("GL error while transferring world matrix to GL for block painter\n");
+        }
+        glEnableVertexAttribArray(painter->simple_a_position);
+        glEnableVertexAttribArray(painter->simple_a_color);
+    }
+    else {
+        glUseProgram(painter->_blockProgram);
+        if(GL_NO_ERROR != glGetError()) {
+            parsegraph_die("GL error while using GL program for block painter\n");
+        }
+        glUniformMatrix3fv(painter->u_world, 1, 0, world);
+        if(GL_NO_ERROR != glGetError()) {
+            parsegraph_die("GL error while transferring world matrix to GL for block painter\n");
+        }
+        glEnableVertexAttribArray(painter->a_position);
+        glEnableVertexAttribArray(painter->a_texCoord);
+        glEnableVertexAttribArray(painter->a_color);
+        glEnableVertexAttribArray(painter->a_borderColor);
+        glEnableVertexAttribArray(painter->a_borderRoundedness);
+        glEnableVertexAttribArray(painter->a_borderThickness);
+        glEnableVertexAttribArray(painter->a_aspectRatio);
+    }
 
-    glEnableVertexAttribArray(painter->a_position);
-    glEnableVertexAttribArray(painter->a_texCoord);
-    glEnableVertexAttribArray(painter->a_color);
-    glEnableVertexAttribArray(painter->a_borderColor);
-    glEnableVertexAttribArray(painter->a_borderRoundedness);
-    glEnableVertexAttribArray(painter->a_borderThickness);
-    glEnableVertexAttribArray(painter->a_aspectRatio);
-
-    float stride = painter->_stride;
+    int stride = painter->_stride;
     if(!painter->_blockBuffer) {
-        fprintf(stderr, "No block buffer to render; BlockPainter.initBuffer(numBlocks) must be called first.\n");
-        abort();
+        parsegraph_die("No block buffer to render; BlockPainter.initBuffer(numBlocks) must be called first.");
     }
     glBindBuffer(GL_ARRAY_BUFFER, painter->_blockBuffer);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error while binding buffer\n");
+    }
 
     // Position: 2 * 4 (two floats)  0-7
     // TexCoord: 2 * 4 (two floats)  8-15
@@ -520,21 +665,36 @@ void parsegraph_BlockPainter_render(parsegraph_BlockPainter* painter, float* wor
     // BorRound: 1 * 4 (one float)   48-51
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
-    glVertexAttribPointer(painter->a_position,          2, GL_FLOAT, 0, stride, (GLvoid*)0);
-    glVertexAttribPointer(painter->a_texCoord,          2, GL_FLOAT, 0, stride, (GLvoid*)8);
-    glVertexAttribPointer(painter->a_color,             4, GL_FLOAT, 0, stride, (GLvoid*)16);
-    glVertexAttribPointer(painter->a_borderColor,       4, GL_FLOAT, 0, stride, (GLvoid*)32);
-    glVertexAttribPointer(painter->a_borderRoundedness, 1, GL_FLOAT, 0, stride, (GLvoid*)48);
-    glVertexAttribPointer(painter->a_borderThickness,   1, GL_FLOAT, 0, stride, (GLvoid*)52);
-    glVertexAttribPointer(painter->a_aspectRatio,       1, GL_FLOAT, 0, stride, (GLvoid*)56);
+    if(usingSimple) {
+        glVertexAttribPointer(painter->simple_a_position,          2, GL_FLOAT, 0, stride, 0);
+        glVertexAttribPointer(painter->simple_a_color,             4, GL_FLOAT, 0, stride, (void*)16);
+    }
+    else {
+        glVertexAttribPointer(painter->a_position,          2, GL_FLOAT, 0, stride, 0);
+        glVertexAttribPointer(painter->a_texCoord,          2, GL_FLOAT, 0, stride, (void*)8);
+        glVertexAttribPointer(painter->a_color,             4, GL_FLOAT, 0, stride, (void*)16);
+        glVertexAttribPointer(painter->a_borderColor,       4, GL_FLOAT, 0, stride, (void*)32);
+        glVertexAttribPointer(painter->a_borderRoundedness, 1, GL_FLOAT, 0, stride, (void*)48);
+        glVertexAttribPointer(painter->a_borderThickness,   1, GL_FLOAT, 0, stride, (void*)52);
+        glVertexAttribPointer(painter->a_aspectRatio,       1, GL_FLOAT, 0, stride, (void*)56);
+    }
 
-    glDrawArrays(GL_TRIANGLES, 0, painter->_numVertices);
+    glDrawArrays(GL_TRIANGLES, 0, painter->_blockBufferVertexIndex);
+    if(GL_NO_ERROR != glGetError()) {
+        parsegraph_die("GL error during draw arrays\n");
+    }
 
-    glDisableVertexAttribArray(painter->a_position);
-    glDisableVertexAttribArray(painter->a_texCoord);
-    glDisableVertexAttribArray(painter->a_color);
-    glDisableVertexAttribArray(painter->a_borderColor);
-    glDisableVertexAttribArray(painter->a_borderRoundedness);
-    glDisableVertexAttribArray(painter->a_borderThickness);
-    glDisableVertexAttribArray(painter->a_aspectRatio);
+    if(usingSimple) {
+        glDisableVertexAttribArray(painter->simple_a_position);
+        glDisableVertexAttribArray(painter->simple_a_color);
+    }
+    else {
+        glDisableVertexAttribArray(painter->a_position);
+        glDisableVertexAttribArray(painter->a_texCoord);
+        glDisableVertexAttribArray(painter->a_color);
+        glDisableVertexAttribArray(painter->a_borderColor);
+        glDisableVertexAttribArray(painter->a_borderRoundedness);
+        glDisableVertexAttribArray(painter->a_borderThickness);
+        glDisableVertexAttribArray(painter->a_aspectRatio);
+    }
 }

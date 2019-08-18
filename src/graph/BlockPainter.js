@@ -374,12 +374,10 @@ function parsegraph_BlockPainter(gl, shaders)
 
     // Setup initial uniform values.
     this._backgroundColor = parsegraph_createColor(1, 1, 1, .15);
-
-    this._borderColor = parsegraph_createColor(
-        parsegraph_createColor(1, 1, 1, 1)
-    );
+    this._borderColor = parsegraph_createColor(parsegraph_createColor(1, 1, 1, 1));
 
     this._bounds = null;
+
     this.a_position = this._gl.getAttribLocation(this._blockProgram, "a_position");
     this.a_texCoord = this._gl.getAttribLocation(this._blockProgram, "a_texCoord");
     this.a_color = this._gl.getAttribLocation(this._blockProgram, "a_color");
@@ -588,9 +586,6 @@ parsegraph_BlockPainter.prototype.drawBlock = function(
     }
     buf[14] = height/width;
 
-    var stride = this._stride;
-    var gl = this._gl;
-
     // Append position and texture coordinate data.
     buf[0] = cx - width / 2;
     buf[1] = cy - height / 2;
@@ -707,3 +702,4 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         gl.disableVertexAttribArray(this.a_aspectRatio);
     }
 };
+
