@@ -314,6 +314,7 @@ const char* parsegraph_BlockPainter_CurlyFragmentShader =
 "}";
 
 static const char* shaderName = "parsegraph_BlockPainter";
+static const char* simpleShaderName = "parsegraph_BlockPainter_Simple";
 
 int parsegraph_BlockPainter_COUNT = 0;
 
@@ -374,7 +375,10 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(apr_pool_t* ppool, apr_hash
     painter->_dataBufferNumVertices = 6;
     painter->_dataBuffer = apr_palloc(painter->pool, painter->_dataBufferNumVertices*painter->_stride);
 
-    painter->_blockProgramSimple = parsegraph_compileProgram(shaders, shaderName, parsegraph_BlockPainter_VertexShader, parsegraph_BlockPainter_FragmentShader_Simple);
+    painter->_blockProgramSimple = parsegraph_compileProgram(shaders, simpleShaderName,
+        parsegraph_BlockPainter_VertexShader_Simple,
+        parsegraph_BlockPainter_FragmentShader_Simple
+    );
     painter->simple_u_world = glGetUniformLocation(painter->_blockProgramSimple, "u_world");
     painter->simple_a_position = glGetAttribLocation(painter->_blockProgramSimple, "a_position");
     painter->simple_a_color = glGetAttribLocation(painter->_blockProgramSimple, "a_color");
