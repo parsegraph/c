@@ -368,6 +368,7 @@ parsegraph_BlockPainter* parsegraph_BlockPainter_new(apr_pool_t* ppool, apr_hash
     // BorThick: 1 * 4 (one float)   52-55
     // AspectRa: 1 * 4 (one float)   56-59
     painter->_stride = 15*sizeof(float);
+    parsegraph_log("BlockPainter stride is %d\n", painter->_stride);
     painter->_vertexBuffer = apr_palloc(painter->pool, painter->_stride);
     painter->_dataBufferVertexIndex = 0;
     painter->_dataBufferNumVertices = 6;
@@ -461,6 +462,14 @@ void parsegraph_BlockPainter_clear(parsegraph_BlockPainter* painter)
 
 void parsegraph_BlockPainter_writeVertex(parsegraph_BlockPainter* painter)
 {
+    parsegraph_log("Writing one vertex with pos [%f, %f] with color(%f, %f, %f, %f)\n",
+        painter->_vertexBuffer[0],
+        painter->_vertexBuffer[1],
+        painter->_vertexBuffer[4],
+        painter->_vertexBuffer[5],
+        painter->_vertexBuffer[6],
+        painter->_vertexBuffer[7]
+    );
     int pos = painter->_dataBufferVertexIndex++ * painter->_stride/sizeof(float);
     memcpy(painter->_dataBuffer + pos, painter->_vertexBuffer, painter->_stride);
     if(painter->_dataBufferVertexIndex >= painter->_dataBufferNumVertices) {
