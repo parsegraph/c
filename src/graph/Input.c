@@ -207,13 +207,22 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float x, float y, int i
         input->cursorWorldPos[0] += x*scale;
         input->cursorWorldPos[1] += y*scale;
     }
-
     if(parsegraph_Carousel_isCarouselShown(parsegraph_Graph_carousel(input->_graph))) {
-        parsegraph_Input_Dispatch(input,
-            parsegraph_Carousel_mouseOverCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]),
-            "mousemove carousel",
-            0
-        );
+        parsegraph_Input_mouseChanged(input);
+
+        int overClickable = parsegraph_Carousel_mouseOverCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]);
+        switch(overClickable) {
+        case 0:
+            // TODO Change cursor to mouse.
+            break;
+        case 1:
+            // World not ready.
+            break;
+        case 2:
+            // TODO Change cursor to pointer.
+            break;
+        }
+        parsegraph_Input_Dispatch(input, overClickable > 0, "mousemove carousel", 0);
         return;
     }
 
@@ -223,12 +232,26 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float x, float y, int i
     }
 
     // Just a mouse moving over the (focused) canvas.
-    parsegraph_Input_Dispatch(
-        input,
-        parsegraph_World_mouseOver(parsegraph_Graph_world(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]),
-        "mousemove world",
-        0
-    );
+    int overClickable;
+    if(!parsegraph_World_paint(parsegraph_Graph_world(input->_graph), parsegraph_INPUT_LAYOUT_TIME)) {
+        overClickable = 1;
+    }
+    else {
+        overClickable = parsegraph_World_mouseOver(parsegraph_Graph_world(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1]);
+    }
+    switch(overClickable) {
+    case 2:
+        // TODO Change cursor to pointer
+        break;
+    case 1:
+        //parsegraph_log("World not ready\n");
+        break;
+    case 0:
+        // TODO Change cursor to mouse
+        break;
+    }
+    parsegraph_Input_Dispatch(input, overClickable > 0, "mousemove world", 0);
+    parsegraph_Input_mouseChanged(input);
 }
 
 void parsegraph_Input_setCursorShown(parsegraph_Input* input, int shown)
@@ -246,6 +269,7 @@ void parsegraph_Input_mousedown(parsegraph_Input* input)
     input->has_mousedown = 1;
     input->mousedownX = input->cursorScreenPos[0];
     input->mousedownY = input->cursorScreenPos[1];
+    parsegraph_Input_mouseChanged(input);
 
     if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 1)) {
         //console.log("Carousel click processed.");
@@ -308,6 +332,7 @@ void parsegraph_Input_onWheel(parsegraph_Input* input, float angleDelta)
     //}
 
     parsegraph_Input_Dispatch(input, 0, "wheel", 1);
+    parsegraph_Input_mouseChanged(input);
 }
 
 parsegraph_Touch* parsegraph_Input_getTouchByIdentifier(parsegraph_Input* input, const char* identifier)
@@ -357,7 +382,7 @@ void parsegraph_Input_afterMouseTimeout(void* data)
 
 void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
 {
-    //console.log("MOUSEUP");
+    parsegraph_logEntercf("Input events", "Mouseup");
 
     input->lastCursorWorldClick[0] = input->cursorWorldClick[0];
     input->lastCursorWorldClick[1] = input->cursorWorldClick[1];
@@ -365,11 +390,11 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
     input->cursorWorldClick[1] = input->cursorWorldPos[1];
 
     if(parsegraph_Carousel_clickCarousel(parsegraph_Graph_carousel(input->_graph), input->cursorScreenPos[0], input->cursorScreenPos[1], 0)) {
-        //console.log("Carousel handled event.");
+        parsegraph_logLeavef("Carousel handled event.");
         return;
     }
     if(!input->attachedMouseListener) {
-        //console.log("No attached listeenr");
+        parsegraph_logLeavef("No attached listener");
         return;
     }
     input->attachedMouseListener = 0;
@@ -380,31 +405,32 @@ void parsegraph_Input_removeMouseListener(parsegraph_Input* input)
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     if(
-        parsegraph_timediffMs(&now, &input->mousedownTime) < parsegraph_CLICK_DELAY_MILLIS
+        parsegraph_timediffMs(&now, &input->mousedownTime) >= parsegraph_CLICK_DELAY_MILLIS
     ) {
-        //parsegraph_log("Click detected.\n");
-        if(input->isDoubleClick) {
-            parsegraph_Input_afterMouseTimeout(input);
-            return;
-        }
-        input->mouseupTimeout = parsegraph_setTimeout(
-            input->_graph->_surface,
-            parsegraph_Input_afterMouseTimeout,
-            parsegraph_CLICK_DELAY_MILLIS/5,
-            input
-        );
+        parsegraph_logLeavef("Click missed timeout");
+        return;
+    }
+    //parsegraph_log("Click detected.\n");
+    if(input->isDoubleClick) {
+        parsegraph_Input_afterMouseTimeout(input);
+        parsegraph_logLeave();
+        return;
+    }
+    input->mouseupTimeout = parsegraph_setTimeout(
+        input->_graph->_surface,
+        parsegraph_Input_afterMouseTimeout,
+        parsegraph_CLICK_DELAY_MILLIS/5,
+        input
+    );
 
-        //parsegraph_log("Click at %f, %f\n", input->cursorScreenPos[0], input->cursorScreenPos[1]);
-        if(parsegraph_Input_checkForNodeClick(input, input->cursorScreenPos[0], input->cursorScreenPos[1])) {
-            // A significant node was clicked.
-            //console.log("Node clicked.");
-            parsegraph_Input_Dispatch(input, 1, "mousedown node", 0);
-            return;
-        }
+    //parsegraph_log("Click at %f, %f\n", input->cursorScreenPos[0], input->cursorScreenPos[1]);
+    if(parsegraph_Input_checkForNodeClick(input, input->cursorScreenPos[0], input->cursorScreenPos[1])) {
+        // A significant node was clicked.
+        parsegraph_log("Node clicked.\n");
+        parsegraph_Input_Dispatch(input, 1, "mousedown node", 0);
     }
-    else {
-        //console.log("Click missed timeout");
-    }
+    parsegraph_logLeave();
+    return;
 }
 
 /**
@@ -414,6 +440,7 @@ void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float dx, float
 {
     float camScale = parsegraph_Camera_scale(input->_camera);
     //parsegraph_log("%f, %f, %f\n", deltaX, deltaY, camScale);
+    parsegraph_Input_mouseChanged(input);
     parsegraph_Camera_adjustOrigin(input->_camera,
         dx / camScale, dy / camScale
     );
@@ -759,6 +786,7 @@ void parsegraph_Input_touchmove(parsegraph_Input* input, parsegraph_ArrayList* c
         }
         touchRecord->x = touch->clientX;
         touchRecord->y = touch->clientY;
+        parsegraph_Input_mouseChanged(input);
     }
 
     //parsegraph_log("Touches monitored: %d", parsegraph_ArrayList_length(input->monitoredTouches));
@@ -862,7 +890,7 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
     if(parsegraph_Node_hasClickListener(selectedNode)) {
         parsegraph_log("Selected node %d has click listener.\n", selectedNode->_id);
         int rv = parsegraph_Node_click(selectedNode, "");
-        if(rv != 0) {
+        if(rv >= 0) {
             parsegraph_logLeave();
             return selectedNode;
         }
@@ -872,7 +900,6 @@ parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, flo
     }
 
     // Check if the label was clicked.
-    parsegraph_log("Clicked\n");
     if(selectedNode->_label && !isnan(selectedNode->_labelPos[0]) && parsegraph_Label_editable(selectedNode->_label)) {
         parsegraph_Label_click(selectedNode->_label,
             (mouseInWorld[0] - selectedNode->_labelPos[0]) / selectedNode->_labelPos[2],
@@ -1015,6 +1042,7 @@ void parsegraph_Input_sliderListener(parsegraph_Input* input, float mouseX, floa
         parsegraph_Node_click(input->selectedSlider, "slider");
     }
     parsegraph_Input_Dispatch(input, 1, "slider", 0);
+    parsegraph_Input_mouseChanged(input);
 }
 
 void parsegraph_Input_SetListener(parsegraph_Input* input, void(*listener)(parsegraph_Input*, int, const char*, int, void*), void* thisArg)
@@ -1070,6 +1098,7 @@ void parsegraph_Input_touchstart(parsegraph_Input* input, parsegraph_ArrayList* 
         touchRec->has_touchstart = 1;
         input->has_touchstartTime = 1;
         clock_gettime(CLOCK_REALTIME, &input->touchstartTime);
+        parsegraph_Input_mouseChanged(input);
     }
 
     int realMonitoredTouches = 0;
@@ -1216,7 +1245,7 @@ int parsegraph_Input_Update(parsegraph_Input* input, struct timespec* inputTime)
             );
         //}
     }
-    parsegraph_Input_Dispatch(input, 0, "update", inputChangedScene);
+    //parsegraph_Input_Dispatch(input, 0, "update", inputChangedScene);
 
     float x = parsegraph_Camera_x(cam);
     float y = parsegraph_Camera_y(cam);

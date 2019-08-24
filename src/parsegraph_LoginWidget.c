@@ -285,7 +285,7 @@ static int rootClick(parsegraph_Node* node, const char* button, void* data)
     parsegraph_Node_setLabelUTF8(actionNode, "Fullscreen", -1, atlas);
     parsegraph_Carousel_addToCarousel(carousel, actionNode, toggleFullScreen, widget);
     parsegraph_Carousel_scheduleCarouselRepaint(carousel);
-    return 0;
+    return -1;
 }
 
 parsegraph_Node* parsegraph_LoginWidget_loggedInForm(parsegraph_LoginWidget* widget)
