@@ -15,7 +15,7 @@ parsegraph_GlyphPage* parsegraph_GlyphPage_new(parsegraph_GlyphAtlas* glyphAtlas
 {
     parsegraph_GlyphPage* page = apr_palloc(glyphAtlas->pool, sizeof(*page));
     page->glyphAtlas = glyphAtlas;
-    page->_id = ++glyphAtlas->_maxPage;
+    page->_id = glyphAtlas->_maxPage++;
     page->_glyphTexture = 0;
     page->_firstGlyph = 0;
     page->_lastGlyph = 0;

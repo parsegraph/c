@@ -1,6 +1,6 @@
-function parsegraph_GlyphPage(id)
+function parsegraph_GlyphPage(glyphAtlas)
 {
-    this._id = id;
+    this._id = glyphAtlas._maxPage++;
     this._glyphTexture = null;
     this._firstGlyph = false;
     this._lastGlyph = false;
@@ -57,6 +57,8 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._x = this._padding;
     this._y = this._padding;
     this._unicode = null;
+
+    this._maxPage = 0;
 }
 
 parsegraph_GlyphAtlas.prototype.setUnicode = function(uni)
@@ -95,7 +97,7 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
 
     var glyphPage = null;
     if(this._pages.length === 0) {
-        glyphPage = new parsegraph_GlyphPage(0);
+        glyphPage = new parsegraph_GlyphPage(this);
         this._pages.push(glyphPage);
     }
     else {
@@ -115,7 +117,7 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
     }
     if(this._y + this._currentRowHeight + this._padding > pageTextureSize) {
         // Move to the next page.
-        glyphPage = new parsegraph_GlyphPage(this._pages.length);
+        glyphPage = new parsegraph_GlyphPage(this);
         this._pages.push(glyphPage);
         this._x = this._padding;
         this._y = this._padding;
