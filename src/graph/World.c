@@ -110,7 +110,7 @@ int parsegraph_World_mouseOver(parsegraph_World* world, float x, float y)
         // The node under cursor is already the node under cursor, so don't
         // do anything.
         //parsegraph_log("Node was the same\n");
-        return 1;
+        return selectedNode ? 1 : 0;
     }
 
     if(world->_nodeUnderCursor && world->_nodeUnderCursor != selectedNode) {

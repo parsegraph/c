@@ -119,7 +119,7 @@ parsegraph_World.prototype.mouseOver = function(x, y)
         // The node under cursor is already the node under cursor, so don't
         // do anything.
         //console.log("Node was the same");
-        return 1;
+        return selectedNode ? 1 : 0;
     }
 
     if(this._nodeUnderCursor && this._nodeUnderCursor !== selectedNode) {
