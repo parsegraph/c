@@ -134,6 +134,7 @@ void parsegraph_SpotlightPainter_drawRectSpotlight(parsegraph_SpotlightPainter* 
 void parsegraph_SpotlightPainter_clear(parsegraph_SpotlightPainter* painter)
 {
     parsegraph_pagingbuffer_clear(painter->_spotlightBuffer);
+    parsegraph_PagingBuffer_addDefaultPage(painter->_spotlightBuffer);
 }
 
 void parsegraph_SpotlightPainter_render(parsegraph_SpotlightPainter* painter, float* world, float scale)
