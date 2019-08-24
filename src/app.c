@@ -174,7 +174,6 @@ void parsegraph_Application_onUnicodeLoaded(parsegraph_Application* app)
 
     parsegraph_AnimationTimer_setListener(app->_renderTimer, onRender, app);
     parsegraph_Input_SetListener(parsegraph_Graph_input(app->_graph), onInput, app);
-    parsegraph_Application_scheduleRender(app);
     parsegraph_Graph_setOnScheduleRepaint(app->_graph, onScheduleRepaint, app);
     parsegraph_Carousel_setOnScheduleRepaint(app->_graph->_carousel, onScheduleRepaint, app);
 
