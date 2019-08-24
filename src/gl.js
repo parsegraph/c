@@ -129,6 +129,45 @@ function createProgram(gl, vertexShader, fragmentShader) {
   return program;
 };
 
+function parsegraph_compileProgram(gl, shaders, shaderName, vertexShader, fragShader)
+{
+    if(shaders[shaderName]) {
+        return shaders[shaderName];
+    }
+    var err;
+
+    var program = gl.createProgram();
+
+    gl.attachShader(
+        program, compileShader(gl,
+            vertexShader, gl.VERTEX_SHADER
+        )
+    );
+    if((err = gl.getError()) != gl.NO_ERROR) {
+        throw new Error("'" + shaderName + "' shader program's vertex shader failed to compile and attach: %s\n", err);
+    }
+
+
+    gl.attachShader(
+        program, compileShader(gl, fragShader, gl.FRAGMENT_SHADER)
+    );
+    if((err = gl.getError()) != gl.NO_ERROR) {
+        throw new Error("'" + shaderName + "' shader program's fragment shader failed to compile and attach: %s\n");
+    }
+
+    gl.linkProgram(program);
+    var st = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(!st) {
+        throw new Error("'" + shaderName + "' shader program failed to link:\n" + gl.getProgramInfoLog (program));
+    }
+    if((err = gl.getError()) != gl.NO_ERROR) {
+        throw new Error("'%s' shader program failed to link: %s\n", shaderName, gluErrorString(err));
+    }
+
+    shaders[shaderName] = program;
+    return program;
+}
+
 /**
  * Creates a shader from the content of a script tag.
  *
