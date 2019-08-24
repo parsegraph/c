@@ -183,7 +183,9 @@ void parsegraph_Graph_render(parsegraph_Graph* graph)
         parsegraph_Camera_scale(cam)
     );
     parsegraph_Camera_project(cam, world);
-    parsegraph_World_render(graph->_world, world);
+    if(!parsegraph_World_render(graph->_world, world)) {
+        parsegraph_Graph_scheduleRepaint(graph);
+    }
 
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     parsegraph_Carousel_render(graph->_carousel, world);
