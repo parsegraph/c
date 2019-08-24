@@ -7,6 +7,7 @@
 #include <unicode/ustring.h>
 #include <time.h>
 #include "die.h"
+#include "timing.h"
 
 int parsegraph_GlyphPage_COUNT = 0;
 
@@ -55,6 +56,7 @@ parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage,
 int parsegraph_GlyphAtlas_COUNT = 0;
 parsegraph_GlyphAtlas* parsegraph_GlyphAtlas_new(apr_pool_t* ppool, float fontSizePixels, UChar* fontName, int fontNameLen, const char* fillStyle)
 {
+    parsegraph_log("Creating glyph atlas with font size of %f\n", fontSizePixels);
     apr_pool_t* pool = 0;
     if(APR_SUCCESS != apr_pool_create(&pool, ppool)) {
         parsegraph_die("Failed to create GlyphAtlas memory pool.");
@@ -126,11 +128,11 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
 {
     parsegraph_GlyphData* glyphData = apr_hash_get(glyphAtlas->_glyphData, glyph, len*sizeof(UChar));
     if(glyphData) {
-        //parsegraph_log("REUSING!!\n");
+        //parsegraph_log("Reusing existing glyph for character %d.\n", glyph[0]);
         return glyphData;
     }
     else {
-        //parsegraph_log("CREATING GLYPH FOR %d!!\n", glyph[0]);
+        parsegraph_logEntercf("Glyph construction", "Creating glyph for character %d.\n", glyph[0]);
     }
     int letterWidth, letterHeight;
     int letterAscent, letterDescent;
@@ -183,6 +185,7 @@ parsegraph_GlyphData* parsegraph_GlyphAtlas_getGlyph(parsegraph_GlyphAtlas* glyp
     glyphAtlas->_x += glyphData->width + glyphAtlas->_padding;
     glyphAtlas->_needsUpdate = 1;
 
+    parsegraph_logLeavef("GlyphAtlas will need an update.\n");
     return glyphData;
 }
 
@@ -214,10 +217,10 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         parsegraph_GlyphAtlas_restoreProperties(glyphAtlas);
     }
     if(!glyphAtlas->_needsUpdate) {
-        //parsegraph_log("GlyphAtlas does not need update\n");
+        parsegraph_log("GlyphAtlas does not need update\n");
         return;
     }
-    //parsegraph_log("GlyphAtlas is updating\n");
+    parsegraph_logEntercf("GlyphAtlas updates", "GlyphAtlas is updating glyph textures.\n");
     glyphAtlas->_needsUpdate = 0;
 
     struct timespec td;
@@ -241,6 +244,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
         // Create texture.
         if(!curTexture) {
+            parsegraph_log("Creating GL glyph texture of size %dx%d\n", glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize);
             glGenTextures(1, &curTexture);
             glBindTexture(GL_TEXTURE_2D, curTexture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
@@ -270,7 +274,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
-    //parsegraph_log("GlyphAtlas updated %d page(s) in %dms\n", pagesUpdated, parsegraph_elapsed(&td));
+    parsegraph_logLeavef("GlyphAtlas updated %d page(s) in %dms\n", pagesUpdated, parsegraph_elapsed(&td));
 }
 
 void parsegraph_GlyphAtlas_clear(parsegraph_GlyphAtlas* glyphAtlas)

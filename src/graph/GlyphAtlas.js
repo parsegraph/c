@@ -32,6 +32,7 @@ function parsegraph_GlyphData(glyphPage, glyph, x, y, width, height, ascent, des
 parsegraph_GlyphAtlas_COUNT = 0;
 function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
 {
+    console.log("Creating glyph atlas with font size of " + fontSizePixels);
     this._id = parsegraph_GlyphAtlas_COUNT++;
     this._fontSize = fontSizePixels;
     this._fontName = fontName;
