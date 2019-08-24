@@ -2,6 +2,7 @@
 #include "Color.h"
 #include "../die.h"
 #include "../timing.h"
+#include "log.h"
 #include "initialize.h"
 #include <math.h>
 #include <stdlib.h>
@@ -211,7 +212,7 @@ int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, fl
     );
     if(dist < carousel->_carouselSize * .75/parsegraph_Camera_scale(carousel->_camera)) {
         if(asDown) {
-            //console.log("Down events within the inner region are treated as 'cancel.'");
+            parsegraph_log("Hiding carousel\n");
             parsegraph_Carousel_hideCarousel(carousel);
             parsegraph_Carousel_scheduleCarouselRepaint(carousel);
             return 1;
@@ -332,6 +333,7 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
             carousel->_showTime.tv_sec = 0;
             carousel->_updateRepeatedly = 0;
         }
+        parsegraph_log("Carousel shown for %fms has show scale of %f\n", ms, carousel->_showScale);
     }
 
     float minScale = 1;
@@ -344,6 +346,7 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
         float caretRad = 3.14159 + angleSpan/2.0f + ((float)i / (float)numPlots) * (2.0f * 3.14159);
         carouselData->x = 2.0f*carousel->_carouselSize * carousel->_showScale * cosf(caretRad);
         carouselData->y = 2.0f*carousel->_carouselSize * carousel->_showScale * sinf(caretRad);
+        parsegraph_log("Placing carousel node %d's root at (%f, %f)\n", i, carouselData->x, carouselData->y);
 
         // Set the scale.
         float extentSize[2];
@@ -388,11 +391,12 @@ void parsegraph_Carousel_setOnScheduleRepaint(parsegraph_Carousel* carousel, voi
 
 void parsegraph_Carousel_scheduleCarouselRepaint(parsegraph_Carousel* carousel)
 {
-    //fprintf(stderr, "Scheduling carousel repaint.\n");
+    parsegraph_logEntercf("Repaint scheduling", "Scheduling carousel repaint.\n");
     carousel->_carouselPaintingDirty = 1;
     if(carousel->onScheduleRepaint) {
         carousel->onScheduleRepaint(carousel->onScheduleRepaintThisArg);
     }
+    parsegraph_logLeave();
 }
 
 parsegraph_GlyphAtlas* parsegraph_Carousel_glyphAtlas(parsegraph_Carousel* carousel)
@@ -418,7 +422,7 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     }
 
     // Paint the carousel.
-    //console.log("Painting the carousel");
+    parsegraph_logEntercf("Carousel paints", "Painting the carousel");
     parsegraph_Carousel_arrangeCarousel(carousel);
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
         parsegraph_CarouselPlot* carouselData = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
@@ -443,10 +447,13 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     }
     float fanPadding = 1.2;
     parsegraph_FanPainter* fanPainter = carousel->_fanPainter;
+    parsegraph_log("Carousel show scale currently %f\n", parsegraph_Carousel_showScale(carousel));
     float ascRadius = parsegraph_Carousel_showScale(carousel) * fanPadding * carousel->_carouselSize;
+    parsegraph_log("Ascending radius is %f\n", ascRadius);
     parsegraph_FanPainter_setAscendingRadius(fanPainter, ascRadius);
     float descRadius = parsegraph_Carousel_showScale(carousel) * fanPadding * 2 * carousel->_carouselSize;
     parsegraph_FanPainter_setDescendingRadius(fanPainter, descRadius);
+    parsegraph_log("Descending radius is %f\n", descRadius);
 
     float startColor[] = {1, 1, 1, 1};
     float endColor[] = {.5, .5, .5, .4};
@@ -457,7 +464,9 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
         startColor, endColor
     );
 
+    parsegraph_log("Carousel show scale is %f\n", carousel->_showScale);
     carousel->_carouselPaintingDirty = 0;
+    parsegraph_logLeave();
 }
 
 void parsegraph_Carousel_render(parsegraph_Carousel* carousel, float* world)
@@ -486,6 +495,7 @@ void parsegraph_Carousel_render(parsegraph_Carousel* carousel, float* world)
         parsegraph_Node* root = carouselPlot->node;
 
         makeTranslation3x3I(trans, carouselPlot->x, carouselPlot->y);
+        parsegraph_log("Carousel plot at (%f, %f)\n", carouselPlot->x, carouselPlot->y);
         float sc[9];
         makeScale3x3I(sc, carouselPlot->scale, carouselPlot->scale);
         float carouselNodeMat[9];
