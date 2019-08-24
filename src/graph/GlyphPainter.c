@@ -5,6 +5,7 @@
 #include "Color.h"
 #include "GlyphAtlas.h"
 #include <math.h>
+#include <GL/glu.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -201,7 +202,10 @@ void parsegraph_GlyphPageRenderer_writeVertex(parsegraph_GlyphPageRenderer* page
 {
     int stride = pageRender->_painter->_stride;
     int pos = pageRender->_dataBufferVertexIndex++ * stride/sizeof(float);
-    memcpy(pageRender->_dataBuffer + pos, pageRender->_painter->_vertexBuffer, stride);
+    float* buf = pageRender->_painter->_vertexBuffer;
+    /*parsegraph_log("Writing glyph vertex with position (%f, %f) and texcoord (%f, %f)\n",
+        buf[0], buf[1], buf[10], buf[11]);*/
+    memcpy(pageRender->_dataBuffer + pos, buf, stride);
     if(pageRender->_dataBufferVertexIndex >= pageRender->_dataBufferNumVertices) {
         parsegraph_GlyphPageRenderer_flush(pageRender);
     }
@@ -217,6 +221,7 @@ void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRe
     int pageIndex = glyphData->glyphPage->_id % pagesPerTexture;
     int pageX = pageTextureSize * (pageIndex % pagesPerRow);
     int pageY = pageTextureSize * (int)floor(pageIndex / pagesPerRow);
+    parsegraph_log("Drawing glyph with glyphPage %d at page coords (%d, %d)\n", glyphData->glyphPage->_id, pageX, pageY);
 
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
