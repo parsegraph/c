@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include "Surface.h"
 #include "die.h"
+#include "log.h"
 #include "Color.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -257,7 +258,8 @@ void parsegraph_Surface_paint(parsegraph_Surface* surface, void* arg, int timeou
 
 void parsegraph_Surface_render(parsegraph_Surface* surface, void* arg)
 {
-    //fprintf(stderr, "Background color is (%f, %f, %f, %f)\n", surface->backgroundColor[0], surface->backgroundColor[1], surface->backgroundColor[2], surface->backgroundColor[3]);
+    parsegraph_logEntercf("Surface renders", "Rendering surface\n");
+    parsegraph_log("Background color is (%f, %f, %f, %f)\n", surface->backgroundColor[0], surface->backgroundColor[1], surface->backgroundColor[2], surface->backgroundColor[3]);
     glClearColor(
         surface->backgroundColor[0],
         surface->backgroundColor[1],
@@ -268,6 +270,7 @@ void parsegraph_Surface_render(parsegraph_Surface* surface, void* arg)
     for(parsegraph_SurfaceRenderer* renderer = surface->first_renderer; renderer; renderer = renderer->next) {
         renderer->renderer(renderer->data, arg);
     }
+    parsegraph_logLeave();
 }
 
 void parsegraph_Surface_setBackground(parsegraph_Surface* surface, float* color)
