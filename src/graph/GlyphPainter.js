@@ -378,7 +378,7 @@ parsegraph_GlyphPainter.prototype.clear = function()
 
 parsegraph_GlyphPainter.prototype.render = function(world, scale)
 {
-    //console.log(scale);
+    //console.log(new Error("GlyphPainter scale="+scale));
     //console.log("Max scale of a single largest glyph would be: " + (this._maxSize *scale));
     if(scale < .1 && this._maxSize*scale < 2) {
         return;
