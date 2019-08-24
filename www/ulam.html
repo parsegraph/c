@@ -9,7 +9,7 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Ulam Spiral");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_ulam_camera");
     SGA = sga;
     sga.setMathMode(true);
@@ -17,9 +17,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var COUNT = 100000;
     sga.setBurstIdle(true);
     var startTime = new Date();
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
+        root.setLabel("Ulam Spiral");
         ulam = new parsegraph_Ulam(app, COUNT);
-        loginNode.connectNode(parsegraph_DOWNWARD, ulam.node());
+        root.connectNode(parsegraph_DOWNWARD, ulam.node());
         return ulam;
     });
     sga.onIdle(function() {

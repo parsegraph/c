@@ -9,10 +9,10 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Text");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_text_camera");
     SGA = sga;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         return buildTextDemo(app);
     });
 });

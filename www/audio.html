@@ -37,7 +37,7 @@ function enableAudio() {
 document.addEventListener("DOMContentLoaded", function(event) {
     var sga = new parsegraph_Application();
     SGA = sga;
-    sga.start(document.body, function(graph, userLogin, node) {
+    sga.start(document.body, function(graph, node) {
         var surface = this.surface();
         node.setNodeFit(parsegraph_NODE_FIT_EXACT);
         var myList = node.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);

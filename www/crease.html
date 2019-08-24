@@ -9,11 +9,11 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Crease");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_crease_camera");
     SGA = sga;
     var crease;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         crease = new parsegraph_CreaseWidget(app);
         return crease;
     });

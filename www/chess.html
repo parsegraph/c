@@ -10,13 +10,13 @@
 <script>
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Chess");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_chess_camera");
     SGA = sga;
     var chessWidget;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         chessWidget = new parsegraph_ChessWidget(app);
-        loginNode.connectNode(parsegraph_FORWARD, chessWidget.node());
+        root.connectNode(parsegraph_FORWARD, chessWidget.node());
         return chessWidget;
     });
 });

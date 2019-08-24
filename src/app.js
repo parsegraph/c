@@ -1,7 +1,6 @@
-function parsegraph_Application(guid)
+function parsegraph_Application()
 {
-    this._cameraName = "parsegraph_login_camera";
-    this._guid = guid || "";
+    this._cameraName = "parsegraph_camera";
     if(window.location.protocol == "https:") {
         this._hostname = "https://" + location.host;
     }
@@ -71,59 +70,6 @@ parsegraph_Application.prototype.start = function(container, initFunc, initFuncT
     uni.load(null, localStorage);
 };
 
-parsegraph_Application.prototype.onLogout = function() {
-    //console.log("onLogout");
-    if(this._world) {
-        this._world.close();
-        this._loginNode.disconnectNode(parsegraph_DOWNWARD);
-        this._world = null;
-    }
-    this._userLogin = null;
-    this._loginNode = null;
-
-};
-
-parsegraph_Application.prototype.onLogin = function(userLogin, loginNode) {
-    this._userLogin = userLogin;
-    this._loginNode = loginNode;
-
-    if(!this._initFunc) {
-        return;
-    }
-    if(typeof this._initFunc != "function") {
-        this._world = null;
-        var worldNode = this._initFunc;
-        while(typeof worldNode.node === "function") {
-            worldNode = worldNode.node();
-        }
-        if(worldNode.isRoot()) {
-            loginNode.connectNode(parsegraph_DOWNWARD, worldNode);
-        }
-    }
-    else {
-        this._world = this._initFunc.call(this._initFuncThisArg, this, userLogin, loginNode)
-        if(loginNode.hasNode(parsegraph_DOWNWARD)) {
-            // Creator attached node.
-            return;
-        }
-        var worldNode = this._world;
-        while(typeof worldNode.node === "function") {
-            worldNode = worldNode.node();
-        }
-        if(worldNode.isRoot()) {
-            //console.log("Connecting " + loginNode + " to " + worldNode);
-            loginNode.connectNode(parsegraph_DOWNWARD, worldNode);
-        }
-    }
-};
-
-parsegraph_Application.prototype.username = function() {
-    if(!this._userLogin) {
-        return null;
-    }
-    return this._userLogin.username;
-};
-
 parsegraph_Application.prototype.onUnicodeLoaded = function() {
     //console.log("Unicode loaded")
     // Verify preconditions for this application state.
@@ -149,16 +95,13 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
 
     this.container().appendChild(surface.container());
 
-    this._loginWidget = new parsegraph_LoginWidget(surface, graph);
-    this._loginWidget.setTitle(this._guid);
-    graph.world().plot(this._loginWidget.root());
-    this._loginWidget.setLoginListener(function(res, userLogin, node) {
-        console.log("Time till authenticated: " + parsegraph_elapsed(parsegraph_START_TIME));
-        this.onLogin(userLogin, node);
-        this._loginWidget.setLogoutListener(function() {
-            this.onLogout(userLogin, node);
-        }, this);
-    }, this);
+    this._root = new parsegraph_Node(parsegraph_BLOCK);
+    var rootStyle = new parsegraph_copyStyle(parsegraph_BLOCK);
+    rootStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+    rootStyle.borderColor = new parsegraph_Color(.7, .7, .7, 1);
+    this._root.setBlockStyle(rootStyle);
+    this._root.setLabel("Rainback", this._glyphAtlas);
+    graph.world().plot(this._root);
 
     var cameraName = this.cameraName();
     if(typeof cameraName === "string" && localStorage.getItem(cameraName) != null) {
@@ -202,7 +145,6 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
             }
         }
     }, this);
-    this.scheduleRender();
     this._graph.setOnScheduleRepaint(function() {
         this.scheduleRender();
     }, this);
@@ -210,7 +152,36 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
         this.scheduleRender();
     }, this);
 
-    this._loginWidget.authenticate();
+    if(this._initFunc) {
+        if(typeof this._initFunc != "function") {
+            this._world = null;
+            var worldNode = this._initFunc;
+            while(typeof worldNode.node === "function") {
+                worldNode = worldNode.node();
+            }
+            if(worldNode.isRoot()) {
+                this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+            }
+        }
+        else {
+            this._world = this._initFunc.call(this._initFuncThisArg, this, this._root)
+            if(this._root.hasNode(parsegraph_DOWNWARD)) {
+                // Creator attached node.
+                return;
+            }
+            var worldNode = this._world;
+            while(typeof worldNode.node === "function") {
+                worldNode = worldNode.node();
+            }
+            if(worldNode.isRoot()) {
+                //console.log("Connecting " + this._root + " to " + worldNode);
+                this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+            }
+        }
+    }
+
+    this.scheduleRepaint();
+    this.scheduleRender();
 };
 
 parsegraph_Application.prototype.onRender = function() {

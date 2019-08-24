@@ -9,14 +9,14 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Memory Piers");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_piers_camera");
     SGA = sga;
     var piers;
     var MAX_SIZE = 400;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         piers = new parsegraph_MemoryPiers(app, MAX_SIZE);
-        loginNode.connectNode(parsegraph_FORWARD, piers.node());
+        root.connectNode(parsegraph_FORWARD, piers.node());
         return piers;
     });
 

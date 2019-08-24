@@ -10,10 +10,10 @@
 <script>
 SGA = null;
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Calendar");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_calendar_camera");
     SGA = sga;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         var cal = new parsegraph_CalendarWidget(app.glyphAtlas());
         return cal.createCalendar(new Date(), 1, 40);
     });

@@ -8,14 +8,14 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("Proportion");
+    var sga = new parsegraph_Application();
     sga.setCameraName("parsegraph_proportion_camera");
     SGA = sga;
     var proportion;
     var MAX_SIZE = 800;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
         proportion = new parsegraph_ProportionWidget(app, MAX_SIZE);
-        loginNode.connectNode(parsegraph_DOWNWARD, proportion.node());
+        root.connectNode(parsegraph_DOWNWARD, proportion.node());
         return proportion;
     });
 

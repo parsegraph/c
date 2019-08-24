@@ -10,10 +10,11 @@
 <script>
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application("King James Bible");
-    sga.setCameraName("parsegraph_buildar_camera");
+    var sga = new parsegraph_Application();
+    sga.setCameraName("parsegraph_bible_camera");
     SGA = sga;
-    sga.start(document.body, function(app, userLogin, loginNode) {
+    sga.start(document.body, function(app, root) {
+        root.setLabel("King James Bible");
         var bible = new parsegraph_BibleWidget(app);
         var caret = new parsegraph_Caret(parsegraph_BUD);
         caret.setGlyphAtlas(app.glyphAtlas());
