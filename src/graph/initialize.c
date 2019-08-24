@@ -132,7 +132,7 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     );
 
     // Font
-    parsegraph_FONT_SIZE = 72;
+    parsegraph_FONT_SIZE = 48;
     parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_SIZE;
     parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
     parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
