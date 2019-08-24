@@ -72,7 +72,7 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* s
 
     // Compile the shader program.
     painter->fanProgram = parsegraph_compileProgram(shaders, "parsegraph_FanPainter",
-        parsegraph_FanPainter_VertexShader, 
+        parsegraph_FanPainter_VertexShader,
         parsegraph_FanPainter_FragmentShader
     );
 
