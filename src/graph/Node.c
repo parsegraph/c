@@ -423,6 +423,9 @@ void parsegraph_Node_commitGroupPos(parsegraph_Node* nodeRoot)
         return;
     }
     nodeRoot->_hasGroupPos = 1;
+    parsegraph_logEntercf("Group position commits", "Commiting group position for node %s",
+        parsegraph_Node_toString(nodeRoot)
+    );
 
     // Retrieve a stack of nodes to determine the group position.
     parsegraph_Node* node = nodeRoot;
@@ -464,13 +467,14 @@ void parsegraph_Node_commitGroupPos(parsegraph_Node* nodeRoot)
         scale *= parsegraph_Node_scaleAt(node, directionToChild);
         node = parsegraph_Node_nodeAt(node, directionToChild);
     }
-    //parsegraph_log("Assigning scale for %s to %f", parsegraph_Node_toString(nodeRoot), scale);
+    parsegraph_log("Assigning scale for %s to %f", parsegraph_Node_toString(nodeRoot), scale);
     nodeRoot->_groupScale = scale;
 
     if(!parsegraph_Node_localPaintGroup(nodeRoot)) {
         nodeRoot->_groupXPos += parsegraph_Node_x(node) * parentScale;
         nodeRoot->_groupYPos += parsegraph_Node_y(node) * parentScale;
     }
+    parsegraph_logLeave();
 }
 
 float parsegraph_Node_groupX(parsegraph_Node* node)
@@ -558,7 +562,7 @@ void parsegraph_connectPaintGroup(parsegraph_Node* a, parsegraph_Node* b)
 {
     a->_paintGroupNext = b;
     b->_paintGroupPrev = a;
-    //parsegraph_log("Connecting paint groups %s to %s", parsegraph_Node_toString(a), parsegraph_Node_toString(b));
+    parsegraph_log("Connecting paint groups %s to %s", parsegraph_Node_toString(a), parsegraph_Node_toString(b));
 }
 
 void parsegraph_Node_setPaintGroup(parsegraph_Node* node, int paintGroup)
@@ -569,7 +573,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, int paintGroup)
     parsegraph_Node_ensureExtended(node);
 
     if(paintGroup) {
-        //parsegraph_log("%s is becoming a paint group.", parsegraph_Node_toString(node));
+        parsegraph_log("%s is becoming a paint group.", parsegraph_Node_toString(node));
         node->_extended->isPaintGroup = 1;
 
         if(parsegraph_Node_isRoot(node)) {
@@ -590,6 +594,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, int paintGroup)
 
         parsegraph_Node_layoutChanged(node, parsegraph_INWARD);
         for(parsegraph_Node* n = node->_layoutNext; n != node; n = n->_layoutNext) {
+            parsegraph_log("Assigning paint group of %d to %d\n", n->_id, node->_id);
             n->_currentPaintGroup = node;
         }
         return;
@@ -597,7 +602,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, int paintGroup)
 
     node->_extended->isPaintGroup = 0;
 
-    //parsegraph_log("%s is no longer a paint group.", parsegraph_Node_toString(node));
+    parsegraph_log("%s is no longer a paint group.", parsegraph_Node_toString(node));
 
     if(!parsegraph_Node_isRoot(node)) {
         parsegraph_Node* paintGroupLast = parsegraph_Node_findLastPaintGroup(node);
@@ -618,6 +623,7 @@ void parsegraph_Node_setPaintGroup(parsegraph_Node* node, int paintGroup)
 
         parsegraph_Node* pg = parsegraph_Node_findPaintGroup(parsegraph_Node_parentNode(node));
         for(parsegraph_Node* n = pg->_layoutNext; n != pg; n = n->_layoutNext) {
+            parsegraph_log("Resetting paint group of %d to %d\n", n->_id, pg->_id);
             n->_currentPaintGroup = pg;
         }
     }
@@ -696,18 +702,24 @@ parsegraph_NodePainter* parsegraph_Node_painter(parsegraph_Node* node)
 
 parsegraph_Node* parsegraph_Node_findPaintGroup(parsegraph_Node* nodeRoot)
 {
+    parsegraph_Node* node = nodeRoot;
     if(!nodeRoot->_currentPaintGroup) {
-        parsegraph_Node* node = nodeRoot;
         while(!parsegraph_Node_isRoot(node)) {
             if(parsegraph_Node_localPaintGroup(node)) {
+                //parsegraph_log("Found paint group at node %d\n", node->_id);
                 break;
             }
             if(node->_currentPaintGroup) {
                 nodeRoot->_currentPaintGroup = node->_currentPaintGroup;
+                //parsegraph_log("Using parent's paint group for node %d\n", node->_currentPaintGroup->_id);
                 return nodeRoot->_currentPaintGroup;
             }
             node = parsegraph_Node_parentNode(node);
         }
+        if(parsegraph_Node_isRoot(node)) {
+            //parsegraph_log("Node %d is a root node, so it became the paint group of %d. (%d)\n", node->_id, nodeRoot->_id, node->_parentNeighbor);
+        }
+        //parsegraph_log("Using found paint group %d for node %d\n", node->_id, nodeRoot->_id);
         nodeRoot->_currentPaintGroup = node;
     }
     else {
@@ -1643,7 +1655,7 @@ void parsegraph_Node_size(parsegraph_Node* node, float* bodySize)
     parsegraph_Node_sizeWithoutPadding(node, bodySize);
     bodySize[0] += 2 * parsegraph_Node_horizontalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
     bodySize[1] += 2 * parsegraph_Node_verticalPadding(node) + 2 * parsegraph_Node_borderThickness(node);
-    //parsegraph_log("Calculated %s node size of (%f, %f)\n", parsegraph_nameNodeType(parsegraph_Node_type(node)), bodySize[0], bodySize[1]);
+    parsegraph_log("Calculated %s node size of (%f, %f)\n", parsegraph_nameNodeType(parsegraph_Node_type(node)), bodySize[0], bodySize[1]);
 }
 
 void parsegraph_Node_absoluteSize(parsegraph_Node* node, float* bodySize)
@@ -1665,7 +1677,7 @@ void parsegraph_Node_groupSize(parsegraph_Node* node, float* bodySize)
 void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* fromParent, int parentDirection)
 {
     if(!fromParent) {
-        // Clearing the parent.
+        parsegraph_log("Clearing the parent of node %d\n", node->_id);
         node->_parentNeighbor = 0;
         return;
     }
@@ -2728,6 +2740,7 @@ int parsegraph_Node_commitLayout(parsegraph_Node* node)
                 !parsegraph_Node_hasNode(node, parsegraph_UPWARD) && !parsegraph_Node_hasNode(node, parsegraph_DOWNWARD)
             )) {
                 node->_layoutState = parsegraph_NEEDS_COMMIT;
+                parsegraph_logLeave();
                 return 1;
             }
 
@@ -3015,7 +3028,7 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
             return 1;
         }
         if(parsegraph_Node_needsPosition(cl->paintGroup) || cl->node) {
-            //parsegraph_log("%s needs a position update", parsegraph_Node_toString(cl->paintGroup));
+            parsegraph_log("Paint group %s needs a position update.", parsegraph_Node_toString(cl->paintGroup));
             if(!cl->node) {
                 cl->node = cl->paintGroup;
             }
@@ -3032,7 +3045,7 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
             } while(cl->node != cl->root);
         }
         else {
-            //parsegraph_log("%s does not need a position update.\n", parsegraph_Node_toString(cl->paintGroup));
+            parsegraph_log("Paint group %s does not need a position update.\n", parsegraph_Node_toString(cl->paintGroup));
         }
         ++cl->paintGroup->_absoluteVersion;
         cl->paintGroup->_absoluteDirty = 1;
@@ -3305,7 +3318,7 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
         return 1;
     }
     else {
-        //parsegraph_log("%s is dirty", parsegraph_Node_toString(node));
+        parsegraph_logEntercf("Node painting", "%s is dirty", parsegraph_Node_toString(node));
     }
 
     struct timespec t;
@@ -3320,7 +3333,7 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
     if(savedState->commitInProgress) {
         savedState->commitLayout.timeout = timeout;
         if(0 != parsegraph_Node_continueCommitLayout(&savedState->commitLayout)) {
-            //parsegraph_log("Timed out during commitLayout\n");
+            parsegraph_logLeavef("Timed out during commitLayout\n");
             return 0;
         }
     }
@@ -3328,13 +3341,13 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
         savedState->commitInProgress = 1;
         savedState->commitLayout.timeout = timeout;
         if(0 != parsegraph_Node_commitLayoutIteratively(node, &savedState->commitLayout)) {
-            //parsegraph_log("Timed out during commitLayout\n");
+            parsegraph_logLeavef("Timed out during commitLayout\n");
             return 0;
         }
     }
 
     if(savedState->commitInProgress) {
-        //parsegraph_log("Committed all layout\n");
+        parsegraph_log("Committed all layout\n");
         savedState->commitInProgress = 0;
         savedState->paintGroup = node;
     }
@@ -3343,14 +3356,14 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
     for(;;) {
         if(timeout != 0 && parsegraph_elapsed(&t)) {
             node->_extended->dirty = 1;
-            //parsegraph_log("Painting timed out\n");
+            parsegraph_logLeavef("Painting timed out\n");
             return 0;
         }
 
         parsegraph_Node* paintGroup = savedState->paintGroup;
-        parsegraph_log("Painting %s\n", parsegraph_Node_toString(paintGroup));
         if(parsegraph_Node_isDirty(paintGroup)) {
             // Paint and render nodes marked for the current group.
+            parsegraph_logEntercf("Paint groups", "Node is painting the paint group %s.\n", parsegraph_Node_toString(paintGroup));
             parsegraph_NodePainter* painter = paintGroup->_extended->painter;
             if(!painter) {
                 paintGroup->_extended->painter = parsegraph_NodePainter_new(node->pool, glyphAtlas, shaders);
@@ -3360,19 +3373,18 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
             parsegraph_NodePainter_resetCounts(painter);
             parsegraph_Node* n = paintGroup;
             do {
-                parsegraph_log("Counting node %s", parsegraph_Node_toString(n));
                 parsegraph_NodePainter_countNode(painter, n, &painter->_counts);
                 n = n->_layoutPrev;
             } while(n != paintGroup);
-            //parsegraph_log("Glyphs: %d", counts.numGlyphs);
             parsegraph_NodePainter_initBlockBuffer(painter, &painter->_counts);
             n = paintGroup;
             do {
                 parsegraph_NodePainter_drawNode(painter, n, shaders);
                 n = n->_layoutPrev;
                 ++parsegraph_NODES_PAINTED;
-                parsegraph_log("Painted nodes %d\n", parsegraph_NODES_PAINTED);
+                parsegraph_log("Painted %d nodes so far.\n", parsegraph_NODES_PAINTED);
             } while(n != paintGroup);
+            parsegraph_logLeave();
         }
         paintGroup->_extended->dirty = 0;
         savedState->paintGroup = paintGroup->_paintGroupNext;
@@ -3382,7 +3394,7 @@ int parsegraph_Node_paint(parsegraph_Node* node, float* backgroundColor, parsegr
     }
 
     savedState->paintGroup = 0;
-    //parsegraph_log("Completed node painting\n");
+    parsegraph_logLeavef("Completed node painting\n");
     return 1;
 }
 
@@ -3421,8 +3433,10 @@ int parsegraph_Node_render(parsegraph_Node* node, float* world, parsegraph_Camer
     // Do not render paint groups that cannot be seen.
     float s[4];
     parsegraph_Rect_copyFrom(s, parsegraph_NodePainter_bounds(painter));
+    parsegraph_log("Node has untranslated bounds [%f, %f, %f, %f]\n", s[0], s[1], s[2], s[3]);
     parsegraph_Rect_scale(s, parsegraph_Node_scale(node), parsegraph_Node_scale(node));
     parsegraph_Rect_translate(s, node->_absoluteXPos, node->_absoluteYPos);
+    parsegraph_log("Node has translated bounds [%f, %f, %f, %f]\n", s[0], s[1], s[2], s[3]);
     if(camera && !parsegraph_Camera_containsAny(camera, s)) {
         parsegraph_log("Out of bounds: %s", parsegraph_Node_toString(node));
         return !node->_absoluteDirty;
