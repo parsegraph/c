@@ -85,9 +85,7 @@ function parsegraph_FanPainter(gl, shaders)
     this.a_selectionSize = this._fanBuffer.defineAttrib("a_selectionSize", 1);
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this.fanProgram, "u_world"
-    );
+    this.u_world = this._gl.getUniformLocation(this.fanProgram, "u_world");
 
     this._fanBuffer.addPage();
 };

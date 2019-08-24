@@ -85,9 +85,7 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* s
     painter->a_selectionSize = parsegraph_pagingbuffer_defineAttrib(painter->_fanBuffer, "a_selectionSize", 1, GL_STATIC_DRAW);
 
     // Cache program locations.
-    painter->u_world = glGetUniformLocation(
-        painter->fanProgram, "u_world"
-    );
+    painter->u_world = glGetUniformLocation(painter->fanProgram, "u_world");
 
     //this._fanBuffer.addPage();
     return painter;
