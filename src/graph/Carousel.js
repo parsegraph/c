@@ -79,6 +79,7 @@ parsegraph_Carousel.prototype.isCarouselShown = function()
 
 parsegraph_Carousel.prototype.hideCarousel = function()
 {
+    console.log(new Error("Hiding carousel"));
     this._selectedCarouselPlot = null;
     this._selectedCarouselPlotIndex = null;
     this._showCarousel = false;
@@ -295,6 +296,7 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
             this._updateRepeatedly = false;
         }
     }
+    console.log("Show scale is " + this._showScale);
 
     var minScale = 1;
     this._carouselPlots.forEach(function(carouselData, i) {
