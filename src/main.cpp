@@ -247,15 +247,10 @@ virtual void resizeGL(int w, int h) {
     }
 }
 virtual void paintGL() {
-    parsegraph_logEntercf("GL Paints", "Painting GL\n");
     if(!surface) {
-        parsegraph_logLeave();
         return;
     }
     parsegraph_Surface_runAnimationCallbacks(surface, ((float)frameElapsedTime.restart())/1000.0);
-    parsegraph_Surface_render(surface, 0);
-    glFlush();
-    parsegraph_logLeave();
 }
 };
 
