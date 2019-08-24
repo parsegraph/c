@@ -21,6 +21,7 @@ struct parsegraph_pagingbuffer* parsegraph_pagingbuffer_new(
     pg->program = program;
     pg->first_page = 0;
     pg->last_page = 0;
+    pg->_currentPage = 0;
     pg->num_pages = 0;
     pg->first_attrib = 0;
     pg->last_attrib = 0;
@@ -73,7 +74,6 @@ struct parsegraph_BufferPage* parsegraph_BufferPage_new(
     page->renderFunc = renderFunc;
     page->renderFuncThisArg = renderFuncThisArg;
     page->pg = pg;
-    page->offset = 0;
     page->next_page = 0;
 
     return page;
@@ -118,6 +118,18 @@ struct parsegraph_BufferPage* parsegraph_pagingbuffer_addDefaultPage(struct pars
 
 struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_pagingbuffer* pg, void(*renderFunc)(void*, int), void* renderFuncThisArg)
 {
+    if(!pg->_currentPage) {
+        pg->_currentPage = pg->first_page;
+        if(pg->_currentPage) {
+            // Reuse the page.
+            return;
+        }
+    }
+    else if(pg->_currentPage->next_page) {
+        // Reuse the page.
+        pg->_currentPage = pg->_currentPage->next_page;
+    }
+
     // Create a new page.
     struct parsegraph_BufferPage* page = parsegraph_BufferPage_new(pg, renderFunc, renderFuncThisArg);
     if(!page) {
@@ -143,15 +155,16 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_
     page->id = pg->num_pages -1;
 
     // Return the working page.
+    pg->_currentPage = page;
     return page;
 }
 
 struct parsegraph_BufferPage* parsegraph_PagingBuffer_getWorkingPage(struct parsegraph_pagingbuffer* pg)
 {
-    if(pg->last_page) {
-        return pg->last_page;
+    if(pg->_currentPage) {
+        return pg->_currentPage;
     }
-    return 0;
+    parsegraph_die("Refusing to create a new page; call pagingbuffer.addPage() first.\n");
 }
 
 int parsegraph_pagingbuffer_defineAttrib(struct parsegraph_pagingbuffer* pg, const char* name, int numComponents, GLenum drawMode)
@@ -289,6 +302,7 @@ void parsegraph_pagingbuffer_clear(struct parsegraph_pagingbuffer* pg)
         }
         page->needsUpdate = 1;
     }
+    pg->_currentPage = 0;
 }
 
 int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
@@ -370,6 +384,10 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
         }
 
         page->needsUpdate = 0;
+        if(page == pg->_currentPage) {
+            // All done.
+            break;
+        }
     }
 
     // Disable used variables.

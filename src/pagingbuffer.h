@@ -13,6 +13,7 @@ struct parsegraph_pagingbuffer {
     GLuint program;
     struct parsegraph_BufferPage* first_page;
     struct parsegraph_BufferPage* last_page;
+    struct parsegraph_BufferPage* _currentPage;
     struct parsegraph_BufferPageAttribute* last_attrib;
     struct parsegraph_BufferPageAttribute* first_attrib;
     int num_pages;
@@ -37,7 +38,6 @@ struct parsegraph_BufferPage {
     void(*renderFunc)(void*, int);
     void*renderFuncThisArg;
     struct parsegraph_pagingbuffer* pg;
-    int offset;
     struct parsegraph_BufferPage* next_page;
 };
 typedef struct parsegraph_BufferPage parsegraph_BufferPage;
