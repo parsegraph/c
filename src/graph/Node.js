@@ -65,6 +65,7 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
+    this._hasGroupPos = false;
     this._groupXPos = null;
     this._groupYPos = null;
     this._groupScale = null;
@@ -271,7 +272,7 @@ parsegraph_Node.prototype.needsCommit = function()
 
 parsegraph_Node.prototype.needsPosition = function()
 {
-    return this.needsCommit() || this._groupXPos === null;
+    return this.needsCommit() || !this._hasGroupPos;
 };
 
 parsegraph_Node.prototype.absoluteX = function()
@@ -303,7 +304,7 @@ parsegraph_Node.prototype.absoluteScale = function()
 
 parsegraph_Node.prototype.commitGroupPos = function()
 {
-    if(this._groupXPos !== null) {
+    if(this._hasGroupPos) {
         //console.log(this + " does not need a position update.");
         return;
     }
@@ -2849,7 +2850,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 do {
                     // Loop from the root to the last node.
                     node._absoluteDirty = true;
-                    node._groupXPos = null;
+                    node._hasGroupPos = false;
                     node.commitGroupPos();
                     node = node._layoutPrev;
                     if(pastTime(node._id)) {
