@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//#define parsegraph_GlyphPainter_DEBUG
+
 // TODO Add runs of selected text
 
 static const char* parsegraph_GlyphPainter_VertexShader =
@@ -45,8 +47,30 @@ static const char* parsegraph_GlyphPainter_FragmentShader =
     "else {\n"
         "gl_FragColor = mix(backgroundColor, fragmentColor, opacity);\n"
     "}\n"
-    //"gl_FragColor = vec4(texture2D(u_glyphTexture, texCoord.st).rgb, 1.0);\n"
 "}\n";
+
+#ifdef parsegraph_GlyphPainter_DEBUG
+static const char* parsegraph_GlyphPainter_VertexShader_debug =
+"uniform mat3 u_world;\n"
+"\n"
+"attribute vec2 a_position;\n"
+"attribute vec2 a_texCoord;\n"
+"\n"
+"varying " HIGHP " vec2 texCoord;\n"
+"\n"
+"void main() {\n"
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);\n"
+   "texCoord = a_texCoord;\n"
+"}\n";
+
+static const char* parsegraph_GlyphPainter_FragmentShader_debug =
+"uniform sampler2D u_glyphTexture;\n"
+"varying " HIGHP " vec2 texCoord;\n"
+"\n"
+"void main() {\n"
+    "gl_FragColor = vec4(texture2D(u_glyphTexture, texCoord.st).argb);\n"
+"}\n";
+#endif
 
 static const char* shaderName = "parsegraph_GlyphPainter";
 int parsegraph_GlyphPainter_COUNT = 0;
@@ -68,8 +92,13 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
 
     // Compile the shader program.
     painter->_textProgram = parsegraph_compileProgram(shaders, shaderName,
+    #ifdef parsegraph_GlyphPainter_DEBUG
+        parsegraph_GlyphPainter_VertexShader_debug,
+        parsegraph_GlyphPainter_FragmentShader_debug
+    #else
         parsegraph_GlyphPainter_VertexShader,
         parsegraph_GlyphPainter_FragmentShader
+    #endif
     );
     GLenum err = glGetError();
     if(GL_NO_ERROR != err) {
@@ -90,8 +119,10 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
     painter->u_world = glGetUniformLocation(painter->_textProgram, "u_world");
     painter->u_glyphTexture = glGetUniformLocation(painter->_textProgram, "u_glyphTexture");
     painter->a_position = glGetAttribLocation(painter->_textProgram, "a_position");
+    #ifndef parsegraph_GlyphPainter_DEBUG
     painter->a_color = glGetAttribLocation(painter->_textProgram, "a_color");
     painter->a_backgroundColor = glGetAttribLocation(painter->_textProgram, "a_backgroundColor");
+    #endif
     painter->a_texCoord = glGetAttribLocation(painter->_textProgram, "a_texCoord");
 
     parsegraph_Color_SetRGBA(painter->_color, 1, 1, 1, 1);
@@ -229,6 +260,7 @@ void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRe
     // Texcoord: 2 * 4 (two floats): 40-48
     float* buf = pageRender->_painter->_vertexBuffer;
 
+    #ifndef parsegraph_GlyphPainter_DEBUG
     // Append color data.
     float* color = pageRender->_painter->_color;
     buf[2] = color[0];
@@ -242,6 +274,7 @@ void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRe
     buf[7] = bg[1];
     buf[8] = bg[2];
     buf[9] = bg[3];
+    #endif
 
     // Position data.
     buf[0] = x;
@@ -314,8 +347,10 @@ void parsegraph_GlyphPageRenderer_render(parsegraph_GlyphPageRenderer* pageRende
     parsegraph_GlyphPainter* painter = pageRender->_painter;
     int stride = painter->_stride;
     glVertexAttribPointer(painter->a_position, 2, GL_FLOAT, 0, stride, 0);
+    #ifndef parsegraph_GlyphPainter_DEBUG
     glVertexAttribPointer(painter->a_color, 4, GL_FLOAT, 0, stride, (void*)8);
     glVertexAttribPointer(painter->a_backgroundColor, 4, GL_FLOAT, 0, stride, (void*)24);
+    #endif
     glVertexAttribPointer(painter->a_texCoord, 2, GL_FLOAT, 0, stride, (void*)40);
     glDrawArrays(GL_TRIANGLES, 0, pageRender->_glyphBufferVertexIndex);
 }
@@ -407,14 +442,18 @@ void parsegraph_GlyphPainter_render(parsegraph_GlyphPainter* painter, float* wor
     // Render glyphs for each page.
     glEnableVertexAttribArray(painter->a_position);
     glEnableVertexAttribArray(painter->a_texCoord);
+    #ifndef parsegraph_GlyphPainter_DEBUG
     glEnableVertexAttribArray(painter->a_color);
     glEnableVertexAttribArray(painter->a_backgroundColor);
+    #endif
     for(int i = 0; i < parsegraph_ArrayList_length(painter->_textBuffers); ++i) {
         parsegraph_GlyphPageRenderer* gp = parsegraph_ArrayList_at(painter->_textBuffers, i);
         parsegraph_GlyphPageRenderer_render(gp);
     }
     glDisableVertexAttribArray(painter->a_position);
     glDisableVertexAttribArray(painter->a_texCoord);
+    #ifndef parsegraph_GlyphPainter_DEBUG
     glDisableVertexAttribArray(painter->a_color);
     glDisableVertexAttribArray(painter->a_backgroundColor);
+    #endif
 }
