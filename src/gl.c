@@ -1,4 +1,5 @@
 #include "gl.h"
+#include <GL/glu.h>
 #include <string.h>
 #include <stdio.h>
 #include "alpha/Maths.h"
@@ -9,6 +10,7 @@
 
 GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, const char* vertexShader, const char* fragShader)
 {
+    GLenum err;
     // Compile the shader program.
     GLuint* programID = (GLuint*)apr_hash_get(shaders, shaderName, APR_HASH_KEY_STRING);
     if(programID) {
@@ -22,16 +24,26 @@ GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, co
             vertexShader, GL_VERTEX_SHADER
         )
     );
+    if((err = glGetError()) != GL_NO_ERROR) {
+        parsegraph_die("'%s' shader program's vertex shader failed to compile and attach: %s\n", shaderName, gluErrorString(err));
+    }
+
 
     glAttachShader(
         program, compileShader(fragShader, GL_FRAGMENT_SHADER)
     );
+    if((err = glGetError()) != GL_NO_ERROR) {
+        parsegraph_die("'%s' shader program's fragment shader failed to compile and attach: %s\n", shaderName, gluErrorString(err));
+    }
 
     glLinkProgram(program);
     GLint st;
     glGetProgramiv(program, GL_LINK_STATUS, &st);
     if(st != GL_TRUE) {
         parsegraph_die("'%s' shader program failed to link.\n", shaderName);
+    }
+    if((err = glGetError()) != GL_NO_ERROR) {
+        parsegraph_die("'%s' shader program failed to link: %s\n", shaderName, gluErrorString(err));
     }
 
     GLuint* progId = apr_palloc(apr_hash_pool_get(shaders), sizeof(GLuint));
