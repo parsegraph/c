@@ -218,9 +218,10 @@ void parsegraph_World_boundingRect(parsegraph_World* world, float* outRect)
 
 void parsegraph_World_scheduleRepaint(parsegraph_World* world)
 {
-    //fprintf(stderr, "Scheduling World repaint\n");
+    parsegraph_logEntercf("Repaint scheduling", "Scheduling World repaint\n");
     world->_worldPaintingDirty = 1;
     world->_previousWorldPaintState = -1;
+    parsegraph_logLeave();
 };
 
 parsegraph_Node* parsegraph_World_nodeUnderCursor(parsegraph_World* world)
@@ -342,14 +343,18 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
                 return 0;
             }
 
-            //fprintf(stderr, "Painted world root %d\n", i);
+            parsegraph_log("Painted world root %d\n", i);
             ++i;
         }
-        //fprintf(stderr, "World is no longer dirty.\n");
+        parsegraph_log("World is no longer dirty.\n");
         world->_worldPaintingDirty = 0;
     }
+    else {
+        parsegraph_logLeavef("World is not dirty.\n");
+        return 1;
+    }
 
-    if(!world->_worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
+    if(parsegraph_NODES_PAINTED > 0) {
         long paintDuration = parsegraph_elapsed(&parsegraph_PAINT_START);
         if(paintDuration > 0) {
             parsegraph_logLeavef("Painted %d nodes over %dms. (%d nodes/ms)\n",
