@@ -1,6 +1,7 @@
 #include "FanPainter.h"
 #include "../die.h"
 #include "alpha/Maths.h"
+#include "log.h"
 
 // TODO Separate coloring and slicing from drawing the circle... Basically, make this actually just draw the fans we want.
 const char* parsegraph_FanPainter_VertexShader =
@@ -115,13 +116,13 @@ void parsegraph_FanPainter_selectRad(parsegraph_FanPainter* painter,
     float userX, float userY,
     float startAngle, float spanAngle,
     float* startColor, float* endColor)
-//parsegraph_FanPainter.prototype.drawFan = function(
-//    cx, cy, radius, color)
 {
-    //console.log(userx + ", " + userY + ". startAngle=" + startAngle + ", spanAngle=" + spanAngle);
-    parsegraph_pagingbuffer_addDefaultPage(painter->_fanBuffer);
+    parsegraph_logEntercf("Drawing FanPainter arcs", "Drawing FanPainter arc at %f, %f. startAngle=%f, spanAngle=%f. ascendingRadius=%f, descendingRadius=%f\n", userX, userY, startAngle, spanAngle, painter->_ascendingRadius, painter->_descendingRadius);
+    parsegraph_log("Start color is [%f, %f, %f, %f]", startColor[0], startColor[1], startColor[2], startColor[3]);
+    parsegraph_log("End color is [%f, %f, %f, %f]", endColor[0], endColor[1], endColor[2], endColor[3]);
 
     float radius = painter->_ascendingRadius + painter->_descendingRadius;
+    parsegraph_log("Radius is %f\n", radius);
 
     // Append position data.
     parsegraph_pagingbuffer_appendArray(painter->_fanBuffer,
@@ -144,6 +145,8 @@ void parsegraph_FanPainter_selectRad(parsegraph_FanPainter* painter,
         parsegraph_PagingBuffer_appendData(painter->_fanBuffer, painter->a_selectionAngle, 1, painter->_selectionAngle);
         parsegraph_PagingBuffer_appendData(painter->_fanBuffer, painter->a_selectionSize, 1, painter->_selectionSize);
     }
+
+    parsegraph_logLeave();
 }
 
 void parsegraph_FanPainter_setAscendingRadius(parsegraph_FanPainter* painter, float ascendingRadius)
@@ -180,7 +183,9 @@ void parsegraph_FanPainter_render(parsegraph_FanPainter* painter, float* viewMat
         parsegraph_die("A viewMatrix must be provided");
     }
     // Render faces.
+    parsegraph_logEntercf("Rendering", "Rendering FanPainter");
     glUseProgram(painter->fanProgram);
     glUniformMatrix3fv(painter->u_world, 1, 0, viewMatrix);
     parsegraph_pagingbuffer_renderPages(painter->_fanBuffer);
+    parsegraph_logLeave();
 }
