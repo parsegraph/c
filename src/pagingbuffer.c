@@ -123,7 +123,7 @@ struct parsegraph_BufferPage* parsegraph_PagingBuffer_addPage(struct parsegraph_
         pg->_currentPage = pg->first_page;
         if(pg->_currentPage) {
             // Reuse the page.
-            return;
+            return pg->_currentPage;
         }
     }
     else if(pg->_currentPage->next_page) {
