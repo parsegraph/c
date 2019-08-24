@@ -50,6 +50,9 @@ function parsegraph_initialize(mathMode) {
     //console.log("Initializing parsegraph. Math mode: ", mathMode);
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
+    // The width in pixels of a glyph atlas's page.
+    parsegraph_MAX_TEXTURE_WIDTH = 512;
+
     // How long the carousel takes, in milliseconds, to open.
     parsegraph_CAROUSEL_SHOW_DURATION = 200;
 

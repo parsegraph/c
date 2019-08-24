@@ -275,7 +275,7 @@ parsegraph_GlyphAtlas.prototype.font = function()
 
 parsegraph_GlyphAtlas.prototype.pageTextureSize = function()
 {
-    return 512;
+    return parsegraph_MAX_TEXTURE_WIDTH;
 };
 
 parsegraph_GlyphAtlas.prototype.letterHeight = function()

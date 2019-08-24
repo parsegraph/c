@@ -1,5 +1,6 @@
 #include "log.h"
 #include "GlyphAtlas.h"
+#include "initialize.h"
 #include "../unicode.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,8 +9,6 @@
 #include "die.h"
 
 int parsegraph_GlyphPage_COUNT = 0;
-
-#define MAX_TEXTURE_WIDTH 512
 
 parsegraph_GlyphPage* parsegraph_GlyphPage_new(parsegraph_GlyphAtlas* glyphAtlas)
 {
@@ -298,7 +297,7 @@ void parsegraph_GlyphAtlas_restoreProperties(parsegraph_GlyphAtlas* glyphAtlas)
 
 int parsegraph_GlyphAtlas_pageTextureSize(parsegraph_GlyphAtlas* glyphAtlas)
 {
-    return MAX_TEXTURE_WIDTH;
+    return parsegraph_MAX_TEXTURE_WIDTH;
 }
 
 void parsegraph_GlyphAtlas_font(parsegraph_GlyphAtlas* glyphAtlas, UChar* buf, size_t len)
