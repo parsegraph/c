@@ -295,7 +295,7 @@ int parsegraph_Carousel_mouseOverCarousel(parsegraph_Carousel* carousel, float x
     return 0;
 }
 
-int parsegraph_Carousel_showScale(parsegraph_Carousel* carousel)
+float parsegraph_Carousel_showScale(parsegraph_Carousel* carousel)
 {
     return carousel->_showScale;
 }
@@ -316,7 +316,7 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
     // Milliseconds
     float showDuration = parsegraph_CAROUSEL_SHOW_DURATION;
     if(carousel->_showTime.tv_sec > 0) {
-        float ms = parsegraph_timediffMs(&now, &carousel->_showTime);
+        float ms = parsegraph_timediffMs(&carousel->_showTime, &now);
         if(ms < showDuration) {
             ms /= showDuration/2.0f;
             if(ms < 1.0f) {
@@ -336,14 +336,14 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
 
     float minScale = 1;
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
-        parsegraph_CarouselPlot* carouselData= parsegraph_ArrayList_at(carousel->_carouselPlots, i);
+        parsegraph_CarouselPlot* carouselData = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
         parsegraph_Node* root = carouselData->node;
         parsegraph_Node_commitLayoutIteratively(root, 0);
 
         // Set the origin.
-        float caretRad = 3.14159 + angleSpan/2.0f + (i / numPlots) * (2.0f * 3.14159);
-        carouselData->x = 2*carousel->_carouselSize * carousel->_showScale * cosf(caretRad);
-        carouselData->y = 2*carousel->_carouselSize * carousel->_showScale * sinf(caretRad);
+        float caretRad = 3.14159 + angleSpan/2.0f + ((float)i / (float)numPlots) * (2.0f * 3.14159);
+        carouselData->x = 2.0f*carousel->_carouselSize * carousel->_showScale * cosf(caretRad);
+        carouselData->y = 2.0f*carousel->_carouselSize * carousel->_showScale * sinf(caretRad);
 
         // Set the scale.
         float extentSize[2];
@@ -361,7 +361,7 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
         float maxShrinkFactor = (xShrinkFactor > yShrinkFactor) ? xShrinkFactor : yShrinkFactor;
         //fprintf(stderr, "%f %f %f\n", extentWidth, extentHeight, 1/maxShrinkFactor);
         float thisScale = carousel->_showScale/maxShrinkFactor;
-        if(minScale > thisScale) {
+        if(thisScale < minScale) {
             minScale = thisScale;
         }
     }
@@ -443,8 +443,10 @@ void parsegraph_Carousel_paint(parsegraph_Carousel* carousel)
     }
     float fanPadding = 1.2;
     parsegraph_FanPainter* fanPainter = carousel->_fanPainter;
-    parsegraph_FanPainter_setAscendingRadius(fanPainter, parsegraph_Carousel_showScale(carousel) * fanPadding * carousel->_carouselSize);
-    parsegraph_FanPainter_setDescendingRadius(fanPainter, parsegraph_Carousel_showScale(carousel) * fanPadding * 2 * carousel->_carouselSize);
+    float ascRadius = parsegraph_Carousel_showScale(carousel) * fanPadding * carousel->_carouselSize;
+    parsegraph_FanPainter_setAscendingRadius(fanPainter, ascRadius);
+    float descRadius = parsegraph_Carousel_showScale(carousel) * fanPadding * 2 * carousel->_carouselSize;
+    parsegraph_FanPainter_setDescendingRadius(fanPainter, descRadius);
 
     float startColor[] = {1, 1, 1, 1};
     float endColor[] = {.5, .5, .5, .4};
@@ -469,10 +471,11 @@ void parsegraph_Carousel_render(parsegraph_Carousel* carousel, float* world)
 
     float dest[9];
     float trans[9];
+    // translation * scale * world
+    makeScale3x3I(dest, 1.0f/parsegraph_Camera_scale(carousel->_camera), 1.0f/parsegraph_Camera_scale(carousel->_camera));
     makeTranslation3x3I(trans, carousel->_carouselX, carousel->_carouselY);
-    matrixMultiply3x3I(dest, trans, world);
-    makeScale3x3I(trans, 1/parsegraph_Camera_scale(carousel->_camera), 1/parsegraph_Camera_scale(carousel->_camera));
-    matrixMultiply3x3I(dest, trans, dest);
+    matrixMultiply3x3I(dest, dest, trans);
+    matrixMultiply3x3I(dest, dest, world);
     world = dest;
 
     parsegraph_FanPainter_render(carousel->_fanPainter, world);
@@ -481,10 +484,14 @@ void parsegraph_Carousel_render(parsegraph_Carousel* carousel, float* world)
     for(int i = 0; i < parsegraph_ArrayList_length(carousel->_carouselPlots); ++i) {
         parsegraph_CarouselPlot* carouselPlot = parsegraph_ArrayList_at(carousel->_carouselPlots, i);
         parsegraph_Node* root = carouselPlot->node;
+
         makeTranslation3x3I(trans, carouselPlot->x, carouselPlot->y);
-        matrixMultiply3x3I(dest, trans, world);
-        makeScale3x3I(trans, carouselPlot->scale, carouselPlot->scale);
-        matrixMultiply3x3I(dest, trans, dest);
-        parsegraph_Node_renderIteratively(root, dest, carousel->_camera);
+        float sc[9];
+        makeScale3x3I(sc, carouselPlot->scale, carouselPlot->scale);
+        float carouselNodeMat[9];
+        matrixMultiply3x3I(carouselNodeMat, sc, trans);
+        matrixMultiply3x3I(carouselNodeMat, carouselNodeMat, world);
+
+        parsegraph_Node_renderIteratively(root, carouselNodeMat, 0);
     }
 }
