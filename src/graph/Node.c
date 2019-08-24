@@ -432,7 +432,7 @@ void parsegraph_Node_commitGroupPos(parsegraph_Node* nodeRoot)
     float parentScale = 1.0;
     float scale = 1.0;
     for(;;) {
-        if(parsegraph_Node_isRoot(node) || parsegraph_Node_findPaintGroup(node)) {
+        if(parsegraph_Node_isRoot(node) || parsegraph_Node_localPaintGroup(node)) {
             nodeRoot->_groupXPos = 0;
             nodeRoot->_groupYPos = 0;
             break;
