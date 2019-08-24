@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../die.h"
+#include "log.h"
 #include "GlyphPainter.h"
 #include "NodePainter.h"
 #include "NodeAlignment.h"
@@ -73,6 +74,7 @@ float* parsegraph_NodePainter_backgroundColor(parsegraph_NodePainter* painter)
 
 void parsegraph_NodePainter_render(parsegraph_NodePainter* painter, float* world, float scale)
 {
+    parsegraph_logEntercf("Painter rendering", "Rendering NodePainter");
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -94,6 +96,7 @@ void parsegraph_NodePainter_render(parsegraph_NodePainter* painter, float* world
         parsegraph_TexturePainter* t = parsegraph_ArrayList_at(painter->_textures, i);
         parsegraph_TexturePainter_render(t, world);
     }
+    parsegraph_logLeave();
 }
 
 void parsegraph_NodePainter_enableExtentRendering(parsegraph_NodePainter* painter)
@@ -747,6 +750,14 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     // Draw the block.
     float size[2];
     parsegraph_Node_groupSize(node, size);
+    parsegraph_logEnterf("NodePainter is painting %s at (%f, %f) with group size of %fx%f\n",
+        parsegraph_Node_toString(node),
+        parsegraph_Node_groupX(node),
+        parsegraph_Node_groupY(node),
+        size[0],
+        size[1]
+    );
+
     parsegraph_Style* style = parsegraph_Node_blockStyle(node);
     parsegraph_BlockPainter* painter = nodePainter->_blockPainter;
 
@@ -765,10 +776,6 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
         parsegraph_BlockPainter_setBackgroundColor(painter, c);
     }
 
-    //fprintf(stderr, "Painting node at world %f, %f, %f\nNode at %f, %f\n", worldX, worldY, userScale,
-        //userScale * parsegraph_Node_absoluteX(node),
-        //userScale * parsegraph_Node_absoluteY(node)
-    //);
     parsegraph_BlockPainter_drawBlock(painter,
         parsegraph_Node_groupX(node),
         parsegraph_Node_groupY(node),
@@ -782,6 +789,7 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     // Draw the label.
     parsegraph_Label* label = node->_label;
     if(!label) {
+        parsegraph_logLeave();
         return;
     }
     float fontScale = (style->fontSize * parsegraph_Node_groupScale(node)) / parsegraph_Label_fontSize(label);
@@ -816,4 +824,5 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     node->_labelPos[1] = labelY;
     node->_labelPos[2] = fontScale;
     parsegraph_Label_paint(label, nodePainter->_glyphPainter, labelX, labelY, fontScale);
+    parsegraph_logLeave();
 }
