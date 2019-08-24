@@ -156,7 +156,8 @@ parsegraph_Graph.prototype.plot = function()
 parsegraph_Graph.prototype.paint = function(timeout)
 {
     //console.log("Painting Graph, timeout=" + timeout);
-    this.glyphAtlas().update();
+    var gl = this.gl();
+    this.glyphAtlas().update(gl);
     this._shaders.gl = this.gl();
     this._shaders.glyphAtlas = this.glyphAtlas();
     this._shaders.timeout = timeout;
