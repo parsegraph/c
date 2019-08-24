@@ -201,34 +201,34 @@ parsegraph_Application.prototype.onRender = function() {
         inputChangedScene = graph.needsRepaint();
         if(inputChangedScene) {
             if(graph.world().needsRepaint()) {
-                console.log("World needs repaint");
+                //console.log("World needs repaint");
             }
             else {
-                console.log("Graph needs repaint");
+                //console.log("Graph needs repaint");
             }
         }
     }
     if(!inputChangedScene) {
         inputChangedScene = this._renderedMouse !== graph.input().mouseVersion();
         if(inputChangedScene) {
-            console.log("Mouse changed scene: " + this._renderedMouse + " vs " + graph.input().mouseVersion());
+            //console.log("Mouse changed scene: " + this._renderedMouse + " vs " + graph.input().mouseVersion());
         }
     }
     if(!inputChangedScene) {
         if(graph.input().UpdateRepeatedly()) {
-            console.log("Input updating repeatedly");
+            //console.log("Input updating repeatedly");
         }
     }
     if(graph.needsRepaint()) {
         surface.paint(interval);
     }
     if(graph.input().UpdateRepeatedly() || inputChangedScene) {
-        console.log("Rendering surface");
+        //console.log("Rendering surface");
         surface.render();
         this._renderedMouse = graph.input().mouseVersion();
     }
     else {
-        console.log("Avoid rerender");
+        //console.log("Avoid rerender");
     }
     interval = interval - parsegraph_IDLE_MARGIN;
     if(this._idleFunc
