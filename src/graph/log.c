@@ -254,6 +254,26 @@ void parsegraph_logMessagecf(const char* category, const char* fmt, ...)
     parsegraph_logAction("", category, buf);
 }
 
+void parsegraph_logcf(const char* category, const char* fmt, ...)
+{
+    if(!parsegraph_isLogging()) {
+        return;
+    }
+    va_list ap;
+    va_start(ap, fmt);
+    char buf[parsegraph_LOGBUFSIZE];
+    int true_written = vsnprintf(buf, sizeof buf, fmt, ap);
+    va_end(ap);
+    if(true_written >= sizeof buf) {
+        buf[parsegraph_LOGBUFSIZE - 5] = '.';
+        buf[parsegraph_LOGBUFSIZE - 4] = '.';
+        buf[parsegraph_LOGBUFSIZE - 3] = '.';
+        buf[parsegraph_LOGBUFSIZE - 2] = '\n';
+        buf[parsegraph_LOGBUFSIZE - 1] = 0;
+    }
+    parsegraph_logAction("", category, buf);
+}
+
 void parsegraph_logLeave()
 {
     parsegraph_logAction("<", 0, 0);
