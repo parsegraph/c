@@ -234,6 +234,7 @@ parsegraph_Input* parsegraph_Application_input(parsegraph_Application* app)
 
 void parsegraph_Application_onRender(parsegraph_Application* app)
 {
+    parsegraph_logEntercf("Application renders", "Rendering Parsegraph application (+%dms)\n", parsegraph_elapsed(&app->_appStartTime));
     parsegraph_Graph* graph = parsegraph_Application_graph(app);
     parsegraph_Surface* surface = parsegraph_Application_surface(app);
 
@@ -302,7 +303,7 @@ void parsegraph_Application_onRender(parsegraph_Application* app)
         //}
         parsegraph_AnimationTimer_schedule(app->_renderTimer);
     }
-    //parsegraph_log("Done rendering in %dms\n", parsegraph_elapsed(&startTime));
+    //parsegraph_logLeave("Done rendering in %dms\n", parsegraph_elapsed(&startTime));
 }
 
 void parsegraph_Application_onIdle(parsegraph_Application* app, int(*idleFunc)(void*, int), void* idleFuncThisArg)
