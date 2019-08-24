@@ -387,7 +387,7 @@ parsegraph_Carousel.prototype.paint = function()
 
     // Paint the background highlighting fan.
     if(!this._fanPainter) {
-        this._fanPainter = new parsegraph_FanPainter(this.gl());
+        this._fanPainter = new parsegraph_FanPainter(this.gl(), this._shaders);
     }
     else {
         this._fanPainter.clear();

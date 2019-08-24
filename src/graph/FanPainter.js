@@ -56,7 +56,7 @@ parsegraph_FanPainter_FragmentShader =
 /**
  * Shows a circle that allows some parts to show as selected.
  */
-function parsegraph_FanPainter(gl)
+function parsegraph_FanPainter(gl, shaders)
 {
     this._gl = gl;
     if(!this._gl || !this._gl.createProgram) {
@@ -69,32 +69,10 @@ function parsegraph_FanPainter(gl)
     this._selectionSize = null;
 
     // Compile the shader program.
-    this.fanProgram = this._gl.createProgram();
-
-    this._gl.attachShader(
-        this.fanProgram,
-        compileShader(
-            this._gl,
-            parsegraph_FanPainter_VertexShader,
-            this._gl.VERTEX_SHADER
-        )
+    this.fanProgram = parsegraph_compileProgram(gl, shaders, "parsegraph_FanPainter",
+        parsegraph_FanPainter_VertexShader,
+        parsegraph_FanPainter_FragmentShader
     );
-
-    this._gl.attachShader(
-        this.fanProgram,
-        compileShader(
-            this._gl,
-            parsegraph_FanPainter_FragmentShader,
-            this._gl.FRAGMENT_SHADER
-        )
-    );
-
-    this._gl.linkProgram(this.fanProgram);
-    if(!this._gl.getProgramParameter(
-        this.fanProgram, this._gl.LINK_STATUS
-    )) {
-        throw new Error("FanPainter program failed to link.");
-    }
 
     // Prepare attribute buffers.
     this._fanBuffer = parsegraph_createPagingBuffer(
