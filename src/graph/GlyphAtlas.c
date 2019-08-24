@@ -235,6 +235,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 
     int pageX = 0;
     int pageY = 0;
+    int recreateTexture = 1;
     GLuint curTexture = 0;
     int pagesUpdated = 0;
     for(int i = 0; i < parsegraph_ArrayList_length(glyphAtlas->_pages); ++i) {
@@ -245,8 +246,9 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         }
 
         // Create texture.
-        if(!curTexture) {
+        if(recreateTexture) {
             parsegraph_log("Creating GL glyph texture of size %dx%d\n", glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize);
+            recreateTexture = 0;
             glGenTextures(1, &curTexture);
             err = glGetError();
             if(GL_NO_ERROR != err) {
@@ -286,10 +288,10 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
             pageY = 0;
             pageX = 0;
             glGenerateMipmap(GL_TEXTURE_2D);
-            curTexture = 0;
             if(GL_NO_ERROR != (err = glGetError())) {
                 parsegraph_die("GL error while generating GL glyph texture mipmap: %s\n", gluErrorString(err));
             }
+            recreateTexture = 1;
         }
         ++pagesUpdated;
     }
