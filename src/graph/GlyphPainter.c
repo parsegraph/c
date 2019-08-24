@@ -214,7 +214,7 @@ void parsegraph_GlyphPageRenderer_writeVertex(parsegraph_GlyphPageRenderer* page
 void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRender, parsegraph_GlyphData* glyphData, float x, float y, float fontScale)
 {
     parsegraph_GlyphAtlas* glyphAtlas = parsegraph_GlyphPainter_glyphAtlas(pageRender->_painter);
-    int glTextureSize = parsegraph_getGlyphTextureSize();
+    float glTextureSize = parsegraph_getGlyphTextureSize();
     int pageTextureSize = parsegraph_GlyphAtlas_pageTextureSize(glyphAtlas);
     int pagesPerRow = glTextureSize / pageTextureSize;
     int pagesPerTexture = (int)pow(pagesPerRow, 2);
@@ -247,48 +247,48 @@ void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRe
     buf[0] = x;
     buf[1] = y;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x) / glTextureSize;
-    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 
     // Position data.
     buf[0] = x + glyphData->width * fontScale;
     buf[1] = y;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
-    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 
     // Position data.
     buf[0] = x + glyphData->width * fontScale;
     buf[1] = y + glyphData->height * fontScale;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
-    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y + glyphData->height) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 
     // Position data.
     buf[0] = x;
     buf[1] = y;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x) / glTextureSize;
-    buf[11] = (pageY + glyphData->y) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 
     // Position data.
     buf[0] = x + glyphData->width * fontScale;
     buf[1] = y + glyphData->height * fontScale;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x + glyphData->width) / glTextureSize;
-    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x + glyphData->width) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y + glyphData->height) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 
     // Position data.
     buf[0] = x;
     buf[1] = y + glyphData->height * fontScale;
     // Texcoord data
-    buf[10] = (pageX + glyphData->x) / glTextureSize;
-    buf[11] = (pageY + glyphData->y + glyphData->height) / glTextureSize;
+    buf[10] = (float)(pageX + glyphData->x) / glTextureSize;
+    buf[11] = (float)(pageY + glyphData->y + glyphData->height) / glTextureSize;
     parsegraph_GlyphPageRenderer_writeVertex(pageRender);
 }
 
