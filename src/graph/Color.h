@@ -5,7 +5,9 @@
 
 float* parsegraph_Color_new(apr_pool_t* pool, float r, float g, float b, float a);
 void parsegraph_Color_SetRGBA(float* color, float r, float g, float b, float a);
+void parsegraph_Color_setRGBA(float* color, float r, float g, float b, float a);
 void parsegraph_Color_SetRGB(float* color, float r, float g, float b);
+void parsegraph_Color_setRGB(float* color, float r, float g, float b);
 void parsegraph_Color_destroy(float* color);
 void parsegraph_Color_copy(float* dest, float* src);
 int parsegraph_Color_equals(float* a, float* b);

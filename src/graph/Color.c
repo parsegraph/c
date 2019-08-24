@@ -42,11 +42,21 @@ void parsegraph_Color_SetRGBA(float* color, float r, float g, float b, float a)
     color[3] = a;
 }
 
+void parsegraph_Color_setRGBA(float* color, float r, float g, float b, float a)
+{
+    parsegraph_Color_SetRGBA(color, r, g, b, a);
+}
+
 void parsegraph_Color_SetRGB(float* color, float r, float g, float b)
 {
     color[0] = r;
     color[1] = g;
     color[2] = b;
+}
+
+void parsegraph_Color_setRGB(float* color, float r, float g, float b)
+{
+    parsegraph_Color_SetRGB(color, r, g, b);
 }
 
 void parsegraph_Color_multiply(float* sink, float* src, float* other)
