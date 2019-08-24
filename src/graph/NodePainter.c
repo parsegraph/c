@@ -85,7 +85,6 @@ void parsegraph_NodePainter_render(parsegraph_NodePainter* painter, float* world
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
         parsegraph_BlockPainter_render(painter->_extentPainter, world, scale);
     }
-
     if(painter->_renderText) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         parsegraph_GlyphPainter_render(painter->_glyphPainter, world, scale);
@@ -202,7 +201,7 @@ void parsegraph_NodePainter_clear(parsegraph_NodePainter* painter)
     parsegraph_ArrayList_clear(painter->_textures);
 }
 
-static void drawLine(parsegraph_BlockPainter* painter, parsegraph_Node* node, float worldX, float worldY, float userScale, float x1, float y1, float x2, float y2, float thickness)
+static void drawLine(parsegraph_BlockPainter* painter, parsegraph_Node* node, float x1, float y1, float x2, float y2, float thickness)
 {
     parsegraph_Style* style = parsegraph_Node_blockStyle(node);
 
@@ -215,13 +214,13 @@ static void drawLine(parsegraph_BlockPainter* painter, parsegraph_Node* node, fl
 
     if(x1 == x2) {
         // Vertical line.
-        rx = parsegraph_LINE_THICKNESS * userScale * thickness;
+        rx = parsegraph_LINE_THICKNESS * parsegraph_Node_groupScale(node) * thickness;
         ry = parsegraph_absf(y2 - y1);
     }
     else {
         // Horizontal line.
         rx = parsegraph_absf(x2 - x1);
-        ry = parsegraph_LINE_THICKNESS * userScale * thickness;
+        ry = parsegraph_LINE_THICKNESS * parsegraph_Node_groupScale(node) * thickness;
     }
 
     float rcolor[4];
@@ -235,30 +234,30 @@ static void drawLine(parsegraph_BlockPainter* painter, parsegraph_Node* node, fl
     parsegraph_BlockPainter_setBorderColor(painter, rcolor);
     parsegraph_BlockPainter_setBackgroundColor(painter, rcolor);
     parsegraph_BlockPainter_drawBlock(painter,
-        worldX + parsegraph_Node_absoluteX(node) + cx,
-        worldY + parsegraph_Node_absoluteY(node) + cy,
+        parsegraph_Node_groupX(node) + cx,
+        parsegraph_Node_groupY(node) + cy,
         rx,
         ry,
         0,
         0,
-        userScale
+        parsegraph_Node_groupScale(node)
     );
 }
 
-void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale)
+void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, parsegraph_Node* node)
 {
     parsegraph_Style* style = parsegraph_Node_blockStyle(node);
     parsegraph_BlockPainter* painter = nodePainter->_blockPainter;
 
-    float absSize[2];
-    parsegraph_Node_absoluteSize(node, absSize);
+    float groupSize[2];
+    parsegraph_Node_groupSize(node, groupSize);
 
     // Draw the connecting line into the slider.
     switch(parsegraph_Node_parentDirection(node)) {
     case parsegraph_UPWARD:
         // Draw downward connecting line into the horizontal slider.
-        drawLine(painter, node, worldX, worldY, userScale * parsegraph_Node_absoluteScale(node),
-            0, -absSize[1] / 2,
+        drawLine(painter, node,
+            0, -groupSize[1] / 2,
             0, 0,
             1
         );
@@ -270,9 +269,9 @@ void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, pars
     }
 
     // Draw the bar that the slider bud is on.
-    drawLine(painter, node, worldX, worldY, userScale * parsegraph_Node_absoluteScale(node),
-        -absSize[0] / 2, 0,
-        absSize[0] / 2, 0,
+    drawLine(painter, node,
+        -groupSize[0] / 2, 0,
+        groupSize[0] / 2, 0,
         1.5
     );
 
@@ -280,7 +279,7 @@ void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, pars
 
     // If snapping, show the intermediate ticks.
 
-    float sliderWidth = userScale * absSize[0];
+    float sliderWidth = groupSize[0];
     int value = (long)parsegraph_Node_value(node);
     if(value < 0) {
         value = 0.5;
@@ -316,15 +315,15 @@ void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, pars
         if(value == 0) {
             value = 0;
         }
-        float thumbWidth = userScale * absSize[1]/1.5;
+        float thumbWidth = groupSize[1]/1.5;
         parsegraph_BlockPainter_drawBlock(painter,
-            worldX + parsegraph_Node_absoluteX(node) - sliderWidth / 2 + thumbWidth/2 + (sliderWidth - thumbWidth) * value,
-            worldY + parsegraph_Node_absoluteY(node),
-            userScale * absSize[1]/1.5,
-            userScale * absSize[1]/1.5,
+            parsegraph_Node_groupX(node) - sliderWidth / 2 + thumbWidth/2 + (sliderWidth - thumbWidth) * value,
+            parsegraph_Node_groupY(node),
+            groupSize[1]/1.5,
+            groupSize[1]/1.5,
             style->borderRoundness/1.5,
             style->borderThickness/1.5,
-            userScale * parsegraph_Node_absoluteScale(node)
+            parsegraph_Node_groupScale(node)
         );
     //}
 
@@ -334,7 +333,7 @@ void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, pars
 
     //float fontScale = .7;
 //    this._glyphPainter.setFontSize(
-//        fontScale * style.fontSize * userScale * node.absoluteScale()
+//        fontScale * style.fontSize * node.groupScale()
 //    );
     parsegraph_GlyphPainter_setColor(nodePainter->_glyphPainter,
         parsegraph_Node_isSelected(node) ?
@@ -343,22 +342,22 @@ void parsegraph_NodePainter_drawSlider(parsegraph_NodePainter* nodePainter, pars
     );
 
     //this._glyphPainter.setFontSize(
-//        fontScale * style.fontSize * userScale * node.absoluteScale()
+//        fontScale * style.fontSize * node.groupScale()
 //    );
     /*if(style->maxLabelChars) {
         parsegraph_GlyphPainter_setWrapWidth(
             nodePainter->_glyphPainter,
-            fontScale * style->fontSize * style->maxLabelChars * style->letterWidth * userScale * parsegraph_Node_absoluteScale(node)
+            fontScale * style->fontSize * style->maxLabelChars * style->letterWidth * parsegraph_Node_groupScale(node)
         );
     }*/
 
     parsegraph_Label* l = parsegraph_Node_realLabel(node);
-    node->_labelPos[0] = worldX + parsegraph_Node_absoluteX(node) - sliderWidth / 2 + sliderWidth * value - parsegraph_Label_width(l)/2;
-    node->_labelPos[1] = worldY + parsegraph_Node_absoluteY(node) - parsegraph_Label_height(l)/2;
-    parsegraph_Label_paint(l, nodePainter->_glyphPainter, node->_labelPos[0], node->_labelPos[1], userScale);
+    node->_labelPos[0] = parsegraph_Node_groupX(node) - sliderWidth / 2 + sliderWidth * value - parsegraph_Label_width(l)/2;
+    node->_labelPos[1] = parsegraph_Node_groupY(node) - parsegraph_Label_height(l)/2;
+    parsegraph_Label_paint(l, nodePainter->_glyphPainter, node->_labelPos[0], node->_labelPos[1], parsegraph_Node_scale(node));
 }
 
-void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale, apr_hash_t* shaders)
+void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, apr_hash_t* shaders)
 {
     if(!parsegraph_Node_scene(node)) {
         return;
@@ -366,8 +365,8 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
 
     float sceneSize[2];
     parsegraph_Node_sizeWithoutPadding(node, sceneSize);
-    float sceneX = worldX + parsegraph_Node_absoluteX(node);
-    float sceneY = worldY + parsegraph_Node_absoluteY(node);
+    float sceneX = parsegraph_Node_groupX(node);
+    float sceneY = parsegraph_Node_groupY(node);
 
     // Render and draw the scene texture.
     if(!apr_hash_get(shaders, "framebuffer", APR_HASH_KEY_STRING)) {
@@ -429,7 +428,7 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
         (long)apr_hash_get(shaders, "framebufferTexture", APR_HASH_KEY_STRING), sceneSize[0], sceneSize[1], shaders
     );
     parsegraph_TexturePainter_drawWholeTexture(p,
-        sceneX - sceneSize[0]/2, sceneY - sceneSize[1]/2, sceneSize[0], sceneSize[1], userScale * parsegraph_Node_absoluteScale(node)
+        sceneX - sceneSize[0]/2, sceneY - sceneSize[1]/2, sceneSize[0], sceneSize[1], parsegraph_Node_groupScale(node)
     );
     parsegraph_ArrayList_push(nodePainter->_textures, p);
 }
@@ -497,32 +496,26 @@ void parsegraph_NodePainter_countNode(parsegraph_NodePainter* nodePainter, parse
 
 void parsegraph_NodePainter_drawNode(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, apr_hash_t* shaders)
 {
-    float worldX = 0;
-    float worldY = 0;
-    float userScale = 1;
     if(parsegraph_NodePainter_isExtentRenderingEnabled(nodePainter)) {
-        parsegraph_NodePainter_paintExtent(nodePainter, node, worldX, worldY, userScale);
+        parsegraph_NodePainter_paintExtent(nodePainter, node);
     }
 
     switch(parsegraph_Node_type(node)) {
     case parsegraph_SLIDER:
-        return parsegraph_NodePainter_drawSlider(nodePainter, node, worldX, worldY, userScale);
+        return parsegraph_NodePainter_drawSlider(nodePainter, node);
     case parsegraph_SCENE:
-        parsegraph_NodePainter_paintLines(nodePainter, node, worldX, worldY, userScale);
-        parsegraph_NodePainter_paintBlock(nodePainter, node, worldX, worldY, userScale);
-        return parsegraph_NodePainter_drawScene(nodePainter, node, worldX, worldY, userScale, shaders);
+        parsegraph_NodePainter_paintLines(nodePainter, node);
+        parsegraph_NodePainter_paintBlock(nodePainter, node);
+        return parsegraph_NodePainter_drawScene(nodePainter, node, shaders);
     default:
-        parsegraph_NodePainter_paintLines(nodePainter, node, worldX, worldY, userScale);
-        parsegraph_NodePainter_paintBlock(nodePainter, node, worldX, worldY, userScale);
+        parsegraph_NodePainter_paintLines(nodePainter, node);
+        parsegraph_NodePainter_paintBlock(nodePainter, node);
     }
 }
 
 struct paintLines_drawLineData {
 parsegraph_NodePainter* nodePainter;
 parsegraph_Node* node;
-float worldX;
-float worldY;
-float userScale;
 };
 
 static void paintLines_drawLine(void* data, int direction)
@@ -530,9 +523,6 @@ static void paintLines_drawLine(void* data, int direction)
     struct paintLines_drawLineData* dld = data;
     parsegraph_Node* node = dld->node;
     parsegraph_NodePainter* nodePainter = dld->nodePainter;
-    float worldX = dld->worldX;
-    float worldY = dld->worldY;
-    float userScale = dld->userScale;
 
     if(parsegraph_Node_parentDirection(node) == direction) {
         return;
@@ -541,10 +531,6 @@ static void paintLines_drawLine(void* data, int direction)
         return;
     }
     parsegraph_NeighborData* directionData = node->_neighbors[direction];
-    // Do not draw lines unless there is a node.
-    if(!directionData->node) {
-        return;
-    }
 
     float selectedColor[4];
     parsegraph_Color_premultiply(selectedColor, parsegraph_SELECTED_LINE_COLOR,
@@ -566,16 +552,16 @@ static void paintLines_drawLine(void* data, int direction)
         parsegraph_BlockPainter_setBackgroundColor(painter, color);
     }
 
-    float parentScale = userScale * parsegraph_Node_absoluteScale(node);
-    float scale = userScale * parsegraph_Node_absoluteScale(directionData->node);
+    float parentScale = parsegraph_Node_groupScale(node);
+    float scale = parsegraph_Node_groupScale(directionData->node);
 
+    float thickness = parsegraph_LINE_THICKNESS * scale * parsegraph_Node_scale(directionData->node);
     if(parsegraph_isVerticalNodeDirection(direction)) {
         float length = parsegraph_nodeDirectionSign(direction)
             * parentScale * (directionData->lineLength + parsegraph_LINE_THICKNESS / 2);
-        float thickness = parsegraph_LINE_THICKNESS * scale;
         parsegraph_BlockPainter_drawBlock(painter,
-            worldX + parsegraph_Node_absoluteX(node),
-            worldY + parsegraph_Node_absoluteY(node) + length / 2,
+            parsegraph_Node_groupX(node),
+            parsegraph_Node_groupY(node) + length / 2,
             thickness,
             parsegraph_absf(length),
             0,
@@ -587,10 +573,9 @@ static void paintLines_drawLine(void* data, int direction)
         // Horizontal line.
         float length = parsegraph_nodeDirectionSign(direction)
             * parentScale * (directionData->lineLength + parsegraph_LINE_THICKNESS / 2);
-        float thickness = parsegraph_LINE_THICKNESS * scale;
         parsegraph_BlockPainter_drawBlock(painter,
-            worldX + parsegraph_Node_absoluteX(node) + length / 2,
-            worldY + parsegraph_Node_absoluteY(node),
+            parsegraph_Node_groupX(node) + length / 2,
+            parsegraph_Node_groupY(node),
             parsegraph_absf(length),
             thickness,
             0,
@@ -600,7 +585,7 @@ static void paintLines_drawLine(void* data, int direction)
     }
 }
 
-void parsegraph_NodePainter_paintLines(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale)
+void parsegraph_NodePainter_paintLines(parsegraph_NodePainter* nodePainter, parsegraph_Node* node)
 {
     float bodySize[2];
     parsegraph_Node_size(node, bodySize);
@@ -608,9 +593,6 @@ void parsegraph_NodePainter_paintLines(parsegraph_NodePainter* nodePainter, pars
     struct paintLines_drawLineData data;
     data.nodePainter = nodePainter;
     data.node = node;
-    data.worldX = worldX;
-    data.worldY = worldY;
-    data.userScale = userScale;
 
     parsegraph_forEachCardinalNodeDirection(paintLines_drawLine, &data);
 }
@@ -619,9 +601,6 @@ struct PaintBoundData {
 float rect[4];
 parsegraph_BlockPainter* painter;
 parsegraph_Node* node;
-float worldX;
-float worldY;
-float userScale;
 };
 
 static void paintExtent_paintBound(struct PaintBoundData* pbd)
@@ -631,13 +610,13 @@ static void paintExtent_paintBound(struct PaintBoundData* pbd)
         return;
     }
     parsegraph_BlockPainter_drawBlock(pbd->painter,
-        pbd->worldX + parsegraph_Rect_x(rect) + parsegraph_Rect_width(rect) / 2,
-        pbd->worldY + parsegraph_Rect_y(rect) + parsegraph_Rect_height(rect) / 2,
+        parsegraph_Rect_x(rect) + parsegraph_Rect_width(rect) / 2,
+        parsegraph_Rect_y(rect) + parsegraph_Rect_height(rect) / 2,
         parsegraph_Rect_width(rect),
         parsegraph_Rect_height(rect),
         parsegraph_EXTENT_BORDER_ROUNDEDNESS,
         parsegraph_EXTENT_BORDER_THICKNESS,
-        pbd->userScale * parsegraph_Node_absoluteScale(pbd->node)
+        parsegraph_Node_groupScale(pbd->node)
     );
 }
 
@@ -645,8 +624,8 @@ static void forEachDownwardExtent(void* data, float length, float size, int inde
 {
     struct PaintBoundData* pbd = data;
     float* rect = pbd->rect;
-    length *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
-    size *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
+    length *= parsegraph_Node_groupScale(pbd->node);
+    size *= parsegraph_Node_groupScale(pbd->node);
     parsegraph_Rect_setWidth(rect, length);
     parsegraph_Rect_setHeight(rect, size);
     paintExtent_paintBound(pbd);
@@ -659,8 +638,8 @@ static void paintExtent_paintDownwardExtent(struct PaintBoundData* pbd)
     parsegraph_Node* node = pbd->node;
 
     parsegraph_Rect_set(pbd->rect,
-        parsegraph_Node_absoluteX(node) - pbd->userScale * parsegraph_Node_absoluteScale(node) * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD),
-        parsegraph_Node_absoluteY(node),
+        parsegraph_Node_groupX(node) - parsegraph_Node_groupScale(node) * parsegraph_Node_extentOffsetAt(node, parsegraph_DOWNWARD),
+        parsegraph_Node_groupY(node),
         0, 0
     );
 
@@ -671,9 +650,9 @@ static void forEachUpwardExtent(void* data, float length, float size, int index)
 {
     struct PaintBoundData* pbd = data;
     float* rect = pbd->rect;
-    length *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
-    size *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
-    parsegraph_Rect_setY(rect, parsegraph_Node_absoluteY(pbd->node) - size);
+    length *= parsegraph_Node_groupScale(pbd->node);
+    size *= parsegraph_Node_groupScale(pbd->node);
+    parsegraph_Rect_setY(rect, parsegraph_Node_groupY(pbd->node) - size);
     parsegraph_Rect_setWidth(rect, length);
     parsegraph_Rect_setHeight(rect, size);
     paintExtent_paintBound(pbd);
@@ -685,7 +664,7 @@ static void paintExtent_paintUpwardExtent(struct PaintBoundData* pbd)
     parsegraph_Node* node = pbd->node;
 
     parsegraph_Rect_set(pbd->rect,
-        parsegraph_Node_absoluteX(node) - pbd->userScale * parsegraph_Node_absoluteScale(node) * parsegraph_Node_extentOffsetAt(node, parsegraph_UPWARD),
+        parsegraph_Node_groupX(node) - parsegraph_Node_groupScale(node) * parsegraph_Node_extentOffsetAt(node, parsegraph_UPWARD),
         0,
         0, 0
     );
@@ -697,10 +676,10 @@ static void forEachBackwardExtent(void* data, float length, float size, int inde
 {
     struct PaintBoundData* pbd = data;
     float* rect = pbd->rect;
-    length *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
-    size *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
+    length *= parsegraph_Node_groupScale(pbd->node);
+    size *= parsegraph_Node_groupScale(pbd->node);
     parsegraph_Rect_setHeight(rect, length);
-    parsegraph_Rect_setX(rect, parsegraph_Node_absoluteX(pbd->node) - size);
+    parsegraph_Rect_setX(rect, parsegraph_Node_groupX(pbd->node) - size);
     parsegraph_Rect_setWidth(rect, size);
     paintExtent_paintBound(pbd);
     parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) + length);
@@ -711,7 +690,7 @@ static void paintExtent_paintBackwardExtent(struct PaintBoundData* pbd)
     parsegraph_Extent* extent = parsegraph_Node_extentsAt(pbd->node, parsegraph_BACKWARD);
     parsegraph_Rect_set(pbd->rect,
         0,
-        parsegraph_Node_absoluteY(pbd->node) - pbd->userScale * parsegraph_Node_absoluteScale(pbd->node) * parsegraph_Node_extentOffsetAt(pbd->node, parsegraph_BACKWARD),
+        parsegraph_Node_groupY(pbd->node) - parsegraph_Node_groupScale(pbd->node) * parsegraph_Node_extentOffsetAt(pbd->node, parsegraph_BACKWARD),
         0, 0
     );
 
@@ -722,8 +701,8 @@ static void forEachForwardExtent(void* data, float length, float size, int index
 {
     struct PaintBoundData* pbd = data;
     float* rect = pbd->rect;
-    length *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
-    size *= pbd->userScale * parsegraph_Node_absoluteScale(pbd->node);
+    length *= parsegraph_Node_groupScale(pbd->node);
+    size *= parsegraph_Node_groupScale(pbd->node);
     parsegraph_Rect_setHeight(rect, length);
     parsegraph_Rect_setWidth(rect, size);
     paintExtent_paintBound(pbd);
@@ -734,15 +713,15 @@ static void paintExtent_paintForwardExtent(struct PaintBoundData* pbd)
 {
     parsegraph_Extent* extent = parsegraph_Node_extentsAt(pbd->node, parsegraph_FORWARD);
     parsegraph_Rect_set(pbd->rect,
-        parsegraph_Node_absoluteX(pbd->node),
-        parsegraph_Node_absoluteY(pbd->node) - parsegraph_Node_extentOffsetAt(pbd->node, parsegraph_FORWARD) * pbd->userScale * parsegraph_Node_absoluteScale(pbd->node),
+        parsegraph_Node_groupX(pbd->node),
+        parsegraph_Node_groupY(pbd->node) - parsegraph_Node_extentOffsetAt(pbd->node, parsegraph_FORWARD) * parsegraph_Node_groupScale(pbd->node),
         0, 0
     );
 
     parsegraph_Extent_forEach(extent, forEachForwardExtent, pbd);
 }
 
-void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale)
+void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, parsegraph_Node* node)
 {
     parsegraph_BlockPainter* painter = nodePainter->_extentPainter;
     parsegraph_BlockPainter_setBorderColor(painter,
@@ -756,9 +735,6 @@ void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, par
     parsegraph_Rect_set(pbd.rect, 0, 0, 0, 0);
     pbd.node = node;
     pbd.painter = painter;
-    pbd.worldX = worldX;
-    pbd.worldY = worldY;
-    pbd.userScale = userScale;
 
     paintExtent_paintDownwardExtent(&pbd);
     paintExtent_paintUpwardExtent(&pbd);
@@ -766,19 +742,22 @@ void parsegraph_NodePainter_paintExtent(parsegraph_NodePainter* nodePainter, par
     paintExtent_paintForwardExtent(&pbd);
 }
 
-void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, parsegraph_Node* node, float worldX, float worldY, float userScale)
+void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, parsegraph_Node* node)
 {
+    // Draw the block.
+    float size[2];
+    parsegraph_Node_groupSize(node, size);
     parsegraph_Style* style = parsegraph_Node_blockStyle(node);
     parsegraph_BlockPainter* painter = nodePainter->_blockPainter;
 
     // Set colors if selected.
-    if(parsegraph_Node_isSelected(node)) {
+    /*if(parsegraph_Node_isSelected(node)) {
         float c[4];
         parsegraph_Color_premultiply(c, style->selectedBorderColor, parsegraph_Node_backdropColor(node));
         parsegraph_BlockPainter_setBorderColor(painter, c);
         parsegraph_Color_premultiply(c, style->selectedBackgroundColor, parsegraph_Node_backdropColor(node));
         parsegraph_BlockPainter_setBackgroundColor(painter, c);
-    } else {
+    } else */{
         float c[4];
         parsegraph_Color_premultiply(c, style->borderColor, parsegraph_Node_backdropColor(node));
         parsegraph_BlockPainter_setBorderColor(painter, c);
@@ -786,23 +765,18 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
         parsegraph_BlockPainter_setBackgroundColor(painter, c);
     }
 
-    // Draw the block.
-    float size[2];
-    parsegraph_Node_absoluteSize(node, size);
-    size[0] *= userScale;
-    size[1] *= userScale;
     //fprintf(stderr, "Painting node at world %f, %f, %f\nNode at %f, %f\n", worldX, worldY, userScale,
         //userScale * parsegraph_Node_absoluteX(node),
         //userScale * parsegraph_Node_absoluteY(node)
     //);
     parsegraph_BlockPainter_drawBlock(painter,
-        worldX + userScale * parsegraph_Node_absoluteX(node),
-        worldY + userScale * parsegraph_Node_absoluteY(node),
+        parsegraph_Node_groupX(node),
+        parsegraph_Node_groupY(node),
         size[0],
         size[1],
         style->borderRoundness,
         style->borderThickness,
-        parsegraph_Node_absoluteScale(node) * userScale
+        parsegraph_Node_groupScale(node)
     );
 
     // Draw the label.
@@ -810,7 +784,7 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
     if(!label) {
         return;
     }
-    float fontScale = (style->fontSize * userScale * parsegraph_Node_absoluteScale(node)) / parsegraph_Label_fontSize(label);
+    float fontScale = (style->fontSize * parsegraph_Node_groupScale(node)) / parsegraph_Label_fontSize(label);
     float labelX, labelY;
     parsegraph_GlyphPainter_setColor(nodePainter->_glyphPainter,
         parsegraph_Node_isSelected(node) ?
@@ -825,18 +799,18 @@ void parsegraph_NodePainter_paintBlock(parsegraph_NodePainter* nodePainter, pars
         parsegraph_Node_sizeWithoutPadding(node, nodeSize);
         if(parsegraph_Node_nodeAlignmentMode(node, parsegraph_INWARD) == parsegraph_ALIGN_VERTICAL) {
             // Align vertical.
-            labelX = worldX + userScale * parsegraph_Node_absoluteX(node) - fontScale * parsegraph_Label_width(label)/2;
-            labelY = worldY + userScale * parsegraph_Node_absoluteY(node) - userScale * parsegraph_Node_absoluteScale(node) * nodeSize[1]/2;
+            labelX = parsegraph_Node_groupX(node) - fontScale * parsegraph_Label_width(label)/2;
+            labelY = parsegraph_Node_groupY(node) - parsegraph_Node_groupScale(node) * nodeSize[1]/2;
         }
         else {
             // Align horizontal.
-            labelX = worldX + userScale * parsegraph_Node_absoluteX(node) - userScale * parsegraph_Node_absoluteScale(node) * nodeSize[0]/2;
-            labelY = worldY + userScale * parsegraph_Node_absoluteY(node) - fontScale * parsegraph_Label_height(label)/2;
+            labelX = parsegraph_Node_groupX(node) - parsegraph_Node_groupScale(node) * nodeSize[0]/2;
+            labelY = parsegraph_Node_groupY(node) - fontScale * parsegraph_Label_height(label)/2;
         }
     }
     else {
-        labelX = worldX + userScale * parsegraph_Node_absoluteX(node) - fontScale * parsegraph_Label_width(label)/2;
-        labelY = worldY + userScale * parsegraph_Node_absoluteY(node) - fontScale * parsegraph_Label_height(label)/2;
+        labelX = parsegraph_Node_groupX(node) - fontScale * parsegraph_Label_width(label)/2;
+        labelY = parsegraph_Node_groupY(node) - fontScale * parsegraph_Label_height(label)/2;
     }
     node->_labelPos[0] = labelX;
     node->_labelPos[1] = labelY;
