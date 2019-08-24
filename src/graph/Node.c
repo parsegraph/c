@@ -1682,6 +1682,9 @@ void parsegraph_Node_assignParent(parsegraph_Node* node, parsegraph_Node* fromPa
         return;
     }
     node->_parentNeighbor = parsegraph_Node_neighborAt(fromParent, parentDirection);
+    if(!node->_parentNeighbor) {
+        parsegraph_die("Parent neighbor must be found when being assigned.");
+    }
 }
 
 int parsegraph_Node_isSelected(parsegraph_Node* node)

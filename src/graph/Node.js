@@ -1490,6 +1490,9 @@ parsegraph_Node.prototype.assignParent = function(fromNode, parentDirection)
         return;
     }
     this._parentNeighbor = fromNode.neighborAt(parentDirection);
+    if(!this._parentNeighbor) {
+        throw new Error("Parent neighbor must be found when being assigned.");
+    }
 };
 
 parsegraph_Node.prototype.isSelected = function()
