@@ -62,7 +62,7 @@ parsegraph_Application.prototype.start = function(container, initFunc, initFuncT
 
     var that = this;
     uni.onLoad = function() {
-        console.log("Time till unicode loaded: " + parsegraph_elapsed(parsegraph_START_TIME));
+        //console.log("Time till unicode loaded: " + parsegraph_elapsed(parsegraph_START_TIME));
         that.onUnicodeLoaded.call(that);
     };
     // Export the Unicode instance.
