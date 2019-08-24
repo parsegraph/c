@@ -429,6 +429,7 @@ parsegraph_Carousel.prototype.render = function(world)
         var carouselData = this._carouselPlots[i];
         var root = carouselData[0];
         root.renderIteratively(
+            // scale * trans * world
             matrixMultiply3x3(
                 makeScale3x3(carouselData[3]),
                 matrixMultiply3x3(makeTranslation3x3(
