@@ -70,6 +70,10 @@ parsegraph_GlyphPainter* parsegraph_GlyphPainter_new(apr_pool_t* ppool, parsegra
         parsegraph_GlyphPainter_VertexShader,
         parsegraph_GlyphPainter_FragmentShader
     );
+    GLenum err = glGetError();
+    if(GL_NO_ERROR != err) {
+        parsegraph_die("GL error while creating text program for glyph painter: %s\n", gluErrorString(err));
+    }
 
     painter->_textBuffers = parsegraph_ArrayList_new(pool);
     painter->_maxSize = 0;
