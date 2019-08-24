@@ -17,7 +17,7 @@ parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool, const char*
     app = apr_palloc(pool, sizeof(*app));
     app->pool = pool;
     app->_cameraName = "parsegraph_login_camera";
-    app->_guid = guid ? guid : "";
+    app->_guid = guid ? guid : "Rainback";
     app->_graph = 0;
 
     app->_idleFunc = 0;
