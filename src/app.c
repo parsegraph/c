@@ -244,16 +244,16 @@ void parsegraph_Application_onRender(parsegraph_Application* app)
 
     int interval = app->_interval;
     if(inputChangedScene) {
-        //parsegraph_log("Input changed scene\n");
+        parsegraph_log("Input changed scene\n");
     }
     if(!inputChangedScene) {
         inputChangedScene = parsegraph_Graph_needsRepaint(graph);
         if(inputChangedScene) {
             if(parsegraph_World_needsRepaint(parsegraph_Graph_world(graph))) {
-                //parsegraph_log("World needs repaint\n");
+                parsegraph_log("World needs repaint\n");
             }
             else {
-                //parsegraph_log("Graph needs repaint\n");
+                parsegraph_log("Graph needs repaint\n");
             }
         }
     }
@@ -261,12 +261,12 @@ void parsegraph_Application_onRender(parsegraph_Application* app)
     if(!inputChangedScene) {
         inputChangedScene = app->_renderedMouse != parsegraph_Input_mouseVersion(input);
         if(inputChangedScene) {
-            //parsegraph_log("Mouse changed scene\n");
+            parsegraph_log("Mouse changed scene\n");
         }
     }
     if(!inputChangedScene) {
         if(parsegraph_Input_UpdateRepeatedly(input)) {
-            //parsegraph_log("Input updating repeatedly\n");
+            parsegraph_log("Input updating repeatedly\n");
         }
     }
     if(parsegraph_Graph_needsRepaint(graph)) {
@@ -278,7 +278,7 @@ void parsegraph_Application_onRender(parsegraph_Application* app)
         app->_renderedMouse = parsegraph_Input_mouseVersion(input);
     }
     else {
-        //parsegraph_log("Avoid rerender\n");
+        parsegraph_log("Avoid rerender\n");
     }
     interval = interval - parsegraph_IDLE_MARGIN;
     if(app->_idleFunc
@@ -303,7 +303,7 @@ void parsegraph_Application_onRender(parsegraph_Application* app)
         //}
         parsegraph_AnimationTimer_schedule(app->_renderTimer);
     }
-    //parsegraph_logLeave("Done rendering in %dms\n", parsegraph_elapsed(&startTime));
+    parsegraph_logLeave("Done rendering in %dms\n", parsegraph_elapsed(&startTime));
 }
 
 void parsegraph_Application_onIdle(parsegraph_Application* app, int(*idleFunc)(void*, int), void* idleFuncThisArg)
