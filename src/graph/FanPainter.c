@@ -181,11 +181,6 @@ void parsegraph_FanPainter_render(parsegraph_FanPainter* painter, float* viewMat
     }
     // Render faces.
     glUseProgram(painter->fanProgram);
-    glUniformMatrix3fv(
-        painter->u_world,
-        1,
-        0,
-        viewMatrix
-    );
+    glUniformMatrix3fv(painter->u_world, 1, 0, viewMatrix);
     parsegraph_pagingbuffer_renderPages(painter->_fanBuffer);
 }

@@ -184,10 +184,6 @@ parsegraph_FanPainter.prototype.render = function(viewMatrix)
     this._gl.useProgram(
         this.fanProgram
     );
-    this._gl.uniformMatrix3fv(
-        this.u_world,
-        false,
-        viewMatrix
-    );
+    this._gl.uniformMatrix3fv(this.u_world, false, viewMatrix);
     this._fanBuffer.renderPages();
 };
