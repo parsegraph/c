@@ -1047,7 +1047,7 @@ parsegraph_Node* parsegraph_Node_connectNode(parsegraph_Node* parentNode, int in
     }
     else {
         parsegraph_Node_insertIntoLayout(parentNode, inDirection);
-        if(parentNode->_paintGroupNext != parentNode) {
+        if(nodeToConnect->_paintGroupNext != nodeToConnect) {
             //parsegraph_log("Adding this node's implicit child paintgroups to the parent");
             parsegraph_Node* pg = parsegraph_Node_findPaintGroup(parentNode);
             parsegraph_Node* paintGroupLast = pg->_paintGroupPrev;
