@@ -107,7 +107,7 @@ parsegraph_FanPainter.prototype.selectDeg = function(
 {
     return this.selectRad(
         userX, userY,
-        alpha_ToDegrees(startAngle), alpha_ToDegrees(spanAngle),
+        alpha_ToRadians(startAngle), alpha_ToRadians(spanAngle),
         startColor, endColor
     );
 };

@@ -105,7 +105,7 @@ void parsegraph_FanPainter_selectDeg(parsegraph_FanPainter* painter,
 {
     parsegraph_FanPainter_selectRad(painter,
         userX, userY,
-        alpha_toDegrees(startAngle), alpha_toDegrees(spanAngle),
+        alpha_toRadians(startAngle), alpha_toRadians(spanAngle),
         startColor, endColor
     );
 }
