@@ -162,8 +162,13 @@ void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parseg
     free(textutf8);
 }
 
-const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
+void* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
 {
     struct parsegraph_PangoTexture* texture = data;
     return cairo_image_surface_get_data(texture->surface);
+}
+
+void parsegraph_GlyphAtlas_freeTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
+{
+    // Returned pointer is not a copy.
 }

@@ -101,6 +101,7 @@ void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas, int
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
 void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parsegraph_GlyphData* glyphData, void* texture);
 void parsegraph_GlyphAtlas_clearTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
-const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
+void* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* texture);
+void parsegraph_GlyphAtlas_freeTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data);
 
 #endif // parsegraph_GlyphAtlas_INCLUDED

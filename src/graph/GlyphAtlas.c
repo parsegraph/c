@@ -274,8 +274,10 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         page->_glyphTexture = curTexture;
 
         // Draw from 2D canvas.
+        parsegraph_log("Drawing glyph page at position (%d, %d) with size %dx%d.\n", pageX, pageY, pageTextureSize, pageTextureSize);
         void* textureData = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, glyphAtlas->_renderTexture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, pageX, pageY, pageTextureSize, pageTextureSize, GL_RED, GL_UNSIGNED_BYTE, textureData);
+        parsegraph_GlyphAtlas_freeTextureData(glyphAtlas, textureData);
         if(GL_NO_ERROR != glGetError()) {
             parsegraph_die("GL error while writing glyph to GL texture\n");
         }

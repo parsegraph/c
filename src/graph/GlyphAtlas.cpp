@@ -49,7 +49,7 @@ void parsegraph_GlyphAtlas_measureText(parsegraph_GlyphAtlas* glyphAtlas, const 
 
 void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas, int width, int height)
 {
-    auto img = new QImage(width, height, QImage::Format_Alpha8);
+    auto img = new QImage(width, height, QImage::Format_ARGB32);
     parsegraph_GlyphAtlas_clearTexture(glyphAtlas, img);
     return img;
 }
@@ -57,14 +57,7 @@ void* parsegraph_GlyphAtlas_createTexture(parsegraph_GlyphAtlas* glyphAtlas, int
 void parsegraph_GlyphAtlas_clearTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
 {
     auto img = static_cast<QImage*>(texture);
-    QPainter p;
-    if(!p.begin(img)) {
-        parsegraph_die("Failed to create texture");
-    }
-    p.setBackground(Qt::black);
-    p.setPen(QPen(Qt::white));
-    p.fillRect(0, 0, img->width(), img->height(), Qt::black);
-    p.end();
+    img->fill(0);
 }
 
 void parsegraph_GlyphAtlas_destroyTexture(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
@@ -80,17 +73,27 @@ void parsegraph_GlyphAtlas_renderGlyph(parsegraph_GlyphAtlas* glyphAtlas, parseg
         parsegraph_die("Failed to paint glyph");
     }
     p.setBackground(Qt::black);
-    p.setPen(QPen(Qt::black));
+    p.setPen(Qt::white);
     p.setFont(*static_cast<QFont*>(glyphAtlas->_font));
-    p.fillRect(glyphData->x, glyphData->y, glyphData->width, glyphData->height, Qt::black);
-    p.setPen(QPen(Qt::white));
-    p.drawText(glyphData->x, glyphData->y + glyphData->ascent, QString::fromUtf16(glyphData->letter, glyphData->length));
+    QString glyph = QString::fromUtf16(glyphData->letter, glyphData->length);
+    parsegraph_log("Rendering glyph '%s' at (%d, %d)\n", glyph.toUtf8().constData(), glyphData->x, glyphData->y);
+    p.drawText(glyphData->x, glyphData->y + glyphData->ascent, glyph);
     p.end();
 }
 
-const GLvoid* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* texture)
+void* parsegraph_GlyphAtlas_getTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
 {
-    return static_cast<QImage*>(texture)->constBits();
+    QImage* img = static_cast<QImage*>(data);
+    size_t sz = img->width()*img->height();
+    unsigned char* bytes = static_cast<unsigned char*>(malloc(sz));
+    QImage alphaImg = img->convertToFormat(QImage::Format_Alpha8);
+    memcpy(bytes, alphaImg.constBits(), sz);
+    return bytes;
+}
+
+void parsegraph_GlyphAtlas_freeTextureData(parsegraph_GlyphAtlas* glyphAtlas, void* data)
+{
+    free(data);
 }
 
 }
