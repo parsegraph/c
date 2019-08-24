@@ -152,6 +152,7 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
     }
     parsegraph_logEntercf("Graph paints", "Painting Graph, timeout=%d\n", timeout);
     parsegraph_GlyphAtlas* glyphAtlas = parsegraph_Graph_glyphAtlas(graph);
+    parsegraph_GlyphAtlas_update(glyphAtlas);
     apr_hash_set(graph->_shaders, "glyphAtlas", APR_HASH_KEY_STRING, glyphAtlas);
     apr_hash_set(graph->_shaders, "timeout", APR_HASH_KEY_STRING, (void*)(long)timeout);
 
