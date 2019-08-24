@@ -87,7 +87,7 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* s
     // Cache program locations.
     painter->u_world = glGetUniformLocation(painter->fanProgram, "u_world");
 
-    //this._fanBuffer.addPage();
+    parsegraph_PagingBuffer_addDefaultPage(painter->_fanBuffer);
     return painter;
 }
 
@@ -124,7 +124,7 @@ void parsegraph_FanPainter_selectRad(parsegraph_FanPainter* painter,
     float radius = painter->_ascendingRadius + painter->_descendingRadius;
 
     // Append position data.
-    parsegraph_PagingBuffer_appendData(painter->_fanBuffer,
+    parsegraph_pagingbuffer_appendArray(painter->_fanBuffer,
         painter->a_position, 12,
         parsegraph_generateRectangleVertices(painter->pool,
             userX, userY, radius * 2, radius * 2
@@ -132,7 +132,7 @@ void parsegraph_FanPainter_selectRad(parsegraph_FanPainter* painter,
     );
 
     // Append texture coordinate data.
-    parsegraph_PagingBuffer_appendData(painter->_fanBuffer,
+    parsegraph_pagingbuffer_appendArray(painter->_fanBuffer,
         painter->a_texCoord, 12,
         parsegraph_generateRectangleTexcoords(painter->pool)
     );
@@ -141,8 +141,8 @@ void parsegraph_FanPainter_selectRad(parsegraph_FanPainter* painter,
     float* color = startColor;
     for(int k = 0; k < 3 * 2; ++k) {
         parsegraph_PagingBuffer_appendRGBA(painter->_fanBuffer, painter->a_color, color[0], color[1], color[2], color[3]);
-        parsegraph_PagingBuffer_appendData(painter->_fanBuffer, 2, painter->a_selectionAngle, painter->_selectionAngle != 0 ? painter->_selectionAngle : 0);
-        parsegraph_PagingBuffer_appendData(painter->_fanBuffer, 2, painter->a_selectionSize, painter->_selectionSize != 0 ? painter->_selectionSize : 0);
+        parsegraph_PagingBuffer_appendData(painter->_fanBuffer, painter->a_selectionAngle, 1, painter->_selectionAngle);
+        parsegraph_PagingBuffer_appendData(painter->_fanBuffer, painter->a_selectionSize, 1, painter->_selectionSize);
     }
 }
 
@@ -171,6 +171,7 @@ void parsegraph_FanPainter_setSelectionSize(parsegraph_FanPainter* painter, floa
 void parsegraph_FanPainter_clear(parsegraph_FanPainter* painter)
 {
     parsegraph_pagingbuffer_clear(painter->_fanBuffer);
+    parsegraph_PagingBuffer_addDefaultPage(painter->_fanBuffer);
 }
 
 void parsegraph_FanPainter_render(parsegraph_FanPainter* painter, float* viewMatrix)
