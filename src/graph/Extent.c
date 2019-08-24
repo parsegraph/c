@@ -87,6 +87,9 @@ parsegraph_Extent* parsegraph_Extent_clone(parsegraph_Extent* orig)
         clone->_maxSize = orig->_maxSize;
         clone->_totalLength = orig->_totalLength;
     }
+    else {
+        parsegraph_Extent_invalidateBoundingValues(clone);
+    }
     return clone;
 }
 
@@ -94,6 +97,7 @@ void parsegraph_Extent_clear(parsegraph_Extent* extent)
 {
     extent->start = 0;
     extent->numBounds = 0;
+    parsegraph_Extent_invalidateBoundingValues(extent);
 }
 
 unsigned int parsegraph_Extent_numBounds(parsegraph_Extent* extent)
@@ -131,6 +135,7 @@ void parsegraph_Extent_setBoundLengthAt(parsegraph_Extent* extent, unsigned int 
     }
     //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (length=%f)\n", extent->start, index, extent->capacity, length);
     extent->bounds[(extent->start + index) % extent->capacity].length = length;
+    parsegraph_Extent_invalidateBoundingValues(extent);
 }
 
 void parsegraph_Extent_setBoundSizeAt(parsegraph_Extent* extent, unsigned int index, float size)
@@ -140,6 +145,7 @@ void parsegraph_Extent_setBoundSizeAt(parsegraph_Extent* extent, unsigned int in
     }
     //parsegraph_log("(start=%d)+(index=%d) %% (capacity=%d) = (size=%f)\n", extent->start, index, extent->capacity, size);
     extent->bounds[(extent->start + index) % extent->capacity].size = size;
+    parsegraph_Extent_invalidateBoundingValues(extent);
 }
 
 int parsegraph_Extent_realloc(parsegraph_Extent* extent, unsigned int capacity)
