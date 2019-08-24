@@ -32,7 +32,7 @@ int _id;
 parsegraph_GlyphAtlas* _glyphAtlas;
 GLuint _textProgram;
 apr_pool_t* pool;
-int _maxSize;
+float _maxSize;
 int _stride;
 GLint a_position;
 GLint a_color;
