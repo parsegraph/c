@@ -342,13 +342,14 @@ int main(int argc, char**argv)
     window.resize(640, 480);
     window.show();
 
-    rv = mainApp.exec();
+    int mainRv = mainApp.exec();
+
     // Destroy the pool for cleanliness.
     parsegraph_Application_close(window.app);
     apr_pool_destroy(pool);
     pool = NULL;
     apr_terminate();
-
     parsegraph_disconnectLog();
-    return rv;
+
+    return mainRv;
 }
