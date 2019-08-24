@@ -104,9 +104,9 @@ parsegraph_Node* parsegraph_Node_new(apr_pool_t* pool, int newType, parsegraph_N
     node->_absoluteYPos = NAN;
     node->_absoluteScale = NAN;
     node->_hasGroupPos = 0;
-    node->_groupXPos = 0;
-    node->_groupYPos = 0;
-    node->_groupScale = 0;
+    node->_groupXPos = NAN;
+    node->_groupYPos = NAN;
+    node->_groupScale = NAN;
     node->_layoutPrev = node;
     node->_layoutNext = node;
 
