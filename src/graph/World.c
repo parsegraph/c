@@ -28,7 +28,7 @@ parsegraph_World* parsegraph_World_new(parsegraph_Graph* graph)
     // The node currently under the cursor.
     world->_nodeUnderCursor = 0;
 
-    world->_previousWorldPaintState = 0;
+    world->_previousWorldPaintState = -1;
 
     world->_camera = 0;
 
@@ -77,7 +77,7 @@ int parsegraph_World_removePlot(parsegraph_World* world, parsegraph_Node* plot)
         parsegraph_Node* node = parsegraph_ArrayList_at(world->_worldRoots, i);
         if(node == plot) {
             if(world->_previousWorldPaintState) {
-                world->_previousWorldPaintState = 0;
+                world->_previousWorldPaintState = -1;
             }
             parsegraph_Node_unref(node);
             parsegraph_ArrayList_splice(world->_worldRoots, i, 1);
@@ -220,7 +220,7 @@ void parsegraph_World_scheduleRepaint(parsegraph_World* world)
 {
     //fprintf(stderr, "Scheduling World repaint\n");
     world->_worldPaintingDirty = 1;
-    world->_previousWorldPaintState = 0;
+    world->_previousWorldPaintState = -1;
 };
 
 parsegraph_Node* parsegraph_World_nodeUnderCursor(parsegraph_World* world)
@@ -307,9 +307,9 @@ int parsegraph_World_paint(parsegraph_World* world, int timeout)
         // Restore the last state.
         int i = 0;
         int savedState = 0;
-        if(world->_previousWorldPaintState != 0) {
+        if(world->_previousWorldPaintState != -1) {
             savedState = world->_previousWorldPaintState;
-            world->_previousWorldPaintState = 0;
+            world->_previousWorldPaintState = -1;
             i = savedState;
         }
         else {
