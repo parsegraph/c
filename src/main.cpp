@@ -311,8 +311,10 @@ int main(int argc, char**argv)
         parsegraph_log("Failed initializing APR. APR status of %d.\n", rv);
         return -1;
     }
+
     rv = apr_pool_create(&pool, NULL);
     if(rv != APR_SUCCESS) {
+        pool = 0;
         parsegraph_log("Failed creating memory pool. APR status of %d.\n", rv);
         return -1;
     }
