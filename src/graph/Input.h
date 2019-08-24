@@ -92,7 +92,7 @@ void parsegraph_Input_switchDebugMode(parsegraph_Input* input);
 parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera);
 void parsegraph_Input_paint(parsegraph_Input* input);
 parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, float clientX, float clientY);
-void parsegraph_Input_Dispatch(parsegraph_Input* input, int arg1, const char* event, int arg2);
+void parsegraph_Input_Dispatch(parsegraph_Input* input, int affectedPaint, const char* eventSource, int inputAffectedCamera);
 void parsegraph_Input_mouseDragListener(parsegraph_Input* input, float dx, float dy);
 const char* parsegraph_Input_getproperkeyname(parsegraph_Input* input, const char* keyName, int keyCode);
 void parsegraph_Input_removeMouseListener(parsegraph_Input* input);

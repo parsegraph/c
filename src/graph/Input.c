@@ -1464,9 +1464,9 @@ void parsegraph_Input_render(parsegraph_Input* input, float* world, float scale)
     apr_pool_destroy(pool);
 }
 
-void parsegraph_Input_Dispatch(parsegraph_Input* input, int argc, const char* event, int argc2)
+void parsegraph_Input_Dispatch(parsegraph_Input* input, int affectedPaint, const char* eventSource, int inputAffectedCamera)
 {
     if(input->listener) {
-        input->listener(input, argc, event, argc2, input->listenerThisArg);
+        input->listener(input, affectedPaint, eventSource, inputAffectedCamera, input->listenerThisArg);
     }
 };
