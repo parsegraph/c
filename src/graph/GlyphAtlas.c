@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unicode/ustring.h>
+#include <GL/glu.h>
 #include <time.h>
 #include "die.h"
 #include "timing.h"
@@ -213,6 +214,7 @@ int parsegraph_getGlyphTextureSize()
 
 void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 {
+    GLenum err;
     if(!glyphAtlas->_font) {
         parsegraph_GlyphAtlas_restoreProperties(glyphAtlas);
     }
@@ -246,17 +248,35 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
         if(!curTexture) {
             parsegraph_log("Creating GL glyph texture of size %dx%d\n", glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize);
             glGenTextures(1, &curTexture);
+            err = glGetError();
+            if(GL_NO_ERROR != err) {
+                parsegraph_die("GL error while generating new glyph GL texture: %s\n", gluErrorString(err));
+            }
             glBindTexture(GL_TEXTURE_2D, curTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+            err = glGetError();
+            if(GL_NO_ERROR != err) {
+                parsegraph_die("GL error while binding new glyph GL texture: %s\n", gluErrorString(err));
+            }
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            if(GL_NO_ERROR != glGetError()) {
+                parsegraph_die("GL error while setting glyph GL texture parameters\n");
+            }
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glyphAtlas->_glTextureSize, glyphAtlas->_glTextureSize, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+            if(GL_NO_ERROR != glGetError()) {
+                parsegraph_die("GL error while creating glyph GL texture\n");
+            }
         }
         page->_glyphTexture = curTexture;
 
         // Draw from 2D canvas.
-        glTexSubImage2D(GL_TEXTURE_2D, 0, pageX, pageY, pageTextureSize, pageTextureSize, GL_RED, GL_UNSIGNED_BYTE, parsegraph_GlyphAtlas_getTextureData(glyphAtlas, glyphAtlas->_renderTexture));
+        void* textureData = parsegraph_GlyphAtlas_getTextureData(glyphAtlas, glyphAtlas->_renderTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, pageX, pageY, pageTextureSize, pageTextureSize, GL_RED, GL_UNSIGNED_BYTE, textureData);
+        if(GL_NO_ERROR != glGetError()) {
+            parsegraph_die("GL error while writing glyph to GL texture\n");
+        }
         pageX += pageTextureSize;
         if(pageX > glyphAtlas->_glTextureSize) {
             pageY += pageTextureSize;
@@ -267,13 +287,22 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
             pageX = 0;
             glGenerateMipmap(GL_TEXTURE_2D);
             curTexture = 0;
+            if(GL_NO_ERROR != (err = glGetError())) {
+                parsegraph_die("GL error while generating GL glyph texture mipmap: %s\n", gluErrorString(err));
+            }
         }
         ++pagesUpdated;
     }
     if(curTexture) {
         glGenerateMipmap(GL_TEXTURE_2D);
+        if(GL_NO_ERROR != (err = glGetError())) {
+            parsegraph_die("GL error while generating GL glyph texture mipmap: %s\n", gluErrorString(err));
+        }
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+    if(GL_NO_ERROR != (err = glGetError())) {
+        parsegraph_die("GL error while unbinding GL glyph texture: %s\n", gluErrorString(err));
+    }
     parsegraph_logLeavef("GlyphAtlas updated %d page(s) in %dms\n", pagesUpdated, parsegraph_elapsed(&td));
 }
 
