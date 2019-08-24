@@ -99,11 +99,12 @@ parsegraph_Input* parsegraph_Graph_input(parsegraph_Graph* graph)
 
 void parsegraph_Graph_scheduleRepaint(parsegraph_Graph* graph)
 {
-    //fprintf(stderr, "Scheduling repaint\n");
+    parsegraph_logEntercf("Repaint scheduling", "Scheduling graph repaint\n");
     parsegraph_World_scheduleRepaint(graph->_world);
     if(graph->onScheduleRepaint) {
         graph->onScheduleRepaint(graph->onScheduleRepaintThisArg);
     }
+    parsegraph_logLeave();
 }
 
 void parsegraph_Graph_setOnScheduleRepaint(parsegraph_Graph* graph, void(*func)(void*), void* thisArg)
@@ -149,8 +150,8 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
     if(!graph->_glyphAtlas) {
         return 0;
     }
+    parsegraph_logEntercf("Graph paints", "Painting Graph, timeout=%d\n", timeout);
     parsegraph_GlyphAtlas* glyphAtlas = parsegraph_Graph_glyphAtlas(graph);
-    //fprintf(stderr, "Painting Graph, timeout=%d\n", timeout);
     apr_hash_set(graph->_shaders, "glyphAtlas", APR_HASH_KEY_STRING, glyphAtlas);
     apr_hash_set(graph->_shaders, "timeout", APR_HASH_KEY_STRING, (void*)(long)timeout);
 
@@ -164,6 +165,7 @@ int parsegraph_Graph_paint(parsegraph_Graph* graph, int timeout)
     //parsegraph_Input_paint(graph->_input);
     //parsegraph_AudioKeyboard_prepare(graph->_piano, glyphAtlas, graph->_shaders);
     //parsegraph_AudioKeyboard_paint(graph->_piano);
+    parsegraph_logLeave();
     return rv;
 }
 
