@@ -53,6 +53,7 @@ void parsegraph_pagingbuffer_destroy(struct parsegraph_pagingbuffer* pg)
 
 static void drawArrays(void* userdata, GLsizei numIndices)
 {
+    parsegraph_log("glDrawArrays(GL_TRIANGLES, 0, %d)\n", numIndices);
     glDrawArrays(GL_TRIANGLES, 0, numIndices);
 }
 
@@ -321,7 +322,7 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
     for(struct parsegraph_BufferPage* page = pg->first_page; page != 0; page = page->next_page) {
         int numIndices = -1;
 
-        //fprintf(stderr, "Rendering buffer page\n");
+        parsegraph_log("Rendering buffer page\n");
 
         // Prepare each vertex attribute.
         int attribIndex = 0;
@@ -357,7 +358,7 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
             );
 
             float thisNumIndices = content->index / attrib->numComponents;
-            //parsegraph_log("This num indices: %d/%d=%f\n", content->index, attrib->numComponents, thisNumIndices);
+            parsegraph_log("This num indices: %d/%d=%f\n", content->index, attrib->numComponents, thisNumIndices);
             if(floor(thisNumIndices) != thisNumIndices) {
                 //throw new Error("Odd number of indices for attrib " + attrib.name + ". Wanted " + Math.round(thisNumIndices) + ", but got " + thisNumIndices);
                 parsegraph_die("Odd number of indices");
@@ -375,12 +376,12 @@ int parsegraph_pagingbuffer_renderPages(struct parsegraph_pagingbuffer* pg)
 
         // Draw the page's triangles.
         if(numIndices > 0) {
-            //parsegraph_log("Invoking page's renderFunc\n");
+            parsegraph_log("Invoking page's renderFunc to draw %d triangles\n", numIndices/3);
             page->renderFunc(page->renderFuncThisArg, numIndices);
             count += numIndices/3;
         }
         else {
-            //parsegraph_log("Page was empty\n");
+            parsegraph_log("Page was empty\n");
         }
 
         page->needsUpdate = 0;
