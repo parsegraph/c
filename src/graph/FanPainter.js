@@ -110,9 +110,6 @@ function parsegraph_FanPainter(gl)
     this.u_world = this._gl.getUniformLocation(
         this.fanProgram, "u_world"
     );
-    this.u_time = this._gl.getUniformLocation(
-        this.fanProgram, "u_time"
-    );
 
     this._fanBuffer.addPage();
 };

@@ -88,9 +88,6 @@ parsegraph_FanPainter* parsegraph_FanPainter_new(apr_pool_t* pool, apr_hash_t* s
     painter->u_world = glGetUniformLocation(
         painter->fanProgram, "u_world"
     );
-    painter->u_time = glGetUniformLocation(
-        painter->fanProgram, "u_time"
-    );
 
     //this._fanBuffer.addPage();
     return painter;

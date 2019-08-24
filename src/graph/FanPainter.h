@@ -18,7 +18,6 @@ GLuint a_texCoord;
 GLuint a_selectionAngle;
 GLuint a_selectionSize;
 GLuint u_world;
-GLuint u_time;
 };
 typedef struct parsegraph_FanPainter parsegraph_FanPainter;
 
