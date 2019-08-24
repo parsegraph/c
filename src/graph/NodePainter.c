@@ -411,7 +411,7 @@ void parsegraph_NodePainter_drawScene(parsegraph_NodePainter* nodePainter, parse
         parsegraph_ArrayList_clear(nodePainter->_textures);
     }
 
-    parsegraph_die("WHAT?");
+    parsegraph_die("NOT YET IMPLEMENTED?");
     glClearColor(parsegraph_BACKGROUND_COLOR[0],
     parsegraph_BACKGROUND_COLOR[1],
     parsegraph_BACKGROUND_COLOR[2],
