@@ -384,8 +384,8 @@ void parsegraph_GlyphPainter_clear(parsegraph_GlyphPainter* painter)
 
 void parsegraph_GlyphPainter_render(parsegraph_GlyphPainter* painter, float* world, float scale)
 {
-    //parsegraph_log("scale=%f\n", scale);
-    //parsegraph_log("Max scale of a single largest glyph would be: %f\n", (painter->_maxSize*scale));
+    parsegraph_log("scale=%f\n", scale);
+    parsegraph_log("Max scale of a single largest glyph would be: %f\n", (painter->_maxSize*scale));
     if(scale < .1 && painter->_maxSize*scale < 2) {
         return;
     }
