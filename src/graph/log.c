@@ -311,17 +311,9 @@ void parsegraph_logLeavef(const char* fmt, ...)
     }
     va_list ap;
     va_start(ap, fmt);
-    char buf[parsegraph_LOGBUFSIZE];
-    int true_written = vsnprintf(buf, sizeof buf, fmt, ap);
+    parsegraph_logMessagevf(fmt, ap);
     va_end(ap);
-    if(true_written >= sizeof buf) {
-        buf[parsegraph_LOGBUFSIZE - 5] = '.';
-        buf[parsegraph_LOGBUFSIZE - 4] = '.';
-        buf[parsegraph_LOGBUFSIZE - 3] = '.';
-        buf[parsegraph_LOGBUFSIZE - 2] = '\n';
-        buf[parsegraph_LOGBUFSIZE - 1] = 0;
-    }
-    parsegraph_logAction("<", "", buf);
+    parsegraph_logLeave();
 }
 
 void parsegraph_logEnterf(const char* fmt, ...)
