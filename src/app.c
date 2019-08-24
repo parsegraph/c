@@ -342,6 +342,7 @@ void parsegraph_Application_scheduleRender(parsegraph_Application* app)
     if(app->_renderTimer) {
         parsegraph_AnimationTimer_schedule(app->_renderTimer);
     }
+    parsegraph_Surface_scheduleRepaint(app->_surface);
 }
 
 const char* parsegraph_Application_cameraName(parsegraph_Application* app)
