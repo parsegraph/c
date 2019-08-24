@@ -46,20 +46,22 @@
 #include <stdarg.h>
 #include "graph/log.h"
 #include "graph/Surface.h"
+#include "app.h"
 #include "graph/Input.h"
 #include "die.h"
 #include "timing.h"
 #include <apr_hash.h>
+#include <GL/glu.h>
 
 // Whether curses is actually used.
-#define parsegraph_NCURSES
+//#define parsegraph_NCURSES
 
 // Whether the page is actually flipped. Comment out to debug graphical hangups.
 #define parsegraph_DUMMY_GRAPHICS
 
 // These functions must be defined by applications; they are not defined here.
-parsegraph_Surface* parsegraph_init(void*, int, int, int, const char* const*);
-void parsegraph_stop(parsegraph_Surface* surf);
+void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_Node* root);
+void parsegraph_stop(parsegraph_Application* surf);
 
 static volatile int quit = 0;
 
@@ -95,7 +97,7 @@ typedef struct parsegraph_Display parsegraph_Display;
 
 struct parsegraph_Environment {
 apr_pool_t* pool;
-parsegraph_Surface* surface;
+parsegraph_Application* app;
 int needInit;
 int needToFocus;
 int needToBlur;
@@ -337,9 +339,9 @@ parsegraph_Environment* parsegraph_Environment_new(int argc, const char* const* 
     env->pool = pool;
     env->argc = argc;
     env->argv = argv;
-    env->surface = 0;
-    env->input = 0;
+    env->app = 0;
     env->needInit = 1;
+    env->input = 0;
     env->keyNames = 0;
 
     env->needToFocus = 0;
@@ -373,16 +375,19 @@ parsegraph_Environment* parsegraph_Environment_new(int argc, const char* const* 
     }
 
     // Create the graphics context
-    env->dpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_MESA, env->gbm, NULL);
+    /*env->dpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_MESA, env->gbm, NULL);
+    */
+    env->dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if(env->dpy == EGL_NO_DISPLAY) {
         parsegraph_die("eglGetDisplay() failed with EGL_NO_DISPLAY");
     }
+
     EGLint major, minor;
     if(!eglInitialize(env->dpy, &major, &minor)) {
         parsegraph_die("eglInitialize() failed");
     }
-    //const char* ver = eglQueryString(env->dpy, EGL_VERSION);
-    //printf("EGL_VERSION = %s\n", ver);
+    const char* ver = eglQueryString(env->dpy, EGL_VENDOR);
+    //parsegraph_die("EGL_VERSION = %s\n", ver);
 
     const char* extensions = eglQueryString(env->dpy, EGL_EXTENSIONS);
     //printf("EGL_EXTENSIONS: %s\n", extensions);
@@ -395,7 +400,7 @@ parsegraph_Environment* parsegraph_Environment_new(int argc, const char* const* 
     };
     EGLConfig config;
     const EGLint config_attribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
         EGL_RED_SIZE, 1,
         EGL_GREEN_SIZE, 1,
         EGL_BLUE_SIZE, 1,
@@ -409,7 +414,7 @@ parsegraph_Environment* parsegraph_Environment_new(int argc, const char* const* 
     if(!eglChooseConfig(env->dpy, config_attribs, &config, 1, &n)) {
         parsegraph_die("Failed to select EGL config");
     }
-    env->ctx = eglCreateContext(env->dpy, config, EGL_NO_CONTEXT, context_attribs);
+    env->ctx = eglCreateContext(env->dpy, config, EGL_NO_CONTEXT, 0);
     if(env->ctx == NULL) {
         const char* ename = get_egl_error(eglGetError());
         if(ename) {
@@ -501,10 +506,6 @@ void parsegraph_Display_destroy(parsegraph_Display* disp)
 
 void parsegraph_Environment_destroy(parsegraph_Environment* env)
 {
-    if(env->surface) {
-        parsegraph_stop(env->surface);
-    }
-
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     eglMakeCurrent(env->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -536,39 +537,6 @@ void parsegraph_Surface_scheduleRepaint(parsegraph_Surface* surface)
     }
 }
 
-void parsegraph_Surface_install(parsegraph_Surface* surface, parsegraph_Input* givenInput)
-{
-    parsegraph_Environment* env = surface->peer;
-    if(env->input) {
-        parsegraph_Surface_uninstall(surface);
-        return;
-    }
-    env->input = givenInput;
-    env->needToBlur = 0;
-    env->needToFocus = 1;
-
-    float defaultScale = .25;
-    parsegraph_Camera* cam = givenInput->_camera;
-    //parsegraph_Camera_project(cam);
-    parsegraph_Camera_setDefaultOrigin(cam,
-        parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
-        parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
-    );
-    parsegraph_Camera_setScale(cam, defaultScale);
-    givenInput->cursorScreenPos[0] = parsegraph_Surface_getWidth(surface) / 2;
-    givenInput->cursorScreenPos[1] = parsegraph_Surface_getHeight(surface) / 2;
-}
-
-void parsegraph_Surface_uninstall(parsegraph_Surface* surface)
-{
-    parsegraph_Environment* env = surface->peer;
-    if(env && env->input) {
-        env->needToBlur = 0;
-        env->needToFocus = 0;
-        env->input = 0;
-    }
-}
-
 static void
 render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, int height, parsegraph_Framebuffer* fb)
 {
@@ -595,6 +563,8 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
 
     //parsegraph_log("Running animation callbacks\n");
     if(fb->needsRender) {
+        parsegraph_die("%s %s %s %s\n", glGetString(GL_RENDERER), glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_EXTENSIONS));
+
         glBindFramebuffer(GL_FRAMEBUFFER, fb->fb);
         //glFramebufferRenderbuffer(
             //GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fb->color_rb
@@ -606,9 +576,12 @@ render_stuff(parsegraph_Environment* env, parsegraph_Display* disp, int width, i
         glViewport(0, 0, width, height);
         glClearColor(disp->color[0], disp->color[1], disp->color[2], 1);
         glClear(GL_COLOR_BUFFER_BIT);
-        if(env->surface) {
-            parsegraph_Surface_runAnimationCallbacks(env->surface, elapsed);
-            parsegraph_Surface_render(env->surface, 0);
+        GLenum err;
+        if(GL_NO_ERROR != (err = glGetError())) {
+            parsegraph_die("Failed to set viewport and clear GL surface: %s\n", gluErrorString(err));
+        }
+        if(!env->needInit) {
+            parsegraph_Surface_runAnimationCallbacks(parsegraph_Application_surface(env->app), elapsed);
         }
         glFlush();
         //glFinish();
@@ -762,8 +735,11 @@ void process_input(parsegraph_Environment* env)
 {
     //parsegraph_log("Input had an event.\n");
     struct libinput* libinput = env->libinput;
+    if(env->needInit) {
+        return;
+    }
     parsegraph_Input* input = env->input;
-    parsegraph_Surface* surface = env->surface;
+    parsegraph_Surface* surface = parsegraph_Application_surface(env->app);
 
     libinput_dispatch(libinput);
     struct libinput_event *ev;
@@ -889,20 +865,55 @@ void process_input(parsegraph_Environment* env)
     }
 }
 
+static void onClose(void* data, parsegraph_Application* app)
+{
+    parsegraph_stop(app);
+}
+
+static void onInit(void* data, parsegraph_Application* app, parsegraph_Node* root)
+{
+    parsegraph_Display* disp = data;
+    parsegraph_Environment* env = disp->env;
+    parsegraph_Surface* surface = parsegraph_Application_surface(app);
+    parsegraph_Surface_setDisplaySize(surface, disp->width, disp->height);
+    parsegraph_Application_setOnClose(app, onClose, disp);
+    parsegraph_Input* input = parsegraph_Application_input(app);
+    env->input = input;
+
+    float defaultScale = .25;
+    parsegraph_Camera* cam = input->_camera;
+    //parsegraph_Camera_project(cam);
+    parsegraph_Camera_setDefaultOrigin(cam,
+        parsegraph_Surface_getWidth(surface) / (2 * defaultScale),
+        parsegraph_Surface_getHeight(surface) / (2 * defaultScale)
+    );
+    parsegraph_Camera_setScale(cam, defaultScale);
+    input->cursorScreenPos[0] = parsegraph_Camera_x(cam);
+    input->cursorScreenPos[1] = parsegraph_Camera_y(cam);
+
+    //parsegraph_Input_setCursorShown(input, 0);
+    parsegraph_init(data, app, root);
+    env->needInit = 0;
+}
+
 void draw_dev(parsegraph_Display* disp)
 {
     parsegraph_Environment* env = disp->env;
     parsegraph_Framebuffer* fb = &disp->framebuffers[disp->front_fb^1];
     //parsegraph_log("Using framebuffer %d\n", fb->fb);
 
-    if(env->needInit) {
-        env->surface = parsegraph_init(env, disp->width, disp->height, env->argc, env->argv);
-        env->needInit = 0;
+    if(!env->app) {
+        env->app = parsegraph_Application_new(env->pool);
+        parsegraph_ArrayList* args = parsegraph_ArrayList_new(env->pool);
+        for(int i = 0; i < env->argc; ++i) {
+            parsegraph_ArrayList_push(args, (void*)env->argv[i]);
+        }
+        parsegraph_Application_start(env->app, env, disp->width, disp->height, args, onInit, disp);
     }
 
     // Actually render this environment.
-    if(env->surface) {
-        parsegraph_Surface_setDisplaySize(env->surface, disp->width, disp->height);
+    if(env->needInit) {
+        parsegraph_Surface_setDisplaySize(parsegraph_Application_surface(env->app), disp->width, disp->height);
     }
     render_stuff(env, disp, disp->width, disp->height, fb);
 
@@ -960,12 +971,13 @@ void loop(parsegraph_Environment* env)
         while(select(maxfd + 1, &rfds, NULL, NULL, NULL) == -1) {
             // Wait for events from DRM or libinput.
         }
-        if(env->surface && FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
-            if(0 != pthread_mutex_lock(&env->surface->lock)) {
+        if(!env->needInit && FD_ISSET(libinput_get_fd(env->libinput), &rfds)) {
+            parsegraph_Surface* surface = parsegraph_Application_surface(env->app);
+            if(0 != pthread_mutex_lock(&surface->lock)) {
                 parsegraph_die("Failed to lock surface to add animation callback");
             }
             process_input(env);
-            if(0 != pthread_mutex_unlock(&env->surface->lock)) {
+            if(0 != pthread_mutex_unlock(&surface->lock)) {
                 parsegraph_die("Failed to unlock surface to add animation callback");
             }
         }
@@ -1039,6 +1051,7 @@ int main(int argc, const char * const *argv)
         parsegraph_die("This program must be run as root.");
     }
 
+    parsegraph_stopLog();
     if(!parsegraph_connectLog("localhost", "28122")) {
         parsegraph_stopLog();
     }
