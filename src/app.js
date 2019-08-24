@@ -189,6 +189,7 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
     }, this);
     this._graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
         if(affectedPaint) {
+            //console.log(new Error("Affected paint"));
             this._graph.scheduleRepaint();
         }
         this.scheduleRender();
@@ -239,7 +240,7 @@ parsegraph_Application.prototype.onRender = function() {
     if(!inputChangedScene) {
         inputChangedScene = this._renderedMouse !== graph.input().mouseVersion();
         if(inputChangedScene) {
-            //console.log("Mouse changed scene");
+            //console.log("Mouse changed scene: " + this._renderedMouse + " vs " + graph.input().mouseVersion());
         }
     }
     if(!inputChangedScene) {
@@ -252,6 +253,7 @@ parsegraph_Application.prototype.onRender = function() {
         surface.paint(interval);
     }
     if(graph.input().UpdateRepeatedly() || inputChangedScene) {
+        //console.log("Rendering surface");
         surface.render();
         this._renderedMouse = graph.input().mouseVersion();
     }
