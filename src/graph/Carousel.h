@@ -38,7 +38,7 @@ float _carouselX;
 float _carouselY;
 float _carouselSize;
 int _showCarousel;
-int _showScale;
+float _showScale;
 int _updateRepeatedly;
 int _carouselPaintingDirty;
 void(*onScheduleRepaint)(void*);
@@ -70,7 +70,7 @@ int parsegraph_Carousel_removeFromCarousel(parsegraph_Carousel* carousel, parseg
 int parsegraph_Carousel_updateRepeatedly(parsegraph_Carousel* carousel);
 int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, float y, int asDown);
 int parsegraph_Carousel_mouseOverCarousel(parsegraph_Carousel* carousel, float x, float y);
-int parsegraph_Carousel_showScale(parsegraph_Carousel* carousel);
+float parsegraph_Carousel_showScale(parsegraph_Carousel* carousel);
 void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel);
 void parsegraph_Carousel_setOnScheduleRepaint(parsegraph_Carousel* carousel, void(*func)(void*), void* thisArg);
 void parsegraph_Carousel_scheduleCarouselRepaint(parsegraph_Carousel* carousel);
