@@ -1,7 +1,7 @@
 #include "app.h"
 #include "graph/initialize.h"
 #include "graph/Input.h"
-#include "parsegraph_LoginWidget.h"
+#include "graph/Color.h"
 #include "die.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,13 +11,12 @@
 #include <unistd.h>
 #include "graph/log.h"
 
-parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool, const char* guid)
+parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool)
 {
     parsegraph_Application* app;
     app = apr_palloc(pool, sizeof(*app));
     app->pool = pool;
     app->_cameraName = "parsegraph_login_camera";
-    app->_guid = guid ? guid : "Rainback";
     app->_graph = 0;
 
     app->_idleFunc = 0;
@@ -71,7 +70,7 @@ parsegraph_ArrayList* parsegraph_Application_args(parsegraph_Application* app)
     return app->_arguments;
 }
 
-void parsegraph_Application_start(parsegraph_Application* app, void* peer, int w, int h, parsegraph_ArrayList* args, void(*initFunc)(void*, parsegraph_Application*, parsegraph_UserLogin*, parsegraph_Node*), void* initFuncThisArg)
+void parsegraph_Application_start(parsegraph_Application* app, void* peer, int w, int h, parsegraph_ArrayList* args, void(*initFunc)(void*, parsegraph_Application*, parsegraph_Node*), void* initFuncThisArg)
 {
     // Always immediately initialize constants for use by application objects.
     parsegraph_initialize(app->pool, app->_mathMode);
@@ -103,47 +102,6 @@ void parsegraph_Application_start(parsegraph_Application* app, void* peer, int w
     parsegraph_Unicode_setOnLoad(app->_unicode, onUnicodeLoaded, app);
     // Export the Unicode instance.
     parsegraph_Unicode_load(app->_unicode, 0);
-}
-
-void parsegraph_Application_onLogout(parsegraph_Application* app)
-{
-    //parsegraph_log("onLogout\n");
-    parsegraph_Node_disconnectNode(app->_loginNode, parsegraph_DOWNWARD);
-    app->_userLogin = 0;
-    app->_loginNode = 0;
-}
-
-void parsegraph_Application_onLogin(parsegraph_Application* app, parsegraph_UserLogin* userLogin, parsegraph_Node* loginNode)
-{
-    app->_userLogin = userLogin;
-    app->_loginNode = loginNode;
-
-    if(!app->_initFunc) {
-        return;
-    }
-    app->_initFunc(app->_initFuncThisArg, app, userLogin, loginNode);
-    parsegraph_Application_scheduleRepaint(app);
-}
-
-const char* parsegraph_Application_username(parsegraph_Application* app)
-{
-    if(!app->_userLogin) {
-        return 0;
-    }
-    return app->_userLogin->username;
-}
-
-static void onLogout(void* data, parsegraph_LoginResult* res, parsegraph_Node* node)
-{
-    parsegraph_Application_onLogout(data);
-}
-
-static void onLogin(void* data, parsegraph_LoginResult* res, parsegraph_UserLogin* userLogin, parsegraph_Node* node)
-{
-    parsegraph_Application* app = data;
-    parsegraph_log("Time till authenticated: %d", parsegraph_elapsed(&app->_appStartTime));
-    parsegraph_Application_onLogin(app, userLogin, node);
-    parsegraph_LoginWidget_setLogoutListener(app->_loginWidget, onLogout, app);
 }
 
 static void onRender(void* data, float elapsed)
@@ -201,18 +159,13 @@ void parsegraph_Application_onUnicodeLoaded(parsegraph_Application* app)
         parsegraph_GlyphAtlas_setUnicode(app->_glyphAtlas, uni);
     }
 
-    app->_loginWidget = parsegraph_LoginWidget_new(surface, graph);
-    parsegraph_LoginWidget_setTitle(app->_loginWidget, app->_guid);
-    parsegraph_Node* loginRoot = parsegraph_LoginWidget_root(app->_loginWidget);
-    parsegraph_World_plot(parsegraph_Graph_world(graph), loginRoot, 0, 0, 1);
-    parsegraph_LoginWidget_setLoginListener(app->_loginWidget, onLogin, app);
-
-    if(app->_cameraName) {
-        parsegraph_Camera_restoreState(parsegraph_Graph_camera(graph), &app->_cameraState);
-    }
-    else {
-        parsegraph_Node_showInCamera(loginRoot, parsegraph_Graph_camera(graph), 0);
-    }
+    app->_root = parsegraph_Node_new(app->pool, parsegraph_BLOCK, 0, 0);
+    parsegraph_Style* rootStyle = parsegraph_copyStyle(app->pool, parsegraph_BLOCK);
+    parsegraph_Color_setRGBA(rootStyle->backgroundColor, 1, 1, 1, 1);
+    parsegraph_Color_setRGBA(rootStyle->borderColor, .7, .7, .7, 1);
+    parsegraph_Node_setBlockStyle(app->_root, rootStyle);
+    parsegraph_Node_setLabelUTF8(app->_root, "Rainback", -1, app->_glyphAtlas);
+    parsegraph_World_plot(parsegraph_Graph_world(graph), app->_root, 0, 0, 1);
 
     // Schedule the repaint.
     app->_renderTimer = parsegraph_AnimationTimer_new(app->_surface);
@@ -224,7 +177,19 @@ void parsegraph_Application_onUnicodeLoaded(parsegraph_Application* app)
     parsegraph_Application_scheduleRender(app);
     parsegraph_Graph_setOnScheduleRepaint(app->_graph, onScheduleRepaint, app);
     parsegraph_Carousel_setOnScheduleRepaint(app->_graph->_carousel, onScheduleRepaint, app);
-    parsegraph_LoginWidget_authenticate(app->_loginWidget);
+
+    if(app->_initFunc) {
+        app->_initFunc(app->_initFuncThisArg, app, app->_root);
+    }
+
+    if(app->_cameraName) {
+        parsegraph_Camera_restoreState(parsegraph_Graph_camera(graph), &app->_cameraState);
+    }
+    else {
+        parsegraph_Node_showInCamera(app->_root, parsegraph_Graph_camera(graph), 0);
+    }
+
+    parsegraph_Application_scheduleRepaint(app);
 }
 
 parsegraph_Input* parsegraph_Application_input(parsegraph_Application* app)
@@ -429,9 +394,4 @@ void parsegraph_Application_close(parsegraph_Application* app)
         app->_closeFunc(app->_closeFuncThisArg, app);
     }
     parsegraph_ArrayList_destroy(app->_arguments);
-}
-
-const char* parsegraph_Application_guid(parsegraph_Application* app)
-{
-    return app->_guid;
 }

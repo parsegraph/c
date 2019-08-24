@@ -7,7 +7,7 @@ extern "C" {
 #include <apr_strings.h>
 #include "app.h"
 
-void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode);
+void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_Node* root);
 void parsegraph_stop(parsegraph_Application* app);
 }
 
@@ -20,7 +20,7 @@ void parsegraph_stop(parsegraph_Application* app);
 
 static apr_pool_t* pool;
 
-static void onInit(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode);
+static void onInit(void* data, parsegraph_Application* app, parsegraph_Node* root);
 
 class MainWindow : public QOpenGLWindow {
 
@@ -225,7 +225,7 @@ virtual void initializeGL() {
     for(int i = 0; i < qtArgs.count(); ++i) {
         parsegraph_ArrayList_push(argumentList, apr_pstrdup(pool, qtArgs[i].toUtf8().constData()));
     }
-    app = parsegraph_Application_new(pool, 0);
+    app = parsegraph_Application_new(pool);
     parsegraph_Application_start(app, this, w, h, argumentList, onInit, 0);
     //parsegraph_log("Window size: %d, %d\n", w, h);
     frameElapsedTime.start();
@@ -259,7 +259,7 @@ static void onClose(void* data, parsegraph_Application* app)
     parsegraph_stop(app);
 }
 
-static void onInit(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode)
+static void onInit(void* data, parsegraph_Application* app, parsegraph_Node* root)
 {
     parsegraph_Surface* surface = parsegraph_Application_surface(app);
     MainWindow* win = static_cast<MainWindow*>(surface->peer);
@@ -283,7 +283,7 @@ static void onInit(void* data, parsegraph_Application* app, parsegraph_UserLogin
     input->cursorScreenPos[1] = parsegraph_Camera_y(cam);
 
     parsegraph_Input_setCursorShown(input, 0);
-    parsegraph_init(data, app, login, loginNode);
+    parsegraph_init(data, app, root);
 }
 
 extern "C" {

@@ -14,13 +14,13 @@ struct ProportionWidget {
 apr_pool_t* pool;
 } widget;
 
-void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_UserLogin* login, parsegraph_Node* loginNode)
+void parsegraph_init(void* data, parsegraph_Application* app, parsegraph_Node* root)
 {
     apr_pool_create(&widget.pool, 0);
     parsegraph_Graph* graph = parsegraph_Application_graph(app);
     int COUNT = 1;
     parsegraph_Node* plot = showProportionTest(graph, COUNT);
-    parsegraph_Node_connectNode(loginNode, parsegraph_DOWNWARD, plot);
+    parsegraph_Node_connectNode(root, parsegraph_DOWNWARD, plot);
 }
 
 void parsegraph_stop(parsegraph_Application* app)
