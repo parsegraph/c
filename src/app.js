@@ -165,23 +165,20 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
         }
         else {
             this._world = this._initFunc.call(this._initFuncThisArg, this, this._root)
-            if(this._root.hasNode(parsegraph_DOWNWARD)) {
-                // Creator attached node.
-                return;
-            }
-            var worldNode = this._world;
-            while(typeof worldNode.node === "function") {
-                worldNode = worldNode.node();
-            }
-            if(worldNode.isRoot()) {
-                //console.log("Connecting " + this._root + " to " + worldNode);
-                this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+            if(!this._root.hasAnyNodes()) {
+                var worldNode = this._world;
+                while(typeof worldNode.node === "function") {
+                    worldNode = worldNode.node();
+                }
+                if(worldNode.isRoot()) {
+                    //console.log("Connecting " + this._root + " to " + worldNode);
+                    this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+                }
             }
         }
     }
 
     this.scheduleRepaint();
-    this.scheduleRender();
 };
 
 parsegraph_Application.prototype.onRender = function() {
