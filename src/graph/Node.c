@@ -387,7 +387,7 @@ int parsegraph_Node_needsCommit(parsegraph_Node* node)
 
 int parsegraph_Node_needsPosition(parsegraph_Node* node)
 {
-    return parsegraph_Node_needsCommit(node) || node->_hasGroupPos;
+    return parsegraph_Node_needsCommit(node) || !node->_hasGroupPos;
 }
 
 float parsegraph_Node_absoluteX(parsegraph_Node* node)
