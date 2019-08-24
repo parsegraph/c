@@ -392,7 +392,6 @@ parsegraph_Node.prototype.removeFromLayout = function(inDirection)
     if(!disconnected) {
         return;
     }
-    var layoutAfter = this.findLaterLayoutSibling(inDirection);
     var layoutBefore = this.findEarlierLayoutSibling(inDirection);
     var earliestDisc = disconnected.findLayoutHead(disconnected);
 
