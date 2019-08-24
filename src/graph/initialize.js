@@ -50,6 +50,9 @@ function parsegraph_initialize(mathMode) {
     //console.log("Initializing parsegraph. Math mode: ", mathMode);
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
+    // How long the carousel takes, in milliseconds, to open.
+    parsegraph_CAROUSEL_SHOW_DURATION = 200;
+
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;
 

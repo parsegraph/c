@@ -4,6 +4,7 @@
 #include "Node.h"
 #include <stdlib.h>
 
+int parsegraph_CAROUSEL_SHOW_DURATION;
 int parsegraph_NATURAL_GROUP_SIZE;
 struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS = 0;
 float parsegraph_MIN_BLOCK_HEIGHT;
@@ -71,6 +72,9 @@ struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool)
 void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 {
     parsegraph_NATURAL_GROUP_SIZE = 250;
+
+    // How long the carousel takes, in milliseconds, to open.
+    parsegraph_CAROUSEL_SHOW_DURATION = 200;
 
     parsegraph_TOUCH_SENSITIVITY = 1;
     parsegraph_MOUSE_SENSITIVITY = 1;

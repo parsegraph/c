@@ -27,6 +27,8 @@ struct parsegraph_Style {
 };
 typedef struct parsegraph_Style parsegraph_Style;
 
+extern int parsegraph_CAROUSEL_SHOW_DURATION;
+
 extern struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS;
 extern struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool);
 parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int nodeType);

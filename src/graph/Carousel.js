@@ -148,7 +148,7 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown)
 
     if(this._showTime) {
         var ms = new Date().getTime() - this._showTime.getTime();
-        if(ms < 200) {
+        if(ms < parsegraph_CAROUSEL_SHOW_DURATION) {
             // Ignore events that occur so early.
             return true;
         }
@@ -276,7 +276,7 @@ parsegraph_Carousel.prototype.arrangeCarousel = function()
 
     var now = new Date();
     // Milliseconds
-    var showDuration = 200;
+    var showDuration = parsegraph_CAROUSEL_SHOW_DURATION;
     if(this._showTime) {
         var ms = now.getTime() - this._showTime.getTime();
         if(ms < showDuration) {

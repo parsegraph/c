@@ -190,7 +190,7 @@ int parsegraph_Carousel_clickCarousel(parsegraph_Carousel* carousel, float x, fl
     if(carousel->_showTime.tv_sec > 0) {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
-        if(parsegraph_timediffMs(&ts, &carousel->_showTime) < 200) {
+        if(parsegraph_timediffMs(&ts, &carousel->_showTime) < parsegraph_CAROUSEL_SHOW_DURATION) {
             // Ignore events that occur so early.
             return 1;
         }
@@ -314,7 +314,7 @@ void parsegraph_Carousel_arrangeCarousel(parsegraph_Carousel* carousel)
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     // Milliseconds
-    float showDuration = 200;
+    float showDuration = parsegraph_CAROUSEL_SHOW_DURATION;
     if(carousel->_showTime.tv_sec > 0) {
         float ms = parsegraph_timediffMs(&now, &carousel->_showTime);
         if(ms < showDuration) {
