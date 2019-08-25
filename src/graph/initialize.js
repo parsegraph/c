@@ -60,7 +60,7 @@ function parsegraph_initialize(mathMode) {
     parsegraph_MOUSE_SENSITIVITY = 1;
 
     // How long painting is done, and optionally, how fast idle loops will render.
-    parsegraph_INTERVAL = 10;
+    parsegraph_INTERVAL = 15;
 
     // How often the idle timer is run when the application is not being rendered.
     parsegraph_BACKGROUND_INTERVAL = parsegraph_INTERVAL*4;
@@ -75,9 +75,9 @@ function parsegraph_initialize(mathMode) {
     parsegraph_RIGHT_TO_LEFT = false;
 
     // How many milliseconds to commit a layout if an input event is detected.
-    parsegraph_INPUT_LAYOUT_TIME = 500;
+    parsegraph_INPUT_LAYOUT_TIME = parsegraph_INTERVAL;
 
-    parsegraph_IDLE_MARGIN = 0;
+    parsegraph_IDLE_MARGIN = 1;
 
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;
