@@ -2302,7 +2302,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             }
 
             // Layout that node.
-            if(layoutSingle.call(this, firstAxisDirection, false)) {
+            if(layoutSingle.call(this, firstAxisDirection, true)) {
                 this._layoutState = parsegraph_NEEDS_COMMIT;
                 return true;
             }
