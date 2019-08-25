@@ -13,6 +13,22 @@ function parsegraph_createRect(x, y, width, height)
     return new parsegraph_Rect(x, y, width, height);
 }
 
+parsegraph_Rect.prototype.isNaN = function()
+{
+    return Number.isNaN(this._x)
+        || Number.isNaN(this._y)
+        || Number.isNaN(this._width)
+        || Number.isNaN(this._height);
+};
+
+parsegraph_Rect.prototype.toNaN = function()
+{
+    this._x = NaN;
+    this._y = NaN;
+    this._width = NaN;
+    this._height = NaN;
+};
+
 parsegraph_Rect.prototype.x = function()
 {
     return this._x;
@@ -142,6 +158,13 @@ parsegraph_Rect_Tests.addTest("hMax", function() {
 
 parsegraph_Rect.prototype.include = function(bx, by, bwidth, bheight)
 {
+    if(this.isNaN()) {
+        this._x = bx;
+        this._y = bx;
+        this._width = bwidth;
+        this._height = bheight;
+        return;
+    }
     var ax = this._x;
     var ay = this._y;
     var awidth = this._width;

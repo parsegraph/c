@@ -350,6 +350,9 @@ parsegraph_Camera.prototype.project = function()
 
 parsegraph_Camera.prototype.containsAny = function(s)
 {
+    if(s.isNaN()) {
+        return false;
+    }
     var camera = this;
     return parsegraph_containsAny(
         -camera.x() + camera.width()/(camera.scale()*2),
@@ -365,6 +368,9 @@ parsegraph_Camera.prototype.containsAny = function(s)
 
 parsegraph_Camera.prototype.containsAll = function(s)
 {
+    if(s.isNaN()) {
+        return false;
+    }
     var camera = this;
     return parsegraph_containsAll(
         -camera.x() + camera.width()/(camera.scale()*2),
