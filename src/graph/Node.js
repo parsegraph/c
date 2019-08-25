@@ -2863,6 +2863,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                     node = node._layoutPrev;
                     if(pastTime(node._id)) {
                         //console.log("Ran out of time");
+                        paintGroup._hasGroupPos = false;
                         return commitLayoutLoop;
                     }
                 } while(node !== root);
