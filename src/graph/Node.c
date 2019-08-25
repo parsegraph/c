@@ -3043,6 +3043,7 @@ int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
                 cl->node = cl->node->_layoutPrev;
                 if(pastTime(cl, &i, cl->node->_id)) {
                     //parsegraph_log("Ran out of time\n");
+                    cl->paintGroup->_hasGroupPos = 0;
                     return 1;
                 }
             } while(cl->node != cl->root);

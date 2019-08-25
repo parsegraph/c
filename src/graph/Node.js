@@ -66,9 +66,9 @@ function parsegraph_Node(newType, fromNode, parentDirection)
     this._absoluteYPos = null;
     this._absoluteScale = null;
     this._hasGroupPos = false;
-    this._groupXPos = null;
-    this._groupYPos = null;
-    this._groupScale = null;
+    this._groupXPos = NaN;
+    this._groupYPos = NaN;
+    this._groupScale = NaN;
     this._layoutPrev = this;
     this._layoutNext = this;
 
@@ -355,12 +355,17 @@ parsegraph_Node.prototype.commitGroupPos = function()
         this._groupXPos += node.x() * parentScale;
         this._groupYPos += node.y() * parentScale;
     }
+
+    this._hasGroupPos = true;
 };
 
 parsegraph_Node.prototype.groupX = function()
 {
     if(this.findPaintGroup().needsPosition()) {
         this.commitLayoutIteratively();
+    }
+    if(this._groupXPos === null || Number.isNaN(this._groupXPos)) {
+        throw new Error("Group X position must not be " + this._groupXPos);
     }
     return this._groupXPos;
 };
@@ -2922,7 +2927,7 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 
         // Set the needs layout flag.
         node._layoutState = parsegraph_NEEDS_COMMIT;
-        node._groupXPos = null;
+        node._hasGroupPos = false;
         node._currentPaintGroup = null;
 
         node.findPaintGroup().markDirty();
