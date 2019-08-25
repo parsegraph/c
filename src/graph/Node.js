@@ -3224,6 +3224,27 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
     return cleanlyRendered;
 };
 
+parsegraph_Node.prototype.getHeaviestNode = function()
+{
+    var node = this;
+    var heaviest = 0;
+    var heaviestNode = this;
+    do {
+        if(node._extended) {
+            var painter = node._extended.painter;
+            if(painter) {
+                var nodeWeight = painter.weight();
+                if(heaviest < nodeWeight) {
+                    heaviestNode = node;
+                    heaviest = nodeWeight;
+                }
+            }
+        }
+        node = node._paintGroupNext;
+    } while(node !== this);
+    return heaviestNode;
+}
+
 parsegraph_Node.prototype.render = function(world, camera)
 {
     if(!this.localPaintGroup()) {
