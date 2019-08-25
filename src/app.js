@@ -304,7 +304,3 @@ parsegraph_Application.prototype.setCameraName = function(name) {
 parsegraph_Application.prototype.container = function() {
     return this._container;
 };
-
-parsegraph_Application.prototype.guid = function() {
-    return this._guid;
-};
