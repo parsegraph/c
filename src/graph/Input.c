@@ -233,7 +233,7 @@ void parsegraph_Input_mousemove(parsegraph_Input* input, float x, float y, int i
 
     // Just a mouse moving over the (focused) canvas.
     int overClickable;
-    if(!parsegraph_World_paint(parsegraph_Graph_world(input->_graph), parsegraph_INPUT_LAYOUT_TIME)) {
+    if(!parsegraph_World_commitLayout(parsegraph_Graph_world(input->_graph), parsegraph_INPUT_LAYOUT_TIME)) {
         overClickable = 1;
     }
     else {

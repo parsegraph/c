@@ -2968,6 +2968,9 @@ static int pastTime(parsegraph_CommitLayoutTraversal* cl, int* i, int id)
 
 int parsegraph_Node_continueCommitLayout(parsegraph_CommitLayoutTraversal* cl)
 {
+    if(cl->timeout <= 0) {
+        return 1;
+    }
     clock_gettime(CLOCK_REALTIME, &cl->startTime);
     int i = 0;
     // Commit layout for all nodes.
@@ -3070,10 +3073,6 @@ int parsegraph_Node_commitLayoutIteratively(parsegraph_Node* node, parsegraph_Co
 {
     if(!parsegraph_Node_isRoot(node)) {
         return parsegraph_Node_commitLayoutIteratively(parsegraph_Node_root(node), cl);
-    }
-    // Avoid needless work if possible.
-    if(node->_layoutState == parsegraph_COMMITTED_LAYOUT) {
-        return 0;
     }
 
     if(!cl) {
