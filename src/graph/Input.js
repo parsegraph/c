@@ -480,7 +480,7 @@ function parsegraph_Input(graph, camera)
 
         // Just a mouse moving over the (focused) canvas.
         var overClickable;
-        if(!graph.world().paint(parsegraph_INPUT_LAYOUT_TIME)) {
+        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
             //console.log("Couldn't commit layout in time");
             overClickable = 1;
         }
