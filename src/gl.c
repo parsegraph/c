@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "graph/log.h"
+#include "graph/initialize.h"
 #include "die.h"
 
 GLuint parsegraph_compileProgram(apr_hash_t* shaders, const char* shaderName, const char* vertexShader, const char* fragShader)
@@ -90,6 +91,13 @@ GLuint compileShader(const char* shaderSource, GLenum shaderType)
  
   return shader;
 
+}
+
+int parsegraph_getTextureSize()
+{
+    int rv;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &rv);
+    return rv > parsegraph_MAX_TEXTURE_SIZE ? parsegraph_MAX_TEXTURE_SIZE : rv;
 }
 
 /**

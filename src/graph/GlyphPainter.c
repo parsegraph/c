@@ -245,7 +245,7 @@ void parsegraph_GlyphPageRenderer_writeVertex(parsegraph_GlyphPageRenderer* page
 void parsegraph_GlyphPageRenderer_drawGlyph(parsegraph_GlyphPageRenderer* pageRender, parsegraph_GlyphData* glyphData, float x, float y, float fontScale)
 {
     parsegraph_GlyphAtlas* glyphAtlas = parsegraph_GlyphPainter_glyphAtlas(pageRender->_painter);
-    float glTextureSize = parsegraph_getGlyphTextureSize();
+    float glTextureSize = parsegraph_getTextureSize();
     int pageTextureSize = parsegraph_GlyphAtlas_pageTextureSize(glyphAtlas);
     int pagesPerRow = glTextureSize / pageTextureSize;
     int pagesPerTexture = (int)pow(pagesPerRow, 2);
@@ -365,7 +365,7 @@ void parsegraph_GlyphPainter_drawGlyph(parsegraph_GlyphPainter* painter, parsegr
     //fprintf(stderr, "Drawing glyph with letter %c at (%f, %f), [w=%d, h=%d]\n", glyphData->letter[0], x, y, glyphData->width, glyphData->height);
     glyphData->painted = 1;
 
-    int glTextureSize = parsegraph_getGlyphTextureSize();
+    int glTextureSize = parsegraph_getTextureSize();
     int pagesPerRow = glTextureSize / parsegraph_GlyphAtlas_pageTextureSize(painter->_glyphAtlas);
     int pagesPerTexture = (int)pow(pagesPerRow, 2);
 

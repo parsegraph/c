@@ -193,7 +193,7 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fon
 {
     var gl = this._painter._gl;
     var glyphAtlas = this._painter.glyphAtlas();
-    var glTextureSize = parsegraph_getGlyphTextureSize(gl);
+    var glTextureSize = parsegraph_getTextureSize(gl);
     if(gl.isContextLost()) {
         return;
     }
@@ -309,7 +309,7 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     }
     glyphData.painted = true;
 
-    var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+    var glTextureSize = parsegraph_getTextureSize(this._gl);
     if(this._gl.isContextLost()) {
         return;
     }

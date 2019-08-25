@@ -15,6 +15,11 @@ function parsegraph_generateRectangleVertices(x, y, w, h)
     ];
 }
 
+function parsegraph_getTextureSize(gl)
+{
+    return Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE));
+}
+
 function getVerts(width, length, height)
 {
     return [

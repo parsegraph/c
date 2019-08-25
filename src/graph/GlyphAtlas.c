@@ -205,13 +205,6 @@ int parsegraph_GlyphAtlas_has(parsegraph_GlyphAtlas* glyphAtlas, const UChar* gl
     return parsegraph_GlyphAtlas_hasGlyph(glyphAtlas, glyph, len);
 }
 
-int parsegraph_getGlyphTextureSize()
-{
-    int rv;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &rv);
-    return rv > 2048 ? 2048 : rv;
-}
-
 void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
 {
     GLenum err;
@@ -229,7 +222,7 @@ void parsegraph_GlyphAtlas_update(parsegraph_GlyphAtlas* glyphAtlas)
     clock_gettime(CLOCK_MONOTONIC, &td);
     int pageTextureSize = parsegraph_GlyphAtlas_pageTextureSize(glyphAtlas);
     if(!glyphAtlas->_renderTexture) {
-        glyphAtlas->_glTextureSize = parsegraph_getGlyphTextureSize();
+        glyphAtlas->_glTextureSize = parsegraph_getTextureSize();
         glyphAtlas->_renderTexture = parsegraph_GlyphAtlas_createTexture(glyphAtlas, pageTextureSize, pageTextureSize);
     }
 
@@ -334,7 +327,7 @@ void parsegraph_GlyphAtlas_restoreProperties(parsegraph_GlyphAtlas* glyphAtlas)
 
 int parsegraph_GlyphAtlas_pageTextureSize(parsegraph_GlyphAtlas* glyphAtlas)
 {
-    return parsegraph_MAX_TEXTURE_WIDTH;
+    return parsegraph_MAX_PAGE_WIDTH;
 }
 
 void parsegraph_GlyphAtlas_font(parsegraph_GlyphAtlas* glyphAtlas, UChar* buf, size_t len)

@@ -34,7 +34,7 @@ parsegraph_NodePainter* parsegraph_NodePainter_new(apr_pool_t* ppool, parsegraph
 
     painter->_textures = parsegraph_ArrayList_new(painter->pool);
 
-    int glTextureSize = parsegraph_getGlyphTextureSize();
+    int glTextureSize = parsegraph_getTextureSize();
     float pagesPerRow = glTextureSize / parsegraph_GlyphAtlas_pageTextureSize(parsegraph_GlyphPainter_glyphAtlas(painter->_glyphPainter));
     painter->_pagesPerGlyphTexture = (int)powf(pagesPerRow, 2);
 

@@ -373,7 +373,7 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
     }
 
     if(Number.isNaN(this._pagesPerGlyphTexture)) {
-        var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+        var glTextureSize = parsegraph_getTextureSize(this._gl);
         if(this._gl.isContextLost()) {
             return;
         }

@@ -87,7 +87,6 @@ float parsegraph_GlyphAtlas_fontBaseline(parsegraph_GlyphAtlas* glyphAtlas);
 float parsegraph_GlyphAtlas_fontSize(parsegraph_GlyphAtlas* glyphAtlas);
 UChar* parsegraph_GlyphAtlas_fontName(parsegraph_GlyphAtlas* glyphAtlas);
 int parsegraph_GlyphAtlas_isNewline(parsegraph_GlyphAtlas* glyphAtlas, UChar c);
-int parsegraph_getGlyphTextureSize();
 
 parsegraph_GlyphData* parsegraph_GlyphData_new(parsegraph_GlyphPage* glyphPage, const UChar* glyph, int len, int x, int y, int width, int height, int ascent, int descent, int advance);
 

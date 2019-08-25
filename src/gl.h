@@ -47,5 +47,6 @@ float* matrixVectorMultiply4x4(apr_pool_t* pool, float* v, float* m);
 float* makeLookAt(apr_pool_t* pool, float* cameraPosition, float* target, float* up);
 void alpha_dumpLastError();
 void alpha_dumpError(GLenum err);
+int parsegraph_getTextureSize();
 
 #endif // parsegraph_gl_INCLUDED

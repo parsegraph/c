@@ -4,7 +4,8 @@
 #include "Node.h"
 #include <stdlib.h>
 
-int parsegraph_MAX_TEXTURE_WIDTH;
+int parsegraph_MAX_PAGE_WIDTH;
+int parsegraph_MAX_TEXTURE_SIZE;
 int parsegraph_CAROUSEL_SHOW_DURATION;
 int parsegraph_NATURAL_GROUP_SIZE;
 struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS = 0;
@@ -75,7 +76,10 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     // The width in pixels of a glyph atlas's page.
-    parsegraph_MAX_TEXTURE_WIDTH = 512;
+    parsegraph_MAX_PAGE_WIDTH = 512;
+
+    // The maximum single dimension of any texture.
+    parsegraph_MAX_TEXTURE_SIZE = 2048;
 
     // How long the carousel takes, in milliseconds, to open.
     parsegraph_CAROUSEL_SHOW_DURATION = 200;

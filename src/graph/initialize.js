@@ -53,6 +53,9 @@ function parsegraph_initialize(mathMode) {
     // The width in pixels of a glyph atlas's page.
     parsegraph_MAX_TEXTURE_WIDTH = 512;
 
+    // The width in pixels of a glyph atlas's page.
+    parsegraph_MAX_TEXTURE_SIZE = 2048;
+
     // How long the carousel takes, in milliseconds, to open.
     parsegraph_CAROUSEL_SHOW_DURATION = 200;
 
