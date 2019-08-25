@@ -319,7 +319,7 @@ parsegraph_Camera.prototype.projectionMatrix = function()
     // Set the viewport to match
     this.surface().gl().viewport(
         0, 0, this.surface().canvas().width, this.surface().canvas().height
-        );
+    );
 
     if(this._aspectRatio != this.surface().canvas().width / this.surface().canvas().height) {
         this._aspectRatio = this.surface().canvas().width / this.surface().canvas().height;
