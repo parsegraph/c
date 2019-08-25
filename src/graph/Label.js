@@ -255,6 +255,9 @@ parsegraph_Line.prototype.glyphCount = function(counts, pagesPerTexture)
     if(counts) {
         this._glyphs.forEach(function(glyphData) {
             var bufIndex = Math.floor(glyphData.glyphPage._id / pagesPerTexture);
+            if(Number.isNaN(bufIndex)) {
+                throw new Error("Glyph page index must not be NaN");
+            }
             if(!(bufIndex in counts)) {
                 counts[bufIndex] = 1;
             }
