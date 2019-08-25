@@ -314,8 +314,15 @@ parsegraph_NodePainter.prototype.drawScene = function(node, shaders)
     this._textures.push(p);
 };
 
+parsegraph_NodePainter.prototype.weight = function()
+{
+    return this._mass * this._consecutiveRenders;
+};
+
 parsegraph_NodePainter.prototype.initBlockBuffer = function(counts)
 {
+    this._consecutiveRenders = 0;
+    this._mass = counts.numBlocks;
     this._blockPainter.initBuffer(counts.numBlocks);
     this._extentPainter.initBuffer(counts.numExtents);
     this._glyphPainter.initBuffer(counts.numGlyphs);
@@ -660,6 +667,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
 
 parsegraph_NodePainter.prototype.render = function(world, scale)
 {
+    ++this._consecutiveRenders;
     this._gl.disable(this._gl.CULL_FACE);
     this._gl.disable(this._gl.DEPTH_TEST);
     this._gl.enable(this._gl.BLEND);
