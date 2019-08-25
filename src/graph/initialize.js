@@ -62,6 +62,9 @@ function parsegraph_initialize(mathMode) {
     // How long painting is done, and optionally, how fast idle loops will render.
     parsegraph_INTERVAL = 10;
 
+    // How often the idle timer is run when the application is not being rendered.
+    parsegraph_BACKGROUND_INTERVAL = parsegraph_INTERVAL*4;
+
     // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
     parsegraph_GOVERNOR = true;
 

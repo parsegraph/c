@@ -18,6 +18,9 @@ function parsegraph_Application()
     this._governor = null;
     this._burstIdle = null;
     this._interval = null;
+
+    this._lastRender = null;
+    this._idleTimer = null;
 }
 
 parsegraph_Application.prototype.setMathMode = function(mathMode)
@@ -132,7 +135,7 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
     }, this);
     this._graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
         if(affectedPaint) {
-            console.log(new Error("Affected paint"));
+            //console.log(new Error("Affected paint"));
             this._graph.scheduleRepaint();
         }
         this.scheduleRender();
@@ -176,12 +179,26 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
                 }
             }
         }
+        this._idleTimer = new parsegraph_IntervalTimer();
+        this._idleTimer.setDelay(parsegraph_INTERVAL);
+        this._idleTimer.setListener(this.onIdleTimer, this);
+        this._idleTimer.schedule();
     }
 
     this.scheduleRepaint();
 };
 
+parsegraph_Application.prototype.onIdleTimer = function() {
+    if(this._lastRender && parsegraph_elapsed(this._lastRender) < parsegraph_BACKGROUND_INTERVAL) {
+        // The scene has been recently rendered, so there is no need to idle.
+        return;
+    }
+    //console.log("Running app in background");
+    this.onRender();
+};
+
 parsegraph_Application.prototype.onRender = function() {
+    //console.log("onRender");
     var graph = this.graph();
     var surface = this.surface();
     if(surface.gl().isContextLost()) {
@@ -198,17 +215,6 @@ parsegraph_Application.prototype.onRender = function() {
         //console.log("Input changed scene");
     }
     if(!inputChangedScene) {
-        inputChangedScene = graph.needsRepaint();
-        if(inputChangedScene) {
-            if(graph.world().needsRepaint()) {
-                //console.log("World needs repaint");
-            }
-            else {
-                //console.log("Graph needs repaint");
-            }
-        }
-    }
-    if(!inputChangedScene) {
         inputChangedScene = this._renderedMouse !== graph.input().mouseVersion();
         if(inputChangedScene) {
             //console.log("Mouse changed scene: " + this._renderedMouse + " vs " + graph.input().mouseVersion());
@@ -217,21 +223,21 @@ parsegraph_Application.prototype.onRender = function() {
     if(!inputChangedScene) {
         if(graph.input().UpdateRepeatedly()) {
             //console.log("Input updating repeatedly");
+            inputChangedScene = true;
         }
     }
-    if(graph.needsRepaint()) {
-        surface.paint(interval);
-    }
-    if(graph.input().UpdateRepeatedly() || inputChangedScene) {
+    if(inputChangedScene) {
         //console.log("Rendering surface");
         surface.render();
         this._renderedMouse = graph.input().mouseVersion();
+        surface.paint(Math.max(0, interval - parsegraph_elapsed(startTime)));
     }
-    else {
-        //console.log("Avoid rerender");
+    else if(this.graph().needsRepaint()) {
+        surface.paint(Math.max(0, interval - 5 - parsegraph_elapsed(startTime)));
+        surface.render();
     }
     interval = interval - parsegraph_IDLE_MARGIN;
-    if(this._idleFunc
+    if(interval > 0 && this._idleFunc
         && parsegraph_elapsed(startTime) < interval
         && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
     ) {
@@ -241,19 +247,31 @@ parsegraph_Application.prototype.onRender = function() {
             var r = this._idleFunc.call(this._idleFuncThisArg, interval - parsegraph_elapsed(startTime));
             if(r !== true) {
                 this.onIdle(null, null);
+                this._idleTimer.cancel();
+                this._idleTimer = null;
             }
         } while(this._burstIdle && interval - parsegraph_elapsed(startTime) > 0 && this._idleFunc);
         if(this._idleFunc && this._governor) {
             this._lastIdle = new Date();
         }
     }
+    else if(this._idleFunc) {
+        if(parsegraph_elapsed(startTime) >= interval) {
+            //console.log("Idle suppressed because there is no remaining time in the render loop.");
+        }
+        else if(this._governor && this._lastIdle && parsegraph_elapsed(this._lastIdle) > interval) {
+            //console.log("Idle suppressed because the last idle was too recent.");
+        }
+    }
     if(graph.input().UpdateRepeatedly() || graph.needsRepaint() || this._idleFunc) {
         if(this._cameraProtocol && graph.input().UpdateRepeatedly()) {
             this._cameraProtocol.update();
         }
+        //console.log("Rescheduling render");
         this._renderTimer.schedule();
     }
-    //console.log("Done rendering in " + parsegraph_elapsed(startTime) + "ms");
+    this._lastRender = new Date();
+    //console.log("Done rendering in " + parsegraph_elapsed(startTime, this._lastRender) + "ms");
 };
 
 parsegraph_Application.prototype.hostname = function()
