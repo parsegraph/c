@@ -19,11 +19,20 @@ function parsegraph_NodePainter(gl, glyphAtlas, shaders)
 
     this._textures = [];
 
-    var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
-    var pagesPerRow = glTextureSize / this._glyphPainter.glyphAtlas().pageTextureSize();
-    this._pagesPerGlyphTexture = Math.pow(pagesPerRow, 2);
+    this._pagesPerGlyphTexture = NaN;
 
     this.bodySize = new parsegraph_Size();
+};
+
+parsegraph_NodePainter.prototype.contextChanged = function(isLost)
+{
+    this._blockPainter.contextChanged(isLost);
+    this._extentPainter.contextChanged(isLost);
+    this._glyphPainter.contextChanged(isLost);
+    this._textures.forEach(function(t) {
+        t.contextChanged(isLost);
+    });
+    this._pagesPerGlyphTexture = NaN;
 };
 
 parsegraph_NodePainter.prototype.bounds = function()
@@ -331,8 +340,6 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         }, this);
     }
 
-    node.glyphCount(counts.numGlyphs, this._pagesPerGlyphTexture);
-
     if(node.type() === parsegraph_SLIDER) {
         if(node.parentDirection() === parsegraph_UPWARD) {
             // Only downward direction is currently supported.
@@ -357,10 +364,27 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         // One for the block.
         ++counts.numBlocks;
     }
+
+    if(Number.isNaN(this._pagesPerGlyphTexture)) {
+        var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+        if(this._gl.isContextLost()) {
+            return;
+        }
+        var pagesPerRow = glTextureSize / this._glyphPainter.glyphAtlas().pageTextureSize();
+        this._pagesPerGlyphTexture = Math.pow(pagesPerRow, 2);
+    }
+    if(Number.isNaN(this._pagesPerGlyphTexture)) {
+        return;
+    }
+
+    node.glyphCount(counts.numGlyphs, this._pagesPerGlyphTexture);
 };
 
 parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
 {
+    if(this._gl.isContextLost()) {
+        return;
+    }
     if(this.isExtentRenderingEnabled() && !node.isRoot()) {
         this.paintExtent(node);
     }

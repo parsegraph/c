@@ -38,59 +38,17 @@ function parsegraph_SpotlightPainter(gl, shaders)
         throw new Error("A GL interface must be given");
     }
 
-    // Compile the shader program.
-    var shaderName = "parsegraph_SpotlightPainter";
-    if(!shaders[shaderName]) {
-        var program = gl.createProgram();
-
-        gl.attachShader(
-            program,
-            compileShader(
-                gl,
-                parsegraph_SpotlightPainter_VertexShader,
-                gl.VERTEX_SHADER
-            )
-        );
-
-        gl.attachShader(
-            program,
-            compileShader(
-                gl,
-                parsegraph_SpotlightPainter_FragmentShader,
-                gl.FRAGMENT_SHADER
-            )
-        );
-
-        gl.linkProgram(program);
-        if(!gl.getProgramParameter(
-            program, gl.LINK_STATUS
-        )) {
-            throw new Error("SpotlightPainter program failed to link.");
-        }
-
-        shaders[shaderName] = program;
-    }
-    this._program = shaders[shaderName];
-
-    // Prepare attribute buffers.
-    this._spotlightBuffer = parsegraph_createPagingBuffer(
-        this._gl, this._program
-    );
-    this.a_position = this._spotlightBuffer.defineAttrib("a_position", 2);
-    this.a_texCoord = this._spotlightBuffer.defineAttrib("a_texCoord", 2);
-    this.a_color = this._spotlightBuffer.defineAttrib("a_color", 4);
-
-    // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this._program, "u_world"
-    );
-
-    this._spotlightBuffer.addPage();
+    this._shaders = shaders;
+    this._program = null;
+    this.contextChanged(gl.isContextLost());
 };
 
 parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
     cx, cy, radius, color)
 {
+    if(this._spotlightBuffer === null) {
+        return;
+    }
     //console.log(cx + ", " + cy + ", " + radius + " " + color.toString());
     // Append position data.
     this._spotlightBuffer.appendData(
@@ -121,6 +79,9 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
 parsegraph_SpotlightPainter.prototype.drawRectSpotlight = function(
     cx, cy, w, h, color)
 {
+    if(this._spotlightBuffer === null) {
+        return;
+    }
     // Append position data.
     this._spotlightBuffer.appendData(
         this.a_position,
@@ -153,8 +114,44 @@ parsegraph_SpotlightPainter.prototype.clear = function()
     this._spotlightBuffer.addPage();
 };
 
+parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost)
+{
+    if(isLost) {
+        //console.log(new Error("Losing spotlight painter"));
+        this._program = null;
+        this._spotlightBuffer.clear();
+        this._spotlightBuffer = null;
+    }
+    else {
+        //console.log(new Error("Restoring spotlight painter"));
+        var gl = this._gl;
+        this._program = parsegraph_compileProgram(gl, this._shaders,
+            "parsegraph_SpotlightPainter",
+            parsegraph_SpotlightPainter_VertexShader,
+            parsegraph_SpotlightPainter_FragmentShader
+        );
+        // Prepare attribute buffers.
+        this._spotlightBuffer = parsegraph_createPagingBuffer(
+            this._gl, this._program
+        );
+        this._spotlightBuffer.addPage();
+
+        this.a_position = this._spotlightBuffer.defineAttrib("a_position", 2);
+        this.a_texCoord = this._spotlightBuffer.defineAttrib("a_texCoord", 2);
+        this.a_color = this._spotlightBuffer.defineAttrib("a_color", 4);
+    }
+};
+
 parsegraph_SpotlightPainter.prototype.render = function(world, scale)
 {
+    if(this._gl.isContextLost()) {
+        return;
+    }
+    // Cache program locations.
+    this.u_world = this._gl.getUniformLocation(
+        this._program, "u_world"
+    );
+
     // Render spotlights.
     this._gl.useProgram(
         this._program

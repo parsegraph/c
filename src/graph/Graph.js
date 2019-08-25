@@ -57,12 +57,33 @@ function parsegraph_Graph()
     // Install the graph.
     this._surface.addPainter(this.paint, this);
     this._surface.addRenderer(this.render, this);
+    this._surface.addContextWatcher(this.contextChanged, this);
 };
 parsegraph_Graph_Tests = new parsegraph_TestSuite("parsegraph_Graph");
 
 parsegraph_Graph.prototype.shaders = function()
 {
     return this._shaders;
+};
+
+parsegraph_Graph.prototype.contextChanged = function(isLost)
+{
+    if(isLost) {
+        var keys = [];
+        for(var k in this._shaders) {
+            keys.push(k);
+        }
+        for(var i in keys) {
+            delete this._shaders[keys[i]];
+        }
+    }
+    if(this._glyphAtlas) {
+        this._glyphAtlas.contextChanged(isLost);
+    }
+    this._world.contextChanged(isLost);
+    this._cameraBox.contextChanged(isLost);
+    this._carousel.contextChanged(isLost);
+    this._input.contextChanged(isLost);
 };
 
 parsegraph_Graph.prototype.cameraBox = function()
@@ -157,6 +178,9 @@ parsegraph_Graph.prototype.paint = function(timeout)
 {
     //console.log("Painting Graph, timeout=" + timeout);
     var gl = this.gl();
+    if(gl.isContextLost()) {
+        return false;
+    }
     this.glyphAtlas().update(gl);
     this._shaders.gl = this.gl();
     this._shaders.glyphAtlas = this.glyphAtlas();
@@ -176,12 +200,16 @@ parsegraph_Graph.prototype.paint = function(timeout)
 
 parsegraph_Graph.prototype.render = function()
 {
+    var gl = this.gl();
+    if(gl.isContextLost()) {
+        return;
+    }
     var world = this.camera().project();
     if(!this._world.render(world)) {
+        //console.log("World was rendered dirty.");
         this.scheduleRepaint();
     }
 
-    var gl = this.gl();
     gl.blendFunc(
         gl.SRC_ALPHA, gl.DST_ALPHA
     );

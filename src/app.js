@@ -184,6 +184,9 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
 parsegraph_Application.prototype.onRender = function() {
     var graph = this.graph();
     var surface = this.surface();
+    if(surface.gl().isContextLost()) {
+        return;
+    }
 
     var startTime = new Date();
     var inputChangedScene = graph.input().Update(startTime);

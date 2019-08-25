@@ -315,76 +315,21 @@ function parsegraph_BlockPainter(gl, shaders)
         throw new Error("A shaders object must be given");
     }
     this._id = parsegraph_BlockPainter_COUNT++;
-
-    // Compile the shader program.
-    var shaderName = "parsegraph_BlockPainter";
-    if(!shaders[shaderName]) {
-        var program = gl.createProgram();
-        gl.attachShader(
-            program,
-            compileShader(
-                gl,
-                parsegraph_BlockPainter_VertexShader,
-                gl.VERTEX_SHADER
-            )
-        );
-
-        var fragProgram = parsegraph_BlockPainter_FragmentShader;
-        // OES_standard_derivatives looks worse on FF.
-        if(
-        navigator.userAgent.indexOf("Firefox") == -1 &&
-        gl.getExtension("OES_standard_derivatives") != null) {
-            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
-        }
-
-        // For development.
-   //     gl.getExtension("OES_standard_derivatives");
-  //      fragProgram = parsegraph_BlockPainter_CurlyFragmentShader;
-//       fragProgram = parsegraph_BlockPainter_ParenthesisFragmentShader;
-//        fragProgram = parsegraph_BlockPainter_SquareFragmentShader;
-//fragProgram = parsegraph_BlockPainter_AngleFragmentShader;
-
-        gl.attachShader(
-            program,
-            compileShader(
-                gl,
-                fragProgram,
-                gl.FRAGMENT_SHADER
-            )
-        );
-
-        gl.linkProgram(program);
-        if(!gl.getProgramParameter(
-            program, gl.LINK_STATUS
-        )) {
-            throw new Error("'" + shaderName + "' shader program failed to link.");
-        }
-
-        shaders[shaderName] = program;
-    }
-    this._blockProgram = shaders[shaderName];
+    this._shaders = shaders;
 
     // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
     this._blockBuffer = null;
     this._blockBufferNumVertices = null;
     this._blockBufferVertexIndex = 0;
 
-    // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(this._blockProgram, "u_world");
-
     // Setup initial uniform values.
     this._backgroundColor = parsegraph_createColor(1, 1, 1, .15);
     this._borderColor = parsegraph_createColor(parsegraph_createColor(1, 1, 1, 1));
 
-    this._bounds = null;
+    this._bounds = new parsegraph_Rect(NaN, NaN, NaN, NaN);
 
-    this.a_position = this._gl.getAttribLocation(this._blockProgram, "a_position");
-    this.a_texCoord = this._gl.getAttribLocation(this._blockProgram, "a_texCoord");
-    this.a_color = this._gl.getAttribLocation(this._blockProgram, "a_color");
-    this.a_borderColor = this._gl.getAttribLocation(this._blockProgram, "a_borderColor");
-    this.a_borderRoundedness = this._gl.getAttribLocation(this._blockProgram, "a_borderRoundedness");
-    this.a_borderThickness = this._gl.getAttribLocation(this._blockProgram, "a_borderThickness");
-    this.a_aspectRatio = this._gl.getAttribLocation(this._blockProgram, "a_aspectRatio");
+    this._blockProgram = null;
+    this._blockProgramSimple = null;
 
     // Position: 2 * 4 (two floats)  0-7
     // TexCoord: 2 * 4 (two floats)  8-15
@@ -398,35 +343,6 @@ function parsegraph_BlockPainter(gl, shaders)
     this._dataBufferVertexIndex = 0;
     this._dataBufferNumVertices = 6;
     this._dataBuffer = new Float32Array(this._dataBufferNumVertices*this._stride/4);
-
-    // Compile the shader program.
-    var shaderName = "parsegraph_BlockPainter_Simple";
-    if(!shaders[shaderName]) {
-        var program = gl.createProgram();
-        gl.attachShader(
-            program,
-            compileShader(gl, parsegraph_BlockPainter_VertexShader_Simple, gl.VERTEX_SHADER)
-        );
-
-        var fragProgram = parsegraph_BlockPainter_FragmentShader_Simple;
-        gl.attachShader(
-            program,
-            compileShader(gl, fragProgram, gl.FRAGMENT_SHADER)
-        );
-
-        gl.linkProgram(program);
-        if(!gl.getProgramParameter(
-            program, gl.LINK_STATUS
-        )) {
-            throw new Error("'" + shaderName + "' shader program failed to link.");
-        }
-
-        shaders[shaderName] = program;
-    }
-    this._blockProgramSimple = shaders[shaderName];
-    this.simple_u_world = this._gl.getUniformLocation(this._blockProgramSimple, "u_world");
-    this.simple_a_position = this._gl.getAttribLocation(this._blockProgramSimple, "a_position");
-    this.simple_a_color = this._gl.getAttribLocation(this._blockProgramSimple, "a_color");
 
     this._maxSize = 0;
 };
@@ -476,12 +392,11 @@ parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
 
 parsegraph_BlockPainter.prototype.clear = function()
 {
-    if(!this._blockBuffer) {
-        return;
+    if(this._blockBuffer && !this._gl.isContextLost()) {
+        this._gl.deleteBuffer(this._blockBuffer);
     }
-    this._gl.deleteBuffer(this._blockBuffer);
     this._blockBuffer = null;
-    this._bounds = null;
+    this._bounds.toNaN();
     this._blockBufferNumVertices = null;
     this._dataBufferVertexIndex = 0;
     this._blockBufferVertexIndex = 0;
@@ -524,18 +439,16 @@ parsegraph_BlockPainter.prototype.flush = function()
 parsegraph_BlockPainter.prototype.drawBlock = function(
     cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
 {
+    if(this._gl.isContextLost()) {
+        return;
+    }
     if(!this._blockBuffer) {
         throw new Error("BlockPainter.initBuffer(numBlocks) must be called first.");
     }
     if(this._blockBufferVertexIndex >= this._blockBufferNumVertices) {
         throw new Error("BlockPainter is full and cannot draw any more blocks.");
     }
-    if(!this._bounds) {
-        this._bounds = new parsegraph_Rect(cx, cy, width, height);
-    }
-    else {
-        this._bounds.include(cx, cy, width, height);
-    }
+    this._bounds.include(cx, cy, width, height);
     if(typeof cx !== "number" || Number.isNaN(cx)) {
         throw new Error("cx must be a number, but was " + cx);
     }
@@ -631,6 +544,13 @@ parsegraph_BlockPainter.prototype.toString = function()
     return "[parsegraph_BlockPainter " + this._id + "]";
 };
 
+parsegraph_BlockPainter.prototype.contextChanged = function(isLost)
+{
+    this.clear();
+    this._blockProgram = null;
+    this._blockProgramSimple = null;
+};
+
 parsegraph_BlockPainter.prototype.render = function(world, scale)
 {
     this.flush();
@@ -640,6 +560,42 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
     var gl = this._gl;
     var usingSimple = (this._maxSize * scale) < 5;
     //console.log(this._id, this._maxSize * scale, usingSimple);
+
+    if(this._blockProgram === null) {
+        var fragProgram = parsegraph_BlockPainter_FragmentShader;
+        // Avoid OES_standard_derivatives on Firefox.
+        if(navigator.userAgent.indexOf("Firefox") == -1
+            && gl.getExtension("OES_standard_derivatives") != null
+        ) {
+            fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
+        }
+        this._blockProgram = parsegraph_compileProgram(gl, this._shaders,
+            "parsegraph_BlockPainter",
+            parsegraph_BlockPainter_VertexShader,
+            fragProgram
+        );
+
+        // Cache program locations.
+        this.u_world = this._gl.getUniformLocation(this._blockProgram, "u_world");
+
+        this.a_position = this._gl.getAttribLocation(this._blockProgram, "a_position");
+        this.a_texCoord = this._gl.getAttribLocation(this._blockProgram, "a_texCoord");
+        this.a_color = this._gl.getAttribLocation(this._blockProgram, "a_color");
+        this.a_borderColor = this._gl.getAttribLocation(this._blockProgram, "a_borderColor");
+        this.a_borderRoundedness = this._gl.getAttribLocation(this._blockProgram, "a_borderRoundedness");
+        this.a_borderThickness = this._gl.getAttribLocation(this._blockProgram, "a_borderThickness");
+        this.a_aspectRatio = this._gl.getAttribLocation(this._blockProgram, "a_aspectRatio");
+    }
+    if(this._blockProgramSimple === null) {
+        this._blockProgramSimple = parsegraph_compileProgram(gl, this._shaders,
+            "parsegraph_BlockPainter_Simple",
+            parsegraph_BlockPainter_VertexShader_Simple,
+            parsegraph_BlockPainter_FragmentShader_Simple
+        );
+        this.simple_u_world = this._gl.getUniformLocation(this._blockProgramSimple, "u_world");
+        this.simple_a_position = this._gl.getAttribLocation(this._blockProgramSimple, "a_position");
+        this.simple_a_color = this._gl.getAttribLocation(this._blockProgramSimple, "a_color");
+    }
 
     if(usingSimple) {
         gl.useProgram(this._blockProgramSimple);

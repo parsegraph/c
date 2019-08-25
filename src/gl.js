@@ -143,16 +143,15 @@ function parsegraph_compileProgram(gl, shaders, shaderName, vertexShader, fragSh
             vertexShader, gl.VERTEX_SHADER
         )
     );
-    if((err = gl.getError()) != gl.NO_ERROR) {
-        throw new Error("'" + shaderName + "' shader program's vertex shader failed to compile and attach: %s\n", err);
+    if((err = gl.getError()) != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
+        throw new Error("'" + shaderName + "' shader program's vertex shader failed to compile and attach: " + parsegraph_glErrorString(gl, err));
     }
-
 
     gl.attachShader(
         program, compileShader(gl, fragShader, gl.FRAGMENT_SHADER)
     );
-    if((err = gl.getError()) != gl.NO_ERROR) {
-        throw new Error("'" + shaderName + "' shader program's fragment shader failed to compile and attach: %s\n");
+    if((err = gl.getError()) != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
+        throw new Error("'" + shaderName + "' shader program's fragment shader failed to compile and attach.");
     }
 
     gl.linkProgram(program);
@@ -160,8 +159,8 @@ function parsegraph_compileProgram(gl, shaders, shaderName, vertexShader, fragSh
     if(!st) {
         throw new Error("'" + shaderName + "' shader program failed to link:\n" + gl.getProgramInfoLog (program));
     }
-    if((err = gl.getError()) != gl.NO_ERROR) {
-        throw new Error("'%s' shader program failed to link: %s\n", shaderName, gluErrorString(err));
+    if((err = gl.getError()) != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
+        throw new Error("'" + shaderName + "' shader program failed to link: " + err);
     }
 
     shaders[shaderName] = program;

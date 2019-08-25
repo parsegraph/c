@@ -7,6 +7,19 @@ function parsegraph_Surface()
 
     // The canvas that will be drawn to.
     this._canvas = document.createElement("canvas");
+    //if(WebGLDebugUtils) {
+        //this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
+    //}
+    var that = this;
+    this._canvas.addEventListener("webglcontextlost", function(event) {
+        console.log("Context lost");
+        event.preventDefault();
+        that.onContextChanged(true);
+    }, false);
+    this._canvas.addEventListener("webglcontextrestored", function() {
+        console.log("Context restored");
+        that.onContextChanged(false);
+    }, false);
     this._canvas.style.display = "block";
     this._canvas.setAttribute("tabIndex", 0);
 
@@ -21,6 +34,15 @@ function parsegraph_Surface()
 
     this._painters = [];
     this._renderers = [];
+    this._contextWatchers = [];
+};
+
+parsegraph_Surface.prototype.onContextChanged = function(isLost)
+{
+    for(var i = 0; i < this._contextWatchers.length; ++i) {
+        var watcher = this._contextWatchers[i];
+        watcher[0].call(watcher[1], isLost);
+    }
 };
 
 parsegraph_Surface.prototype.canvas = function()
@@ -110,8 +132,16 @@ parsegraph_Surface.prototype.addRenderer = function(renderer, thisArg)
     this._renderers.push([renderer, thisArg]);
 };
 
+parsegraph_Surface.prototype.addContextWatcher = function(watcher, thisArg)
+{
+    this._contextWatchers.push([watcher, thisArg]);
+};
+
 parsegraph_Surface.prototype.paint = function()
 {
+    if(this.gl().isContextLost()) {
+        return;
+    }
     //console.log("Painting surface");
     var args = arguments;
     this._painters.forEach(function(painter) {
@@ -155,6 +185,10 @@ parsegraph_Surface.prototype.canProject = function()
  */
 parsegraph_Surface.prototype.render = function()
 {
+    var gl = this.gl();
+    if(this.gl().isContextLost()) {
+        return;
+    }
     //console.log("Rendering surface");
     if(!this.canProject()) {
         throw new Error(
@@ -163,7 +197,6 @@ parsegraph_Surface.prototype.render = function()
     }
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
-    var gl = this.gl();
     gl.clearColor(
         this._backgroundColor._r,
         this._backgroundColor._g,

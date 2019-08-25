@@ -3082,10 +3082,25 @@ function parsegraph_labeledBlock(label, glyphAtlas)
     return node;
 };
 
-parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders, timeout)
+parsegraph_Node.prototype.contextChanged = function(isLost)
 {
     if(!this.localPaintGroup()) {
         return;
+    }
+    var node = this;
+    do {
+        node.markDirty();
+        if(node._extended.painter) {
+            node._extended.painter.contextChanged(isLost);
+        }
+        node = node._paintGroupNext;
+    } while(node !== this);
+};
+
+parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders, timeout)
+{
+    if(!this.localPaintGroup()) {
+        return false;
     }
     if(!this.isDirty()) {
         //console.log(this + " is not dirty");
@@ -3096,6 +3111,12 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     }
     if(!gl) {
         throw new Error("A WebGL context must be provided.");
+    }
+    if(gl.isContextLost()) {
+        return false;
+    }
+    if(timeout <= 0) {
+        return false;
     }
 
     var t = new Date().getTime();

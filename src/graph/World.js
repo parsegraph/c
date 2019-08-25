@@ -14,6 +14,11 @@ function parsegraph_World(graph)
     this._graph = graph;
 }
 
+parsegraph_World.prototype.graph = function()
+{
+    return this._graph;
+};
+
 parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
 
 parsegraph_World.prototype.camera = function()
@@ -29,6 +34,15 @@ parsegraph_World.prototype.setCamera = function(camera)
     this._camera = camera;
 };
 
+parsegraph_World.prototype.contextChanged = function(isLost)
+{
+    this._worldPaintingDirty = true;
+    this._previousWorldPaintState = null;
+    for(var i = 0; i < this._worldRoots.length; ++i) {
+        var root = this._worldRoots[i];
+        root.contextChanged(isLost);
+    }
+};
 
 parsegraph_World.prototype.plot = function(node)
 {
@@ -293,6 +307,10 @@ parsegraph_World.prototype.needsRepaint = function()
 
 parsegraph_World.prototype.paint = function(timeout)
 {
+    var gl = this.graph().gl();
+    if(gl.isContextLost()) {
+        return false;
+    }
     //console.log("Painting Graph, timeout=" + timeout);
     var t = new Date().getTime();
     var pastTime = function() {
@@ -365,6 +383,10 @@ parsegraph_World.prototype.paint = function(timeout)
 
 parsegraph_World.prototype.render = function(world)
 {
+    var gl = this.graph().gl();
+    if(gl.isContextLost()) {
+        return false;
+    }
     var cleanlyRendered = true;
     for(var i in this._worldRoots) {
         cleanlyRendered = this._worldRoots[i].renderIteratively(world, this.camera()) && cleanlyRendered;

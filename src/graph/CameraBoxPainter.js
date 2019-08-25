@@ -10,6 +10,15 @@ function parsegraph_CameraBoxPainter(gl, glyphAtlas, shaders)
     this._fontSize = 24;
 }
 
+parsegraph_CameraBoxPainter.prototype.contextChanged = function(isLost)
+{
+    if(!isLost) {
+        return;
+    }
+    this._blockPainter.contextChanged(isLost);
+    this._glyphPainter.contextChanged(isLost);
+};
+
 parsegraph_CameraBoxPainter.prototype.clear = function()
 {
     this._glyphPainter.clear();

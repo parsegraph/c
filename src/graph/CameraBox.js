@@ -14,6 +14,17 @@ function parsegraph_CameraBox(graph)
     this._numBoxes = 0;
 }
 
+parsegraph_CameraBox.prototype.contextChanged = function(isLost)
+{
+    this._cameraBoxDirty = true;
+    if(!isLost) {
+        return;
+    }
+    if(this._cameraBoxPainter) {
+        this._cameraBoxPainter.contextChanged(isLost);
+    }
+};
+
 parsegraph_CameraBox.prototype.needsRepaint = function()
 {
     return this._cameraBoxDirty;
@@ -117,6 +128,9 @@ parsegraph_CameraBox.prototype.render = function(world, scale)
 {
     if(this._showCameraBoxes) {
         var gl = this.gl();
+        if(!gl) {
+            return;
+        }
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
         this._cameraBoxPainter.render(world, scale);

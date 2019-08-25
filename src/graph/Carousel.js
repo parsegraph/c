@@ -366,6 +366,19 @@ parsegraph_Carousel.prototype.setBackgroundColor = function(backgroundColor)
     this.scheduleCarouselRepaint();
 };
 
+parsegraph_Carousel.prototype.contextChanged = function(isLost)
+{
+    this._carouselPaintingDirty = true;
+    if(this._fanPainter) {
+        this._fanPainter.contextChanged(isLost);
+    }
+    for(var i in this._carouselPlots) {
+        var carouselData = this._carouselPlots[i];
+        var root = carouselData[0];
+        root.contextChanged(isLost);
+    }
+};
+
 parsegraph_Carousel.prototype.paint = function()
 {
     if(!this._updateRepeatedly && (!this._carouselPaintingDirty || !this._showCarousel)) {

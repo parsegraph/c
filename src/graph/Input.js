@@ -1093,15 +1093,29 @@ parsegraph_Input.prototype.camera = function()
     return this._camera;
 }
 
+parsegraph_Input.prototype.contextChanged = function(isLost)
+{
+    if(this._caretPainter) {
+        this._caretPainter.contextChanged(isLost);
+    }
+    if(this._spotlightPainter) {
+        this._spotlightPainter.contextChanged(isLost);
+    }
+};
+
 parsegraph_Input.prototype.render = function(world, scale)
 {
     var gl = this._graph.gl();
-    gl.disable(gl.CULL_FACE);
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.BLEND);
-    this._caretPainter.render(world, scale);
-    gl.enable(gl.BLEND);
-    this._spotlightPainter.render(world, scale);
+    if(this._caretPainter) {
+        gl.disable(gl.CULL_FACE);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.BLEND);
+        this._caretPainter.render(world, scale);
+    }
+    if(this._spotlightPainter) {
+        gl.enable(gl.BLEND);
+        this._spotlightPainter.render(world, scale);
+    }
 }
 
 parsegraph_Input.prototype.Dispatch = function(affectedPaint, eventSource, inputAffectedCamera)

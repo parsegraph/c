@@ -156,6 +156,15 @@ function parsegraph_getGlyphTextureSize(gl)
     return Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE));
 }
 
+parsegraph_GlyphAtlas.prototype.contextChanged = function(isLost)
+{
+    if(!isLost) {
+        return;
+    }
+    this.clear();
+    this._needsUpdate = true;
+};
+
 /**
  * Updates the given WebGL instance with this texture.
  *
@@ -166,6 +175,9 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
 {
     if(arguments.length === 0) {
         gl = this._gl;
+    }
+    if(gl.isContextLost()) {
+        return;
     }
     if(!this._needsUpdate && this._gl === gl) {
         //console.log("Dont need update");
@@ -181,14 +193,20 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
         this.clear();
         this._gl = gl;
         this._glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+        if(gl.isContextLost()) {
+            this._needsUpdate = true;
+            return;
+        }
         //console.log("GLTEXTURESIZE=" + this._glTextureSize);
-        this._renderCanvas = document.createElement("canvas");
-        this._renderCanvas.width = pageTextureSize;
-        this._renderCanvas.height = pageTextureSize;
-        this._renderCtx = this._renderCanvas.getContext("2d");
-        this._renderCtx.font = this.font();
-        this._renderCtx.fillStyle = this._fillStyle;
-        this._textureArray = new Uint8Array(this._glTextureSize*this._glTextureSize);
+        if(!this._renderCanvas) {
+            this._renderCanvas = document.createElement("canvas");
+            this._renderCanvas.width = pageTextureSize;
+            this._renderCanvas.height = pageTextureSize;
+            this._renderCtx = this._renderCanvas.getContext("2d");
+            this._renderCtx.font = this.font();
+            this._renderCtx.fillStyle = this._fillStyle;
+            this._textureArray = new Uint8Array(this._glTextureSize*this._glTextureSize);
+        }
     }
 
     var pageX = 0;
@@ -253,13 +271,13 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
 
 parsegraph_GlyphAtlas.prototype.clear = function()
 {
-    if(!this._gl) {
-        return;
-    }
     for(var i in this._pages) {
         var page = this._pages[i];
         if(page._glyphTexture) {
-            this._gl.deleteTexture(page._glyphTexture);
+            if(this._gl && !this._gl.isContextLost()) {
+                this._gl.deleteTexture(page._glyphTexture);
+            }
+            page._glyphTexture = null;
         }
     }
 };

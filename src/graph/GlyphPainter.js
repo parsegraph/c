@@ -47,34 +47,12 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
     this._glyphAtlas = glyphAtlas;
     this._id = ++parsegraph_GlyphPainter_COUNT;
 
-    // Compile the shader program.
-    var shaderName = "parsegraph_GlyphPainter";
-    if(!shaders[shaderName]) {
-        var program = gl.createProgram();
-
-        gl.attachShader(
-            program, compileShader(
-                gl, parsegraph_GlyphPainter_VertexShader, gl.VERTEX_SHADER
-            )
-        );
-
-        var fragProgram = parsegraph_GlyphPainter_FragmentShader;
-        gl.attachShader(
-            program, compileShader(gl, fragProgram, gl.FRAGMENT_SHADER)
-        );
-
-        gl.linkProgram(program);
-        if(!gl.getProgramParameter(
-            program, gl.LINK_STATUS
-        )) {
-            throw new Error("'" + shaderName + "' shader program failed to link.");
-        }
-
-        shaders[shaderName] = program;
-    }
-    this._textProgram = shaders[shaderName];
+    this._shaders = shaders;
     this._textBuffers = {};
+    this._numTextBuffers = 0;
     this._maxSize = 0;
+
+    this._textProgram = null;
 
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
@@ -83,20 +61,14 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
     this._stride = 48;
     this._vertexBuffer = new Float32Array(this._stride/4);
 
-    // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this._textProgram, "u_world"
-    );
-    this.u_glyphTexture = this._gl.getUniformLocation(
-        this._textProgram, "u_glyphTexture"
-    );
-    this.a_position = this._gl.getAttribLocation(this._textProgram, "a_position");
-    this.a_color = this._gl.getAttribLocation(this._textProgram, "a_color");
-    this.a_backgroundColor = this._gl.getAttribLocation(this._textProgram, "a_backgroundColor");
-    this.a_texCoord = this._gl.getAttribLocation(this._textProgram, "a_texCoord");
-
     this._color = parsegraph_createColor(1, 1, 1, 1);
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
+};
+
+parsegraph_GlyphPainter.prototype.contextChanged = function(isLost)
+{
+    this._textProgram = null;
+    this.clear();
 };
 
 parsegraph_GlyphPainter.prototype.color = function()
@@ -174,11 +146,10 @@ parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs)
 
 parsegraph_GlyphPageRenderer.prototype.clear = function()
 {
-    if(!this._glyphBuffer) {
-        return;
-    }
     var gl = this._painter._gl;
-    gl.deleteBuffer(this._glyphBuffer);
+    if(this._glyphBuffer && !gl.isContextLost()) {
+        gl.deleteBuffer(this._glyphBuffer);
+    }
     this._glyphBuffer = null;
     this._glyphBufferNumVertices = null;
     this._dataBufferVertexIndex = 0;
@@ -223,6 +194,9 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fon
     var gl = this._painter._gl;
     var glyphAtlas = this._painter.glyphAtlas();
     var glTextureSize = parsegraph_getGlyphTextureSize(gl);
+    if(gl.isContextLost()) {
+        return;
+    }
     var pageTextureSize = glyphAtlas.pageTextureSize();
     var pagesPerRow = glTextureSize / pageTextureSize;
     var pagesPerTexture = Math.pow(pagesPerRow, 2);
@@ -336,13 +310,18 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
     glyphData.painted = true;
 
     var glTextureSize = parsegraph_getGlyphTextureSize(this._gl);
+    if(this._gl.isContextLost()) {
+        return;
+    }
+        //console.log("GLTEXTURESIZE=" + this._glTextureSize);
     var pagesPerRow = glTextureSize / this.glyphAtlas().pageTextureSize();
     var pagesPerTexture = Math.pow(pagesPerRow, 2);
 
     // Select the correct buffer.
-    var gp = this._textBuffers[Math.floor(glyphData.glyphPage._id/pagesPerTexture)];
+    var gpid = Math.floor(glyphData.glyphPage._id/pagesPerTexture);
+    var gp = this._textBuffers[gpid];
     if(!gp) {
-        throw new Error("GlyphPageRenderer must be available when drawing glyph.");
+        throw new Error("GlyphPageRenderer " + gpid + " must be available when drawing glyph.");
     }
 
     if(this._maxSize < glyphData.width * fontScale) {
@@ -357,11 +336,12 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
         var gp = this._textBuffers[i];
         if(!gp) {
             gp = new parsegraph_GlyphPageRenderer(this, i);
+            ++this._numTextBuffers;
             this._textBuffers[i] = gp;
         }
         gp.initBuffer(numGlyphs[i]);
     }
-    for(var j=i+1; j < this._textBuffers.length; ++j) {
+    for(var j=i+1; j < this._numTextBuffers; ++j) {
         delete this._textBuffers[j];
     }
 };
@@ -369,10 +349,11 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
 parsegraph_GlyphPainter.prototype.clear = function()
 {
     for(var i in this._textBuffers) {
-        var gp = this._textBuffers;
+        var gp = this._textBuffers[i];
         gp.clear();
     }
     this._textBuffers = {};
+    this._numTextBuffers = 0;
     this._maxSize = 0;
 };
 
@@ -389,6 +370,30 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
     }
 
     var gl = this._gl;
+    if(gl.isContextLost()) {
+        return;
+    }
+
+    // Compile the shader program.
+    if(this._textProgram === null) {
+        this._textProgram = parsegraph_compileProgram(gl, this._shaders,
+            "parsegraph_GlyphPainter",
+            parsegraph_GlyphPainter_VertexShader,
+            parsegraph_GlyphPainter_FragmentShader
+        );
+
+        // Cache program locations.
+        this.u_world = this._gl.getUniformLocation(
+            this._textProgram, "u_world"
+        );
+        this.u_glyphTexture = this._gl.getUniformLocation(
+            this._textProgram, "u_glyphTexture"
+        );
+        this.a_position = this._gl.getAttribLocation(this._textProgram, "a_position");
+        this.a_color = this._gl.getAttribLocation(this._textProgram, "a_color");
+        this.a_backgroundColor = this._gl.getAttribLocation(this._textProgram, "a_backgroundColor");
+        this.a_texCoord = this._gl.getAttribLocation(this._textProgram, "a_texCoord");
+    }
 
     // Load program.
     gl.useProgram(this._textProgram);
