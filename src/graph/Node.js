@@ -2764,7 +2764,10 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
     var cld = new parsegraph_CommitLayoutData();
 
     // Traverse the graph depth-first, committing each node's layout in turn.
-    var commitLayoutLoop = function() {
+    var commitLayoutLoop = function(timeout) {
+        if(timeout <= 0) {
+            return false;
+        }
         var startTime = new Date();
         var i = 0;
         var pastTime = function(val) {
@@ -2880,7 +2883,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
         return null;
     };
 
-    return commitLayoutLoop();
+    return commitLayoutLoop(timeout);
 };
 
 parsegraph_Node.prototype.separationAt = function(inDirection) {
