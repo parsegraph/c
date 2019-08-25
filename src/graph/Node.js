@@ -2798,7 +2798,8 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             else {
                 //console.log("Continuing commit layout phase 1");
             }
-            if(pastTime(paintGroup._id)) {
+            if(pastTime(node._id)) {
+                //console.log("Ran out of time between groups during phase 1 (Commit layout, timeout=" + timeout +")");
                 return commitLayoutLoop;
             }
             if(root.needsCommit()) {
@@ -2816,6 +2817,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                         node._currentPaintGroup = paintGroup;
                     }
                     if(pastTime(node._id)) {
+                        //console.log("Ran out of time mid-group during phase 1 (Commit layout)");
                         return commitLayoutLoop;
                     }
                 } while(node !== root);
@@ -2844,7 +2846,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             }
             //console.log("Processing position for ", paintGroup);
             if(pastTime(paintGroup._id)) {
-                //console.log("Ran out of time");
+                //console.log("Ran out of time between groups during phase 2 (Commit group position). Next node is ", paintGroup);
                 return commitLayoutLoop;
             }
             if(paintGroup.needsPosition() || node) {
@@ -2859,7 +2861,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                     node.commitGroupPos();
                     node = node._layoutPrev;
                     if(pastTime(node._id)) {
-                        //console.log("Ran out of time");
+                        //console.log("Ran out of time mid-group during phase 2 (Commit group position). Next node is ", node);
                         paintGroup._hasGroupPos = false;
                         return commitLayoutLoop;
                     }
@@ -3136,19 +3138,21 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
 
     var cont;
     if(savedState.commitLayoutFunc) {
-        cont = savedState.commitLayoutFunc();
+        //console.log("Continuing commit layout in progress");
+        cont = savedState.commitLayoutFunc(timeout);
     }
     else if(!savedState.paintGroup) {
+        //console.log("Starting new commit layout");
         cont = this.commitLayoutIteratively(timeout);
     }
 
     if(cont) {
-        //console.log("Timed out during commitLayout");
+        //console.log(this + " Timed out during commitLayout");
         savedState.commitLayoutFunc = cont;
         return false;
     }
     else {
-        //console.log("Committed all layout");
+        //console.log(this + " Committed all layout");
         savedState.commitLayoutFunc = null;
         savedState.paintGroup = this;
 
@@ -3158,14 +3162,14 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     while(true) {
         if(pastTime()) {
             this._extended.dirty = true;
-            //console.log("Painting timed out");
+            //console.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedState.paintGroup);
             return false;
         }
 
         var paintGroup = savedState.paintGroup;
-        //console.log("Painting " + paintGroup);
         if(paintGroup.isDirty()) {
             // Paint and render nodes marked for the current group.
+            //console.log("Painting " + paintGroup);
             var painter = paintGroup._extended.painter;
             if(!painter) {
                 paintGroup._extended.painter = new parsegraph_NodePainter(gl, glyphAtlas, shaders);
@@ -3253,5 +3257,8 @@ parsegraph_Node.prototype.render = function(world, camera)
         this._absoluteScale * (camera ? camera.scale() : 1)
     );
 
+    if(this._absoluteDirty) {
+        //console.log("Node was rendered with dirty absolute position.");
+    }
     return !this._absoluteDirty;
 };
