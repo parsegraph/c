@@ -42,6 +42,7 @@ function parsegraph_Graph()
     }
 
     // Construct the graph.
+    this._shaders = {};
     this._surface = surface;
     this._canvas = surface.canvas();
     this._container = surface.container();
@@ -52,7 +53,6 @@ function parsegraph_Graph()
     this._carousel = new parsegraph_Carousel(this._camera, this.surface().backgroundColor());
     this._input = new parsegraph_Input(this, this.camera());
     //this._piano = new parsegraph_AudioKeyboard(this._camera);
-    this._shaders = {};
 
     // Install the graph.
     this._surface.addPainter(this.paint, this);

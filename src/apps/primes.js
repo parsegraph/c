@@ -7,6 +7,7 @@ function parsegraph_PrimesWidget(app)
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
     this.caret.setGlyphAtlas(app.glyphAtlas());
+    this.caret.setWorld(this._graph.world());
     this.caret.setMathMode(true);
     this.caret.label("1");
 
@@ -32,6 +33,7 @@ parsegraph_PrimesWidget.prototype.step = function()
     this.caret.push();
     this.caret.pull('u');
     this.caret.crease();
+    //this.caret.freeze();
     var isPrime = true;
 
     function addHighlights(dir) {
@@ -76,6 +78,7 @@ parsegraph_PrimesWidget.prototype.step = function()
         this.caret.node()._id = this.position + ":" + prime.frequency;
         if(i === 0) {
             this.caret.crease();
+            //this.caret.freeze();
         }
     }
     if(isPrime) {

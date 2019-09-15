@@ -51,10 +51,14 @@ function parsegraph_initialize() {
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     // The width in pixels of a glyph atlas's page.
-    parsegraph_MAX_TEXTURE_WIDTH = 512;
+    parsegraph_MAX_PAGE_WIDTH = 512;
 
     // The width in pixels of a glyph atlas's page.
     parsegraph_MAX_TEXTURE_SIZE = 2048;
+
+    // The maximum scale where nodes will be rendered from a cache.
+    parsegraph_FREEZER_TEXTURE_SCALE = .1;
+    parsegraph_CACHE_ACTIVATION_SCALE = .01;
 
     // How long the carousel takes, in milliseconds, to open.
     parsegraph_CAROUSEL_SHOW_DURATION = 200;

@@ -12,7 +12,13 @@ function parsegraph_World(graph)
     this._camera = null;
 
     this._graph = graph;
+    this._freezer = new parsegraph_Freezer(this._graph.gl(), this._graph.shaders());
 }
+
+parsegraph_World.prototype.freezer = function()
+{
+    return this._freezer;
+};
 
 parsegraph_World.prototype.graph = function()
 {

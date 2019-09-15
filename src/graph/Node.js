@@ -483,6 +483,7 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
     }
 
     this._extended.isPaintGroup = false;
+    this.thaw();
 
     //console.log(this + " is no longer a paint group.");
     if(!this.isRoot()) {
@@ -2946,9 +2947,37 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
             break;
         }
     }
+
+    if(this._extended && this._extended.cache) {
+        this._extended.cache.invalidate();
+    }
 };
 parsegraph_Node.prototype.layoutHasChanged = parsegraph_Node.prototype.layoutWasChanged;
 parsegraph_Node.prototype.layoutChanged = parsegraph_Node.prototype.layoutWasChanged;
+
+parsegraph_Node.prototype.freeze = function(freezer)
+{
+    if(!this.localPaintGroup()) {
+        throw new Error("A node must be a paint group in order to be frozen.");
+    }
+    this.ensureExtended().cache = freezer.cache(this);
+};
+
+parsegraph_Node.prototype.isFrozen = function()
+{
+    return this._extended && this._extended.cache;
+};
+
+parsegraph_Node.prototype.thaw = function()
+{
+    if(!this.localPaintGroup()) {
+        throw new Error("A node must be a paint group in order to be thawed.");
+    }
+    if(this.ensureExtended().cache) {
+        this.ensureExtended().cache.invalidate();
+        this.ensureExtended().cache = null;
+    }
+};
 
 parsegraph_Node.prototype.layoutOrder = function()
 {
@@ -3192,6 +3221,9 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
                 ++parsegraph_NODES_PAINTED;
                 //console.log("Painted nodes " + parsegraph_NODES_PAINTED);
             } while(node !== paintGroup);
+            if(paintGroup.isFrozen()) {
+                paintGroup.ensureExtended().cache.paint();
+            }
         }
         paintGroup._extended.dirty = false;
         savedState.paintGroup = paintGroup._paintGroupNext;
@@ -3245,7 +3277,19 @@ parsegraph_Node.prototype.getHeaviestNode = function()
     return heaviestNode;
 }
 
-parsegraph_Node.prototype.render = function(world, camera)
+parsegraph_Node.prototype.renderOffscreen = function(renderWorld, renderScale)
+{
+    if(!this.localPaintGroup()) {
+        throw new Error("Cannot render a node that is not a paint group");
+    }
+    var painter = this._extended.painter;
+    if(!painter) {
+        return false;
+    }
+    painter.render(renderWorld, renderScale, true);
+};
+
+parsegraph_Node.prototype.render = function(world, camera, renderData)
 {
     if(!this.localPaintGroup()) {
         throw new Error("Cannot render a node that is not a paint group");
@@ -3258,8 +3302,12 @@ parsegraph_Node.prototype.render = function(world, camera)
         return false;
     }
 
+    if(!renderData) {
+        renderData = new parsegraph_NodeRenderData();
+    }
+
     // Do not render paint groups that cannot be seen.
-    var s = painter.bounds().clone();
+    var s = painter.bounds().clone(renderData.bounds);
     s.scale(this.scale());
     s.translate(this._absoluteXPos, this._absoluteYPos);
     if(camera && !camera.containsAny(s)) {
@@ -3267,16 +3315,31 @@ parsegraph_Node.prototype.render = function(world, camera)
         return !this._absoluteDirty;
     }
 
-    //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
-    //console.log("Rendering " + this, painter.bounds());
+    makeScale3x3I(renderData.scaleMat, this._absoluteScale);
+    makeTranslation3x3I(renderData.transMat, this._absoluteXPos, this._absoluteYPos);
+    matrixMultiply3x3I(renderData.worldMat, renderData.scaleMat, renderData.transMat);
+    var renderWorld = matrixMultiply3x3I(renderData.worldMat, renderData.worldMat, world);
+    var renderScale = this._absoluteScale * (camera ? camera.scale() : 1);
 
-    painter.render(
-        matrixMultiply3x3(
-            makeScale3x3(this._absoluteScale),
-            matrixMultiply3x3(makeTranslation3x3(this._absoluteXPos, this._absoluteYPos), world)
-        ),
-        this._absoluteScale * (camera ? camera.scale() : 1)
-    );
+    //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
+    if(this._extended.cache && renderScale < parsegraph_CACHE_ACTIVATION_SCALE) {
+        //console.log("Rendering " + this + " from cache.");
+        var cleanRender = this._extended.cache.render(renderWorld, renderData, CACHED_RENDERS === 0);
+        if(IMMEDIATE_RENDERS > 0) {
+            //console.log("Immediately rendered " +IMMEDIATE_RENDERS + " times");
+            IMMEDIATE_RENDERS = 0;
+        }
+        ++CACHED_RENDERS;
+        return cleanRender && !this._absoluteDirty;
+    }
+    if(CACHED_RENDERS > 0) {
+        //console.log("Rendered from cache " + CACHED_RENDERS + " times");
+        CACHED_RENDERS = 0;
+    }
+    ++IMMEDIATE_RENDERS;
+
+    //console.log("Rendering " + this + " in scene.");
+    painter.render(renderWorld, renderScale);
 
     if(this._absoluteDirty) {
         //console.log("Node was rendered with dirty absolute position.");

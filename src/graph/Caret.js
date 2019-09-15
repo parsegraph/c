@@ -19,6 +19,7 @@ function parsegraph_Caret(nodeRoot, glyphAtlas)
     this._labels = [];
 
     this._glyphAtlas = glyphAtlas ? glyphAtlas : null;
+    this._world = null;
 };
 
 parsegraph_Caret.prototype.clone = function()
@@ -160,6 +161,42 @@ parsegraph_Caret.prototype.crease = function(inDirection)
     if(!node.localPaintGroup()) {
         node.setPaintGroup(true);
     }
+};
+
+parsegraph_Caret.prototype.setWorld = function(world)
+{
+    this._world = world;
+};
+
+parsegraph_Caret.prototype.freeze = function(inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+    var node;
+    if(arguments.length === 0) {
+        node = this.node();
+    }
+    else {
+        node = this.node().nodeAt(inDirection);
+    }
+    if(!this._world) {
+        throw new Error("Caret must have a world in order to freeze nodes");
+    }
+    node.freeze(this._world.freezer());
+};
+
+parsegraph_Caret.prototype.thaw = function(inDirection)
+{
+    // Interpret the given direction for ease-of-use.
+    inDirection = parsegraph_readNodeDirection(inDirection);
+    var node;
+    if(arguments.length === 0) {
+        node = this.node();
+    }
+    else {
+        node = this.node().nodeAt(inDirection);
+    }
+    node.thaw();
 };
 
 parsegraph_Caret.prototype.uncrease = function(inDirection)
