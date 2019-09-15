@@ -3245,6 +3245,14 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     return true;
 };
 
+function parsegraph_NodeRenderData()
+{
+    this.bounds = new parsegraph_Rect();
+    this.scaleMat = matrixIdentity3x3();
+    this.transMat = matrixIdentity3x3();
+    this.worldMat = matrixIdentity3x3();
+}
+
 parsegraph_Node.prototype.renderIteratively = function(world, camera)
 {
     //console.log("Rendering iteratively");
