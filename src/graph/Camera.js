@@ -2,18 +2,29 @@ parsegraph_CLICK_DELAY_MILLIS = 500;
 
 function parsegraph_Camera(surface)
 {
-    if(!surface) {
-        throw new Error("A surface must be provided");
-    }
-    this._surface = surface;
-
     this._cameraX = 0;
     this._cameraY = 0;
     this._scale = 1;
 
-    this._width = 0;
-    this._height = 0;
-    this._aspectRatio = 1;
+    if(arguments.length === 2) {
+        this._surface = null;
+        this._width = arguments[0];
+        this._height = arguments[1];
+        this._aspectRatio = this._width / this._height;
+    }
+    else if(arguments.length === 0) {
+        this._surface = null;
+        this._width = NaN;
+        this._height = NaN;
+        this._aspectRatio = NaN;
+    }
+    else {
+        this._surface = surface;
+        this._width = NaN;
+        this._height = NaN;
+        this._aspectRatio = NaN;
+    }
+
     this._changeVersion = 0;
 };
 
@@ -85,7 +96,7 @@ function parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx,
     var halfWidth = width / 2;
     var halfHeight = height / 2;
 
-    function dump() {
+    /*function dump() {
         console.log("viewportX=" + viewportX);
         console.log("viewportY=" + viewportY);
         console.log("viewWidth=" + viewWidth);
@@ -94,7 +105,7 @@ function parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx,
         console.log("cy=" + cy);
         console.log("width=" + width);
         console.log("height=" + height);
-    };
+    };*/
 
     if(cx - halfWidth > viewportX + viewHalfWidth) {
         //console.log(1);
@@ -155,6 +166,13 @@ parsegraph_Camera_Tests.addTest("containsAny", function() {
         return "Small box on edge of viewport";
     }
 });
+
+parsegraph_Camera.prototype.setSize = function(width, height)
+{
+    this._width = width;
+    this._height = height;
+    this._aspectRatio = this._width / this._height;
+};
 
 parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
 {
@@ -221,6 +239,9 @@ parsegraph_Camera.prototype.restore = function(json)
 
 parsegraph_Camera.prototype.surface = function()
 {
+    if(!this._surface) {
+        throw new Error("Camera does not have a surface");
+    }
     return this._surface;
 };
 
@@ -287,6 +308,9 @@ parsegraph_Camera.prototype.height = function()
 
 parsegraph_Camera.prototype.canProject = function()
 {
+    if(!this._surface) {
+        return !Number.isNaN(this._width) && !Number.isNaN(this._height);
+    }
     var displayWidth = this.surface().container().clientWidth;
     var displayHeight = this.surface().container().clientHeight;
 
@@ -300,6 +324,10 @@ parsegraph_Camera.prototype.projectionMatrix = function()
             "Camera cannot create a projection matrix because the " +
             "target canvas has no size. Use canProject() to handle."
         );
+    }
+
+    if(!this._surface) {
+        return make2DProjection(this._width, this._height);
     }
 
     // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
@@ -353,17 +381,21 @@ parsegraph_Camera.prototype.containsAny = function(s)
     if(s.isNaN()) {
         return false;
     }
-    var camera = this;
-    return parsegraph_containsAny(
-        -camera.x() + camera.width()/(camera.scale()*2),
-        -camera.y() + camera.height()/(camera.scale()*2),
-        camera.width() / camera.scale(),
-        camera.height() / camera.scale(),
-        s.x(),
-        s.y(),
-        s.width(),
-        s.height()
-    );
+    var viewportX = -this.x() + this.width()/(this.scale()*2);
+    if(s.x() - s.width()/2 > viewportX + (this.width()/this.scale())/2) {
+        return false;
+    }
+    if(s.x() + s.width()/2 < viewportX - (this.width()/this.scale())/2) {
+        return false;
+    }
+    var viewportY = -this.y() + this.height()/(this.scale()*2);
+    if(s.y() - s.height()/2 > viewportY + (this.height()/this.scale())/2) {
+        return false;
+    }
+    if(s.y() + s.height()/2 < viewportY - (this.height()/this.scale())/2) {
+        return false;
+    }
+    return true;
 };
 
 parsegraph_Camera.prototype.containsAll = function(s)
