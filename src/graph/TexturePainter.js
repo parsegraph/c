@@ -152,7 +152,7 @@ parsegraph_TexturePainter.prototype.render = function(world)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.uniform1i(this.u_texture, 0);
 
-    // Render text.
+    // Render texture.
     gl.uniformMatrix3fv(this.u_world, false, world);
     this._buffer.renderPages();
 };
