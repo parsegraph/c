@@ -112,18 +112,6 @@ static void onUnicodeLoaded(void* data, parsegraph_Unicode* uni)
     parsegraph_AnimationTimer_schedule(primesApp.renderTimer);
 }
 
-void parsegraph_stop(parsegraph_Surface* surf)
-{
-    if(primesApp.widget) {
-        parsegraph_PrimesWidget_destroy(primesApp.widget);
-    }
-    if(primesApp.graph) {
-        parsegraph_Graph_destroy(primesApp.graph);
-    }
-    parsegraph_Surface_destroy(surf);
-    apr_pool_destroy(primesApp.pool);
-}
-
 parsegraph_Surface* parsegraph_init(void* peer, int w, int h, int argc, const char* const* argv)
 {
     primesApp.pool = 0;
@@ -142,4 +130,16 @@ parsegraph_Surface* parsegraph_init(void* peer, int w, int h, int argc, const ch
     parsegraph_UNICODE_INSTANCE = uni;
     parsegraph_Unicode_load(uni, 0);
     return surface;
+}
+
+void parsegraph_stop(parsegraph_Surface* surf)
+{
+    if(primesApp.widget) {
+        parsegraph_PrimesWidget_destroy(primesApp.widget);
+    }
+    if(primesApp.graph) {
+        parsegraph_Graph_destroy(primesApp.graph);
+    }
+    parsegraph_Surface_destroy(surf);
+    apr_pool_destroy(primesApp.pool);
 }
