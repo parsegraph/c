@@ -665,7 +665,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
     label.paint(this._glyphPainter, labelX, labelY, fontScale);
 };
 
-parsegraph_NodePainter.prototype.render = function(world, scale)
+parsegraph_NodePainter.prototype.render = function(world, scale, forceSimple)
 {
     ++this._consecutiveRenders;
     this._gl.disable(this._gl.CULL_FACE);
@@ -673,14 +673,14 @@ parsegraph_NodePainter.prototype.render = function(world, scale)
     this._gl.enable(this._gl.BLEND);
     if(this._renderBlocks) {
         this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
-        this._blockPainter.render(world, scale);
+        this._blockPainter.render(world, scale, forceSimple);
     }
     if(this._renderExtents) {
         this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA);
         this._extentPainter.render(world, scale);
     }
 
-    if(this._renderText) {
+    if(!forceSimple && this._renderText) {
         this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
         this._glyphPainter.render(world, scale);
     }
