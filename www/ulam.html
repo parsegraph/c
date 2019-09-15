@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         root.connectNode(parsegraph_DOWNWARD, ulam.node());
         return ulam;
     });
-    sga.onIdle(function() {
-        var callAgain = ulam.step();
+    sga.onIdle(function(timeout) {
+        var callAgain = ulam.step(timeout);
         sga.scheduleRepaint();
         if(!callAgain) {
             console.log("Done in " + parsegraph_elapsed(startTime) + "ms");

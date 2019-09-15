@@ -32,14 +32,16 @@ parsegraph_Ulam.prototype.spawnNumber = function(dir, num)
     this.caret.node()._id = "Ulam " + num;
 };
 
-parsegraph_Ulam.prototype.step = function()
+parsegraph_Ulam.prototype.step = function(timeout)
 {
+    var maxNumber = this.rowSize*this.rowSize;
+    if(!this.computePrimes(maxNumber, timeout)) {
+        return true;
+    }
+
     //console.log("Position=" + this.position + " RowSize=" + this.rowSize);
     this.caret.moveToRoot();
     var prior = this.caret.disconnect('d');
-
-    var maxNumber = this.rowSize*this.rowSize;
-    this.computePrimes(maxNumber);
 
     this.spawnNumber('d', maxNumber);
     this.caret.fitExact();
@@ -108,7 +110,7 @@ parsegraph_Ulam.prototype.getType = function(pos) {
     return pos in this.primeMap ? parsegraph_BLOCK : parsegraph_SLOT;
 };
 
-parsegraph_Ulam.prototype.computePrimes = function(max)
+parsegraph_Ulam.prototype.computePrimes = function(max, timeout)
 {
     function makeModulo(frequency) {
         var target = 0;
@@ -128,7 +130,14 @@ parsegraph_Ulam.prototype.computePrimes = function(max)
         return object;
     };
 
+    var startTime = new Date();
+
     while(this.candidate <= max) {
+        if(this.candidate % 100 === 0) {
+            if(timeout && parsegraph_elapsed(startTime) > timeout) {
+                return false;
+            }
+        }
         var isPrime = true;
         for(var i = 0; i < this.knownPrimes.length; ++i) {
             var prime = this.knownPrimes[i];
@@ -147,4 +156,5 @@ parsegraph_Ulam.prototype.computePrimes = function(max)
 
         ++this.candidate;
     }
+    return true;
 };
