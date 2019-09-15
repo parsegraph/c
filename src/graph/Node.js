@@ -1542,9 +1542,9 @@ parsegraph_Node.prototype.horizontalSeparation = function(direction)
     return style.horizontalSeparation;
 };
 
-parsegraph_Node.prototype.inNodeBody = function(x, y, userScale)
+parsegraph_Node.prototype.inNodeBody = function(x, y, userScale, bodySize)
 {
-    var s = this.size();
+    var s = this.size(bodySize);
     var ax = this.absoluteX();
     var ay = this.absoluteY();
     var aScale = this.absoluteScale();
@@ -1643,7 +1643,7 @@ parsegraph_Node.prototype.nodeUnderCoords = function(x, y, userScale)
             return candidates.pop();
         }
 
-        if(candidate.inNodeBody(x, y, userScale)) {
+        if(candidate.inNodeBody(x, y, userScale, extentSize)) {
             //console.log("Click is in node body");
             if(candidate.hasNode(parsegraph_INWARD)) {
                 if(candidate.nodeAt(parsegraph_INWARD).inNodeExtents(x, y, userScale, extentSize)) {
@@ -2651,15 +2651,23 @@ parsegraph_Node.prototype.commitLayout = function(cld)
 
         if(this.nodeFit() == parsegraph_NODE_FIT_EXACT) {
             // Append the line-shaped bound.
+            var lineSize;
+            if(perpAxis === parsegraph_VERTICAL_AXIS) {
+                lineSize = bodySize.height()/2;
+            }
+            else {
+                lineSize = bodySize.width()/2;
+            }
+            //lineSize = this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2;
             this.extentsAt(parsegraph_getPositiveNodeDirection(perpAxis)).combineBound(
                 positiveOffset,
                 this.lineLengthAt(given),
-                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
+                lineSize
             );
             this.extentsAt(parsegraph_getNegativeNodeDirection(perpAxis)).combineBound(
                 negativeOffset,
                 this.lineLengthAt(given),
-                this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2
+                lineSize
             );
         }
     };
