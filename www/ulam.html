@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var ulam;
     var COUNT = 100000;
     sga.setBurstIdle(true);
+    sga.setGovernor(false);
     var startTime = new Date();
     sga.start(document.body, function(app, root) {
         root.setLabel("Ulam Spiral");
