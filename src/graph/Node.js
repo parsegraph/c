@@ -3253,23 +3253,68 @@ function parsegraph_NodeRenderData()
     this.worldMat = matrixIdentity3x3();
 }
 
+var renderTimes = [];
+var renderData = new parsegraph_NodeRenderData();
+var CACHED_RENDERS = 0;
+var IMMEDIATE_RENDERS = 0;
+
 parsegraph_Node.prototype.renderIteratively = function(world, camera)
 {
+    CACHED_RENDERS = 0;
+    IMMEDIATE_RENDERS = 0;
+    var start = new Date();
     //console.log("Rendering iteratively");
     var paintGroup = this;
-    var cleanlyRendered = true;
+    var dirtyRenders = 0;
     var nodesRendered = 0;
+    var heaviestPaintGroup = null;
+    var mostRenders = 0;
+
     do {
         if(!paintGroup.localPaintGroup() && !paintGroup.isRoot()) {
             throw new Error("Paint group chain must not refer to a non-paint group");
         }
         //console.log("Rendering node " + paintGroup);
-        cleanlyRendered = paintGroup.render(world, camera) && cleanlyRendered;
+        if(!paintGroup.render(world, camera, renderData)) {
+            ++dirtyRenders;
+        }
+        else if(paintGroup.painter()._consecutiveRenders > 1) {
+            mostRenders = Math.max(paintGroup.painter()._consecutiveRenders, mostRenders);
+            if(heaviestPaintGroup === null) {
+                heaviestPaintGroup = paintGroup;
+            }
+            else if(paintGroup.painter().weight() > heaviestPaintGroup.painter().weight()) {
+                heaviestPaintGroup = paintGroup;
+            }
+        }
         paintGroup = paintGroup._paintGroupPrev;
         ++nodesRendered;
     } while(paintGroup !== this);
-    //console.log(nodesRendered + " paint groups rendered");
-    return cleanlyRendered;
+    //console.log(nodesRendered + " paint groups rendered " + (dirtyRenders > 0 ? "(" + dirtyRenders + " dirty)" : ""));
+    var renderTime = parsegraph_elapsed(start);
+    if(renderTimes.length == 11) {
+        renderTimes.splice(Math.floor(Math.random() * 11), 1);
+    }
+    if(mostRenders > 1) {
+        renderTimes.push(renderTime);
+        renderTimes.sort(function(a, b) {
+            return a - b;
+        });
+        var meanRenderTime = renderTimes[Math.floor(renderTimes.length/2)];
+        if(meanRenderTime > parsegraph_INTERVAL / 2) {
+            //console.log("Freezing heaviest node " + heaviestPaintGroup + " (weight=" + heaviestPaintGroup.painter().weight() + ") because rendering took " + meanRenderTime + "ms (most renders = " + mostRenders + ")");
+            var str = "[";
+            for(var i = 0; i < renderTimes.length; ++i) {
+                if(i > 0) {
+                    str += ", ";
+                }
+                str += renderTimes[i];
+            }
+            str += "]";
+            //console.log(str);
+        }
+    }
+    return dirtyRenders == 0;
 };
 
 parsegraph_Node.prototype.getHeaviestNode = function()
