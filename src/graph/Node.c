@@ -2634,17 +2634,27 @@ static void addLineBounds(void* nodePtr, int given)
 
     if(parsegraph_Node_nodeFit(node) == parsegraph_NODE_FIT_EXACT) {
         // Append the line-shaped bound.
+        float bodySize[2];
+        parsegraph_Node_size(node, bodySize);
+        float lineSize;
+        if(perpAxis == parsegraph_VERTICAL_AXIS) {
+            lineSize = bodySize[1]/2.0;
+        }
+        else {
+            lineSize = bodySize[0]/2.0;
+        }
+        //lineSize = parsegraph_Node_scaleAt(node, given) * parsegraph_LINE_THICKNESS / 2;
         parsegraph_Extent_combineBound(
             parsegraph_Node_extentsAt(node, parsegraph_getPositiveNodeDirection(perpAxis)),
             positiveOffset,
             parsegraph_Node_lineLengthAt(node, given),
-            parsegraph_Node_scaleAt(node, given) * parsegraph_LINE_THICKNESS / 2
+            lineSize
         );
         parsegraph_Extent_combineBound(
             parsegraph_Node_extentsAt(node, parsegraph_getNegativeNodeDirection(perpAxis)),
             negativeOffset,
             parsegraph_Node_lineLengthAt(node, given),
-            parsegraph_Node_scaleAt(node, given) * parsegraph_LINE_THICKNESS / 2
+            lineSize
         );
     }
 }
