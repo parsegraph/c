@@ -385,6 +385,7 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
     }
 
     node.glyphCount(counts.numGlyphs, this._pagesPerGlyphTexture);
+    //console.log(node + " Count=" + counts.numBlocks);
 };
 
 parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
