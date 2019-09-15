@@ -49,8 +49,12 @@ parsegraph_Rect.prototype.setY = function(y)
     this._y = y;
 };
 
-parsegraph_Rect.prototype.clone = function()
+parsegraph_Rect.prototype.clone = function(target)
 {
+    if(target) {
+        this.copy(target);
+        return target;
+    }
     return new parsegraph_Rect(this.x(), this.y(), this.width(), this.height());
 };
 
