@@ -262,11 +262,11 @@ function resize(gl) {
 
 function matrixIdentity3x3()
 {
-    return [
-        1, 0, 0,
-        0, 1, 0,
-        0, 0, 1
-    ];
+    var arr = new Float32Array(9);
+    arr[0] = 1;
+    arr[4] = 1;
+    arr[8] = 1;
+    return arr;
 }
 
 function matrixCopy3x3(src)
@@ -308,6 +308,21 @@ function matrixMultiply3x3()
     return rv;
 }
 
+function matrixMultiply3x3I(dest, a, b)
+{
+    return matrixSet3x3(dest,
+        a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
+        a[0] * b[1] + a[1] * b[4] + a[2] * b[7],
+        a[0] * b[2] + a[1] * b[5] + a[2] * b[8],
+        a[3] * b[0] + a[4] * b[3] + a[5] * b[6],
+        a[3] * b[1] + a[4] * b[4] + a[5] * b[7],
+        a[3] * b[2] + a[4] * b[5] + a[5] * b[8],
+        a[6] * b[0] + a[7] * b[3] + a[8] * b[6],
+        a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
+        a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
+    );
+}
+
 function matrixTransform2D(world, x, y)
 {
     return [
@@ -317,11 +332,15 @@ function matrixTransform2D(world, x, y)
 }
 
 function makeTranslation3x3(tx, ty) {
-    return [
+    return makeTranslation3x3I(matrixIdentity3x3(), tx, ty);
+}
+
+function makeTranslation3x3I(dest, tx, ty) {
+    return matrixSet3x3(dest,
         1, 0, 0,
         0, 1, 0,
         tx, ty, 1
-    ];
+    );
 }
 
 function makeRotation3x3(angleInRadians) {
@@ -338,11 +357,31 @@ function makeScale3x3(sx, sy) {
     if(arguments.length === 1) {
         sy = sx;
     }
-    return [
+    return makeScale3x3I(matrixIdentity3x3(), sx, sy);
+}
+
+function matrixSet3x3(dest, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+    dest[0] = a1;
+    dest[1] = a2;
+    dest[2] = a3;
+    dest[3] = a4;
+    dest[4] = a5;
+    dest[5] = a6;
+    dest[6] = a7;
+    dest[7] = a8;
+    dest[8] = a9;
+    return dest;
+}
+
+function makeScale3x3I(dest, sx, sy) {
+    if(arguments.length === 2) {
+        sy = sx;
+    }
+    return matrixSet3x3(dest,
         sx, 0, 0,
         0, sy, 0,
         0, 0, 1
-    ];
+    );
 }
 
 // http://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
