@@ -551,14 +551,14 @@ parsegraph_BlockPainter.prototype.contextChanged = function(isLost)
     this._blockProgramSimple = null;
 };
 
-parsegraph_BlockPainter.prototype.render = function(world, scale)
+parsegraph_BlockPainter.prototype.render = function(world, scale, forceSimple)
 {
     this.flush();
     if(this._blockBufferVertexIndex === 0) {
         return;
     }
     var gl = this._gl;
-    var usingSimple = (this._maxSize * scale) < 5;
+    var usingSimple = forceSimple || (this._maxSize * scale) < 5;
     //console.log(this._id, this._maxSize * scale, usingSimple);
 
     if(this._blockProgram === null) {
@@ -642,6 +642,7 @@ parsegraph_BlockPainter.prototype.render = function(world, scale)
         gl.vertexAttribPointer(this.a_aspectRatio,       1, gl.FLOAT, false, stride, 56);
     }
 
+    //console.log(this._blockBufferVertexIndex);
     gl.drawArrays(gl.TRIANGLES, 0, this._blockBufferVertexIndex);
 
     if(usingSimple) {
