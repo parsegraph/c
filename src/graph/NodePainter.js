@@ -685,9 +685,11 @@ parsegraph_NodePainter.prototype.render = function(world, scale, forceSimple)
         this._glyphPainter.render(world, scale);
     }
 
-    this._textures.forEach(function(t) {
-        t.render(world);
-    });
+    if(this._textures.length > 0) {
+        this._textures.forEach(function(t) {
+            t.render(world);
+        });
+    }
 };
 
 parsegraph_NodePainter.prototype.enableExtentRendering = function()
