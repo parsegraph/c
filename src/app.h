@@ -19,7 +19,6 @@ int(*_idleFunc)(void*, int);
 void* _idleFuncThisArg;
 void(*_closeFunc)(void*, struct parsegraph_Application*);
 void* _closeFuncThisArg;
-int _mathMode;
 int _governor;
 int _burstIdle;
 parsegraph_CameraState _cameraState;
@@ -36,7 +35,6 @@ int _renderedMouse;
 typedef struct parsegraph_Application parsegraph_Application;
 
 parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool);
-void parsegraph_Application_setMathMode(parsegraph_Application* app, int mathMode);
 void parsegraph_Application_setGovernor(parsegraph_Application* app, int governor);
 void parsegraph_Application_setBurstIdle(parsegraph_Application* app, int burstIdle);
 void parsegraph_Application_setInterval(parsegraph_Application* app, int interval);

@@ -8,6 +8,8 @@ function parsegraph_Caret(nodeRoot, glyphAtlas)
     }
     this._nodeRoot = nodeRoot;
 
+    this._mathMode = false;
+
     // Stack of nodes.
     this._nodes = [this._nodeRoot];
 
@@ -22,6 +24,27 @@ function parsegraph_Caret(nodeRoot, glyphAtlas)
 parsegraph_Caret.prototype.clone = function()
 {
     return new parsegraph_Caret(this.node(), this.glyphAtlas());
+};
+
+parsegraph_Caret.prototype.setMathMode = function(mathMode)
+{
+    this._mathMode = mathMode;
+    var curr = this.node();
+    if(mathMode) {
+        switch(curr.type()) {
+        case parsegraph_BLOCK:
+            curr.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            curr.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+            break;
+        }
+    }
+};
+
+parsegraph_Caret.prototype.mathMode = function()
+{
+    return this._mathMode;
 };
 
 parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
@@ -78,6 +101,17 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newType, newAlignmentMo
         this.align(inDirection, newAlignmentMode);
         if(newAlignmentMode !== parsegraph_DO_NOT_ALIGN) {
             this.node().setNodeFit(parsegraph_NODE_FIT_EXACT);
+        }
+    }
+
+    if(this._mathMode) {
+        switch(newType) {
+        case parsegraph_BLOCK:
+            created.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            created.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+            break;
         }
     }
 
@@ -274,6 +308,16 @@ parsegraph_Caret.prototype.replace = function()
     // Set the node type.
     withContent = parsegraph_readNodeType(withContent);
     node.setType(withContent);
+    if(this._mathMode) {
+        switch(newType) {
+        case parsegraph_BLOCK:
+            this.node().setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            this.node().setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+            break;
+        }
+    }
 };
 
 parsegraph_Caret.prototype.at = function(inDirection)

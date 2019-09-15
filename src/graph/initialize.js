@@ -46,8 +46,8 @@ function parsegraph_showGraph(rootNode)
     return graph.surface().container();
 }
 
-function parsegraph_initialize(mathMode) {
-    //console.log("Initializing parsegraph. Math mode: ", mathMode);
+function parsegraph_initialize() {
+    //console.log("Initializing parsegraph.");
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     // The width in pixels of a glyph atlas's page.
@@ -173,12 +173,10 @@ function parsegraph_initialize(mathMode) {
     parsegraph_VERTICAL_SEPARATION_PADDING = parsegraph_BUD_RADIUS;
 
     // Configures graphs to appear grid-like; I call it 'math-mode'.
-    if(mathMode) {
-        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*40;
-        parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
-        parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
-        parsegraph_VERTICAL_SEPARATION_PADDING = 2;
-    }
+    parsegraph_MIN_BLOCK_WIDTH_MATH = parsegraph_BUD_RADIUS*40;
+    parsegraph_MIN_BLOCK_HEIGHT_MATH = parsegraph_MIN_BLOCK_WIDTH_MATH;
+    parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH = 2;
+    parsegraph_VERTICAL_SEPARATION_PADDING_MATH = 2;
 
     /**
      * The separation between leaf buds and their parents.
@@ -250,10 +248,26 @@ function parsegraph_initialize(mathMode) {
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
-    if(mathMode) {
-        parsegraph_BLOCK_STYLE.horizontalPadding = 2*parsegraph_BUD_RADIUS;
-        parsegraph_BLOCK_STYLE.verticalPadding = .5*parsegraph_BUD_RADIUS;
-    }
+    parsegraph_BLOCK_MATH_STYLE = {
+        minWidth: parsegraph_MIN_BLOCK_WIDTH_MATH,
+        minHeight: parsegraph_MIN_BLOCK_HEIGHT_MATH,
+        horizontalPadding: 2*parsegraph_BUD_RADIUS,
+        verticalPadding: .5*parsegraph_BUD_RADIUS,
+        borderColor: new parsegraph_Color(.6, 1, .6, 1),
+        backgroundColor: new parsegraph_Color(.75, 1, .75, 1),
+        selectedBorderColor: new parsegraph_Color(.8, .8, 1, 1),
+        selectedBackgroundColor: new parsegraph_Color(.75, .75, 1, 1),
+        brightness: 0.75,
+        borderRoundness: parsegraph_BUD_RADIUS*3,
+        borderThickness: parsegraph_BUD_RADIUS*2,
+        maxLabelChars: null,
+        fontColor: new parsegraph_Color(0, 0, 0, 1),
+        selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
+        fontSize: parsegraph_FONT_SIZE,
+        letterWidth: .61,
+        verticalSeparation: 6 * parsegraph_VERTICAL_SEPARATION_PADDING_MATH,
+        horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH
+    };
 
     parsegraph_SCENE_STYLE = {
         minWidth: 2048,
@@ -297,15 +311,27 @@ function parsegraph_initialize(mathMode) {
         horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING
     };
 
-    if(mathMode) {
-        parsegraph_SLOT_STYLE.horizontalPadding = 2*parsegraph_BUD_RADIUS;
-        parsegraph_SLOT_STYLE.verticalPadding = .5*parsegraph_BUD_RADIUS;
-    }
-
-    if(mathMode) {
-        //parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
-        parsegraph_SLOT_STYLE.borderColor.setA(1);
-    }
+    parsegraph_SLOT_MATH_STYLE = {
+        minWidth: parsegraph_MIN_BLOCK_WIDTH_MATH,
+        minHeight: parsegraph_MIN_BLOCK_HEIGHT_MATH,
+        horizontalPadding: 2*parsegraph_BUD_RADIUS,
+        verticalPadding: .5*parsegraph_BUD_RADIUS,
+        borderColor: new parsegraph_Color(1, 1, 1, 1),
+        backgroundColor: new parsegraph_Color(.75, .75, 1, 1),
+        selectedBorderColor: new parsegraph_Color(.95, 1, .95, 1),
+        selectedBackgroundColor: new parsegraph_Color(.9, 1, .9, 1),
+        brightness: 0.75,
+        borderRoundness: parsegraph_BUD_RADIUS*3,
+        borderThickness: parsegraph_BUD_RADIUS*2,
+        maxLabelChars: null,
+        fontColor: new parsegraph_Color(0, 0, 0, 1),
+        selectedFontColor: new parsegraph_Color(0, 0, 0, 1),
+        fontSize: parsegraph_FONT_SIZE,
+        letterWidth: .61,
+        verticalSeparation: 6 * parsegraph_VERTICAL_SEPARATION_PADDING_MATH,
+        horizontalSeparation: 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH
+    };
+    parsegraph_SLOT_MATH_STYLE.borderColor.setA(1);
 
     parsegraph_EXTENT_BORDER_COLOR = new parsegraph_Color(1, 1, 0, .1);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;

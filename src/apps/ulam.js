@@ -1,6 +1,7 @@
 function parsegraph_Ulam(app, COUNT)
 {
     this.caret = new parsegraph_Caret('u');
+    this.caret.setMathMode(true);
     this.caret.setGlyphAtlas(app.glyphAtlas());
 
     this.maxNumber = COUNT;

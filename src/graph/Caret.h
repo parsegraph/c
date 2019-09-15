@@ -22,6 +22,7 @@ parsegraph_ArrayList* _labels;
 parsegraph_ArrayList* _savedNodes;
 parsegraph_GlyphAtlas* _glyphAtlas;
 parsegraph_Node* _nodeRoot;
+int _mathMode;
 };
 typedef struct parsegraph_Caret parsegraph_Caret;
 
@@ -63,6 +64,8 @@ void parsegraph_Caret_grow(parsegraph_Caret* caret, const char* inDir);
 void parsegraph_Caret_shrink(parsegraph_Caret* caret, const char* inDir);
 void parsegraph_Caret_fitExact(parsegraph_Caret* caret, const char* inDir);
 void parsegraph_Caret_fitLoose(parsegraph_Caret* caret, const char* inDir);
+void parsegraph_Caret_setMathMode(parsegraph_Caret* caret, int mathMode);
+int parsegraph_Caret_mathMode(parsegraph_Caret* caret);
 void parsegraph_Caret_destroy(parsegraph_Caret* caret);
 
 #endif // parsegraph_Caret_INCLUDED

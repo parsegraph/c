@@ -24,7 +24,6 @@ parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool)
     app->_closeFunc = 0;
     app->_closeFuncThisArg = 0;
     app->_renderTimer = 0;
-    app->_mathMode = 0;
     app->_renderedMouse = 0;
     clock_gettime(CLOCK_MONOTONIC, &app->_appStartTime);
     app->_lastIdle = app->_appStartTime;
@@ -36,11 +35,6 @@ parsegraph_Application* parsegraph_Application_new(apr_pool_t* pool)
     app->_cameraState.cameraY = 0;
     app->_cameraState.scale = 1;
     return app;
-}
-
-void parsegraph_Application_setMathMode(parsegraph_Application* app, int mathMode)
-{
-    app->_mathMode = mathMode;
 }
 
 void parsegraph_Application_setGovernor(parsegraph_Application* app, int governor)
@@ -73,7 +67,7 @@ parsegraph_ArrayList* parsegraph_Application_args(parsegraph_Application* app)
 void parsegraph_Application_start(parsegraph_Application* app, void* peer, int w, int h, parsegraph_ArrayList* args, void(*initFunc)(void*, parsegraph_Application*, parsegraph_Node*), void* initFuncThisArg)
 {
     // Always immediately initialize constants for use by application objects.
-    parsegraph_initialize(app->pool, app->_mathMode);
+    parsegraph_initialize(app->pool);
     if(app->_governor == -1) {
         app->_governor = parsegraph_GOVERNOR;
     }

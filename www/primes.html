@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     sga.setCameraName("parsegraph_primes_camera");
     SGA = sga;
     var primes = null;
-    sga.setMathMode(true);
     sga.start(document.body, function(app, root) {
         primes = new parsegraph_PrimesWidget(app);
         root.connectNode(parsegraph_FORWARD, primes.node());

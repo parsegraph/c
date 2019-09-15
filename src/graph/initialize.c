@@ -11,6 +11,8 @@ int parsegraph_NATURAL_GROUP_SIZE;
 struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS = 0;
 float parsegraph_MIN_BLOCK_HEIGHT;
 float parsegraph_MIN_BLOCK_WIDTH;
+float parsegraph_MIN_BLOCK_HEIGHT_MATH;
+float parsegraph_MIN_BLOCK_WIDTH_MATH;
 float parsegraph_BUD_RADIUS;
 float parsegraph_LINE_COLOR[4];
 float parsegraph_SELECTED_LINE_COLOR[4];
@@ -19,8 +21,10 @@ float parsegraph_FONT_SIZE;
 struct parsegraph_Style* parsegraph_BUD_STYLE;
 struct parsegraph_Style* parsegraph_SLIDER_STYLE;
 struct parsegraph_Style* parsegraph_BLOCK_STYLE;
+struct parsegraph_Style* parsegraph_BLOCK_MATH_STYLE;
 struct parsegraph_Style* parsegraph_SCENE_STYLE;
 struct parsegraph_Style* parsegraph_SLOT_STYLE;
+struct parsegraph_Style* parsegraph_SLOT_MATH_STYLE;
 int parsegraph_WRAP_WIDTH;
 float parsegraph_TOUCH_SENSITIVITY;
 float parsegraph_MOUSE_SENSITIVITY;
@@ -32,6 +36,8 @@ int parsegraph_WRAP_WIDTH;
 float parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION;
 float parsegraph_HORIZONTAL_SEPARATION_PADDING;
 float parsegraph_VERTICAL_SEPARATION_PADDING;
+float parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH;
+float parsegraph_VERTICAL_SEPARATION_PADDING_MATH;
 float parsegraph_EXTENT_BORDER_ROUNDEDNESS;
 float parsegraph_EXTENT_BORDER_THICKNESS;
 float parsegraph_EXTENT_BORDER_COLOR[4];
@@ -164,12 +170,10 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_VERTICAL_SEPARATION_PADDING = parsegraph_BUD_RADIUS;
 
     // Configures graphs to appear grid-like; I call it 'math-mode'.
-    if(mathMode) {
-        parsegraph_MIN_BLOCK_WIDTH = parsegraph_BUD_RADIUS*40;
-        parsegraph_MIN_BLOCK_HEIGHT = parsegraph_MIN_BLOCK_WIDTH;
-        parsegraph_HORIZONTAL_SEPARATION_PADDING = 2;
-        parsegraph_VERTICAL_SEPARATION_PADDING = 2;
-    }
+    parsegraph_MIN_BLOCK_WIDTH_MATH = parsegraph_BUD_RADIUS*40;
+    parsegraph_MIN_BLOCK_HEIGHT_MATH = parsegraph_MIN_BLOCK_WIDTH_MATH;
+    parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH = 2;
+    parsegraph_VERTICAL_SEPARATION_PADDING_MATH = 2;
 
     /**
      * The separation between leaf buds and their parents.
@@ -238,10 +242,25 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_BLOCK_STYLE->verticalSeparation = 6 * parsegraph_VERTICAL_SEPARATION_PADDING;
     parsegraph_BLOCK_STYLE->horizontalSeparation = 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING;
 
-    if(mathMode) {
-        parsegraph_BLOCK_STYLE->horizontalPadding = 2*parsegraph_BUD_RADIUS;
-        parsegraph_BLOCK_STYLE->verticalPadding = .5*parsegraph_BUD_RADIUS;
-    }
+    parsegraph_BLOCK_MATH_STYLE = apr_palloc(pool, sizeof(parsegraph_Style));
+    parsegraph_BLOCK_MATH_STYLE->minWidth = parsegraph_MIN_BLOCK_WIDTH_MATH;
+    parsegraph_BLOCK_MATH_STYLE->minHeight = parsegraph_MIN_BLOCK_HEIGHT_MATH;
+    parsegraph_BLOCK_MATH_STYLE->horizontalPadding = 2*parsegraph_BUD_RADIUS;
+    parsegraph_BLOCK_MATH_STYLE->verticalPadding = .5*parsegraph_BUD_RADIUS;
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->borderColor, .6, 1, .6, 1);
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->backgroundColor, .75, 1, .75, 1);
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->selectedBorderColor, .8, .8, 1, 1);
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->selectedBackgroundColor, .75, .75, 1, 1);
+    parsegraph_BLOCK_MATH_STYLE->brightness = 0.75;
+    parsegraph_BLOCK_MATH_STYLE->borderRoundness = parsegraph_BUD_RADIUS*3;
+    parsegraph_BLOCK_MATH_STYLE->borderThickness = parsegraph_BUD_RADIUS*2;
+    parsegraph_BLOCK_MATH_STYLE->maxLabelChars = 0;
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->fontColor, 0, 0, 0, 1);
+    parsegraph_Color_SetRGBA(parsegraph_BLOCK_MATH_STYLE->selectedFontColor, 0, 0, 0, 1);
+    parsegraph_BLOCK_MATH_STYLE->fontSize = parsegraph_FONT_SIZE;
+    parsegraph_BLOCK_MATH_STYLE->letterWidth = .61;
+    parsegraph_BLOCK_MATH_STYLE->verticalSeparation = 6 * parsegraph_VERTICAL_SEPARATION_PADDING_MATH;
+    parsegraph_BLOCK_MATH_STYLE->horizontalSeparation = 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH;
 
     parsegraph_SCENE_STYLE = apr_palloc(pool, sizeof(parsegraph_Style));
     parsegraph_SCENE_STYLE->minWidth = 2048;
@@ -283,15 +302,26 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_SLOT_STYLE->verticalSeparation = 6 * parsegraph_VERTICAL_SEPARATION_PADDING;
     parsegraph_SLOT_STYLE->horizontalSeparation = 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING;
 
-    if(mathMode) {
-        parsegraph_SLOT_STYLE->horizontalPadding = 2*parsegraph_BUD_RADIUS;
-        parsegraph_SLOT_STYLE->verticalPadding = .5*parsegraph_BUD_RADIUS;
-    }
-
-    if(mathMode) {
-        //parsegraph_BLOCK_STYLE.verticalPadding = parsegraph_SLOT_STYLE.verticalPadding;
-        parsegraph_SLOT_STYLE->borderColor[3] = 1;
-    }
+    parsegraph_SLOT_MATH_STYLE = apr_palloc(pool, sizeof(parsegraph_Style));
+    parsegraph_SLOT_MATH_STYLE->minWidth = parsegraph_MIN_BLOCK_WIDTH_MATH;
+    parsegraph_SLOT_MATH_STYLE->minHeight = parsegraph_MIN_BLOCK_HEIGHT_MATH;
+    parsegraph_SLOT_MATH_STYLE->horizontalPadding = 2*parsegraph_BUD_RADIUS;
+    parsegraph_SLOT_MATH_STYLE->verticalPadding = .5*parsegraph_BUD_RADIUS;
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->borderColor, 1, 1, 1, 1);
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->backgroundColor, .75, .75, 1, 1);
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->selectedBorderColor, .95, 1, .95, 1);
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->selectedBackgroundColor, .9, 1, .9, 1);
+    parsegraph_SLOT_MATH_STYLE->brightness = 0.75;
+    parsegraph_SLOT_MATH_STYLE->borderRoundness = parsegraph_BUD_RADIUS*3;
+    parsegraph_SLOT_MATH_STYLE->borderThickness = parsegraph_BUD_RADIUS*2;
+    parsegraph_SLOT_MATH_STYLE->maxLabelChars = 0;
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->fontColor, 0, 0, 0, 1);
+    parsegraph_Color_SetRGBA(parsegraph_SLOT_MATH_STYLE->selectedFontColor, 0, 0, 0, 1);
+    parsegraph_SLOT_MATH_STYLE->fontSize = parsegraph_FONT_SIZE;
+    parsegraph_SLOT_MATH_STYLE->letterWidth = .61;
+    parsegraph_SLOT_MATH_STYLE->verticalSeparation = 6 * parsegraph_VERTICAL_SEPARATION_PADDING_MATH;
+    parsegraph_SLOT_MATH_STYLE->horizontalSeparation = 7 * parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH;
+    parsegraph_SLOT_MATH_STYLE->borderColor[3] = 1;
 
     parsegraph_Color_SetRGBA(parsegraph_EXTENT_BORDER_COLOR, 1, 1, 0, .1);
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_LINE_THICKNESS;

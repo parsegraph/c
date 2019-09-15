@@ -26,6 +26,8 @@ parsegraph_Caret* parsegraph_Caret_new(parsegraph_Surface* surface, parsegraph_N
     caret->surface = surface;
     caret->pool = pool;
 
+    caret->_mathMode = 0;
+
     caret->_nodeRoot = nodeRoot;
 
     // Stack of nodes.
@@ -51,6 +53,27 @@ void parsegraph_Caret_destroy(parsegraph_Caret* caret)
     }
     parsegraph_ArrayList_destroy(caret->_labels);
     apr_pool_destroy(caret->pool);
+}
+
+void parsegraph_Caret_setMathMode(parsegraph_Caret* caret, int mathMode)
+{
+    caret->_mathMode = mathMode;
+    parsegraph_Node* curr = parsegraph_Caret_node(caret);
+    if(mathMode) {
+        switch(parsegraph_Node_type(curr)) {
+        case parsegraph_BLOCK:
+            parsegraph_Node_setBlockStyle(curr, parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            parsegraph_Node_setBlockStyle(curr, parsegraph_SLOT_MATH_STYLE);
+            break;
+        }
+    }
+}
+
+int parsegraph_Caret_mathMode(parsegraph_Caret* caret)
+{
+    return caret->_mathMode;
 }
 
 void parsegraph_Caret_setGlyphAtlas(parsegraph_Caret* caret, parsegraph_GlyphAtlas* glyphAtlas)
@@ -94,6 +117,17 @@ void parsegraph_Caret_spawn(parsegraph_Caret* caret, const char* inDirection, co
         parsegraph_Caret_align(caret, inDirection, newAlignmentMode);
         if(newAlignmentModeVal != parsegraph_DO_NOT_ALIGN) {
             parsegraph_Node_setNodeFit(parsegraph_Caret_node(caret), parsegraph_NODE_FIT_EXACT);
+        }
+    }
+
+    if(caret->_mathMode) {
+        switch(newTypeVal) {
+        case parsegraph_BLOCK:
+            parsegraph_Node_setBlockStyle(created, parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            parsegraph_Node_setBlockStyle(created, parsegraph_SLOT_MATH_STYLE);
+            break;
         }
     }
 
@@ -323,7 +357,18 @@ void parsegraph_Caret_replace(parsegraph_Caret* caret, const char* arg1, const c
 
     // Set the node type.
     int withContentVal = parsegraph_readNodeType(withContent);
+
     parsegraph_Node_setType(node, withContentVal);
+    if(caret->_mathMode) {
+        switch(withContentVal) {
+        case parsegraph_BLOCK:
+            parsegraph_Node_setBlockStyle(node, parsegraph_BLOCK_MATH_STYLE);
+            break;
+        case parsegraph_SLOT:
+            parsegraph_Node_setBlockStyle(node, parsegraph_SLOT_MATH_STYLE);
+            break;
+        }
+    }
 }
 
 int parsegraph_Caret_at(parsegraph_Caret* caret, const char* inDirection)

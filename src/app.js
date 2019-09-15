@@ -13,7 +13,6 @@ function parsegraph_Application()
     this._idleFunc = null;
     this._idleFuncThisArg = null;
     this._renderTimer = null;
-    this._mathMode = false;
 
     this._governor = null;
     this._burstIdle = null;
@@ -22,11 +21,6 @@ function parsegraph_Application()
     this._lastRender = null;
     this._idleTimer = null;
 }
-
-parsegraph_Application.prototype.setMathMode = function(mathMode)
-{
-    this._mathMode = mathMode;
-};
 
 parsegraph_Application.prototype.setGovernor = function(governor)
 {
@@ -45,7 +39,7 @@ parsegraph_Application.prototype.setInterval = function(interval)
 
 parsegraph_Application.prototype.start = function(container, initFunc, initFuncThisArg) {
     // Always immediately initialize constants for use by application objects.
-    parsegraph_initialize(this._mathMode);
+    parsegraph_initialize();
     this._governor = this._governor === null ? parsegraph_GOVERNOR : this._governor;
     this._burstIdle = this._burstIdle === null ? parsegraph_BURST_IDLE : this._burstIdle;
     this._interval = this._interval === null ? parsegraph_INTERVAL : this._interval;

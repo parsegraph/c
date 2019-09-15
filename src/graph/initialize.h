@@ -35,7 +35,7 @@ extern struct parsegraph_GlyphAtlas* parsegraph_GLYPH_ATLAS;
 extern struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool);
 parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int nodeType);
 parsegraph_Style* parsegraph_style(int nodeType);
-void parsegraph_initialize(apr_pool_t* pool, int mathMode);
+void parsegraph_initialize(apr_pool_t* pool);
 
 extern float parsegraph_TOUCH_SENSITIVITY;
 extern float parsegraph_MOUSE_SENSITIVITY;
@@ -71,10 +71,14 @@ extern float parsegraph_BUD_RADIUS;
 
 extern float parsegraph_MIN_BLOCK_HEIGHT;
 extern float parsegraph_MIN_BLOCK_WIDTH;
+extern float parsegraph_MIN_BLOCK_HEIGHT_MATH;
+extern float parsegraph_MIN_BLOCK_WIDTH_MATH;
 
 // Inter-node spacing
 extern float parsegraph_HORIZONTAL_SEPARATION_PADDING;
 extern float parsegraph_VERTICAL_SEPARATION_PADDING;
+extern float parsegraph_HORIZONTAL_SEPARATION_PADDING_MATH;
+extern float parsegraph_VERTICAL_SEPARATION_PADDING_MATH;
 
 /**
  * The separation between leaf buds and their parents.
@@ -88,6 +92,8 @@ extern struct parsegraph_Style* parsegraph_SLIDER_STYLE;
 extern struct parsegraph_Style* parsegraph_BLOCK_STYLE;
 extern struct parsegraph_Style* parsegraph_SCENE_STYLE;
 extern struct parsegraph_Style* parsegraph_SLOT_STYLE;
+extern struct parsegraph_Style* parsegraph_SLOT_MATH_STYLE;
+extern struct parsegraph_Style* parsegraph_BLOCK_MATH_STYLE;
 
 extern float parsegraph_EXTENT_BORDER_COLOR[4];
 extern float parsegraph_EXTENT_BORDER_THICKNESS;
