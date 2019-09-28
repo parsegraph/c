@@ -353,6 +353,15 @@ function parsegraph_initialize()
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;
 }
 
+function parsegraph_cloneStyle(style)
+{
+    var rv = {};
+    for(var styleName in style) {
+        rv[styleName] = style[styleName];
+    }
+    return rv;
+}
+
 function parsegraph_copyStyle(type)
 {
     var rv = {};
