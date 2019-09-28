@@ -640,6 +640,9 @@ parsegraph_Window.prototype.canProject = function()
 parsegraph_Window.prototype.render = function()
 {
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
+    var gl = this.gl();
+    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
+    gl.clear(gl.COLOR_BUFFER_BIT);
     //this.renderMultisampleFramebuffer();
     this.renderDirect();
     //this.renderFramebuffer();
