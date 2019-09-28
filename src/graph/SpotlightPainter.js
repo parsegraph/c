@@ -31,16 +31,15 @@ parsegraph_SpotlightPainter_FragmentShader =
     "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);" +
 "}";
 
-function parsegraph_SpotlightPainter(gl, shaders)
+function parsegraph_SpotlightPainter(window)
 {
-    this._gl = gl;
-    if(!this._gl || !this._gl.createProgram) {
-        throw new Error("A GL interface must be given");
+    this._window = window;
+    if(!this._window) {
+        throw new Error("Window must be provided");
     }
 
-    this._shaders = shaders;
     this._program = null;
-    this.contextChanged(gl.isContextLost());
+    this.contextChanged(this._window.gl().isContextLost());
 };
 
 parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
@@ -124,16 +123,14 @@ parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost)
     }
     else {
         //console.log(new Error("Restoring spotlight painter"));
-        var gl = this._gl;
-        this._program = parsegraph_compileProgram(gl, this._shaders,
+        var gl = this._window.gl();
+        this._program = parsegraph_compileProgram(this._window,
             "parsegraph_SpotlightPainter",
             parsegraph_SpotlightPainter_VertexShader,
             parsegraph_SpotlightPainter_FragmentShader
         );
         // Prepare attribute buffers.
-        this._spotlightBuffer = parsegraph_createPagingBuffer(
-            this._gl, this._program
-        );
+        this._spotlightBuffer = parsegraph_createPagingBuffer(gl, this._program);
         this._spotlightBuffer.addPage();
 
         this.a_position = this._spotlightBuffer.defineAttrib("a_position", 2);
@@ -144,19 +141,16 @@ parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost)
 
 parsegraph_SpotlightPainter.prototype.render = function(world, scale)
 {
-    if(this._gl.isContextLost()) {
+    var gl = this._window.gl();
+    if(gl.isContextLost()) {
         return;
     }
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(
-        this._program, "u_world"
-    );
+    this.u_world = gl.getUniformLocation(this._program, "u_world");
 
     // Render spotlights.
-    this._gl.useProgram(
-        this._program
-    );
-    this._gl.uniformMatrix3fv(
+    gl.useProgram(this._program);
+    gl.uniformMatrix3fv(
         this.u_world,
         false,
         world

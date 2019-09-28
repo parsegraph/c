@@ -1,21 +1,17 @@
 var audioTransition = 1.2;
-function alpha_WeetCubeWidget()
+function alpha_WeetCubeWidget(window)
 {
-    var surface;
-    if(arguments.length === 0) {
-        surface = new parsegraph_Surface();
+    this.window = window;
+    if(!this.window) {
+        throw new Error("A Window must be provided when creating a Widget");
     }
-    else {
-        surface = arguments[0];
-    }
-    this.surface = surface;
 
-    this.camera = new alpha_Camera(surface);
+    this.camera = new alpha_Camera();
     this.camera.SetFovX(60);
     this.camera.SetFarDistance(1000);
     this.camera.SetNearDistance(.1);
 
-    this.input = new alpha_Input(surface, this.camera);
+    this.input = new alpha_Input(this.window, this.camera);
     this.input.SetMouseSensitivity(.4);
 
     this.input.SetOnKeyDown(this.onKeyDown, this);
@@ -135,7 +131,22 @@ function alpha_WeetCubeWidget()
     this.camera.GetParent().SetOrientation(alpha_QuaternionFromAxisAndAngle(
         0, 1, 0, Math.PI
     ));
+
+    this._component = new parsegraph_Component();
+    this._component.setPainter(this.paint, this);
+    this._component.setRenderer(this.render, this);
+    this.setLayout(new parsegraph_FullscreenLayout());
 }
+
+alpha_WeetCubeWidget.prototype.component = function()
+{
+    return this._component;
+};
+
+alpha_WeetCubeWidget.prototype.setLayout = function(layout)
+{
+    this._component.setLayout(layout);
+};
 
 alpha_WeetCubeWidget.prototype.createAudioNode = function(audio)
 {
@@ -218,9 +229,9 @@ alpha_WeetCubeWidget.prototype.paint = function()
 {
     var elapsed = this._elapsed;
     var rotq = this.rotq;
-    var audio=this.surface.audio();
+    var audio=this.window.audio();
     if(!this.cubePainter) {
-        this.cubePainter = new alpha_WeetPainter(this.surface.gl());
+        this.cubePainter = new alpha_WeetPainter(this.window);
         this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
     }
     else {
@@ -352,54 +363,46 @@ alpha_WeetCubeWidget.prototype.setUpdateListener = function(listener, listenerTh
     this._listenerThisArg = listenerThisArg || this;
 }
 
-alpha_WeetCubeWidget.prototype.render = function()
+alpha_WeetCubeWidget.prototype.render = function(width, height)
 {
-    var gl = this.surface.gl();
+    var gl = this.window.gl();
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
 
-    audio = this.surface.audio();
-    if(audio) {
-        var listener=audio.listener;
-        if(listener.forwardX) {
-      listener.forwardX.value = 0;
-      listener.forwardY.value = 0;
-      listener.forwardZ.value = -1;
-      listener.upX.value = 0;
-      listener.upY.value = 1;
-      listener.upZ.value = 0;
-    } else {
-      listener.setOrientation(0,0,-1,0,1,0);
-    }
-    }
+    audio = this.window.audio();
 
     var cm=this.camera.GetParent().GetModelMatrix();
     var xPos=cm[12];
     var yPos=cm[13];
     var zPos=cm[14];
     if(audio) {
+        var listener = audio.listener;
         if(listener.positionX) {
-          listener.positionX.value = xPos;
-          listener.positionY.value = yPos;
-          listener.positionZ.value = zPos;
+            listener.positionX.value = xPos;
+            listener.positionY.value = yPos;
+            listener.positionZ.value = zPos;
         } else {
-          listener.setPosition(xPos,yPos,zPos);
+            listener.setPosition(xPos,yPos,zPos);
+        }
+        if(listener.forwardX) {
+            var forV = cm.Transform(0, 0, -1);
+            var upV = cm.Transform(0, 1, 0);
+            listener.forwardX.setValueAtTime(forV[0], audio.currentTime);
+            listener.forwardY.setValueAtTime(forV[1], audio.currentTime);
+            listener.forwardZ.setValueAtTime(forV[2], audio.currentTime);
+            listener.upX.setValueAtTime(upV[0], audio.currentTime);
+            listener.upY.setValueAtTime(upV[1], audio.currentTime);
+            listener.upZ.setValueAtTime(upV[2], audio.currentTime);
+            console.log("Setting orientation:" + forV[0] + ", " + forV[1] + ", " + forV[2]);
         }
     }
     //console.log(xPos + ", " + yPos + ", " + zPos);
 
-    var projection;
-    if(arguments.length > 0) {
-        projection = this.camera.UpdateProjection(arguments[0], arguments[1]);
-    }
-    else {
-        projection = this.camera.UpdateProjection();
-    }
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    var projection = this.camera.UpdateProjection(width, height);
     //console.log("projection is" + projection.toString());
     var viewMatrix = this.camera.GetViewMatrix().Multiplied(projection);
     //console.log("CameraViewMatrix is" + this.camera.GetViewMatrix().toString());
     //console.log("viewMatrix is " + viewMatrix.toString());
     this.cubePainter.Draw(viewMatrix);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
 };

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
-.parsegraph_Surface {
+.parsegraph_Window {
     width: 100%;
     height: 100%;
 }
@@ -61,15 +61,13 @@ inited = true;
 
 parsegraph_initialize();
 
-var surface = new parsegraph_Surface();
-surface.startAudio();
-document.body.appendChild(surface.container());
+var window = new parsegraph_Window();
+window.startAudio();
+document.body.appendChild(window.container());
 
-var widget = new alpha_WeetCubeWidget(surface);
+var widget = new alpha_WeetCubeWidget(window);
 WIDGET = widget;
-
-surface.addPainter(widget.paint, widget);
-surface.addRenderer(widget.render, widget);
+window.addWidget(widget);
 
 var start = alpha_GetTime();
 var audioUpdate = null;
@@ -81,10 +79,10 @@ var tick = function(t) {
     var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
     widget.Tick(elapsed, frozen, updateAudio);
     if(!frozen || !widget.cubePainter) {
-        surface.paint();
+        window.paint();
     }
     else if(widget._modeSwitched) {
-        surface.paint();
+        window.paint();
     }
     if(updateAudio) {
         audioUpdate = t;
@@ -92,7 +90,7 @@ var tick = function(t) {
     if(!frozen) {
         start = t;
     }
-    surface.render();
+    window.render();
 
     // Reschedule.
     tickIntervalId = requestAnimationFrame(tick)
@@ -108,7 +106,7 @@ backgroundAudioForcer.setListener(function() {
     var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
     widget.Tick(elapsed, frozen, updateAudio);
     if(!frozen || !widget.cubePainter) {
-        surface.paint(elapsed, frozen, updateAudio);
+        window.paint(elapsed, frozen, updateAudio);
     }
     if(updateAudio) {
         audioUpdate = t;

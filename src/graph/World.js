@@ -1,4 +1,4 @@
-function parsegraph_World(graph)
+function parsegraph_World()
 {
     // World-rendered graphs.
     this._worldPaintingDirty = true;
@@ -8,11 +8,8 @@ function parsegraph_World(graph)
     this._nodeUnderCursor = null;
 
     this._previousWorldPaintState = null;
-
-    this._camera = null;
-
-    this._graph = graph;
-    this._freezer = new parsegraph_Freezer(this._graph.gl(), this._graph.shaders());
+    this._freezer = new parsegraph_Freezer();
+    this._cameraBox = new parsegraph_CameraBox(this);
 }
 
 parsegraph_World.prototype.freezer = function()
@@ -20,34 +17,17 @@ parsegraph_World.prototype.freezer = function()
     return this._freezer;
 };
 
-parsegraph_World.prototype.graph = function()
-{
-    return this._graph;
-};
-
 parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
 
-parsegraph_World.prototype.camera = function()
-{
-    if(!this._camera) {
-        this._camera = new parsegraph_Camera(this._graph.surface());
-    }
-    return this._camera;
-};
-
-parsegraph_World.prototype.setCamera = function(camera)
-{
-    this._camera = camera;
-};
-
-parsegraph_World.prototype.contextChanged = function(isLost)
+parsegraph_World.prototype.contextChanged = function(isLost, window)
 {
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
     for(var i = 0; i < this._worldRoots.length; ++i) {
         var root = this._worldRoots[i];
-        root.contextChanged(isLost);
+        root.contextChanged(isLost, window);
     }
+    this._cameraBox.contextChanged(isLost, window);
 };
 
 parsegraph_World.prototype.plot = function(node)
@@ -113,26 +93,15 @@ parsegraph_World.prototype.removePlot = function(plot)
 };
 
 /**
- * Receives a mouseover event at the given coordinates, in client space.
+ * Receives a mouseover event at the given coordinates, in world space.
  *
  * Returns true if this event processing requires a graph repaint.
  */
 parsegraph_World.prototype.mouseOver = function(x, y)
 {
-    if(!this._camera) {
-        // Never rendered.
-        return 0;
-    }
     if(!this.readyForInput()) {
         return 1;
     }
-    //console.log("mouseover: " + x + ", " + y);
-    var mouseInWorld = matrixTransform2D(
-        makeInverse3x3(this.camera().worldMatrix()),
-        x, y
-    );
-    x = mouseInWorld[0];
-    y = mouseInWorld[1];
 
     var selectedNode = this.nodeUnderCoords(x, y);
     if(this._nodeUnderCursor === selectedNode) {
@@ -308,16 +277,16 @@ parsegraph_World.prototype.nodeUnderCoords = function(x, y)
 
 parsegraph_World.prototype.needsRepaint = function()
 {
-    return this._worldPaintingDirty;
+    return this._worldPaintingDirty || this._cameraBox.needsRepaint();
 };
 
-parsegraph_World.prototype.paint = function(timeout)
+parsegraph_World.prototype.paint = function(window, timeout)
 {
-    var gl = this.graph().gl();
+    var gl = window.gl();
     if(gl.isContextLost()) {
         return false;
     }
-    //console.log("Painting Graph, timeout=" + timeout);
+    //console.log("Painting world, timeout=" + timeout);
     var t = new Date().getTime();
     var pastTime = function() {
         return timeout !== undefined && (new Date().getTime() - t > timeout);
@@ -353,15 +322,7 @@ parsegraph_World.prototype.paint = function(timeout)
             if(!plot.localPaintGroup()) {
                 throw new Error("World root must have a paint group");
             }
-            parsegraph_PAINTING_GLYPH_ATLAS = this._graph.glyphAtlas();
-            var paintCompleted = plot.paint(
-                this._graph.gl(),
-                this._graph.surface().backgroundColor(),
-                this._graph.glyphAtlas(),
-                this._graph._shaders,
-                timeRemaining()
-            );
-            parsegraph_PAINTING_GLYPH_ATLAS = null;
+            var paintCompleted = plot.paint(window, timeRemaining());
 
             if(!paintCompleted) {
                 this._previousWorldPaintState = i;
@@ -384,18 +345,21 @@ parsegraph_World.prototype.paint = function(timeout)
         parsegraph_PAINT_START = null;
     }
 
+    this._cameraBox.paint(window);
+
     return true;
 };
 
-parsegraph_World.prototype.render = function(world)
+parsegraph_World.prototype.render = function(window, camera)
 {
-    var gl = this.graph().gl();
+    var gl = window.gl();
     if(gl.isContextLost()) {
         return false;
     }
     var cleanlyRendered = true;
     for(var i in this._worldRoots) {
-        cleanlyRendered = this._worldRoots[i].renderIteratively(world, this.camera()) && cleanlyRendered;
+        cleanlyRendered = this._worldRoots[i].renderIteratively(window, camera) && cleanlyRendered;
     }
+    this._cameraBox.render(window, camera);
     return cleanlyRendered;
 };

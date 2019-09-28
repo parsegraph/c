@@ -19,22 +19,12 @@ var parsegraph_MIN_CAMERA_SCALE = .00125;
 var parsegraph_ZOOM_IN_KEY = "ZoomIn";
 var parsegraph_ZOOM_OUT_KEY = "ZoomOut";
 
-function parsegraph_Input(graph, camera)
+function parsegraph_Input(viewport, camera)
 {
-    this._graph = graph;
-    this._camera = camera;
+    this._viewport = viewport;
+    this._mousedownTime = null;
 
     var attachedMouseListener = null;
-    var mousedownTime = null;
-
-    var touchX;
-    var touchY;
-
-    var lastMouseX = 0;
-    var lastMouseY = 0;
-
-    var mousedownX = 0;
-    var mousedownY = 0;
 
     this._updateRepeatedly = false;
 
@@ -49,861 +39,652 @@ function parsegraph_Input(graph, camera)
 
     this._mouseVersion = 0;
 
-    this.lastMouseCoords = function() {
-        return [lastMouseX, lastMouseY];
-    };
-
-    this.lastMouseX = function() {
-        return lastMouseX;
-    };
-
-    this.lastMouseY = function() {
-        return lastMouseY;
-    };
-
-    // Whether the container is focused and not blurred.
-    var focused = false;
-
     // A map of event.key's to a true value.
     this.keydowns = {};
 
-    var checkForNodeClick = function(clientX, clientY, onlySlider) {
-        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
-            return null;
-        }
-        var mouseInWorld = matrixTransform2D(
-            makeInverse3x3(this._camera.worldMatrix()),
-            clientX, clientY
-        );
-        //console.log(clientX, clientY);
-        //console.log(mouseInWorld);
-        var selectedNode = graph.world().nodeUnderCoords(mouseInWorld[0], mouseInWorld[1]);
-        if(!selectedNode) {
-            //console.log("No node found under coords:", mouseInWorld);
-            return null;
-        }
+    this._zoomTouchDistance = 0;
 
-        //console.log("Node found for coords:", mouseInWorld, selectedNode);
-
-        // Check if the selected node was a slider.
-        if(selectedNode.type() == parsegraph_SLIDER) {
-            if(!onlySlider && selectedNode === selectedSlider) {
-                //console.log(new Error("Removing slider listener"));
-                selectedSlider = null;
-                attachedMouseListener = null;
-                this._graph.scheduleRepaint();
-                return null;
-            }
-            //console.log("Slider node!");
-            selectedSlider = selectedNode;
-            attachedMouseListener = sliderListener;
-            sliderListener.call(this, clientX, clientY);
-            this._graph.scheduleRepaint();
-            return selectedNode;
-        }
-
-        if(onlySlider) {
-            return null;
-        }
-
-        // Check if the selected node has a click listener.
-        if(selectedNode.hasClickListener()) {
-            //console.log("Selected Node has click listener", selectedNode);
-            var rv = selectedNode.click();
-            if(rv !== false) {
-                return selectedNode;
-            }
-        }
-
-        // Check if the label was clicked.
-        //console.log("Clicked");
-        var selectedLabel = selectedNode._label;
-        if(selectedLabel && !Number.isNaN(selectedLabel._x) && selectedLabel.editable()) {
-            //console.log("Clicked label");
-            selectedLabel.click(
-                (mouseInWorld[0] - selectedLabel._x) / selectedLabel._scale,
-                (mouseInWorld[1] - selectedLabel._y) / selectedLabel._scale
-            );
-            //console.log(selectedLabel.caretLine());
-            //console.log(selectedLabel.caretPos());
-            this._focusedLabel = true;
-            this._focusedNode = selectedNode;
-            this._graph.scheduleRepaint();
-            return selectedNode;
-        }
-        if(selectedNode && !selectedNode.ignoresMouse()) {
-            //console.log("Setting focusedNode to ", selectedNode);
-            this._focusedNode = selectedNode;
-            this._focusedLabel = false;
-            this._graph.scheduleRepaint();
-            //console.log("Selected Node has nothing", selectedNode);
-            return selectedNode;
-        }
-
-        return null;
-    };
-
-    parsegraph_addEventListener(graph.container(), "focus", function(event) {
-        focused = true;
-    });
-
-    parsegraph_addEventListener(graph.container(), "blur", function(event) {
-        focused = false;
-    });
-
-    /**
-     * The receiver of all graph canvas wheel events.
-     */
-    var onWheel = function(event) {
-        event.preventDefault();
-
-        // Get the mouse coordinates, relative to bottom-left of the canvas.
-        var boundingRect = graph.canvas().getBoundingClientRect();
-        var x = event.clientX - boundingRect.left;
-        var y = event.clientY - boundingRect.top;
-
-        var wheel = normalizeWheel(event);
-        //console.log("Wheel event", wheel);
-
-        // Adjust the scale.
-        var numSteps = (wheel.spinY > 0 ? -1 : 1);
-        if(numSteps > 0 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
-            camera.zoomToPoint(Math.pow(1.1, numSteps), x, y);
-        }
-        this.Dispatch(false, "wheel", true);
-        this.mouseChanged();
-    };
-    parsegraph_addEventMethod(graph.canvas(), "DOMMouseScroll", onWheel, this, false);
-    parsegraph_addEventMethod(graph.canvas(), "mousewheel", onWheel, this, false);
-
-    var zoomTouchDistance = 0;
-    var monitoredTouches = [];
-    var getTouchByIdentifier = function(identifier) {
-        for(var i = 0; i < monitoredTouches.length; ++i) {
-            if(monitoredTouches[i].identifier == identifier) {
-                return monitoredTouches[i];
-            }
-        }
-        return null;
-    };
-
-    var removeTouchByIdentifier = function(identifier) {
-        var touch = null;
-        for(var i = 0; i < monitoredTouches.length; ++i) {
-            if(monitoredTouches[i].identifier == identifier) {
-                touch = monitoredTouches.splice(i--, 1)[0];
-                break;
-            }
-        }
-        return touch;
-    };
-
-    /*
-     * Touch event handling
-     */
-
-    parsegraph_addEventMethod(graph.canvas(), "touchmove", function(event) {
-        if(!focused) {
-            return;
-        }
-        event.preventDefault();
-        //console.log("touchmove", event);
-
-        for(var i = 0; i < event.changedTouches.length; ++i) {
-            var touch = event.changedTouches[i];
-            var touchRecord = getTouchByIdentifier(touch.identifier);
-
-            if(monitoredTouches.length == 1) {
-                if(!graph.carousel().isCarouselShown()) {
-                    // Move.
-                    camera.adjustOrigin(
-                        (touch.clientX - touchRecord.x) / camera.scale(),
-                        (touch.clientY - touchRecord.y) / camera.scale()
-                    );
-                    this.Dispatch(false, "touchmove", true);
-                }
-                else {
-                    this.Dispatch(graph.carousel().mouseOverCarousel(touch.clientX, touch.clientY), "mousemove carousel", false);
-                }
-            }
-            else {
-                this.Dispatch(false, "touchmove", false);
-            }
-            touchRecord.x = touch.clientX;
-            touchRecord.y = touch.clientY;
-            lastMouseX = touch.clientX;
-            lastMouseY = touch.clientY;
-            this.mouseChanged();
-        }
-
-        var realMonitoredTouches = 0;
-        monitoredTouches.forEach(function(touchRec) {
-            if(touchRec.touchstart) {
-                realMonitoredTouches++;
-            }
-        }, this);
-        if(realMonitoredTouches > 1) {
-            // Zoom.
-            var dist = Math.sqrt(
-                Math.pow(
-                    monitoredTouches[1].x - monitoredTouches[0].x,
-                    2
-                ) +
-                Math.pow(
-                    monitoredTouches[1].y - monitoredTouches[0].y,
-                    2
-                )
-            );
-            var zoomCenter = midPoint(
-                monitoredTouches[0].x, monitoredTouches[0].y,
-                monitoredTouches[1].x, monitoredTouches[1].y
-            );
-            if((dist / zoomTouchDistance) > 1 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
-                camera.zoomToPoint(
-                    dist / zoomTouchDistance,
-                    zoomCenter[0],
-                    zoomCenter[1]
-                );
-                this.Dispatch(false, "touchzoom", true);
-            }
-            zoomTouchDistance = dist;
-        }
-    }, this);
-
-    var selectedSlider = null;
-    var sliderListener = function(mouseX, mouseY) {
-        // Get the current mouse position, in world space.
-        var mouseInWorld = matrixTransform2D(
-            makeInverse3x3(camera.worldMatrix()),
-            mouseX, mouseY
-        );
-        var x = mouseInWorld[0];
-        var y = mouseInWorld[1];
-
-        //if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
-            var nodeWidth = selectedSlider.absoluteSize().width();
-            if(x <= selectedSlider.absoluteX() - nodeWidth / 2) {
-                // To the left!
-                selectedSlider.setValue(0);
-            }
-            else if(x >= selectedSlider.absoluteX() + nodeWidth / 2) {
-                // To the right!
-                selectedSlider.setValue(1);
-            }
-            else {
-                // In between.
-                //console.log("x=" + x);
-                //console.log("selectedSlider.absoluteX()=" + selectedSlider.absoluteX());
-                //console.log("PCT: " + (x - selectedSlider.absoluteX()));
-                //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
-                selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
-            }
-            selectedSlider.layoutWasChanged();
-        //}
-        if(selectedSlider.hasClickListener()) {
-            selectedSlider.click();
-        }
-        this.Dispatch(true, "slider", false);
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
-        this.mouseChanged();
-
-        return true;
-    };
-
-    var touchstartTime;
-
-    parsegraph_addEventMethod(graph.canvas(), "touchstart", function(event) {
-        //console.log("touchstart", event);
-        event.preventDefault();
-        focused = true;
-
-        for(var i = 0; i < event.changedTouches.length; ++i) {
-            var touch = event.changedTouches.item(i);
-            var touchRec = {
-                "identifier": touch.identifier,
-                "x":touch.clientX,
-                "y":touch.clientY,
-                "startX":touch.clientX,
-                "startY":touch.clientY,
-                "touchstart":null
-            };
-            monitoredTouches.push(touchRec);
-            lastMouseX = touch.clientX;
-            lastMouseY = touch.clientY;
-            this.mouseChanged();
-
-            // Get the current mouse position, in world space.
-            //alert(camera.worldMatrix());
-            if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, true)) {
-                //console.log("Carousel click processed.");
-                return;
-            }
-
-            /*if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
-                // A significant node was clicked.
-                this.Dispatch(true, "touchstart", false);
-                touchstartTime = null;
-                return;
-            }*/
-
-            touchRec.touchstart = Date.now();
-            touchstartTime = Date.now();
-        }
-
-        var realMonitoredTouches = 0;
-        monitoredTouches.forEach(function(touchRec) {
-            if(touchRec.touchstart) {
-                realMonitoredTouches++;
-            }
-        }, this);
-        if(realMonitoredTouches > 1) {
-            // Zoom.
-            zoomTouchDistance = Math.sqrt(
-                Math.pow(
-                    monitoredTouches[1].x - monitoredTouches[0].x,
-                    2
-                ) +
-                Math.pow(
-                    monitoredTouches[1].y - monitoredTouches[0].y,
-                    2
-                )
-            );
-            this.Dispatch(false, "touchzoomstart", false);
-        }
-    }, this, true);
-
-    var isDoubleTouch = false;
-    var touchendTimeout = 0;
-
-    var afterTouchTimeout = function() {
-        touchendTimeout = null;
-
-        if(isDoubleTouch) {
-            // Double touch ended.
-            isDoubleTouch = false;
-            return;
-        }
-
-        // Single touch ended.
-        isDoubleTouch = false;
-    };
-
-    var removeTouchListener = function(event) {
-        //console.log("touchend");
-        for(var i = 0; i < event.changedTouches.length; ++i) {
-            var touch = event.changedTouches.item(i);
-            var touchData = removeTouchByIdentifier(touch.identifier);
-        }
-
-        if(touchstartTime != null && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS) {
-            touchendTimeout = setTimeout(afterTouchTimeout, parsegraph_CLICK_DELAY_MILLIS);
-        }
-
-        graph.carousel().clickCarousel(lastMouseX, lastMouseY, false);
-
-        var WINDOW = 10;
-
-        if(
-            touchstartTime != null
-            && Date.now() - touchstartTime < parsegraph_CLICK_DELAY_MILLIS
-        ) {
-            var mouseInWorld = matrixTransform2D(
-                makeInverse3x3(this._camera.worldMatrix()),
-                lastMouseX, lastMouseY
-            );
-            //alert("touchend (" + lastMouseX + ", " + lastMouseY + ")=(" + Math.round(mouseInWorld[0]) + ", " + Math.round(mouseInWorld[1]) + ") [" + this._camera.width() + ", " + this._camera.height() + "]");
-            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
-                // A significant node was clicked.
-                this.Dispatch(true, "touchstart", false);
-                touchstartTime = null;
-                return;
-            }
-            else {
-                this.Dispatch(false, "touchstart", false);
-            }
-        }
-
-        return true;
-    };
-
-    parsegraph_addEventMethod(graph.canvas(), "touchend", removeTouchListener, this);
-    parsegraph_addEventMethod(graph.canvas(), "touchcancel", removeTouchListener, this);
-
-    /*
-     * Mouse event handling
-     */
-
-    /**
-     * Receives events that cause the camera to be moved.
-     */
-    var mouseDragListener = function(mouseX, mouseY) {
-        var deltaX = mouseX - lastMouseX;
-        var deltaY = mouseY - lastMouseY;
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
-        this.mouseChanged();
-
-        camera.adjustOrigin(
-            deltaX / camera.scale(),
-            deltaY / camera.scale()
-        );
-        this.Dispatch(false, "mouseDrag world", true);
-    };
-
-    parsegraph_addEventMethod(graph.canvas(), "mousemove", function(event) {
-        if(graph.carousel().isCarouselShown()) {
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
-            this.mouseChanged();
-
-            var overClickable = graph.carousel().mouseOverCarousel(event.clientX, event.clientY)
-            switch(overClickable) {
-            case 2:
-                graph.canvas().style.cursor = "pointer";
-                break;
-            case 1:
-                break;
-            case 0:
-                graph.canvas().style.cursor = "auto";
-                break;
-            }
-
-            this.Dispatch(overClickable > 0, "mousemove carousel", false);
-            return;
-        }
-
-        // Moving during a mousedown i.e. dragging (or zooming)
-        if(attachedMouseListener) {
-            return attachedMouseListener.call(this, event.clientX, event.clientY);
-        }
-
-        // Just a mouse moving over the (focused) canvas.
-        var overClickable;
-        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
-            //console.log("Couldn't commit layout in time");
-            overClickable = 1;
-        }
-        else {
-            overClickable = graph.world().mouseOver(event.clientX, event.clientY);
-        }
-        switch(overClickable) {
-        case 2:
-            graph.canvas().style.cursor = "pointer";
-            break;
-        case 1:
-            //console.log("World not ready");
-            break;
-        case 0:
-            graph.canvas().style.cursor = "auto";
-            break;
-        }
-        this.Dispatch(overClickable > 0, "mousemove world", false);
-        lastMouseX = event.clientX;
-        lastMouseY = event.clientY;
-        this.mouseChanged();
-    }, this);
-
-    parsegraph_addEventMethod(graph.canvas(), "mousedown", function(event) {
-        //console.log("Mousedown", event);
-        focused = true;
-        event.preventDefault();
-        graph.canvas().focus();
-
-        lastMouseX = event.clientX;
-        lastMouseY = event.clientY;
-        this.mouseChanged();
-
-        mousedownX = event.clientX;
-        mousedownY = event.clientY;
-
-        if(graph.carousel().clickCarousel(event.clientX, event.clientY, true)) {
-            //console.log("Carousel click processed.");
-            return;
-        }
-
-        this._focusedLabel = false;
-        this._focusedNode = null;
-        if(this._caretPainter) {
-            this._caretPainter.initBuffer(1);
-        }
-        if(this._spotlightPainter) {
-            this._spotlightPainter.clear();
-        }
-
-        //console.log("Checking for slider");
-        if(checkForNodeClick.call(this, lastMouseX, lastMouseY, true)) {
-            //console.log("Slider clicked.");
-            this.Dispatch(true, "mousedown node", false);
-            mousedownTime = Date.now();
-            return;
-        }
-
-        //console.log("Dragging on the canvas.");
-        attachedMouseListener = mouseDragListener;
-        //console.log("Repainting graph");
-        this.Dispatch(false, "mousedown canvas", true);
-
-        //console.log("Setting mousedown time");
-        mousedownTime = Date.now();
-
-        // This click is a second click following a recent click; it's a double-click.
-        if(mouseupTimeout) {
-            window.clearTimeout(mouseupTimeout);
-            mouseupTimeout = null;
-            isDoubleClick = true;
-        }
-    }, this);
-
-    var isDoubleClick = false;
-    var mouseupTimeout = 0;
-
-    var afterMouseTimeout = function() {
-        mouseupTimeout = null;
-
-        if(isDoubleClick) {
-            // Double click ended.
-            isDoubleClick = false;
-            //console.log("Double click detected");
-        }
-        else {
-            //console.log("Single click detected");
-        }
-
-        // Single click ended.
-        isDoubleClick = false;
-
-        // We double-clicked.
-    };
-
-    var removeMouseListener = function(event) {
-        //console.log("MOUSEUP");
-
-        if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, false)) {
-            //console.log("Carousel handled event.");
-            return;
-        }
-        if(!attachedMouseListener) {
-            //console.log("No attached listeenr");
-            return;
-        }
-        attachedMouseListener = null;
-
-        if(!graph.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
-            return;
-        }
-
-        if(
-            mousedownTime != null
-            && Date.now() - mousedownTime < parsegraph_CLICK_DELAY_MILLIS
-        ) {
-            //console.log("Click detected");
-            if(isDoubleClick) {
-                afterMouseTimeout();
-                return;
-            }
-            mouseupTimeout = setTimeout(
-                afterMouseTimeout,
-                parsegraph_CLICK_DELAY_MILLIS/5
-            );
-
-            if(checkForNodeClick.call(this, lastMouseX, lastMouseY)) {
-                // A significant node was clicked.
-                //console.log("Node clicked.");
-                this.Dispatch(true, "mousedown node", false);
-                mousedownTime = null;
-                return;
-            }
-        }
-        else {
-            //console.log("Click missed timeout");
-        }
-    };
-
-    var getproperkeyname = function(event) {
-        var keyName = event.key;
-        //console.log(keyName + " " + event.keyCode);
-        switch(keyName) {
-            case "Enter": return keyName;
-            case "Escape": return keyName;
-            case "ArrowLeft": return keyName;
-            case "ArrowUp": return keyName;
-            case "ArrowRight": return keyName;
-            case "ArrowDown": return keyName;
-            case "-": return "ZoomIn";
-            case "_": return "ZoomIn";
-            case "+": return "ZoomOut";
-            case "=": return "ZoomOut";
-        }
-        switch(event.keyCode) {
-            case 13: keyName = "Enter"; break;
-            case 27: keyName = "Escape"; break;
-            case 37: keyName = "ArrowLeft"; break;
-            case 38: keyName = "ArrowUp"; break;
-            case 39: keyName = "ArrowRight"; break;
-            case 40: keyName = "ArrowDown"; break;
-        }
-        return keyName;
-    };
-
-    parsegraph_addEventMethod(graph.canvas(), "keydown", function(event) {
-        if(event.altKey || event.metaKey) {
-            //console.log("Key event had ignored modifiers");
-            return;
-        }
-        if(event.ctrlKey && event.shiftKey) {
-            return;
-        }
-
-        var keyName = getproperkeyname(event);
-        //console.log("Keydown " + selectedSlider);
-        if(selectedSlider) {
-            if(event.key.length === 0) {
-                return;
-            }
-
-            var diff = .01;
-            switch(event.key) {
-            case parsegraph_MOVE_BACKWARD_KEY:
-                selectedSlider.setValue(Math.max(0, selectedSlider.value() - diff));
-                selectedSlider.layoutWasChanged();
-                this._graph.scheduleRepaint();
-                return;
-            case parsegraph_MOVE_FORWARD_KEY:
-                selectedSlider.setValue(Math.min(1, selectedSlider.value() + diff));
-                selectedSlider.layoutWasChanged();
-                this._graph.scheduleRepaint();
-                return;
-            case "Space":
-            case "Spacebar":
-            case ' ':
-            case parsegraph_RESET_CAMERA_KEY:
-                selectedSlider.layoutWasChanged();
-                attachedMouseListener = null;
-                selectedSlider = null;
-                this._graph.scheduleRepaint();
-                return;
-            }
-        }
-        else if(this._focusedNode && focused) {
-            if(event.key.length === 0) {
-                return;
-            }
-            if(this._focusedNode._label && event.ctrlKey) {
-                if(this._focusedNode._label.ctrlKey(event.key)) {
-                    //console.log("LAYOUT CHANGED");
-                    this._focusedNode.layoutWasChanged();
-                    this._graph.scheduleRepaint();
-                    return;
-                }
-            }
-            else if(this._focusedNode.hasKeyListener() && this._focusedNode.key(event.key) !== false
-            ) {
-                //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
-                this._focusedNode.layoutWasChanged();
-                this._graph.scheduleRepaint();
-                return;
-            }
-            else if(this._focusedNode._label && this._focusedNode._label.editable() && this._focusedNode._label.key(event.key)) {
-                //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
-                this._focusedNode.layoutWasChanged();
-                this._graph.scheduleRepaint();
-                return;
-            }
-            // Didn't move the caret, so interpret it as a key move
-            // on the node itself.
-            var node = this._focusedNode;
-            var skipHorizontalInward = event.ctrlKey;
-            var skipVerticalInward = event.ctrlKey;
-            while(true) {
-                switch(event.key) {
-                case parsegraph_RESET_CAMERA_KEY:
-                    this._focusedNode = null;
-                    this._focusedLabel = false;
-                    break;
-                case parsegraph_MOVE_BACKWARD_KEY:
-                    var neighbor = node.nodeAt(parsegraph_BACKWARD);
-                    if(neighbor) {
-                        this._focusedNode = neighbor;
-                        this._focusedLabel = true;
-                        this._graph.scheduleRepaint();
-                        return;
-                    }
-                    neighbor = node.nodeAt(parsegraph_OUTWARD);
-                    if(neighbor) {
-                        this._focusedNode = neighbor;
-                        this._focusedLabel = true;
-                        this._graph.scheduleRepaint();
-                        return;
-                    }
-                    break;
-                case parsegraph_MOVE_FORWARD_KEY:
-                    if(
-                        node.hasNode(parsegraph_INWARD) &&
-                        node.nodeAlignmentMode(parsegraph_INWARD) != parsegraph_ALIGN_VERTICAL &&
-                        !skipHorizontalInward
-                    ) {
-                        this._focusedNode = node.nodeAt(parsegraph_INWARD);
-                        this._focusedLabel = true;
-                        this._graph.scheduleRepaint();
-                        return;
-                    }
-                    //console.log("ArrowRight");
-                    var neighbor = node.nodeAt(parsegraph_FORWARD);
-                    if(neighbor) {
-                        this._focusedNode = neighbor;
-                        this._focusedLabel = !event.ctrlKey;
-                        this._graph.scheduleRepaint();
-                        return;
-                    }
-                    neighbor = node.nodeAt(parsegraph_OUTWARD);
-                    if(neighbor) {
-                        //console.log("Going outward");
-                        skipHorizontalInward = true;
-                        node = neighbor;
-                        continue;
-                    }
-                    // Search up the parents hoping that an inward node can be escaped.
-                    while(true) {
-                        if(node.isRoot()) {
-                            // The focused node is not within an inward node.
-                            return;
-                        }
-                        var pdir = node.parentDirection();
-                        node = node.nodeAt(pdir);
-                        if(pdir === parsegraph_OUTWARD) {
-                            // Found the outward node to escape.
-                            skipHorizontalInward = true;
-                            break;
-                        }
-                    }
-                    // Continue traversing using the found node.
-                    continue;
-                case parsegraph_MOVE_DOWNWARD_KEY:
-                    neighbor = node.nodeAt(parsegraph_DOWNWARD);
-                    if(neighbor) {
-                        this._focusedNode = neighbor;
-                        this._graph.scheduleRepaint();
-                        this._focusedLabel = true;
-                        return;
-                    }
-                    break;
-                case parsegraph_MOVE_UPWARD_KEY:
-                    neighbor = node.nodeAt(parsegraph_UPWARD);
-                    if(neighbor) {
-                        this._focusedNode = neighbor;
-                        this._graph.scheduleRepaint();
-                        this._focusedLabel = true;
-                        return;
-                    }
-                    break;
-                case "Backspace":
-                    break;
-                case "Tab":
-                    var toNode = event.shiftKey ?
-                        this._focusedNode._extended.prevTabNode :
-                        this._focusedNode._extended.nextTabNode;
-                    if(toNode) {
-                        this._focusedNode = toNode;
-                        this._graph.scheduleRepaint();
-                        event.preventDefault();
-                        break;
-                    }
-                    // Fall through otherwise.
-                    break;
-                case "Enter":
-                    if(this._focusedNode.hasKeyListener()) {
-                        if(this._focusedNode.key("Enter")) {
-                            // Node handled it.
-                            event.preventDefault();
-                            break;
-                        }
-                        // Nothing handled it.
-                    }
-                    // Fall through.
-                default:
-                    return;
-                }
-                break;
-            }
-
-            if(this._focusedNode) {
-                return;
-            }
-            if(event.key === parsegraph_RESET_CAMERA_KEY) {
-                this._graph.scheduleRepaint();
-                return;
-            }
-        }
-
-        if(this.keydowns[keyName]) {
-            // Already processed.
-            //console.log("Key event, but already processed.");
-            return;
-        }
-        this.keydowns[keyName] = new Date();
-
-        switch(keyName) {
-        case parsegraph_CLICK_KEY:
-            //console.log("Q key for click pressed!");
-            if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, true)) {
-                return;
-            }
-            if(graph.nodeUnderCursor()) {
-                graph.nodeUnderCursor().click();
-            }
-            // fall through
-        case parsegraph_RESET_CAMERA_KEY:
-            if(graph.carousel().isCarouselShown()) {
-                graph.carousel().hideCarousel();
-                break;
-            }
-        case parsegraph_ZOOM_IN_KEY:
-        case parsegraph_ZOOM_OUT_KEY:
-        case parsegraph_MOVE_DOWNWARD_KEY:
-        case parsegraph_MOVE_UPWARD_KEY:
-        case parsegraph_MOVE_BACKWARD_KEY:
-        case parsegraph_MOVE_FORWARD_KEY:
-            this.Dispatch(false, "keydown", true);
-            break;
-        }
-    }, this);
-
-    parsegraph_addEventMethod(graph.canvas(), "keyup", function(event) {
-        var keyName = getproperkeyname(event);
-        //console.log(keyName);
-
-        if(!this.keydowns[keyName]) {
-            // Already processed.
-            return;
-        }
-        delete this.keydowns[keyName];
-
-        switch(keyName) {
-        case parsegraph_CLICK_KEY:
-            if(graph.carousel().clickCarousel(lastMouseX, lastMouseY, false)) {
-                //console.log("Carousel processed event.");
-                return;
-            }
-            // fall through
-        case parsegraph_ZOOM_IN_KEY:
-        case parsegraph_ZOOM_OUT_KEY:
-        case parsegraph_RESET_CAMERA_KEY:
-        case parsegraph_MOVE_DOWNWARD_KEY:
-        case parsegraph_MOVE_UPWARD_KEY:
-        case parsegraph_MOVE_BACKWARD_KEY:
-        case parsegraph_MOVE_FORWARD_KEY:
-            this.Dispatch(false, "keyup", true);
-            break;
-        }
-    }, this);
-
-    parsegraph_addEventMethod(graph.canvas(), "mouseup", removeMouseListener, this);
-
-    // Ensure the mousemove listener is removed if we switch windows or change focus.
-    parsegraph_addEventMethod(graph.canvas(), "mouseout", removeMouseListener, this);
+    this._selectedSlider = null;
 
     this.listener = null;
+};
+
+parsegraph_Input.prototype.onKeydown = function(event)
+{
+    var keyName = parsegraph_getproperkeyname(event);
+    //console.log("Keydown " + selectedSlider);
+    if(this._selectedSlider) {
+        if(event.key.length === 0) {
+            return;
+        }
+
+        var diff = .01;
+        switch(event.key) {
+        case parsegraph_MOVE_BACKWARD_KEY:
+            this._selectedSlider.setValue(Math.max(0, this._selectedSlider.value() - diff));
+            this._selectedSlider.layoutWasChanged();
+            this._viewport.scheduleRepaint();
+            return;
+        case parsegraph_MOVE_FORWARD_KEY:
+            this._selectedSlider.setValue(Math.min(1, this._selectedSlider.value() + diff));
+            this._selectedSlider.layoutWasChanged();
+            this._viewport.scheduleRepaint();
+            return;
+        case "Space":
+        case "Spacebar":
+        case ' ':
+        case parsegraph_RESET_CAMERA_KEY:
+            this._selectedSlider.layoutWasChanged();
+            this._attachedMouseListener = null;
+            this._selectedSlider = null;
+            this._viewport.scheduleRepaint();
+            return;
+        }
+    }
+    else if(this._focusedNode) {
+        if(event.key.length === 0) {
+            return;
+        }
+        if(this._focusedNode._label && event.ctrlKey) {
+            if(this._focusedNode._label.ctrlKey(event.key)) {
+                //console.log("LAYOUT CHANGED");
+                this._focusedNode.layoutWasChanged();
+                this._viewport.scheduleRepaint();
+                return;
+            }
+        }
+        else if(this._focusedNode.hasKeyListener() && this._focusedNode.key(event.key) !== false
+        ) {
+            //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
+            this._focusedNode.layoutWasChanged();
+            this._viewport.scheduleRepaint();
+            return;
+        }
+        else if(this._focusedNode._label && this._focusedNode._label.editable() && this._focusedNode._label.key(event.key)) {
+            //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
+            this._focusedNode.layoutWasChanged();
+            this._viewport.scheduleRepaint();
+            return;
+        }
+        // Didn't move the caret, so interpret it as a key move
+        // on the node itself.
+        var node = this._focusedNode;
+        var skipHorizontalInward = event.ctrlKey;
+        var skipVerticalInward = event.ctrlKey;
+        while(true) {
+            switch(event.key) {
+            case parsegraph_RESET_CAMERA_KEY:
+                this._focusedNode = null;
+                this._focusedLabel = false;
+                break;
+            case parsegraph_MOVE_BACKWARD_KEY:
+                var neighbor = node.nodeAt(parsegraph_BACKWARD);
+                if(neighbor) {
+                    this._focusedNode = neighbor;
+                    this._focusedLabel = true;
+                    this._viewport.scheduleRepaint();
+                    return;
+                }
+                neighbor = node.nodeAt(parsegraph_OUTWARD);
+                if(neighbor) {
+                    this._focusedNode = neighbor;
+                    this._focusedLabel = true;
+                    this._viewport.scheduleRepaint();
+                    return;
+                }
+                break;
+            case parsegraph_MOVE_FORWARD_KEY:
+                if(
+                    node.hasNode(parsegraph_INWARD) &&
+                    node.nodeAlignmentMode(parsegraph_INWARD) != parsegraph_ALIGN_VERTICAL &&
+                    !skipHorizontalInward
+                ) {
+                    this._focusedNode = node.nodeAt(parsegraph_INWARD);
+                    this._focusedLabel = true;
+                    this._viewport.scheduleRepaint();
+                    return;
+                }
+                //console.log("ArrowRight");
+                var neighbor = node.nodeAt(parsegraph_FORWARD);
+                if(neighbor) {
+                    this._focusedNode = neighbor;
+                    this._focusedLabel = !event.ctrlKey;
+                    this._viewport.scheduleRepaint();
+                    return;
+                }
+                neighbor = node.nodeAt(parsegraph_OUTWARD);
+                if(neighbor) {
+                    //console.log("Going outward");
+                    skipHorizontalInward = true;
+                    node = neighbor;
+                    continue;
+                }
+                // Search up the parents hoping that an inward node can be escaped.
+                while(true) {
+                    if(node.isRoot()) {
+                        // The focused node is not within an inward node.
+                        return;
+                    }
+                    var pdir = node.parentDirection();
+                    node = node.nodeAt(pdir);
+                    if(pdir === parsegraph_OUTWARD) {
+                        // Found the outward node to escape.
+                        skipHorizontalInward = true;
+                        break;
+                    }
+                }
+                // Continue traversing using the found node.
+                continue;
+            case parsegraph_MOVE_DOWNWARD_KEY:
+                neighbor = node.nodeAt(parsegraph_DOWNWARD);
+                if(neighbor) {
+                    this._focusedNode = neighbor;
+                    this._viewport.scheduleRepaint();
+                    this._focusedLabel = true;
+                    return;
+                }
+                break;
+            case parsegraph_MOVE_UPWARD_KEY:
+                neighbor = node.nodeAt(parsegraph_UPWARD);
+                if(neighbor) {
+                    this._focusedNode = neighbor;
+                    this._viewport.scheduleRepaint();
+                    this._focusedLabel = true;
+                    return;
+                }
+                break;
+            case "Backspace":
+                break;
+            case "Tab":
+                var toNode = event.shiftKey ?
+                    this._focusedNode._extended.prevTabNode :
+                    this._focusedNode._extended.nextTabNode;
+                if(toNode) {
+                    this._focusedNode = toNode;
+                    this._viewport.scheduleRepaint();
+                    break;
+                }
+                // Fall through otherwise.
+                break;
+            case "Enter":
+                if(this._focusedNode.hasKeyListener()) {
+                    if(this._focusedNode.key("Enter")) {
+                        // Node handled it.
+                        break;
+                    }
+                    // Nothing handled it.
+                }
+                // Fall through.
+            default:
+                return;
+            }
+            break;
+        }
+
+        if(this._focusedNode) {
+            return;
+        }
+        if(event.key === parsegraph_RESET_CAMERA_KEY) {
+            this._viewport.scheduleRepaint();
+            return;
+        }
+    }
+
+    if(this.keydowns[keyName]) {
+        // Already processed.
+        //console.log("Key event, but already processed.");
+        return;
+    }
+    this.keydowns[keyName] = new Date();
+
+    switch(keyName) {
+    case parsegraph_CLICK_KEY:
+        //console.log("Q key for click pressed!");
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(this.camera().worldMatrix()),
+            event.x, event.y
+        );
+        if(this._viewport.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
+            return;
+        }
+        if(this._viewport.nodeUnderCursor()) {
+            this._viewport.nodeUnderCursor().click();
+        }
+        // fall through
+    case parsegraph_RESET_CAMERA_KEY:
+        if(this._viewport.carousel().isCarouselShown()) {
+            this._viewport.carousel().hideCarousel();
+            break;
+        }
+    case parsegraph_ZOOM_IN_KEY:
+    case parsegraph_ZOOM_OUT_KEY:
+    case parsegraph_MOVE_DOWNWARD_KEY:
+    case parsegraph_MOVE_UPWARD_KEY:
+    case parsegraph_MOVE_BACKWARD_KEY:
+    case parsegraph_MOVE_FORWARD_KEY:
+        this.Dispatch(false, "keydown", true);
+        break;
+    }
+};
+
+parsegraph_Input.prototype.onKeyup = function(event)
+{
+    var keyName = parsegraph_getproperkeyname(event);
+    //console.log(keyName);
+
+    if(!this.keydowns[keyName]) {
+        // Already processed.
+        return;
+    }
+    delete this.keydowns[keyName];
+
+    switch(keyName) {
+    case parsegraph_CLICK_KEY:
+        var mouseInWorld = matrixTransform2D(
+            makeInverse3x3(this.camera().worldMatrix()),
+            event.x, event.y
+        );
+        if(this._viewport.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], false)) {
+            //console.log("Carousel processed event.");
+            return;
+        }
+        // fall through
+    case parsegraph_ZOOM_IN_KEY:
+    case parsegraph_ZOOM_OUT_KEY:
+    case parsegraph_RESET_CAMERA_KEY:
+    case parsegraph_MOVE_DOWNWARD_KEY:
+    case parsegraph_MOVE_UPWARD_KEY:
+    case parsegraph_MOVE_BACKWARD_KEY:
+    case parsegraph_MOVE_FORWARD_KEY:
+        this.Dispatch(false, "keyup", true);
+        break;
+    }
+};
+
+parsegraph_Input.prototype.onWheel = function(event)
+{
+    // Adjust the scale.
+    var numSteps = (event.spinY > 0 ? -1 : 1);
+    var camera = this.camera();
+    if(numSteps > 0 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
+        camera.zoomToPoint(Math.pow(1.1, numSteps), event.x, event.y);
+    }
+    this.Dispatch(false, "wheel", true);
+    this.mouseChanged();
+};
+
+parsegraph_Input.prototype.camera = function()
+{
+    return this._viewport.camera();
+};
+
+parsegraph_Input.prototype.onTouchzoom = function(event)
+{
+    // Zoom.
+    var dist = Math.sqrt(Math.pow(event.dx, 2) + Math.pow(event.dy, 2));
+    var cam = this.camera();
+    if((dist / this._zoomTouchDistance) > 1 || cam.scale() >= parsegraph_MIN_CAMERA_SCALE) {
+        cam.zoomToPoint(
+            dist / zoomTouchDistance,
+            event.x, event.y
+        );
+        this.Dispatch(false, "touchzoom", true);
+    }
+    this._zoomTouchDistance = dist;
+};
+
+parsegraph_Input.prototype.onTouchmove = function(event)
+{
+    if(event.multiple) {
+        this.Dispatch(false, "touchmove", false);
+        return;
+    }
+    if(!this._viewport.carousel().isCarouselShown()) {
+        // Move.
+        this.camera().adjustOrigin(
+            event.dx / camera.scale(),
+            event.dy / camera.scale()
+        );
+        this.Dispatch(false, "touchmove", true);
+    }
+    else {
+        this.Dispatch(this._viewport.carousel().mouseOverCarousel(
+            event.x, event.y), "mousemove carousel", false
+        );
+    }
+    this.mouseChanged();
+};
+
+parsegraph_Input.prototype.mouseDragListener = function(x, y, dx, dy)
+{
+    this.mouseChanged();
+    var camera = this.camera();
+    camera.adjustOrigin(
+        dx / camera.scale(),
+        dy / camera.scale()
+    );
+    this.Dispatch(false, "mouseDrag world", true);
+};
+
+parsegraph_Input.prototype.menu = function()
+{
+    return this._viewport.menu();
+};
+
+parsegraph_Input.prototype.onMousedown = function(event)
+{
+    if(this.menu().onMousedown(event.x, event.y)) {
+        //console.log("Menu click processed.");
+        return;
+    }
+
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        event.x, event.y
+    );
+    this.mouseChanged();
+
+    if(this.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
+        //console.log("Carousel click processed.");
+        return;
+    }
+
+    this._focusedLabel = false;
+    this._focusedNode = null;
+    if(this._caretPainter) {
+        this._caretPainter.initBuffer(1);
+    }
+    if(this._spotlightPainter) {
+        this._spotlightPainter.clear();
+    }
+
+    //console.log("Checking for node");
+    if(this.checkForNodeClick(mouseInWorld[0], mouseInWorld[1], true)) {
+        //console.log("Node clicked.");
+        this.Dispatch(true, "mousedown node", false);
+        return;
+    }
+
+    this._attachedMouseListener = this.mouseDragListener;
+    //console.log("Repainting graph");
+    this.Dispatch(false, "mousedown canvas", true);
+};
+
+parsegraph_Input.prototype.onMousemove = function(event)
+{
+    if(this._viewport.menu().onMousemove(event.x, event.y)) {
+        return;
+    }
+
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        event.x, event.y
+    );
+
+    if(this._viewport.carousel().isCarouselShown()) {
+        this.mouseChanged();
+
+        var overClickable = this._viewport.carousel().mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
+        switch(overClickable) {
+        case 2:
+            this._viewport.window().setCursor("pointer");
+            break;
+        case 1:
+            break;
+        case 0:
+            this._viewport.window().setCursor("auto");
+            break;
+        }
+
+        this.Dispatch(overClickable > 0, "mousemove carousel", false);
+        return;
+    }
+
+    // Moving during a mousedown i.e. dragging (or zooming)
+    if(this._attachedMouseListener) {
+        return this._attachedMouseListener(mouseInWorld[0], mouseInWorld[1], event.dx, event.dy);
+    }
+
+    // Just a mouse moving over the (focused) canvas.
+    var overClickable;
+    if(!this._viewport.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
+        //console.log("Couldn't commit layout in time");
+        overClickable = 1;
+    }
+    else {
+        overClickable = this._viewport.world().mouseOver(mouseInWorld[0], mouseInWorld[1]);
+    }
+    switch(overClickable) {
+    case 2:
+        this._viewport.window().setCursor("pointer");
+        break;
+    case 1:
+        //console.log("World not ready");
+        break;
+    case 0:
+        this._viewport.window().setCursor("auto");
+        break;
+    }
+    this.Dispatch(overClickable > 0, "mousemove world", false);
+    this.mouseChanged();
+};
+
+parsegraph_Input.prototype.onTouchstart = function(event)
+{
+    this.mouseChanged();
+
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        event.x, event.y
+    );
+
+    // Get the current mouse position, in world space.
+    //alert(camera.worldMatrix());
+    if(this._viewport.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
+        //console.log("Carousel click processed.");
+        return;
+    }
+
+    /*if(this.checkForNodeClick(event.x, event.y)) {
+        // A significant node was clicked.
+        this.Dispatch(true, "touchstart", false);
+        return true;
+    }*/
+};
+
+parsegraph_Input.prototype.sliderListener = function(x, y, dx, dy)
+{
+    //if(parsegraph_isVerticalNodeDirection(selectedSlider.parentDirection())) {
+        var nodeWidth = this._selectedSlider.absoluteSize().width();
+        if(x <= this._selectedSlider.absoluteX() - nodeWidth / 2) {
+            // To the left!
+            this._selectedSlider.setValue(0);
+        }
+        else if(x >= this._selectedSlider.absoluteX() + nodeWidth / 2) {
+            // To the right!
+            this._selectedSlider.setValue(1);
+        }
+        else {
+            // In between.
+            //console.log("x=" + x);
+            //console.log("selectedSlider.absoluteX()=" + selectedSlider.absoluteX());
+            //console.log("PCT: " + (x - selectedSlider.absoluteX()));
+            //console.log("In between: " + ((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth));
+            this._selectedSlider.setValue((nodeWidth/2 + x - selectedSlider.absoluteX()) / nodeWidth);
+        }
+        this._selectedSlider.layoutWasChanged();
+    //}
+    if(this._selectedSlider.hasClickListener()) {
+        this._selectedSlider.click();
+    }
+    this.Dispatch(true, "slider", false);
+    this.mouseChanged();
+
+    return true;
+};
+
+parsegraph_Input.prototype.checkForNodeClick = function(x, y, onlySlider)
+{
+    if(!this.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
+        return null;
+    }
+    var selectedNode = this.world().nodeUnderCoords(x, y);
+    if(!selectedNode) {
+        //console.log("No node found under coords:", x, y);
+        return null;
+    }
+
+    //console.log("Node found for coords:", x, y);
+
+    // Check if the selected node was a slider.
+    if(selectedNode.type() == parsegraph_SLIDER) {
+        if(!onlySlider && selectedNode === this._selectedSlider) {
+            //console.log(new Error("Removing slider listener"));
+            this._selectedSlider = null;
+            this._attachedMouseListener = null;
+            this._viewport.scheduleRepaint();
+            return null;
+        }
+        //console.log("Slider node!");
+        this._selectedSlider = selectedNode;
+        this._attachedMouseListener = this.sliderListener;
+        this._attachedMouseListener(x, y, 0, 0);
+        this._viewport.scheduleRepaint();
+        return selectedNode;
+    }
+
+    //if(onlySlider) {
+        //return null;
+    //}
+
+    // Check if the selected node has a click listener.
+    if(selectedNode.hasClickListener()) {
+        //console.log("Selected Node has click listener", selectedNode);
+        var rv = selectedNode.click();
+        if(rv !== false) {
+            return selectedNode;
+        }
+    }
+
+    // Check if the label was clicked.
+    //console.log("Clicked");
+    var selectedLabel = selectedNode._label;
+    if(selectedLabel && !Number.isNaN(selectedLabel._x) && selectedLabel.editable()) {
+        //console.log("Clicked label");
+        selectedLabel.click(
+            (x - selectedLabel._x) / selectedLabel._scale,
+            (y - selectedLabel._y) / selectedLabel._scale
+        );
+        //console.log(selectedLabel.caretLine());
+        //console.log(selectedLabel.caretPos());
+        this._focusedLabel = true;
+        this._focusedNode = selectedNode;
+        this._viewport.scheduleRepaint();
+        return selectedNode;
+    }
+    if(selectedNode && !selectedNode.ignoresMouse()) {
+        //console.log("Setting focusedNode to ", selectedNode);
+        this._focusedNode = selectedNode;
+        this._focusedLabel = false;
+        this._viewport.scheduleRepaint();
+        //console.log("Selected Node has nothing", selectedNode);
+        return selectedNode;
+    }
+
+    return null;
+};
+
+parsegraph_Input.prototype.afterMouseTimeout = function()
+{
+    this._mouseupTimeout = null;
+
+    if(this._isDoubleClick) {
+        // Double click ended.
+        this._isDoubleClick = false;
+        //console.log("Double click detected");
+    }
+    else {
+        //console.log("Single click detected");
+    }
+
+    // Single click ended.
+    this._isDoubleClick = false;
+
+    // We double-clicked.
+};
+
+parsegraph_Input.prototype.onMouseup = function(event)
+{
+    //console.log("MOUSEUP");
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        event.x, event.y
+    );
+
+    if(this._viewport.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], false)) {
+        //console.log("Carousel handled event.");
+        return;
+    }
+    if(!this._attachedMouseListener) {
+        //console.log("No attached listeenr");
+        return;
+    }
+    this._attachedMouseListener = null;
+
+    if(!this._viewport.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
+        return;
+    }
+
+    if(
+        this._mousedownTime != null
+        && Date.now() - this._mousedownTime < parsegraph_CLICK_DELAY_MILLIS
+    ) {
+        //console.log("Click detected");
+        if(this._isDoubleClick) {
+            afterMouseTimeout();
+            return;
+        }
+        this._mouseupTimeout = setTimeout(
+            afterMouseTimeout,
+            parsegraph_CLICK_DELAY_MILLIS/5
+        );
+
+        if(this.checkForNodeClick(mouseInWorld[0], mouseInWorld[1])) {
+            // A significant node was clicked.
+            //console.log("Node clicked.");
+            this.Dispatch(true, "mousedown node", false);
+            this._mousedownTime = null;
+            return;
+        }
+    }
+    else {
+        //console.log("Click missed timeout");
+    }
+};
+
+parsegraph_Input.prototype.onTouchend = function(event)
+{
+    var mouseInWorld = matrixTransform2D(
+        makeInverse3x3(this.camera().worldMatrix()),
+        event.x, event.y
+    );
+
+    this._viewport.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], false);
+
+    var WINDOW = 10;
+
+    if(
+        event.startTime != null && Date.now() - event.startTime < parsegraph_CLICK_DELAY_MILLIS
+    ) {
+        //alert("touchend (" + lastMouseX + ", " + lastMouseY + ")=(" + Math.round(mouseInWorld[0]) + ", " + Math.round(mouseInWorld[1]) + ") [" + this.camera().width() + ", " + this.camera().height() + "]");
+        if(this.checkForNodeClick(mouseInWorld[0], mouseInWorld[1])) {
+            // A significant node was clicked.
+            this.Dispatch(true, "touchstart", false);
+            return true;
+        }
+        this.Dispatch(false, "touchstart", false);
+    }
+    return false;
 };
 
 parsegraph_Input.prototype.SetListener = function(listener, thisArg)
@@ -920,7 +701,7 @@ parsegraph_Input.prototype.SetListener = function(listener, thisArg)
 
 parsegraph_Input.prototype.UpdateRepeatedly = function()
 {
-    return this._updateRepeatedly || this._graph.carousel().updateRepeatedly();
+    return this._updateRepeatedly || this._viewport.carousel().updateRepeatedly();
 };
 
 parsegraph_Input.prototype.mouseVersion = function()
@@ -933,9 +714,28 @@ parsegraph_Input.prototype.mouseChanged = function()
     ++this._mouseVersion;
 };
 
+parsegraph_Input.prototype.resetCamera = function(complete)
+{
+    var defaultScale = .25;
+    var cam = this.camera();
+    var x = this._viewport.gl().drawingBufferWidth / 2;
+    var y = this._viewport.gl().drawingBufferHeight / 2;
+    if(!complete && cam.x() === x && cam.y() === y) {
+        cam.setScale(defaultScale);
+    }
+    else {
+        if(complete) {
+            cam.setScale(defaultScale);
+        }
+        x = this._viewport.width() / (2 * defaultScale);
+        y = this._viewport.height() / (2 * defaultScale);
+        cam.setOrigin(x, y);
+    }
+};
+
 parsegraph_Input.prototype.Update = function(t)
 {
-    var cam = this._camera;
+    var cam = this.camera();
 
     var xSpeed = 1000 / cam.scale();
     var ySpeed = 1000 / cam.scale();
@@ -944,37 +744,25 @@ parsegraph_Input.prototype.Update = function(t)
     var inputChangedScene = false;
     this._updateRepeatedly = false;
 
-    if(this.Get(parsegraph_RESET_CAMERA_KEY) && this._graph.surface()._gl) {
-        //var defaultScale = .5;
-        var defaultScale = 1;
-        var x = this._graph.gl().drawingBufferWidth / 2;
-        var y = this._graph.gl().drawingBufferHeight / 2;
-        if(cam.x() === x && cam.y() === y) {
-            cam.setScale(defaultScale);
-        }
-        else {
-            x = this._graph.gl().drawingBufferWidth / (2 * defaultScale);
-            y = this._graph.gl().drawingBufferHeight / (2 * defaultScale);
-            cam.setOrigin(x, y);
-        }
+    if(this.Get(parsegraph_RESET_CAMERA_KEY) && this._viewport.gl()) {
+        this.resetCamera(false);
         inputChangedScene = true;
     }
 
     if(this.Get(parsegraph_MOVE_BACKWARD_KEY) || this.Get(parsegraph_MOVE_FORWARD_KEY) || this.Get(parsegraph_MOVE_UPWARD_KEY) || this.Get(parsegraph_MOVE_DOWNWARD_KEY)) {
         this._updateRepeatedly = true;
-        var x = cam._cameraX + (this.Elapsed(parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed + this.Elapsed(parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed);
-        var y = cam._cameraY + (this.Elapsed(parsegraph_MOVE_UPWARD_KEY, t) * ySpeed + this.Elapsed(parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed);
+        var x = cam.x() + (this.Elapsed(parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed + this.Elapsed(parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed);
+        var y = cam.y() + (this.Elapsed(parsegraph_MOVE_UPWARD_KEY, t) * ySpeed + this.Elapsed(parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed);
         cam.setOrigin(x, y);
         inputChangedScene = true;
     }
 
-    var lastCoords = this.lastMouseCoords();
     if(this.Get(parsegraph_ZOOM_OUT_KEY)) {
         this._updateRepeatedly = true;
         inputChangedScene = true;
         cam.zoomToPoint(Math.pow(1.1, scaleSpeed * this.Elapsed(parsegraph_ZOOM_OUT_KEY, t)),
-            this._graph.gl().drawingBufferWidth / 2,
-            this._graph.gl().drawingBufferHeight / 2
+            this._viewport.gl().drawingBufferWidth / 2,
+            this._viewport.gl().drawingBufferHeight / 2
         );
     }
     if(this.Get(parsegraph_ZOOM_IN_KEY)) {
@@ -983,16 +771,16 @@ parsegraph_Input.prototype.Update = function(t)
         inputChangedScene = true;
         if(cam.scale() >= parsegraph_MIN_CAMERA_SCALE) {
             cam.zoomToPoint(Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
-                this._graph.gl().drawingBufferWidth / 2,
-                this._graph.gl().drawingBufferHeight / 2
+                this._viewport.gl().drawingBufferWidth / 2,
+                this._viewport.gl().drawingBufferHeight / 2
             );
         }
     }
     //this.Dispatch(false, "update", inputChangedScene);
 
-    //var x = cam._cameraX;
-    //var y = cam._cameraY;
-    //var r = this._graph.world().boundingRect();
+    //var x = cam.x();
+    //var y = cam.y();
+    //var r = this._viewport.world().boundingRect();
     //x = Math.max(x, r.x() - r.width()/2);
     //x = Math.min(x, r.x() + r.width()/2);
     //y = Math.max(y, r.y() - r.height()/2);
@@ -1019,15 +807,19 @@ parsegraph_Input.prototype.Elapsed = function(key, t)
     return elapsed;
 };
 
+parsegraph_Input.prototype.window = function()
+{
+    return this._viewport.window();
+};
+
 parsegraph_Input.prototype.paint = function()
 {
+    var window = this.window();
     if(!this._caretPainter) {
-        this._caretPainter = new parsegraph_BlockPainter(this._graph.gl(), this._graph.shaders());
+        this._caretPainter = new parsegraph_BlockPainter(window);
     }
     if(!this._spotlightPainter) {
-        this._spotlightPainter = new parsegraph_SpotlightPainter(
-            this._graph.gl(), this._graph.shaders()
-        );
+        this._spotlightPainter = new parsegraph_SpotlightPainter(window);
     }
 
     this._caretPainter.initBuffer(1);
@@ -1088,9 +880,19 @@ parsegraph_Input.prototype.focusedLabel = function()
     return this._focusedLabel;
 }
 
-parsegraph_Input.prototype.camera = function()
+parsegraph_Input.prototype.carousel = function()
 {
-    return this._camera;
+    return this._viewport.carousel();
+}
+
+parsegraph_Input.prototype.menu = function()
+{
+    return this._viewport.menu();
+}
+
+parsegraph_Input.prototype.world = function()
+{
+    return this._viewport.world();
 }
 
 parsegraph_Input.prototype.contextChanged = function(isLost)
@@ -1105,7 +907,7 @@ parsegraph_Input.prototype.contextChanged = function(isLost)
 
 parsegraph_Input.prototype.render = function(world, scale)
 {
-    var gl = this._graph.gl();
+    var gl = this._viewport.gl();
     if(this._caretPainter) {
         gl.disable(gl.CULL_FACE);
         gl.disable(gl.DEPTH_TEST);
@@ -1124,3 +926,31 @@ parsegraph_Input.prototype.Dispatch = function(affectedPaint, eventSource, input
         this.listener[0].call(this.listener[1], affectedPaint, eventSource, inputAffectedCamera);
     }
 };
+
+function parsegraph_getproperkeyname(event)
+{
+    var keyName = event.key;
+    //console.log(keyName + " " + event.keyCode);
+    switch(keyName) {
+        case "Enter": return keyName;
+        case "Escape": return keyName;
+        case "ArrowLeft": return keyName;
+        case "ArrowUp": return keyName;
+        case "ArrowRight": return keyName;
+        case "ArrowDown": return keyName;
+        case "-": return "ZoomIn";
+        case "_": return "ZoomIn";
+        case "+": return "ZoomOut";
+        case "=": return "ZoomOut";
+    }
+    switch(event.keyCode) {
+        case 13: keyName = "Enter"; break;
+        case 27: keyName = "Escape"; break;
+        case 37: keyName = "ArrowLeft"; break;
+        case 38: keyName = "ArrowUp"; break;
+        case 39: keyName = "ArrowRight"; break;
+        case 40: keyName = "ArrowDown"; break;
+    }
+    return keyName;
+};
+

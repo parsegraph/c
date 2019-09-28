@@ -1,0 +1,1043 @@
+parsegraph_Window_VertexShader =
+"uniform mat3 u_world;\n" +
+"" +
+"attribute vec2 a_position;" +
+"attribute vec2 a_texCoord;" +
+"" +
+"varying highp vec2 texCoord;" +
+"" +
+"void main() {" +
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
+    "texCoord = a_texCoord;" +
+"}";
+
+parsegraph_Window_FragmentShader =
+"uniform sampler2D u_texture;\n" +
+"varying highp vec2 texCoord;\n" +
+"\n" +
+"void main() {\n" +
+    "gl_FragColor = texture2D(u_texture, texCoord.st);" +
+    //"gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
+"}";
+parsegraph_WINDOW_COUNT = 0;
+
+function parsegraph_Window()
+{
+    if(!parsegraph_INITIALIZED) {
+        throw new Error("Parsegraph must be initialized using parsegraph_initialize()");
+    }
+    this._id = ++parsegraph_WINDOW_COUNT;
+    this._backgroundColor = parsegraph_BACKGROUND_COLOR;
+
+    this._container = document.createElement("div");
+    this._container.className = "parsegraph_Window";
+
+    this._framebuffer = null;
+    this._renderbuffer = null;
+    this._glTexture = null;
+    this._program = null;
+
+    // The canvas that will be drawn to.
+    this._canvas = document.createElement("canvas");
+    //if(WebGLDebugUtils) {
+        //this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
+    //}
+    var that = this;
+    this._canvas.addEventListener("webglcontextlost", function(event) {
+        console.log("Context lost");
+        event.preventDefault();
+        that.onContextChanged(true);
+    }, false);
+    this._canvas.addEventListener("webglcontextrestored", function() {
+        console.log("Context restored");
+        that.onContextChanged(false);
+    }, false);
+    this._canvas.style.display = "block";
+    this._canvas.setAttribute("tabIndex", 0);
+
+    // GL content, not created until used.
+    this._gl = null;
+    this._shaders = {};
+
+    this._container.appendChild(this._canvas);
+
+    // The identifier used to cancel a pending Render.
+    this._pendingRender = null;
+    this._needsRepaint = true;
+
+    this._components = [];
+
+    this._textureSize = NaN;
+
+    // Whether the container is focused and not blurred.
+    this._focused = false;
+    this._isDoubleClick = false;
+    this._isDoubleTouch = false;
+
+    var touchX;
+    var touchY;
+
+    this._lastMouseX = 0;
+    this._lastMouseY = 0;
+
+    parsegraph_addEventMethod(this.container(), "focus", function(event) {
+        this._focused = true;
+    }, this);
+
+    parsegraph_addEventMethod(this.container(), "blur", function(event) {
+        this._focused = false;
+    }, this);
+
+    this._monitoredTouches = [];
+    this._touchstartTime = null;
+
+    var onWheel = function(event) {
+        event.preventDefault();
+
+        // Get the mouse coordinates, relative to bottom-left of the canvas.
+        var boundingRect = this.canvas().getBoundingClientRect();
+        var x = event.clientX - boundingRect.left;
+        var y = event.clientY - boundingRect.top;
+
+        //console.log("Wheel event", wheel);
+        var e = normalizeWheel(event);
+        e.x = event.clientX;
+        e.y = event.clientY;
+        this.handleInput("wheel", e);
+    };
+
+    /**
+     * The receiver of all canvas wheel events.
+     */
+    parsegraph_addEventMethod(this.canvas(), "DOMMouseScroll", onWheel, this, false);
+    parsegraph_addEventMethod(this.canvas(), "mousewheel", onWheel, this, false);
+
+    parsegraph_addEventMethod(this.canvas(), "touchstart", function(event) {
+        //console.log("touchstart", event);
+        event.preventDefault();
+        this._focused = true;
+
+        for(var i = 0; i < event.changedTouches.length; ++i) {
+            var touch = event.changedTouches.item(i);
+            var touchRec = {
+                "identifier": touch.identifier,
+                "x":touch.clientX,
+                "y":touch.clientY,
+                "startX":touch.clientX,
+                "startY":touch.clientY,
+                "touchstart":null
+            };
+            this._monitoredTouches.push(touchRec);
+            this._lastMouseX = touch.clientX;
+            this._lastMouseY = touch.clientY;
+
+            this.handleInput("touchstart", {
+                multiple:this._monitoredTouches.length == 1,
+                x:touch.clientX,
+                y:touch.clientY,
+                dx:touch.clientX - touchRecord.x,
+                dy:touch.clientY - touchRecord.y
+            });
+
+            touchRec.touchstart = Date.now();
+            this._touchstartTime = Date.now();
+        }
+
+        var realMonitoredTouches = 0;
+        this._monitoredTouches.forEach(function(touchRec) {
+            if(touchRec.touchstart) {
+                realMonitoredTouches++;
+            }
+        }, this);
+        if(realMonitoredTouches > 1) {
+            // Zoom.
+            var zoomCenter = midPoint(
+                this._monitoredTouches[0].x, this._monitoredTouches[0].y,
+                this._monitoredTouches[1].x, this._monitoredTouches[1].y
+            );
+            this.handleInput("touchzoom", {
+                x:zoomCenter[0],
+                y:zoomCenter[1],
+                dx:this._monitoredTouches[1].x - this._monitoredTouches[0].x,
+                dy:this._monitoredTouches[1].y - this._monitoredTouches[0].y,
+            });
+        }
+    }, this, true);
+
+    parsegraph_addEventMethod(this.canvas(), "touchmove", function(event) {
+        if(!this._focused) {
+            return;
+        }
+        event.preventDefault();
+        //console.log("touchmove", event);
+
+        for(var i = 0; i < event.changedTouches.length; ++i) {
+            var touch = event.changedTouches[i];
+            var touchRecord = getTouchByIdentifier(touch.identifier);
+
+            this.handleInput("touchmove", {
+                multiple:this._monitoredTouches.length == 1,
+                x:touch.clientX,
+                y:touch.clientY,
+                dx:touch.clientX - touchRecord.x,
+                dy:touch.clientY - touchRecord.y
+            });
+            touchRecord.x = touch.clientX;
+            touchRecord.y = touch.clientY;
+            this._lastMouseX = touch.clientX;
+            this._lastMouseY = touch.clientY;
+        }
+
+        var realMonitoredTouches = 0;
+        monitoredTouches.forEach(function(touchRec) {
+            if(touchRec.touchstart) {
+                realMonitoredTouches++;
+            }
+        }, this);
+        if(realMonitoredTouches > 1) {
+            var zoomCenter = midPoint(
+                this._monitoredTouches[0].x, this._monitoredTouches[0].y,
+                this._monitoredTouches[1].x, this._monitoredTouches[1].y
+            );
+            this.handleInput("touchzoom", {
+                x:zoomCenter[0],
+                y:zoomCenter[1],
+                dx:this._monitoredTouches[1].x - this._monitoredTouches[0].x,
+                dy:this._monitoredTouches[1].y - this._monitoredTouches[0].y,
+            });
+        }
+    }, this);
+
+    var removeTouchListener = function(event) {
+        //console.log("touchend");
+        for(var i = 0; i < event.changedTouches.length; ++i) {
+            var touch = event.changedTouches.item(i);
+            var touchData = this.removeTouchByIdentifier(touch.identifier);
+        }
+
+        if(this._touchstartTime != null && Date.now() - this._touchstartTime < parsegraph_CLICK_DELAY_MILLIS) {
+            var that = this;
+            this._touchendTimeout = setTimeout(function() {
+                that._touchendTimeout = null;
+
+                if(isDoubleTouch) {
+                    // Double touch ended.
+                    that._isDoubleTouch = false;
+                    return;
+                }
+
+                // Single touch ended.
+                that._isDoubleTouch = false;
+            }, parsegraph_CLICK_DELAY_MILLIS);
+        }
+
+        if(this.handleInput("touchend", {
+            x:this._lastMouseX,
+            y:this._lastMouseY,
+            startTime:this._touchstartTime
+        })) {
+            this._touchstartTime = null;
+        }
+    };
+
+    parsegraph_addEventMethod(this.canvas(), "touchend", removeTouchListener, this);
+    parsegraph_addEventMethod(this.canvas(), "touchcancel", removeTouchListener, this);
+
+    parsegraph_addEventMethod(this.canvas(), "mousedown", function(event) {
+        //console.log("Mousedown", event);
+        this._focused = true;
+        event.preventDefault();
+
+        this.canvas().focus();
+
+        this._lastMouseX = event.clientX;
+        this._lastMouseY = event.clientY;
+
+        //console.log("Setting mousedown time");
+        this._mousedownTime = Date.now();
+
+        this.handleInput("mousedown", {
+            x:this._lastMouseX,
+            y:this._lastMouseY,
+            startTime:this._mousedownTime
+        });
+
+        // This click is a second click following a recent click; it's a double-click.
+        if(this._mouseupTimeout) {
+            window.clearTimeout(this._mouseupTimeout);
+            this._mouseupTimeout = null;
+            this._isDoubleClick = true;
+        }
+    }, this);
+
+    this._isDoubleClick = false;
+    this._mouseupTimeout = 0;
+
+    parsegraph_addEventMethod(this.canvas(), "mousemove", function(event) {
+        this.handleInput("mousemove", {
+            x:event.clientX,
+            y:event.clientY,
+            dx:event.clientX - this._lastMouseX,
+            dy:event.clientY - this._lastMouseY
+        });
+        this._lastMouseX = event.clientX;
+        this._lastMouseY = event.clientY;
+    }, this);
+
+    var mouseUpListener = function(event) {
+        this.handleInput("mouseup", {
+            x:this._lastMouseX,
+            y:this._lastMouseY
+        });
+    };
+
+    parsegraph_addEventMethod(this.canvas(), "mouseup", mouseUpListener, this);
+    parsegraph_addEventMethod(this.canvas(), "mouseout", mouseUpListener, this);
+
+    parsegraph_addEventMethod(this.canvas(), "keydown", function(event) {
+        if(event.altKey || event.metaKey) {
+            //console.log("Key event had ignored modifiers");
+            return;
+        }
+        if(event.ctrlKey && event.shiftKey) {
+            return;
+        }
+
+        this.handleInput("keydown", {
+            x:this._lastMouseX,
+            y:this._lastMouseY,
+            key:event.key,
+            keyCode:event.keyCode,
+            ctrlKey:event.ctrlKey
+        });
+    }, this);
+
+    parsegraph_addEventMethod(this.canvas(), "keyup", function(event) {
+        this.handleInput("keyup", {
+            x:this._lastMouseX,
+            y:this._lastMouseY,
+            key:event.key,
+            keyCode:event.keyCode,
+            ctrlKey:event.ctrlKey
+        });
+    }, this);
+};
+
+parsegraph_Window.prototype.setCursor = function(cursorType)
+{
+    this.canvas().style.cursor = cursorType;
+};
+
+parsegraph_Window.prototype.focusedComponent = function()
+{
+    return this._focused ? this._focusedComponent : null;
+};
+
+parsegraph_Window.prototype.setFocusedComponent = function(x, y)
+{
+    var compSize = new parsegraph_Rect();
+    y = this.height() - y;
+    //console.log("Focusing component at (" + x + ", " + y + ")");
+    for(var i = this._components.length - 1; i >= 0; --i) {
+        var comp = this._components[i];
+        if(!comp.hasInputHandler()) {
+            continue;
+        }
+        comp.layout(this, compSize);
+        if(x < compSize.x() || y < compSize.y()) {
+            //console.log("Component is greater than X or Y (" + compSize.x() + ", " + compSize.y() + ")");
+            continue;
+        }
+        if(x > compSize.x() + compSize.width() || y > compSize.y() + compSize.height()) {
+            //console.log("Component is lesser than X or Y");
+            continue;
+        }
+        if(this._focusedComponent !== comp && this._focusedComponent) {
+            this._focusedComponent.handleInput("blur");
+        }
+        this._focusedComponent = comp;
+        //console.log("Found focused component: " + comp.peer());
+        return;
+    }
+    if(this._focusedComponent) {
+        this._focusedComponent.handleInput("blur");
+    }
+    this._focusedComponent = null;
+};
+
+parsegraph_Window.prototype.handleInput = function(eventType, inputData)
+{
+    var compSize = new parsegraph_Rect();
+    if(
+        eventType === "touchstart"
+        || eventType === "wheel"
+        || eventType === "touchmove"
+        || eventType === "mousedown"
+    ) {
+        this.setFocusedComponent(inputData.x, inputData.y);
+        if(!this._focusedComponent) {
+            return;
+        }
+        this._focusedComponent.layout(this, compSize);
+        inputData.x -= compSize.x();
+        // Input data is topleft-origin.
+        // Component position is bottomleft-origin.
+        // Component input should be topleft-origin.
+        //console.log("Raw Y: y=" + inputData.y +", cs.h=" + compSize.height() + ", cs.y=" + compSize.y());
+        inputData.y -= this.height() - (compSize.y() + compSize.height());
+        //console.log("Adjusted Y: " + inputData.y + ", " + compSize.y());
+    }
+    if(this._focusedComponent) {
+        if(eventType === "touchend" || eventType === "mousemove") {
+            this._focusedComponent.layout(this, compSize);
+            inputData.x -= compSize.x();
+            inputData.y -= this.height() - (compSize.y() + compSize.height());
+        }
+        this._focusedComponent.handleInput(eventType, inputData);
+    }
+};
+
+parsegraph_Window.prototype.getTouchByIdentifier = function(identifier)
+{
+    for(var i = 0; i < this._monitoredTouches.length; ++i) {
+        if(this._monitoredTouches[i].identifier == identifier) {
+            return this._monitoredTouches[i];
+        }
+    }
+    return null;
+};
+
+parsegraph_Window.prototype.removeTouchByIdentifier = function(identifier)
+{
+    var touch = null;
+    for(var i = 0; i < this._monitoredTouches.length; ++i) {
+        if(this._monitoredTouches[i].identifier == identifier) {
+            touch = this._monitoredTouches.splice(i--, 1)[0];
+            break;
+        }
+    }
+    return touch;
+};
+
+parsegraph_Window.prototype.lastMouseCoords = function()
+{
+    return [this._lastMouseX, this._lastMouseY];
+};
+
+parsegraph_Window.prototype.lastMouseX = function()
+{
+    return this._lastMouseX;
+};
+
+parsegraph_Window.prototype.lastMouseY = function()
+{
+    return this._lastMouseY;
+};
+
+parsegraph_Window.prototype.id = function()
+{
+    return this._id;
+};
+
+parsegraph_Window.prototype.shaders = function()
+{
+    return this._shaders;
+};
+
+parsegraph_Window.prototype.textureSize = function()
+{
+    if(this._gl.isContextLost()) {
+        return NaN;
+    }
+    if(Number.isNaN(this._textureSize)) {
+        this._textureSize = Math.min(512, parsegraph_getTextureSize(this._gl));
+    }
+    return this._textureSize;
+};
+
+parsegraph_Window.prototype.onContextChanged = function(isLost)
+{
+    if(isLost) {
+        var keys = [];
+        for(var k in this._shaders) {
+            keys.push(k);
+        }
+        for(var i in keys) {
+            delete this._shaders[keys[i]];
+        }
+    }
+    for(var i = 0; i < this._components.length; ++i) {
+        var comp = this._components[i];
+        if(comp.contextChanged) {
+            comp.contextChanged(isLost, this);
+        }
+    }
+};
+
+parsegraph_Window.prototype.canvas = function()
+{
+    return this._canvas;
+};
+
+parsegraph_Window.prototype.gl = function()
+{
+    if(this._gl) {
+        return this._gl;
+    }
+   // this._gl = this._canvas.getContext("webgl2", {
+        //antialias:false
+    //});
+    if(this._gl) {
+        return this._gl;
+    }
+    this._gl = this._canvas.getContext("experimental-webgl");
+    if(this._gl) {
+        return this._gl;
+    }
+    this._gl = this._canvas.getContext("webgl");
+    if(this._gl) {
+        return this._gl;
+    }
+    throw new Error("GL context is not supported");
+};
+
+parsegraph_Window.prototype.setGL = function(gl)
+{
+    this._gl = gl;
+};
+
+parsegraph_Window.prototype.setAudio = function(audio)
+{
+    this._audio = audio;
+};
+
+parsegraph_Window.prototype.startAudio = function()
+{
+    if(!this._audio) {
+        try {
+            this._audio = new AudioContext();
+        }
+        catch(ex) {
+            console.log(ex);
+        }
+        if(this._audio == null) {
+            throw new Error("AudioContext is not supported");
+        }
+    }
+    return this.audio();
+};
+
+parsegraph_Window.prototype.audio = function()
+{
+    return this._audio;
+};
+
+parsegraph_Window.prototype.resize = function(w, h)
+{
+    this.container().style.width = typeof w === "number" ? (w + "px") : w;
+    if(arguments.length === 1) {
+        h = w;
+    }
+    this.container().style.height = typeof h === "number" ? (h + "px") : h;
+};
+
+parsegraph_Window.prototype.getWidth = function()
+{
+    return this.container().clientWidth;
+};
+parsegraph_Window.prototype.width = parsegraph_Window.prototype.getWidth;
+
+parsegraph_Window.prototype.getHeight = function()
+{
+    return this.container().clientHeight;
+};
+parsegraph_Window.prototype.height = parsegraph_Window.prototype.getHeight;
+
+/**
+ * Returns the container that holds the canvas for this graph.
+ */
+parsegraph_Window.prototype.container = function()
+{
+    return this._container;
+};
+
+parsegraph_Window.prototype.addWidget = function(widget)
+{
+    if(!widget.component) {
+        throw new Error("A widget must have a component");
+    }
+    this.addComponent(widget.component());
+};
+
+parsegraph_Window.prototype.addComponent = function(comp)
+{
+    this._components.push(comp);
+};
+
+parsegraph_Window.prototype.removeWidget = function(widget)
+{
+    return this.removeComponent(widget.component());
+};
+
+parsegraph_Window.prototype.removeComponent = function(comp)
+{
+    for(var i = 0; i < this._components.length; ++i) {
+        if(this._components[i] === comp) {
+            this._components.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+};
+
+parsegraph_Window.prototype.paint = function(timeout)
+{
+    if(this.gl().isContextLost()) {
+        return;
+    }
+    //console.log("Painting window");
+    this._shaders.gl = this.gl();
+    this._shaders.timeout = timeout;
+    var startTime = new Date();
+    while(timeout > 0) {
+        for(var i = 0; i < this._components.length; ++i) {
+            var comp = this._components[i];
+            comp.paint(timeout / this._components.length);
+        }
+        timeout = Math.max(0, timeout - parsegraph_elapsed(startTime));
+    }
+};
+
+parsegraph_Window.prototype.setBackground = function(color)
+{
+    if(arguments.length > 1) {
+        return this.setBackground(
+            parsegraph_createColor.apply(this, arguments)
+        );
+    }
+    this._backgroundColor = color;
+};
+
+/**
+ * Retrieves the current background color.
+ */
+parsegraph_Window.prototype.backgroundColor = function()
+{
+    return this._backgroundColor;
+};
+
+/**
+ * Returns whether the window has a nonzero client width and height.
+ */
+parsegraph_Window.prototype.canProject = function()
+{
+    var displayWidth = this.getWidth();
+    var displayHeight = this.getHeight();
+
+    return displayWidth != 0 && displayHeight != 0;
+};
+
+parsegraph_Window.prototype.render = function()
+{
+    //this.renderMultisampleFramebuffer();
+    this.renderDirect();
+    //this.renderFramebuffer();
+    //this.renderWebgl2();
+};
+
+parsegraph_Window.prototype.renderWebgl2 = function()
+{
+    var gl = this.gl();
+    if(this.gl().isContextLost()) {
+        return;
+    }
+    //console.log("Rendering window");
+    if(!this.canProject()) {
+        throw new Error(
+            "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        );
+    }
+
+    // Lookup the size the browser is displaying the canvas.
+    var displayWidth = this.container().clientWidth;
+    var displayHeight = this.container().clientHeight;
+    // Check if the canvas is not the same size.
+    if(this.canvas().width != displayWidth || this.canvas().height != displayHeight) {
+        // Make the canvas the same size
+        this.canvas().width = displayWidth;
+        this.canvas().height = displayHeight;
+    }
+
+    if(!this._framebuffer) {
+        this._multisampleFramebuffer = gl.createFramebuffer();
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, gl.getParameter(gl.MAX_SAMPLES), gl.RGBA8, displayWidth, displayHeight);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this._renderbuffer);
+
+        this._glTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, displayWidth, displayHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        this._framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._glTexture, 0);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
+    }
+    else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+    }
+    this._container.style.backgroundColor = this._backgroundColor.asRGB();
+
+    var compSize = new parsegraph_Rect();
+    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
+    gl.enable(gl.SCISSOR_TEST);
+    for(var i = 0; i < this._components.length; ++i) {
+        var comp = this._components[i];
+        if(comp.needsRender()) {
+            comp.layout(this, compSize);
+            //console.log("Rendering: " + comp.peer().id());
+            //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+            gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.viewport(compSize.x(), compSize.y(), compSize.width(), compSize.height());
+            comp.render(compSize.width(), compSize.height());
+        }
+    }
+    gl.disable(gl.SCISSOR_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._multisampleFramebuffer);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+    gl.clearBufferfv(gl.COLOR, 0, [1.0, 1.0, 1.0, 1.0]);
+    gl.blitFramebuffer(0, 0, displayWidth, displayHeight,
+                     0, 0, displayWidth, displayHeight,
+                     gl.COLOR_BUFFER_BIT, gl.LINEAR);
+};
+
+parsegraph_Window.prototype.renderMultisampleFramebuffer = function()
+{
+    var gl = this.gl();
+    if(this.gl().isContextLost()) {
+        return;
+    }
+    //console.log("Rendering window");
+    if(!this.canProject()) {
+        throw new Error(
+            "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        );
+    }
+
+    // Lookup the size the browser is displaying the canvas.
+    var displayWidth = this.container().clientWidth;
+    var displayHeight = this.container().clientHeight;
+    // Check if the canvas is not the same size.
+    if(this.canvas().width != displayWidth || this.canvas().height != displayHeight) {
+        // Make the canvas the same size
+        this.canvas().width = displayWidth;
+        this.canvas().height = displayHeight;
+    }
+
+    var multisample = 8;
+    var backbufferWidth = multisample*displayWidth;
+    var backbufferHeight = multisample*displayHeight;
+
+    if(!this._framebuffer) {
+        this._glTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, backbufferWidth, backbufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        this._framebuffer = gl.createFramebuffer();
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, backbufferWidth, backbufferHeight);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._glTexture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+    }
+    else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+    }
+    //this._container.style.backgroundColor = this._backgroundColor.asRGB();
+
+    var compSize = new parsegraph_Rect();
+    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
+    gl.enable(gl.SCISSOR_TEST);
+    for(var i = 0; i < this._components.length; ++i) {
+        var comp = this._components[i];
+        if(comp.needsRender()) {
+            comp.layout(this, compSize);
+            //console.log("Rendering: " + comp.peer().id());
+            //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+            gl.scissor(multisample*compSize.x(), multisample*compSize.y(), multisample*compSize.width(), multisample*compSize.height());
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.viewport(multisample*compSize.x(), multisample*compSize.y(), multisample*compSize.width(), multisample*compSize.height());
+            comp.render(compSize.width(), compSize.height());
+        }
+    }
+    gl.disable(gl.SCISSOR_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+    if(!this._program) {
+        this._program = parsegraph_compileProgram(this,
+            "parsegraph_Window",
+            parsegraph_Window_VertexShader,
+            parsegraph_Window_FragmentShader
+        );
+        this.u_world = gl.getUniformLocation(this._program, "u_world");
+        this.u_texture = gl.getUniformLocation(this._program, "u_texture");
+        this.a_position = gl.getAttribLocation(this._program, "a_position");
+        this.a_texCoord = gl.getAttribLocation(this._program, "a_texCoord");
+    }
+    gl.useProgram(this._program);
+
+    gl.activeTexture(gl.TEXTURE0);
+    //console.log("Using texture " + frag.slot()._id);
+    gl.enableVertexAttribArray(this.a_position);
+    gl.enableVertexAttribArray(this.a_texCoord);
+    gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
+    gl.uniform1i(this.u_texture, 0);
+    gl.uniformMatrix3fv(this.u_world, false, make2DProjection(displayWidth, displayHeight));
+
+    gl.viewport(0, 0, displayWidth, displayHeight);
+    if(!this._vertexBuffer) {
+        this._vertexBuffer = gl.createBuffer();
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
+
+    var arr = new Float32Array(6*4);
+    arr[0] = 0;
+    arr[1] = 0;
+    arr[2] = 0;
+    arr[3] = multisample*displayHeight/backbufferHeight;
+    //arr[2] = 0;
+    //arr[3] = 0;
+
+    arr[4] = displayWidth;
+    arr[5] = 0;
+    arr[6] = multisample*displayWidth/backbufferWidth;
+    arr[7] = multisample*displayHeight/backbufferHeight;
+    //arr[6] = 1;
+    //arr[7] = 0;
+
+    arr[8] = displayWidth;
+    arr[9] = displayHeight;
+    arr[10] = arr[6];
+    arr[11] = 0
+    //arr[10] = 1;
+    //arr[11] = 1;
+
+    arr[12] = arr[0];
+    arr[13] = arr[1];
+    arr[14] = arr[2];
+    arr[15] = arr[3];
+
+    arr[16] = arr[8];
+    arr[17] = arr[9];
+    arr[18] = arr[10];
+    arr[19] = arr[11];
+
+    arr[20] = arr[0];
+    arr[21] = arr[9];
+    arr[22] = arr[2];
+    arr[23] = arr[11];
+    gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+
+    var FLOAT_SIZE = 4;
+    var stride = 4 * FLOAT_SIZE;
+    gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, stride, 0);
+    gl.vertexAttribPointer(this.a_texCoord, 2, gl.FLOAT, false, stride, 2*FLOAT_SIZE);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+};
+
+/**
+ * Invokes all renderers.
+ *
+ * Throws if canProject() returns false.
+ */
+parsegraph_Window.prototype.renderFramebuffer = function()
+{
+    var gl = this.gl();
+    if(this.gl().isContextLost()) {
+        return;
+    }
+    //console.log("Rendering window");
+    if(!this.canProject()) {
+        throw new Error(
+            "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        );
+    }
+
+    // Lookup the size the browser is displaying the canvas.
+    var displayWidth = this.container().clientWidth;
+    var displayHeight = this.container().clientHeight;
+    // Check if the canvas is not the same size.
+    if(this.canvas().width != displayWidth || this.canvas().height != displayHeight) {
+        // Make the canvas the same size
+        this.canvas().width = displayWidth;
+        this.canvas().height = displayHeight;
+    }
+
+    var backbufferWidth = displayWidth;
+    var backbufferHeight = displayHeight;
+
+    if(!this._framebuffer) {
+        this._glTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, backbufferWidth, backbufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        this._framebuffer = gl.createFramebuffer();
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, backbufferWidth, backbufferHeight);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._glTexture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+    }
+    else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+    }
+    //this._container.style.backgroundColor = this._backgroundColor.asRGB();
+
+    var compSize = new parsegraph_Rect();
+    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
+    gl.enable(gl.SCISSOR_TEST);
+    for(var i = 0; i < this._components.length; ++i) {
+        var comp = this._components[i];
+        if(comp.needsRender()) {
+            comp.layout(this, compSize);
+            //console.log("Rendering: " + comp.peer().id());
+            //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+            gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.viewport(compSize.x(), compSize.y(), compSize.width(), compSize.height());
+            comp.render(compSize.width(), compSize.height());
+        }
+    }
+    gl.disable(gl.SCISSOR_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+    if(!this._program) {
+        this._program = parsegraph_compileProgram(this,
+            "parsegraph_Window",
+            parsegraph_Window_VertexShader,
+            parsegraph_Window_FragmentShader
+        );
+        this.u_world = gl.getUniformLocation(this._program, "u_world");
+        this.u_texture = gl.getUniformLocation(this._program, "u_texture");
+        this.a_position = gl.getAttribLocation(this._program, "a_position");
+        this.a_texCoord = gl.getAttribLocation(this._program, "a_texCoord");
+    }
+    gl.useProgram(this._program);
+
+    gl.activeTexture(gl.TEXTURE0);
+    //console.log("Using texture " + frag.slot()._id);
+    gl.enableVertexAttribArray(this.a_position);
+    gl.enableVertexAttribArray(this.a_texCoord);
+    gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
+    gl.uniform1i(this.u_texture, 0);
+    gl.uniformMatrix3fv(this.u_world, false, make2DProjection(displayWidth, displayHeight));
+
+    gl.viewport(0, 0, displayWidth, displayHeight);
+    if(!this._vertexBuffer) {
+        this._vertexBuffer = gl.createBuffer();
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
+
+    var arr = new Float32Array(6*4);
+    arr[0] = 0;
+    arr[1] = 0;
+    arr[2] = 0;
+    arr[3] = displayHeight/backbufferHeight;
+    //arr[2] = 0;
+    //arr[3] = 0;
+
+    arr[4] = displayWidth;
+    arr[5] = 0;
+    arr[6] = displayWidth/backbufferWidth;
+    arr[7] = displayHeight/backbufferHeight;
+    //arr[6] = 1;
+    //arr[7] = 0;
+
+    arr[8] = displayWidth;
+    arr[9] = displayHeight;
+    arr[10] = arr[6];
+    arr[11] = 0
+    //arr[10] = 1;
+    //arr[11] = 1;
+
+    arr[12] = arr[0];
+    arr[13] = arr[1];
+    arr[14] = arr[2];
+    arr[15] = arr[3];
+
+    arr[16] = arr[8];
+    arr[17] = arr[9];
+    arr[18] = arr[10];
+    arr[19] = arr[11];
+
+    arr[20] = arr[0];
+    arr[21] = arr[9];
+    arr[22] = arr[2];
+    arr[23] = arr[11];
+    gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+
+    var FLOAT_SIZE = 4;
+    var stride = 4 * FLOAT_SIZE;
+    gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, stride, 0);
+    gl.vertexAttribPointer(this.a_texCoord, 2, gl.FLOAT, false, stride, 2*FLOAT_SIZE);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+};
+
+parsegraph_Window.prototype.renderDirect = function()
+{
+    var gl = this.gl();
+    if(this.gl().isContextLost()) {
+        return;
+    }
+    //console.log("Rendering window");
+    if(!this.canProject()) {
+        throw new Error(
+            "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        );
+    }
+
+    // Lookup the size the browser is displaying the canvas.
+    var displayWidth = this.container().clientWidth;
+    var displayHeight = this.container().clientHeight;
+    // Check if the canvas is not the same size.
+    if(this.canvas().width != displayWidth || this.canvas().height != displayHeight) {
+        // Make the canvas the same size
+        this.canvas().width = displayWidth;
+        this.canvas().height = displayHeight;
+    }
+
+    var compSize = new parsegraph_Rect();
+    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    for(var i = 0; i < this._components.length; ++i) {
+        var comp = this._components[i];
+        comp.layout(this, compSize);
+        //console.log("Rendering: " + comp.peer().id());
+        //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+        gl.viewport(compSize.x(), compSize.y(), compSize.width(), compSize.height());
+        comp.render(compSize.width(), compSize.height());
+    }
+};

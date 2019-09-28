@@ -1,27 +1,26 @@
-function parsegraph_CameraBox(graph)
+function parsegraph_CameraBox()
 {
     // Camera boxes.
     this._showCameraBoxes = true;
     this._cameraBoxDirty = true;
     this._cameraBoxes = {};
-    this._cameraBoxPainter = null;
+    this._painters = {};
 
-    this._graph = graph;
-    this._gl = null;
     this._glyphAtlas = null;
-    this._shaders = null;
 
     this._numBoxes = 0;
 }
 
-parsegraph_CameraBox.prototype.contextChanged = function(isLost)
+parsegraph_CameraBox.prototype.contextChanged = function(isLost, window)
 {
     this._cameraBoxDirty = true;
     if(!isLost) {
         return;
     }
-    if(this._cameraBoxPainter) {
-        this._cameraBoxPainter.contextChanged(isLost);
+    for(var wid in this._painters) {
+        if(window.id() === wid) {
+            this._painters[wid].contextChanged(isLost);
+        }
     }
 };
 
@@ -30,21 +29,9 @@ parsegraph_CameraBox.prototype.needsRepaint = function()
     return this._cameraBoxDirty;
 };
 
-parsegraph_CameraBox.prototype.gl = function()
-{
-    return this._gl;
-}
-
 parsegraph_CameraBox.prototype.glyphAtlas = function()
 {
     return this._glyphAtlas;
-}
-
-parsegraph_CameraBox.prototype.prepare = function(gl, glyphAtlas, shaders)
-{
-    this._gl = gl;
-    this._glyphAtlas = glyphAtlas;
-    this._shaders = shaders;
 }
 
 parsegraph_CameraBox.prototype.setCameraMouse = function(name, x, y)
@@ -57,7 +44,7 @@ parsegraph_CameraBox.prototype.setCameraMouse = function(name, x, y)
     this._cameraBoxes[name].mouseY = y;
     this._cameraBoxes[name].when = new Date();
     this._cameraBoxDirty = true;
-    this._graph.scheduleRepaint();
+    this._viewport.scheduleRepaint();
 };
 
 parsegraph_CameraBox.prototype.setCamera = function(name, camera)
@@ -75,7 +62,7 @@ parsegraph_CameraBox.prototype.setCamera = function(name, camera)
     this._cameraBoxes[name].mouseY = oldMouseY;
     this._cameraBoxes[name].when = new Date();
     this._cameraBoxDirty = true;
-    this._graph.scheduleRepaint();
+    this._viewport.scheduleRepaint();
 };
 
 parsegraph_CameraBox.prototype.removeCamera = function(name)
@@ -94,20 +81,20 @@ parsegraph_CameraBox.prototype.scheduleRepaint = function()
     this._graph.scheduleRepaint();
 };
 
-parsegraph_CameraBox.prototype.paint = function()
+parsegraph_CameraBox.prototype.paint = function(window)
 {
     //console.log("Repainting camera boxes");
     var needsRepaint = false;
     if(this._showCameraBoxes && this._cameraBoxDirty) {
-        if(!this._cameraBoxPainter) {
-            this._cameraBoxPainter = new parsegraph_CameraBoxPainter(
-                this.gl(), this.glyphAtlas(), this._shaders
-            );
+        var painter = this._painters[window.id()];
+        if(!painter) {
+            painter = new parsegraph_CameraBoxPainter(window);
+            this._painters[window.id()] = painter;
         }
         else {
-            this._cameraBoxPainter.clear();
+            painter.clear();
         }
-        this._cameraBoxPainter._blockPainter.initBuffer(this._numBoxes);
+        painter._blockPainter.initBuffer(this._numBoxes);
         var rect = new parsegraph_Rect();
         for(var name in this._cameraBoxes) {
             var cameraBox = this._cameraBoxes[name];
@@ -117,27 +104,26 @@ parsegraph_CameraBox.prototype.paint = function()
             rect.setY(-cameraBox.cameraY + hh/2);
             rect.setWidth(cameraBox.width/cameraBox.scale);
             rect.setHeight(cameraBox.height/cameraBox.scale);
-            needsRepaint = this._cameraBoxPainter.drawBox(name, rect, cameraBox.scale, cameraBox.mouseX, cameraBox.mouseY, cameraBox.when) || needsRepaint;
+            needsRepaint = painter.drawBox(name, rect, cameraBox.scale, cameraBox.mouseX, cameraBox.mouseY, cameraBox.when) || needsRepaint;
         }
         this._cameraBoxDirty = needsRepaint;
     }
     return needsRepaint;
 }
 
-parsegraph_CameraBox.prototype.render = function(world, scale)
+parsegraph_CameraBox.prototype.render = function(window, camera)
 {
-    if(this._showCameraBoxes) {
-        var gl = this.gl();
-        if(!gl) {
-            return;
-        }
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
-        this._cameraBoxPainter.render(world, scale);
+    if(!this._showCameraBoxes) {
+        return true;
     }
-};
-
-parsegraph_CameraBox.prototype.shaders = function()
-{
-    return this._shaders;
+    var gl = window.gl();
+    if(!gl) {
+        return false;
+    }
+    var painter = this._painters[window.id()];
+    if(!painter) {
+        return false;
+    }
+    gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
+    painter.render(camera.project(), camera.scale());
 };

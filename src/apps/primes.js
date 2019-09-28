@@ -3,19 +3,30 @@ function parsegraph_PrimesWidget(app)
     this.knownPrimes = [];
     this.position = 2;
 
-    this._graph = app.graph();
+    this._app = app;
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
-    this.caret.setWorld(this._graph.world());
+    this.caret.setFont(app.font());
+    // TODO this.caret.setWorld(this._viewport.world());
     this.caret.setMathMode(true);
     this.caret.label("1");
 
-    var carousel = new parsegraph_ActionCarousel(app.graph());
+    var carousel = new parsegraph_ActionCarousel(this.window());
     carousel.addAction("Pause", function() {
         this._paused = !this._paused;
     }, this);
     carousel.install(this.caret.node());
 }
+
+parsegraph_PrimesWidget.prototype.window = function()
+{
+    return this._app.window();
+};
+
+parsegraph_PrimesWidget.prototype.world = function()
+{
+    return this._app.world();
+};
 
 parsegraph_PrimesWidget.prototype.isPaused = function()
 {
@@ -36,10 +47,10 @@ parsegraph_PrimesWidget.prototype.step = function()
     var isPrime = true;
 
     function addHighlights(dir) {
-        var carousel = new parsegraph_ActionCarousel(this._graph);
-        var graph = this._graph;
+        var carousel = new parsegraph_ActionCarousel(this.window());
+        var world = this.world();
         carousel.addAction("Highlight", function() {
-            var bs = parsegraph_copyStyle('s');
+            var bs = parsegraph_cloneStyle(parsegraph_SLOT_MATH_STYLE);
             bs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
             for(var n = this; n; n = n.nodeAt(dir)) {
                 if(n.type() === parsegraph_SLOT) {
@@ -47,17 +58,17 @@ parsegraph_PrimesWidget.prototype.step = function()
                 }
             }
             console.log("Highlighted node " + this.label());
-            graph.scheduleRepaint();
+            world.scheduleRepaint();
         }, this.caret.node());
         carousel.addAction("Unhighlight", function() {
-            var bs = parsegraph_copyStyle('s');
+            var bs = parsegraph_cloneStyle(parsegraph_SLOT_MATH_STYLE);
             for(var n = this; n; n = n.nodeAt(dir)) {
                 if(n.type() === parsegraph_SLOT) {
                     n.setBlockStyle(bs);
                 }
             }
             console.log("Unhighlighted node " + this.label());
-            graph.scheduleRepaint();
+            world.scheduleRepaint();
         }, this.caret.node());
         carousel.install(this.caret.node());
     };

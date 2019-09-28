@@ -25,49 +25,25 @@ alpha_WeetPainter_FragmentShader =
 /**
  * Draws 3d faces in a solid color.
  */
-function alpha_WeetPainter(gl)
+function alpha_WeetPainter(window)
 {
-    this.gl = gl;
+    if(!window) {
+        throw new Error("A Window must be provided when creating a WeetPainter");
+    }
+    this.gl = window.gl();
     this._numCubes = null;
-    if(!this.gl || !this.gl.createProgram) {
-        throw new Error("FacePainter must be given a GL interface");
-    }
 
-    this.faceProgram = this.gl.createProgram();
-
-    this.gl.attachShader(
-        this.faceProgram,
-        compileShader(
-            this.gl,
-            alpha_WeetPainter_VertexShader,
-            this.gl.VERTEX_SHADER
-        )
+    this.faceProgram = parsegraph_compileProgram(window, "alpha_WeetPainter",
+        alpha_WeetPainter_VertexShader,
+        alpha_WeetPainter_FragmentShader
     );
-
-    this.gl.attachShader(
-        this.faceProgram,
-        compileShader(
-            this.gl,
-            alpha_WeetPainter_FragmentShader,
-            this.gl.FRAGMENT_SHADER
-        )
-    );
-
-    this.gl.linkProgram(this.faceProgram);
-    if(!this.gl.getProgramParameter(
-        this.faceProgram, this.gl.LINK_STATUS
-    )) {
-        throw new Error("FacePainter program failed to link.");
-    }
 
     // Prepare attribute buffers.
     this.a_position = this.gl.getAttribLocation(this.faceProgram, "a_position");
     this.a_color = this.gl.getAttribLocation(this.faceProgram, "a_color");
 
     // Cache program locations.
-    this.u_world = this.gl.getUniformLocation(
-        this.faceProgram, "u_world"
-    );
+    this.u_world = this.gl.getUniformLocation(this.faceProgram, "u_world");
 };
 
 {

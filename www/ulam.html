@@ -9,15 +9,20 @@
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var sga = new parsegraph_Application(window);
+    document.body.appendChild(window.container());
+    parsegraph_addEventMethod(top.window, "resize", sga.scheduleRepaint, sga);
     sga.setCameraName("parsegraph_ulam_camera");
     SGA = sga;
+
     var ulam;
     var COUNT = 100000;
     sga.setBurstIdle(true);
     sga.setGovernor(false);
     var startTime = new Date();
-    sga.start(document.body, function(app, root) {
+    sga.start(function(app, root) {
         root.setLabel("Ulam Spiral");
         ulam = new parsegraph_Ulam(app, COUNT);
         root.connectNode(parsegraph_DOWNWARD, ulam.node());

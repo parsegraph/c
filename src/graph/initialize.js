@@ -97,6 +97,17 @@ function parsegraph_initialize()
 
     parsegraph_IDLE_MARGIN = 1;
 
+    // Anchors
+    parsegraph_TOPLEFT = 1;
+    parsegraph_TOP = 2;
+    parsegraph_TOPRIGHT = 3;
+    parsegraph_RIGHT = 4;
+    parsegraph_BOTTOMRIGHT = 5;
+    parsegraph_BOTTOM = 6;
+    parsegraph_BOTTOMLEFT = 7;
+    parsegraph_LEFT = 8;
+    parsegraph_CENTER = 9;
+
     // Node Direction
     parsegraph_NULL_NODE_DIRECTION = -1;
     parsegraph_INWARD = 0;

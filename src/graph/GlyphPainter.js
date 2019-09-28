@@ -27,7 +27,7 @@ parsegraph_GlyphPainter_FragmentShader =
 "varying highp vec2 texCoord;\n" +
 "\n" +
 "void main() {\n" +
-    //"gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
+    "gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
     "highp float opacity = texture2D(u_glyphTexture, texCoord.st).a;" +
     "if(backgroundColor.a == 0.0) {" +
         "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
@@ -37,17 +37,15 @@ parsegraph_GlyphPainter_FragmentShader =
     "}" +
 "}";
 
-function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
+function parsegraph_GlyphPainter(window, font)
 {
-    this._gl = gl;
-
-    if(!glyphAtlas) {
-        throw new Error("Glyph atlas must be provided");
+    if(!font) {
+        throw new Error("Font must be provided");
     }
-    this._glyphAtlas = glyphAtlas;
+    this._font = font;
     this._id = ++parsegraph_GlyphPainter_COUNT;
 
-    this._shaders = shaders;
+    this._window = window;
     this._textBuffers = {};
     this._numTextBuffers = 0;
     this._maxSize = 0;
@@ -63,6 +61,11 @@ function parsegraph_GlyphPainter(gl, glyphAtlas, shaders)
 
     this._color = parsegraph_createColor(1, 1, 1, 1);
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
+};
+
+parsegraph_GlyphPainter.prototype.window = function()
+{
+    return this._window;
 };
 
 parsegraph_GlyphPainter.prototype.contextChanged = function(isLost)
@@ -103,12 +106,12 @@ parsegraph_GlyphPainter.prototype.setBackgroundColor = function()
 
 parsegraph_GlyphPainter.prototype.fontSize = function()
 {
-    return this._glyphAtlas.fontSize();
+    return this._font.fontSize();
 };
 
-parsegraph_GlyphPainter.prototype.glyphAtlas = function()
+parsegraph_GlyphPainter.prototype.font = function()
 {
-    return this._glyphAtlas;
+    return this._font;
 };
 
 function parsegraph_GlyphPageRenderer(painter, textureIndex)
@@ -137,7 +140,7 @@ parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs)
     if(this._glyphBuffer) {
         this.clear();
     }
-    var gl = this._painter._gl;
+    var gl = this._painter.window().gl();
     this._glyphBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this._painter._stride*6*numGlyphs, gl.STATIC_DRAW);
@@ -146,7 +149,7 @@ parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs)
 
 parsegraph_GlyphPageRenderer.prototype.clear = function()
 {
-    var gl = this._painter._gl;
+    var gl = this._painter.window().gl();
     if(this._glyphBuffer && !gl.isContextLost()) {
         gl.deleteBuffer(this._glyphBuffer);
     }
@@ -161,7 +164,7 @@ parsegraph_GlyphPageRenderer.prototype.flush = function()
     if(this._dataBufferVertexIndex === 0) {
         return;
     }
-    var gl = this._painter._gl;
+    var gl = this._painter.window().gl();
     var stride = this._painter._stride;
     gl.bindBuffer(gl.ARRAY_BUFFER, this._glyphBuffer);
 
@@ -191,13 +194,13 @@ parsegraph_GlyphPageRenderer.prototype.writeVertex = function()
 
 parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
-    var gl = this._painter._gl;
-    var glyphAtlas = this._painter.glyphAtlas();
+    var gl = this._painter.window().gl();
+    var font = this._painter.font();
     var glTextureSize = parsegraph_getTextureSize(gl);
     if(gl.isContextLost()) {
         return;
     }
-    var pageTextureSize = glyphAtlas.pageTextureSize();
+    var pageTextureSize = font.pageTextureSize();
     var pagesPerRow = glTextureSize / pageTextureSize;
     var pagesPerTexture = Math.pow(pagesPerRow, 2);
     var pageIndex = glyphData.glyphPage._id % pagesPerTexture;
@@ -282,8 +285,8 @@ parsegraph_GlyphPageRenderer.prototype.render = function()
     if(this._glyphBufferVertexIndex === 0) {
         return;
     }
-    var gl = this._painter._gl;
-    var glyphTexture = this._painter._glyphAtlas._pages[this._textureIndex]._glyphTexture;
+    var gl = this._painter.window().gl();
+    var glyphTexture = this._painter._font._pages[this._textureIndex]._glyphTexture[this._painter.window().id()];
     //console.log("Rendering " + (this._glyphBufferVertexIndex/6) + " glyphs of glyph page " + this._textureIndex);
     gl.bindTexture(gl.TEXTURE_2D, glyphTexture);
     gl.uniform1i(this._painter.u_glyphTexture, 0);
@@ -305,16 +308,17 @@ parsegraph_GlyphPageRenderer.prototype.render = function()
 parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScale)
 {
     if(typeof glyphData !== "object") {
-        glyphData = this._glyphAtlas.getGlyph(glyphData);
+        glyphData = this._font.getGlyph(glyphData);
     }
     glyphData.painted = true;
 
-    var glTextureSize = parsegraph_getTextureSize(this._gl);
-    if(this._gl.isContextLost()) {
+    var gl = this.window().gl();
+    var glTextureSize = parsegraph_getTextureSize(gl);
+    if(gl.isContextLost()) {
         return;
     }
         //console.log("GLTEXTURESIZE=" + this._glTextureSize);
-    var pagesPerRow = glTextureSize / this.glyphAtlas().pageTextureSize();
+    var pagesPerRow = glTextureSize / this.font().pageTextureSize();
     var pagesPerTexture = Math.pow(pagesPerRow, 2);
 
     // Select the correct buffer.
@@ -333,6 +337,9 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
 parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
 {
     for(var i in numGlyphs) {
+        if(i == "font") {
+            continue;
+        }
         var gp = this._textBuffers[i];
         if(!gp) {
             gp = new parsegraph_GlyphPageRenderer(this, i);
@@ -359,6 +366,7 @@ parsegraph_GlyphPainter.prototype.clear = function()
 
 parsegraph_GlyphPainter.prototype.render = function(world, scale)
 {
+    this._font.update(this._window);
     //console.log(new Error("GlyphPainter scale="+scale));
     //console.log("Max scale of a single largest glyph would be: " + (this._maxSize *scale));
     if(scale < .1 && this._maxSize*scale < 2) {
@@ -369,30 +377,30 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
         return;
     }
 
-    var gl = this._gl;
+    var gl = this.window().gl();
     if(gl.isContextLost()) {
         return;
     }
 
     // Compile the shader program.
     if(this._textProgram === null) {
-        this._textProgram = parsegraph_compileProgram(gl, this._shaders,
+        this._textProgram = parsegraph_compileProgram(this.window(),
             "parsegraph_GlyphPainter",
             parsegraph_GlyphPainter_VertexShader,
             parsegraph_GlyphPainter_FragmentShader
         );
 
         // Cache program locations.
-        this.u_world = this._gl.getUniformLocation(
+        this.u_world = gl.getUniformLocation(
             this._textProgram, "u_world"
         );
-        this.u_glyphTexture = this._gl.getUniformLocation(
+        this.u_glyphTexture = gl.getUniformLocation(
             this._textProgram, "u_glyphTexture"
         );
-        this.a_position = this._gl.getAttribLocation(this._textProgram, "a_position");
-        this.a_color = this._gl.getAttribLocation(this._textProgram, "a_color");
-        this.a_backgroundColor = this._gl.getAttribLocation(this._textProgram, "a_backgroundColor");
-        this.a_texCoord = this._gl.getAttribLocation(this._textProgram, "a_texCoord");
+        this.a_position = gl.getAttribLocation(this._textProgram, "a_position");
+        this.a_color = gl.getAttribLocation(this._textProgram, "a_color");
+        this.a_backgroundColor = gl.getAttribLocation(this._textProgram, "a_backgroundColor");
+        this.a_texCoord = gl.getAttribLocation(this._textProgram, "a_texCoord");
     }
 
     // Load program.

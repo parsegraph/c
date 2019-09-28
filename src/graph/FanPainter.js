@@ -56,11 +56,11 @@ parsegraph_FanPainter_FragmentShader =
 /**
  * Shows a circle that allows some parts to show as selected.
  */
-function parsegraph_FanPainter(gl, shaders)
+function parsegraph_FanPainter(window)
 {
-    this._gl = gl;
-    if(!this._gl || !this._gl.createProgram) {
-        throw new Error("A GL interface must be given");
+    this._window = window;
+    if(!this._window) {
+        throw new Error("Window must be provided");
     }
 
     this._ascendingRadius = 250;
@@ -69,15 +69,13 @@ function parsegraph_FanPainter(gl, shaders)
     this._selectionSize = null;
 
     // Compile the shader program.
-    this.fanProgram = parsegraph_compileProgram(gl, shaders, "parsegraph_FanPainter",
+    this.fanProgram = parsegraph_compileProgram(this._window, "parsegraph_FanPainter",
         parsegraph_FanPainter_VertexShader,
         parsegraph_FanPainter_FragmentShader
     );
 
     // Prepare attribute buffers.
-    this._fanBuffer = parsegraph_createPagingBuffer(
-        this._gl, this.fanProgram
-    );
+    this._fanBuffer = parsegraph_createPagingBuffer(window.gl(), this.fanProgram);
     this.a_position = this._fanBuffer.defineAttrib("a_position", 2);
     this.a_color = this._fanBuffer.defineAttrib("a_color", 4);
     this.a_texCoord = this._fanBuffer.defineAttrib("a_texCoord", 2);
@@ -85,7 +83,7 @@ function parsegraph_FanPainter(gl, shaders)
     this.a_selectionSize = this._fanBuffer.defineAttrib("a_selectionSize", 1);
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(this.fanProgram, "u_world");
+    this.u_world = this.window().gl().getUniformLocation(this.fanProgram, "u_world");
 
     this._fanBuffer.addPage();
 };
@@ -169,6 +167,11 @@ parsegraph_FanPainter.prototype.setSelectionSize = function(selectionSize)
     this._selectionSize = Math.min(Math.PI/2.0, selectionSize);
 };
 
+parsegraph_FanPainter.prototype.window = function()
+{
+    return this._window;
+};
+
 parsegraph_FanPainter.prototype.clear = function()
 {
     this._fanBuffer.clear();
@@ -181,9 +184,8 @@ parsegraph_FanPainter.prototype.render = function(viewMatrix)
         throw new Error("A viewMatrix must be provided");
     }
     // Render faces.
-    this._gl.useProgram(
-        this.fanProgram
-    );
-    this._gl.uniformMatrix3fv(this.u_world, false, viewMatrix);
+    var gl = this._window.gl();
+    gl.useProgram(this.fanProgram);
+    gl.uniformMatrix3fv(this.u_world, false, viewMatrix);
     this._fanBuffer.renderPages();
 };

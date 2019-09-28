@@ -1,9 +1,8 @@
-function parsegraph_CameraBoxPainter(gl, glyphAtlas, shaders)
+function parsegraph_CameraBoxPainter(window)
 {
-    this._blockPainter = new parsegraph_BlockPainter(gl, shaders);
-    this._glyphPainter = new parsegraph_GlyphPainter(gl, glyphAtlas, shaders);
+    this._blockPainter = new parsegraph_BlockPainter(window);
+    this._glyphPainter = new parsegraph_GlyphPainter(window, parsegraph_defaultFont());
 
-    this._glyphAtlas = glyphAtlas;
     this._borderColor = new parsegraph_Color(1, 1, 1, 0.1);
     this._backgroundColor = new parsegraph_Color(1, 1, 1, 0.1);
     this._textColor = new parsegraph_Color(1, 1, 1, 1);
@@ -54,10 +53,11 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(name, rect, scale, mous
         .1,
         scale
     );
-    var label = new parsegraph_Label(this._glyphAtlas);
+    var font = this._glyphPainter.font();
+    var label = new parsegraph_Label(font);
     label.setText(name);
-    var lw = label.width()*(this._fontSize/this._glyphAtlas.fontSize())/scale;
-    var lh = label.height()*(this._fontSize/this._glyphAtlas.fontSize())/scale;
+    var lw = label.width()*(this._fontSize/font.fontSize())/scale;
+    var lh = label.height()*(this._fontSize/font.fontSize())/scale;
 
     if(mouseX === undefined) {
         mouseX = rect.width()/2 - lw;
@@ -77,7 +77,7 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(name, rect, scale, mous
     label.paint(this._glyphPainter,
         rect.x() - lw/2 - rect.width()/2 + mouseX/scale,
         rect.y() - lh/2 - rect.height()/2 + mouseY/scale,
-        (this._fontSize/this._glyphAtlas.fontSize())/scale
+        (this._fontSize/font.fontSize())/scale
     );
 
     return interp > 0;

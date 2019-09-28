@@ -151,8 +151,13 @@ function parsegraph_glErrorString(gl, err)
     }
 }
 
-function parsegraph_compileProgram(gl, shaders, shaderName, vertexShader, fragShader)
+function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
 {
+    var gl = window.gl();
+    var shaders = window.shaders();
+    if(gl.isContextLost()) {
+        return;
+    }
     if(shaders[shaderName]) {
         return shaders[shaderName];
     }

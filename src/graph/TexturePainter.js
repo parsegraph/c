@@ -3,25 +3,32 @@ parsegraph_TexturePainter_VertexShader =
 "" +
 "attribute vec2 a_position;" +
 "attribute vec2 a_texCoord;" +
+"attribute float a_alpha;" +
 "" +
 "varying highp vec2 texCoord;" +
+"varying highp float alpha;" +
 "" +
 "void main() {" +
     "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
    "texCoord = a_texCoord;" +
+   "alpha = a_alpha;" +
 "}";
 
 parsegraph_TexturePainter_FragmentShader =
 "uniform sampler2D u_texture;\n" +
 "varying highp vec2 texCoord;\n" +
+"varying highp float alpha;\n" +
 "\n" +
 "void main() {\n" +
     "gl_FragColor = texture2D(u_texture, texCoord.st);" +
+    "gl_FragColor.a = gl_FragColor.a * alpha;" +
 "}";
 
-function parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
+function parsegraph_TexturePainter(window, textureId, texWidth, texHeight)
 {
-    this._gl = gl;
+    this._gl = window.gl();
+    var gl = this._gl;
+    var shaders = window.shaders();
 
     // Compile the shader program.
     var shaderName = "parsegraph_TexturePainter";
@@ -59,6 +66,7 @@ function parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
     this.a_color = this._buffer.defineAttrib("a_color", 4);
     this.a_backgroundColor = this._buffer.defineAttrib("a_backgroundColor", 4);
     this.a_texCoord = this._buffer.defineAttrib("a_texCoord", 2);
+    this.a_alpha = this._buffer.defineAttrib("a_alpha", 1);
 
     // Cache program locations.
     this.u_world = this._gl.getUniformLocation(
@@ -72,11 +80,17 @@ function parsegraph_TexturePainter(gl, textureId, texWidth, texHeight, shaders)
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
 
     this._buffer.addPage();
+    this._alpha = 1;
 };
 
 parsegraph_TexturePainter.prototype.texture = function()
 {
     return this._texture;
+};
+
+parsegraph_TexturePainter.prototype.setAlpha = function(alpha)
+{
+    this._alpha = alpha;
 };
 
 parsegraph_TexturePainter.prototype.drawWholeTexture = function(x, y, width, height, scale)
@@ -129,6 +143,9 @@ parsegraph_TexturePainter.prototype.drawTexture = function(
             iconY / this._texHeight,
         ]
     );
+    for(var i = 0; i < 6; ++i) {
+        this._buffer.appendData(this.a_alpha, this._alpha);
+    }
 };
 
 parsegraph_TexturePainter.prototype.clear = function()
@@ -142,9 +159,7 @@ parsegraph_TexturePainter.prototype.render = function(world)
     var gl = this._gl;
 
     // Load program.
-    this._gl.useProgram(
-        this._textureProgram
-    );
+    this._gl.useProgram(this._textureProgram);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this._texture);

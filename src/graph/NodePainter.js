@@ -1,19 +1,16 @@
-function parsegraph_NodePainter(gl, glyphAtlas, shaders)
+function parsegraph_NodePainter(window)
 {
-    this._gl = gl;
-    if(!this._gl || !this._gl.createProgram) {
-        throw new Error("A GL interface must be given");
-    }
+    this._window = window;
 
     this._backgroundColor = parsegraph_BACKGROUND_COLOR;
 
-    this._blockPainter = new parsegraph_BlockPainter(this._gl, shaders);
+    this._blockPainter = new parsegraph_BlockPainter(window);
     this._renderBlocks = true;
 
-    this._extentPainter = new parsegraph_BlockPainter(this._gl, shaders);
+    this._extentPainter = new parsegraph_BlockPainter(window);
     //this._renderExtents = true;
 
-    this._glyphPainter = new parsegraph_GlyphPainter(this._gl, glyphAtlas, shaders);
+    this._fontPainters = {};
 
     this._renderText = true;
 
@@ -28,7 +25,10 @@ parsegraph_NodePainter.prototype.contextChanged = function(isLost)
 {
     this._blockPainter.contextChanged(isLost);
     this._extentPainter.contextChanged(isLost);
-    this._glyphPainter.contextChanged(isLost);
+    for(var fontName in this._fontPainters) {
+        var fontPainter = this._fontPainters[fontName];
+        fontPainter.contextChanged(isLost);
+    }
     this._textures.forEach(function(t) {
         t.contextChanged(isLost);
     });
@@ -40,14 +40,25 @@ parsegraph_NodePainter.prototype.bounds = function()
     return this._blockPainter.bounds();
 };
 
-parsegraph_NodePainter.prototype.gl = function()
+parsegraph_NodePainter.prototype.getFontPainter = function(font)
 {
-    return this._gl;
+    var fullFontName = font.fullName();
+    var painter = this._fontPainters[fullFontName];
+    if(!painter) {
+        painter = new parsegraph_GlyphPainter(this.window(), font);
+        this._fontPainters[fullFontName] = painter;
+    }
+    return painter;
 };
 
-parsegraph_NodePainter.prototype.glyphPainter = function()
+parsegraph_NodePainter.prototype.window = function()
 {
-    return this._glyphPainter;
+    return this._window;
+};
+
+parsegraph_NodePainter.prototype.gl = function()
+{
+    return this._window.gl();
 };
 
 parsegraph_NodePainter.prototype.setBackground = function(color)
@@ -69,9 +80,12 @@ parsegraph_NodePainter.prototype.clear = function()
 {
     this._blockPainter.clear();
     this._extentPainter.clear();
-    this._glyphPainter.clear();
+    for(var fontName in this._fontPainters) {
+        var fontPainter = this._fontPainters[fontName];
+        fontPainter.clear();
+    }
 
-    var gl = this._gl;
+    var gl = this.gl();
     this._textures.forEach(function(t) {
         t.clear();
         //gl.deleteTexture(t._texture);
@@ -212,10 +226,11 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
     }
 
     var fontScale = .7;
-//    this._glyphPainter.setFontSize(
+    var fontPainter = this.getFontPainter(node.realLabel().font());
+//    fontPainter.setFontSize(
 //        fontScale * style.fontSize * node.groupScale()
 //    );
-    this._glyphPainter.setColor(
+    fontPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
@@ -226,23 +241,23 @@ parsegraph_NodePainter.prototype.drawSlider = function(node)
     if(value == null) {
         value = 0.5;
     }
-    //this._glyphPainter.setFontSize(
+    //fontPainter.setFontSize(
 //        fontScale * style.fontSize * node.groupScale()
 //    );
     /*if(style.maxLabelChars) {
-        this._glyphPainter.setWrapWidth(
+        fontPainter.setWrapWidth(
             fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * node.groupScale()
         );
     }*/
 
-    var textMetrics = this._glyphPainter.measureText(node.label());
+    var textMetrics = fontPainter.measureText(node.label());
     node._label[0] = node.groupX() - sliderWidth / 2 + sliderWidth * value - textMetrics[0]/2;
     node._label[1] = node.groupY() - textMetrics[1]/2;
-    this._glyphPainter.setPosition(node._label[0], node._label[1]);
-    this._glyphPainter.drawText(node.label());
+    fontPainter.setPosition(node._label[0], node._label[1]);
+    fontPainter.drawText(node.label());
 };
 
-parsegraph_NodePainter.prototype.drawScene = function(node, shaders)
+parsegraph_NodePainter.prototype.drawScene = function(node)
 {
     if(!node.scene()) {
         return;
@@ -253,6 +268,7 @@ parsegraph_NodePainter.prototype.drawScene = function(node, shaders)
     var sceneY = node.groupY();
 
     // Render and draw the scene texture.
+    var shaders = this._window.shaders();
     var gl = shaders.gl;
     if(!shaders.framebuffer) {
         var framebuffer = gl.createFramebuffer();
@@ -325,16 +341,23 @@ parsegraph_NodePainter.prototype.initBlockBuffer = function(counts)
     this._mass = counts.numBlocks;
     this._blockPainter.initBuffer(counts.numBlocks);
     this._extentPainter.initBuffer(counts.numExtents);
-    this._glyphPainter.initBuffer(counts.numGlyphs);
+    if(counts.numGlyphs) {
+        for(var fullFontName in counts.numGlyphs) {
+            var numGlyphs = counts.numGlyphs[fullFontName];
+            var fontPainter = this._fontPainters[fullFontName];
+            if(!fontPainter) {
+                fontPainter = new parsegraph_FontPainter(numGlyphs.font);
+                this._fontPainters[fullFontName] = fontPainter;
+            }
+            fontPainter.initBuffer(numGlyphs);
+        }
+    }
 };
 
 parsegraph_NodePainter.prototype.countNode = function(node, counts)
 {
     if(!counts.numBlocks) {
         counts.numBlocks = 0;
-    }
-    if(!counts.numGlyphs) {
-        counts.numGlyphs = {};
     }
 
     if(this.isExtentRenderingEnabled()) {
@@ -372,25 +395,42 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
         ++counts.numBlocks;
     }
 
+    if(!node.realLabel()) {
+        return;
+    }
+
+    var font = node.realLabel().font();
+    var fontPainter = this.getFontPainter(font);
+
     if(Number.isNaN(this._pagesPerGlyphTexture)) {
-        var glTextureSize = parsegraph_getTextureSize(this._gl);
-        if(this._gl.isContextLost()) {
+        var glTextureSize = parsegraph_getTextureSize(this.gl());
+        if(this.gl().isContextLost()) {
             return;
         }
-        var pagesPerRow = glTextureSize / this._glyphPainter.glyphAtlas().pageTextureSize();
+        var pagesPerRow = glTextureSize / fontPainter.font().pageTextureSize();
         this._pagesPerGlyphTexture = Math.pow(pagesPerRow, 2);
     }
     if(Number.isNaN(this._pagesPerGlyphTexture)) {
         return;
     }
 
-    node.glyphCount(counts.numGlyphs, this._pagesPerGlyphTexture);
+    if(!counts.numGlyphs) {
+        counts.numGlyphs = {};
+    }
+
+    var numGlyphs = counts.numGlyphs[font.fullName()];
+    if(!numGlyphs) {
+        numGlyphs = {font:font};
+        counts.numGlyphs[font.fullName()] = numGlyphs;
+    }
+
+    node.glyphCount(numGlyphs, this._pagesPerGlyphTexture);
     //console.log(node + " Count=" + counts.numBlocks);
 };
 
-parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
+parsegraph_NodePainter.prototype.drawNode = function(node)
 {
-    if(this._gl.isContextLost()) {
+    if(this.gl().isContextLost()) {
         return;
     }
     if(this.isExtentRenderingEnabled() && !node.isRoot()) {
@@ -403,7 +443,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node, shaders)
     case parsegraph_SCENE:
         this.paintLines(node);
         this.paintBlock(node);
-        return this.drawScene(node, shaders);
+        return this.drawScene(node);
     default:
         this.paintLines(node);
         this.paintBlock(node);
@@ -631,13 +671,14 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
     );
 
     // Draw the label.
-    var label = node._label;
+    var label = node.realLabel();
     if(!label) {
         return;
     }
     var fontScale = (style.fontSize * node.groupScale()) / label.fontSize();
     var labelX, labelY;
-    this._glyphPainter.setColor(
+    var fontPainter = this.getFontPainter(label.font());
+    fontPainter.setColor(
         node.isSelected() ?
             style.selectedFontColor :
             style.fontColor
@@ -663,27 +704,31 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
     node._label._x = labelX;
     node._label._y = labelY;
     node._label._scale = fontScale;
-    label.paint(this._glyphPainter, labelX, labelY, fontScale);
+    label.paint(fontPainter, labelX, labelY, fontScale);
 };
 
 parsegraph_NodePainter.prototype.render = function(world, scale, forceSimple)
 {
     ++this._consecutiveRenders;
-    this._gl.disable(this._gl.CULL_FACE);
-    this._gl.disable(this._gl.DEPTH_TEST);
-    this._gl.enable(this._gl.BLEND);
+    var gl = this.gl();
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
     if(this._renderBlocks) {
-        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         this._blockPainter.render(world, scale, forceSimple);
     }
     if(this._renderExtents) {
-        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_DST_ALPHA);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
         this._extentPainter.render(world, scale);
     }
 
     if(!forceSimple && this._renderText) {
-        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
-        this._glyphPainter.render(world, scale);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        for(var fontName in this._fontPainters) {
+            var fontPainter = this._fontPainters[fontName];
+            fontPainter.render(world, scale);
+        }
     }
 
     if(this._textures.length > 0) {

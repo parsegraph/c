@@ -30,8 +30,9 @@ function parsegraph_ExtendedNode()
 
     this.isPaintGroup = false;
     this.dirty = true;
-    this.painter = null;
-    this.previousPaintState = null;
+    this.windowPainter = {};
+    this.windowPaintGroup = {};
+    this.commitLayoutFunc = null;
     this.scene = null;
 }
 
@@ -551,15 +552,9 @@ parsegraph_Node.prototype.markDirty = function()
     //console.log(this + " marked dirty");
     this.ensureExtended();
     this._extended.dirty = true;
-    if(!this._extended.previousPaintState) {
-        this._extended.previousPaintState = {
-            paintGroup: null,
-            commitLayoutFunc: null
-        };
-    }
-    else {
-        this._extended.previousPaintState.commitLayoutFunc = null;
-        this._extended.previousPaintState.paintGroup = null;
+    this._extended.commitLayoutFunc = null;
+    for(var wid in this._extended.windowPaintGroup) {
+        this._extended.windowPaintGroup[wid] = null;
     }
 };
 
@@ -568,10 +563,13 @@ parsegraph_Node.prototype.isDirty = function()
     return this._extended && this._extended.dirty;
 };
 
-parsegraph_Node.prototype.painter = function()
+parsegraph_Node.prototype.painter = function(window)
 {
     this.ensureExtended();
-    return this._extended.painter;
+    if(!window) {
+        throw new Error("A window must be provided for a NodePainter to be selected");
+    }
+    return this._extended.windowPainter[window.id()];
 };
 
 parsegraph_Node.prototype.findPaintGroup = function()
@@ -1814,6 +1812,7 @@ function parsegraph_CommitLayoutData()
     this.bv = [null, null, null];
     this.firstSize = new parsegraph_Size();
     this.secondSize = new parsegraph_Size();
+    this.needsPosition = false;
 }
 
 parsegraph_Node.prototype.commitLayout = function(cld)
@@ -2812,6 +2811,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 return commitLayoutLoop;
             }
             if(root.needsCommit()) {
+                cld.needsPosition = true;
                 do {
                     // Loop back to the first node, from the root.
                     node = node._layoutNext;
@@ -2831,6 +2831,9 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                     }
                 } while(node !== root);
             }
+            else {
+                cld.needsPosition = cld.needsPosition || root.needsPosition();
+            }
             if(paintGroup === rootPaintGroup) {
                 //console.log("Commit layout phase 1 done");
                 ++layoutPhase;
@@ -2842,7 +2845,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             node = root;
         }
         // Calculate position.
-        while(layoutPhase === 2) {
+        while(cld.needsPosition && layoutPhase === 2) {
             //console.log("Now in layout phase 2");
             if(paintGroup === null) {
                 //console.log("Beginning layout phase 2");
@@ -2891,6 +2894,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
             root = paintGroup;
             node = null;
         }
+        cld.needsPosition = false;
         return null;
     };
 
@@ -2963,7 +2967,7 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 parsegraph_Node.prototype.layoutHasChanged = parsegraph_Node.prototype.layoutWasChanged;
 parsegraph_Node.prototype.layoutChanged = parsegraph_Node.prototype.layoutWasChanged;
 
-parsegraph_Node.prototype.freeze = function(freezer)
+parsegraph_Node.prototype.freeze = function()
 {
     if(!this.localPaintGroup()) {
         throw new Error("A node must be a paint group in order to be frozen.");
@@ -3124,7 +3128,7 @@ function parsegraph_labeledBlock(label, font)
     return node;
 };
 
-parsegraph_Node.prototype.contextChanged = function(isLost)
+parsegraph_Node.prototype.contextChanged = function(isLost, window)
 {
     if(!this.localPaintGroup()) {
         return;
@@ -3132,14 +3136,17 @@ parsegraph_Node.prototype.contextChanged = function(isLost)
     var node = this;
     do {
         node.markDirty();
-        if(node._extended.painter) {
-            node._extended.painter.contextChanged(isLost);
+        for(var wid in node._extended.windowPainter) {
+            var painter = node._extended.windowPainter[wid];
+            if(window.id() === wid) {
+                painter.contextChanged(isLost);
+            }
         }
         node = node._paintGroupNext;
     } while(node !== this);
 };
 
-parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shaders, timeout)
+parsegraph_Node.prototype.paint = function(window, timeout)
 {
     if(!this.localPaintGroup()) {
         return false;
@@ -3151,10 +3158,7 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
     else {
         //console.log(this + " is dirty");
     }
-    if(!gl) {
-        throw new Error("A WebGL context must be provided.");
-    }
-    if(gl.isContextLost()) {
+    if(window.gl().isContextLost()) {
         return false;
     }
     if(timeout <= 0) {
@@ -3163,55 +3167,55 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
 
     var t = new Date().getTime();
     var pastTime = function() {
-        return timeout !== undefined && (new Date().getTime() - t > timeout);
+        var isPast = timeout !== undefined && (new Date().getTime() - t > timeout);
+        if(isPast) {
+            //console.log("Past time: " + (new Date().getTime() - t));
+        }
+        return isPast;
     };
 
     // Load saved state.
-    if(!this._extended.previousPaintState) {
-        this.markDirty();
-    }
-    var savedState = this._extended.previousPaintState;
-    var paintGroup = savedState.paintGroup;
+    var wid = window.id();
+    var savedPaintGroup = this._extended.windowPaintGroup[wid];
 
     var cont;
-    if(savedState.commitLayoutFunc) {
+    if(this._extended.commitLayoutFunc) {
         //console.log("Continuing commit layout in progress");
-        cont = savedState.commitLayoutFunc(timeout);
+        cont = this._extended.commitLayoutFunc(timeout);
     }
-    else if(!savedState.paintGroup) {
+    else if(!savedPaintGroup) {
         //console.log("Starting new commit layout");
         cont = this.commitLayoutIteratively(timeout);
     }
 
     if(cont) {
         //console.log(this + " Timed out during commitLayout");
-        savedState.commitLayoutFunc = cont;
+        this._extended.commitLayoutFunc = cont;
         return false;
     }
     else {
         //console.log(this + " Committed all layout");
-        savedState.commitLayoutFunc = null;
-        savedState.paintGroup = this;
-
+        this._extended.commitLayoutFunc = null;
+        this._extended.windowPaintGroup[wid] = this;
+        savedPaintGroup = this;
     }
 
     // Continue painting.
     while(true) {
         if(pastTime()) {
             this._extended.dirty = true;
-            //console.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedState.paintGroup);
+            //console.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
             return false;
         }
 
-        var paintGroup = savedState.paintGroup;
+        var paintGroup = savedPaintGroup;
         if(paintGroup.isDirty()) {
             // Paint and render nodes marked for the current group.
             //console.log("Painting " + paintGroup);
-            var painter = paintGroup._extended.painter;
+            var painter = paintGroup._extended.windowPainter[wid];
             if(!painter) {
-                paintGroup._extended.painter = new parsegraph_NodePainter(gl, glyphAtlas, shaders);
-                painter = paintGroup._extended.painter;
-                painter.setBackground(backgroundColor);
+                painter = new parsegraph_NodePainter(window);
+                paintGroup._extended.windowPainter[wid] = painter;
             }
             var counts = {};
             var node = paintGroup;
@@ -3224,23 +3228,24 @@ parsegraph_Node.prototype.paint = function(gl, backgroundColor, glyphAtlas, shad
             painter.initBlockBuffer(counts);
             node = paintGroup;
             do {
-                painter.drawNode(node, shaders);
+                painter.drawNode(node);
                 node = node._layoutPrev;
                 ++parsegraph_NODES_PAINTED;
                 //console.log("Painted nodes " + parsegraph_NODES_PAINTED);
             } while(node !== paintGroup);
             if(paintGroup.isFrozen()) {
-                paintGroup.ensureExtended().cache.paint();
+                paintGroup.ensureExtended().cache.paint(window);
             }
         }
         paintGroup._extended.dirty = false;
-        savedState.paintGroup = paintGroup._paintGroupNext;
-        if(savedState.paintGroup === this) {
+        this._extended.windowPaintGroup[wid] = paintGroup._paintGroupNext;
+        savedPaintGroup = this._extended.windowPaintGroup[wid];
+        if(this._extended.windowPaintGroup[wid] === this) {
             break;
         }
     }
 
-    savedState.paintGroup = null;
+    this._extended.windowPaintGroup[wid] = null;
     //console.log("Completed node painting");
     return true;
 };
@@ -3258,7 +3263,7 @@ var renderData = new parsegraph_NodeRenderData();
 var CACHED_RENDERS = 0;
 var IMMEDIATE_RENDERS = 0;
 
-parsegraph_Node.prototype.renderIteratively = function(world, camera)
+parsegraph_Node.prototype.renderIteratively = function(window, camera)
 {
     CACHED_RENDERS = 0;
     IMMEDIATE_RENDERS = 0;
@@ -3275,15 +3280,16 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
             throw new Error("Paint group chain must not refer to a non-paint group");
         }
         //console.log("Rendering node " + paintGroup);
-        if(!paintGroup.render(world, camera, renderData)) {
+        var painter = paintGroup.painter(window);
+        if(!paintGroup.render(window, camera, renderData)) {
             ++dirtyRenders;
         }
-        else if(paintGroup.painter()._consecutiveRenders > 1) {
-            mostRenders = Math.max(paintGroup.painter()._consecutiveRenders, mostRenders);
+        else if(painter._consecutiveRenders > 1) {
+            mostRenders = Math.max(painter._consecutiveRenders, mostRenders);
             if(heaviestPaintGroup === null) {
                 heaviestPaintGroup = paintGroup;
             }
-            else if(paintGroup.painter().weight() > heaviestPaintGroup.painter().weight()) {
+            else if(painter.weight() > heaviestPaintGroup.painter(window).weight()) {
                 heaviestPaintGroup = paintGroup;
             }
         }
@@ -3302,7 +3308,7 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
         });
         var meanRenderTime = renderTimes[Math.floor(renderTimes.length/2)];
         if(meanRenderTime > parsegraph_INTERVAL / 2) {
-            //console.log("Freezing heaviest node " + heaviestPaintGroup + " (weight=" + heaviestPaintGroup.painter().weight() + ") because rendering took " + meanRenderTime + "ms (most renders = " + mostRenders + ")");
+            //console.log("Freezing heaviest node " + heaviestPaintGroup + " (weight=" + heaviestPaintGroup.painter(window).weight() + ") because rendering took " + meanRenderTime + "ms (most renders = " + mostRenders + ")");
             var str = "[";
             for(var i = 0; i < renderTimes.length; ++i) {
                 if(i > 0) {
@@ -3317,14 +3323,14 @@ parsegraph_Node.prototype.renderIteratively = function(world, camera)
     return dirtyRenders == 0;
 };
 
-parsegraph_Node.prototype.getHeaviestNode = function()
+parsegraph_Node.prototype.getHeaviestNode = function(window)
 {
     var node = this;
     var heaviest = 0;
     var heaviestNode = this;
     do {
         if(node._extended) {
-            var painter = node._extended.painter;
+            var painter = node._extended.windowPainter[window.id()];
             if(painter) {
                 var nodeWeight = painter.weight();
                 if(heaviest < nodeWeight) {
@@ -3338,24 +3344,24 @@ parsegraph_Node.prototype.getHeaviestNode = function()
     return heaviestNode;
 }
 
-parsegraph_Node.prototype.renderOffscreen = function(renderWorld, renderScale)
+parsegraph_Node.prototype.renderOffscreen = function(window, renderWorld, renderScale, forceSimple)
 {
     if(!this.localPaintGroup()) {
         throw new Error("Cannot render a node that is not a paint group");
     }
-    var painter = this._extended.painter;
+    var painter = this._extended.windowPainter[window.id()];
     if(!painter) {
         return false;
     }
-    painter.render(renderWorld, renderScale, true);
+    painter.render(renderWorld, renderScale, forceSimple);
 };
 
-parsegraph_Node.prototype.render = function(world, camera, renderData)
+parsegraph_Node.prototype.render = function(window, camera, renderData)
 {
     if(!this.localPaintGroup()) {
         throw new Error("Cannot render a node that is not a paint group");
     }
-    var painter = this._extended.painter;
+    var painter = this._extended.windowPainter[window.id()];
     if(!painter) {
         return false;
     }
@@ -3376,6 +3382,7 @@ parsegraph_Node.prototype.render = function(world, camera, renderData)
         return !this._absoluteDirty;
     }
 
+    var world = camera.project();
     makeScale3x3I(renderData.scaleMat, this._absoluteScale);
     makeTranslation3x3I(renderData.transMat, this._absoluteXPos, this._absoluteYPos);
     matrixMultiply3x3I(renderData.worldMat, renderData.scaleMat, renderData.transMat);
@@ -3385,7 +3392,7 @@ parsegraph_Node.prototype.render = function(world, camera, renderData)
     //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
     if(this._extended.cache && renderScale < parsegraph_CACHE_ACTIVATION_SCALE) {
         //console.log("Rendering " + this + " from cache.");
-        var cleanRender = this._extended.cache.render(renderWorld, renderData, CACHED_RENDERS === 0);
+        var cleanRender = this._extended.cache.render(window, renderWorld, renderData, CACHED_RENDERS === 0);
         if(IMMEDIATE_RENDERS > 0) {
             //console.log("Immediately rendered " +IMMEDIATE_RENDERS + " times");
             IMMEDIATE_RENDERS = 0;
@@ -3405,5 +3412,5 @@ parsegraph_Node.prototype.render = function(world, camera, renderData)
     if(this._absoluteDirty) {
         //console.log("Node was rendered with dirty absolute position.");
     }
-    return !this._absoluteDirty;
+    return !this.isDirty() && !this._absoluteDirty;
 };

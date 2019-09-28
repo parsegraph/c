@@ -12,7 +12,7 @@ parsegraph_Node_Tests.addTest("parsegraph_Node.setKeyListener", function() {
     });
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport", function() {
     var caret = new parsegraph_Caret(parsegraph_SLOT);
     if(caret.node().type() !== parsegraph_SLOT) {
         return "Graph must use the provided type for its root.";
@@ -23,7 +23,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph", function() {
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport.spawn", function() {
     var caret = new parsegraph_Caret('b');
     if(
        caret.has(parsegraph_FORWARD) ||
@@ -57,7 +57,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph.spawn", function() {
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Trivial layout", function() {
     // Spawn the graph.
     //console.log("TRIV");
     var caret = new parsegraph_Caret('b');
@@ -120,7 +120,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Trivial layout", function() {
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with forward bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
@@ -176,7 +176,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward bud", func
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - PaintGroup sanity", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - PaintGroup sanity", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
@@ -194,7 +194,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - PaintGroup sanity", function(
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with forward creased bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     var creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
@@ -224,7 +224,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bu
     //console.log(caret.node().nodeAt(parsegraph_DOWNWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud, uncreased", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with forward creased bud, uncreased", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     var root = caret.root();
@@ -247,7 +247,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bu
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bud, removed", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with forward creased bud, removed", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     var root = caret.root();
@@ -269,7 +269,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward creased bu
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with backward bud", function() {
     // Spawn the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
@@ -334,7 +334,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with backward bud", fun
     }
 });
 
-parsegraph_Graph_Tests.addTest("nodeAt returns parent", function() {
+parsegraph_Viewport_Tests.addTest("nodeAt returns parent", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -347,7 +347,7 @@ parsegraph_Graph_Tests.addTest("nodeAt returns parent", function() {
     caret.moveToRoot();
 });
 
-parsegraph_Graph_Tests.addTest("Multiple crease still creates valid paint group chain", function() {
+parsegraph_Viewport_Tests.addTest("Multiple crease still creates valid paint group chain", function() {
     console.log("Multiple crease");
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.node()._id = "Multiple crease root";
@@ -380,7 +380,7 @@ parsegraph_Graph_Tests.addTest("Multiple crease still creates valid paint group 
     console.log("Multiple crease DONE");
  });
 
-parsegraph_Graph_Tests.addTest("Fancy crease", function() {
+parsegraph_Viewport_Tests.addTest("Fancy crease", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.node()._id = "root";
@@ -409,7 +409,7 @@ parsegraph_Graph_Tests.addTest("Fancy crease", function() {
     //console.log(parsegraph_dumpPaintGroups(caret.root()));
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with downward bud", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with downward bud", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -467,7 +467,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with downward bud", fun
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Bud with downward block", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
@@ -524,7 +524,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with downward block", fun
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two deep", function(dom) {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Bud with vertical blocks, two deep", function(dom) {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
@@ -607,7 +607,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with vertical blocks, two
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward bud", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with upward bud", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
@@ -673,7 +673,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward bud", funct
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward and downward buds", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with upward and downward buds", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
@@ -740,7 +740,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with upward and downwar
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward and backward buds", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with forward and backward buds", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
@@ -806,7 +806,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with forward and backwa
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Backward T layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Double Axis Sans Backward T layout", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
@@ -887,7 +887,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Backward T l
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Positive Direction Layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Positive Direction Layout", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
@@ -967,7 +967,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Positive Direction Layout", f
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Negative Direction Layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Negative Direction Layout", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
@@ -1046,7 +1046,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Negative Direction Layout", f
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Double Axis layout", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
@@ -1135,7 +1135,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis layout", function
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with shrunk bud", function(resultDom) {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with shrunk bud", function(resultDom) {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.fitExact();
@@ -1261,7 +1261,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Block with shrunk bud", funct
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with 2-deep shrunk downward block", function(resultDom) {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Bud with 2-deep shrunk downward block", function(resultDom) {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.fitExact();
@@ -1292,7 +1292,7 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Bud with 2-deep shrunk downwa
     }
 });
 
-parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T layout", function() {
+parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Double Axis Sans Forward T layout", function() {
     // Build the graph.
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
@@ -1400,10 +1400,9 @@ parsegraph_Graph_Tests.addTest("parsegraph_Graph - Double Axis Sans Forward T la
     }
 });
 
-parsegraph_Graph_Tests.addTest("Creased forward buds", function() {
+parsegraph_Viewport_Tests.addTest("Creased forward buds", function() {
     //console.log("Creased forward buds");
     var car = new parsegraph_Caret('b');
-    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     var root = car.root();
     root._id = "root";
     var bnode = car.spawnMove('f', 'u');
@@ -1429,7 +1428,7 @@ parsegraph_Graph_Tests.addTest("Creased forward buds", function() {
     car.root().commitLayoutIteratively();
 });
 
-parsegraph_Graph_Tests.addTest("Centrally aligned back-and-forth", function() {
+parsegraph_Viewport_Tests.addTest("Centrally aligned back-and-forth", function() {
     var car = new parsegraph_Caret('b');
     car.spawnMove('d', 'bu');
     car.align('f', 'c');
@@ -1458,30 +1457,27 @@ parsegraph_Graph_Tests.addTest("Centrally aligned back-and-forth", function() {
     );*/
 });
 
-parsegraph_Graph_Tests.addTest("Label test", function() {
+parsegraph_Viewport_Tests.addTest("Label test", function() {
     var car = new parsegraph_Caret('b');
-    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     car.label('No time');
     car.root().commitLayoutIteratively();
 });
 
-function parsegraph_simpleGraph(container, node, glyphAtlas)
+function parsegraph_simpleGraph(container, node)
 {
-    if(node.root && !glyphAtlas) {
-        glyphAtlas = node.glyphAtlas();
+    if(node.root) {
         node = node.root();
     }
-    var graph = new parsegraph_Graph();
-    graph.surface().resize(500, 500);
-    graph.setGlyphAtlas(glyphAtlas);
-    container.appendChild(graph.surface().container());
+    var graph = new parsegraph_Viewport();
+    graph.window().resize(500, 500);
+    container.appendChild(graph.window().container());
     graph.plot(node);
     graph.scheduleRepaint();
     var timer = new parsegraph_AnimationTimer();
     timer.setListener(function() {
         node.showInCamera(graph.camera(), true);
-        graph.surface().paint();
-        graph.surface().render();
+        graph.window().paint();
+        graph.window().render();
     });
     graph.input().SetListener(function() {
         timer.schedule();
@@ -1489,9 +1485,8 @@ function parsegraph_simpleGraph(container, node, glyphAtlas)
     timer.schedule();
 }
 
-parsegraph_Graph_Tests.addTest("Intra-group move test", function(out) {
+parsegraph_Viewport_Tests.addTest("Intra-group move test", function(out) {
     var car = new parsegraph_Caret('b');
-    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
 
     var bnode = car.spawn('d', 'b');
     car.pull('d');
@@ -1518,9 +1513,8 @@ parsegraph_Graph_Tests.addTest("Intra-group move test", function(out) {
     }
 });
 
-parsegraph_Graph_Tests.addTest("Absolute position test", function(out) {
+parsegraph_Viewport_Tests.addTest("Absolute position test", function(out) {
     var car = new parsegraph_Caret(parsegraph_BLOCK);
-    car.setGlyphAtlas(parsegraph_buildGlyphAtlas());
     var bnode = car.spawnMove('f', 'b');
     car.spawnMove('f', 'b');
     car.root().commitLayoutIteratively();
@@ -1537,8 +1531,8 @@ parsegraph_Graph_Tests.addTest("Absolute position test", function(out) {
 
 parsegraph_Node_Tests.addTest("parsegraph_Node.setLabel", function() {
     var n = new parsegraph_Node(parsegraph_BLOCK);
-    var atlas = parsegraph_buildGlyphAtlas();
-    n.setLabel("No time", atlas);
+    var font = parsegraph_defaultFont();
+    n.setLabel("No time", font);
 });
 
 parsegraph_Node_Tests.addTest("parsegraph_Node Morris world threading spawned", function() {
@@ -1589,14 +1583,14 @@ parsegraph_Node_Tests.addTest("parsegraph_Node lisp test", function(out) {
     car.spawnMove('d', 'u');
     car.root().commitLayoutIteratively();
     //parsegraph_getLayoutNodes(car.root());
-    var g = new parsegraph_Graph();
-    g.setGlyphAtlas(parsegraph_buildGlyphAtlas());
-    out.appendChild(g.surface().container());
+    var g = new parsegraph_Viewport();
+    g.setFont(parsegraph_defaultFont());
+    out.appendChild(g.window().container());
     g.plot(car.root());
     g.scheduleRepaint();
     g.input().SetListener(function() {
-        g.surface().paint();
-        g.surface().render();
+        g.window().paint();
+        g.window().render();
     });
 });
 
@@ -2009,9 +2003,9 @@ parsegraph_Node_Tests.AddTest("Disconnect complex test", function() {
 });
 
 parsegraph_Node_Tests.AddTest("Proportion pull test", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
+    var font = parsegraph_defaultFont();
     var car = new parsegraph_Caret(parsegraph_BUD);
-    car.setGlyphAtlas(atlas);
+    car.setFont(font);
     car.node().commitLayoutIteratively();
     var originalRoot = car.node();
     originalRoot._id = "ROOT";

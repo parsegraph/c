@@ -1,29 +1,14 @@
 parsegraph_CLICK_DELAY_MILLIS = 500;
 
-function parsegraph_Camera(surface)
+function parsegraph_Camera()
 {
     this._cameraX = 0;
     this._cameraY = 0;
     this._scale = 1;
 
-    if(arguments.length === 2) {
-        this._surface = null;
-        this._width = arguments[0];
-        this._height = arguments[1];
-        this._aspectRatio = this._width / this._height;
-    }
-    else if(arguments.length === 0) {
-        this._surface = null;
-        this._width = NaN;
-        this._height = NaN;
-        this._aspectRatio = NaN;
-    }
-    else {
-        this._surface = surface;
-        this._width = NaN;
-        this._height = NaN;
-        this._aspectRatio = NaN;
-    }
+    this._width = NaN;
+    this._height = NaN;
+    this._aspectRatio = NaN;
 
     this._changeVersion = 0;
 };
@@ -169,9 +154,13 @@ parsegraph_Camera_Tests.addTest("containsAny", function() {
 
 parsegraph_Camera.prototype.setSize = function(width, height)
 {
+    if(this._width === width && this._height === height) {
+        return;
+    }
     this._width = width;
     this._height = height;
     this._aspectRatio = this._width / this._height;
+    this.hasChanged();
 };
 
 parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
@@ -218,6 +207,7 @@ parsegraph_Camera.prototype.changeVersion = function()
 parsegraph_Camera.prototype.hasChanged = function()
 {
     ++this._changeVersion;
+    this._worldMatrix = null;
 }
 
 parsegraph_Camera.prototype.toJSON = function()
@@ -235,14 +225,6 @@ parsegraph_Camera.prototype.restore = function(json)
 {
     this.setOrigin(json.cameraX, json.cameraY);
     this.setScale(json.scale);
-};
-
-parsegraph_Camera.prototype.surface = function()
-{
-    if(!this._surface) {
-        throw new Error("Camera does not have a surface");
-    }
-    return this._surface;
 };
 
 parsegraph_Camera.prototype.scale = function()
@@ -308,13 +290,7 @@ parsegraph_Camera.prototype.height = function()
 
 parsegraph_Camera.prototype.canProject = function()
 {
-    if(!this._surface) {
-        return !Number.isNaN(this._width) && !Number.isNaN(this._height);
-    }
-    var displayWidth = this.surface().container().clientWidth;
-    var displayHeight = this.surface().container().clientHeight;
-
-    return displayWidth != 0 && displayHeight != 0;
+    return !Number.isNaN(this._width) && !Number.isNaN(this._height);
 };
 
 parsegraph_Camera.prototype.projectionMatrix = function()
@@ -326,54 +302,18 @@ parsegraph_Camera.prototype.projectionMatrix = function()
         );
     }
 
-    if(!this._surface) {
-        return make2DProjection(this._width, this._height);
-    }
-
-    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    // Lookup the size the browser is displaying the canvas.
-    var displayWidth = this.surface().container().clientWidth;
-    var displayHeight = this.surface().container().clientHeight;
-
-    // Check if the canvas is not the same size.
-    if(
-        this.surface().canvas().width != displayWidth
-        || this.surface().canvas().height != displayHeight
-    ) {
-        // Make the canvas the same size
-        this.surface().canvas().width = displayWidth;
-        this.surface().canvas().height = displayHeight;
-    }
-    // Set the viewport to match
-    this.surface().gl().viewport(
-        0, 0, this.surface().canvas().width, this.surface().canvas().height
-    );
-
-    if(this._aspectRatio != this.surface().canvas().width / this.surface().canvas().height) {
-        this._aspectRatio = this.surface().canvas().width / this.surface().canvas().height;
-        this.hasChanged();
-    }
-    if(this._width != this.surface().canvas().width) {
-        this._width = this.surface().canvas().width;
-        this.hasChanged();
-    }
-    if(this._height != this.surface().canvas().height) {
-        this._height = this.surface().canvas().height;
-        this.hasChanged();
-    }
-
-    return make2DProjection(
-        this.surface().gl().drawingBufferWidth,
-        this.surface().gl().drawingBufferHeight
-    );
+    return make2DProjection(this._width, this._height);
 };
 
 parsegraph_Camera.prototype.project = function()
 {
-    return matrixMultiply3x3(
-        this.worldMatrix(),
-        this.projectionMatrix()
-    );
+    if(!this._worldMatrix) {
+        this._worldMatrix = matrixMultiply3x3(
+            this.worldMatrix(),
+            this.projectionMatrix()
+        );
+    }
+    return this._worldMatrix;
 };
 
 parsegraph_Camera.prototype.containsAny = function(s)

@@ -321,7 +321,7 @@ parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
 
         this._containerNode.disconnectNode(parsegraph_INWARD);
         resNode = this.loggedInForm();
-        resNode.setLabel(userLogin.username, this._graph.glyphAtlas());
+        resNode.setLabel(userLogin.username, this._graph.font());
         this._containerNode.connectNode(parsegraph_INWARD, resNode);
         this._graph.input().setFocusedNode(null);
         this._graph.scheduleRepaint();
@@ -337,7 +337,7 @@ parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
     else if(res === false) {
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
-        resNode.setLabel(userLogin.result, this._graph.glyphAtlas());
+        resNode.setLabel(userLogin.result, this._graph.font());
         this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
         this._graph.input().setFocusedNode(null);
         this._graph.scheduleRepaint();
@@ -347,7 +347,7 @@ parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin)
         console.log("Login response", res);
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
-        resNode.setLabel("An exception occurred during processing and was logged.", this._graph.glyphAtlas());
+        resNode.setLabel("An exception occurred during processing and was logged.", this._graph.font());
         this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
         this._graph.scheduleRepaint();
     }
@@ -360,7 +360,6 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
     }
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
 
     function toggleFullScreen() {
       var doc = window.document;
@@ -390,14 +389,14 @@ parsegraph_LoginWidget.prototype.loggedInForm = function()
 
         // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
         var actionNode = new parsegraph_Node(parsegraph_BLOCK);
-        actionNode.setLabel("Leave", this.glyphAtlas());
+        actionNode.setLabel("Leave", this.font());
         carousel.addToCarousel(actionNode, this.leave, this);
         actionNode = new parsegraph_Node(parsegraph_BLOCK);
-        actionNode.setLabel("Log out", this.glyphAtlas());
+        actionNode.setLabel("Log out", this.font());
         carousel.addToCarousel(actionNode, this.logout, this);
 
         actionNode = new parsegraph_Node(parsegraph_BLOCK);
-        actionNode.setLabel("Fullscreen", this.glyphAtlas());
+        actionNode.setLabel("Fullscreen", this.font());
         carousel.addToCarousel(actionNode, function() {
             toggleFullScreen.call(this);
         }, this);
@@ -425,7 +424,7 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
     if(res === true) {
         this._containerNode.disconnectNode(parsegraph_INWARD);
         resNode = this.loggedInForm();
-        resNode.setLabel(userLogin.username, this._graph.glyphAtlas());
+        resNode.setLabel(userLogin.username, this._graph.font());
         this._containerNode.connectNode(parsegraph_INWARD, resNode);
         this._graph.input().setFocusedNode(null);
         this._graph.scheduleRepaint();
@@ -441,7 +440,7 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
         //localStorage.removeItem("parsegraph_LoginWidget_remember");
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
-        resNode.setLabel(userLogin.result, this._graph.glyphAtlas());
+        resNode.setLabel(userLogin.result, this._graph.font());
         this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
         this._graph.scheduleRepaint();
     }
@@ -451,15 +450,15 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin)
         console.log(res);
         this._containerNode.disconnectNode(parsegraph_DOWNWARD);
         resNode = new parsegraph_Node(parsegraph_BLOCK);
-        resNode.setLabel("An exception occurred during processing and was logged.", this._graph.glyphAtlas());
+        resNode.setLabel("An exception occurred during processing and was logged.", this._graph.font());
         this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
         this._graph.scheduleRepaint();
     }
 };
 
-parsegraph_LoginWidget.prototype.glyphAtlas = function()
+parsegraph_LoginWidget.prototype.font = function()
 {
-    return this._graph.glyphAtlas();
+    return parsegraph_defaultFont();
 };
 
 parsegraph_LoginWidget.prototype.setTitle = function(title)
@@ -477,7 +476,6 @@ parsegraph_LoginWidget.prototype.root = function()
     if(!this._root) {
 
         var car = new parsegraph_Caret(parsegraph_SLOT);
-        car.setGlyphAtlas(this.glyphAtlas());
         car.label(this.title());
         this._containerNode = car.root();
         this._containerNode.setIgnoreMouse(true);
@@ -501,7 +499,7 @@ parsegraph_LoginWidget.prototype.authenticateForm = function()
     }
 
     var car = new parsegraph_Caret(parsegraph_BLOCK);
-    car.setGlyphAtlas(this.glyphAtlas());
+    car.setFont(this.font());
     var remembered = "1"; // localStorage.getItem("parsegraph_LoginWidget_remember");
     if(remembered !== "1" && remembered !== "0") {
         car.label(remembered);
@@ -528,7 +526,6 @@ parsegraph_LoginWidget.prototype.loginForm = function()
     nbs.minWidth = parsegraph_BUD_RADIUS * 80;
 
     var car = new parsegraph_Caret(parsegraph_BUD);
-    car.setGlyphAtlas(this.glyphAtlas());
 
     this._loginForm = car.root();
     car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);

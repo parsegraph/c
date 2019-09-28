@@ -1,13 +1,27 @@
-function parsegraph_Application()
+function parsegraph_Application(window)
 {
+    this._window = window;
+    if(!this._window) {
+        throw new Error("A Window must be provided to this Application");
+    }
+    this._world = new parsegraph_World();
+    this._viewport = new parsegraph_Viewport(this._window, this._world);
+    //this._viewport.setLayout(new parsegraph_PercentAnchorLayout(parsegraph_TOP));
+    this._window.addWidget(this._viewport);
+    //this._viewport2 = new parsegraph_Viewport(this._window, this._world);
+    //this._viewport2.setLayout(new parsegraph_PercentAnchorLayout(parsegraph_BOTTOM));
+    //this._window.addWidget(this._viewport2);
+    this._viewports = [
+        this._viewport//, this._viewport2
+    ];
+
     this._cameraName = "parsegraph_camera";
-    if(window.location.protocol == "https:") {
+    if(top.location.protocol == "https:") {
         this._hostname = "https://" + location.host;
     }
     else {
         this._hostname = "http://" + location.host;
     }
-    this._graph = null;
     this._rootNode = null;
     this._titleNode = null;
 
@@ -18,10 +32,23 @@ function parsegraph_Application()
     this._governor = null;
     this._burstIdle = null;
     this._interval = null;
+    this._forceRender = false;
 
     this._lastRender = null;
     this._idleTimer = null;
+
+    this._renderedMouse = {};
 }
+
+parsegraph_Application.prototype.window = function()
+{
+    return this._window;
+};
+
+parsegraph_Application.prototype.world = function()
+{
+    return this._world;
+};
 
 parsegraph_Application.prototype.setGovernor = function(governor)
 {
@@ -38,19 +65,14 @@ parsegraph_Application.prototype.setInterval = function(interval)
     this._interval = interval;
 };
 
-parsegraph_Application.prototype.start = function(container, initFunc, initFuncThisArg) {
+parsegraph_Application.prototype.start = function(initFunc, initFuncThisArg) {
     // Always immediately initialize constants for use by application objects.
-    parsegraph_initialize();
     this._governor = this._governor === null ? parsegraph_GOVERNOR : this._governor;
     this._burstIdle = this._burstIdle === null ? parsegraph_BURST_IDLE : this._burstIdle;
     this._interval = this._interval === null ? parsegraph_INTERVAL : this._interval;
 
     // Create and globalize the graph.
     this._font = null;
-    this._surface = new parsegraph_Surface();
-    this._graph = new parsegraph_Graph(this._surface);
-    GRAPH = this._graph;
-    this._container = container;
 
     // Start initializing by loading Unicode for text.
     var uni = new parsegraph_Unicode();
@@ -71,15 +93,7 @@ parsegraph_Application.prototype.start = function(container, initFunc, initFuncT
 parsegraph_Application.prototype.onUnicodeLoaded = function() {
     //console.log("Unicode loaded")
     // Verify preconditions for this application state.
-    var graph = this.graph();
-    var surface = this.surface();
     var uni = this.unicode();
-    if(!graph) {
-        throw new Error("A graph must have already been constructed.");
-    }
-    if(!surface) {
-        throw new Error("A surface must have already been constructed.");
-    }
     if(!uni) {
         throw new Error("A Unicode object must have already been constructed.");
     }
@@ -90,20 +104,23 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
     }
 
     this._titleNode = new parsegraph_Node(parsegraph_BLOCK);
-    this.container().appendChild(surface.container());
-
     var rootStyle = new parsegraph_copyStyle(parsegraph_BLOCK);
     rootStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
     rootStyle.borderColor = new parsegraph_Color(.7, .7, .7, 1);
     this._titleNode.setBlockStyle(rootStyle);
     this._titleNode.setLabel("Rainback", this._font);
-    graph.world().plot(this._root);
+    this._world.plot(this._titleNode);
 
     var cameraName = this.cameraName();
     if(typeof cameraName === "string" && localStorage.getItem(cameraName) != null) {
         try {
-            var cameraData = JSON.parse(localStorage.getItem(cameraName));
-            graph.camera().restore(cameraData);
+            var camData = JSON.parse(localStorage.getItem(cameraName));
+            for(var i in camData) {
+                if(!this._viewports[i]) {
+                    break;
+                }
+                this._viewports[i].camera().restore(camData[i]);
+            }
         } catch(e) {
             console.log(
                 "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
@@ -111,13 +128,15 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
         }
     }
     else {
-        graph.camera().restore({
-            cameraX:this.surface().container().clientWidth/2,
-            cameraY:this.surface().container().clientHeight/2,
+        var defaultCam = {
+            cameraX:this.window().width()/2,
+            cameraY:this.window().height()/2,
             scale:1,
-            width:this.surface().container().clientWidth,
-            height:this.surface().container().clientHeight
-        });
+            width:this.window().width(),
+            height:this.window().height()
+        }
+        this._viewport.camera().restore(defaultCam);
+        this._viewport2.camera().restore(defaultCam);
     }
 
     // Schedule the repaint.
@@ -126,26 +145,29 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
     this._renderTimer.setListener(function() {
         this.onRender();
     }, this);
-    this._graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
-        if(affectedPaint) {
-            //console.log(new Error("Affected paint"));
-            this._graph.scheduleRepaint();
-        }
-        this.scheduleRender();
-        if(this._cameraProtocol) {
-            this._cameraProtocol.update();
-        }
-        if(inputAffectedCamera) {
-            if(typeof cameraName === "string") {
-                localStorage.setItem(cameraName, JSON.stringify(this._graph.camera().toJSON()));
+    this._viewports.forEach(function(viewport) {
+        viewport.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
+            if(affectedPaint) {
+                //console.log(new Error("Affected paint"));
+                this.scheduleRepaint();
             }
-        }
-    }, this);
-    this._graph.setOnScheduleRepaint(function() {
-        this.scheduleRender();
-    }, this);
-    this._graph.carousel().setOnScheduleRepaint(function() {
-        this.scheduleRender();
+            this.scheduleRender();
+            viewport.component().setNeedsRender();
+            if(this._cameraProtocol) {
+                this._cameraProtocol.update();
+            }
+            if(inputAffectedCamera) {
+                if(typeof cameraName === "string") {
+                    var camData = [];
+                    for(var i in this._viewports) {
+                        camData.push(this._viewports[i].camera().toJSON());
+                    }
+                    localStorage.setItem(cameraName, JSON.stringify(camData));
+                }
+            }
+        }, this);
+        viewport.setOnScheduleRepaint(this.scheduleRender, this);
+        viewport.carousel().setOnScheduleRepaint(this.scheduleRender, this);
     }, this);
 
     if(this._initFunc) {
@@ -192,42 +214,50 @@ parsegraph_Application.prototype.onIdleTimer = function() {
 
 parsegraph_Application.prototype.onRender = function() {
     //console.log("onRender");
-    var graph = this.graph();
-    var surface = this.surface();
-    if(surface.gl().isContextLost()) {
+    var window = this.window();
+    if(window.gl().isContextLost()) {
         return;
     }
 
     var startTime = new Date();
-    var inputChangedScene = graph.input().Update(startTime);
+    var inputChangedScene = false;
+    for(var i in this._viewports) {
+        var viewport = this._viewports[i];
+        inputChangedScene = viewport.input().Update(startTime) || inputChangedScene;
+        inputChangedScene = this._renderedMouse[viewport.id()] !== viewport.input().mouseVersion() || inputChangedScene;
+        inputChangedScene = viewport.input().UpdateRepeatedly() || inputChangedScene;
+    }
     var t = alpha_GetTime();
     start = t;
 
     var interval = this._interval;
     if(inputChangedScene) {
-        //console.log("Input changed scene");
-    }
-    if(!inputChangedScene) {
-        inputChangedScene = this._renderedMouse !== graph.input().mouseVersion();
-        if(inputChangedScene) {
-            //console.log("Mouse changed scene: " + this._renderedMouse + " vs " + graph.input().mouseVersion());
+        //console.log("Render and paint");
+        window.render();
+        window.paint(Math.max(0, interval - parsegraph_elapsed(startTime)));
+        for(var i in this._viewports) {
+            var viewport = this._viewports[i];
+            this._renderedMouse[viewport.id()] = viewport.input().mouseVersion();
         }
     }
-    if(!inputChangedScene) {
-        if(graph.input().UpdateRepeatedly()) {
-            //console.log("Input updating repeatedly");
-            inputChangedScene = true;
+    else {
+        var needsRepaint = this._world.needsRepaint();
+        for(var i in this._viewports) {
+            var viewport = this._viewports[i];
+            needsRepaint = needsRepaint || viewport.needsRepaint();
         }
-    }
-    if(inputChangedScene) {
-        //console.log("Rendering surface");
-        surface.render();
-        this._renderedMouse = graph.input().mouseVersion();
-        surface.paint(Math.max(0, interval - parsegraph_elapsed(startTime)));
-    }
-    else if(this.graph().needsRepaint()) {
-        surface.paint(Math.max(0, interval - 5 - parsegraph_elapsed(startTime)));
-        surface.render();
+        if(needsRepaint) {
+            var timeout = interval - 5 - parsegraph_elapsed(startTime);
+            //console.log("Paint and render: " + timeout);
+            window.paint(Math.max(0, timeout));
+            //console.log("Paint and render took " + parsegraph_elapsed(startTime));
+        }
+        if(needsRepaint || this._forceRender) {
+            window.render();
+            if(!needsRepaint && this._forceRender) {
+                this._forceRender = false;
+            }
+        }
     }
     interval = interval - parsegraph_IDLE_MARGIN;
     if(interval > 0 && this._idleFunc
@@ -256,8 +286,16 @@ parsegraph_Application.prototype.onRender = function() {
             //console.log("Idle suppressed because the last idle was too recent.");
         }
     }
-    if(graph.input().UpdateRepeatedly() || graph.needsRepaint() || this._idleFunc) {
-        if(this._cameraProtocol && graph.input().UpdateRepeatedly()) {
+    var needsRepaint = this._idleFunc;
+    for(var i in this._viewports) {
+        var viewport = this._viewports[i];
+        needsRepaint = needsRepaint || viewport.input().UpdateRepeatedly() || viewport.needsRepaint();
+    }
+    if(needsRepaint || inputChangedScene) {
+        if(inputChangedScene) {
+            this._forceRender = true;
+        }
+        if(this._cameraProtocol && this._viewport.input().UpdateRepeatedly()) {
             this._cameraProtocol.update();
         }
         //console.log("Rescheduling render");
@@ -278,10 +316,6 @@ parsegraph_Application.prototype.onIdle = function(idleFunc, idleFuncThisArg)
     this._idleFuncThisArg = idleFuncThisArg;
 };
 
-parsegraph_Application.prototype.graph = function() {
-    return this._graph;
-};
-
 parsegraph_Application.prototype.unicode = function() {
     return this._unicode;
 };
@@ -295,10 +329,15 @@ parsegraph_Application.prototype.font = function() {
 };
 
 parsegraph_Application.prototype.scheduleRepaint = function() {
-    this._graph.scheduleRepaint();
+    for(var i in this._viewports) {
+        var viewport = this._viewports[i];
+        //console.log("Scheduling viewport render");
+        viewport.scheduleRepaint();
+    }
 };
 
 parsegraph_Application.prototype.scheduleRender = function() {
+    //console.log(new Error("Scheduling render"));
     if(this._renderTimer) {
         this._renderTimer.schedule();
     }
@@ -310,8 +349,4 @@ parsegraph_Application.prototype.cameraName = function() {
 
 parsegraph_Application.prototype.setCameraName = function(name) {
     this._cameraName = name;
-};
-
-parsegraph_Application.prototype.container = function() {
-    return this._container;
 };

@@ -1,20 +1,15 @@
-function parsegraph_ActionCarousel(graph)
+function parsegraph_ActionCarousel(window)
 {
-    this._graph = graph;
+    this._window = window;
     this._actions = [];
 }
-
-parsegraph_ActionCarousel.prototype.graph = function()
-{
-    return this._graph;
-};
 
 parsegraph_ActionCarousel.prototype.addAction = function(action, listener, listenerThisArg)
 {
     if(typeof action === "string") {
         var label = action;
         action = new parsegraph_Node(parsegraph_BLOCK);
-        action.setLabel(label, this.graph().glyphAtlas());
+        action.setLabel(label, parsegraph_defaultFont());
     }
     if(!listenerThisArg) {
         listenerThisArg = this;
@@ -35,7 +30,11 @@ parsegraph_ActionCarousel.prototype.install = function(node, nodeData)
 parsegraph_ActionCarousel.prototype.onClick = function(node, nodeData)
 {
     //console.log("Creating carousel");
-    var carousel = this.graph().carousel();
+    var viewport = this._window.focusedComponent().peer();
+    if(!viewport) {
+        return;
+    }
+    var carousel = viewport.carousel();
     carousel.clearCarousel();
     carousel.moveCarousel(
         node.absoluteX(),

@@ -20,10 +20,10 @@ function parsegraph_CreaseWidget(app)
             if(uninstall) {
                 uninstall();
             }
-            var carousel = new parsegraph_ActionCarousel(app.graph());
-            if(node.value()) {
+            var carousel = new parsegraph_ActionCarousel(app.window());
+            if(node.value().startTime) {
                 carousel.addAction("Stop", function() {
-                    node.setValue(false);
+                    node.value().startTime = false;
                     var s = parsegraph_copyStyle(parsegraph_BLOCK);
                     node.setBlockStyle(s);
                     reinstall();
@@ -31,7 +31,7 @@ function parsegraph_CreaseWidget(app)
             }
             else {
                 carousel.addAction("Grow", function() {
-                    node.setValue(new Date());
+                    node.value().startTime = new Date();
                     reinstall();
                 });
             }
@@ -71,6 +71,10 @@ function parsegraph_CreaseWidget(app)
                 uninstallCarousel();
             };
         };
+        node.setValue({
+            reinstall:reinstall,
+            startTime:false
+        });
         uninstall = reinstall();
     };
 
@@ -103,7 +107,7 @@ function parsegraph_CreaseWidget(app)
     }
     caret.pop();
 
-    var rootActions = new parsegraph_ActionCarousel(app.graph());
+    var rootActions = new parsegraph_ActionCarousel(app.window());
     rootActions.addAction("Crease random", function() {
         for(var i in this.creasables) {
             var n = this.creasables[i];
@@ -113,7 +117,8 @@ function parsegraph_CreaseWidget(app)
     rootActions.addAction("Grow all", function() {
         for(var i in this.creasables) {
             var n = this.creasables[i];
-            n.setValue(Math.random() > .5 ? new Date() : false);
+            n.value().startTime = Math.random() > .5 ? new Date() : false;
+            n.value().reinstall();
         }
     }, this);
     rootActions.install(caret.node());
@@ -121,12 +126,14 @@ function parsegraph_CreaseWidget(app)
 
 parsegraph_CreaseWidget.prototype.tick = function()
 {
+    var animating = false;
     for(var i = 0; i < this.creasables.length; ++i) {
         var node = this.creasables[i];
-        if(!node.value()) {
+        if(!node.value().startTime) {
             continue;
         }
-        var startTime = node.value();
+        animating = true;
+        var startTime = node.value().startTime;
         var s = parsegraph_copyStyle(parsegraph_BLOCK);
         if(node.parentDirection() === parsegraph_UPWARD) {
             s.verticalPadding = 10*parsegraph_BUD_RADIUS*(1+Math.sin(parsegraph_elapsed(startTime)/1000));
@@ -136,6 +143,7 @@ parsegraph_CreaseWidget.prototype.tick = function()
         }
         node.setBlockStyle(s);
     }
+    return animating;
 };
 
 parsegraph_CreaseWidget.prototype.node = function()

@@ -22,42 +22,36 @@ parsegraph_Freezer_FragmentShader =
 
 parsegraph_FREEZER_MARGIN = 8;
 
-function parsegraph_Freezer(gl, shaders)
+function parsegraph_FreezerWindow(freezer, window)
 {
-    this._frozenNodes = [];
-    this._gl = gl;
-    this._shaders = shaders;
-    if(!this._shaders) {
-        throw new Error("Freezer must be given shaders collection");
-    }
-    this._textureScale = parsegraph_FREEZER_TEXTURE_SCALE;
-
-    this._lowAspectRow = new parsegraph_FreezerRow(this, true);
-    this._highAspectRow = new parsegraph_FreezerRow(this, false);
-
-    this._camera = new parsegraph_Camera();
-
-    this._framebuffer = null;
-    this._renderbuffer = null;
-    this._activated = false;
-
-    this._textureSize = NaN;
+    this._freezer = freezer;
+    this._window = window;
+    this._gl = this._window.gl();
+    this._shaders = this._window.shaders();
+    this._highAspectRow = new parsegraph_FreezerRow(freezer, window, true);
+    this._lowAspectRow = new parsegraph_FreezerRow(freezer, window, false);
 }
 
-parsegraph_Freezer.prototype.cache = function(node)
+parsegraph_FreezerWindow.prototype.allocate = function(width, height)
 {
-    var item = new parsegraph_FrozenNode(this, node);
-    this._frozenNodes.push(item);
-    return item;
+    var frag = new parsegraph_FrozenNodeFragment(window, width, height);
+    var aspect = width / height;
+    if(aspect < 1/4) {
+        wdata._lowAspectRow.allocate(frag);
+    }
+    else {
+        wdata._highAspectRow.allocate(frag);
+    }
+    return frag;
 };
 
-parsegraph_Freezer.prototype.renderFragment = function(frag, world, needsSetup, needsLoad)
+parsegraph_FreezerWindow.prototype.renderFragment = function(frag, world, needsSetup, needsLoad)
 {
     var gl = this.gl();
     var err;
     if(needsSetup) {
         if(!this._program) {
-            this._program = parsegraph_compileProgram(gl, this._shaders,
+            this._program = parsegraph_compileProgram(this._window,
                 "parsegraph_Freezer",
                 parsegraph_Freezer_VertexShader,
                 parsegraph_Freezer_FragmentShader
@@ -94,7 +88,7 @@ parsegraph_Freezer.prototype.renderFragment = function(frag, world, needsSetup, 
     }*/
 };
 
-parsegraph_Freezer.prototype.activate = function(slot)
+parsegraph_FreezerWindow.prototype.activate = function(slot)
 {
     var tsize = this.textureSize();
     var gl = this._gl;
@@ -112,7 +106,7 @@ parsegraph_Freezer.prototype.activate = function(slot)
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
 };
 
-parsegraph_Freezer.prototype.deactivate = function()
+parsegraph_FreezerWindow.prototype.deactivate = function()
 {
     if(!this._activated) {
         return;
@@ -123,8 +117,38 @@ parsegraph_Freezer.prototype.deactivate = function()
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._origRenderbuffer);
 };
 
+parsegraph_FreezerWindow.prototype.gl = function()
+{
+    return this._gl;
+};
+
+function parsegraph_Freezer(window)
+{
+    this._frozenNodes = [];
+    this._textureScale = parsegraph_FREEZER_TEXTURE_SCALE;
+
+    this._windowData = {};
+
+    this._camera = new parsegraph_Camera();
+
+    this._framebuffer = null;
+    this._renderbuffer = null;
+    this._activated = false;
+}
+
+parsegraph_Freezer.prototype.cache = function(node)
+{
+    var item = new parsegraph_FrozenNode(this, node);
+    this._frozenNodes.push(item);
+    return item;
+};
+
 parsegraph_Freezer.prototype.contextChanged = function(isLost)
 {
+    for(var wid in this._windowData) {
+        var wdata = this._windowData[wid];
+        wdata.contextChanged(isLost);
+    }
     this._lowAspectRow.contextChanged(isLost);
     this._highAspectRow.contextChanged(isLost);
     if(isLost) {
@@ -135,22 +159,14 @@ parsegraph_Freezer.prototype.contextChanged = function(isLost)
     }
 };
 
-parsegraph_Freezer.prototype.allocate = function(width, height)
+parsegraph_Freezer.prototype.allocate = function(window, width, height)
 {
-    var frag = new parsegraph_FrozenNodeFragment(width, height);
-    var aspect = width / height;
-    if(aspect < 1/4) {
-        this._lowAspectRow.allocate(frag);
+    var wdata = this._windowData[window.id()];
+    if(!wdata) {
+        wdata = new parsegraph_FreezerWindow(this, window);
+        this._windowData[window.id()] = wdata;
     }
-    else {
-        this._highAspectRow.allocate(frag);
-    }
-    return frag;
-};
-
-parsegraph_Freezer.prototype.gl = function()
-{
-    return this._gl;
+    return wdata.allocate(width, height);
 };
 
 parsegraph_Freezer.prototype.camera = function()
@@ -163,20 +179,10 @@ parsegraph_Freezer.prototype.textureScale = function()
     return this._textureScale;
 };
 
-parsegraph_Freezer.prototype.textureSize = function()
-{
-    if(this._gl.isContextLost()) {
-        return NaN;
-    }
-    if(Number.isNaN(this._textureSize)) {
-        this._textureSize = Math.min(512, parsegraph_getTextureSize(this._gl));
-    }
-    return this._textureSize;
-};
-
-function parsegraph_FreezerRow(freezer, colFirst)
+function parsegraph_FreezerRow(freezer, window, colFirst)
 {
     this._freezer = freezer;
+    this._window = window;
     this._colFirst = colFirst;
     this._slots = [];
 
@@ -184,6 +190,11 @@ function parsegraph_FreezerRow(freezer, colFirst)
     this._y = 0;
     this._currentMax = 0;
 }
+
+parsegraph_FreezerRow.prototype.textureSize = function()
+{
+    return this._window.textureSize();
+};
 
 parsegraph_FreezerRow.prototype.allocate = function(frag)
 {
@@ -253,11 +264,6 @@ parsegraph_FreezerRow.prototype.freezer = function()
     return this._freezer;
 };
 
-parsegraph_FreezerRow.prototype.textureSize = function()
-{
-    return this.freezer().textureSize();
-};
-
 parsegraph_FreezerSlot_COUNT = 0;
 
 function parsegraph_FreezerSlot(row)
@@ -277,7 +283,7 @@ parsegraph_FreezerSlot.prototype.glTexture = function()
 parsegraph_FreezerSlot.prototype.init = function()
 {
     var freezer = this.freezer();
-    var tsize = freezer.textureSize();
+    var tsize = this._row.textureSize();
     var gl = freezer.gl();
     this._glTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
@@ -314,18 +320,21 @@ function parsegraph_FrozenNode(freezer, node)
 {
     this._node = node;
     this._freezer = freezer;
-    this._fragments = [];
+    this._windowFragments = {};
     this.invalidate();
 }
 
 parsegraph_FrozenNode.prototype.invalidate = function()
 {
     //console.log("Invalidating cache for " + this._node);
-    for(var i in this._fragments) {
-        var frag = this._fragments[i];
-        frag.dispose();
+    for(var wid in this._windowFragments) {
+        var fragments = this._windowFragments[wid];
+        for(var i in fragments) {
+            var frag = fragments[i];
+            frag.dispose();
+        }
+        fragments.splice(0, fragments.length);
     }
-    this._fragments.splice(0, this._fragments.length);
     this._validated = false;
     this._width = NaN;
     this._height = NaN;
@@ -344,48 +353,60 @@ parsegraph_FrozenNode.prototype.validate = function()
     this._x = bounds.left;
     this._y = bounds.top;
 
-    var scale = this._freezer.textureScale();
-    var fragWidth = this._width * scale;
-    var fragHeight = this._height * scale;
-    var fragX = this._x * scale;
-    var fragY = this._y * scale;
-    var textureSize = this._freezer.textureSize();
-    var fragSize = textureSize * scale;
-    var numRows = Math.ceil(fragHeight / textureSize);
-    var numCols = Math.ceil(fragWidth / textureSize);
-    for(var y = 0; y < numRows; ++y) {
-        for(var x = 0; x < numCols; ++x) {
-            var frag = this._freezer.allocate(
-                Math.min(fragWidth - textureSize*x, textureSize),
-                Math.min(fragHeight - textureSize*y, textureSize)
-            );
-            frag.assignNode(this, x * fragSize/this._freezer.textureScale() - fragX, y * fragSize/this._freezer.textureScale() - fragY);
-            this._fragments.push(frag);
-        }
-    }
-
     this._validated = true;
 };
 
-parsegraph_FrozenNode.prototype.paint = function()
+parsegraph_FrozenNode.prototype.paint = function(window)
 {
     //console.log("Painting frozen node");
     this.validate();
-    for(var i in this._fragments) {
-        this._fragments[i].paint();
+    var fragments = this._windowFragments[window.id()];
+    if(!fragments) {
+        fragments = [];
+        this._windowFragments[window.id()] = fragments;
+    }
+
+    if(fragments.length === 0) {
+        var scale = this._freezer.textureScale();
+        var fragWidth = this._width * scale;
+        var fragHeight = this._height * scale;
+        var fragX = this._x * scale;
+        var fragY = this._y * scale;
+        var textureSize = window.textureSize();
+        var fragSize = textureSize * scale;
+        var numRows = Math.ceil(fragHeight / textureSize);
+        var numCols = Math.ceil(fragWidth / textureSize);
+        for(var y = 0; y < numRows; ++y) {
+            for(var x = 0; x < numCols; ++x) {
+                var frag = this._freezer.allocate(
+                    window,
+                    Math.min(fragWidth - textureSize*x, textureSize),
+                    Math.min(fragHeight - textureSize*y, textureSize)
+                );
+                frag.assignNode(this, x * fragSize/this._freezer.textureScale() - fragX, y * fragSize/this._freezer.textureScale() - fragY);
+                fragments.push(frag);
+            }
+        }
+    }
+    for(var i in fragments) {
+        fragments[i].paint();
     }
 };
 
-parsegraph_FrozenNode.prototype.render = function(world, renderData, needsSetup)
+parsegraph_FrozenNode.prototype.render = function(window, world, renderData, needsSetup)
 {
     //console.log("Frozen render");
     if(!this._validated) {
         return false;
     }
+    var fragments = this._windowFragments[window.id()];
+    if(!fragments) {
+        return false;
+    }
     var renderedClean = true;
     var needsLoad = true;
-    for(var i in this._fragments) {
-        if(!this._fragments[i].render(world, renderData, needsSetup, needsLoad)) {
+    for(var i in fragments) {
+        if(!fragments[i].render(world, renderData, needsSetup, needsLoad)) {
             renderedClean = false;
         }
         else {

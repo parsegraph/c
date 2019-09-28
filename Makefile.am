@@ -83,8 +83,9 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/initialize.js \
 	src/graph/log.js \
 	src/graph/Carousel.js \
+	src/graph/BurgerMenu.js \
 	src/graph/CameraBox.js \
-	src/graph/Graph.js \
+	src/graph/Viewport.js \
 	src/graph/World.js \
 	src/graph/parsegraph_Graph_Tests.js \
 	src/graph/Input.js \
@@ -99,8 +100,10 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/LayoutPreference.js \
 	src/graph/LayoutState.js \
 	src/graph/Node.js \
+	src/graph/Component.js \
+	src/graph/layout.js \
 	src/graph/Freezer.js \
-	src/graph/Surface.js \
+	src/graph/Window.js \
 	src/graph/CameraBoxPainter.js \
 	src/alpha/Maths.js \
 	src/alpha/Physical.js \

@@ -305,19 +305,15 @@ parsegraph_BlockPainter_CurlyFragmentShader =
 
 parsegraph_BlockPainter_COUNT = 0;
 
-function parsegraph_BlockPainter(gl, shaders)
+function parsegraph_BlockPainter(window)
 {
-    this._gl = gl;
-    if(!this._gl || !this._gl.createProgram) {
-        throw new Error("A GL interface must be given");
-    }
-    if(!shaders) {
-        throw new Error("A shaders object must be given");
-    }
     this._id = parsegraph_BlockPainter_COUNT++;
-    this._shaders = shaders;
+    this._window = window;
+    if(!this._window) {
+        throw new Error("Window must be provided");
+    }
 
-    // Prepare buffer using initBuffer(numBlocks). BlockPainter supports a fixed number of blocks.
+    // Prepare buffer using prepare(numBlocks). BlockPainter supports a fixed number of blocks.
     this._blockBuffer = null;
     this._blockBufferNumVertices = null;
     this._blockBufferVertexIndex = 0;
@@ -383,7 +379,7 @@ parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
     if(this._blockBuffer) {
         this.clear();
     }
-    var gl = this._gl;
+    var gl = this._window.gl();
     this._blockBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this._stride*6*numBlocks, gl.STATIC_DRAW);
@@ -392,8 +388,12 @@ parsegraph_BlockPainter.prototype.initBuffer = function(numBlocks)
 
 parsegraph_BlockPainter.prototype.clear = function()
 {
-    if(this._blockBuffer && !this._gl.isContextLost()) {
-        this._gl.deleteBuffer(this._blockBuffer);
+    if(!this._window) {
+        return;
+    }
+    var gl = this._window.gl();
+    if(this._blockBuffer && !gl.isContextLost()) {
+        gl.deleteBuffer(this._blockBuffer);
     }
     this._blockBuffer = null;
     this._bounds.toNaN();
@@ -417,7 +417,7 @@ parsegraph_BlockPainter.prototype.flush = function()
     if(this._dataBufferVertexIndex === 0) {
         return;
     }
-    var gl = this._gl;
+    var gl = this._window.gl();
     var stride = this._stride;
     gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
 
@@ -439,7 +439,8 @@ parsegraph_BlockPainter.prototype.flush = function()
 parsegraph_BlockPainter.prototype.drawBlock = function(
     cx, cy, width, height, borderRoundedness, borderThickness, borderScale)
 {
-    if(this._gl.isContextLost()) {
+    var gl = this._window.gl();
+    if(gl.isContextLost()) {
         return;
     }
     if(!this._blockBuffer) {
@@ -557,7 +558,7 @@ parsegraph_BlockPainter.prototype.render = function(world, scale, forceSimple)
     if(this._blockBufferVertexIndex === 0) {
         return;
     }
-    var gl = this._gl;
+    var gl = this._window.gl();
     var usingSimple = forceSimple || (this._maxSize * scale) < 5;
     //console.log(this._id, this._maxSize * scale, usingSimple);
 
@@ -569,32 +570,32 @@ parsegraph_BlockPainter.prototype.render = function(world, scale, forceSimple)
         ) {
             fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
         }
-        this._blockProgram = parsegraph_compileProgram(gl, this._shaders,
+        this._blockProgram = parsegraph_compileProgram(this._window,
             "parsegraph_BlockPainter",
             parsegraph_BlockPainter_VertexShader,
             fragProgram
         );
 
         // Cache program locations.
-        this.u_world = this._gl.getUniformLocation(this._blockProgram, "u_world");
+        this.u_world = gl.getUniformLocation(this._blockProgram, "u_world");
 
-        this.a_position = this._gl.getAttribLocation(this._blockProgram, "a_position");
-        this.a_texCoord = this._gl.getAttribLocation(this._blockProgram, "a_texCoord");
-        this.a_color = this._gl.getAttribLocation(this._blockProgram, "a_color");
-        this.a_borderColor = this._gl.getAttribLocation(this._blockProgram, "a_borderColor");
-        this.a_borderRoundedness = this._gl.getAttribLocation(this._blockProgram, "a_borderRoundedness");
-        this.a_borderThickness = this._gl.getAttribLocation(this._blockProgram, "a_borderThickness");
-        this.a_aspectRatio = this._gl.getAttribLocation(this._blockProgram, "a_aspectRatio");
+        this.a_position = gl.getAttribLocation(this._blockProgram, "a_position");
+        this.a_texCoord = gl.getAttribLocation(this._blockProgram, "a_texCoord");
+        this.a_color = gl.getAttribLocation(this._blockProgram, "a_color");
+        this.a_borderColor = gl.getAttribLocation(this._blockProgram, "a_borderColor");
+        this.a_borderRoundedness = gl.getAttribLocation(this._blockProgram, "a_borderRoundedness");
+        this.a_borderThickness = gl.getAttribLocation(this._blockProgram, "a_borderThickness");
+        this.a_aspectRatio = gl.getAttribLocation(this._blockProgram, "a_aspectRatio");
     }
     if(this._blockProgramSimple === null) {
-        this._blockProgramSimple = parsegraph_compileProgram(gl, this._shaders,
+        this._blockProgramSimple = parsegraph_compileProgram(this._window,
             "parsegraph_BlockPainter_Simple",
             parsegraph_BlockPainter_VertexShader_Simple,
             parsegraph_BlockPainter_FragmentShader_Simple
         );
-        this.simple_u_world = this._gl.getUniformLocation(this._blockProgramSimple, "u_world");
-        this.simple_a_position = this._gl.getAttribLocation(this._blockProgramSimple, "a_position");
-        this.simple_a_color = this._gl.getAttribLocation(this._blockProgramSimple, "a_color");
+        this.simple_u_world = gl.getUniformLocation(this._blockProgramSimple, "u_world");
+        this.simple_a_position = gl.getAttribLocation(this._blockProgramSimple, "a_position");
+        this.simple_a_color = gl.getAttribLocation(this._blockProgramSimple, "a_color");
     }
 
     if(usingSimple) {
