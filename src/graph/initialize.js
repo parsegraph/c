@@ -46,8 +46,16 @@ function parsegraph_showGraph(rootNode)
     return graph.surface().container();
 }
 
-function parsegraph_initialize() {
+parsegraph_INITIALIZED = false;
+
+function parsegraph_initialize()
+{
+    if(parsegraph_INITIALIZED) {
+        return;
+    }
     //console.log("Initializing parsegraph.");
+    parsegraph_INITIALIZED = true;
+
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     // The width in pixels of a font's glyph page.
