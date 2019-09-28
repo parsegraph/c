@@ -639,6 +639,7 @@ parsegraph_Window.prototype.canProject = function()
 
 parsegraph_Window.prototype.render = function()
 {
+    this._container.style.backgroundColor = this._backgroundColor.asRGB();
     //this.renderMultisampleFramebuffer();
     this.renderDirect();
     //this.renderFramebuffer();
@@ -693,7 +694,6 @@ parsegraph_Window.prototype.renderWebgl2 = function()
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     }
-    this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
     var compSize = new parsegraph_Rect();
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
@@ -705,7 +705,6 @@ parsegraph_Window.prototype.renderWebgl2 = function()
             //console.log("Rendering: " + comp.peer().id());
             //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
             gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
-            gl.clear(gl.COLOR_BUFFER_BIT);
             gl.viewport(compSize.x(), compSize.y(), compSize.width(), compSize.height());
             comp.render(compSize.width(), compSize.height());
         }
@@ -769,7 +768,6 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function()
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     }
-    //this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
     var compSize = new parsegraph_Rect();
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
@@ -781,7 +779,6 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function()
             //console.log("Rendering: " + comp.peer().id());
             //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
             gl.scissor(multisample*compSize.x(), multisample*compSize.y(), multisample*compSize.width(), multisample*compSize.height());
-            gl.clear(gl.COLOR_BUFFER_BIT);
             gl.viewport(multisample*compSize.x(), multisample*compSize.y(), multisample*compSize.width(), multisample*compSize.height());
             comp.render(compSize.width(), compSize.height());
         }
@@ -913,7 +910,6 @@ parsegraph_Window.prototype.renderFramebuffer = function()
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     }
-    //this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
     var compSize = new parsegraph_Rect();
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
@@ -925,7 +921,6 @@ parsegraph_Window.prototype.renderFramebuffer = function()
             //console.log("Rendering: " + comp.peer().id());
             //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
             gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
-            gl.clear(gl.COLOR_BUFFER_BIT);
             gl.viewport(compSize.x(), compSize.y(), compSize.width(), compSize.height());
             comp.render(compSize.width(), compSize.height());
         }
@@ -1030,8 +1025,6 @@ parsegraph_Window.prototype.renderDirect = function()
     }
 
     var compSize = new parsegraph_Rect();
-    gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
-    gl.clear(gl.COLOR_BUFFER_BIT);
     for(var i = 0; i < this._components.length; ++i) {
         var comp = this._components[i];
         comp.layout(this, compSize);
