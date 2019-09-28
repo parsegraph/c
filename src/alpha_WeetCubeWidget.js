@@ -334,7 +334,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
             rotq = 0;
         }
         if(!this._frozen) {
-            rotq = rotq + 0.2 * elapsed;
+            rotq = rotq + 0.1 * elapsed;
         }
     }
     //console.log("dataX=" + this.cubePainter._dataX);
