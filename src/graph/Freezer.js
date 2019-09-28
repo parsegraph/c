@@ -34,13 +34,13 @@ function parsegraph_FreezerWindow(freezer, window)
 
 parsegraph_FreezerWindow.prototype.allocate = function(width, height)
 {
-    var frag = new parsegraph_FrozenNodeFragment(window, width, height);
+    var frag = new parsegraph_FrozenNodeFragment(width, height);
     var aspect = width / height;
     if(aspect < 1/4) {
-        wdata._lowAspectRow.allocate(frag);
+        this._lowAspectRow.allocate(frag);
     }
     else {
-        wdata._highAspectRow.allocate(frag);
+        this._highAspectRow.allocate(frag);
     }
     return frag;
 };
@@ -88,22 +88,33 @@ parsegraph_FreezerWindow.prototype.renderFragment = function(frag, world, needsS
     }*/
 };
 
+parsegraph_FreezerWindow.prototype.textureSize = function()
+{
+    return this._window.textureSize();
+};
+
 parsegraph_FreezerWindow.prototype.activate = function(slot)
 {
-    var tsize = this.textureSize();
     var gl = this._gl;
     this._origFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
     this._origRenderbuffer = gl.getParameter(gl.RENDERBUFFER_BINDING);
     this._activated = true;
 
-    this._framebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+    if(!this._framebuffer) {
+        this._framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
 
-    this._renderbuffer = gl.createRenderbuffer();
-    gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, tsize, tsize);
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        var tsize = this.textureSize();
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, tsize, tsize);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+    }
+    else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+    }
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, slot.glTexture(), 0);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
 };
 
 parsegraph_FreezerWindow.prototype.deactivate = function()
@@ -135,6 +146,11 @@ function parsegraph_Freezer(window)
     this._renderbuffer = null;
     this._activated = false;
 }
+
+parsegraph_Freezer.prototype.windowData = function(window)
+{
+    return this._windowData[window.id()];
+};
 
 parsegraph_Freezer.prototype.cache = function(node)
 {
@@ -191,6 +207,16 @@ function parsegraph_FreezerRow(freezer, window, colFirst)
     this._currentMax = 0;
 }
 
+parsegraph_FreezerRow.prototype.gl = function()
+{
+    return this._window.gl();
+};
+
+parsegraph_FreezerRow.prototype.window = function()
+{
+    return this._window;
+};
+
 parsegraph_FreezerRow.prototype.textureSize = function()
 {
     return this._window.textureSize();
@@ -224,6 +250,7 @@ parsegraph_FreezerRow.prototype.allocate = function(frag)
             this._y = 0;
             this._currentMax = 0;
         }
+        //console.log("COL", lastSlot, this._x);
         frag.assignSlot(lastSlot, this._x, this._y, neededWidth, neededHeight);
         this._y += neededHeight + parsegraph_FREEZER_MARGIN;
         this._currentMax = Math.max(this._currentMax, neededWidth + parsegraph_FREEZER_MARGIN);
@@ -241,6 +268,7 @@ parsegraph_FreezerRow.prototype.allocate = function(frag)
             this._y = 0;
             this._currentMax = 0;
         }
+        //console.log("ROW", lastSlot, this._x);
         frag.assignSlot(lastSlot, this._x, this._y, neededWidth, neededHeight);
         this._x += neededWidth + parsegraph_FREEZER_MARGIN;
         this._currentMax = Math.max(this._currentMax, neededHeight + parsegraph_FREEZER_MARGIN);
@@ -280,17 +308,26 @@ parsegraph_FreezerSlot.prototype.glTexture = function()
     return this._glTexture;
 };
 
+parsegraph_FreezerSlot.prototype.gl = function()
+{
+    return this._row.gl();
+};
+
+parsegraph_FreezerSlot.prototype.window = function()
+{
+    return this._row.window();
+};
+
 parsegraph_FreezerSlot.prototype.init = function()
 {
-    var freezer = this.freezer();
     var tsize = this._row.textureSize();
-    var gl = freezer.gl();
+    var gl = this.gl();
     this._glTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, tsize, tsize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    console.log("Creating new freezer texture");
+    //console.log("Creating new freezer texture");
 };
 
 parsegraph_FreezerSlot.prototype.contextChanged = function(isLost)
@@ -457,6 +494,21 @@ parsegraph_FrozenNodeFragment.prototype.vertexBuffer = function()
     return this._vertexBuffer;
 };
 
+parsegraph_FrozenNodeFragment.prototype.window = function()
+{
+    return this._slot.window();
+};
+
+parsegraph_FrozenNodeFragment.prototype.windowData = function()
+{
+    return this.freezer().windowData(this.window());
+};
+
+parsegraph_FrozenNodeFragment.prototype.gl = function()
+{
+    return this.window().gl();
+};
+
 parsegraph_FrozenNodeFragment.prototype.paint = function()
 {
     if(this._vertexBuffer) {
@@ -466,11 +518,12 @@ parsegraph_FrozenNodeFragment.prototype.paint = function()
         throw new Error("Fragment must be assigned a slot in order for it to be painted");
     }
     var freezer = this.freezer();
+    var wdata = this.freezer().windowData(this.window());
     try {
-        var gl = freezer.gl();
+        var gl = wdata.gl();
         gl.bindTexture(gl.TEXTURE_2D, this._slot.glTexture());
-        //gl.generateMipmap(gl.TEXTURE_2D);
-        freezer.activate(this._slot);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        wdata.activate(this._slot);
         var cam = freezer.camera();
         var margin = parsegraph_FREEZER_MARGIN;
         var halfMarg = parsegraph_FREEZER_MARGIN/2;
@@ -480,10 +533,10 @@ parsegraph_FrozenNodeFragment.prototype.paint = function()
         cam.setOrigin(-this._x/scale, -this._y/scale);
         //console.log("Viewport=", this._textureX, this._textureY, this._textureWidth, this._textureHeight);
         gl.viewport(this._textureX, this._textureY, this._textureWidth, this._textureHeight);
-        var tsize = freezer.textureSize();
+        var tsize = wdata.textureSize();
         var world = cam.project();
         //console.log("Rnedering offscreen");
-        this._frozenNode.node().renderOffscreen(world, scale);
+        this._frozenNode.node().renderOffscreen(this.window(), world, scale);
         //console.log("Dnone");
 
         if(!this._vertexBuffer) {
@@ -536,7 +589,7 @@ parsegraph_FrozenNodeFragment.prototype.paint = function()
         gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
     }
     finally {
-        freezer.deactivate();
+        wdata.deactivate();
     }
 };
 
@@ -545,14 +598,14 @@ parsegraph_FrozenNodeFragment.prototype.render = function(world, renderData, nee
     if(!this._vertexBuffer) {
         return false;
     }
-    this.freezer().renderFragment(this, world, needsSetup, needsLoad);
+    this.windowData().renderFragment(this, world, needsSetup, needsLoad);
     return true;
 };
 
 parsegraph_FrozenNodeFragment.prototype.dispose = function()
 {
     if(this._vertexBuffer) {
-        var gl = this.freezer().gl();
+        var gl = this.gl();
         if(!gl.isContextLost()) {
             console.log("Disposing of vertex buffer");
             gl.deleteBuffer(this._vertexBuffer);

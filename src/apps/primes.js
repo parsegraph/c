@@ -7,7 +7,7 @@ function parsegraph_PrimesWidget(app)
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
     this.caret.setFont(app.font());
-    // TODO this.caret.setWorld(this._viewport.world());
+    this.caret.setWorld(app.world());
     this.caret.setMathMode(true);
     this.caret.label("1");
 

@@ -2967,7 +2967,7 @@ parsegraph_Node.prototype.layoutWasChanged = function(changeDirection)
 parsegraph_Node.prototype.layoutHasChanged = parsegraph_Node.prototype.layoutWasChanged;
 parsegraph_Node.prototype.layoutChanged = parsegraph_Node.prototype.layoutWasChanged;
 
-parsegraph_Node.prototype.freeze = function()
+parsegraph_Node.prototype.freeze = function(freezer)
 {
     if(!this.localPaintGroup()) {
         throw new Error("A node must be a paint group in order to be frozen.");
