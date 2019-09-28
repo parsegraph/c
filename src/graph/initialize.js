@@ -50,10 +50,10 @@ function parsegraph_initialize() {
     //console.log("Initializing parsegraph.");
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
-    // The width in pixels of a glyph atlas's page.
+    // The width in pixels of a font's glyph page.
     parsegraph_MAX_PAGE_WIDTH = 512;
 
-    // The width in pixels of a glyph atlas's page.
+    // The width in pixels of any texture.
     parsegraph_MAX_TEXTURE_SIZE = 2048;
 
     // The maximum scale where nodes will be rendered from a cache.
