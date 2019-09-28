@@ -20,14 +20,13 @@ parsegraph_DelayWidget.prototype.node = function()
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_SLOT);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("Delay");
     car.fitExact();
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     var onOff = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
-    onOff.setLabel("Play", this._graph.glyphAtlas());
+    onOff.setLabel("Play", this._graph.font());
     this._onButton = onOff;
 
     var slider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
@@ -41,11 +40,11 @@ parsegraph_DelayWidget.prototype.node = function()
 
     onOff.setClickListener(function() {
         if(onOff.label() === "Play") {
-            onOff.setLabel("Stop", this._graph.glyphAtlas());
+            onOff.setLabel("Stop", this._graph.font());
             this._delay.delayTime.value = this._slider.value() * this._maxDelay;
         }
         else {
-            onOff.setLabel("Play", this._graph.glyphAtlas());
+            onOff.setLabel("Play", this._graph.font());
             this._delay.delayTime.value = 0;
         }
     }, this);

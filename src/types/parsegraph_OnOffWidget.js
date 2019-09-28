@@ -55,7 +55,6 @@ parsegraph_OnOffWidget.prototype.node = function()
     if(!this._containerNode) {
         // Switch case.
         var car = new parsegraph_Caret(parsegraph_SLOT);
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
         car.node().setIgnoreMouse(true);
         car.shrink();

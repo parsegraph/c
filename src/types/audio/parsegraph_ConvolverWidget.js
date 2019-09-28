@@ -52,7 +52,6 @@ parsegraph_ConvolverWidget.prototype.node = function()
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_BLOCK);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("Convolver");
 
@@ -80,7 +79,7 @@ parsegraph_ConvolverWidget.prototype.node = function()
     car.pull(parsegraph_DOWNWARD);
     car.shrink();
     var reversedButton = car.spawn(parsegraph_DOWNWARD, parsegraph_SLOT);
-    reversedButton.setLabel("Reverse", this._graph.glyphAtlas());
+    reversedButton.setLabel("Reverse", this._graph.font());
     reversedButton.setClickListener(function() {
         this._reversed = !this._reversed;
         this.refresh();

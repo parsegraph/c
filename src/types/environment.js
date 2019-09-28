@@ -229,11 +229,15 @@ parsegraph_Environment.prototype.close = function()
 {
 };
 
+parsegraph_Environment.prototype.font = function()
+{
+    return parsegraph_defaultFont();
+};
+
 parsegraph_Environment.prototype.load = function(worldList)
 {
     var startTime = new Date();
     var car = new parsegraph_Caret(this._root);
-    car.setGlyphAtlas(this.glyphAtlas());
     car.disconnect('d');
     //console.log(worldList);
 
@@ -253,7 +257,7 @@ parsegraph_Environment.prototype.load = function(worldList)
 
             // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
             var actionNode = new parsegraph_Node(parsegraph_BLOCK);
-            actionNode.setLabel("Prepopulate", this.glyphAtlas());
+            actionNode.setLabel("Prepopulate", this.font());
             carousel.addToCarousel(actionNode, function() {
                 this.prepopulate(this, function(success, resp) {
                     //console.log(success, resp);
@@ -301,11 +305,6 @@ parsegraph_Environment.prototype.app = function()
 parsegraph_Environment.prototype.guid = function()
 {
     return this._app.guid();
-};
-
-parsegraph_Environment.prototype.glyphAtlas = function()
-{
-    return this._app.glyphAtlas();
 };
 
 parsegraph_Environment.prototype.graph = function()

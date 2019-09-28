@@ -6,7 +6,6 @@ function parsegraph_PrimesWidget(app)
     this._graph = app.graph();
 
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
-    this.caret.setGlyphAtlas(app.glyphAtlas());
     this.caret.setWorld(this._graph.world());
     this.caret.setMathMode(true);
     this.caret.label("1");

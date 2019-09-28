@@ -7,8 +7,9 @@ function parsegraph_Application()
     else {
         this._hostname = "http://" + location.host;
     }
-    this._world = null;
     this._graph = null;
+    this._rootNode = null;
+    this._titleNode = null;
 
     this._idleFunc = null;
     this._idleFuncThisArg = null;
@@ -45,11 +46,11 @@ parsegraph_Application.prototype.start = function(container, initFunc, initFuncT
     this._interval = this._interval === null ? parsegraph_INTERVAL : this._interval;
 
     // Create and globalize the graph.
+    this._font = null;
     this._surface = new parsegraph_Surface();
     this._graph = new parsegraph_Graph(this._surface);
     GRAPH = this._graph;
     this._container = container;
-    this._glyphAtlas = null;
 
     // Start initializing by loading Unicode for text.
     var uni = new parsegraph_Unicode();
@@ -83,21 +84,19 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
         throw new Error("A Unicode object must have already been constructed.");
     }
 
-    // Create and set the glyph atlas if necessary.
-    if(!this._glyphAtlas) {
-        this._glyphAtlas = parsegraph_buildGlyphAtlas();
-        graph.setGlyphAtlas(this.glyphAtlas());
-        graph.glyphAtlas().setUnicode(uni);
+    // Create and set the font if necessary.
+    if(!this._font) {
+        this._font = parsegraph_defaultFont();
     }
 
+    this._titleNode = new parsegraph_Node(parsegraph_BLOCK);
     this.container().appendChild(surface.container());
 
-    this._root = new parsegraph_Node(parsegraph_BLOCK);
     var rootStyle = new parsegraph_copyStyle(parsegraph_BLOCK);
     rootStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
     rootStyle.borderColor = new parsegraph_Color(.7, .7, .7, 1);
-    this._root.setBlockStyle(rootStyle);
-    this._root.setLabel("Rainback", this._glyphAtlas);
+    this._titleNode.setBlockStyle(rootStyle);
+    this._titleNode.setLabel("Rainback", this._font);
     graph.world().plot(this._root);
 
     var cameraName = this.cameraName();
@@ -151,25 +150,25 @@ parsegraph_Application.prototype.onUnicodeLoaded = function() {
 
     if(this._initFunc) {
         if(typeof this._initFunc != "function") {
-            this._world = null;
+            this._rootNode = null;
             var worldNode = this._initFunc;
             while(typeof worldNode.node === "function") {
                 worldNode = worldNode.node();
             }
             if(worldNode.isRoot()) {
-                this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+                this._titleNode.connectNode(parsegraph_DOWNWARD, worldNode);
             }
         }
         else {
-            this._world = this._initFunc.call(this._initFuncThisArg, this, this._root)
-            if(!this._root.hasAnyNodes()) {
-                var worldNode = this._world;
+            this._rootNode = this._initFunc.call(this._initFuncThisArg, this, this._titleNode)
+            if(!this._titleNode.hasAnyNodes()) {
+                var worldNode = this._rootNode;
                 while(typeof worldNode.node === "function") {
                     worldNode = worldNode.node();
                 }
                 if(worldNode.isRoot()) {
-                    //console.log("Connecting " + this._root + " to " + worldNode);
-                    this._root.connectNode(parsegraph_DOWNWARD, worldNode);
+                    //console.log("Connecting " + this._titleNode + " to " + worldNode);
+                    this._titleNode.connectNode(parsegraph_DOWNWARD, worldNode);
                 }
             }
         }
@@ -291,8 +290,8 @@ parsegraph_Application.prototype.surface = function() {
     return this._surface;
 };
 
-parsegraph_Application.prototype.glyphAtlas = function() {
-    return this._glyphAtlas;
+parsegraph_Application.prototype.font = function() {
+    return this._font;
 };
 
 parsegraph_Application.prototype.scheduleRepaint = function() {

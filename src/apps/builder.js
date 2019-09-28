@@ -1,7 +1,6 @@
 function showFlowchartTemplate(graph)
 {
     var caret = new parsegraph_Caret('b');
-    caret.setGlyphAtlas(graph.glyphAtlas());
 
     var clickChild = function() {
         // Spawn a reasonable child in an allowed direction.

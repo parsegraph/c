@@ -97,7 +97,6 @@ parsegraph_FilterWidget.prototype.typeNode = function()
 {
     if(!this._typeNode) {
         var car = new parsegraph_Caret('s');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         this._typeNode = car.root();
         car.label("Type");
 
@@ -128,7 +127,6 @@ parsegraph_FilterWidget.prototype.frequencyNode = function()
 {
     if(!this._frequencyNode) {
         var car = new parsegraph_Caret('s');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         car.label('Frequency');
         this._frequencyNode = car.root();
         var MAXFS = 20000;
@@ -155,7 +153,6 @@ parsegraph_FilterWidget.prototype.qNode = function()
 {
     if(!this._qNode) {
         var car = new parsegraph_Caret('s');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         car.label('Q');
         this._qNode = car.root();
         var MAXFS = 20000;
@@ -182,7 +179,6 @@ parsegraph_FilterWidget.prototype.gainNode = function()
 {
     if(!this._gainNode) {
         var car = new parsegraph_Caret('s');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         car.label('Gain');
         this._gainNode = car.root();
         var valueSlider = car.spawn('d', 'sli');
@@ -198,7 +194,6 @@ parsegraph_FilterWidget.prototype.detuneNode = function()
 {
     if(!this._detuneNode) {
         var car = new parsegraph_Caret('s');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         car.label('Detune');
         this._detuneNode = car.root();
         var MAXFS = 20000;
@@ -225,7 +220,6 @@ parsegraph_FilterWidget.prototype.node = function()
 {
     if(!this._containerNode) {
         var car = new parsegraph_Caret('b');
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
         car.label('BiquadFilterNode');
 

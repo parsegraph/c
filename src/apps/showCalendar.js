@@ -1,4 +1,4 @@
-function createDay(i, glyphAtlas, d, currentDate, noteFunc, noteFuncThisArg, onUpdateNote, onUpdateNoteThisArg) {
+function createDay(i, d, currentDate, noteFunc, noteFuncThisArg, onUpdateNote, onUpdateNoteThisArg) {
     var names = parsegraph_getListOfDays();
     var weekday = names[i];
 
@@ -20,7 +20,6 @@ function createDay(i, glyphAtlas, d, currentDate, noteFunc, noteFuncThisArg, onU
     workNoteStyle.backgroundColor = new parsegraph_Color(.9, 1, 1);
 
     var car = new parsegraph_Caret('bu');
-    car.setGlyphAtlas(glyphAtlas);
     car.shrink();
 
     var isWorkday = weekday!=="Sunday"&&weekday!=="Saturday";
@@ -51,10 +50,10 @@ function createDay(i, glyphAtlas, d, currentDate, noteFunc, noteFuncThisArg, onU
         car.spawnMove('f', 's');
         car.node().setBlockStyle((isWorkday && h >= 9 && h < 17) ? workNoteStyle : noteStyle);
         if(typeof noteFunc === "function") {
-            car.label(noteFunc.call(noteFuncThisArg, h), glyphAtlas);
+            car.label(noteFunc.call(noteFuncThisArg, h));
         }
         else {
-            car.label("", glyphAtlas);
+            car.label("");
         }
         car.node().realLabel().setEditable(true);
         if(onUpdateNote) {
@@ -95,9 +94,8 @@ parsegraph_CalendarWidget.prototype.getNote = function(d, h)
     return rv;
 };
 
-function parsegraph_CalendarWidget(glyphAtlas)
+function parsegraph_CalendarWidget()
 {
-    this._glyphAtlas = glyphAtlas;
 }
 
 parsegraph_CalendarWidget.prototype.pastStyleName = function()
@@ -113,7 +111,6 @@ parsegraph_CalendarWidget.prototype.futureStyleName = function()
 parsegraph_CalendarWidget.prototype.createWeek = function(d, currentDate, firstWeekOfYear, lastWeekOfYear)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.setGlyphAtlas(this._glyphAtlas);
 
     if(firstWeekOfYear && lastWeekOfYear) {
         throw new Error("A week cannot be both the first and the last week of the same year.");
@@ -168,7 +165,7 @@ parsegraph_CalendarWidget.prototype.createWeek = function(d, currentDate, firstW
                 //console.log(d.getFullYear() + " " + currentDate.getFullYear());
                 caret.label(dayNames[d.getDay()] + ", " + monthNames[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear());
                 caret.align('i', 'v');
-                caret.connect('i', createDay(d.getDay(), caret.glyphAtlas(), d, currentDate,
+                caret.connect('i', createDay(d.getDay(), d, currentDate,
                     function(h) { return this.getNote(d, h); }, this, this.updateNote, this));
             }
             else {
@@ -202,7 +199,6 @@ parsegraph_CalendarWidget.prototype.createWeek = function(d, currentDate, firstW
 parsegraph_CalendarWidget.prototype.createYear = function(year, currentDate)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.setGlyphAtlas(this._glyphAtlas);
 
     var d = parsegraph_getFirstDayOfWeek(new Date(year, 0, 1));
     for(var i = 0; i <= 52; ++i) {
@@ -249,7 +245,6 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(currentDate, previ
         previousYears = 0;
         nextYears = 0;
     }
-    var glyphAtlas = this._glyphAtlas;
 
     if(currentDate === undefined) {
         // Use today's date.
@@ -258,7 +253,6 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(currentDate, previ
 
     var year = currentDate.getFullYear();
     var caret = new parsegraph_Caret(parsegraph_SLOT);
-    caret.setGlyphAtlas(glyphAtlas);
     caret.label(year);
     caret.align('d', 'c');
     caret.connect('d', this.createYear(year, currentDate));

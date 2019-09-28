@@ -1409,10 +1409,10 @@ parsegraph_Node.prototype.realLabel = function()
     return this._label;
 };
 
-parsegraph_Node.prototype.setLabel = function(text, glyphAtlas)
+parsegraph_Node.prototype.setLabel = function(text, font)
 {
     if(!this._label) {
-        this._label = new parsegraph_Label(glyphAtlas);
+        this._label = new parsegraph_Label(font);
     }
     this._label.setText(text);
     this.layoutWasChanged();
@@ -1726,7 +1726,7 @@ parsegraph_Node.prototype.sizeWithoutPadding = function(bodySize)
             //console.log(new Error("Creating size"));
             bodySize = new parsegraph_Size();
         }
-        var scaling = style.fontSize / this._label.glyphAtlas().fontSize();
+        var scaling = style.fontSize / this._label.font().fontSize();
         bodySize[0] = this._label.width() * scaling;
         bodySize[1] = this._label.height() * scaling;
         if(Number.isNaN(bodySize[0]) || Number.isNaN(bodySize[1])) {
@@ -3103,24 +3103,24 @@ parsegraph_Node.prototype.dumpExtentBoundingRect = function()
     parsegraph_log("Downward values: " + downwardValues);*/
 };
 
-function parsegraph_labeledBud(label, glyphAtlas)
+function parsegraph_labeledBud(label, font)
 {
     var node = new parsegraph_Node(parsegraph_BUD);
-    node.setLabel(label, glyphAtlas);
+    node.setLabel(label, font);
     return node;
 };
 
-function parsegraph_labeledSlot(label, glyphAtlas)
+function parsegraph_labeledSlot(label, font)
 {
     var node = new parsegraph_Node(parsegraph_SLOT);
-    node.setLabel(label, glyphAtlas);
+    node.setLabel(label, font);
     return node;
 };
 
-function parsegraph_labeledBlock(label, glyphAtlas)
+function parsegraph_labeledBlock(label, font)
 {
     var node = new parsegraph_Node(parsegraph_BLOCK);
-    node.setLabel(label, glyphAtlas);
+    node.setLabel(label, font);
     return node;
 };
 

@@ -47,7 +47,6 @@ parsegraph_ChessWidget.prototype.node = function() {
         this._squares = [];
         var car = new parsegraph_Caret('u');
         car.fitExact();
-        car.setGlyphAtlas(this._app.glyphAtlas());
         this._containerNode = car.root();
         var fs = "abcdefgh";
         var rs = "12345678";

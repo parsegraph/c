@@ -40,29 +40,33 @@ parsegraph_WhiteNoiseWidget.prototype.audioNode = function()
     return this._audioNode;
 };
 
+parsegraph_WhiteNoiseWidget.prototype.font = function()
+{
+    return parsegraph_defaultFont();
+};
+
 parsegraph_WhiteNoiseWidget.prototype.node = function()
 {
     if(this._containerNode) {
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_SLOT);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("WhiteNoise");
     car.fitExact();
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     var onOff = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
-    onOff.setLabel("Play", this._graph.glyphAtlas());
+    onOff.setLabel("Play", this.font());
     this._onButton = onOff;
 
     onOff.setClickListener(function() {
         this._active = !this._active;
         if(this._active) {
-            onOff.setLabel("Stop", this._graph.glyphAtlas());
+            onOff.setLabel("Stop", this.font());
         }
         else {
-            onOff.setLabel("Play", this._graph.glyphAtlas());
+            onOff.setLabel("Play", this.font());
         }
     }, this);
 

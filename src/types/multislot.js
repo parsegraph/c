@@ -2,7 +2,7 @@ function parsegraph_Multislot(env, rowSize, columnSize, color, subtype)
 {
     this._env = env;
     this._plots = [];
-    var car = new parsegraph_Caret('b', env.glyphAtlas());
+    var car = new parsegraph_Caret('b', env.font());
     this._root = car.node();
     this._size = rowSize * columnSize;
     this._columnSize = columnSize;
@@ -49,7 +49,6 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
         case "pushListItem":
             var child = ev.item;
             var car = new parsegraph_Caret(node);
-            car.setGlyphAtlas(app.glyphAtlas());
             app.spawn(car, child);
             app.graph().scheduleRepaint();
             break;
@@ -285,7 +284,7 @@ parsegraph_listClasses.multislot = {
                 s.backgroundColor = new parsegraph_Color(125, 125, 125);
                 title.setType(parsegraph_SLOT);
                 title.setBlockStyle(s);
-                title.setLabel(item.username ? item.username : "CLAIMED", env.glyphAtlas());
+                title.setLabel(item.username ? item.username : "CLAIMED", env.font());
                 allocations[plotStart + i] = ev.item;
                 console.log(allocations[plotStart + i]);
                 env.listen(ev.item_id, plotListener, node);

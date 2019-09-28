@@ -1,7 +1,6 @@
 function parsegraph_CreaseWidget(app)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.setGlyphAtlas(app.glyphAtlas());
     this.app = app;
 
     this._root = caret.root();
@@ -14,7 +13,7 @@ function parsegraph_CreaseWidget(app)
 
     var addActions = function(id) {
         var node = caret.node();
-        node.setLabel(id, app.glyphAtlas());
+        node.setLabel(id, app.font());
         var uninstall = null;
         var reinstall;
         reinstall = function() {

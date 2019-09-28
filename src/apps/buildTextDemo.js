@@ -117,7 +117,6 @@ var testLanguageNames = [
 function buildTextDemo(app)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    caret.setGlyphAtlas(app.glyphAtlas());
 
     for(var i in testLanguages) {
         caret.spawnMove("f", "u");

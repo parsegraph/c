@@ -1,6 +1,6 @@
-function parsegraph_GlyphIterator(atlas, text)
+function parsegraph_GlyphIterator(font, text)
 {
-    this.atlas = atlas;
+    this.font = font;
     this.index = 0;
     this.len = text.length;
     this.prevLetter = null;
@@ -9,7 +9,7 @@ function parsegraph_GlyphIterator(atlas, text)
 
 parsegraph_GlyphIterator.prototype.next = function()
 {
-    var u = this.atlas.unicode();
+    var u = this.font.unicode();
     if(this.index >= this.len) {
         return null;
     }
@@ -24,7 +24,7 @@ parsegraph_GlyphIterator.prototype.next = function()
     if(u.isMark(start)) {
         // Show an isolated mark.
         //parsegraph_log("Found isolated Unicode mark character %x.\n", start[0]);
-        var rv = atlas.getGlyph(start);
+        var rv = font.getGlyph(start);
         return rv;
     }
 
@@ -115,35 +115,35 @@ parsegraph_GlyphIterator.prototype.next = function()
 
     var trueText = this.text.substring(startIndex, startIndex + len);
     trueText = String.fromCodePoint(givenLetter) + trueText.substring(1);
-    return this.atlas.getGlyph(trueText);
+    return this.font.getGlyph(trueText);
 };
 
 parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
 
-parsegraph_Label_Tests.addTest("parsegraph_buildGlyphAtlas", function() {
-    var glyphAtlas = parsegraph_buildGlyphAtlas();
-    if(!glyphAtlas) {
-        return "No glyph atlas created";
+parsegraph_Label_Tests.addTest("parsegraph_defaultFont", function() {
+    var font = parsegraph_defaultFont();
+    if(!font) {
+        return "No font created";
     }
 });
 
 parsegraph_Label_Tests.addTest("new parsegraph_Label", function() {
-    var glyphAtlas = parsegraph_buildGlyphAtlas();
-    var label = new parsegraph_Label(glyphAtlas);
+    var font = parsegraph_defaultFont();
+    var label = new parsegraph_Label(font);
     if(!label) {
         return "No label created";
     }
 });
 
 parsegraph_Label_Tests.addTest("parsegraph_Label.label", function() {
-    var glyphAtlas = parsegraph_buildGlyphAtlas();
-    var label = new parsegraph_Label(glyphAtlas);
+    var font = parsegraph_defaultFont();
+    var label = new parsegraph_Label(font);
     if(!label) {
         return "No label created";
     }
 
     var car = new parsegraph_Caret('s');
-    car.setGlyphAtlas(glyphAtlas);
+    car.setFont(font);
     car.label("No time");
 });
 
@@ -160,7 +160,7 @@ function parsegraph_Line(label, text)
     // unique texture rendering of the modified glyph.
     this._glyphs = [];
     this._width = 0;
-    this._height = this.glyphAtlas().letterHeight();
+    this._height = this.font().letterHeight();
     if(arguments.length > 1 && text.length > 0) {
         this.appendText(text);
     }
@@ -169,8 +169,8 @@ function parsegraph_Line(label, text)
 parsegraph_Line_Tests = new parsegraph_TestSuite("parsegraph_Line");
 
 parsegraph_Line_Tests.addTest("new parsegraph_Line", function() {
-    var atlas = new parsegraph_GlyphAtlas();
-    var label = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var label = new parsegraph_Label(font);
     var l = new parsegraph_Line(label);
     var f = 0;
     try {
@@ -190,9 +190,9 @@ parsegraph_Line.prototype.isEmpty = function()
     return this._width === 0;
 }
 
-parsegraph_Line.prototype.glyphAtlas = function()
+parsegraph_Line.prototype.font = function()
 {
-    return this._label.glyphAtlas();
+    return this._label.font();
 }
 
 parsegraph_Line.prototype.remove = function(pos, count)
@@ -206,12 +206,12 @@ parsegraph_Line.prototype.remove = function(pos, count)
 parsegraph_Line.prototype.appendText = function(text)
 {
     var i = 0;
-    var atlas = this.glyphAtlas();
-    if(!atlas) {
-        throw new Error("Line cannot add text without the label having a GlyphAtlas.");
+    var font = this.font();
+    if(!font) {
+        throw new Error("Line cannot add text without the label having a font.");
     }
 
-    var gi = new parsegraph_GlyphIterator(atlas, text);
+    var gi = new parsegraph_GlyphIterator(font, text);
     var glyphData = null;
     while((glyphData = gi.next()) != null) {
         //console.log("LETTER: " + glyphData.letter);
@@ -224,9 +224,9 @@ parsegraph_Line.prototype.appendText = function(text)
 parsegraph_Line.prototype.insertText = function(pos, text)
 {
     var i = 0;
-    var atlas = this.glyphAtlas();
-    if(!atlas) {
-        throw new Error("Line cannot add text without the label having a GlyphAtlas.");
+    var font = this.font();
+    if(!font) {
+        throw new Error("Line cannot add text without the label having a font.");
     }
 
     var gi = new parsegraph_GlyphIterator(atlaas, text);
@@ -319,12 +319,12 @@ parsegraph_Line.prototype.glyphs = function()
 //
 //////////////////////////////////////
 
-function parsegraph_Label(glyphAtlas)
+function parsegraph_Label(font)
 {
-    if(!glyphAtlas) {
-        throw new Error("Label requires a GlyphAtlas.");
+    if(!font) {
+        throw new Error("Label requires a font.");
     }
-    this._glyphAtlas = glyphAtlas;
+    this._font = font;
     this._wrapWidth = null;
     this._lines = [];
     this._caretLine = 0;
@@ -339,9 +339,9 @@ function parsegraph_Label(glyphAtlas)
     this._y = null;
 }
 
-parsegraph_Label.prototype.glyphAtlas = function()
+parsegraph_Label.prototype.font = function()
 {
-    return this._glyphAtlas;
+    return this._font;
 }
 
 parsegraph_Label.prototype.isEmpty = function()
@@ -356,8 +356,8 @@ parsegraph_Label.prototype.isEmpty = function()
 }
 
 parsegraph_Label_Tests.addTest("isEmpty", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
-    var l = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var l = new parsegraph_Label(font);
     if(!l.isEmpty()) {
         return "New label must begin as empty.";
     }
@@ -688,8 +688,8 @@ parsegraph_Label.prototype.click = function(x, y)
 };
 
 parsegraph_Label_Tests.addTest("Click before beginning", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
-    var l = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var l = new parsegraph_Label(font);
     l.setText("No time");
     l.click(-5, -5);
 
@@ -702,10 +702,10 @@ parsegraph_Label_Tests.addTest("Click before beginning", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click on second character", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
-    var l = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var l = new parsegraph_Label(font);
     l.setText("No time");
-    l.click(atlas.getGlyph('N').width + 1, 0);
+    l.click(font.getGlyph('N').width + 1, 0);
 
     if(l.caretLine() != 0) {
         return "caretLine";
@@ -716,10 +716,10 @@ parsegraph_Label_Tests.addTest("Click on second character", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click on second line", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
-    var l = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var l = new parsegraph_Label(font);
     l.setText("No time\nLol");
-    l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + 1);
+    l.click(font.getGlyph('L').width + 1, l.lineAt(0).height() + 1);
 
     if(l.caretLine() != 1) {
         return "caretLine";
@@ -730,10 +730,10 @@ parsegraph_Label_Tests.addTest("Click on second line", function() {
 });
 
 parsegraph_Label_Tests.addTest("Click past end", function() {
-    var atlas = parsegraph_buildGlyphAtlas();
-    var l = new parsegraph_Label(atlas);
+    var font = parsegraph_defaultFont();
+    var l = new parsegraph_Label(font);
     l.setText("No time\nLol");
-    l.click(atlas.getGlyph('L').width + 1, l.lineAt(0).height() + l.lineAt(1).height() + 1);
+    l.click(font.getGlyph('L').width + 1, l.lineAt(0).height() + l.lineAt(1).height() + 1);
 
     if(l.caretLine() != 1) {
         return "caretLine";
@@ -784,7 +784,7 @@ parsegraph_Label.prototype.glyphPos = function()
 
 parsegraph_Label.prototype.fontSize = function()
 {
-    return this._glyphAtlas.fontSize();
+    return this._font.fontSize();
 };
 
 parsegraph_Label.prototype.width = function()
@@ -845,7 +845,7 @@ parsegraph_Line.prototype.paint = function(painter, worldX, worldY, pos, fontSca
     var startRun = 0;
     for(var j = 0; j < this._glyphs.length; ++j) {
         var glyphData = this._glyphs[j];
-        var glyphDirection = this.glyphAtlas().unicode().getGlyphDirection(glyphData.letter) || pos[2];
+        var glyphDirection = this.font().unicode().getGlyphDirection(glyphData.letter) || pos[2];
         if(pos[2] === "WS" && glyphDirection !== "WS") {
             // Use the glyph's direction if there is none currently in use.
             pos[2] = glyphDirection;
@@ -866,8 +866,8 @@ parsegraph_Line.prototype.paint = function(painter, worldX, worldY, pos, fontSca
 
 parsegraph_Label.prototype.paint = function(painter, worldX, worldY, fontScale)
 {
-    if(this.glyphAtlas() !== painter.glyphAtlas()) {
-        throw new Error("Painter must use the same glyph atlas as this label: " + this.glyphAtlas() + ", " + painter.glyphAtlas());
+    if(this.font() !== painter.font()) {
+        throw new Error("Painter must use the same font as this label: " + this.font() + ", " + painter.font());
     }
     var pos = [0, 0, "WS"];
 

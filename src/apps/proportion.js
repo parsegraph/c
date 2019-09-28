@@ -9,7 +9,6 @@ function parsegraph_ProportionWidget(app, maxSize)
 {
     this.app = app;
     this.caret = new parsegraph_Caret("b");
-    this.caret.setGlyphAtlas(app.glyphAtlas());
     this._maxSize = maxSize || 100;
     this._count = 0;
 }
@@ -75,7 +74,6 @@ parsegraph_ProportionWidget.prototype.step = function()
         var i = 0;
         commands.forEach(function(command) {
             var commandCaret = new parsegraph_Caret(parsegraph_BLOCK);
-            commandCaret.setGlyphAtlas(caret.glyphAtlas());
 
             commandCaret.node().setBlockStyle(commandStyle);
             commandCaret.label(command);

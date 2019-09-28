@@ -48,7 +48,6 @@ parsegraph_OscillatorWidget.prototype.node = function()
     var MAXFS = 3000;
     if(!this._containerNode) {
         var car = new parsegraph_Caret(parsegraph_BLOCK);
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         this._containerNode = car.root();
         car.label("Oscillator");
         //car.fitExact();

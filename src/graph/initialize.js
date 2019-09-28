@@ -1,10 +1,13 @@
-function parsegraph_buildGlyphAtlas()
+parsegraph_DEFAULT_FONT = null;
+function parsegraph_defaultFont()
 {
-    var ga = new parsegraph_GlyphAtlas(
-        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-    );
-    ga.setUnicode(parsegraph_defaultUnicode());
-    return ga;
+    if(!parsegraph_DEFAULT_FONT) {
+        parsegraph_DEFAULT_FONT = new parsegraph_Font(
+            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
+        );
+        parsegraph_DEFAULT_FONT.setUnicode(parsegraph_defaultUnicode());
+    }
+    return parsegraph_DEFAULT_FONT;
 }
 
 parsegraph_glBufferData_BYTES = 0;

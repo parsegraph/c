@@ -52,23 +52,22 @@ parsegraph_8BitWidget.prototype.node = function()
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_SLOT);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("8Bit");
     car.fitExact();
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     var onOff = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
-    onOff.setLabel("Play", this._graph.glyphAtlas());
+    onOff.setLabel("Play", this._graph.font());
     this._onButton = onOff;
 
     onOff.setClickListener(function() {
         this._active = !this._active;
         if(this._active) {
-            onOff.setLabel("Stop", this._graph.glyphAtlas());
+            onOff.setLabel("Stop", this._graph.font());
         }
         else {
-            onOff.setLabel("Play", this._graph.glyphAtlas());
+            onOff.setLabel("Play", this._graph.font());
         }
     }, this);
 

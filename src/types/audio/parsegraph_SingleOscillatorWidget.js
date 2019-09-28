@@ -22,7 +22,6 @@ parsegraph_SingleOscillatorWidget.prototype.node = function()
 {
     if(!this._containerNode) {
         var car = new parsegraph_Caret(parsegraph_BLOCK);
-        car.setGlyphAtlas(this._graph.glyphAtlas());
         car.node().setIgnoreMouse(true);
         this._containerNode = car.root();
         car.label("Single Oscillator");

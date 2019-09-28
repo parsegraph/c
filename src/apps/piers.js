@@ -6,7 +6,6 @@ function parsegraph_MemoryPiers(app, COUNT)
     }
     this.size = 0;
     this.caret = new parsegraph_Caret(parsegraph_BUD);
-    this.caret.setGlyphAtlas(app.glyphAtlas());
 }
 
 parsegraph_MemoryPiers.prototype.step = function()

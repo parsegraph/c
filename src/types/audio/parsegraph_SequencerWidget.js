@@ -74,10 +74,7 @@ parsegraph_SequenceStep.prototype.node = function()
     var b = parsegraph_copyStyle(parsegraph_BLOCK);
     b.backgroundColor = new parsegraph_Color(1, 1, this._i % 2 == 0 ? 1 : .8, 1);
     step.setBlockStyle(b);
-
-    var ga = this._seq._graph.glyphAtlas();
-
-    step.setLabel((1 + this._i), ga);
+    step.setLabel((1 + this._i), parsegraph_defaultFont());
     var s = step.spawnNode(parsegraph_INWARD, parsegraph_BUD);
     s.setIgnoreMouse(true);
     s.setScale(.5);
@@ -372,24 +369,28 @@ parsegraph_SequencerWidget.prototype.play = function(bpm)
     //this._renderTimer.schedule();
 };
 
+parsegraph_SequencerWidget.prototype.font = function()
+{
+    return parsegraph_defaultFont();
+};
+
 parsegraph_SequencerWidget.prototype.node = function()
 {
     if(this._containerNode) {
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_SLOT);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
-    car.label("Sequencer");
+    car.label("Sequencer", this.font());
     //car.fitExact();
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     var onOff = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
-    onOff.setLabel("Play", this._graph.glyphAtlas());
+    onOff.setLabel("Play", this.font());
     this._onButton = onOff;
 
     this._recordButton = onOff.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
-    this._recordButton.setLabel("Record", this._graph.glyphAtlas());
+    this._recordButton.setLabel("Record", this.font());
 
     this._recordButton.setClickListener(function() {
         this._recording = !this._recording;
@@ -420,18 +421,18 @@ parsegraph_SequencerWidget.prototype.node = function()
     onOff.setClickListener(function() {
         this._playing = !this._playing;
         if(this._playing) {
-            //onOff.setLabel("Stop", this._graph.glyphAtlas());
+            //onOff.setLabel("Stop", this.font());
             var v = bpmSlider.value();
             var bpm = v * this._maxBpm;
             this.play(bpm);
         }
         else {
-            onOff.setLabel("Play", this._graph.glyphAtlas());
+            onOff.setLabel("Play", this.font());
         }
     }, this);
 
     this._resetButton = this._recordButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
-    this._resetButton.setLabel("Reset", this._graph.glyphAtlas());
+    this._resetButton.setLabel("Reset", this.font());
     this._resetButton.setClickListener(function() {
         var newFreq = 440;
         for(var i = 0; i < this._numSteps; ++i) {
@@ -442,7 +443,7 @@ parsegraph_SequencerWidget.prototype.node = function()
     }, this);
 
     this._randomizeButton = this._resetButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
-    this._randomizeButton.setLabel("Randomize", this._graph.glyphAtlas());
+    this._randomizeButton.setLabel("Randomize", this.font());
     this._randomizeButton.setClickListener(function() {
         for(var i = 0; i < this._numSteps; ++i) {
             var step = this._steps[i];
@@ -466,7 +467,7 @@ parsegraph_SequencerWidget.prototype.node = function()
     var y = parsegraph_copyStyle(parsegraph_BLOCK);
     y.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
     l.setBlockStyle(y);
-    l.setLabel("Oscillator", this._graph.glyphAtlas());
+    l.setLabel("Oscillator", this.font());
     var rootStep = n;
     var voices = ["sine", "sawtooth", "square", "triangle"];
     for(var i = 0; i < this._numSteps; ++i) {
@@ -487,9 +488,9 @@ parsegraph_SequencerWidget.prototype.node = function()
         }, [this, i]);
     }
     var addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
-    addStep.setLabel("+", this._graph.glyphAtlas());
+    addStep.setLabel("+", this.font());
 
     var addStep = n.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-    addStep.setLabel("+", this._graph.glyphAtlas());
+    addStep.setLabel("+", this.font());
     return this._containerNode;
 }

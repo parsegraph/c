@@ -20,6 +20,11 @@ function parsegraph_WaveShaperWidget(graph)
     this._oversampling = 'none';
 }
 
+parsegraph_WaveShaperWidget.prototype.font = function()
+{
+    return parsegraph_defaultFont();
+};
+
 parsegraph_WaveShaperWidget.prototype.audioNode = function()
 {
     if(!this._waveShapeNode) {
@@ -42,13 +47,12 @@ parsegraph_WaveShaperWidget.prototype.node = function()
         return this._containerNode;
     }
     var car = new parsegraph_Caret(parsegraph_SLOT);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     this._containerNode = car.root();
     car.label("WaveShaper");
 
     this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
     this._onButton = this._containerNode.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
-    this._onButton.setLabel("Play", this._graph.glyphAtlas());
+    this._onButton.setLabel("Play", this.font());
     this._onButton.setClickListener(function() {
         this._active = !this._active;
         if(this._active) {
@@ -68,7 +72,6 @@ parsegraph_WaveShaperWidget.prototype.node = function()
     var oversample = this._onButton.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
     oversample.setScale(.5);
     car = new parsegraph_Caret(oversample);
-    car.setGlyphAtlas(this._graph.glyphAtlas());
     car.label('none');
     car.onClick(function() {
         this._oversampling = 'none';

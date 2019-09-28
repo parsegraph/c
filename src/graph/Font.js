@@ -1,7 +1,7 @@
-function parsegraph_GlyphPage(glyphAtlas)
+function parsegraph_GlyphPage(font)
 {
-    this._id = glyphAtlas._maxPage++;
-    this._glyphTexture = null;
+    this._id = font._maxPage++;
+    this._glyphTexture = {};
     this._firstGlyph = false;
     this._lastGlyph = false;
     this.next = null;
@@ -23,37 +23,43 @@ function parsegraph_GlyphData(glyphPage, glyph, x, y, width, height, ascent, des
     this.next = null;
 }
 
+function parsegraph_FontWindow(font, window)
+{
+    this._glTextureSize = null;
+    this._numGlyphs = 0;
+    this._textureArray = null;
+}
+
 /**
- * TODO Allow a max texture width of 1024, by paging the texture.
  * TODO Allow glyph texture data to be downloaded rather than generated.
  *
  * http://webglfundamentals.org/webgl/lessons/webgl-text-glyphs.html
  */
-parsegraph_GlyphAtlas_COUNT = 0;
-function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
+parsegraph_Font_COUNT = 0;
+function parsegraph_Font(fontSizePixels, fontName, fillStyle)
 {
-    //console.log("Creating glyph atlas with font size of " + fontSizePixels);
-    this._id = parsegraph_GlyphAtlas_COUNT++;
+    this._id = parsegraph_Font_COUNT++;
     this._fontSize = fontSizePixels;
     this._fontName = fontName;
     this._fillStyle = fillStyle;
+    //console.log("Creating font " + this);
 
-    this._glTextureSize = null;
     this._measureCanvas = document.createElement("canvas");
     this._measureCtx = this._measureCanvas.getContext("2d");
     this._measureCtx.font = this.font();
     this._measureCtx.fillStyle = this._fillStyle;
 
+    this._windows = {};
     this._renderCanvas = null;
     this._renderCtx = null;
 
     this._pages = [];
-    this._needsUpdate = true;
+    this._numGlyphs = 0;
 
     this._glyphData = {};
     this._currentRowHeight = 0;
 
-    // Atlas working position.
+    // Glyph atlas working position.
     this._padding = this.fontSize() / 4;
     this._x = this._padding;
     this._y = this._padding;
@@ -62,7 +68,7 @@ function parsegraph_GlyphAtlas(fontSizePixels, fontName, fillStyle)
     this._maxPage = 0;
 }
 
-parsegraph_GlyphAtlas.prototype.setUnicode = function(uni)
+parsegraph_Font.prototype.setUnicode = function(uni)
 {
     if(!uni.loaded()) {
         throw new Error("Unicode provided has not been loaded.");
@@ -70,17 +76,17 @@ parsegraph_GlyphAtlas.prototype.setUnicode = function(uni)
     this._unicode = uni;
 }
 
-parsegraph_GlyphAtlas.prototype.unicode = function()
+parsegraph_Font.prototype.unicode = function()
 {
     return this._unicode;
 }
 
-parsegraph_GlyphAtlas.prototype.toString = function()
+parsegraph_Font.prototype.toString = function()
 {
-    return "[GlyphAtlas " + this._id + "]";
+    return "[parsegraph_Font " + this._id + ": " + this._fontName + " " + this._fillStyle + "]";
 }
 
-parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
+parsegraph_Font.prototype.getGlyph = function(glyph)
 {
     if(typeof glyph !== "string") {
         glyph = String.fromCharCode(glyph);
@@ -138,71 +144,66 @@ parsegraph_GlyphAtlas.prototype.getGlyph = function(glyph)
     }
 
     this._x += glyphData.width + this._padding;
-    this._needsUpdate = true;
+    ++this._numGlyphs;
 
     return glyphData;
 };
-parsegraph_GlyphAtlas.prototype.get = parsegraph_GlyphAtlas.prototype.getGlyph;
+parsegraph_Font.prototype.get = parsegraph_Font.prototype.getGlyph;
 
-parsegraph_GlyphAtlas.prototype.hasGlyph = function(glyph)
+parsegraph_Font.prototype.hasGlyph = function(glyph)
 {
     var glyphData = this._glyphData[glyph];
     return glyphData !== undefined;
 };
-parsegraph_GlyphAtlas.prototype.has = parsegraph_GlyphAtlas.prototype.hasGlyph;
+parsegraph_Font.prototype.has = parsegraph_Font.prototype.hasGlyph;
 
-parsegraph_GlyphAtlas.prototype.contextChanged = function(isLost)
+parsegraph_Font.prototype.contextChanged = function(isLost, window)
 {
     if(!isLost) {
         return;
     }
-    this.clear();
-    this._needsUpdate = true;
+    this.dispose(window);
 };
 
-/**
- * Updates the given WebGL instance with this texture.
- *
- * ga.update(); // Updates the standard GL instance.
- * ga.update(gl); // Updates the given GL instance and clears old one.
- */
-parsegraph_GlyphAtlas.prototype.update = function(gl)
+parsegraph_Font.prototype.update = function(window)
 {
-    if(arguments.length === 0) {
-        gl = this._gl;
+    if(!window) {
+        throw new Error("Window must be provided");
     }
+    var gl = window.gl();
     if(gl.isContextLost()) {
         return;
     }
-    if(!this._needsUpdate && this._gl === gl) {
+    var td = new Date();
+    var pageTextureSize = this.pageTextureSize();
+    var ctx = this._windows[window.id()];
+    if(!ctx) {
+        ctx = new parsegraph_FontWindow(this, window);
+        this._windows[window.id()] = ctx;
+    }
+    var gl = window.gl();
+    if(gl.isContextLost()) {
+        return;
+    }
+    if(!ctx._glTextureSize) {
+        ctx._glTextureSize = parsegraph_getTextureSize(gl);
+        //console.log("GLTEXTURESIZE=" + ctx._glTextureSize);
+        ctx._textureArray = new Uint8Array(ctx._glTextureSize*ctx._glTextureSize);
+    }
+    if(!this._renderCanvas) {
+        this._renderCanvas = document.createElement("canvas");
+        this._renderCanvas.width = pageTextureSize;
+        this._renderCanvas.height = pageTextureSize;
+        this._renderCtx = this._renderCanvas.getContext("2d");
+        this._renderCtx.font = this.font();
+        this._renderCtx.fillStyle = this._fillStyle;
+    }
+    if(ctx._numGlyphs === this._numGlyphs) {
         //console.log("Dont need update");
         return;
     }
-    else {
-        //console.log("Updating glyphAtlas");
-        this._needsUpdate = false;
-    }
-    var td = new Date();
-    var pageTextureSize = this.pageTextureSize();
-    if(this._gl !== gl) {
-        this.clear();
-        this._gl = gl;
-        this._glTextureSize = parsegraph_getTextureSize(this._gl);
-        if(gl.isContextLost()) {
-            this._needsUpdate = true;
-            return;
-        }
-        //console.log("GLTEXTURESIZE=" + this._glTextureSize);
-        if(!this._renderCanvas) {
-            this._renderCanvas = document.createElement("canvas");
-            this._renderCanvas.width = pageTextureSize;
-            this._renderCanvas.height = pageTextureSize;
-            this._renderCtx = this._renderCanvas.getContext("2d");
-            this._renderCtx.font = this.font();
-            this._renderCtx.fillStyle = this._fillStyle;
-            this._textureArray = new Uint8Array(this._glTextureSize*this._glTextureSize);
-        }
-    }
+    //console.log(this.fullName() + " has " + this._numGlyphs + " and window has " + ctx._numGlyphs);
+    ctx._numGlyphs = 0;
 
     var pageX = 0;
     var pageY = 0;
@@ -218,6 +219,7 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
                 glyphData.x,
                 glyphData.y + this.fontBaseline()
             );
+            ++ctx._numGlyphs;
         }
 
         // Create texture.
@@ -226,7 +228,7 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
             gl.bindTexture(gl.TEXTURE_2D, curTexture);
             var ut = new Date();
             gl.texImage2D(
-                gl.TEXTURE_2D, 0, gl.ALPHA, this._glTextureSize, this._glTextureSize, 0, gl.ALPHA, gl.UNSIGNED_BYTE, this._textureArray
+                gl.TEXTURE_2D, 0, gl.ALPHA, ctx._glTextureSize, ctx._glTextureSize, 0, gl.ALPHA, gl.UNSIGNED_BYTE, ctx._textureArray
             );
             //console.log("Upload time: " + parsegraph_elapsed(ut));
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -235,18 +237,18 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
             // Prevents t-coordinate wrapping (repeating).
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         }
-        page._glyphTexture = curTexture;
+        page._glyphTexture[window.id()] = curTexture;
 
         // Draw from 2D canvas.
         gl.texSubImage2D(
             gl.TEXTURE_2D, 0, pageX, pageY, gl.ALPHA, gl.UNSIGNED_BYTE, this._renderCanvas
         );
         pageX += pageTextureSize;
-        if(pageX >= this._glTextureSize) {
+        if(pageX >= ctx._glTextureSize) {
             pageY += pageTextureSize;
             pageX = 0;
         }
-        if(pageY >= this._glTextureSize) {
+        if(pageY >= ctx._glTextureSize) {
             pageY = 0;
             pageX = 0;
             gl.generateMipmap(gl.TEXTURE_2D);
@@ -261,58 +263,83 @@ parsegraph_GlyphAtlas.prototype.update = function(gl)
         gl.generateMipmap(gl.TEXTURE_2D);
     }
     gl.bindTexture(gl.TEXTURE_2D, null);
-    //console.log("GlyphAtlas updated " + pagesUpdated + " page(s) in " + parsegraph_elapsed(td) + "ms");
+    //console.log("Font updated " + pagesUpdated + " page(s) in " + parsegraph_elapsed(td) + "ms");
 };
 
-parsegraph_GlyphAtlas.prototype.clear = function()
+parsegraph_Font.prototype.dispose = function(window)
+{
+    var ctx = this._windows[window.id()];
+    if(!ctx) {
+        return;
+    }
+    var gl = ctx._gl;
+    for(var i in this._pages) {
+        var page = this._pages[i];
+        if(page._glyphTexture[window.id()]) {
+            var tex = page._glyphTexture[window.id()];
+            if(gl && !gl.isContextLost()) {
+                gl.deleteTexture(tex);
+            }
+            delete page._glyphTexture[window.id()];
+        }
+    }
+    ctx._numGlyphs = 0;
+};
+
+parsegraph_Font.prototype.clear = function()
 {
     for(var i in this._pages) {
         var page = this._pages[i];
-        if(page._glyphTexture) {
-            if(this._gl && !this._gl.isContextLost()) {
-                this._gl.deleteTexture(page._glyphTexture);
+        for(var wid in page._glyphTexture) {
+            var tex = page._glyphTexture[wid];
+            var ctx = this._windows[wid];
+            if(ctx && ctx._gl && !ctx._gl.isContextLost()) {
+                ctx._gl.deleteTexture(tex);
             }
-            page._glyphTexture = null;
         }
+        page._glyphTexture = {};
+    }
+    for(var wid in this._windows) {
+        this._windows[wid]._numGlyphs = 0;
     }
 };
 
-parsegraph_GlyphAtlas.prototype.needsUpdate = function()
-{
-    return this._needsUpdate;
-};
-
-parsegraph_GlyphAtlas.prototype.font = function()
+parsegraph_Font.prototype.font = function()
 {
     return this._fontSize + "px " + this._fontName;
 };
 
-parsegraph_GlyphAtlas.prototype.pageTextureSize = function()
+parsegraph_Font.prototype.pageTextureSize = function()
 {
     return parsegraph_MAX_PAGE_WIDTH;
 };
 
-parsegraph_GlyphAtlas.prototype.letterHeight = function()
+parsegraph_Font.prototype.letterHeight = function()
 {
     return this.fontSize() * 1.3;
 };
 
-parsegraph_GlyphAtlas.prototype.fontBaseline = function()
+parsegraph_Font.prototype.fontBaseline = function()
 {
     return this.fontSize();
 };
 
-parsegraph_GlyphAtlas.prototype.fontSize = function()
+parsegraph_Font.prototype.fontSize = function()
 {
     return this._fontSize;
 };
 
-parsegraph_GlyphAtlas.prototype.fontName = function()
+parsegraph_Font.prototype.fullName = function()
+{
+    return this._fontName + " " + this._fillStyle;
+};
+
+parsegraph_Font.prototype.fontName = function()
 {
     return this._fontName;
 };
 
-parsegraph_GlyphAtlas.prototype.isNewline = function(c)
+parsegraph_Font.prototype.isNewline = function(c)
 {
     return c === '\n';
 };

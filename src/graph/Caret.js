@@ -1,4 +1,4 @@
-function parsegraph_Caret(nodeRoot, glyphAtlas)
+function parsegraph_Caret(nodeRoot, font)
 {
     if(arguments.length === 0) {
         nodeRoot = new parsegraph_Node(parsegraph_DEFAULT_NODE_TYPE);
@@ -18,13 +18,13 @@ function parsegraph_Caret(nodeRoot, glyphAtlas)
 
     this._labels = [];
 
-    this._glyphAtlas = glyphAtlas ? glyphAtlas : null;
+    this._font = font ? font : parsegraph_defaultFont();
     this._world = null;
 };
 
 parsegraph_Caret.prototype.clone = function()
 {
-    return new parsegraph_Caret(this.node(), this.glyphAtlas());
+    return new parsegraph_Caret(this.node(), this.font());
 };
 
 parsegraph_Caret.prototype.setMathMode = function(mathMode)
@@ -60,17 +60,17 @@ parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
     }
 });
 
-parsegraph_Caret.prototype.setGlyphAtlas = function(glyphAtlas)
+parsegraph_Caret.prototype.setFont = function(font)
 {
-    this._glyphAtlas = glyphAtlas;
+    this._font = font;
 };
 
-parsegraph_Caret.prototype.glyphAtlas = function()
+parsegraph_Caret.prototype.font = function()
 {
-    if(!this._glyphAtlas) {
-        throw new Error("Caret does not have a GlyphAtlas");
+    if(!this._font) {
+        throw new Error("Caret does not have a Font");
     }
-    return this._glyphAtlas;
+    return this._font;
 };
 
 parsegraph_Caret.prototype.node = function()
@@ -453,25 +453,25 @@ parsegraph_Caret.prototype.fitNaive = function()
 
 parsegraph_Caret.prototype.label = function(/* ... */)
 {
-    var node, text, glyphAtlas;
+    var node, text, font;
     switch(arguments.length) {
     case 0:
         return this.node().label();
     case 1:
         node = this.node();
         text = arguments[0];
-        glyphAtlas = this.glyphAtlas();
+        font = this.font();
         break;
     case 2:
         if(typeof arguments[1] === "object") {
             node = this.node();
             text = arguments[0];
-            glyphAtlas = arguments[1];
+            font = arguments[1];
         }
         else {
             node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
             text = arguments[1];
-            glyphAtlas = this.glyphAtlas();
+            font = this.font();
             //console.log(typeof arguments[0]);
             //console.log(typeof arguments[1]);
         }
@@ -479,10 +479,10 @@ parsegraph_Caret.prototype.label = function(/* ... */)
     case 3:
         node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
         text = arguments[1];
-        glyphAtlas = arguments[2];
+        font = arguments[2];
         break;
     }
-    node.setLabel(text, glyphAtlas);
+    node.setLabel(text, font);
 };
 
 parsegraph_Caret.prototype.select = function()

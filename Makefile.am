@@ -1,7 +1,7 @@
 # TODO Allow tests to be excluded for production uses.
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src
+#SUBDIRS = src
 
 VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
 
@@ -90,7 +90,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Input.js \
 	src/graph/BlockPainter.js \
 	src/graph/SpotlightPainter.js \
-	src/graph/GlyphAtlas.js \
+	src/graph/Font.js \
 	src/graph/GlyphPainter.js \
 	src/graph/FanPainter.js \
 	src/graph/NodePainter.js \
