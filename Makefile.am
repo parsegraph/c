@@ -52,6 +52,7 @@ parsegraph_SCRIPT_FILES = \
 	src/unicode.js \
 	src/event.js \
 	src/Form.js \
+	src/function.js \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
