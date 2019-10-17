@@ -75,7 +75,7 @@ function parsegraph_initialize()
     parsegraph_SLIDER_NUDGE = 0.01;
 
     // The maximum scale where nodes will be rendered from a cache.
-    parsegraph_FREEZER_TEXTURE_SCALE = .1;
+    parsegraph_FREEZER_TEXTURE_SCALE = .01;
     parsegraph_CACHE_ACTIVATION_SCALE = .01;
 
     // How long the carousel takes, in milliseconds, to open.
