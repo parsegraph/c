@@ -26,9 +26,12 @@
 parsegraph_Viewport_COUNT = 0;
 function parsegraph_Viewport(window, world)
 {
+    if(!window) {
+        throw new Error("A window must be provided");
+    }
     this._id = ++parsegraph_Viewport_COUNT;
     // Construct the graph.
-    this._component = new parsegraph_Component(this);
+    this._component = new parsegraph_Component(this, "parsegraph_Viewport");
     this._window = window;
     this._world = world;
     this._camera = new parsegraph_Camera();
@@ -36,12 +39,13 @@ function parsegraph_Viewport(window, world)
     this._input = new parsegraph_Input(this);
     this._menu = new parsegraph_BurgerMenu(this);
     //this._piano = new parsegraph_AudioKeyboard(this._camera);
+    this._renderedMouse = null;
+    this._needsRender = true;
 
     this._component.setPainter(this.paint, this);
     this._component.setRenderer(this.render, this);
-    this._component.setInputHandler(this.handleInput, this);
+    this._component.setEventHandler(this.handleEvent, this);
     this._component.setContextChanged(this.contextChanged, this);
-    this.setLayout(new parsegraph_FullscreenLayout());
 };
 parsegraph_Viewport_Tests = new parsegraph_TestSuite("parsegraph_Viewport");
 
@@ -50,40 +54,45 @@ parsegraph_Viewport.prototype.id = function()
     return this._id;
 };
 
-parsegraph_Viewport.prototype.handleInput = function(eventType, inputData)
+parsegraph_Viewport.prototype.handleEvent = function(eventType, eventData)
 {
     if(eventType === "blur") {
         this._menu.closeMenu();
+        return true;
     }
     if(eventType === "wheel") {
-        return this._input.onWheel(inputData);
+        return this._input.onWheel(eventData);
     }
     if(eventType === "touchmove") {
-        return this._input.onTouchmove(inputData);
+        return this._input.onTouchmove(eventData);
     }
     if(eventType === "touchzoom") {
-        return this._input.onTouchzoom(inputData);
+        return this._input.onTouchzoom(eventData);
     }
     if(eventType === "touchstart") {
-        return this._input.onTouchstart(inputData);
+        this._nodeShown = null;
+        return this._input.onTouchstart(eventData);
     }
     if(eventType === "touchend") {
-        return this._input.onTouchend(inputData);
+        return this._input.onTouchend(eventData);
     }
     if(eventType === "mousedown") {
-        return this._input.onMousedown(inputData);
+        return this._input.onMousedown(eventData);
     }
     if(eventType === "mousemove") {
-        return this._input.onMousemove(inputData);
+        return this._input.onMousemove(eventData);
     }
     if(eventType === "mouseup") {
-        return this._input.onMouseup(inputData);
+        return this._input.onMouseup(eventData);
     }
     if(eventType === "keydown") {
-        return this._input.onKeydown(inputData);
+        return this._input.onKeydown(eventData);
     }
     if(eventType === "keyup") {
-        return this._input.onKeyup(inputData);
+        return this._input.onKeyup(eventData);
+    }
+    if(eventType === "tick") {
+        return this._input.Update(eventData);
     }
     console.log("Unhandled event type: " + eventType);
 };
@@ -95,35 +104,32 @@ parsegraph_Viewport.prototype.component = function()
 
 parsegraph_Viewport.prototype.width = function()
 {
-    var rv = new parsegraph_Rect();
-    this._component.layout(this._window, rv);
-    return rv.width();
+    return this._window.layout(this.component()).width();
 };
 
 parsegraph_Viewport.prototype.x = function()
 {
-    var rv = new parsegraph_Rect();
-    this._component.layout(this._window, rv);
-    return rv.x();
+    return this._window.layout(this.component()).x();
 };
 
 parsegraph_Viewport.prototype.y = function()
 {
-    var rv = new parsegraph_Rect();
-    this._component.layout(this._window, rv);
-    return rv.y();
+    return this._window.layout(this.component()).y();
 };
 
 parsegraph_Viewport.prototype.height = function()
 {
-    var rv = new parsegraph_Rect();
-    this._component.layout(this._window, rv);
-    return rv.height();
+    return this._window.layout(this.component()).height();
 };
 
 parsegraph_Viewport.prototype.setLayout = function(layout)
 {
     this._component.setLayout(layout);
+};
+
+parsegraph_Viewport.prototype.layout = function(window, outSize)
+{
+    return this._component.layout(window, outSize);
 };
 
 parsegraph_Viewport.prototype.shaders = function()
@@ -175,25 +181,34 @@ parsegraph_Viewport.prototype.input = function()
     return this._input;
 };
 
-parsegraph_Viewport.prototype.scheduleRepaint = function()
+parsegraph_Viewport.prototype.dispose = function()
 {
-    //console.log(this._id, new Error("Scheduling repaint"));
-    this._world.scheduleRepaint();
-    this._component.setNeedsRender();
-    if(this.onScheduleRepaint) {
-        this.onScheduleRepaint.call(this.onScheduleRepaintThisArg);
-    }
+    this._menu.dispose();
 };
 
-parsegraph_Viewport.prototype.setOnScheduleRepaint = function(func, thisArg)
+parsegraph_Viewport.prototype.scheduleRepaint = function()
 {
-    this.onScheduleRepaint = func;
-    this.onScheduleRepaintThisArg = thisArg || this;
+    //console.log("Viewport is scheduling repaint");
+    this._component.scheduleUpdate();
+    this._needsRepaint = true;
+    this._needsRender = true;
+};
+
+parsegraph_Viewport.prototype.scheduleRender = function()
+{
+    //console.log("Viewport is scheduling render");
+    this._component.scheduleUpdate();
+    this._needsRender = true;
 };
 
 parsegraph_Viewport.prototype.needsRepaint = function()
 {
-    return this._world.needsRepaint() || (this._carousel.isCarouselShown() && this._carousel.needsRepaint()) || this._menu.needsRepaint();
+    return this._needsRepaint || this._world.needsRepaint() || (this._carousel.isCarouselShown() && this._carousel.needsRepaint()) || this._menu.needsRepaint();
+};
+
+parsegraph_Viewport.prototype.needsRender = function()
+{
+    return this.needsRepaint() || this._needsRender || this._renderedMouse !== this.input().mouseVersion();
 };
 
 parsegraph_Viewport.prototype.plot = function()
@@ -208,35 +223,67 @@ parsegraph_Viewport.prototype.plot = function()
  */
 parsegraph_Viewport.prototype.paint = function(timeout)
 {
-    //console.log("Painting Viewport, timeout=" + timeout);
     var window = this._window;
     var gl = this._window.gl();
     if(gl.isContextLost()) {
         return false;
     }
+    if(!this.needsRepaint()) {
+        //console.log("World does not need repainting");
+        return false;
+    }
 
-    this._carousel.paint();
-    var rv = this._world.paint(window, timeout);
+    var needsUpdate = this._carousel.paint();
+    var needsUpdate = this._world.paint(window, timeout) || needsUpdate;
 
     this._input.paint();
     //this._piano.paint();
-    this._menu.paint();
-    return rv;
+    if(needsUpdate) {
+        this.scheduleRepaint();
+    }
+    else {
+        this._needsRepaint = false;
+    }
+    this._needsRender = true;
+    return needsUpdate;
 };
 
-parsegraph_Viewport.prototype.render = function(width, height)
+parsegraph_Viewport.prototype.mouseVersion = function()
+{
+    return this._renderedMouse;
+};
+
+parsegraph_Viewport.prototype.showInCamera = function(node)
+{
+    this._nodeShown = node;
+    this.scheduleRender();
+};
+
+parsegraph_Viewport.prototype.render = function(width, height, avoidIfPossible)
 {
     var gl = this._window.gl();
     if(gl.isContextLost()) {
-        return;
+        return false;
     }
     var cam = this.camera();
-    cam.setSize(width, height);
-    var needsRender = false;
-    if(!this._world.render(this._window, cam)) {
+    if(!cam.setSize(width, height) && avoidIfPossible && !this.needsRender()) {
+        return false;
+    }
+    else {
+        this._menu.paint();
+    }
+    if(!this._needsRepaint) {
+        if(this._nodeShown) {
+            this._nodeShown.showInCamera(this.camera(), false);
+        }
+    }
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    var needsUpdate = this._world.render(this._window, cam);
+    if(needsUpdate) {
         //console.log("World was rendered dirty.");
-        this.scheduleRepaint();
-        needsRender = true;
+        this.scheduleRender();
     }
 
     gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
@@ -247,5 +294,9 @@ parsegraph_Viewport.prototype.render = function(width, height)
         this._carousel.render(world);
         this._menu.render(world);
     }
-    return needsRender;
+    if(!needsUpdate) {
+        this._renderedMouse = this.input().mouseVersion();
+        this._needsRender = this._needsRepaint;
+    }
+    return needsUpdate;
 };

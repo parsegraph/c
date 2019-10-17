@@ -1,31 +1,25 @@
-function parsegraph_PrimesWidget(app)
+function parsegraph_PrimesWidget(world)
 {
+    this._world = world;
+
     this.knownPrimes = [];
     this.position = 2;
 
-    this._app = app;
-
     this.caret = new parsegraph_Caret(parsegraph_BLOCK);
-    this.caret.setFont(app.font());
-    this.caret.setWorld(app.world());
     this.caret.setMathMode(true);
+    this.caret.setWorld(this._world);
     this.caret.label("1");
 
-    var carousel = new parsegraph_ActionCarousel(this.window());
+    var carousel = new parsegraph_ActionCarousel();
     carousel.addAction("Pause", function() {
         this._paused = !this._paused;
     }, this);
     carousel.install(this.caret.node());
 }
 
-parsegraph_PrimesWidget.prototype.window = function()
-{
-    return this._app.window();
-};
-
 parsegraph_PrimesWidget.prototype.world = function()
 {
-    return this._app.world();
+    return this._world;
 };
 
 parsegraph_PrimesWidget.prototype.isPaused = function()
@@ -43,11 +37,12 @@ parsegraph_PrimesWidget.prototype.step = function()
     this.caret.push();
     this.caret.pull('u');
     this.caret.crease();
-    //this.caret.freeze();
+    var freeze = false;
+    freeze && this.caret.freeze();
     var isPrime = true;
 
     function addHighlights(dir) {
-        var carousel = new parsegraph_ActionCarousel(this.window());
+        var carousel = new parsegraph_ActionCarousel();
         var world = this.world();
         carousel.addAction("Highlight", function() {
             var bs = parsegraph_cloneStyle(parsegraph_SLOT_MATH_STYLE);
@@ -88,7 +83,7 @@ parsegraph_PrimesWidget.prototype.step = function()
         this.caret.node()._id = this.position + ":" + prime.frequency;
         if(i === 0) {
             this.caret.crease();
-            //this.caret.freeze();
+            freeze && this.caret.freeze();
         }
     }
     if(isPrime) {

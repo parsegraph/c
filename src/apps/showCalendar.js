@@ -73,9 +73,21 @@ function createDay(i, d, currentDate, noteFunc, noteFuncThisArg, onUpdateNote, o
     return car.root();
 };
 
+function parsegraph_CalendarWidget(belt, world)
+{
+    this._belt = belt;
+    this._world = world;
+}
+
 parsegraph_CalendarWidget.prototype.noteID = function(d, h)
 {
     return "CalendarWidget-"+parsegraph_outputDate(d, true, false, false) + "@"+h;
+};
+
+parsegraph_CalendarWidget.prototype.scheduleUpdate = function()
+{
+    this._belt.scheduleUpdate();
+    this._world.scheduleRepaint();
 };
 
 parsegraph_CalendarWidget.prototype.updateNote = function(d, h, note)
@@ -83,6 +95,7 @@ parsegraph_CalendarWidget.prototype.updateNote = function(d, h, note)
     //console.log(d + " " + note);
     localStorage.setItem(this.noteID(d, h), note);
     //console.log(this.noteID(d, h));
+    this.scheduleUpdate();
 };
 
 parsegraph_CalendarWidget.prototype.getNote = function(d, h)
@@ -93,10 +106,6 @@ parsegraph_CalendarWidget.prototype.getNote = function(d, h)
     }
     return rv;
 };
-
-function parsegraph_CalendarWidget()
-{
-}
 
 parsegraph_CalendarWidget.prototype.pastStyleName = function()
 {
@@ -257,7 +266,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(currentDate, previ
     caret.align('d', 'c');
     caret.connect('d', this.createYear(year, currentDate));
     caret.pull('d');
-    //caret.crease();
+    caret.crease();
 
     caret.push();
     for(var i=1; i <= previousYears; ++i) {
@@ -266,7 +275,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(currentDate, previ
         caret.label(year - i);
         caret.align('d', 'c');
         caret.connect('d', this.createYear(year - i, currentDate));
-        //caret.crease();
+        caret.crease();
     }
     caret.pop();
 
@@ -277,7 +286,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(currentDate, previ
         caret.label(year + i);
         caret.align('d', 'c');
         caret.connect('d', this.createYear(year + i, currentDate));
-        //caret.crease();
+        caret.crease();
     }
     caret.pop();
 

@@ -135,17 +135,11 @@ function alpha_WeetCubeWidget(window)
     this._component = new parsegraph_Component();
     this._component.setPainter(this.paint, this);
     this._component.setRenderer(this.render, this);
-    this.setLayout(new parsegraph_FullscreenLayout());
 }
 
 alpha_WeetCubeWidget.prototype.component = function()
 {
     return this._component;
-};
-
-alpha_WeetCubeWidget.prototype.setLayout = function(layout)
-{
-    this._component.setLayout(layout);
 };
 
 alpha_WeetCubeWidget.prototype.createAudioNode = function(audio)
@@ -227,6 +221,7 @@ alpha_WeetCubeWidget.prototype.setRotq = function(rotq)
 
 alpha_WeetCubeWidget.prototype.paint = function()
 {
+    console.log("painting weetcubes");
     var elapsed = this._elapsed;
     var rotq = this.rotq;
     var audio=this.window.audio();
@@ -365,6 +360,9 @@ alpha_WeetCubeWidget.prototype.setUpdateListener = function(listener, listenerTh
 
 alpha_WeetCubeWidget.prototype.render = function(width, height)
 {
+    if(!this.cubePainter) {
+        return;
+    }
     var gl = this.window.gl();
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
@@ -393,7 +391,7 @@ alpha_WeetCubeWidget.prototype.render = function(width, height)
             listener.upX.setValueAtTime(upV[0], audio.currentTime);
             listener.upY.setValueAtTime(upV[1], audio.currentTime);
             listener.upZ.setValueAtTime(upV[2], audio.currentTime);
-            console.log("Setting orientation:" + forV[0] + ", " + forV[1] + ", " + forV[2]);
+            //console.log("Setting orientation:" + forV[0] + ", " + forV[1] + ", " + forV[2]);
         }
     }
     //console.log(xPos + ", " + yPos + ", " + zPos);

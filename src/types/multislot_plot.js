@@ -70,7 +70,7 @@ function parsegraph_MultislotPlot(multislot, index)
     this._multislot = multislot;
     this._version = 0;
 
-    var car = new parsegraph_Caret('s', this.env().glyphAtlas());
+    var car = new parsegraph_Caret('s');
     this._root = car.node();
     var bs = parsegraph_copyStyle('s');
     bs.backgroundColor = multislot.color();
@@ -84,7 +84,7 @@ function parsegraph_MultislotPlot(multislot, index)
     car.pull('d');
     car.move('d');
 
-    this._unclaimedActions = new parsegraph_ActionCarousel(this.env().graph());
+    this._unclaimedActions = new parsegraph_ActionCarousel();
     this._unclaimedActions.addAction("Claim", function() {
         var app = this._multislot.env().app();
         var username = app.username();
@@ -101,10 +101,10 @@ function parsegraph_MultislotPlot(multislot, index)
             this.unclaim();
         }, this);
     };
-    this._populatedActions = new parsegraph_ActionCarousel(this.env().graph());
+    this._populatedActions = new parsegraph_ActionCarousel();
     addDefaultActions.call(this, this._populatedActions);
 
-    this._claimedActions = new parsegraph_ActionCarousel(this.env().graph());
+    this._claimedActions = new parsegraph_ActionCarousel();
     this._claimedActions.addAction("Lisp", function(plotId) {
         parsegraph_pushListItem(this.env(), plotId, "lisp", "");
     }, this);
@@ -160,7 +160,7 @@ parsegraph_MultislotPlot.prototype.claimant = function()
 
 parsegraph_MultislotPlot.prototype.claim = function(name)
 {
-    this._root.setLabel(name, this.glyphAtlas());
+    this._root.setLabel(name);
     this._root.setBlockStyle(this._claimedStyle);
     this.env().app().scheduleRepaint();
     this._actionRemover();
@@ -188,11 +188,6 @@ parsegraph_MultislotPlot.prototype.unclaim = function()
 
 parsegraph_MultislotPlot.prototype.multislot = function() {
     return this._multislot;
-};
-
-parsegraph_MultislotPlot.prototype.glyphAtlas = function()
-{
-    return this._multislot.env().glyphAtlas();
 };
 
 parsegraph_MultislotPlot.prototype.env = function()

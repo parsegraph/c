@@ -45,70 +45,90 @@ function alpha_Input(surface, camera)
     this.mouseWheelUp = 0;
     this.mouseWheelDown = 0;
     this.grabbed = null;
+};
 
-    parsegraph_addEventMethod(document, "keydown", function(event) {
-        if(this.onKeyDown(event.key)) {
-            return;
-        }
-        if(event.ctrlKey || event.altKey || event.metaKey) {
-            return;
-        }
-        this[event.key.toLowerCase()] = 1;
-    }, this);
-    parsegraph_addEventMethod(document, "keyup", function(event) {
-        this[event.key.toLowerCase()] = null;
-    }, this);
-    parsegraph_addEventMethod(surface.canvas(), "mousedown", function(event) {
-        var button, x, y;
-        button = event.button;
-        x = event.clientX;
-        y = event.clientY;
-        this[button] = 1;
+alpha_Input.prototype.onKeyup = function(event)
+{
+    this[event.key.toLowerCase()] = null;
+    return true;
+};
 
-        // reset for a new drag
-        this.startX = x;
-        this.startY = y;
-        this.endX = x;
-        this.endY = y;
-    }, this);
+alpha_Input.prototype.onKeydown = function(event)
+{
+    if(this.onKeyDown(event.key)) {
+        return;
+    }
+    if(event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+    }
+    this[event.key.toLowerCase()] = 1;
+    return true;
+};
 
-    parsegraph_addEventMethod(surface.canvas(), "mouseup", function(event) {
-        var button, x, y;
-        button = event.button;
-        x = event.clientX;
-        y = event.clientY;
-        this[button] = null;
+function alpha_GetButtonName(buttonIndex)
+{
+    switch(event.button) {
+    case 0:
+        return "LeftMouseButton";
+    case 2:
+        return "RightMouseButton";
+    case 1:
+        return "MiddleMouseButton";
+    }
+    return null;
+}
 
-        // new end point;
-        this.endX = x;
-        this.endY = y;
-    }, this);
+alpha_Input.prototype.onMousedown = function(event)
+{
+    var button, x, y;
+    button = alpha_GetButtonName(event.button);
+    x = event.x;
+    y = event.y;
+    this[button] = 1;
 
-    parsegraph_addEventMethod(surface.canvas(), "mousemove", function(event) {
-        var x, y;
-        x = event.clientX;
-        y = event.clientY;
-        this.endX = x;
-        this.endY = y;
-    }, this);
+    // reset for a new drag
+    this.startX = x;
+    this.startY = y;
+    this.endX = x;
+    this.endY = y;
+    return true;
+};
 
-    var onWheel = function(event) {
-        event.preventDefault();
-        var wheel = normalizeWheel(event);
+alpha_Input.prototype.onMouseup = function(event)
+{
+    var button, x, y;
+    button = alpha_GetButtonName(event.button);
+    x = event.clientX;
+    y = event.clientY;
+    this[button] = null;
 
-        if(wheel > 0) {
-            this.mouseWheelUp = this.mouseWheelUp + wheel;
-        }
-        else if(wheel < 0) {
-            // keeping it positive!
-            this.mouseWheelDown = this.mouseWheelDown - wheel;
-        }
-        else {
-            // I have no idea how I got here
-        }
-    };
-    parsegraph_addEventListener(surface.canvas(), "DOMMouseScroll", onWheel, false);
-    parsegraph_addEventListener(surface.canvas(), "mousewheel", onWheel, false);
+    // new end point;
+    this.endX = x;
+    this.endY = y;
+    return true;
+};
+
+alpha_Input.prototype.onMousemove = function(event)
+{
+    var x, y;
+    x = event.x;
+    y = event.y;
+    this.endX = x;
+    this.endY = y;
+    return true;
+};
+
+alpha_Input.prototype.onWheel = function(event)
+{
+    var wheel = event.spinY;
+    if(wheel > 0) {
+        this.mouseWheelUp = this.mouseWheelUp + wheel;
+    }
+    else {
+        // keeping it positive!
+        this.mouseWheelDown = this.mouseWheelDown - wheel;
+    }
+    return true;
 };
 
 alpha_Input.prototype.onKeyDown = function()
@@ -249,6 +269,8 @@ alpha_Input.prototype.Update = function(elapsed)
     this.camera.TurnRight(
         this.Get("LeftMouseButton") * this.MouseRight() * elapsed
     );
+    //console.log("MouseUp", this.MouseUp());
+    //console.log("MouseDown", this.MouseDown());
     this.camera.PitchUp(
         this.Get("LeftMouseButton") * this.MouseUp() * elapsed
     );

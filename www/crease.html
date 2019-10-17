@@ -10,21 +10,22 @@
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
     parsegraph_initialize();
-
     var window = new parsegraph_Window();
+    var world = new parsegraph_World();
     document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
 
-    var sga = new parsegraph_Application(window);
-    sga.setCameraName("parsegraph_crease_camera");
-    SGA = sga;
-    var crease;
-    sga.start(function(app, root) {
-        crease = new parsegraph_CreaseWidget(app);
-        return crease;
-    });
-    sga.onIdle(function(timeout) {
+    var crease = new parsegraph_CreaseWidget(belt, world);
+    world.plot(crease.node());
+    viewport.showInCamera(crease.node());
+    belt.queueJob(function(timeout) {
         if(crease.tick()) {
-            sga.scheduleRepaint();
+            belt.scheduleUpdate();
+            world.scheduleRepaint();
         }
         return true;
     });

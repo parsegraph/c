@@ -11,7 +11,7 @@ function parsegraph_Multislot(env, rowSize, columnSize, color, subtype)
 
     this.build(car, subtype);
 
-    var multislotActions = new parsegraph_ActionCarousel(this.graph());
+    var multislotActions = new parsegraph_ActionCarousel();
     multislotActions.addAction("Edit", function() {
         this.env().togglePermissions(this._id);
     }, this);
@@ -35,9 +35,9 @@ parsegraph_Multislot.prototype.env = function()
     return this._env;
 };
 
-parsegraph_Multislot.prototype.graph = function()
+parsegraph_Multislot.prototype.scheduleUpdate = function()
 {
-    return this._env.graph();
+    return this.env().scheduleUpdate();
 };
 
 parsegraph_Multislot.prototype.build = function(car, subtype)
@@ -50,7 +50,7 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
             var child = ev.item;
             var car = new parsegraph_Caret(node);
             app.spawn(car, child);
-            app.graph().scheduleRepaint();
+            this.scheduleUpdate();
             break;
         };
     };
@@ -289,7 +289,7 @@ parsegraph_listClasses.multislot = {
                 console.log(allocations[plotStart + i]);
                 env.listen(ev.item_id, plotListener, node);
             }
-            env.graph().scheduleRepaint();
+            this.scheduleUpdate();
             break;
         }
     }, this);

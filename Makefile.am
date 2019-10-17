@@ -99,6 +99,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Caret.js \
 	src/graph/LayoutPreference.js \
 	src/graph/LayoutState.js \
+	src/graph/TimingBelt.js \
 	src/graph/Node.js \
 	src/graph/Component.js \
 	src/graph/layout.js \

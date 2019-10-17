@@ -1,4 +1,4 @@
-function showIPAddresses(graph)
+function showIPAddresses()
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);

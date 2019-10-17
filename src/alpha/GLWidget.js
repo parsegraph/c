@@ -3,29 +3,20 @@
 // TODO Mouse input appears to be... strangely interpreted.
 
 // test version 1.0
-function alpha_GLWidget()
+function alpha_GLWidget(belt, window)
 {
-    // Allow surface to be created implicitly.
-    var surface;
-    if(arguments.length == 0) {
-        surface = new parsegraph_Surface();
-    }
-    else {
-        surface = arguments[0];
-    }
-    if(!surface) {
-        throw new Error("Surface must be given");
-    }
-    this._surface = surface;
-    surface.addPainter(this.paint, this);
-    surface.addRenderer(this.render, this);
-
-    this._canvas = surface._canvas;
-    this._container = surface._container;
+    this._belt = belt;
+    this._window = window;
+    this._component = new parsegraph_Component(this, "alpha_GLWidget");
+    this._component.setPainter(this.paint, this);
+    this._component.setRenderer(this.render, this);
+    this._component.setEventHandler(this.handleEvent, this);
+    //this._component.setContextChanged(this.contextChanged, this);
 
     this._backgroundColor = new alpha_Color(0, 47/255, 57/255);
 
     this.camera = new alpha_Camera(this);
+    this._start = new Date();
 
     // Set the field of view.
     this.camera.SetFovX(60);
@@ -39,8 +30,8 @@ function alpha_GLWidget()
 
 //this.camera.PitchDown(40 * Math.PI / 180);
 
-    this.input = new alpha_Input(this, this.camera);
-    this.input.SetMouseSensitivity(.4);
+    this._input = new alpha_Input(this, this.camera);
+    this._input.SetMouseSensitivity(.4);
 
     this._done = false;
 
@@ -186,6 +177,11 @@ function alpha_GLWidget()
     this.time = 0;
 }; // alpha_GLWidget
 
+alpha_GLWidget.prototype.component = function()
+{
+    return this._component;
+};
+
 alpha_GLWidget.prototype.paint = function()
 {
     if(!this.paintingDirty) {
@@ -201,10 +197,39 @@ alpha_GLWidget.prototype.paint = function()
     this.paintingDirty = false;
 };
 
+alpha_GLWidget.prototype.handleEvent = function(eventType, eventData)
+{
+    if(eventType === "tick") {
+        this.Tick(parsegraph_elapsed(this._start));
+        this._start = new Date();
+        return true;
+    }
+    else if(eventType === "wheel") {
+        return this._input.onWheel(eventData);
+    }
+    else if(eventType === "mousemove") {
+        return this._input.onMousemove(eventData);
+    }
+    else if(eventType === "mousedown") {
+        return this._input.onMousedown(eventData);
+    }
+    else if(eventType === "mouseup") {
+        return this._input.onMouseup(eventData);
+    }
+    else if(eventType === "keydown") {
+        return this._input.onKeydown(eventData);
+    }
+    else if(eventType === "keyup") {
+        return this._input.onKeyup(eventData);
+    }
+    return false;
+};
+
 alpha_GLWidget.prototype.Tick = function(elapsed)
 {
+    elapsed /= 1000;
     this.time += elapsed;
-    this.input.Update(elapsed);
+    this._input.Update(elapsed);
 
     var ymin;
     for(var i = 0; i < this.swarm.length; ++i) {
@@ -250,7 +275,7 @@ alpha_GLWidget.prototype.setBackground = function()
 alpha_GLWidget.prototype.scheduleRepaint = function()
 {
     this.paintingDirty = true;
-    this._surface.scheduleRepaint();
+    this._belt.scheduleUpdate();
 };
 
 /**
@@ -266,42 +291,17 @@ alpha_GLWidget.prototype.Camera = function()
     return this.camera;
 };
 
-alpha_GLWidget.prototype.canvas = function()
-{
-    return this.surface().canvas();
-};
-
 alpha_GLWidget.prototype.gl = function()
 {
-    return this.surface().gl();
-};
-
-alpha_GLWidget.prototype.surface = function()
-{
-    return this._surface;
-};
-
-/**
- * Returns the container for this scene.
- */
-alpha_GLWidget.prototype.container = function()
-{
-    return this._container;
+    return this._window.gl();
 };
 
 /**
  * Render painted memory buffers.
  */
-alpha_GLWidget.prototype.render = function()
+alpha_GLWidget.prototype.render = function(width, height, avoidIfPossible)
 {
-    var projection;
-    if(arguments.length > 0) {
-        projection = this.camera.UpdateProjection(arguments[0], arguments[1]);
-    }
-    else {
-        projection = this.camera.UpdateProjection();
-    }
-    console.log(projection);
+    var projection = this.camera.UpdateProjection(width, height);
 
     // local fullcam = boat:Inverse() * player:Inverse() * Bplayer:Inverse() * cam:Inverse()
 

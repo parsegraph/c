@@ -8,31 +8,45 @@
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
-    sga.setCameraName("parsegraph_week_camera");
-    SGA = sga;
-    sga.start(document.body, function(graph, root) {
-        var car = new parsegraph_Caret(parsegraph_BUD);
-        car.setGlyphAtlas(graph.glyphAtlas());
-        [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday"
-        ].forEach(function(weekday, i) {
-            if(i !== 0) {
-                car.spawnMove('f', 'bu');
-            }
+function createWeek(belt, world)
+{
+    var car = new parsegraph_Caret(parsegraph_BUD);
+    [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ].forEach(function(weekday, i) {
+        if(i !== 0) {
+            car.spawnMove('f', 'bu');
+        }
 
-            car.connect('d', createDay(i, graph.glyphAtlas()));
-            car.pull('d');
-        }, this);
-        return car.root();
-    });
+        car.connect('d', createDay(i, null, null, null, null, function() {
+            belt.scheduleUpdate();
+            world.scheduleRepaint();
+        }, this));
+        car.pull('d');
+    }, this);
+    return car.root();
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
+    var week = createWeek(belt, world);
+    world.plot(week);
+    viewport.showInCamera(week);
 });
 </script>
 </head>

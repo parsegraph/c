@@ -1,27 +1,31 @@
-function showCorporateStructure(graph)
+function showCorporateStructure()
 {
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
     caret.label("Shareholders");
 
     // Show the board
     caret.spawnMove('d', 'b');
-    caret.node().setIgnoreMouse(true);
+    //caret.node().setIgnoreMouse(true);
     caret.label("Board of Directors");
+    caret.node()._id = "Board of Directors";
     caret.push();
     caret.spawnMove('i', 's', 'v');
-    caret.node().setIgnoreMouse(true);
+    //caret.node().setIgnoreMouse(true);
+    caret.node()._id = "Board of Directors slot";
     caret.shrink();
 
     // First, the chairman.
     caret.spawnMove('i', 'b', 'v');
     caret.shrink();
     caret.label("Chairman");
+    caret.node()._id = "Chairman";
     caret.spawn('i', 's', 'v');
 
     // Show the board members.
     for(var i = 0; i < 8; ++i) {
         if(i == 0) {
             caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+            caret.crease();
             caret.shrink();
         }
         else {
@@ -30,6 +34,7 @@ function showCorporateStructure(graph)
         caret.pull('d');
         caret.spawnMove('d', 'b');
         caret.label("Board Member");
+        caret.node()._id = "Board Member " + i;
         caret.spawn('i', 's', 'v');
         caret.move('u');
     }
@@ -37,16 +42,19 @@ function showCorporateStructure(graph)
 
     // C-level management.
     caret.spawnMove('d', 'b');
-    caret.node().setIgnoreMouse(true);
+    //caret.node().setIgnoreMouse(true);
     caret.label("C-level Management");
+    caret.node()._id = "C-level Management";
     caret.push();
     caret.spawnMove('i', 's', 'v');
-    caret.node().setIgnoreMouse(true);
+    caret.node()._id = "C-level Management slot";
+    //caret.node().setIgnoreMouse(true);
     caret.shrink();
 
     // CEO.
     caret.spawnMove('i', 'b', 'v');
     caret.label("CEO");
+    caret.node()._id = "CEO";
     caret.shrink();
     caret.spawn('i', 'slot', 'v');
 
@@ -74,6 +82,7 @@ function showCorporateStructure(graph)
         caret.pull('d');
         caret.spawnMove('d', 'b');
         caret.label(executive);
+        caret.node()._id = executive;
         caret.spawn('i', 's', 'v');
         caret.move('u');
     });
@@ -112,12 +121,12 @@ function showCorporateStructure(graph)
         caret.push();
         caret.pull('d');
         caret.spawnMove('d', 'block');
-        caret.node().setIgnoreMouse(true);
+        //caret.node().setIgnoreMouse(true);
         caret.label(sector);
         caret.spawnMove('i', 's', 'v');
         caret.crease();
         caret.shrink();
-        caret.node().setIgnoreMouse(true);
+        //caret.node().setIgnoreMouse(true);
 
         caret.spawnMove('i', 'block');
         caret.label("Sector President");

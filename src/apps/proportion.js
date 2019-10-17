@@ -5,9 +5,8 @@
  *
  * Presently, COUNT cannot be more than 100. It defaults to 10.
  */
-function parsegraph_ProportionWidget(app, maxSize)
+function parsegraph_ProportionWidget(maxSize)
 {
-    this.app = app;
     this.caret = new parsegraph_Caret("b");
     this._maxSize = maxSize || 100;
     this._count = 0;
@@ -57,9 +56,8 @@ parsegraph_ProportionWidget.prototype.step = function()
     commandItemStyle.borderColor = new parsegraph_Color(0, .5, 0, 1);
 
     // Attach commands for this block.
-    var graph = this.app.graph();
-    caret.onClick(function() {
-        var carousel = graph.carousel();
+    caret.onClick(function(viewport) {
+        var carousel = viewport.carousel();
         //console.log("OnClick!");
         if(carousel.isCarouselShown() && selectedNode == this) {
             carousel.clearCarousel();

@@ -11,26 +11,27 @@
 document.addEventListener("DOMContentLoaded", function(event) {
     parsegraph_initialize();
     var window = new parsegraph_Window();
-    var sga = new parsegraph_Application(window);
+    var world = new parsegraph_World();
     document.body.appendChild(window.container());
-    parsegraph_addEventMethod(top.window, "resize", sga.scheduleRepaint, sga);
-    sga.setCameraName("parsegraph_ulam_camera");
-    SGA = sga;
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    belt.setBurstIdle(true);
+    belt.setGovernor(false);
 
-    var ulam;
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
     var COUNT = 100000;
-    sga.setBurstIdle(true);
-    sga.setGovernor(false);
+    var ulam = new parsegraph_Ulam(COUNT);
+    world.plot(ulam.node());
+    viewport.showInCamera(ulam.node());
+
     var startTime = new Date();
-    sga.start(function(app, root) {
-        root.setLabel("Ulam Spiral");
-        ulam = new parsegraph_Ulam(app, COUNT);
-        root.connectNode(parsegraph_DOWNWARD, ulam.node());
-        return ulam;
-    });
-    sga.onIdle(function(timeout) {
+    belt.queueJob(function(timeout) {
         var callAgain = ulam.step(timeout);
-        sga.scheduleRepaint();
+        belt.scheduleUpdate();
+        world.scheduleRepaint();
         if(!callAgain) {
             console.log("Done in " + parsegraph_elapsed(startTime) + "ms");
         }

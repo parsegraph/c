@@ -67,6 +67,9 @@ function parsegraph_initialize()
     // The width in pixels of any texture.
     parsegraph_MAX_TEXTURE_SIZE = 2048;
 
+    // The amount by which a slider is adjusted by keyboard and mouse events.
+    parsegraph_SLIDER_NUDGE = 0.01;
+
     // The maximum scale where nodes will be rendered from a cache.
     parsegraph_FREEZER_TEXTURE_SCALE = .1;
     parsegraph_CACHE_ACTIVATION_SCALE = .01;

@@ -1583,11 +1583,10 @@ parsegraph_Node_Tests.addTest("parsegraph_Node lisp test", function(out) {
     car.spawnMove('d', 'u');
     car.root().commitLayoutIteratively();
     //parsegraph_getLayoutNodes(car.root());
-    var g = new parsegraph_Viewport();
-    g.setFont(parsegraph_defaultFont());
-    out.appendChild(g.window().container());
-    g.plot(car.root());
-    g.scheduleRepaint();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    var g = new parsegraph_Viewport(window, world);
+    world.plot(car.root());
     g.input().SetListener(function() {
         g.window().paint();
         g.window().render();

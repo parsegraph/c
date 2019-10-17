@@ -8,15 +8,21 @@
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-SGA = null;
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
-    sga.setCameraName("parsegraph_calendar_camera");
-    SGA = sga;
-    sga.start(document.body, function(app, root) {
-        var cal = new parsegraph_CalendarWidget(app.glyphAtlas());
-        return cal.createCalendar(new Date(), 1, 40);
-    });
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
+    var widget = new parsegraph_CalendarWidget(belt, world);
+    var calendar = widget.createCalendar(new Date(), 1, 40);
+    world.plot(calendar);
+    viewport.showInCamera(calendar);
 });
 </script>
 </head>

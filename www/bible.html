@@ -10,23 +10,31 @@
 <script>
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
-    sga.setCameraName("parsegraph_bible_camera");
-    SGA = sga;
-    sga.start(document.body, function(app, root) {
-        root.setLabel("King James Bible");
-        var bible = new parsegraph_BibleWidget(app);
-        var caret = new parsegraph_Caret(parsegraph_BUD);
-        caret.setGlyphAtlas(app.glyphAtlas());
-        caret.push();
-        caret.pull('d');
-        caret.spawnMove('d', 'u');
-        bible.getOldTestament(caret, function() {
-            caret.pop();
-            caret.spawnMove('f', 'u');
-            bible.getNewTestament(caret);
-        }, this);
-        return caret.root();
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
+    var bible = new parsegraph_BibleWidget(belt, world);
+    var caret = new parsegraph_Caret(parsegraph_BLOCK);
+    caret.label("King James Bible");
+    caret.push();
+    caret.pull('d');
+    caret.spawnMove('d', 'u');
+    bible.getOldTestament(caret, function() {
+        caret.pop();
+        caret.spawnMove('f', 'u');
+        bible.getNewTestament(caret);
+    }, this);
+    world.plot(caret.root());
+    viewport.showInCamera(caret.root());
+    belt.queueJob(function(timeout) {
+        return bible.tick();
     });
 });
 </script>

@@ -8,17 +8,20 @@
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
-
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
-    sga.setCameraName("parsegraph_chess_camera");
-    SGA = sga;
-    var chessWidget;
-    sga.start(document.body, function(app, root) {
-        chessWidget = new parsegraph_ChessWidget(app);
-        root.connectNode(parsegraph_FORWARD, chessWidget.node());
-        return chessWidget;
-    });
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
+    var chess = new parsegraph_ChessWidget();
+    world.plot(chess.node());
+    viewport.showInCamera(chess.node());
 });
 </script>
 </head>

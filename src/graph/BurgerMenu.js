@@ -29,6 +29,7 @@ function parsegraph_BurgerMenu(viewport)
     this._menuOpened = false;
     this._menuHovered = null;
     this._iconLocations = {};
+    this._needsRepaint = true;
 
     this._textInput = document.createElement('input');
     this._textInput.style.display = "none";
@@ -38,8 +39,16 @@ function parsegraph_BurgerMenu(viewport)
 
 parsegraph_BurgerMenu.prototype.scheduleRepaint = function()
 {
+    //console.log("BurgerMenu is scheduling repaint");
     this._needsRepaint = true;
     this._viewport.scheduleRepaint();
+};
+
+parsegraph_BurgerMenu.prototype.scheduleRender = function()
+{
+    //console.log("BurgerMenu is scheduling render");
+    this._needsRepaint = true;
+    this._viewport.scheduleRender();
 };
 
 parsegraph_BurgerMenu.prototype.getIcon = function(x, y)
@@ -74,12 +83,13 @@ parsegraph_BurgerMenu.prototype.onMousemove = function(x, y)
     if(iconIndex === null && this._menuHovered === null) {
         return false;
     }
-    if(this._menuHovered != iconIndex) {
-        console.log("Repainting");
-        this.scheduleRepaint();
+    if(this._menuHovered == iconIndex) {
+        return false;
     }
+    console.log("Repainting");
+    this.scheduleRepaint();
     this._menuHovered = iconIndex;
-    return this._menuHovered !== null;
+    return true;
 };
 
 parsegraph_BurgerMenu.prototype.onMousedown = function(x, y)
@@ -120,24 +130,41 @@ parsegraph_BurgerMenu.prototype.onMousedown = function(x, y)
         }
         if(iconIndex == parsegraph_MENU_ICON_RESET_CAMERA) {
             this._viewport.input().resetCamera(true);
-            this.scheduleRepaint();
+            this._viewport.scheduleRender();
             return true;
         }
         if(iconIndex == parsegraph_MENU_ICON_HSPLIT) {
-            console.log("Hsplit!");
+            var newViewport = new parsegraph_Viewport(this.window(), this._viewport.world());
+            newViewport.camera().copy(this._viewport.camera());
+            newViewport.camera().setSize(this._viewport.camera().width(), this._viewport.camera().height());
+            this.window().addHorizontal(newViewport.component(), this._viewport.component());
+            this.scheduleRepaint();
             return true;
         }
         if(iconIndex == parsegraph_MENU_ICON_VSPLIT) {
-            console.log("vsplit!");
+            var newViewport = new parsegraph_Viewport(this.window(), this._viewport.world());
+            newViewport.camera().copy(this._viewport.camera());
+            newViewport.camera().setSize(this._viewport.camera().width(), this._viewport.camera().height());
+            this.window().addVertical(newViewport.component(), this._viewport.component());
+            this.scheduleRepaint();
             return true;
         }
         if(iconIndex == parsegraph_MENU_ICON_CLOSE) {
-            console.log("close!");
+            console.log("Closing widget");
+            this.window().removeComponent(this._viewport.component());
+            this._viewport.dispose();
+            this.scheduleRepaint();
             return true;
         }
         throw new Error("Unhandled menu icon type: " + iconIndex);
     }
     return false;
+};
+
+parsegraph_BurgerMenu.prototype.dispose = function()
+{
+    this._textInput.parentNode.removeChild(this._textInput);
+    this._textInput = null;
 };
 
 parsegraph_BurgerMenu.prototype.contextChanged = function(isLost)
@@ -196,6 +223,9 @@ parsegraph_BurgerMenu.prototype.paint = function()
     }
     this._iconPainter.clear();
     this._iconPainter.setAlpha(0.5);
+    for(var iconIndex in this._iconLocations) {
+        this._iconLocations[iconIndex] = null;
+    }
     this.drawIcon(parsegraph_MENU_ICON_MAIN, 0);
     if(this._menuOpened) {
         var viewportWidth = this._viewport.width();
@@ -206,12 +236,12 @@ parsegraph_BurgerMenu.prototype.paint = function()
         this.drawIcon(parsegraph_MENU_ICON_VSPLIT, pad+2*parsegraph_MENU_ICON_SIZE);
         this.drawIcon(parsegraph_MENU_ICON_HSPLIT, pad+parsegraph_MENU_ICON_SIZE);
         this.drawIcon(parsegraph_MENU_ICON_RESET_CAMERA, pad+3*parsegraph_MENU_ICON_SIZE);
-        this.drawIcon(parsegraph_MENU_ICON_CLOSE, viewportWidth-viewportWidth/2-parsegraph_MENU_ICON_SIZE/2);
+        if(this.window().numComponents() > 1) {
+            this.drawIcon(parsegraph_MENU_ICON_CLOSE, viewportWidth-viewportWidth/2-parsegraph_MENU_ICON_SIZE/2);
+        }
         this._textInput.style.display = "block";
         this._textInput.style.position = "absolute";
-        this._textInput.style.left = "50%";
         this._textInput.style.width = (parsegraph_MENU_ICON_SIZE*6) + "px";
-        this._textInput.style.bottom = (this._viewport.y() + this._viewport.height() - parsegraph_MENU_ICON_SIZE - 1.5*parsegraph_MENU_ICON_PADDING) + "px";
         this._textInput.style.transform = "translateX(-50%)";
     }
     else {
@@ -224,6 +254,10 @@ parsegraph_BurgerMenu.prototype.render = function()
 {
     if(!this._iconPainter) {
         return;
+    }
+    if(this._menuOpened) {
+        this._textInput.style.left = (this._viewport.x() + this._viewport.width()/2) + "px";
+        this._textInput.style.bottom = (this._viewport.y() + this._viewport.height() - parsegraph_MENU_ICON_SIZE - 1.5*parsegraph_MENU_ICON_PADDING) + "px";
     }
     var world = this._viewport.camera().projectionMatrix();
     matrixMultiply3x3I(world, makeTranslation3x3(this._viewport.width()/2, 0), world);
@@ -246,4 +280,3 @@ parsegraph_BurgerMenu.prototype.window = function()
 {
     return this._viewport.window();
 };
-

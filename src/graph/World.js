@@ -316,17 +316,17 @@ parsegraph_World.prototype.paint = function(window, timeout)
         while(i < this._worldRoots.length) {
             if(pastTime()) {
                 this._previousWorldPaintState = i;
-                return false;
+                return true;
             }
             var plot = this._worldRoots[i];
             if(!plot.localPaintGroup()) {
                 throw new Error("World root must have a paint group");
             }
-            var paintCompleted = plot.paint(window, timeRemaining());
+            var needsUpdate = plot.paint(window, timeRemaining());
 
-            if(!paintCompleted) {
+            if(needsUpdate) {
                 this._previousWorldPaintState = i;
-                return false;
+                return true;
             }
 
             ++i;
@@ -339,15 +339,17 @@ parsegraph_World.prototype.paint = function(window, timeout)
     }
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
-        var paintDuration = parsegraph_elapsed(parsegraph_PAINT_START);
-        //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        if(parsegraph_PAINT_START) {
+            var paintDuration = parsegraph_elapsed(parsegraph_PAINT_START);
+            //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+        }
         parsegraph_NODES_PAINTED = 0;
         parsegraph_PAINT_START = null;
     }
 
     this._cameraBox.paint(window);
 
-    return true;
+    return false;
 };
 
 parsegraph_World.prototype.render = function(window, camera)
@@ -356,10 +358,10 @@ parsegraph_World.prototype.render = function(window, camera)
     if(gl.isContextLost()) {
         return false;
     }
-    var cleanlyRendered = true;
+    var needsUpdate = false;
     for(var i in this._worldRoots) {
-        cleanlyRendered = this._worldRoots[i].renderIteratively(window, camera) && cleanlyRendered;
+        needsUpdate = this._worldRoots[i].renderIteratively(window, camera) || needsUpdate;
     }
     this._cameraBox.render(window, camera);
-    return cleanlyRendered;
+    return needsUpdate;
 };

@@ -2,17 +2,26 @@
 <html>
 <head>
 <title>Internet - Rainback</title>
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" type="text/css" href="/environment.css"/>
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var sga = new parsegraph_Application();
-    SGA = sga;
-    sga.start(document.body, function(app, root) {
-        return showIPAddresses(app);
-    });
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+
+    var ips = showIPAddresses();
+    world.plot(ips);
+    viewport.showInCamera(ips);
 });
 </script>
 </head>

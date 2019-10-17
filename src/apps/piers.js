@@ -1,4 +1,4 @@
-function parsegraph_MemoryPiers(app, COUNT)
+function parsegraph_MemoryPiers(COUNT)
 {
     this.maxSize = COUNT;
     if(!this.maxSize) {

@@ -1,6 +1,5 @@
-function parsegraph_ActionCarousel(window)
+function parsegraph_ActionCarousel()
 {
-    this._window = window;
     this._actions = [];
 }
 
@@ -19,21 +18,17 @@ parsegraph_ActionCarousel.prototype.addAction = function(action, listener, liste
 
 parsegraph_ActionCarousel.prototype.install = function(node, nodeData)
 {
-    node.setClickListener(function() {
-        this.onClick(node, nodeData);
+    node.setClickListener(function(viewport) {
+        this.onClick(viewport, node, nodeData);
     }, this);
     return function() {
         node.setClickListener(null);
     };
 };
 
-parsegraph_ActionCarousel.prototype.onClick = function(node, nodeData)
+parsegraph_ActionCarousel.prototype.onClick = function(viewport, node, nodeData)
 {
     //console.log("Creating carousel");
-    var viewport = this._window.focusedComponent().peer();
-    if(!viewport) {
-        return;
-    }
     var carousel = viewport.carousel();
     carousel.clearCarousel();
     carousel.moveCarousel(

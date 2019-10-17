@@ -10,29 +10,30 @@
 document.addEventListener("DOMContentLoaded", function(event) {
     parsegraph_initialize();
     var window = new parsegraph_Window();
-    var sga = new parsegraph_Application(window);
+    var world = new parsegraph_World();
     document.body.appendChild(window.container());
-    parsegraph_addEventMethod(top.window, "resize", sga.scheduleRepaint, sga);
-    sga.setCameraName("parsegraph_primes_camera");
-    SGA = sga;
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
 
-    var primes = null;
-    sga.start(function(app, root) {
-        primes = new parsegraph_PrimesWidget(app);
-        root.connectNode(parsegraph_FORWARD, primes.node());
-        return primes;
-    });
+    var primes = new parsegraph_PrimesWidget(world);
+    world.plot(primes.node());
+
+    viewport.showInCamera(primes.node());
 
     var totalStart = new Date();
     var MAX_PRIME = 3000;
-    sga.setGovernor(false);
-    sga.setBurstIdle(true);
-    sga.onIdle(function(timeout) {
+    belt.setGovernor(false);
+    belt.setBurstIdle(true);
+    belt.queueJob(function(timeout) {
         //console.log("Processing primes: " + primes.position + " of " + MAX_PRIME)
         if(!primes.isPaused() && primes.position <= MAX_PRIME) {
             primes.step();
         }
-        sga.scheduleRepaint();
+        belt.scheduleUpdate();
+        world.scheduleRepaint();
         if(primes.position > MAX_PRIME) {
             console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
         }

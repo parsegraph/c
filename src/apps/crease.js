@@ -1,7 +1,8 @@
-function parsegraph_CreaseWidget(app)
+function parsegraph_CreaseWidget(belt, world)
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
-    this.app = app;
+    this._belt = belt;
+    this._world = world;
 
     this._root = caret.root();
     var rs = parsegraph_copyStyle(parsegraph_BUD);
@@ -13,14 +14,14 @@ function parsegraph_CreaseWidget(app)
 
     var addActions = function(id) {
         var node = caret.node();
-        node.setLabel(id, app.font());
+        node.setLabel(id, parsegraph_defaultFont());
         var uninstall = null;
         var reinstall;
         reinstall = function() {
             if(uninstall) {
                 uninstall();
             }
-            var carousel = new parsegraph_ActionCarousel(app.window());
+            var carousel = new parsegraph_ActionCarousel();
             if(node.value().startTime) {
                 carousel.addAction("Stop", function() {
                     node.value().startTime = false;
@@ -67,6 +68,8 @@ function parsegraph_CreaseWidget(app)
                 changeCrease(false);
             });
             var uninstallCarousel = carousel.install(node);
+            belt.scheduleUpdate();
+            world.scheduleRepaint();
             return function() {
                 uninstallCarousel();
             };
@@ -107,7 +110,7 @@ function parsegraph_CreaseWidget(app)
     }
     caret.pop();
 
-    var rootActions = new parsegraph_ActionCarousel(app.window());
+    var rootActions = new parsegraph_ActionCarousel();
     rootActions.addAction("Crease random", function() {
         for(var i in this.creasables) {
             var n = this.creasables[i];

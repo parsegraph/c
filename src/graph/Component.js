@@ -1,57 +1,90 @@
-function parsegraph_Component(peer)
+parsegraph_Component_COUNT = 0;
+function parsegraph_Component(peer, peerType)
 {
-    this._layoutFunc = null;
-    this._layoutFuncThisArg = null;
+    this._id = ++parsegraph_Component_COUNT;
     this._painterFunc = null;
     this._painterFuncThisArg = null;
     this._rendererFunc = null;
     this._rendererFuncThisArg = null;
     this._contextChangedFunc = null;
     this._contextChangedFuncThisArg = null;
-    this._inputHandler = null;
-    this._inputHandlerThisArg = null;
+    this._eventHandler = null;
+    this._eventHandlerThisArg = null;
     this._peer = peer;
+    this._peerType = peerType;
+    this._window = null;
 }
+
+parsegraph_Component.prototype.toString = function()
+{
+    return "[parsegraph_Component " + this.id() + "]";
+};
+
+parsegraph_Component.prototype.id = function()
+{
+    return this._id;
+};
+
+parsegraph_Component.prototype.type = function()
+{
+    return this._peerType;
+};
 
 parsegraph_Component.prototype.peer = function()
 {
     return this._peer;
 };
 
-parsegraph_Component.prototype.layout = function(window, sizeOut)
-{
-    if(this._layoutFunc === null) {
-        throw new Error("Component must have a layout");
-    }
-    return this._layoutFunc.call(this._layoutFuncThisArg, window, sizeOut);
-};
-
 parsegraph_Component.prototype.paint = function(timeout)
 {
     if(!this._painterFunc) {
-        return;
+        return false;
     }
-    return this._painterFunc.call(this._painterFuncThisArg, timeout);
+    if(this._painterFunc.call(this._painterFuncThisArg, timeout)) {
+        this.scheduleUpdate();
+        return true;
+    }
+    return false;
 };
 
-parsegraph_Component.prototype.render = function(width, height)
+parsegraph_Component.prototype.render = function(width, height, avoidIfPossible)
 {
     if(!this._rendererFunc) {
+        return false;
+    }
+    if(this._rendererFunc.call(this._rendererFuncThisArg, width, height, avoidIfPossible)) {
+        this.scheduleUpdate();
+        return true;
+    }
+    return false;
+};
+
+parsegraph_Component.prototype.needsUpdate = function()
+{
+    return this._needsUpdate;
+};
+
+parsegraph_Component.prototype.setOwner = function(window)
+{
+    if(this._window === window) {
         return;
     }
-    this._needsRender = this._rendererFunc.call(this._rendererFuncThisArg, width, height);
-    return this._needsRender;
+    if(this._window) {
+        this._window.scheduleUpdate();
+    }
+    this._window = window;
+    this._needsUpdate = true;
+    if(this._window) {
+        this._window.scheduleUpdate();
+    }
 };
 
-parsegraph_Component.prototype.setNeedsRender = function()
+parsegraph_Component.prototype.scheduleUpdate = function()
 {
-    //console.log(new Error(this.peer().id() + " needs render"));
-    this._needsRender = true;
-};
-
-parsegraph_Component.prototype.needsRender = function()
-{
-    return this._needsRender;
+    //console.log("Component is scheduling update", this._window);
+    if(this._window) {
+        this._window.scheduleUpdate();
+    }
 };
 
 parsegraph_Component.prototype.contextChanged = function(isLost)
@@ -62,27 +95,17 @@ parsegraph_Component.prototype.contextChanged = function(isLost)
     return this._contextChangedFunc.call(this._contextChangedFuncThisArg, isLost);
 };
 
-parsegraph_Component.prototype.hasInputHandler = function()
+parsegraph_Component.prototype.hasEventHandler = function()
 {
-    return !!this._inputHandler;
+    return !!this._eventHandler;
 };
 
-parsegraph_Component.prototype.handleInput = function()
+parsegraph_Component.prototype.handleEvent = function()
 {
-    if(!this._inputHandler) {
-        return;
+    if(!this._eventHandler) {
+        return false;
     }
-    return this._inputHandler.apply(this._inputHandlerThisArg, arguments);
-};
-
-parsegraph_Component.prototype.setLayout = function(layoutFunc, layoutFuncThisArg)
-{
-    if(arguments.length === 1) {
-        layoutFuncThisArg = layoutFunc;
-        layoutFunc = layoutFunc.layout;
-    }
-    this._layoutFunc = layoutFunc;
-    this._layoutFuncThisArg = layoutFuncThisArg;
+    return this._eventHandler.apply(this._eventHandlerThisArg, arguments);
 };
 
 parsegraph_Component.prototype.setPainter = function(painterFunc, painterFuncThisArg)
@@ -97,10 +120,10 @@ parsegraph_Component.prototype.setRenderer = function(rendererFunc, rendererFunc
     this._rendererFuncThisArg = rendererFuncThisArg;
 };
 
-parsegraph_Component.prototype.setInputHandler = function(inputHandler, inputHandlerThisArg)
+parsegraph_Component.prototype.setEventHandler = function(eventHandler, eventHandlerThisArg)
 {
-    this._inputHandler = inputHandler;
-    this._inputHandlerThisArg = inputHandlerThisArg;
+    this._eventHandler = eventHandler;
+    this._eventHandlerThisArg = eventHandlerThisArg;
 };
 
 parsegraph_Component.prototype.setContextChanged = function(contextChanged, contextChangedThisArg)

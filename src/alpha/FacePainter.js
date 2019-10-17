@@ -77,8 +77,10 @@ function alpha_FacePainter(gl)
 alpha_FacePainter_Tests = new parsegraph_TestSuite("alpha_FacePainter");
 
 alpha_FacePainter_Tests.addTest("alpha_FacePainter", function(resultDom) {
-    var widget = new alpha_GLWidget();
-    var painter = new alpha_FacePainter(widget.gl());
+    var belt = new parsegraph_TimingBelt();
+    var window = new parsegraph_Window();
+    var widget = new alpha_GLWidget(belt, window);
+    var painter = new alpha_FacePainter(window.gl());
 });
 
 alpha_FacePainter.prototype.Clear = function()

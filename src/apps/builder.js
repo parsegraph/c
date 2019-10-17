@@ -1,4 +1,4 @@
-function showFlowchartTemplate(graph)
+function showFlowchartTemplate(world, belt)
 {
     var caret = new parsegraph_Caret('b');
 
@@ -84,7 +84,8 @@ function showFlowchartTemplate(graph)
             // Set up the child.
             child.setClickListener(clickChild);
         }
-        graph.scheduleRepaint();
+        world.scheduleRepaint();
+        belt.scheduleUpdate();
     };
     caret.onClick(clickChild);
     return caret.root();

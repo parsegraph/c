@@ -1,11 +1,25 @@
-function parsegraph_BibleWidget(app)
+function parsegraph_BibleWidget(belt, world)
 {
-    this.app = app;
+    this.belt = belt;
+    this.world = world;
+    this._nextRequest = null;
 }
+
+parsegraph_BibleWidget.prototype.tick = function()
+{
+    if(!this._nextRequest) {
+        console.log("No next request");
+        return false;
+    }
+    this._nextRequest.send();
+    this._nextRequest = null;
+    return true;
+};
 
 parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callback, callbackThisArg) {
     var xhr = new XMLHttpRequest();
-    var app = this.app;
+    var belt = this.belt;
+    var world = this.world;
     xhr.addEventListener("load", function() {
         var verseCount = 1;
         caret.push();
@@ -40,17 +54,19 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
             caret.pop();
         });
         caret.pop();
-        app.scheduleRepaint();
-        setTimeout(function() {
-            callback.call(callbackThisArg);
-        }, 50);
+        belt.scheduleUpdate();
+        world.scheduleRepaint();
+        callback.call(callbackThisArg);
     });
 
     if(typeof chap === "number" && chap < 10) {
         chap = "0" + chap;
     }
     xhr.open("GET", "/bible/eng-kjv2006_" + book + "_" + chap + "_read.txt");
-    xhr.send();
+    if(this._nextRequest) {
+        throw new Error("Request already in progress");
+    }
+    this._nextRequest = xhr;
     return xhr;
 };
 

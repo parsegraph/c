@@ -39,7 +39,7 @@ parsegraph_Carousel.prototype.camera = function()
 
 parsegraph_Carousel.prototype.needsRepaint = function()
 {
-    return this._carouselPaintingDirty;
+    return this._carouselPaintingDirty || this._updateRepeatedly;
 };
 
 parsegraph_Carousel.prototype.moveCarousel = function(worldX, worldY)
@@ -339,7 +339,7 @@ parsegraph_Carousel.prototype.contextChanged = function(isLost)
 parsegraph_Carousel.prototype.paint = function()
 {
     if(!this._updateRepeatedly && (!this._carouselPaintingDirty || !this._showCarousel)) {
-        return;
+        return false;
     }
 
     // Paint the carousel.
@@ -367,6 +367,7 @@ parsegraph_Carousel.prototype.paint = function()
     );
 
     this._carouselPaintingDirty = false;
+    return this._updateRepeatedly;
 };
 
 parsegraph_Carousel.prototype.render = function(world)

@@ -1,6 +1,5 @@
-function parsegraph_ChessWidget(app)
+function parsegraph_ChessWidget()
 {
-    this._app = app;
 }
 
 var whiteStyle;

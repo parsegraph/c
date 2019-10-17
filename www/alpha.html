@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
-.parsegraph_Surface {
+.parsegraph_Window {
     width: 100%;
     height: 100%;
 }
@@ -47,99 +47,71 @@ body > div input {
 
 }
 </style>
-<script src="parsegraph-1.3.js"></script>
-<script src="parsegraph-widgets-1.3.js"></script>
+<script src="/parsegraph-1.3.js"></script>
+<script src="/parsegraph-widgets-1.3.js"></script>
 <script>
 
-document.addEventListener("DOMContentLoaded", function(event) {
+function fpsRendering()
+{
+    //var frameElapsed = 0;
+    //surface.addRenderer(function() {
+        // Start timing.
+        //frameElapsed = parsegraph_getTimeInMillis();
+    //});
 
-parsegraph_initialize();
-
-var surface = new parsegraph_Surface();
-var shaders = {};
-
-var frameElapsed = 0;
-surface.addRenderer(function() {
-    // Start timing.
-    frameElapsed = parsegraph_getTimeInMillis();
-});
-
-var widget;
-widget = new alpha_GLWidget(surface);
-
-surface.addPainter(widget.paint, widget);
-surface.addRenderer(widget.render, widget);
-
-/*var glyphAtlas = new parsegraph_GlyphAtlas(
-    parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-);
-var glyphPainter = new parsegraph_GlyphPainter(surface.gl(), glyphAtlas, shaders);
-
-var textCamera = new parsegraph_Camera(surface);
-
-surface.addRenderer(function() {
-    var gl = surface.gl();
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-
-    gl.enable(gl.BLEND);
-    gl.blendFunc(
-        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
+    /*var glyphAtlas = new parsegraph_GlyphAtlas(
+        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
     );
-    glyphPainter.clear();
-    glyphPainter.setColor(1, 1, 1);
+    var glyphPainter = new parsegraph_GlyphPainter(surface.gl(), glyphAtlas, shaders);
 
-    glyphPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
-    glyphPainter.setColor(1, .5, .5);
-    glyphPainter.setFontSize(20);
+    var textCamera = new parsegraph_Camera(surface);
 
-    var drawMultiline = function(x, y, text) {
-        var lines = text.split("\n");
-        for(var i = 0; i < lines.length; ++i) {
-            var line = lines[i];
-            glyphPainter.drawText(line, x, y + (1 + i) * glyphPainter.fontSize());
-        }
-    };
+    surface.addRenderer(function() {
+        var gl = surface.gl();
 
-    var t = "";
-    t += "position=" + widget.camera.position.toString() + "\n";
-    t += "orientation=" + widget.camera.orientation.toString();
-    drawMultiline(8, 4, t);
-    var world = textCamera.project();
-    glyphPainter.render(world);
-});
-*/
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.CULL_FACE);
 
-// This flag is used to squelch rendering if that function
-// threw an exception and failed to complete.
-var needsRender = false;
-var tickIntervalId;
-var start = alpha_GetTime();
-var tick = function() {
-    // Check if a render is needed before another tick should occur.
-    if(needsRender) {
-        return;
-    }
+        gl.enable(gl.BLEND);
+        gl.blendFunc(
+            gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA
+        );
+        glyphPainter.clear();
+        glyphPainter.setColor(1, 1, 1);
 
-    // Update the scene.
-    var t = alpha_GetTime();
-    if(widget) {
-        widget.Tick(t - start);
-        //widget.Tick(t - start);
-    }
-    start = t;
+        glyphPainter.drawText(Math.round(1000/(parsegraph_getTimeInMillis() - frameElapsed))  + "fps", 8, 4, 16);
+        glyphPainter.setColor(1, .5, .5);
+        glyphPainter.setFontSize(20);
 
-    // Set the render flag.
-    needsRender = true;
-    surface.render();
-    needsRender = false;
-    tickIntervalId = requestAnimationFrame(tick);
-}; // Tick
-tickIntervalId = requestAnimationFrame(tick);
+        var drawMultiline = function(x, y, text) {
+            var lines = text.split("\n");
+            for(var i = 0; i < lines.length; ++i) {
+                var line = lines[i];
+                glyphPainter.drawText(line, x, y + (1 + i) * glyphPainter.fontSize());
+            }
+        };
 
-document.body.appendChild(surface.container());
+        var t = "";
+        t += "position=" + widget.camera.position.toString() + "\n";
+        t += "orientation=" + widget.camera.orientation.toString();
+        drawMultiline(8, 4, t);
+        var world = textCamera.project();
+        glyphPainter.render(world);
+    });
+    */
+}
 
+document.addEventListener("DOMContentLoaded", function(event) {
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+
+    var widget = new alpha_GLWidget(belt, window);
+    window.addComponent(widget.component());
 }); // DOMContentLoaded
 </script>
 </head>

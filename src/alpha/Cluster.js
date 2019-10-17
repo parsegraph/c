@@ -28,7 +28,9 @@ function alpha_Cluster(widget)
 alpha_Cluster_Tests = new parsegraph_TestSuite("alpha_Cluster");
 
 alpha_Cluster_Tests.addTest("alpha_Cluster", function(resultDom) {
-    var widget = new alpha_GLWidget();
+    var belt = new parsegraph_TimingBelt();
+    var window = new parsegraph_Window();
+    var widget = new alpha_GLWidget(belt, window);
 
     // test version 1.0
     var cubeman = widget.BlockTypes.Get("blank", "cubeman");

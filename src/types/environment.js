@@ -1,11 +1,10 @@
 parsegraph_listClasses = {};
 
-function parsegraph_Environment(app)
+function parsegraph_Environment(belt, world, guid)
 {
-    if(!app) {
-        throw new Error("An application must be provided when creating a world");
-    }
-    this._app = app;
+    this._belt = belt;
+    this._world = world;
+    this._guid = guid;
     this._sessionId = null;
     this._itemListeners = {};
     this._items = {};
@@ -245,9 +244,9 @@ parsegraph_Environment.prototype.load = function(worldList)
         car.disconnect('d');
         car.align('d', 'c');
         var node = car.spawnMove('d', 'bu');
-        car.onClick(function() {
+        car.onClick(function(viewport) {
             //console.log("Creating carousel");
-            var carousel = this.graph().carousel();
+            var carousel = viewport.carousel();
             carousel.clearCarousel();
             carousel.moveCarousel(
                 node.absoluteX(),
@@ -263,7 +262,7 @@ parsegraph_Environment.prototype.load = function(worldList)
                     //console.log(success, resp);
                 }, this);
             }, this);
-            this.graph().carousel().scheduleCarouselRepaint();
+            viewport.carousel().scheduleCarouselRepaint();
         }, this);
         car.move('u');
         car.pull('d');
@@ -297,17 +296,13 @@ parsegraph_Environment.prototype.sessionId = function()
     return this._sessionId;
 };
 
-parsegraph_Environment.prototype.app = function()
+parsegraph_Environment.prototype.scheduleUpdate = function()
 {
-    return this._app;
+    this._belt.scheduleUpdate();
+    this._world.scheduleRepaint();
 };
 
 parsegraph_Environment.prototype.guid = function()
 {
-    return this._app.guid();
-};
-
-parsegraph_Environment.prototype.graph = function()
-{
-    return this._app.graph();
+    return this._guid;
 };

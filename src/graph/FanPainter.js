@@ -91,8 +91,8 @@ function parsegraph_FanPainter(window)
 parsegraph_FanPainter_Tests = new parsegraph_TestSuite("parsegraph_FanPainter");
 
 parsegraph_FanPainter_Tests.addTest("parsegraph_FanPainter", function(resultDom) {
-    var surface = new parsegraph_Surface();
-    var painter = new parsegraph_FanPainter(surface.gl());
+    var window = new parsegraph_Window();
+    var painter = new parsegraph_FanPainter(window);
     painter.selectDeg(0, 0, 0, 90, new parsegraph_Color(0, 0, 0, 1), new parsegraph_Color(1, 0, 1, 1));
 });
 
