@@ -1444,6 +1444,9 @@ parsegraph_Node.prototype.realLabel = function()
 
 parsegraph_Node.prototype.setLabel = function(text, font)
 {
+    if(!font) {
+        font = parsegraph_defaultFont();
+    }
     if(!this._label) {
         this._label = new parsegraph_Label(font);
     }
