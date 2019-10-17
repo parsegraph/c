@@ -3216,11 +3216,11 @@ parsegraph_Node.prototype.contextChanged = function(isLost, window)
 parsegraph_Node.prototype.paint = function(window, timeout)
 {
     if(!this.localPaintGroup()) {
-        return false;
+        throw new Error("A node must be a paint group in order to be painted");
     }
     if(!this.isDirty()) {
         //console.log(this + " is not dirty");
-        return true;
+        return false;
     }
     else {
         //console.log(this + " is dirty");
@@ -3229,14 +3229,14 @@ parsegraph_Node.prototype.paint = function(window, timeout)
         return false;
     }
     if(timeout <= 0) {
-        return false;
+        return true;
     }
 
     var t = new Date().getTime();
     var pastTime = function() {
         var isPast = timeout !== undefined && (new Date().getTime() - t > timeout);
         if(isPast) {
-            //console.log("Past time: " + (new Date().getTime() - t));
+            //console.log("Past time: timeout=" + timeout + ", elapsed="+(new Date().getTime() - t));
         }
         return isPast;
     };
@@ -3258,7 +3258,7 @@ parsegraph_Node.prototype.paint = function(window, timeout)
     if(cont) {
         //console.log(this + " Timed out during commitLayout");
         this._extended.commitLayoutFunc = cont;
-        return false;
+        return true;
     }
     else {
         //console.log(this + " Committed all layout");
@@ -3272,7 +3272,7 @@ parsegraph_Node.prototype.paint = function(window, timeout)
         if(pastTime()) {
             this._extended.dirty = true;
             //console.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
-            return false;
+            return true;
         }
 
         var paintGroup = savedPaintGroup;
@@ -3314,7 +3314,7 @@ parsegraph_Node.prototype.paint = function(window, timeout)
 
     this._extended.windowPaintGroup[wid] = null;
     //console.log("Completed node painting");
-    return true;
+    return false;
 };
 
 function parsegraph_NodeRenderData()
@@ -3387,7 +3387,7 @@ parsegraph_Node.prototype.renderIteratively = function(window, camera)
             //console.log(str);
         }
     }
-    return dirtyRenders == 0;
+    return dirtyRenders > 0;
 };
 
 parsegraph_Node.prototype.getHeaviestNode = function(window)
