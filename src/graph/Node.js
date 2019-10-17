@@ -1393,6 +1393,7 @@ parsegraph_Node.prototype.value = function()
 parsegraph_Node.prototype.setValue = function(newValue, report)
 {
     this.ensureExtended();
+    //console.log("Setting value to ", newValue);
     if(this._extended.value === newValue) {
         return;
     }
