@@ -484,8 +484,8 @@ parsegraph_Node.prototype.setPaintGroup = function(paintGroup)
         return;
     }
 
-    this._extended.isPaintGroup = false;
     this.thaw();
+    this._extended.isPaintGroup = false;
 
     //console.log(this + " is no longer a paint group.");
     if(!this.isRoot()) {
