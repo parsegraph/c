@@ -28,6 +28,8 @@ parsegraph_Rect.prototype.toNaN = function()
     this._width = NaN;
     this._height = NaN;
 };
+parsegraph_Rect.prototype.clear = parsegraph_Rect.prototype.toNaN;
+parsegraph_Rect.prototype.reset = parsegraph_Rect.prototype.toNaN;
 
 parsegraph_Rect.prototype.x = function()
 {
