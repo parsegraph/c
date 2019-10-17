@@ -111,7 +111,7 @@ parsegraph_Rect.prototype.setWidth = function(width)
 
 parsegraph_Rect.prototype.toString = function()
 {
-    return "[Rect " + this.x() + ", " + this.y() + ", " + this.width() + ", " + this.height() + "]";
+    return "[Rect x=" + this.x() + ", y=" + this.y() + ", w=" + this.width() + ", h=" + this.height() + "]";
 };
 
 parsegraph_Rect.prototype.vMin = function()
