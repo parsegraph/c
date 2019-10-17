@@ -277,7 +277,8 @@ parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
     return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.load = function(dbURL, storage) {
+parsegraph_Unicode.prototype.load = function(dbURL, storage)
+{
     if(this._loaded) {
         return;
     }
