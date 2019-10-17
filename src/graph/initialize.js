@@ -71,6 +71,9 @@ function parsegraph_initialize()
     // The width in pixels of any texture.
     parsegraph_MAX_TEXTURE_SIZE = 2048;
 
+    // The largest scale at which nodes are shown in camera.
+    parsegraph_NATURAL_VIEWPORT_SCALE = 0.5;
+
     // The amount by which a slider is adjusted by keyboard and mouse events.
     parsegraph_SLIDER_NUDGE = 0.01;
 
