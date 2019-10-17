@@ -355,13 +355,19 @@ alpha_Camera.prototype.TurnRight = function(elapsed)
 alpha_Camera.prototype.PitchUp = function(elapsed)
 {
     var angle = elapsed * this.rotationSpeed[0];
-    this.Pitch(angle);
+    if(angle !== 0) {
+        //console.log("Pitch up " + angle);
+        this.Pitch(angle);
+    }
 }
 
 alpha_Camera.prototype.PitchDown = function(elapsed)
 {
     var angle = elapsed * this.rotationSpeed[0];
-    this.Pitch(-angle);
+    if(angle !== 0) {
+        //console.log("Pitch down " + angle);
+        this.Pitch(angle);
+    }
 }
 
 // set which axis you want to align to
