@@ -155,12 +155,19 @@ parsegraph_Camera_Tests.addTest("containsAny", function() {
 parsegraph_Camera.prototype.setSize = function(width, height)
 {
     if(this._width === width && this._height === height) {
-        return;
+        return false;
+    }
+    if(!isNaN(this._width) && !isNaN(this._height)) {
+        this.adjustOrigin(
+            (width - this._width)/(2*this._scale),
+            (height - this._height)/(2*this._scale)
+        );
     }
     this._width = width;
     this._height = height;
     this._aspectRatio = this._width / this._height;
     this.hasChanged();
+    return true;
 };
 
 parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y)
