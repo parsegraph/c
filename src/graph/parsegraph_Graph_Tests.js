@@ -1173,15 +1173,12 @@ parsegraph_Viewport_Tests.addTest("parsegraph_Viewport - Block with shrunk bud",
     downwardExtent.appendLS(
         parsegraph_style('b').minWidth
         + parsegraph_style('b').borderThickness * 2
-        + parsegraph_style('b').horizontalPadding * 2,
+        + parsegraph_style('b').horizontalPadding * 2
+        + parsegraph_SHRINK_SCALE
+            * caret.node().horizontalSeparation(parsegraph_FORWARD),
         parsegraph_style('b').verticalPadding
         + parsegraph_style('b').borderThickness
         + parsegraph_style('b').minHeight / 2
-    );
-    downwardExtent.appendLS(
-        parsegraph_SHRINK_SCALE
-            * caret.node().horizontalSeparation(parsegraph_FORWARD),
-        parsegraph_SHRINK_SCALE * parsegraph_LINE_THICKNESS / 2
     );
     downwardExtent.appendLS(
         parsegraph_SHRINK_SCALE * (
