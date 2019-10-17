@@ -1,5 +1,3 @@
-parsegraph_CLICK_DELAY_MILLIS = 500;
-
 function parsegraph_Camera()
 {
     this._cameraX = 0;
