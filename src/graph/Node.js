@@ -1238,8 +1238,8 @@ parsegraph_Node.prototype.showNodeInCamera = function(cam, onlyScaleIfNecessary)
     var bodySize = this.absoluteSize();
 
     var bodyRect = new parsegraph_Rect(
-        parsegraph_Node_absoluteX(node),
-        parsegraph_Node_absoluteY(node),
+        this.absoluteX(),
+        this.absoluteY(),
         bodySize[0],
         bodySize[1]
     );
