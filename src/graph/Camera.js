@@ -234,6 +234,12 @@ parsegraph_Camera.prototype.restore = function(json)
     this.setScale(json.scale);
 };
 
+parsegraph_Camera.prototype.copy = function(other)
+{
+    this.setOrigin(other.x(), other.y());
+    this.setScale(other.scale());
+};
+
 parsegraph_Camera.prototype.scale = function()
 {
     return this._scale;
