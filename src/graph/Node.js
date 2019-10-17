@@ -1249,10 +1249,9 @@ parsegraph_Node.prototype.showNodeInCamera = function(cam, onlyScaleIfNecessary)
 
     var nodeScale = this.absoluteScale();
 
-    var surface = cam.surface();
     var camScale = cam.scale();
-    var screenWidth = surface.getWidth();
-    var screenHeight = surface.getHeight();
+    var screenWidth = cam.width();
+    var screenHeight = cam.height();
 
     var scaleAdjustment;
     var widthIsBigger = screenWidth / (bodySize[0]*nodeScale) < screenHeight / (bodySize[1]*nodeScale);
@@ -1276,14 +1275,18 @@ parsegraph_Node.prototype.showNodeInCamera = function(cam, onlyScaleIfNecessary)
 
 parsegraph_Node.prototype.showInCamera = function(cam, onlyScaleIfNecessary)
 {
+    //console.log("Showing node in camera");
     this.commitLayoutIteratively();
     var bodySize = this.extentSize();
-
-    var surface = cam.surface()
+    var nodeScale = this.absoluteScale();
     var camScale = cam.scale();
-    var screenWidth = surface.getWidth();
-    var screenHeight = surface.getHeight();
+    var screenWidth = cam.width();
+    var screenHeight = cam.height();
+    if(Number.isNaN(screenWidth) || Number.isNaN(screenHeight)) {
+        throw new Error("Camera size must be set before a node can be shown in it.");
+    }
 
+    // Adjust camera scale.
     var scaleAdjustment;
     var widthIsBigger = screenWidth / bodySize[0] < screenHeight / bodySize[1];
     if(widthIsBigger) {
@@ -1292,27 +1295,33 @@ parsegraph_Node.prototype.showInCamera = function(cam, onlyScaleIfNecessary)
     else {
         scaleAdjustment = screenHeight / bodySize[1];
     }
-    if(onlyScaleIfNecessary && scaleAdjustment > camScale) {
+    var scaleMaxed = scaleAdjustment > parsegraph_NATURAL_VIEWPORT_SCALE;
+    if(scaleMaxed) {
+        scaleAdjustment = parsegraph_NATURAL_VIEWPORT_SCALE;
+    }
+    if(onlyScaleIfNecessary && scaleAdjustment/nodeScale > camScale) {
         scaleAdjustment = camScale;
     }
     else {
-        cam.setScale(scaleAdjustment);
+        cam.setScale(scaleAdjustment/nodeScale);
     }
 
+    // Get node extents.
     var x, y;
     var bv = [null, null, null];
     this.extentsAt(parsegraph_BACKWARD).boundingValues(bv);
-    x = bv[1];
+    x = bv[2]*nodeScale;
     this.extentsAt(parsegraph_UPWARD).boundingValues(bv);
-    y = bv[1];
+    y = bv[2]*nodeScale;
 
-    if(widthIsBigger || scaleAdjustment < 1.0) {
-        y += (screenHeight - bodySize[1]*scaleAdjustment)/(scaleAdjustment*2);
+    if(widthIsBigger || scaleMaxed) {
+        y += screenHeight/(cam.scale()*2) - nodeScale*bodySize[1]/2;
     }
-    if(!widthIsBigger || scaleAdjustment < 1.0) {
-        x += (screenWidth - bodySize[0]*scaleAdjustment)/(scaleAdjustment*2);
+    if(!widthIsBigger || scaleMaxed) {
+        x += screenWidth/(cam.scale()*2) - nodeScale*bodySize[0]/2;
     }
 
+    // Move camera into position.
     var ax = this.absoluteX();
     var ay = this.absoluteY();
     cam.setOrigin(x - ax, y - ay);
