@@ -71,8 +71,7 @@ parsegraph_FreezerWindow.prototype.renderFragment = function(frag, world, needsS
     gl.bindTexture(gl.TEXTURE_2D, frag.slot().glTexture());
     gl.uniform1i(this.u_texture, 0);
     if(needsLoad || needsSetup) {
-        var renderWorld = world;
-        gl.uniformMatrix3fv(this.u_world, false, renderWorld);
+        gl.uniformMatrix3fv(this.u_world, false, world);
     }
 
     var FLOAT_SIZE = 4;
