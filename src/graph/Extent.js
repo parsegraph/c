@@ -796,7 +796,7 @@ parsegraph_Extent.prototype.boundingValues = function(outVal)
     return outVal;
 };
 
-parsegraph_Extent.prototype.equals = function(other)
+parsegraph_Extent.prototype.equals = function(other, fuzziness)
 {
     // Exit quickly if we are comparing with ourselves.
     if(this === other) {
@@ -810,7 +810,7 @@ parsegraph_Extent.prototype.equals = function(other)
 
     // Compare the bounds for equality.
     for(var i = 0; i < this.numBounds(); ++i) {
-        if(this.boundLengthAt(i) !== other.boundLengthAt(i)) {
+        if(!parsegraph_fuzzyEquals(this.boundLengthAt(i), other.boundLengthAt(i), parsegraph_FUZZINESS)) {
             return false;
         }
         var thisSize = this.boundSizeAt(i);
@@ -823,7 +823,7 @@ parsegraph_Extent.prototype.equals = function(other)
         if(isNaN(thisSize) || isNaN(otherSize)) {
             return false;
         }
-        if(this.boundSizeAt(i) !== other.boundSizeAt(i)) {
+        if(!parsegraph_fuzzyEquals(this.boundSizeAt(i), other.boundSizeAt(i), parsegraph_FUZZINESS)) {
             return false;
         }
     }

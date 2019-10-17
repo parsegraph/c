@@ -61,6 +61,7 @@ function parsegraph_initialize()
 
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
+    parsegraph_FUZZINESS = 1e-6;
     // The width in pixels of a font's glyph page.
     parsegraph_MAX_PAGE_WIDTH = 512;
 
