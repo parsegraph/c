@@ -19,8 +19,8 @@ function parsegraph_defaultUnicode()
 {
     if(!parsegraph_UNICODE_INSTANCE) {
         parsegraph_UNICODE_INSTANCE = new parsegraph_Unicode();
-        parsegraph_UNICODE_INSTANCE.load();
-        //parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
+        //parsegraph_UNICODE_INSTANCE.load();
+        parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
     }
     return parsegraph_UNICODE_INSTANCE;
 }

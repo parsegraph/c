@@ -63,22 +63,8 @@ function parsegraph_Font(fontSizePixels, fontName, fillStyle)
     this._padding = this.fontSize() / 4;
     this._x = this._padding;
     this._y = this._padding;
-    this._unicode = null;
 
     this._maxPage = 0;
-}
-
-parsegraph_Font.prototype.setUnicode = function(uni)
-{
-    if(!uni.loaded()) {
-        throw new Error("Unicode provided has not been loaded.");
-    }
-    this._unicode = uni;
-}
-
-parsegraph_Font.prototype.unicode = function()
-{
-    return this._unicode;
 }
 
 parsegraph_Font.prototype.toString = function()

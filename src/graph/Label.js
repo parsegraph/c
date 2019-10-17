@@ -9,7 +9,10 @@ function parsegraph_GlyphIterator(font, text)
 
 parsegraph_GlyphIterator.prototype.next = function()
 {
-    var u = this.font.unicode();
+    var unicode = parsegraph_defaultUnicode();
+    if(!unicode.loaded()) {
+        return null;
+    }
     if(this.index >= this.len) {
         return null;
     }
@@ -21,7 +24,7 @@ parsegraph_GlyphIterator.prototype.next = function()
         start = this.text.substring(this.index, this.index + 2);
     }
     this.index += len;
-    if(u.isMark(start)) {
+    if(unicode.isMark(start)) {
         // Show an isolated mark.
         //parsegraph_log("Found isolated Unicode mark character %x.\n", start[0]);
         var rv = font.getGlyph(start);
@@ -55,12 +58,12 @@ parsegraph_GlyphIterator.prototype.next = function()
                 nextLetter = this.text.substring(this.index + 1, this.index + 3);
                 len = 2;
             }
-            if(u.isMark(nextLetter)) {
+            if(unicode.isMark(nextLetter)) {
                 i += len;
                 continue;
             }
             // given, prev, next
-            if(u.cursive(nextLetter[0], givenLetter, null)) {
+            if(unicode.cursive(nextLetter[0], givenLetter, null)) {
                 nextLetterChar = nextLetter[0];
             }
             break;
@@ -69,7 +72,7 @@ parsegraph_GlyphIterator.prototype.next = function()
         //        ^-next
         //           ^-given
         //              ^-prev
-        var cursiveLetter = u.cursive(givenLetter, this.prevLetter, nextLetterChar);
+        var cursiveLetter = unicode.cursive(givenLetter, this.prevLetter, nextLetterChar);
         if(cursiveLetter != null) {
             //console.log("Found cursive char " + givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
             this.prevLetter = givenLetter;
@@ -94,7 +97,7 @@ parsegraph_GlyphIterator.prototype.next = function()
             throw new Error("Unterminated UTF-16 character");
         }
 
-        if(u.isMark(letter)) {
+        if(unicode.isMark(letter)) {
             foundVirama = letter[0].charCodeAt(0) == 0x094d;
             len += llen;
             this.index += llen;
@@ -229,7 +232,7 @@ parsegraph_Line.prototype.insertText = function(pos, text)
         throw new Error("Line cannot add text without the label having a font.");
     }
 
-    var gi = new parsegraph_GlyphIterator(atlaas, text);
+    var gi = new parsegraph_GlyphIterator(font, text);
     var glyphData = null;
     var spliced = [pos, 0];
     for(var i = 0; (glyphData = gi.next()) != null; ++i) {
@@ -843,9 +846,13 @@ parsegraph_Line.prototype.drawGlyphRun = function(painter, worldX, worldY, pos, 
 parsegraph_Line.prototype.paint = function(painter, worldX, worldY, pos, fontScale)
 {
     var startRun = 0;
+    var unicode = parsegraph_defaultUnicode();
+    if(!unicode.loaded()) {
+        return;
+    }
     for(var j = 0; j < this._glyphs.length; ++j) {
         var glyphData = this._glyphs[j];
-        var glyphDirection = this.font().unicode().getGlyphDirection(glyphData.letter) || pos[2];
+        var glyphDirection = unicode.getGlyphDirection(glyphData.letter) || pos[2];
         if(pos[2] === "WS" && glyphDirection !== "WS") {
             // Use the glyph's direction if there is none currently in use.
             pos[2] = glyphDirection;

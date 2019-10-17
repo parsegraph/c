@@ -5,7 +5,6 @@ function parsegraph_defaultFont()
         parsegraph_DEFAULT_FONT = new parsegraph_Font(
             parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
         );
-        parsegraph_DEFAULT_FONT.setUnicode(parsegraph_defaultUnicode());
     }
     return parsegraph_DEFAULT_FONT;
 }
