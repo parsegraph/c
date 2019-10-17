@@ -597,7 +597,7 @@ parsegraph_Node.prototype.findPaintGroup = function()
 
 parsegraph_Node.prototype.localPaintGroup = function()
 {
-    return this._extended && this._extended.isPaintGroup;
+    return !!this._extended && !!this._extended.isPaintGroup;
 };
 
 parsegraph_Node.prototype.backdropColor = function()
