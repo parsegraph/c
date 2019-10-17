@@ -6,6 +6,7 @@ function parsegraph_NeighborData(owner, dir)
     this.owner = owner;
     this.direction = dir;
     this.alignmentMode = parsegraph_NULL_NODE_ALIGNMENT;
+    this.allowAxisOverlap = parsegraph_DEFAULT_AXIS_OVERLAP;
     this.alignmentOffset = 0;
     this.separation = 0;
     this.lineLength = 0;
@@ -1338,6 +1339,31 @@ parsegraph_Node.prototype.nodeAlignmentMode = function(inDirection)
     return parsegraph_NULL_NODE_ALIGNMENT;
 };
 
+parsegraph_Node.prototype.setAxisOverlap = function(inDirection, newAxisOverlap)
+{
+    if(arguments.length === 1) {
+        return this.parentNode().setAxisOverlap(
+            parsegraph_reverseNodeDirection(this.parentDirection()),
+            arguments[0]
+        );
+    }
+    this.ensureNeighbor(inDirection).allowAxisOverlap = newAxisOverlap;
+    this.layoutWasChanged(inDirection);
+};
+
+parsegraph_Node.prototype.axisOverlap = function(inDirection)
+{
+    if(arguments.length === 0) {
+        return this.parentNode().axisOverlap(
+            parsegraph_reverseNodeDirection(this.parentDirection())
+        );
+    }
+    if(this._neighbors[inDirection]) {
+        return this._neighbors[inDirection].allowAxisOverlap;
+    }
+    return parsegraph_NULL_AXIS_OVERLAP;
+};
+
 parsegraph_Node.prototype.type = function()
 {
     return this._type;
@@ -2187,6 +2213,15 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             return;
         }
 
+        switch(this.axisOverlap(direction)) {
+        case parsegraph_PREVENT_AXIS_OVERLAP:
+            allowAxisOverlap = false;
+            break;
+        case parsegraph_ALLOW_AXIS_OVERLAP:
+            allowAxisOverlap = true;
+            break;
+        }
+
         /*console.log(
             "Laying out single " + parsegraph_nameNodeDirection(direction) + " child, "
             + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
@@ -2302,7 +2337,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             }
 
             // Layout that node.
-            if(layoutSingle.call(this, firstAxisDirection, true)) {
+            if(layoutSingle.call(this, firstAxisDirection, allowAxisOverlap)) {
                 this._layoutState = parsegraph_NEEDS_COMMIT;
                 return true;
             }
@@ -2379,6 +2414,25 @@ parsegraph_Node.prototype.commitLayout = function(cld)
             "firstNode.extentOffsetAt(secondDirection)=" + firstNode.extentOffsetAt(secondDirection)
         );*/
 
+        var firstAxisOverlap = allowAxisOverlap;
+        switch(this.nodeAt(firstDirection).axisOverlap()) {
+        case parsegraph_PREVENT_AXIS_OVERLAP:
+            firstAxisOverlap = false;
+            break;
+        case parsegraph_ALLOW_AXIS_OVERLAP:
+            firstAxisOverlap = true;
+            break;
+        }
+        var secondAxisOverlap = allowAxisOverlap;
+        switch(this.nodeAt(secondDirection).axisOverlap()) {
+        case parsegraph_PREVENT_AXIS_OVERLAP:
+            secondAxisOverlap = false;
+            break;
+        case parsegraph_ALLOW_AXIS_OVERLAP:
+            secondAxisOverlap = true;
+            break;
+        }
+
         // Allow some overlap if we have both first-axis sides, but
         // nothing ahead on the second axis.
         var separationFromFirst = this.extentsAt(firstDirection).separation(
@@ -2386,7 +2440,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
                 this.extentOffsetAt(firstDirection)
                 + firstNodeAlignment
                 - this.scaleAt(firstDirection) * firstNode.extentOffsetAt(secondDirection),
-                allowAxisOverlap,
+                firstAxisOverlap,
                 this.scaleAt(firstDirection),
                 parsegraph_LINE_THICKNESS / 2
             );
@@ -2397,7 +2451,7 @@ parsegraph_Node.prototype.commitLayout = function(cld)
                 this.extentOffsetAt(secondDirection)
                 + secondNodeAlignment
                 - this.scaleAt(secondDirection) * secondNode.extentOffsetAt(firstDirection),
-                allowAxisOverlap,
+                secondAxisOverlap,
                 this.scaleAt(secondDirection),
                 parsegraph_LINE_THICKNESS / 2
             );

@@ -377,6 +377,22 @@ parsegraph_Caret.prototype.align = function(inDirection, newAlignmentMode)
     }
 };
 
+parsegraph_Caret.prototype.overlapAxis = function(inDirection, newAxisOverlap)
+{
+    if(arguments.length === 0) {
+        this.node().setAxisOverlap(parsegraph_ALLOW_AXIS_OVERLAP);
+        return;
+    }
+    if(arguments.length === 1) {
+        this.node().setAxisOverlap(parsegraph_readAxisOverlap(arguments[0]));
+        return;
+    }
+    inDirection = parsegraph_readNodeDirection(inDirection);
+    newAxisOverlap = parsegraph_readAxisOverlap(newAxisOverlap);
+    this.node().setAxisOverlap(inDirection, newAxisOverlap);
+};
+parsegraph_Caret.prototype.axisOverlap = parsegraph_Caret.prototype.overlapAxis;
+
 parsegraph_Caret.prototype.pull = function(given)
 {
     given = parsegraph_readNodeDirection(given);

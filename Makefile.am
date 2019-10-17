@@ -73,6 +73,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Color.js \
 	src/graph/Exception.js \
 	src/graph/Extent.js \
+	src/graph/AxisOverlap.js \
 	src/graph/NodeAlignment.js \
 	src/graph/NodeDirection.js \
 	src/graph/NodeType.js \

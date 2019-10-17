@@ -1,4 +1,4 @@
-function parsegraph_Ulam(app, COUNT)
+function parsegraph_Ulam(COUNT)
 {
     this.caret = new parsegraph_Caret('u');
     this.caret.setMathMode(true);
@@ -29,6 +29,7 @@ parsegraph_Ulam.prototype.spawnNumber = function(dir, num)
     this.caret.spawnMove(dir, this.getType(num));
     this.caret.label(num);
     this.caret.node()._id = "Ulam " + num;
+    this.caret.overlapAxis('a');
 };
 
 parsegraph_Ulam.prototype.step = function(timeout)

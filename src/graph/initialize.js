@@ -160,6 +160,11 @@ function parsegraph_initialize()
     parsegraph_NODE_FIT_LOOSE = 16;
     parsegraph_NODE_FIT_NAIVE = 17;
 
+    parsegraph_NULL_AXIS_OVERLAP = 18;
+    parsegraph_ALLOW_AXIS_OVERLAP = 19;
+    parsegraph_PREVENT_AXIS_OVERLAP = 20;
+    parsegraph_DEFAULT_AXIS_OVERLAP = 21;
+
     // Optimization hints.
     parsegraph_FIT_LOOSE = false;
     parsegraph_CREASE = true;
