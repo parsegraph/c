@@ -114,12 +114,14 @@ var testLanguageNames = [
 "Hungarian",
 ];
 
-function buildTextDemo(app)
+function buildTextDemo()
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
     for(var i in testLanguages) {
-        caret.spawnMove("f", "u");
+        if(i > 0) {
+            caret.spawnMove("f", "u");
+        }
         caret.push();
         caret.pull("d");
         caret.spawnMove("d", "b");

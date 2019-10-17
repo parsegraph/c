@@ -174,7 +174,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/primes.js \
 	src/apps/crease.js \
 	src/LinearWidget.js \
-	src/apps/buildTextDemo.js
+	src/apps/text.js
 
 parsegraph-widgets-$(PACKAGE_VERSION).js: $(parsegraph_WIDGET_FILES)
 	rm -f $@
