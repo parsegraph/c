@@ -702,13 +702,13 @@ parsegraph_Node.prototype.valueChanged = function()
     this._extended.changeListener.apply(this._extended.changeListenerThisArg, arguments);
 };
 
-parsegraph_Node.prototype.click = function()
+parsegraph_Node.prototype.click = function(viewport)
 {
     // Invoke the click listener.
     if(!this.hasClickListener()) {
         return;
     }
-    return this._extended.clickListener.apply(this._extended.clickListenerThisArg, arguments);
+    return this._extended.clickListener.call(this._extended.clickListenerThisArg, viewport);
 };
 
 parsegraph_Node.prototype.setKeyListener = function(listener, thisArg)
