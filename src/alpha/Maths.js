@@ -391,7 +391,7 @@ alpha_Quaternion_Tests = new parsegraph_TestSuite("alpha_Quaternion");
 
 alpha_Quaternion_Tests.addTest("Does quaternion rotation really even work?", function(resultDom) {
     var m = new alpha_RMatrix4();
-    var rotq = 90;
+    var rotq = Math.PI/2;
     m.Rotate(alpha_QuaternionFromAxisAndAngle(
         0, 1, 1, rotq
     ));
@@ -403,7 +403,18 @@ alpha_Quaternion_Tests.addTest("Does quaternion rotation really even work?", fun
     ));
     var v = m.Transform(10, 0, 0);
     // TODO What is the expected value?
-    //return v.toString();
+    console.log(v.toString());
+});
+
+alpha_Quaternion_Tests.addTest("alpha_QuaternionFromAxisAndAngle", function(resultDom) {
+    var quat = alpha_QuaternionFromAxisAndAngle(1, 0, 0, Math.PI/2);
+    if(
+        !parsegraph_fuzzyEquals(quat[0], 0.7071, 10e-2)
+        || !parsegraph_fuzzyEquals(quat[1], 0, 10e-2)
+        || !parsegraph_fuzzyEquals(quat[2], 0, 10e-2)
+        || !parsegraph_fuzzyEquals(quat[3], 0.7071, 10e-2)) {
+        throw new Error("Quaternion " + quat + " does not match expected (0.7071, 0, 0, 0.7071)");
+    }
 });
 
 alpha_Quaternion.prototype.Clone = function()
@@ -658,9 +669,11 @@ alpha_Quaternion.prototype.InnerProduct = alpha_Quaternion.prototype.DotProduct;
 // so its been optimized to hell and back
 // a more normal, and decently optimized version is found next
 // this version is about 2x faster than RotatedVector2
+(function() {
 alpha_Quaternion.prototype.RotatedVector = function()
 {
     var x, y, z;
+    var vec = new alpha_Vector();
     if(arguments.length > 1) {
         x = arguments[0];
         y = arguments[1];
@@ -671,47 +684,39 @@ alpha_Quaternion.prototype.RotatedVector = function()
         y = arguments[0][1];
         z = arguments[0][2];
     }
+    this.RotatedVectorEach(vec, x, y, z);
+    return vec;
+};
+})();
 
-    // vector to quat
-    var a = new alpha_Quaternion(x, y, z, 0);
-    var b = this.Conjugate();
-
-    // var r = this * v * conjugate;
-    // var q = v * c;
+(function() {
+var scratchQuat = new alpha_Quaternion();
+alpha_Quaternion.prototype.RotatedVectorEach = function(outVec, x, y, z)
+{
     var aw = 0;
-    var ax = a[0];
-    var ay = a[1]
-    var az = a[2];
+    var ax = x;
+    var ay = y;
+    var az = z;
 
-    var bw = b[3];
-    var bx = b[0];
-    var by = b[1];
-    var bz = b[2];
+    var bw = this[3];
+    var bx = -this[0];
+    var by = -this[1];
+    var bz = -this[2];
+
     // removed all the mults by aw, which would result in 0;
-
-    var q = new alpha_Quaternion(
+    scratchQuat.Set(
         ax * bw + ay * bz - az * by,
         -ax * bz + ay * bw + az * bx,
         ax * by - ay * bx + az * bw,
         -ax * bx - ay * by - az * bz
     );
-    /*
-    var q = [
-        (aw * bx + ax * bw + ay * bz - az * by),
-        (aw * by - ax * bz + ay * bw + az * bx),
-        (aw * bz + ax * by - ay * bx + az * bw),
-        (aw * bw - ax * bx - ay * by - az * bz)
-    ];
-    */
+    var q = scratchQuat;
 
-    // var r = this.Multiplied(q);
-
-    var a = this;
     var b = q;
-    aw = a[3];
-    ax = a[0];
-    ay = a[1];
-    az = a[2];
+    aw = this[3];
+    ax = this[0];
+    ay = this[1];
+    az = this[2];
 
     bw = b[3];
     bx = b[0];
@@ -720,32 +725,13 @@ alpha_Quaternion.prototype.RotatedVector = function()
 
     // and we strip the w component from this
     // which makes it a vector
-    return new alpha_Vector(
+    outVec.Set(
         (aw * bx + ax * bw + ay * bz - az * by),
         (aw * by - ax * bz + ay * bw + az * bx),
         (aw * bz + ax * by - ay * bx + az * bw)
     );
 };
-
-// this is a decently optimized version; about twice as slow as version 1
-alpha_Quaternion.prototype.RotatedVector2 = function()
-{
-    var x, y, z;
-    if(arguments.length > 1) {
-        x = arguments[0];
-        y = arguments[1];
-        z = arguments[2];
-    }
-    else {
-        x = arguments[0][0];
-        y = arguments[0][1];
-        z = arguments[0][2];
-    }
-    var conjugate = this.Conjugate();
-    var v = new alpha_Quaternion(x, y, z, 0);
-    var r = this.Multiplied(v).Multiply(conjugate);
-    return new alpha_Vector(r[0], r[1], r[2]);
-};
+})();
 
 alpha_Quaternion.prototype.toString = function()
 {
@@ -990,11 +976,15 @@ alpha_RMatrix4.prototype.Transform = function()
         y = arguments[1];
         z = arguments[2];
         w = arguments[3];
-        if(w === undefined) {
-            w = 1.0;
-        }
     }
     if(w === undefined) {
+        //console.log("X1", this[0], x, this[0] * x);
+        //console.log("X2", this[1], y, this[1] * y);
+        //console.log("X3", this[2], z, this[2] * z);
+        //console.log("X4", this[3]);
+        //console.log("X", this[0] * x + this[1] * y + this[2] * z + this[3]);
+        //console.log("Y", this[4] * x + this[5] * y + this[6] * z + this[7]);
+        //console.log("Z", this[8] * x + this[9] * y + this[10] * z + this[11]);
         return new alpha_Vector(
             this[0] * x + this[1] * y + this[2] * z + this[3],
             this[4] * x + this[5] * y + this[6] * z + this[7],
@@ -1021,6 +1011,39 @@ alpha_RMatrix4_Tests.addTest("alpha_RMatrix4.Transform", function(resultDom) {
 
     var value = m.Transform(3, 4, 5, 1);
     if(!value.Equals(6, 8, 10, 1)) {
+        return value.toString();
+    }
+});
+
+alpha_RMatrix4_Tests.addTest("alpha_RMatrix4.Transform with rotation", function(resultDom) {
+    var m = new alpha_RMatrix4();
+    var rot = alpha_QuaternionFromAxisAndAngle(
+        0, 0, 1, Math.PI/2
+    );
+    m.FromQuaternion(rot);
+
+    var value = m.Transform(1, 0, 0);
+    if(!value.Equals(0, -1, 0)) {
+        return value.toString();
+    }
+
+    var rot = alpha_QuaternionFromAxisAndAngle(
+        0, 0, 1, Math.PI
+    );
+    m.FromQuaternion(rot);
+    value = m.Transform(1, 0, 0);
+    if(!value.Equals(-1, 0, 0)) {
+        return value.toString();
+    }
+
+    var m2 = new alpha_RMatrix4();
+    var rot = alpha_QuaternionFromAxisAndAngle(
+        0, 0, 1, Math.PI
+    );
+    m2.FromQuaternion(rot);
+    m.Multiply(m2);
+    value = m.Transform(1, 0, 0);
+    if(!value.Equals(1, 0, 0)) {
         return value.toString();
     }
 });
@@ -1362,6 +1385,7 @@ alpha_RMatrix4.prototype.FromVectorAroundQuaternion = function(vector, quat)
     this[12] = r4.DotProduct(c1);
     this[13] = r4.DotProduct(c2);
     this[14] = r4.DotProduct(c3);
+    console.log(this);
 
     return this;
 };
@@ -1372,13 +1396,13 @@ function alpha_RMatrix4FromVectorAroundQuaternionAtVector()
     return m.FromVectorAroundQuaternionAtVector.apply(m, arguments);
 };
 
-alpha_RMatrix4.prototype.FromVectorAroundQuaternionAtVector = function(vec1, quat, vec2)
+alpha_RMatrix4.prototype.FromVectorAroundQuaternionAtVector = function(position, rotation, offset)
 {
     // rotation * translation;
-    this.FromQuaternionAtVector(vec2, quat);
+    this.FromQuaternionAtVector(offset, rotation);
 
     // set our critical rows and columns
-    var r4 = new alpha_Quaternion(vec1[0], vec1[1], vec1[2], 1);
+    var r4 = new alpha_Quaternion(position[0], position[1], position[2], 1);
     var c1 = new alpha_Quaternion(this[0], this[4], this[8], this[12]);
     var c2 = new alpha_Quaternion(this[1], this[5], this[9], this[13]);
     var c3 = new alpha_Quaternion(this[2], this[6], this[10], this[14]);

@@ -4,123 +4,48 @@
 <title>Weetcubes</title>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-
-.parsegraph_Window {
-    width: 100%;
-    height: 100%;
-}
-
-body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #111;
-    color: #eee;
-}
-
-body > div {
-    text-align: center;
-    position: absolute;
-}
-
-.Successful {
-    color: green;
-}
-
-.Crashed {
-    color: maroon;
-}
-
-.Failed {
-    color: red;
-}
-
-@media only screen and (max-width: 980px) {
-
-body > div {
-    width: 100%;
-}
-
-body > div input {
-    clear: left;
-}
-
-}
-</style>
-<script src="parsegraph-1.3.js"></script>
-<script src="parsegraph-widgets-1.3.js"></script>
+<link rel="stylesheet" type="text/css" href="/environment.css"/>
+<script src="/parsegraph-1.3.js"></script>
+<script src="/parsegraph-widgets-1.3.js"></script>
 <script>
+document.addEventListener("DOMContentLoaded", function(event) {
+    parsegraph_initialize();
+    var window = new parsegraph_Window();
+    var world = new parsegraph_World();
+    document.body.appendChild(window.container());
+    var belt = new parsegraph_TimingBelt();
+    belt.addWindow(window);
+    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
 
-var inited = false;
-document.addEventListener("click", function(event) {
-if(inited) {
-    return;
-}
-inited = true;
+    var widget = new alpha_WeetCubeWidget(window);
+    WIDGET = widget;
+    window.addWidget(widget);
 
-parsegraph_initialize();
+    var audioUpdate = null;
+    var backgroundAudioForcer = new parsegraph_IntervalTimer();
+    backgroundAudioForcer.setDelay(0);
+    backgroundAudioForcer.setListener(function() {
+        if(widget.TickIfNecessary()) {
+            widget.paint();
+            window.render();
+        }
+    }, this);
 
-var window = new parsegraph_Window();
-window.startAudio();
-document.body.appendChild(window.container());
+    parsegraph_addEventListener(document, "keydown", function(event) {
+        if(event.key === "Escape") {
+            widget._frozen = !widget._frozen;
+        }
+    });
 
-var widget = new alpha_WeetCubeWidget(window);
-WIDGET = widget;
-window.addWidget(widget);
-
-var start = alpha_GetTime();
-var audioUpdate = null;
-var frozen = true;
-var tick = function(t) {
-    // Set the render flag.
-    var t = alpha_GetTime();
-    var elapsed = t - start;
-    var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
-    widget.Tick(elapsed, frozen, updateAudio);
-    if(!frozen || !widget.cubePainter) {
-        window.paint();
-    }
-    else if(widget._modeSwitched) {
-        window.paint();
-    }
-    if(updateAudio) {
-        audioUpdate = t;
-    }
-    if(!frozen) {
-        start = t;
-    }
-    window.render();
-
-    // Reschedule.
-    tickIntervalId = requestAnimationFrame(tick)
-};
-tickIntervalId = requestAnimationFrame(tick);
-
-var backgroundAudioForcer = new parsegraph_IntervalTimer();
-backgroundAudioForcer.setDelay(0);
-backgroundAudioForcer.setListener(function() {
-    // Set the render flag.
-    var t = alpha_GetTime();
-    var elapsed = t - start;
-    var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
-    widget.Tick(elapsed, frozen, updateAudio);
-    if(!frozen || !widget.cubePainter) {
-        window.paint(elapsed, frozen, updateAudio);
-    }
-    if(updateAudio) {
-        audioUpdate = t;
-    }
-    start = t;
-}, this);
-backgroundAudioForcer.schedule();
-
-parsegraph_addEventListener(document, "keydown", function(event) {
-    if(event.key === "Escape") {
-        frozen = !frozen;
-    }
-});
-
+    var started = false;
+    document.addEventListener("click", function(event) {
+        if(started) {
+            return;
+        }
+        started = true;
+        window.startAudio();
+        backgroundAudioForcer.schedule();
+    });
 }); // DOMContentLoaded
 </script>
 </head>

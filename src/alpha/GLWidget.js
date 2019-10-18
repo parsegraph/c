@@ -23,7 +23,7 @@ function alpha_GLWidget(belt, window)
     // this.camera.SetProperFOV(2,2);
 
     // Set the camera's near and far distance.
-    this.camera.SetFarDistance(150);
+    this.camera.SetFarDistance(1000);
     this.camera.SetNearDistance(1);
 
     this.paintingDirty = true;
@@ -67,17 +67,11 @@ function alpha_GLWidget(belt, window)
     this.playerCluster.AddBlock(grass, 1, 3, 0,8); // right
 
     var WORLD_SIZE = 30;
+    var MAX_TYPE = 23;
     for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
         for(var j = 1; j <= WORLD_SIZE * 2; ++j) {
-            var r = alpha_random(0, 23);
+            var r = alpha_random(0, MAX_TYPE);
             this.worldCluster.AddBlock([grass, stone][alpha_random(0, 1)], i,-1,-j,r);
-        }
-    }
-
-    for(var i = -WORLD_SIZE; i <= WORLD_SIZE; ++i) {
-        for(var j = 0; j <= WORLD_SIZE * 2; ++j) {
-            var r = alpha_random(0, 23);
-            this.worldCluster.AddBlock(stone, i,-1,-30,r);
         }
     }
 
@@ -158,7 +152,7 @@ function alpha_GLWidget(belt, window)
 
     var spot = new alpha_Vector(0,15,35);
     this.swarm = [];
-    for(var i = 0; i < 100; ++i) {
+    for(var i = 0; i < 10; ++i) {
         this.swarm.push(new alpha_Physical(this.camera));
         var x = alpha_random(1, 30);
         var y = alpha_random(1, 30);

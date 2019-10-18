@@ -263,18 +263,16 @@ alpha_Input.prototype.Update = function(elapsed)
     //console.log("MouseLeft: " + (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
     //console.log("LeftMouse: " + this.Get("LeftMouseButton"));
     //console.log("TurnLeft: " + this.MouseLeft() * elapsed);
-    this.camera.TurnLeft(
+    this.camera.GetParent().TurnLeft(
         this.Get("LeftMouseButton") * this.MouseLeft() * elapsed
     );
-    this.camera.TurnRight(
+    this.camera.GetParent().TurnRight(
         this.Get("LeftMouseButton") * this.MouseRight() * elapsed
     );
-    //console.log("MouseUp", this.MouseUp());
-    //console.log("MouseDown", this.MouseDown());
-    this.camera.PitchUp(
-        this.Get("LeftMouseButton") * this.MouseUp() * elapsed
+    this.camera.GetParent().PitchUp(
+        -this.Get("LeftMouseButton") * this.MouseUp() * elapsed
     );
-    this.camera.PitchDown(
+    this.camera.GetParent().PitchDown(
         this.Get("LeftMouseButton") * this.MouseDown() * elapsed
     );
     this.camera.MoveForward(this.MouseWheelDegreesUp() * elapsed);

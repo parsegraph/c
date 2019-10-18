@@ -11,15 +11,16 @@ function alpha_WeetCubeWidget(window)
     this.camera.SetFarDistance(1000);
     this.camera.SetNearDistance(.1);
 
-    this.input = new alpha_Input(this.window, this.camera);
-    this.input.SetMouseSensitivity(.4);
+    this._input = new alpha_Input(this.window, this.camera);
+    this._input.SetMouseSensitivity(.4);
+    this._lastPaint = new Date();
 
-    this.input.SetOnKeyDown(this.onKeyDown, this);
+    this._input.SetOnKeyDown(this.onKeyDown, this);
 
     this.cubePainter = null;
     this.rotq = 0;
     this._elapsed = 0;
-    this._frozen = false;
+    this._frozen = true;
     var amt = 7;
     this._xMax = amt;
     this._yMax = amt;
@@ -135,7 +136,35 @@ function alpha_WeetCubeWidget(window)
     this._component = new parsegraph_Component();
     this._component.setPainter(this.paint, this);
     this._component.setRenderer(this.render, this);
+    this._component.setEventHandler(this.handleEvent, this);
 }
+
+alpha_WeetCubeWidget.prototype.handleEvent = function(eventType, eventData)
+{
+    if(eventType === "tick") {
+        this.Tick();
+        return true;
+    }
+    else if(eventType === "wheel") {
+        return this._input.onWheel(eventData);
+    }
+    else if(eventType === "mousemove") {
+        return this._input.onMousemove(eventData);
+    }
+    else if(eventType === "mousedown") {
+        return this._input.onMousedown(eventData);
+    }
+    else if(eventType === "mouseup") {
+        return this._input.onMouseup(eventData);
+    }
+    else if(eventType === "keydown") {
+        return this._input.onKeydown(eventData);
+    }
+    else if(eventType === "keyup") {
+        return this._input.onKeyup(eventData);
+    }
+    return false;
+};
 
 alpha_WeetCubeWidget.prototype.component = function()
 {
@@ -170,15 +199,24 @@ alpha_WeetCubeWidget.prototype.switchAudioMode = function()
     this._modeSwitched = true;
 };
 
-alpha_WeetCubeWidget.prototype.Tick = function(elapsed, frozen)
+alpha_WeetCubeWidget.prototype.TickIfNecessary = function()
 {
-    if(elapsed === undefined || Number.isNaN(elapsed)) {
-        throw new Error("elapsed must be provided.");
+    //console.log("Necessary?", parsegraph_elapsed(this._lastPaint));
+    if(parsegraph_elapsed(this._lastPaint) > 20) {
+        console.log("Necessary:" + parsegraph_elapsed(this._lastPaint));
+        this.Tick();
+        return true;
     }
+    return false;
+};
 
-    this.input.Update(elapsed);
-    this._elapsed = elapsed;
-    this._frozen = frozen;
+alpha_WeetCubeWidget.prototype.Tick = function()
+{
+    var elapsed = parsegraph_elapsed(this._lastPaint)/500;
+    this._input.Update(elapsed);
+    if(!this._frozen) {
+        this._elapsed += elapsed;
+    }
 }
 
 alpha_WeetCubeWidget.prototype.refresh = function()
@@ -221,9 +259,6 @@ alpha_WeetCubeWidget.prototype.setRotq = function(rotq)
 
 alpha_WeetCubeWidget.prototype.paint = function()
 {
-    console.log("painting weetcubes");
-    var elapsed = this._elapsed;
-    var rotq = this.rotq;
     var audio=this.window.audio();
     if(!this.cubePainter) {
         this.cubePainter = new alpha_WeetPainter(this.window);
@@ -268,6 +303,7 @@ alpha_WeetCubeWidget.prototype.paint = function()
 
 
     var cubeSize = 1;
+    //console.log("Painting", elapsed);
     for(var i = 0; i < this._xMax; ++i) {
         for(var j = 0; j < this._yMax; ++j) {
             for(var k = 0; k < this._zMax; ++k) {
@@ -276,9 +312,9 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 c.orientation.Set(0, 0, 0, 1);
                 c.position.Set(0, 0, 0);
                 c.scale.Set(1, 1, 1);
-                c.Rotate(rotq*2*k/10, 0, 1, 1);
-                c.Rotate(rotq*2*i/15, 1, 0, 0);
-                c.Rotate(rotq*2*j/10, 1, 0, 1);
+                c.Rotate(this.rotq*2*k/10, 0, 1, 1);
+                c.Rotate(this.rotq*2*i/15, 1, 0, 0);
+                c.Rotate(this.rotq*2*j/10, 1, 0, 1);
                 c.SetPosition(3*i, 3*j, 3*k);
                 c.SetScale(cubeSize, cubeSize, cubeSize);
                 this.cubePainter.Cube(c.GetModelMatrix());
@@ -333,20 +369,12 @@ alpha_WeetCubeWidget.prototype.paint = function()
                 ++this._nodesPainted;
             }
         }
-
-        // Not really necessary, but just constraining the value of this so it
-        // doesn't get massive when running in the background.
-        if(rotq >= 360) {
-            rotq = 0;
-        }
-        if(!this._frozen) {
-            rotq = rotq + 0.1 * elapsed;
-        }
     }
+    this.rotq = this._elapsed;
     //console.log("dataX=" + this.cubePainter._dataX);
 
     this._modeSwitched = false;
-    this.rotq = rotq;
+    this._lastPaint = new Date();
     if(this._listener) {
         this._listener.call(this._listenerThisArg);
     }
@@ -383,8 +411,9 @@ alpha_WeetCubeWidget.prototype.render = function(width, height)
             listener.setPosition(xPos,yPos,zPos);
         }
         if(listener.forwardX) {
-            var forV = cm.Transform(0, 0, -1);
+            var forV = cm.Transform(0, 0, 1);
             var upV = cm.Transform(0, 1, 0);
+            //console.log("UP", upV[0], upV[1], upV[2]);
             listener.forwardX.setValueAtTime(forV[0], audio.currentTime);
             listener.forwardY.setValueAtTime(forV[1], audio.currentTime);
             listener.forwardZ.setValueAtTime(forV[2], audio.currentTime);

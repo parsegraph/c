@@ -104,6 +104,10 @@ alpha_Cluster.prototype.CalculateVertices = function()
         this.facePainter.Clear();
     }
 
+    var rv1 = new alpha_Vector();
+    var rv2 = new alpha_Vector();
+    var rv3 = new alpha_Vector();
+    var rv4 = new alpha_Vector();
     this.blocks.forEach(function(block) {
         var quat = block.GetQuaternion( true );
         if(!quat) {
@@ -164,59 +168,65 @@ alpha_Cluster.prototype.CalculateVertices = function()
                 // Process every vertex of the face.
                 for(var j = 0; j < face.length; j += 4) {
                     var v1 = face[j];
-                    if(!v1) {
-                        throw new Error("Face must not contain any null vertices (v1)");
-                    }
+                    //if(!v1) {
+                        //throw new Error("Face must not contain any null vertices (v1)");
+                    //}
                     var v2 = face[j + 1];
-                    if(!v2) {
-                        throw new Error("Face must not contain any null vertices (v2)");
-                    }
+                    //if(!v2) {
+                        //throw new Error("Face must not contain any null vertices (v2)");
+                    //}
                     var v3 = face[j + 2];
-                    if(!v3) {
-                        throw new Error("Face must not contain any null vertices (v3)");
-                    }
+                    //if(!v3) {
+                        //throw new Error("Face must not contain any null vertices (v3)");
+                    //}
                     var v4 = face[j + 3];
-                    if(!v4) {
-                        throw new Error("Face must not contain any null vertices (v4)");
-                    }
+                    //if(!v4) {
+                        //throw new Error("Face must not contain any null vertices (v4)");
+                    //}
 
                     // get the color for this vertex;
                     var c1 = colors[j];
-                    if(!c1 ) {
-                        throw new Error("Colors must not contain any null color values (c1)");
-                    }
+                    //if(!c1 ) {
+                        //throw new Error("Colors must not contain any null color values (c1)");
+                    //}
                     var c2 = colors[j + 1];
-                    if(!c2 ) {
-                        throw new Error("Colors must not contain any null color values (c2)");
-                    }
+                    //if(!c2 ) {
+                        //throw new Error("Colors must not contain any null color values (c2)");
+                    //}
                     var c3 = colors[j + 2];
-                    if(!c3 ) {
-                        throw new Error("Colors must not contain any null color values (c3)");
-                    }
+                    //if(!c3 ) {
+                        //throw new Error("Colors must not contain any null color values (c3)");
+                    //}
                     var c4 = colors[j + 3];
-                    if(!c4 ) {
-                        throw new Error("Colors must not contain any null color values (c4)");
-                    }
+                    //if(!c4 ) {
+                        //throw new Error("Colors must not contain any null color values (c4)");
+                    //}
 
                     // rotate it; if it's not the default
                     if(block.orientation > 0) {
-                        v1 = quat.RotatedVector(v1);
-                        v2 = quat.RotatedVector(v2);
-                        v3 = quat.RotatedVector(v3);
-                        v4 = quat.RotatedVector(v4);
+                        quat.RotatedVectorEach(rv1, v1[0], v1[1], v1[2]);
+                        quat.RotatedVectorEach(rv2, v2[0], v2[1], v2[2]);
+                        quat.RotatedVectorEach(rv3, v3[0], v3[1], v3[2]);
+                        quat.RotatedVectorEach(rv4, v4[0], v4[1], v4[2]);
+                    }
+                    else {
+                        rv1.Set(v1);
+                        rv2.Set(v2);
+                        rv3.Set(v3);
+                        rv4.Set(v4);
                     }
                     // now translate it
-                    if(typeof block[0] !== "number" || typeof block[1] !== "number" || typeof block[2] !== "number") {
+                    //if(typeof block[0] !== "number" || typeof block[1] !== "number" || typeof block[2] !== "number") {
                         //console.log(block);
-                        throw new Error("Block must contain numeric components.");
-                    }
-                    v1 = v1.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v2 = v2.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v3 = v3.Added(new alpha_Vector(block[0], block[1], block[2]));
-                    v4 = v4.Added(new alpha_Vector(block[0], block[1], block[2]));
+                        //throw new Error("Block must contain numeric components.");
+                    //}
+                    rv1.Add(block[0], block[1], block[2]);
+                    rv2.Add(block[0], block[1], block[2]);
+                    rv3.Add(block[0], block[1], block[2]);
+                    rv4.Add(block[0], block[1], block[2]);
 
                     // Translate quads to triangles
-                    this.facePainter.Quad(v1, v2, v3, v4, c1, c2, c3, c4);
+                    this.facePainter.Quad(rv1, rv2, rv3, rv4, c1, c2, c3, c4);
                 }
             } else {
                 throw new Error("Face must have a valid drawType property to read of either alpha_QUADS or alpha_TRIANGLES. (Given " + face.drawType + ")");
@@ -228,7 +238,7 @@ alpha_Cluster.prototype.CalculateVertices = function()
 alpha_Cluster.prototype.Draw = function(viewMatrix)
 {
     if(!this.facePainter) {
-        this.CalculateVertices();
+        return;
     }
     this.facePainter.Draw(viewMatrix);
 };

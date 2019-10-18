@@ -186,6 +186,30 @@ alpha_Physical.prototype.RollRight = function(elapsed)
     this.Rotate(-angle, 0, 0, 1);
 };
 
+alpha_Physical.prototype.Turn = function(angle)
+{
+    // if you aren't rotating about an angle, then you aren't rotating
+    if(angle == 0) {
+        return;
+    }
+
+    var q = new alpha_Quaternion();
+    q.FromAxisAndAngle(0, 1, 0, angle);
+    this.SetOrientation(q.Multiply(this.GetOrientation()));
+}
+
+alpha_Physical.prototype.TurnLeft = function(elapsed)
+{
+    var angle = elapsed * this.rotationSpeed[1];
+    this.Turn(angle);
+};
+
+alpha_Physical.prototype.TurnRight = function(elapsed)
+{
+    var angle = elapsed * this.rotationSpeed[1];
+    this.Turn(-angle);
+}
+
 //-------------------------------------
 //------------ POSITION ---------------
 //-------------------------------------
@@ -466,6 +490,8 @@ alpha_Physical.prototype.GetModelMatrix = function()
             m.Translate(this.position);
             m.Scale(this.scale);
             break;
+        default:
+            throw new Error("Model mode must be an expected value: " + this.modelMode);
         }
 
         this.modelDirty = false;
