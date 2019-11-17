@@ -58,7 +58,6 @@ parsegraph_SCRIPT_FILES = \
 	src/gl.js \
 	src/types/permissions.js \
 	src/app.js \
-	src/types/environment.js \
 	src/types/event_processor.js \
 	src/types/multislot.js \
 	src/types/multislot_plot.js \
