@@ -336,10 +336,15 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
 
 parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
 {
+    var maxPage = NaN;
     for(var i in numGlyphs) {
         if(i == "font") {
             continue;
         }
+        if(Number.isNaN(maxPage)) {
+            maxPage = i;
+        }
+        maxPage = Math.max(i, maxPage);
         var gp = this._textBuffers[i];
         if(!gp) {
             gp = new parsegraph_GlyphPageRenderer(this, i);
@@ -348,7 +353,12 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
         }
         gp.initBuffer(numGlyphs[i]);
     }
-    for(var j=i+1; j < this._numTextBuffers; ++j) {
+    if(Number.isNaN(maxPage)) {
+        maxPage = -1;
+    }
+    for(var j=maxPage+1; j < this._numTextBuffers; ++j) {
+        var gp = this._textBuffers[j];
+        gp.clear();
         delete this._textBuffers[j];
     }
 };
