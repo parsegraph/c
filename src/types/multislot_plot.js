@@ -18,8 +18,8 @@ parsegraph_ClaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
     this._listenerThisArg = cbThisArg;
 };
 
-parsegraph_ClaimPlotAction.prototype.env = function() {
-    return this._plot.env();
+parsegraph_ClaimPlotAction.prototype.room = function() {
+    return this._plot.room();
 };
 
 parsegraph_ClaimPlotAction.prototype.multislot = function() {
@@ -27,14 +27,79 @@ parsegraph_ClaimPlotAction.prototype.multislot = function() {
 };
 
 parsegraph_ClaimPlotAction.prototype.advance = function() {
-    var multislotId = this.env().getId(this.multislot());
+    var multislotId = this.room().getId(this.multislot());
     if(multislotId === null) {
         return false;
     }
     this._originalClaimant = this._plot.claimant();
     this._version = this._plot.version();
     this._plot.claim(this._username);
-    this.env().pushListItem(multislotId, "multislot::plot", [this._plot.index(), 1], this.receive, this);
+    this.room().pushListItem(multislotId, "multislot::plot", [this._plot.index(), 1], this.receive, this);
+    return true;
+};
+
+parsegraph_ClaimPlotAction.prototype.reverse = function() {
+    if(this._plot.version() !== this._version) {
+        // Preempted.
+        return false;
+    }
+    if(this._originalClaimant) {
+        this._plot.claim(this._originalClaimant);
+    }
+    else {
+        this._plot.unclaim();
+    }
+    return true;
+};
+
+parsegraph_ClaimPlotAction.prototype.receive = function(err, resp) {
+    if(err) {
+        this.reverse();
+    }
+    else {
+        this._plot.nextVersion();
+    }
+    if(this._listener) {
+        this._listener.call(this._listenerThisArg);
+    }
+};
+
+function parsegraph_UnclaimPlotAction(plot)
+{
+    this._plot = plot;
+    this._originalClaimant = null;
+}
+
+parsegraph_UnclaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
+    if(this._listener) {
+        console.log("Refusing to overwrite existing listener");
+        console.log("Original listener:");
+        console.log(this._listener, this._listenerThisArg);
+        console.log("New listener:");
+        console.log(cb, cbThisArg);
+        throw new Error("Refusing to overwrite existing listener");
+    }
+    this._listener = cb;
+    this._listenerThisArg = cbThisArg;
+};
+
+parsegraph_UnclaimPlotAction.prototype.room = function() {
+    return this._plot.room();
+};
+
+parsegraph_UnclaimPlotAction.prototype.multislot = function() {
+    return this._plot.multislot();
+};
+
+parsegraph_UnclaimPlotAction.prototype.advance = function() {
+    var multislotId = this.room().getId(this.multislot());
+    if(multislotId === null) {
+        return false;
+    }
+    this._originalClaimant = this._plot.claimant();
+    this._version = this._plot.version();
+    this._plot.unclaim();
+    this.room().destroyListItem(multislotId, "multislot::plot", [this._plot.index(), 1], this.receive, this);
     return true;
 };
 
@@ -86,19 +151,23 @@ function parsegraph_MultislotPlot(multislot, index)
 
     this._unclaimedActions = new parsegraph_ActionCarousel();
     this._unclaimedActions.addAction("Claim", function() {
-        var app = this._multislot.env().app();
-        var username = app.username();
-        this.env().submit(new parsegraph_ClaimPlotAction(this, username));
+        var room = this._multislot.room();
+        var username = room.username();
+        if(!username) {
+            throw new Error("Room must have a valid username");
+        }
+        this.room().submit(new parsegraph_ClaimPlotAction(this, username));
     }, this);
     this._actionRemover = this._unclaimedActions.install(car.node());
     car.move('u');
 
     var addDefaultActions = function(carousel) {
         carousel.addAction("Edit", function(plotId) {
-            this.env().togglePermissions(plotId);
+            this.room().togglePermissions(plotId);
         }, this);
         carousel.addAction("Unclaim", function(plotId) {
-            this.unclaim();
+            var room = this._multislot.room();
+            this.room().submit(new parsegraph_UnclaimPlotAction(this));
         }, this);
     };
     this._populatedActions = new parsegraph_ActionCarousel();
@@ -106,7 +175,7 @@ function parsegraph_MultislotPlot(multislot, index)
 
     this._claimedActions = new parsegraph_ActionCarousel();
     this._claimedActions.addAction("Lisp", function(plotId) {
-        parsegraph_pushListItem(this.env(), plotId, "lisp", "");
+        parsegraph_pushListItem(this.room(), plotId, "lisp", "");
     }, this);
     addDefaultActions.call(this, this._claimedActions);
 
@@ -162,7 +231,7 @@ parsegraph_MultislotPlot.prototype.claim = function(name)
 {
     this._root.setLabel(name);
     this._root.setBlockStyle(this._claimedStyle);
-    this.env().app().scheduleRepaint();
+    this.room().scheduleUpdate();
     this._actionRemover();
     this._actionRemover = this._claimedActions.install(this._root.nodeAt(parsegraph_DOWNWARD));
 };
@@ -183,16 +252,16 @@ parsegraph_MultislotPlot.prototype.unclaim = function()
     var node = this._root.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
     this._actionRemover = this._unclaimedActions.install(node);
     this._root.setBlockStyle(this._unclaimedStyle);
-    this.env().app().scheduleRepaint();
+    this.room().scheduleUpdate();
 };
 
 parsegraph_MultislotPlot.prototype.multislot = function() {
     return this._multislot;
 };
 
-parsegraph_MultislotPlot.prototype.env = function()
+parsegraph_MultislotPlot.prototype.room = function()
 {
-    return this._multislot.env();
+    return this._multislot.room();
 };
 
 parsegraph_MultislotPlot.prototype.version = function()

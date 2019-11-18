@@ -1,7 +1,7 @@
-function parsegraph_setListOwner(env, id, ownerName, cb, cbThisArg)
+function parsegraph_setListOwner(room, id, ownerName, cb, cbThisArg)
 {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/@" + env.guid() + "/" + id + "/changeowner", true);
+    xhr.open("POST", "/@" + room.roomId() + "/" + id + "/changeowner", true);
     xhr.setRequestHeader("Accept", "application/json");
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
@@ -24,13 +24,13 @@ function parsegraph_setListOwner(env, id, ownerName, cb, cbThisArg)
             console.log(ex + " " + xhr.responseText);
         }
     };
-    xhr.send("username=" + ownerName + "&world_session=" + env.sessionId());
+    xhr.send("username=" + ownerName + "&world_session=" + room.sessionId());
 }
 
-function parsegraph_setListGroup(env, id, group, cb, cbThisArg)
+function parsegraph_setListGroup(room, id, group, cb, cbThisArg)
 {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/@" + env.guid() + "/" + id + "/changegroup", true);
+    xhr.open("POST", "/@" + room.roomId() + "/" + id + "/changegroup", true);
     xhr.setRequestHeader("Accept", "application/json");
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
@@ -53,13 +53,13 @@ function parsegraph_setListGroup(env, id, group, cb, cbThisArg)
             console.log(ex + " " + xhr.responseText);
         }
     };
-    xhr.send("group=" + group + "&world_session=" + env.sessionId());
+    xhr.send("group=" + group + "&world_session=" + room.sessionId());
 }
 
-function parsegraph_setListPermissions(env, id, perms, cb, cbThisArg)
+function parsegraph_setListPermissions(room, id, perms, cb, cbThisArg)
 {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/@" + env.guid() + "/" + id + "/permissions", true);
+    xhr.open("POST", "/@" + room.roomId() + "/" + id + "/permissions", true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
     xhr.onreadystatechange = function() {
@@ -82,14 +82,13 @@ function parsegraph_setListPermissions(env, id, perms, cb, cbThisArg)
             console.log(ex + " " + xhr.responseText);
         }
     };
-    perms.session = env.sessionId();
+    perms.session = room.sessionId();
     xhr.send(JSON.stringify(perms));
 }
 
-function parsegraph_PermissionsForm(env, id)
+function parsegraph_PermissionsForm(room, id)
 {
-    this._env = env;
-    this.guid = env.guid();
+    this._room = room;
     this.id = id;
 
     var container = document.createElement('span');
@@ -107,7 +106,7 @@ function parsegraph_PermissionsForm(env, id)
             alert("No list item ID associated with this form");
             return;
         }
-        parsegraph_setListOwner(env, that.id, ownerForm.childNodes[1].childNodes[1].value, function() {
+        parsegraph_setListOwner(room, that.id, ownerForm.childNodes[1].childNodes[1].value, function() {
             //alert("OWNER CHANGED");
         });
     });
@@ -124,7 +123,7 @@ function parsegraph_PermissionsForm(env, id)
             alert("No list item ID associated with this form");
             return;
         }
-        parsegraph_setListGroup(env, that.id, groupForm.childNodes[1].childNodes[1].value, function() {
+        parsegraph_setListGroup(room, that.id, groupForm.childNodes[1].childNodes[1].value, function() {
             //alert("GROUP CHANGED");
         });
     });
@@ -162,7 +161,7 @@ function parsegraph_PermissionsForm(env, id)
             alert("No list item ID associated with this form");
             return;
         }
-        parsegraph_setListPermissions(env, that.id, {
+        parsegraph_setListPermissions(room, that.id, {
             user_access:perms.user_access.checked ? "on" : "off",
             user_change:perms.user_change.checked ? "on" : "off",
             group_access:perms.group_access.checked ? "on" : "off",
@@ -182,11 +181,12 @@ parsegraph_PermissionsForm.prototype.container = function() {
 };
 
 parsegraph_PermissionsForm.prototype.refresh = function() {
+    var roomId = this._room.roomId();
     if(arguments.length > 0) {
         this.id = arguments[0];
-        this.permForm.action = '/@' + this.guid + "/" + this.id + '/permissions';
-        this.groupForm.action = '/@' + this.guid + "/" + this.id + '/changegroup';
-        this.ownerForm.action = '/@' + this.guid + "/" + this.id + '/changeowner';
+        this.permForm.action = '/@' + roomId + "/" + this.id + '/permissions';
+        this.groupForm.action = '/@' + roomId + "/" + this.id + '/changegroup';
+        this.ownerForm.action = '/@' + roomId + "/" + this.id + '/changeowner';
     }
     for(var n in this.perms) {
         this.perms[n].enabled = false;
@@ -194,7 +194,7 @@ parsegraph_PermissionsForm.prototype.refresh = function() {
     }
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/@" + this.guid + "/" + this.id + "/getpermissions", true);
+    xhr.open("POST", "/@" + roomId + "/" + this.id + "/getpermissions", true);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.setRequestHeader("Accept", "application/json");
 
@@ -232,5 +232,5 @@ parsegraph_PermissionsForm.prototype.refresh = function() {
             console.log(ex + " " + xhr.responseText);
         }
     };
-    xhr.send("world_session=" + this.env.sessionId());
+    xhr.send("world_session=" + this._room.sessionId());
 };

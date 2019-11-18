@@ -57,7 +57,7 @@ parsegraph_SCRIPT_FILES = \
 	src/list.js \
 	src/gl.js \
 	src/types/permissions.js \
-	src/types/event_processor.js \
+	src/types/room.js \
 	src/types/multislot.js \
 	src/types/multislot_plot.js \
 	src/parsegraph_ActionCarousel.js \

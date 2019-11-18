@@ -1,8 +1,8 @@
-function parsegraph_Multislot(env, rowSize, columnSize, color, subtype)
+function parsegraph_Multislot(room, rowSize, columnSize, color, subtype)
 {
-    this._env = env;
+    this._room = room;
     this._plots = [];
-    var car = new parsegraph_Caret('b', env.font());
+    var car = new parsegraph_Caret('b');
     this._root = car.node();
     this._size = rowSize * columnSize;
     this._columnSize = columnSize;
@@ -13,7 +13,7 @@ function parsegraph_Multislot(env, rowSize, columnSize, color, subtype)
 
     var multislotActions = new parsegraph_ActionCarousel();
     multislotActions.addAction("Edit", function() {
-        this.env().togglePermissions(this._id);
+        this.room().togglePermissions(this._id);
     }, this);
     multislotActions.install(this.node());
 
@@ -30,14 +30,14 @@ parsegraph_Multislot.prototype.node = function()
     return this._root;
 };
 
-parsegraph_Multislot.prototype.env = function()
+parsegraph_Multislot.prototype.room = function()
 {
-    return this._env;
+    return this._room;
 };
 
 parsegraph_Multislot.prototype.scheduleUpdate = function()
 {
-    return this.env().scheduleUpdate();
+    return this.room().scheduleRepaint();
 };
 
 parsegraph_Multislot.prototype.build = function(car, subtype)
@@ -49,7 +49,7 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
         case "pushListItem":
             var child = ev.item;
             var car = new parsegraph_Caret(node);
-            app.spawn(car, child);
+            this.room().spawn(car, child);
             this.scheduleUpdate();
             break;
         };
@@ -246,15 +246,20 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
 };
 
 parsegraph_listClasses.multislot = {
-"spawnItem":function(env, value, children) {
+"spawnItem":function(room, value, children) {
     var params = JSON.parse(value);
     var subtype = params[0];
     var rowSize = params[1];
     var columnSize = params[2];
     var color = new parsegraph_Color(params[3]/255, params[4]/255, params[5]/255);
-    var multislot = new parsegraph_Multislot(env, rowSize, columnSize, color, subtype);
+    var multislot = new parsegraph_Multislot(room, rowSize, columnSize, color, subtype);
+    for(var i = 0; i < children.length; ++i) {
+        var child = children[i];
+        console.log(child);
+        room.spawnItem(child.id, child.type, JSON.parse(child.value), child.items);
+    }
     /*
-    env.listen(id, function(ev) {
+    room.listen(id, function(ev) {
         switch(ev.event) {
         case "pushListItem":
             if(ev.list_id !== id) {
@@ -284,7 +289,7 @@ parsegraph_listClasses.multislot = {
                 s.backgroundColor = new parsegraph_Color(125, 125, 125);
                 title.setType(parsegraph_SLOT);
                 title.setBlockStyle(s);
-                title.setLabel(item.username ? item.username : "CLAIMED", env.font());
+                title.setLabel(item.username ? item.username : "CLAIMED", room.font());
                 allocations[plotStart + i] = ev.item;
                 console.log(allocations[plotStart + i]);
                 env.listen(ev.item_id, plotListener, node);
@@ -300,7 +305,6 @@ parsegraph_listClasses.multislot = {
             allocations[plot[0] + k] = items[j];
         }
     }*/
-
 
     return multislot;
 }
