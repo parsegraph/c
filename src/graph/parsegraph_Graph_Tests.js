@@ -348,7 +348,7 @@ parsegraph_Viewport_Tests.addTest("nodeAt returns parent", function() {
 });
 
 parsegraph_Viewport_Tests.addTest("Multiple crease still creates valid paint group chain", function() {
-    console.log("Multiple crease");
+    //console.log("Multiple crease");
     var caret = new parsegraph_Caret(parsegraph_BUD);
     caret.node()._id = "Multiple crease root";
     var first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
@@ -377,7 +377,7 @@ parsegraph_Viewport_Tests.addTest("Multiple crease still creates valid paint gro
         console.log(pgs);
         throw new Error("Third paint group must be " + caret.root() + " but was " + pgs[2]);
     }
-    console.log("Multiple crease DONE");
+    //console.log("Multiple crease DONE");
  });
 
 parsegraph_Viewport_Tests.addTest("Fancy crease", function() {

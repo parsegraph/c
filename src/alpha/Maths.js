@@ -403,7 +403,7 @@ alpha_Quaternion_Tests.addTest("Does quaternion rotation really even work?", fun
     ));
     var v = m.Transform(10, 0, 0);
     // TODO What is the expected value?
-    console.log(v.toString());
+    //console.log(v.toString());
 });
 
 alpha_Quaternion_Tests.addTest("alpha_QuaternionFromAxisAndAngle", function(resultDom) {
