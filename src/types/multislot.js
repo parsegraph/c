@@ -2,6 +2,8 @@ function parsegraph_Multislot(room, rowSize, columnSize, color, subtype)
 {
     this._room = room;
     this._plots = [];
+    this._id = null;
+
     var car = new parsegraph_Caret('b');
     this._root = car.node();
     this._size = rowSize * columnSize;
@@ -13,11 +15,21 @@ function parsegraph_Multislot(room, rowSize, columnSize, color, subtype)
 
     var multislotActions = new parsegraph_ActionCarousel();
     multislotActions.addAction("Edit", function() {
-        this.room().togglePermissions(this._id);
+        this.room().togglePermissions(this.id());
     }, this);
     multislotActions.install(this.node());
 
     this._root.label(subtype);
+};
+
+parsegraph_Multislot.prototype.setId = function(id)
+{
+    this._id = id;
+};
+
+parsegraph_Multislot.prototype.id = function()
+{
+    return this._id;
 };
 
 parsegraph_Multislot.prototype.color = function()
@@ -38,6 +50,11 @@ parsegraph_Multislot.prototype.room = function()
 parsegraph_Multislot.prototype.scheduleUpdate = function()
 {
     return this.room().scheduleRepaint();
+};
+
+parsegraph_Multislot.prototype.getPlot = function(index)
+{
+    return this._plots[index];
 };
 
 parsegraph_Multislot.prototype.build = function(car, subtype)
@@ -246,66 +263,28 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
 };
 
 parsegraph_listClasses.multislot = {
-"spawnItem":function(room, value, children) {
+"spawnItem":function(room, value, children, id) {
     var params = JSON.parse(value);
     var subtype = params[0];
     var rowSize = params[1];
     var columnSize = params[2];
     var color = new parsegraph_Color(params[3]/255, params[4]/255, params[5]/255);
     var multislot = new parsegraph_Multislot(room, rowSize, columnSize, color, subtype);
+    multislot.setId(id);
     for(var i = 0; i < children.length; ++i) {
         var child = children[i];
         console.log(child);
-        room.spawnItem(child.id, child.type, JSON.parse(child.value), child.items);
+        if(child.type === "multislot::plot") {
+            var plotData = JSON.parse(child.value);
+            var plot = multislot.getPlot(plotData[0]);
+            plot.setId(child.id);
+            plot.claim(child.username);
+            console.log(child);
+        }
+        else {
+            throw new Error("Unexpected type: " + child.type);
+        }
     }
-    /*
-    room.listen(id, function(ev) {
-        switch(ev.event) {
-        case "pushListItem":
-            if(ev.list_id !== id) {
-                return;
-            }
-            var item = ev.item;
-            var plot = JSON.parse(item.value);
-            var plotStart = plot[0];
-            var plotLength = plot[1];
-            for(var i = 0; i < plotLength; ++i) {
-                var nodeAlloc = nodeAllocations[plotStart + i];
-                if(nodeAlloc.length > 2) {
-                    nodeAlloc[2]();
-                    nodeAlloc.splice(2, 1);
-                }
-                var node = nodeAllocations[plotStart + i][0];
-                var title = nodeAllocations[plotStart + i][1];
-                node.setType(parsegraph_BUD);
-                var s = parsegraph_copyStyle('u');
-                s.backgroundColor = new parsegraph_Color(125, 125, 125);
-                node.setBlockStyle(s);
-                if(nodeAllocations[plotStart + i][2]) {
-                    nodeAllocations[plotStart + i][2]();
-                }
-                nodeAllocations[plotStart + i][2] = claimedActions.install(node, ev.item.id);
-                var s = parsegraph_copyStyle('s');
-                s.backgroundColor = new parsegraph_Color(125, 125, 125);
-                title.setType(parsegraph_SLOT);
-                title.setBlockStyle(s);
-                title.setLabel(item.username ? item.username : "CLAIMED", room.font());
-                allocations[plotStart + i] = ev.item;
-                console.log(allocations[plotStart + i]);
-                env.listen(ev.item_id, plotListener, node);
-            }
-            this.scheduleUpdate();
-            break;
-        }
-    }, this);
-    */
-    /*for(var j in items) {
-        var plot = JSON.parse(items[j].value);
-        for(var k = 0; k < plot[1]; ++k) {
-            allocations[plot[0] + k] = items[j];
-        }
-    }*/
-
     return multislot;
 }
 };

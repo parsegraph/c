@@ -223,7 +223,7 @@ parsegraph_Room.prototype.spawnItem = function(id, type, value, items)
     if(id in this._items) {
         throw new Error("Item was already spawned.", this._items[id]);
     }
-    return this.register(klass.spawnItem.call(klass, this, value, items), id);
+    return this.register(klass.spawnItem.call(klass, this, value, items, id), id);
 };
 
 parsegraph_Room.prototype.getId = function(item)
