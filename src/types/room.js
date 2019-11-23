@@ -60,6 +60,10 @@ function parsegraph_Room(belt, world, roomId)
 
     var shownPermissionId = null;
     this.togglePermissions = function(plotId) {
+        if(!plotId) {
+            throw new Error("Plot ID must be provided when showing permissions");
+        }
+        this.scheduleRepaint();
         if(shownPermissionId == plotId && bg.parentNode) {
             bg.parentNode.removeChild(bg);
             shownPermissionId = null;
