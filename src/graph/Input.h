@@ -1,7 +1,7 @@
 #ifndef parsegraph_Input_INCLUDED
 #define parsegraph_Input_INCLUDED
 
-#include "Graph.h"
+#include "Viewport.h"
 #include "time.h"
 #include "Camera.h"
 #include "GlyphPainter.h"
@@ -40,7 +40,7 @@ parsegraph_ArrayList* _memoryTester;
 int _id;
 int _noInput;
 apr_pool_t* pool;
-parsegraph_Graph* _graph;
+parsegraph_Viewport* _viewport;
 parsegraph_Camera* _camera;
 void(*listener)(parsegraph_Input*, int, const char*, int, void*);
 void* listenerThisArg;
@@ -89,7 +89,7 @@ typedef struct parsegraph_Input parsegraph_Input;
 
 void parsegraph_Input_switchDebugMode(parsegraph_Input* input);
 
-parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera);
+parsegraph_Input* parsegraph_Input_new(parsegraph_Viewport* viewport, parsegraph_Camera* camera);
 void parsegraph_Input_paint(parsegraph_Input* input);
 parsegraph_Node* parsegraph_Input_checkForNodeClick(parsegraph_Input* input, float clientX, float clientY);
 void parsegraph_Input_Dispatch(parsegraph_Input* input, int affectedPaint, const char* eventSource, int inputAffectedCamera);

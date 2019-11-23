@@ -15,25 +15,6 @@ float* parsegraph_Rect_new(apr_pool_t* pool)
     return rv;
 }
 
-void parsegraph_Rect_copyFrom(float* dest, float* src)
-{
-    parsegraph_Rect_set(dest, src[0], src[1], src[2], src[3]);
-}
-
-void parsegraph_Rect_translate(float* rect, float x, float y)
-{
-    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) + x);
-    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) + y);
-}
-
-void parsegraph_Rect_scale(float* rect, float sx, float sy)
-{
-    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) * sx);
-    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) * sy);
-    parsegraph_Rect_setWidth(rect, parsegraph_Rect_width(rect) * sx);
-    parsegraph_Rect_setHeight(rect, parsegraph_Rect_height(rect) * sy);
-}
-
 float* parsegraph_createRect(apr_pool_t* pool, float x, float y, float width, float height)
 {
     float* rect = parsegraph_Rect_new(pool);
@@ -41,24 +22,27 @@ float* parsegraph_createRect(apr_pool_t* pool, float x, float y, float width, fl
     return rect;
 }
 
-void parsegraph_Rect_setIdentity(float* rect)
+void parsegraph_Rect_isNaN(float* rect)
 {
-    memset(rect, 0, sizeof(float)*4);
+    return isnan(rect->_x) || isnan(rect->_y) || isnan(rect->_width) || isnan(rect->_height);
 }
 
-void parsegraph_Rect_set(float* rect, float x, float y, float width, float height)
+void parsegraph_Rect_toNaN(float* rect)
 {
-    rect[0] = x;
-    rect[1] = y;
-    rect[2] = width;
-    rect[3] = height;
+    rect->_x = NAN;
+    rect->_y = NAN;
+    rect->_width = NAN;
+    rect->_height = NAN;
 }
 
-void parsegraph_Rect_destroy(float* rect, apr_pool_t* pool)
+void parsegraph_Rect_clear(float* rect)
 {
-    if(!pool) {
-        free(rect);
-    }
+    parsegraph_Rect_toNaN(rect);
+}
+
+void parsegraph_Rect_reset(float* rect)
+{
+    parsegraph_Rect_toNaN(rect);
 }
 
 float parsegraph_Rect_x(float* rect)
@@ -81,6 +65,42 @@ void parsegraph_Rect_setY(float* rect, float y)
     rect[1] = y;
 }
 
+float* parsegraph_Rect_clone(float* rect, float* target)
+{
+    if(!target) {
+        target = parsegraph_Rect_new(0);
+    }
+    parsegraph_Rect_copy(rect, target);
+    return target;
+}
+
+void parsegraph_Rect_copy(float* src, float* dest)
+{
+    if(!dest) {
+        return parsegraph_Rect_clone(src, 0);
+    }
+    parsegraph_Rect_copyFrom(dest, src);
+}
+
+void parsegraph_Rect_copyFrom(float* dest, float* src)
+{
+    parsegraph_Rect_set(dest, src[0], src[1], src[2], src[3]);
+}
+
+void parsegraph_Rect_translate(float* rect, float x, float y)
+{
+    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) + x);
+    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) + y);
+}
+
+void parsegraph_Rect_scale(float* rect, float sx, float sy)
+{
+    parsegraph_Rect_setX(rect, parsegraph_Rect_x(rect) * sx);
+    parsegraph_Rect_setY(rect, parsegraph_Rect_y(rect) * sy);
+    parsegraph_Rect_setWidth(rect, parsegraph_Rect_width(rect) * sx);
+    parsegraph_Rect_setHeight(rect, parsegraph_Rect_height(rect) * sy);
+}
+
 float parsegraph_Rect_height(float* rect)
 {
     return rect[3];
@@ -99,6 +119,26 @@ float parsegraph_Rect_width(float* rect)
 void parsegraph_Rect_setWidth(float* rect, float width)
 {
     rect[2] = width;
+}
+
+void parsegraph_Rect_setIdentity(float* rect)
+{
+    memset(rect, 0, sizeof(float)*4);
+}
+
+void parsegraph_Rect_set(float* rect, float x, float y, float width, float height)
+{
+    rect[0] = x;
+    rect[1] = y;
+    rect[2] = width;
+    rect[3] = height;
+}
+
+void parsegraph_Rect_destroy(float* rect, apr_pool_t* pool)
+{
+    if(!pool) {
+        free(rect);
+    }
 }
 
 float parsegraph_Rect_vMin(float* rect)

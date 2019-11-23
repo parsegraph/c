@@ -4,6 +4,7 @@
 #include "Node.h"
 #include <stdlib.h>
 
+int parsegraph_INITIALIZED = 0;
 int parsegraph_MAX_PAGE_WIDTH;
 int parsegraph_MAX_TEXTURE_SIZE;
 int parsegraph_CAROUSEL_SHOW_DURATION;
@@ -52,10 +53,51 @@ int parsegraph_GOVERNOR;
 int parsegraph_IDLE_MARGIN;
 int parsegraph_BURST_IDLE;
 int parsegraph_INTERVAL;
+int parsegraph_COMPONENT_LAYOUT_VERTICAL;
+int parsegraph_COMPONENT_LAYOUT_HORIZONTAL;
+int parsegraph_COMPONENT_LAYOUT_ENTRY;
 
 int parsegraph_LAYOUT_ORDER_MAX;
 int parsegraph_VERTICAL_ORDER[7];
 int parsegraph_HORIZONTAL_ORDER[7];
+
+static parsegraph_Backend* backend = 0;
+
+parsegraph_Backend* parsegraph_getBackend()
+{
+    if(backend) {
+        return backend;
+    }
+    const char* backendName = getenv("PARSEGRAPH_BACKEND");
+    if(!backendName) {
+        if(getenv("DISPLAY")) {
+            // Use desktop backend.
+            backendName = "DESKTOP";
+        }
+        else {
+            // Use headless environment.
+            backendName = "NATIVE";
+        }
+    }
+    if(!backendName) {
+        parsegraph_die("No Parsegraph backend available\n");
+    }
+    if(!strcmp(backendName, "DESKTOP")) {
+        backend = "parsegraph-Qt.so";
+    }
+    else if(!strcmp(backendName, "NATIVE")) {
+        backend = "parsegraph-kms.so";
+    }
+    else if(!strcmp(backendName, "IMAGE")) {
+        backend = "parsegraph-osmesa.so";
+    }
+    void* handle = dlopen(backendName, RTLD_LAZY);
+    if(!handle) {
+        parsegraph_die("Failed to open Parsegraph backend %s: %s\n", backendName, dlerror());
+    }
+    backend = dlsym(handle, "parsegraph_startBackend");
+    return backend;
+}
 
 struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool)
 {
@@ -77,8 +119,14 @@ struct parsegraph_GlyphAtlas* parsegraph_buildGlyphAtlas(apr_pool_t* ppool)
     return parsegraph_GLYPH_ATLAS;
 }
 
-void parsegraph_initialize(apr_pool_t* pool, int mathMode)
+
+void parsegraph_initialize(apr_pool_t* pool)
 {
+    if(parsegraph_INITIALIZED) {
+        return;
+    }
+    parsegraph_INITIALIZED = 1;
+
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     // The width in pixels of a glyph atlas's page.
@@ -181,6 +229,10 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
     parsegraph_BUD_LEAF_SEPARATION = 4.2;
 
     parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION = parsegraph_BUD_RADIUS*4.5;
+
+    parsegraph_COMPONENT_LAYOUT_VERTICAL = 1;
+    parsegraph_COMPONENT_LAYOUT_HORIZONTAL = 2;
+    parsegraph_COMPONENT_LAYOUT_ENTRY = 3;
 
     parsegraph_BUD_STYLE = apr_palloc(pool, sizeof(struct parsegraph_Style));
     parsegraph_BUD_STYLE->minWidth = parsegraph_BUD_RADIUS*3;
@@ -329,6 +381,8 @@ void parsegraph_initialize(apr_pool_t* pool, int mathMode)
 
     parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
     parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;
+
+    parsegraph_getBackend();
 }
 
 parsegraph_Style* parsegraph_copyStyle(apr_pool_t* pool, int type)

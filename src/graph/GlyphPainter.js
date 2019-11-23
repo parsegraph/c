@@ -336,6 +336,7 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(glyphData, x, y, fontScal
 
 parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
 {
+    this.clear();
     var maxPage = NaN;
     for(var i in numGlyphs) {
         if(i == "font") {
@@ -355,11 +356,6 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs)
     }
     if(Number.isNaN(maxPage)) {
         maxPage = -1;
-    }
-    for(var j=maxPage+1; j < this._numTextBuffers; ++j) {
-        var gp = this._textBuffers[j];
-        gp.clear();
-        delete this._textBuffers[j];
     }
 };
 

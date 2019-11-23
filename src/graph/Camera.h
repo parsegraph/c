@@ -2,12 +2,8 @@
 #define parsegraph_Camera_INCLUDED
 
 #include <apr_pools.h>
-#include "Surface.h"
-
-extern int parsegraph_VFLIP;
 
 struct parsegraph_Camera {
-parsegraph_Surface* surface;
 float _cameraX;
 float _cameraY;
 int has_pos;
@@ -17,6 +13,7 @@ float _width;
 float _height;
 float _aspectRatio;
 int _changeVersion;
+int _vflip;
 };
 typedef struct parsegraph_Camera parsegraph_Camera;
 
@@ -31,7 +28,7 @@ typedef struct parsegraph_CameraState parsegraph_CameraState;
 
 extern int parsegraph_CLICK_DELAY_MILLIS;
 
-parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface);
+parsegraph_Camera* parsegraph_Camera_new(apr_pool_t* pool);
 int parsegraph_containsAll(int viewportX, int viewportY, int viewWidth, int viewHeight, int cx, int cy, int width, int height);
 int parsegraph_containsAny(int viewportX, int viewportY, int viewWidth, int viewHeight, int cx, int cy, int width, int height);
 void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor, int x, int y);
@@ -39,7 +36,6 @@ void parsegraph_Camera_setDefaultOrigin(parsegraph_Camera* camera, float x, floa
 void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y);
 int parsegraph_Camera_changeVersion(parsegraph_Camera* camera);
 void parsegraph_Camera_hasChanged(parsegraph_Camera* camera);
-parsegraph_Surface* parsegraph_Camera_surface(parsegraph_Camera* camera);
 float parsegraph_Camera_scale(parsegraph_Camera* camera);
 float parsegraph_Camera_x(parsegraph_Camera* camera);
 float parsegraph_Camera_y(parsegraph_Camera* camera);
@@ -52,6 +48,8 @@ float parsegraph_Camera_aspectRatio(parsegraph_Camera* camera);
 float parsegraph_Camera_width(parsegraph_Camera* camera);
 float parsegraph_Camera_height(parsegraph_Camera* camera);
 int parsegraph_Camera_canProject(parsegraph_Camera* camera);
+int parsegraph_Camera_getVflip(parsegraph_Camera* camera);
+void parsegraph_Camera_setVflip(parsegraph_Camera* camera, int vflip);
 void parsegraph_Camera_projectionMatrix(parsegraph_Camera* camera, float* dest);
 void parsegraph_Camera_project(parsegraph_Camera* camera, float* dest);
 int parsegraph_Camera_containsAny(parsegraph_Camera* camera, float* rect);

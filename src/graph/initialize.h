@@ -27,6 +27,8 @@ struct parsegraph_Style {
 };
 typedef struct parsegraph_Style parsegraph_Style;
 
+extern int parsegraph_INITIALIZED;
+
 extern int parsegraph_CAROUSEL_SHOW_DURATION;
 extern int parsegraph_MAX_PAGE_WIDTH;
 extern int parsegraph_MAX_TEXTURE_SIZE;
@@ -115,5 +117,9 @@ extern int parsegraph_CREASE;
 extern int parsegraph_VERTICAL_ORDER[];
 extern int parsegraph_HORIZONTAL_ORDER[];
 extern int parsegraph_LAYOUT_ORDER_MAX;
+
+extern int parsegraph_COMPONENT_LAYOUT_VERTICAL;
+extern int parsegraph_COMPONENT_LAYOUT_HORIZONTAL;
+extern int parsegraph_COMPONENT_LAYOUT_ENTRY;
 
 #endif // parsegraph_initialize_INCLUDED

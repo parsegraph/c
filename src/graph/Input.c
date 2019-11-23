@@ -9,7 +9,6 @@
 #include "Rect.h"
 #include "gl.h"
 #include "Label.h"
-#include "Graph.h"
 #include "World.h"
 #include "timing.h"
 #include "Color.h"
@@ -46,15 +45,15 @@ void parsegraph_Input_setNoInput(parsegraph_Input* input)
     input->_noInput = 1;
 }
 
-parsegraph_Input* parsegraph_Input_new(parsegraph_Graph* graph, parsegraph_Camera* camera)
+parsegraph_Input* parsegraph_Input_new(parsegraph_Viewport* viewport, parsegraph_Camera* camera)
 {
     apr_pool_t* pool = 0;
-    if(APR_SUCCESS != apr_pool_create(&pool, graph->_surface->pool)) {
+    if(APR_SUCCESS != apr_pool_create(&pool, viewport->pool)) {
         parsegraph_die("Failed to create Input memory pool");
     }
     parsegraph_Input* input = apr_palloc(pool, sizeof(*input));
     input->pool = pool;
-    input->_graph = graph;
+    input->_viewport = viewport;
     input->_camera = camera;
 
     input->_memoryTester = parsegraph_ArrayList_new(input->pool);

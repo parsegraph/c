@@ -5,17 +5,13 @@
 #include "Rect.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 int parsegraph_CLICK_DELAY_MILLIS = 500;
 
-parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface)
+parsegraph_Camera* parsegraph_Camera_new(apr_pool_t* pool)
 {
-    parsegraph_Camera* camera = apr_palloc(surface->pool, sizeof(*camera));
-    if(!surface) {
-        fprintf(stderr, "A surface must be provided");
-        abort();
-    }
-    camera->surface = surface;
+    parsegraph_Camera* camera = apr_palloc(pool, sizeof(*camera));
 
     camera->has_pos = 0;
     camera->_cameraX = 0;
@@ -23,13 +19,25 @@ parsegraph_Camera* parsegraph_Camera_new(parsegraph_Surface* surface)
     camera->_scale = 1;
     memset(camera->_defaultCameraPos, 0, sizeof(float)*2);
 
-    camera->_width = 0;
-    camera->_height = 0;
-    camera->_aspectRatio = 1;
+    camera->_width = NAN;
+    camera->_height = NAN;
+    camera->_aspectRatio = NAN;
     camera->_changeVersion = 0;
+
+    camera->_vflip = 0;
 
     return camera;
 };
+
+int parsegraph_Camera_getVflip(parsegraph_Camera* camera)
+{
+    return camera->_vflip;
+}
+
+void parsegraph_Camera_setVflip(parsegraph_Camera* camera, int vflip)
+{
+    camera->_vflip = vflip;
+}
 
 int parsegraph_containsAll(int viewportX, int viewportY, int viewWidth, int viewHeight, int cx, int cy, int width, int height)
 {
@@ -94,6 +102,24 @@ int parsegraph_containsAny(int viewportX, int viewportY, int viewWidth, int view
     return 1;
 }
 
+parsegraph_Camera_setSize(parsegraph_Camera* camera, float width, float height)
+{
+    if(camera->_width == width && camera->_height == height) {
+        return 0;
+    }
+    if(!isnan(camera->_width) && !isnan(camera->_height)) {
+        parsegraph_Camera_adjustOrigin(camera,
+            (width - camera->_width)/(2*camera->_scale),
+            (height - camera->_height)/(2*camera->_scale)
+        );
+    }
+    camera->_width = width;
+    camera->_height = height;
+    camera->_aspectRatio = camera->_width / camera->_height;
+    parsegraph_Camera_hasChanged(camera);
+    return 1;
+}
+
 void parsegraph_Camera_zoomToPoint(parsegraph_Camera* camera, float scaleFactor, int x, int y)
 {
     apr_pool_t* pool = 0;
@@ -131,6 +157,9 @@ void parsegraph_Camera_setOrigin(parsegraph_Camera* camera, float x, float y)
     if(!camera->has_pos) {
         camera->has_pos = 1;
     }
+    if(camera->_cameraX == x && camera->_cameraY == y) {
+        return;
+    }
     //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
     camera->_cameraX = x;
     camera->_cameraY = y;
@@ -145,6 +174,7 @@ int parsegraph_Camera_changeVersion(parsegraph_Camera* camera)
 void parsegraph_Camera_hasChanged(parsegraph_Camera* camera)
 {
     ++camera->_changeVersion;
+    camera->_worldMatrix = 0;
 }
 
 void parsegraph_Camera_saveState(parsegraph_Camera* camera, parsegraph_CameraState* dest)
@@ -162,17 +192,11 @@ void parsegraph_Camera_restoreState(parsegraph_Camera* camera, parsegraph_Camera
     parsegraph_Camera_setScale(camera, src->scale);
 }
 
-void parsegraph_Camera_setDefaultOrigin(parsegraph_Camera* camera, float x, float y)
+void parsegraph_Camera_copy(parsegraph_Camera* camera, parsegraph_Camera* src)
 {
-    //parsegraph_log("Setting Camera origin to (%f, %f)\n", x, y);
-    camera->_defaultCameraPos[0] = x;
-    camera->_defaultCameraPos[1] = y;
+    parsegraph_Camera_setOrigin(camera, src->_cameraX, src->_cameraY);
+    parsegraph_Camera_setScale(camera, src->_scale);
 }
-
-parsegraph_Surface* parsegraph_Camera_surface(parsegraph_Camera* camera)
-{
-    return camera->surface;
-};
 
 float parsegraph_Camera_scale(parsegraph_Camera* camera)
 {
@@ -207,10 +231,11 @@ int parsegraph_Camera_toString(parsegraph_Camera* camera, char* buf, int maxlen)
 
 void parsegraph_Camera_adjustOrigin(parsegraph_Camera* camera, float dx, float dy)
 {
-    if(!camera->has_pos) {
-        camera->_cameraX = camera->_defaultCameraPos[0];
-        camera->_cameraY = camera->_defaultCameraPos[1];
-        camera->has_pos = 1;
+    if(dx == 0 && dy == 0) {
+        return;
+    }
+    if(isnan(camera->_cameraX) || isnan(camera->_cameraY)) {
+        parsegraph_die("Adjusted origin must not be null. (Given %f, %f)\n", dx, dy);
     }
     //parsegraph_log("Adjusting Camera origin (%f, %f) by (%f, %f)\n", camera->_cameraX, camera->_cameraY, dx, dy);
     camera->_cameraX += dx;
@@ -253,9 +278,7 @@ float parsegraph_Camera_height(parsegraph_Camera* camera)
 
 int parsegraph_Camera_canProject(parsegraph_Camera* camera)
 {
-    float displayWidth = parsegraph_Surface_getWidth(camera->surface);
-    float displayHeight = parsegraph_Surface_getHeight(camera->surface);
-    return displayWidth != 0 && displayHeight != 0;
+    return !isnan(camera->_width) && !isnan(camera->_height);
 }
 
 void parsegraph_Camera_projectionMatrix(parsegraph_Camera* camera, float* dest)
@@ -267,28 +290,19 @@ void parsegraph_Camera_projectionMatrix(parsegraph_Camera* camera, float* dest)
         );
     }
 
-    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    // Lookup the size the browser is displaying the canvas.
-    float displayWidth = parsegraph_Surface_getWidth(camera->surface);
-    float displayHeight = parsegraph_Surface_getHeight(camera->surface);
-
-    // Set the viewport to match
-    glViewport(0, 0, displayWidth, displayHeight);
-
-    camera->_aspectRatio = displayWidth / displayHeight;
-    camera->_width = displayWidth;
-    camera->_height = displayHeight;
-
-    make2DProjectionI(dest, displayWidth, displayHeight, parsegraph_VFLIP);
+    make2DProjectionI(dest, camera->_width, camera->_height, camera->_vflip);
 }
 
 void parsegraph_Camera_project(parsegraph_Camera* camera, float* dest)
 {
-    float projectionMatrix[9];
-    parsegraph_Camera_projectionMatrix(camera, projectionMatrix);
-    float worldMatrix[9];
-    parsegraph_Camera_worldMatrixI(camera, worldMatrix);
-    matrixMultiply3x3I(dest, worldMatrix, projectionMatrix);
+    if(isnan(camera->_worldMatrix[0])) {
+        float projectionMatrix[9];
+        parsegraph_Camera_projectionMatrix(camera, projectionMatrix);
+        float worldMatrix[9];
+        parsegraph_Camera_worldMatrixI(camera, worldMatrix);
+        matrixMultiply3x3I(camera->_worldMatrix, worldMatrix, projectionMatrix);
+    }
+    matrixCopy3x3I(dest, camera->_worldMatrix);
 }
 
 int parsegraph_Camera_containsAny(parsegraph_Camera* camera, float* rect)

@@ -246,6 +246,11 @@ float* matrixIdentity3x3(apr_pool_t* pool)
     return m;
 }
 
+void matrixCopy3x3I(float* dest, float* src)
+{
+    memcpy(dest, src, sizeof(float)*9);
+}
+
 float* matrixCopy3x3(apr_pool_t* pool, float* src)
 {
     float cop[] = {
