@@ -126,7 +126,6 @@ parsegraph_Room.prototype.load = function(items)
         car.push();
         car.pull('d');
         var item = items[i];
-        console.log("Got item: ", item);
         var widget = this.spawnItem(item.id, item.type, item.value, item.items);
         car.connect('d', widget.node());
         car.pop();
