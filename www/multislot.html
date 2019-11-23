@@ -19,9 +19,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var viewport = new parsegraph_Viewport(window, world);
     window.addComponent(viewport.component());
 
-    var env = new parsegraph_Environment(belt, world, "test");
+    var room = new parsegraph_Room(belt, world);
     var maxSize = 25;
-    var ms = new parsegraph_Multislot(env, 1+Math.round(Math.random()*maxSize), 1+Math.round(Math.random()*maxSize), new parsegraph_Color(Math.random(), Math.random(), Math.random()), 0);
+    var ms = new parsegraph_Multislot(room, 1+Math.round(Math.random()*maxSize), 1+Math.round(Math.random()*maxSize), new parsegraph_Color(Math.random(), Math.random(), Math.random()), 0);
     world.plot(ms.node());
     viewport.showInCamera(ms.node());
 });
