@@ -325,6 +325,11 @@ function parsegraph_Window()
     }, this);
 };
 
+parsegraph_Window.prototype.isOffscreen = function()
+{
+    return false;
+};
+
 parsegraph_Window.prototype.numComponents = function()
 {
     return this._layoutList.count();
@@ -1091,7 +1096,7 @@ parsegraph_Window.prototype.renderFramebuffer = function()
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
 
-parsegraph_Window.prototype.render = function()
+parsegraph_Window.prototype.renderBasic = function()
 {
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
@@ -1128,5 +1133,11 @@ parsegraph_Window.prototype.render = function()
         needsUpdate = comp.render(compSize.width(), compSize.height()) || needsUpdate;
     }, this);
     gl.disable(gl.SCISSOR_TEST);
+
     return needsUpdate;
+};
+
+parsegraph_Window.prototype.render = function()
+{
+    return this.renderBasic();
 };

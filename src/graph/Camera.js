@@ -9,6 +9,8 @@ function parsegraph_Camera()
     this._aspectRatio = NaN;
 
     this._changeVersion = 0;
+
+    this._vflip = parsegraph_VFLIP;
 };
 
 parsegraph_Camera_Tests = new parsegraph_TestSuite("parsegraph_Camera");
@@ -318,7 +320,8 @@ parsegraph_Camera.prototype.projectionMatrix = function()
 
 parsegraph_Camera.prototype.project = function()
 {
-    if(!this._worldMatrix) {
+    if(!this._worldMatrix || parsegraph_VFLIP !== this._vflip) {
+        this._vflip = parsegraph_VFLIP;
         this._worldMatrix = matrixMultiply3x3(
             this.worldMatrix(),
             this.projectionMatrix()

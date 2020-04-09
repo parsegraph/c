@@ -105,6 +105,8 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/layout.js \
 	src/graph/Freezer.js \
 	src/graph/Window.js \
+	src/graph/ImageWindow.js \
+	src/graph/ImageBuilder.js \
 	src/graph/CameraBoxPainter.js \
 	src/alpha/Maths.js \
 	src/alpha/Physical.js \

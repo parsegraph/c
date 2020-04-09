@@ -290,7 +290,7 @@ parsegraph_Viewport.prototype.render = function(width, height, avoidIfPossible)
     var world = cam.project();
     this._input.render(world, cam.scale());
     //this._piano.render(world, cam.scale());
-    if(this._window.focusedComponent() && this._window.focusedComponent().peer() === this) {
+    if(!this._window.isOffscreen() && this._window.focusedComponent() && this._window.focusedComponent().peer() === this) {
         this._carousel.render(world);
         this._menu.render(world);
     }

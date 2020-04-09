@@ -423,12 +423,18 @@ function midPoint(x1, y1, x2, y2)
     ];
 }
 
-function make2DProjection(width, height)
+function make2DProjection(width, height, flipVertical)
 {
+    if(flipVertical === undefined) {
+        flipVertical = parsegraph_VFLIP;
+    }
+    flipVertical = flipVertical === true;
+    //console.log("Making 2D projection (flipVertical=" + flipVertical + ")");
+    flipVertical = flipVertical ? -1 : 1;
     return [
         2 / width, 0, 0,
-        0, -2 / height, 0,
-        -1, 1, 1
+        0, -2 / (flipVertical * height), 0,
+        -1, flipVertical, 1
     ];
 };
 

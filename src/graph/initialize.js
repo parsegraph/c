@@ -58,6 +58,8 @@ function parsegraph_initialize()
     //console.log("Initializing parsegraph.");
     parsegraph_INITIALIZED = true;
 
+    parsegraph_VFLIP = false;
+
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     parsegraph_FUZZINESS = 1e-6;
