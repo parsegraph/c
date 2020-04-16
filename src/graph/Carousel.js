@@ -72,6 +72,7 @@ parsegraph_Carousel.prototype.hideCarousel = function()
     this._selectedCarouselPlotIndex = null;
     this._showCarousel = false;
     this._hideTime = new Date();
+    this._viewport.scheduleRepaint();
 };
 
 parsegraph_Carousel.prototype.addToCarousel = function(node, callback, thisArg, nodeData)
