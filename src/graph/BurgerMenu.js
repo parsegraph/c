@@ -34,7 +34,9 @@ function parsegraph_BurgerMenu(viewport)
     this._textInput = document.createElement('input');
     this._textInput.style.display = "none";
     this._textInput.placeholder = "Search";
-    this._viewport.window().container().appendChild(this._textInput);
+    if(!this.window().isOffscreen()) {
+        this._viewport.window().container().appendChild(this._textInput);
+    }
 }
 
 parsegraph_BurgerMenu.prototype.scheduleRepaint = function()
