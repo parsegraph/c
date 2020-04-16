@@ -356,12 +356,14 @@ parsegraph_Input.prototype.onTouchzoom = function(event)
     // Zoom.
     var dist = Math.sqrt(Math.pow(event.dx, 2) + Math.pow(event.dy, 2));
     var cam = this.camera();
-    if((dist / this._zoomTouchDistance) > 1 || cam.scale() >= parsegraph_MIN_CAMERA_SCALE) {
+    if(dist != 0 && this._zoomTouchDistance != 0) {
+        this._viewport.showInCamera(null);
         cam.zoomToPoint(
-            dist / zoomTouchDistance,
+            dist / this._zoomTouchDistance,
             event.x, event.y
         );
         this._zoomTouchDistance = dist;
+        this.mouseChanged();
         return true;
     }
     this._zoomTouchDistance = dist;
@@ -373,6 +375,7 @@ parsegraph_Input.prototype.onTouchmove = function(event)
     if(event.multiple) {
         return false;
     }
+    return this.onMousemove(event);
     this.mouseChanged();
     if(!this._viewport.carousel().isCarouselShown()) {
         // Move.
@@ -506,6 +509,11 @@ parsegraph_Input.prototype.onMousemove = function(event)
 
 parsegraph_Input.prototype.onTouchstart = function(event)
 {
+    if(event.multiple) {
+        return false;
+    }
+    return this.onMousedown(event);
+
     this.mouseChanged();
 
     var mouseInWorld = matrixTransform2D(
@@ -693,6 +701,11 @@ parsegraph_Input.prototype.onMouseup = function(event)
 
 parsegraph_Input.prototype.onTouchend = function(event)
 {
+    if(event.multiple) {
+        return false;
+    }
+    this._zoomTouchDistance = 0;
+    return this.onMouseup(event);
     var mouseInWorld = matrixTransform2D(
         makeInverse3x3(this.camera().worldMatrix()),
         event.x, event.y
