@@ -1,8 +1,8 @@
-function showIPAddresses()
+function showIPAddresses(maxDepth)
 {
     var COUNT = 2;
     COUNT = Math.max(2, COUNT);
-    var MAX_DEPTH = 15;
+    var MAX_DEPTH = maxDepth || 15;
 
     var caret = new parsegraph_Caret(parsegraph_BLOCK);
 
