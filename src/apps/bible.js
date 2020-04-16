@@ -3,16 +3,22 @@ function parsegraph_BibleWidget(belt, world)
     this.belt = belt;
     this.world = world;
     this._nextRequest = null;
+    this._requestInProgress = false;
 }
 
 parsegraph_BibleWidget.prototype.tick = function()
 {
-    if(!this._nextRequest) {
+    if(!this._nextRequest && !this._requestInProgress) {
         console.log("No next request");
         return false;
     }
-    this._nextRequest.send();
-    this._nextRequest = null;
+    if(this._requestInProgress) {
+        return true;
+    }
+    if(this._nextRequest) {
+        this._nextRequest.send();
+        this._requestInProgress = true;
+    }
     return true;
 };
 
@@ -20,6 +26,7 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
     var xhr = new XMLHttpRequest();
     var belt = this.belt;
     var world = this.world;
+    var that = this;
     xhr.addEventListener("load", function() {
         var verseCount = 1;
         caret.push();
@@ -56,6 +63,8 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
         caret.pop();
         belt.scheduleUpdate();
         world.scheduleRepaint();
+        that._nextRequest = null;
+        that._requestInProgress = false;
         callback.call(callbackThisArg);
     });
 
