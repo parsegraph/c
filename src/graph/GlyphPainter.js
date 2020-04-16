@@ -428,3 +428,29 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
     gl.disableVertexAttribArray(this.a_color);
     gl.disableVertexAttribArray(this.a_backgroundColor);
 };
+
+parsegraph_GlyphPainter_Tests = new parsegraph_TestSuite("parsegraph_GlyphPainter");
+
+parsegraph_GlyphPainter_Tests.addTest("parsegraph_GlyphPainter", function() {
+    var window = new parsegraph_Window();
+    var font = parsegraph_defaultFont();
+
+    var painter = new parsegraph_GlyphPainter(window, font);
+    painter.initBuffer({0:1000, 1:1000});
+    for(var i = 0; i < 1000; ++i) {
+        painter.drawGlyph(String.fromCharCode(32+i), 0, 0, 1);
+    }
+    painter.initBuffer({0:1000});
+    for(var i = 0; i < 400; ++i) {
+        painter.drawGlyph(String.fromCharCode(32+i), 0, 0, 1);
+    }
+    painter.initBuffer({0:1000, 1:1000});
+    for(var i = 0; i < 1000; ++i) {
+        painter.drawGlyph(String.fromCharCode(32+i), 0, 0, 1);
+    }
+    painter.initBuffer({});
+    painter.initBuffer({0:1000, 1:1000});
+    for(var i = 0; i < 1000; ++i) {
+        painter.drawGlyph(String.fromCharCode(32+i), 0, 0, 1);
+    }
+});
