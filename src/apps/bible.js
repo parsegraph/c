@@ -65,7 +65,9 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
         world.scheduleRepaint();
         that._nextRequest = null;
         that._requestInProgress = false;
-        callback.call(callbackThisArg);
+        if(callback) {
+            callback.call(callbackThisArg);
+        }
     });
 
     if(typeof chap === "number" && chap < 10) {
@@ -84,7 +86,9 @@ parsegraph_BibleWidget.prototype.getAllChapters = function(caret, book, maxChaps
     var chapNum = 1;
     var cont = function() {
         if(chapNum > maxChaps) {
-            callback.call(callbackThisArg);
+            if(callback) {
+                callback.call(callbackThisArg);
+            }
             return;
         }
         if(chapNum > 1) {
