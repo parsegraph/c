@@ -19,6 +19,11 @@ parsegraph_ImageBuilder.prototype.scheduleUpdate = function()
     this._renderTimer.schedule();
 };
 
+parsegraph_ImageBuilder.prototype.window = function()
+{
+    return this._window;
+};
+
 parsegraph_ImageBuilder.prototype.viewport = function()
 {
     return this._viewport;
