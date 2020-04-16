@@ -97,13 +97,13 @@ function parsegraph_Window()
 
         // Get the mouse coordinates, relative to bottom-left of the canvas.
         var boundingRect = this.canvas().getBoundingClientRect();
-        var x = event.clientX - boundingRect.left;
-        var y = event.clientY - boundingRect.top;
+        var x = event.offsetX - boundingRect.left;
+        var y = event.offsetY - boundingRect.top;
 
         //console.log("Wheel event", wheel);
         var e = normalizeWheel(event);
-        e.x = event.clientX;
-        e.y = event.clientY;
+        e.x = event.offsetX;
+        e.y = event.offsetY;
         this.handleEvent("wheel", e);
     };
 
@@ -114,43 +114,38 @@ function parsegraph_Window()
     parsegraph_addEventMethod(this.canvas(), "mousewheel", onWheel, this, false);
 
     parsegraph_addEventMethod(this.canvas(), "touchstart", function(event) {
-        //console.log("touchstart", event);
         event.preventDefault();
         this._focused = true;
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
-            var touch = event.changedTouches.item(i);
+            var touch = event.changedTouches[i];
+            var touchX = touch.pageX;
+            var touchY = touch.pageY;
             var touchRec = {
                 "identifier": touch.identifier,
-                "x":touch.clientX,
-                "y":touch.clientY,
-                "startX":touch.clientX,
-                "startY":touch.clientY,
+                "x":touchX,
+                "y":touchY,
+                "startX":touchX,
+                "startY":touchY,
                 "touchstart":null
             };
             this._monitoredTouches.push(touchRec);
-            this._lastMouseX = touch.clientX;
-            this._lastMouseY = touch.clientY;
+            this._lastMouseX = touchX;
+            this._lastMouseY = touchY;
 
             this.handleEvent("touchstart", {
-                multiple:this._monitoredTouches.length == 1,
-                x:touch.clientX,
-                y:touch.clientY,
-                dx:touch.clientX - touchRecord.x,
-                dy:touch.clientY - touchRecord.y
+                multiple:this._monitoredTouches.length != 1,
+                x:touchX,
+                y:touchY,
+                dx:0,
+                dy:0
             });
 
             touchRec.touchstart = Date.now();
             this._touchstartTime = Date.now();
         }
 
-        var realMonitoredTouches = 0;
-        this._monitoredTouches.forEach(function(touchRec) {
-            if(touchRec.touchstart) {
-                realMonitoredTouches++;
-            }
-        }, this);
-        if(realMonitoredTouches > 1) {
+        if(this.numActiveTouches() > 1) {
             // Zoom.
             var zoomCenter = midPoint(
                 this._monitoredTouches[0].x, this._monitoredTouches[0].y,
@@ -174,28 +169,24 @@ function parsegraph_Window()
 
         for(var i = 0; i < event.changedTouches.length; ++i) {
             var touch = event.changedTouches[i];
-            var touchRecord = getTouchByIdentifier(touch.identifier);
+            var touchRecord = this.getTouchByIdentifier(touch.identifier);
 
+            var touchX = touch.pageX;
+            var touchY = touch.pageY;
             this.handleEvent("touchmove", {
-                multiple:this._monitoredTouches.length == 1,
-                x:touch.clientX,
-                y:touch.clientY,
-                dx:touch.clientX - touchRecord.x,
-                dy:touch.clientY - touchRecord.y
+                multiple:this._monitoredTouches.length != 1,
+                x:touchX,
+                y:touchY,
+                dx:touchX - touchRecord.x,
+                dy:touchY - touchRecord.y
             });
-            touchRecord.x = touch.clientX;
-            touchRecord.y = touch.clientY;
-            this._lastMouseX = touch.clientX;
-            this._lastMouseY = touch.clientY;
+            touchRecord.x = touchX;
+            touchRecord.y = touchY;
+            this._lastMouseX = touchX;
+            this._lastMouseY = touchY;
         }
 
-        var realMonitoredTouches = 0;
-        monitoredTouches.forEach(function(touchRec) {
-            if(touchRec.touchstart) {
-                realMonitoredTouches++;
-            }
-        }, this);
-        if(realMonitoredTouches > 1) {
+        if(this.numActiveTouches() > 1) {
             var zoomCenter = midPoint(
                 this._monitoredTouches[0].x, this._monitoredTouches[0].y,
                 this._monitoredTouches[1].x, this._monitoredTouches[1].y
@@ -210,9 +201,10 @@ function parsegraph_Window()
     }, this);
 
     var removeTouchListener = function(event) {
+        //alert
         //console.log("touchend");
         for(var i = 0; i < event.changedTouches.length; ++i) {
-            var touch = event.changedTouches.item(i);
+            var touch = event.changedTouches[i];
             var touchData = this.removeTouchByIdentifier(touch.identifier);
         }
 
@@ -235,7 +227,8 @@ function parsegraph_Window()
         if(this.handleEvent("touchend", {
             x:this._lastMouseX,
             y:this._lastMouseY,
-            startTime:this._touchstartTime
+            startTime:this._touchstartTime,
+            multiple:this._monitoredTouches.length != 1,
         })) {
             this._touchstartTime = null;
         }
@@ -247,8 +240,9 @@ function parsegraph_Window()
     parsegraph_addEventMethod(this.canvas(), "mousedown", function(event) {
         this._focused = true;
 
-        this._lastMouseX = event.clientX;
-        this._lastMouseY = event.clientY;
+        console.log(event);
+        this._lastMouseX = event.offsetX;
+        this._lastMouseY = event.offsetY;
 
         //console.log("Setting mousedown time");
         this._mousedownTime = Date.now();
@@ -277,13 +271,13 @@ function parsegraph_Window()
 
     parsegraph_addEventMethod(this.canvas(), "mousemove", function(event) {
         this.handleEvent("mousemove", {
-            x:event.clientX,
-            y:event.clientY,
-            dx:event.clientX - this._lastMouseX,
-            dy:event.clientY - this._lastMouseY
+            x:event.offsetX,
+            y:event.offsetY,
+            dx:event.offsetX - this._lastMouseX,
+            dy:event.offsetY - this._lastMouseY
         });
-        this._lastMouseX = event.clientX;
-        this._lastMouseY = event.clientY;
+        this._lastMouseX = event.offsetX;
+        this._lastMouseY = event.offsetY;
     }, this);
 
     var mouseUpListener = function(event) {
@@ -328,6 +322,17 @@ function parsegraph_Window()
 parsegraph_Window.prototype.isOffscreen = function()
 {
     return false;
+};
+
+parsegraph_Window.prototype.numActiveTouches = function()
+{
+    var realMonitoredTouches = 0;
+    this._monitoredTouches.forEach(function(touchRec) {
+        if(touchRec.touchstart) {
+            realMonitoredTouches++;
+        }
+    }, this);
+    return realMonitoredTouches;
 };
 
 parsegraph_Window.prototype.numComponents = function()
@@ -426,7 +431,7 @@ parsegraph_Window.prototype.handleEvent = function(eventType, inputData)
     ) {
         this.setFocusedComponent(inputData.x, inputData.y);
         if(!this._focusedComponent) {
-            console.log("No focused component");
+            //console.log("No focused component");
             return;
         }
         var compSize = this.layout(this._focusedComponent);
