@@ -2847,7 +2847,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
         var i = 0;
         var pastTime = function(val) {
             ++i;
-            if(i % parsegraph_NATURAL_GROUP_SIZE === 0) {
+            if(i % 10 === 0) {
                 var ct = new Date();
                 var el = parsegraph_elapsed(startTime, ct);
                 if(el > 4*1000) {
