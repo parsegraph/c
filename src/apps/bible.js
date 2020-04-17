@@ -9,7 +9,7 @@ function parsegraph_BibleWidget(belt, world)
 parsegraph_BibleWidget.prototype.tick = function()
 {
     if(!this._nextRequest && !this._requestInProgress) {
-        console.log("No next request");
+        //console.log("No next request");
         return false;
     }
     if(this._requestInProgress) {
@@ -224,4 +224,3 @@ parsegraph_BibleWidget.prototype.getNewTestament = function(caret, callback, cal
         ["096_REV", 22]
     ], callback, callbackThisArg);
 };
-

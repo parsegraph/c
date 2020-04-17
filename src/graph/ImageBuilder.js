@@ -65,7 +65,7 @@ parsegraph_ImageBuilder.prototype.cycle = function()
     };
     var job = this._jobs[0];
     if(!job) {
-        console.log("No scenes to build.");
+        //console.log("No scenes to build.");
         return false;
     }
     if(!job.root) {
@@ -80,7 +80,7 @@ parsegraph_ImageBuilder.prototype.cycle = function()
         for(var builder = job.builders[0]; builder; builder = job.builders[0]) {
             var callAgain = builder[0].call(builder[1], timeLeft());
             if(!callAgain) {
-                console.log("Finished with builder");
+                //console.log("Finished with builder");
                 job.builders.shift();
             }
             break;
@@ -93,7 +93,7 @@ parsegraph_ImageBuilder.prototype.cycle = function()
         this.scheduleUpdate();
         return;
     }
-    console.log("Completed render");
+    //console.log("Completed render");
     this._jobs.shift();
     this._window.newImage();
     this._world.removePlot(job.root);
