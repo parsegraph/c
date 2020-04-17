@@ -2856,7 +2856,7 @@ parsegraph_Node.prototype.commitLayoutIteratively = function(timeout)
                 if(el > 5*1000) {
                     throw new Error("Commit Layout is taking too long");
                 }
-                if(timeout !== undefined && parsegraph_elapsed(startTime, ct) > timeout) {
+                if(timeout !== undefined && el > timeout) {
                     return true;
                 }
             }
