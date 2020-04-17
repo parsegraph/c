@@ -17,13 +17,13 @@ parsegraph_BlockPainter_VertexShader =
 "varying highp float aspectRatio;\n" +
 "\n" +
 "void main() {\n" +
-    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
-    "contentColor = a_color;" +
-    "borderColor = a_borderColor;" +
-    "borderRoundedness = max(0.001, a_borderRoundedness);" +
-    "texCoord = a_texCoord;" +
-    "borderThickness = a_borderThickness;" +
-    "aspectRatio = a_aspectRatio;" +
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);\n" +
+    "contentColor = a_color;\n" +
+    "borderColor = a_borderColor;\n" +
+    "borderRoundedness = max(0.001, a_borderRoundedness);\n" +
+    "texCoord = a_texCoord;\n" +
+    "borderThickness = a_borderThickness;\n" +
+    "aspectRatio = a_aspectRatio;\n" +
 "}";
 
 parsegraph_BlockPainter_VertexShader_Simple =
