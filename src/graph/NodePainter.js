@@ -340,7 +340,9 @@ parsegraph_NodePainter.prototype.initBlockBuffer = function(counts)
     this._consecutiveRenders = 0;
     this._mass = counts.numBlocks;
     this._blockPainter.initBuffer(counts.numBlocks);
-    this._extentPainter.initBuffer(counts.numExtents);
+    if(counts.numExtents) {
+        this._extentPainter.initBuffer(counts.numExtents);
+    }
     if(counts.numGlyphs) {
         for(var fullFontName in counts.numGlyphs) {
             var numGlyphs = counts.numGlyphs[fullFontName];
