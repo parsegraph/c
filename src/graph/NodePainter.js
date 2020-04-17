@@ -438,6 +438,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node)
     if(this.isExtentRenderingEnabled() && !node.isRoot()) {
         this.paintExtent(node);
     }
+    parsegraph_checkGLError(gl, "Before Node drawNode");
 
     switch(node.type()) {
     case parsegraph_SLIDER:
@@ -450,6 +451,7 @@ parsegraph_NodePainter.prototype.drawNode = function(node)
         this.paintLines(node);
         this.paintBlock(node);
     }
+    parsegraph_checkGLError(gl, "After Node drawNode");
 };
 
 parsegraph_NodePainter.prototype.paintLines = function(node)

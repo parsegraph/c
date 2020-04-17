@@ -60,6 +60,8 @@ function parsegraph_initialize()
 
     parsegraph_VFLIP = false;
 
+    parsegraph_IGNORE_GL_ERRORS = true;
+
     parsegraph_NATURAL_GROUP_SIZE = 250;
 
     parsegraph_FUZZINESS = 1e-6;
