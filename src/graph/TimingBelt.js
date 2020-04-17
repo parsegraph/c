@@ -102,7 +102,7 @@ parsegraph_TimingBelt.prototype.idle = function(interval)
 
 parsegraph_TimingBelt.prototype.cycle = function()
 {
-    //console.log("Running timing belt");
+    console.log("Running timing belt");
     var startTime = new Date();
 
     // Update all input functions.
@@ -115,18 +115,37 @@ parsegraph_TimingBelt.prototype.cycle = function()
     var interval = this._interval;
     var windowInterval = Math.max(0, (interval - parsegraph_elapsed(startTime))/this._windows.length);
     var needsUpdate = false;
+    var windowOffset = Math.floor(Math.random() % this._windows.length);
     if(inputChangedScene) {
         //console.log("Render and paint");
-        for(var i in this._windows) {
-            var window = this._windows[i];
+        for(var i=0; i < this._windows.length; ++i) {
+            var window = this._windows[(windowOffset + i)%this._windows.length];
+            // Eagerly retrieve the GL context since this can take a while on first attempt.
+            window.gl();
+            if(parsegraph_elapsed(startTime) > interval) {
+                needsUpdate = true;
+                break;
+            }
             needsUpdate = window.render() || needsUpdate;
+            if(parsegraph_elapsed(startTime) > interval) {
+                needsUpdate = true;
+                break;
+            }
             needsUpdate = window.paint(windowInterval) || needsUpdate;
         }
     }
     else {
-        for(var i in this._windows) {
-            var window = this._windows[i];
+        for(var i=0; i < this._windows.length; ++i) {
+            var window = this._windows[(windowOffset + i)%this._windows.length];
+            if(parsegraph_elapsed(startTime) > interval) {
+                needsUpdate = true;
+                break;
+            }
             needsUpdate = window.paint(windowInterval) || needsUpdate;
+            if(parsegraph_elapsed(startTime) > interval) {
+                needsUpdate = true;
+                break;
+            }
             needsUpdate = window.render() || needsUpdate;
         }
     }
