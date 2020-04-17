@@ -83,7 +83,10 @@ parsegraph_ImageBuilder.prototype.cycle = function()
                 //console.log("Finished with builder");
                 job.builders.shift();
             }
-            break;
+            if(timeLeft() < 0) {
+                this.scheduleUpdate();
+                return;
+            }
         }
     }
     var needsUpdate = job.builders && job.builders.length > 0;
