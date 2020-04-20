@@ -432,7 +432,8 @@ parsegraph_NodePainter.prototype.countNode = function(node, counts)
 
 parsegraph_NodePainter.prototype.drawNode = function(node)
 {
-    if(this.gl().isContextLost()) {
+    var gl = this.gl();
+    if(gl.isContextLost()) {
         return;
     }
     if(this.isExtentRenderingEnabled() && !node.isRoot()) {
