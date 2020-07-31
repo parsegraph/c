@@ -39,7 +39,7 @@ PKG_CHECK_MODULES(openssl, [openssl],
 
 PKG_CHECK_MODULES(parsegraph_common, [apr-1 egl gl ncurses icu-uc icu-io icu-i18n libcurl glu],
     [],
-    [AC_MSG_ERROR([parsegraph requires make httpd-devel apr-devel apr-util-devel autoconf automake libtool mesa-libEGL-devel mesa-libGL-devel ncurses-devel libicu-devel mesa-libGLU])]
+    [AC_MSG_ERROR([parsegraph requires make httpd-devel apr-devel apr-util-devel autoconf automake libtool mesa-libEGL-devel mesa-libGL-devel ncurses-devel libicu-devel mesa-libGLU-devel])]
 )
 
 PKG_CHECK_MODULES(parsegraph, [cairo pango pangocairo libdrm egl gl gbm libudev libinput libevdev ncurses icu-uc icu-io icu-i18n harfbuzz osmesa],
