@@ -71,8 +71,15 @@ function parsegraph_initialize()
     // The width in pixels of a font's glyph page.
     parsegraph_MAX_PAGE_WIDTH = 512;
 
+    // Font
+    parsegraph_FONT_SIZE = 72;
+    parsegraph_FONT_UPSCALE = 1;
+    parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_UPSCALE*parsegraph_FONT_SIZE;
+    parsegraph_LETTER_HEIGHT = 2.0;
+    parsegraph_SDF_RADIUS = 8;
+
     // The width in pixels of any texture.
-    parsegraph_MAX_TEXTURE_SIZE = 2048;
+    parsegraph_MAX_TEXTURE_SIZE = 512;
 
     // The largest scale at which nodes are shown in camera.
     parsegraph_NATURAL_VIEWPORT_SCALE = 0.5;
@@ -187,12 +194,6 @@ function parsegraph_initialize()
         //256/255, 255/255, 255/255, 1
         //45/255, 84/255, 127/255, 1
     );
-
-    // Font
-    parsegraph_FONT_SIZE = 72;
-    parsegraph_UPSCALED_FONT_SIZE = 72;
-    parsegraph_RENDERED_FONT_SIZE = parsegraph_UPSCALED_FONT_SIZE/4;
-    parsegraph_WRAP_WIDTH = 80 * parsegraph_RENDERED_FONT_SIZE;
 
     /**
      * The scale at which shrunk nodes are shrunk.

@@ -50,6 +50,14 @@ function parsegraph_ImageWindow(width, height)
     this._imageContext = this._imageCanvas.getContext('2d');
 };
 
+parsegraph_ImageWindow.prototype.log = function()
+{
+};
+
+parsegraph_ImageWindow.prototype.clearLog = function()
+{
+};
+
 parsegraph_ImageWindow.prototype.isOffscreen = function()
 {
     return true;

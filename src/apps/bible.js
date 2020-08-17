@@ -3,51 +3,197 @@ function parsegraph_BibleWidget(belt, world)
     this.belt = belt;
     this.world = world;
     this._nextRequest = null;
-    this._requestInProgress = false;
+    this._requestSent = false;
+    this._loadedData = {};
 }
+
+parsegraph_BibleWidget.prototype.setNextRequest = function(nextRequest)
+{
+    if(this._nextRequest) {
+        throw new Error("Refusing to overwrite next request");
+    }
+    this._nextRequest = nextRequest;
+};
+
+parsegraph_BibleWidget.prototype.clearNextRequest = function()
+{
+    this._nextRequest = null;
+};
+
+parsegraph_BibleWidget.prototype.getNextRequest = function()
+{
+    return this._nextRequest;
+};
+
+parsegraph_BibleWidget.prototype.callNextRequest = function()
+{
+    this._nextRequest();
+};
+
+parsegraph_BibleWidget.prototype.getRequestSent = function()
+{
+    //console.log("Getting request sent. Value=" + this._requestSent);
+    return this._requestSent;
+};
+
+parsegraph_BibleWidget.prototype.setRequestSent = function()
+{
+    if(this._requestSent) {
+        throw new Error("Sent request flag cannot be set again");
+    }
+    //console.log("Setting request sent");
+    this._requestSent = true;
+};
+
+parsegraph_BibleWidget.prototype.clearRequestSent = function()
+{
+    //console.log("Clearing request sent");
+    this._requestSent = false;
+};
 
 parsegraph_BibleWidget.prototype.tick = function()
 {
-    if(!this._nextRequest && !this._requestInProgress) {
+    if(!this.getNextRequest() && !this.getRequestSent()) {
         //console.log("No next request");
         return false;
     }
-    if(this._requestInProgress) {
+    if(this.getRequestSent()) {
+        //console.log("Awaiting response from request");
         return true;
     }
-    if(this._nextRequest) {
-        this._nextRequest.send();
-        this._requestInProgress = true;
+    if(this.getNextRequest()) {
+        //console.log("Invoking request");
+        this.callNextRequest();
     }
     return true;
 };
 
-parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callback, callbackThisArg) {
+parsegraph_BibleWidget.prototype.parseChapter = function(chapterText)
+{
+    var data = {paragraphs:[]};
+    chapterText.split("¶").forEach(function(paragraph, paraIndex) {
+        var lines = paragraph.split("\n");
+        if(paraIndex === 0) {
+            data.book = lines.shift();
+            data.chapter = lines.shift();
+        }
+        for(var i = 0; i < lines.length; ++i) {
+            var line = lines[i];
+            if(line.match(/^\s*$/)) {
+                lines.splice(i--, 1);
+                continue;
+            }
+        }
+        data.paragraphs.push(lines);
+    });
+    return data;
+};
+
+parsegraph_BibleWidget.prototype.preload = function(callback, callbackThisArg)
+{
+    if(this.getNextRequest() || this.getRequestSent()) {
+        throw new Error("Request already in progress");
+    }
     var xhr = new XMLHttpRequest();
+    var that = this;
+    xhr.addEventListener("load", function() {
+        this.responseText.split("@EOB@\n").forEach(function(bookText) {
+            bookText.split("@EOC@\n").forEach(function(chapterText) {
+                chapterText = chapterText.trim();
+                if(chapterText.length === 0) {
+                    return;
+                }
+                var filename = chapterText.substring(0, chapterText.indexOf("\n"));
+                var bookMatch = filename.match(/^eng-kjv2006_([0-9]+_...)_([0-9]+)/);
+                if(!bookMatch) {
+                    //console.log(chapterText);
+                    throw new Error("Failed to read book filename: " + filename);
+                }
+                var book = bookMatch[1];
+                var chap = bookMatch[2];
+                chapterText = chapterText.substring(chapterText.indexOf("\n") + 1);
+                var data = that.parseChapter(chapterText);
+                if(!that._loadedData[book]) {
+                    that._loadedData[book] = {};
+                }
+                that._loadedData[book][chap] = data;
+            });
+        });
+        //console.log("Bible preloaded");
+        that.clearNextRequest();
+        that.clearRequestSent();
+        if(callback) {
+            callback.call(callbackThisArg);
+        }
+    });
+    xhr.open("GET", "/bible/bible.txt");
+    this.setNextRequest(function() {
+        xhr.send();
+        that.setRequestSent();
+    });
+};
+
+parsegraph_BibleWidget.prototype.loadChapter = function(book, chap, callback, callbackThisArg) {
+    if(this.getNextRequest() || this.getRequestSent()) {
+        throw new Error("Request already in progress: (next=" + this.getNextRequest() + ", sent=" + this.getRequestSent() +")");
+    }
+    if(typeof chap === "number" && chap < 10) {
+        chap = "0" + chap;
+    }
+    //console.log("Loading chapter: " + book + ", " + chap);
+    var that = this;
+    if(this._loadedData[book] && this._loadedData[book][chap]) {
+        //console.log("Using cached chapter.");
+        that.setNextRequest(function() {
+            //console.log("Returning cached chapter");
+            if(callback) {
+                callback.call(callbackThisArg, that._loadedData[book][chap]);
+            }
+        });
+        return;
+    }
+    //console.log("Using chapter from web");
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function() {
+        var verseCount = 1;
+        var data = that.parseChapter(this.responseText);
+        if(!that._loadedData[book]) {
+            that._loadedData[book] = {};
+        }
+        that._loadedData[book][chap] = data;
+        if(callback) {
+            callback.call(callbackThisArg, data);
+        }
+    });
+
+    xhr.open("GET", "/bible/eng-kjv2006_" + book + "_" + chap + "_read.txt");
+    this.setNextRequest(function() {
+        //console.log("Retrieving chapter from web");
+        xhr.send();
+        that.setRequestSent();
+    });
+    return xhr;
+};
+
+parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callback, callbackThisArg) {
     var belt = this.belt;
     var world = this.world;
     var that = this;
-    xhr.addEventListener("load", function() {
+    this.loadChapter(book, chap, function(data) {
+        //console.log("Received " + book + " " + chap);
         var verseCount = 1;
         caret.push();
-        this.responseText.split("¶").forEach(function(paragraph, paraIndex) {
-            var lines = paragraph.split("\n");
+        data.paragraphs.forEach(function(paragraph, paraIndex) {
             if(paraIndex === 0) {
-                var title = lines[0];
-                var chapterTitle = lines[1];
-                lines.splice(0, 2);
                 caret.spawnMove('d', 'b');
-                caret.label(title);
+                caret.label(data.book);
                 caret.spawnMove('d', 'b');
-                caret.label(chapterTitle);
+                caret.label(data.chapter);
             }
             caret.spawnMove('d', 'u');
             caret.push();
             caret.spawnMove('f', 'u');
-            lines.forEach(function(line, i) {
-                if(line.match(/^\s*$/)) {
-                    return;
-                }
+            paragraph.forEach(function(verse, i) {
                 if(i > 0) {
                     caret.spawnMove('d', 'u');
                 }
@@ -55,7 +201,7 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
                 caret.push();
                 caret.pull('f');
                 caret.spawnMove('f', paraIndex % 2 === 0 ? 's' : 'b');
-                caret.label(line);
+                caret.label(verse);
                 caret.pop();
             });
             caret.pop();
@@ -63,22 +209,12 @@ parsegraph_BibleWidget.prototype.getChapter = function(caret, book, chap, callba
         caret.pop();
         belt.scheduleUpdate();
         world.scheduleRepaint();
-        that._nextRequest = null;
-        that._requestInProgress = false;
+        that.clearNextRequest();
+        that.clearRequestSent();
         if(callback) {
             callback.call(callbackThisArg);
         }
     });
-
-    if(typeof chap === "number" && chap < 10) {
-        chap = "0" + chap;
-    }
-    xhr.open("GET", "/bible/eng-kjv2006_" + book + "_" + chap + "_read.txt");
-    if(this._nextRequest) {
-        throw new Error("Request already in progress");
-    }
-    this._nextRequest = xhr;
-    return xhr;
 };
 
 parsegraph_BibleWidget.prototype.getAllChapters = function(caret, book, maxChaps, callback, callbackThisArg)

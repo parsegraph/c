@@ -3,32 +3,46 @@ var parsegraph_GlyphPainter_COUNT = 0;
 
 parsegraph_GlyphPainter_VertexShader =
 "uniform mat3 u_world;\n" +
+"uniform highp float u_scale;\n" +
 "" +
 "attribute vec2 a_position;" +
 "attribute vec4 a_color;" +
 "attribute vec4 a_backgroundColor;" +
 "attribute vec2 a_texCoord;" +
+"attribute highp float a_scale;" +
 "" +
 "varying highp vec2 texCoord;" +
 "varying highp vec4 fragmentColor;" +
 "varying highp vec4 backgroundColor;" +
+"varying highp float scale;" +
 "" +
 "void main() {" +
-    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
-   "fragmentColor = a_color;" +
-   "backgroundColor = a_backgroundColor;" +
-   "texCoord = a_texCoord;" +
+    "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);\n" +
+   "fragmentColor = a_color;\n" +
+   "backgroundColor = a_backgroundColor;\n" +
+   "texCoord = a_texCoord;\n" +
+   "scale = a_scale * u_scale;\n" +
 "}";
 
 parsegraph_GlyphPainter_FragmentShader =
+"#extension GL_OES_standard_derivatives : enable\n" +
 "uniform sampler2D u_glyphTexture;\n" +
 "varying highp vec4 fragmentColor;\n" +
 "varying highp vec4 backgroundColor;" +
 "varying highp vec2 texCoord;\n" +
+"varying highp float scale;\n" +
+"\n" +
+"highp float aastep(highp float threshold, highp float value)\n" +
+"{\n" +
+    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
+    "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
+"}\n" +
 "\n" +
 "void main() {\n" +
     "gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
-    "highp float opacity = texture2D(u_glyphTexture, texCoord.st).a;" +
+    "highp float distance = texture2D(u_glyphTexture, texCoord.st).a;" +
+    "highp float smoothing=0.5;\n" +
+    "highp float opacity = mix(aastep(smoothing, distance), distance, min(0.0, scale));\n" +
     "if(backgroundColor.a == 0.0) {" +
         "gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);" +
     "}" +
@@ -55,12 +69,15 @@ function parsegraph_GlyphPainter(window, font)
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
     // Background Color: 4 * 4 (four floats) : 24 - 39
-    // Texcoord: 2 * 4 (two floats): 40-48
-    this._stride = 48;
+    // Texcoord: 2 * 4 (two floats): 40-47
+    // Scale: 4 (one float): 48-51
+    this._stride = 52;
     this._vertexBuffer = new Float32Array(this._stride/4);
 
     this._color = parsegraph_createColor(1, 1, 1, 1);
     this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
+
+    this._lines = [];
 };
 
 parsegraph_GlyphPainter.prototype.window = function()
@@ -210,7 +227,8 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fon
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
     // Background Color: 4 * 4 (four floats) : 24 - 39
-    // Texcoord: 2 * 4 (two floats): 40-48
+    // Texcoord: 2 * 4 (two floats): 40-47
+    // Scale: 4 (one float): 48-51
     var buf = this._painter._vertexBuffer;
 
     // Append color data.
@@ -226,6 +244,11 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fon
     buf[7] = bg.g();
     buf[8] = bg.b();
     buf[9] = bg.a();
+
+    // Add font scale
+    buf[12] = fontScale;
+
+    y -= glyphData.ascent;
 
     // Position data.
     buf[0] = x;
@@ -276,6 +299,16 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(glyphData, x, y, fon
     this.writeVertex();
 };
 
+parsegraph_GlyphPainter.prototype.drawLine = function(text, worldX, worldY, fontScale)
+{
+    this._lines.push({
+        text:text,
+        x:worldX,
+        y:worldY,
+        scale:fontScale
+    });
+};
+
 parsegraph_GlyphPageRenderer.prototype.render = function()
 {
     if(!this._glyphBuffer) {
@@ -295,13 +328,15 @@ parsegraph_GlyphPageRenderer.prototype.render = function()
     // Position: 2 * 4 (two floats) : 0-7
     // Color: 4 * 4 (four floats) : 8-23
     // Background Color: 4 * 4 (four floats) : 24 - 39
-    // Texcoord: 2 * 4 (two floats): 40-48
+    // Texcoord: 2 * 4 (two floats): 40-47
+    // Scale: 4 (one float): 48-51
     var painter = this._painter;
     var stride = this._painter._stride;
     gl.vertexAttribPointer(painter.a_position, 2, gl.FLOAT, false, stride, 0);
     gl.vertexAttribPointer(painter.a_color, 4, gl.FLOAT, false, stride, 8);
     gl.vertexAttribPointer(painter.a_backgroundColor, 4, gl.FLOAT, false, stride, 24);
     gl.vertexAttribPointer(painter.a_texCoord, 2, gl.FLOAT, false, stride, 40);
+    gl.vertexAttribPointer(painter.a_scale, 1, gl.FLOAT, false, stride, 48);
     gl.drawArrays(gl.TRIANGLES, 0, this._glyphBufferVertexIndex);
 };
 
@@ -368,14 +403,22 @@ parsegraph_GlyphPainter.prototype.clear = function()
     this._textBuffers = {};
     this._numTextBuffers = 0;
     this._maxSize = 0;
+    this._lines = [];
 };
 
 parsegraph_GlyphPainter.prototype.render = function(world, scale)
 {
+    var overlay = this.window().overlay();
+    for(var i = 0; i < this._lines.length; ++i) {
+        var line = this._lines[i];
+        overlay.font = "72px sans-serif";
+        overlay.fillText(line.text, line.x, line.y);
+    }
+    return;
     this._font.update(this._window);
     //console.log(new Error("GlyphPainter scale="+scale));
     //console.log("Max scale of a single largest glyph would be: " + (this._maxSize *scale));
-    if(scale < .1 && this._maxSize*scale < 2) {
+    if(scale < .2 && this._maxSize*scale < 1) {
         return;
     }
 
@@ -395,11 +438,22 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
             parsegraph_GlyphPainter_VertexShader,
             parsegraph_GlyphPainter_FragmentShader
         );
+        /*if(gl.getExtension("OES_standard_derivatives") != null) {
+            this._textProgram = parsegraph_compileProgram(this.window(),
+                "parsegraph_GlyphPainter",
+                parsegraph_GlyphPainter_VertexShader,
+                parsegraph_GlyphPainter_FragmentShader
+            );
+        }
+        else {
+            throw new Error("TextPainter requires OES_standard_derivatives GL extension");
+        }*/
 
         // Cache program locations.
         this.u_world = gl.getUniformLocation(
             this._textProgram, "u_world"
         );
+        this.u_scale = gl.getUniformLocation(this._textProgram, "u_scale");
         this.u_glyphTexture = gl.getUniformLocation(
             this._textProgram, "u_glyphTexture"
         );
@@ -407,18 +461,22 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
         this.a_color = gl.getAttribLocation(this._textProgram, "a_color");
         this.a_backgroundColor = gl.getAttribLocation(this._textProgram, "a_backgroundColor");
         this.a_texCoord = gl.getAttribLocation(this._textProgram, "a_texCoord");
+        this.a_scale = gl.getAttribLocation(this._textProgram, "a_scale");
+        //console.log(this.a_scale);
     }
 
     // Load program.
     gl.useProgram(this._textProgram);
     gl.activeTexture(gl.TEXTURE0);
     gl.uniformMatrix3fv(this.u_world, false, world);
+    gl.uniform1f(this.u_scale, scale);
 
     // Render glyphs for each page.
     gl.enableVertexAttribArray(this.a_position);
     gl.enableVertexAttribArray(this.a_texCoord);
     gl.enableVertexAttribArray(this.a_color);
     gl.enableVertexAttribArray(this.a_backgroundColor);
+    gl.enableVertexAttribArray(this.a_scale);
     for(var i in this._textBuffers) {
         var gp = this._textBuffers[i];
         gp.render();
@@ -427,6 +485,7 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
     gl.disableVertexAttribArray(this.a_texCoord);
     gl.disableVertexAttribArray(this.a_color);
     gl.disableVertexAttribArray(this.a_backgroundColor);
+    gl.disableVertexAttribArray(this.a_scale);
 };
 
 parsegraph_GlyphPainter_Tests = new parsegraph_TestSuite("parsegraph_GlyphPainter");

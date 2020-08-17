@@ -105,7 +105,7 @@ var testLanguageNames = [
 "Russian",
 "Arabic",
 "Hebrew",
-"Hindu",
+"Hindi",
 "Greek",
 "Chinese (simplified)",
 "Korean",
@@ -118,7 +118,7 @@ function buildTextDemo()
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
 
-    for(var i in testLanguages) {
+    for(var i = 0; i < testLanguages.length; ++i) {
         if(i > 0) {
             caret.spawnMove("f", "u");
         }
@@ -127,7 +127,7 @@ function buildTextDemo()
         caret.spawnMove("d", "b");
         caret.label(testLanguageNames[i]);
         var testSentences = testLanguages[i];
-        for(var j in testSentences) {
+        for(var j = 0; j < testSentences.length; ++j) {
             caret.spawnMove("d", "s");
             caret.label(testSentences[j]);
             caret.move("u");

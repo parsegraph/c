@@ -53,6 +53,7 @@ function parsegraph_MultislotPlot(multislot, index)
 
 parsegraph_MultislotPlot.prototype.setId = function(id)
 {
+    console.log("ID set for plot");
     this._id = id;
 };
 

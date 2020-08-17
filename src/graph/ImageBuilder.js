@@ -68,12 +68,16 @@ parsegraph_ImageBuilder.prototype.cycle = function()
         //console.log("No scenes to build.");
         return false;
     }
-    if(!job.root) {
-        console.log("Building root");
+    if(!job.rootless && !job.root) {
         job.root = job.creatorFunc.call(job.creatorFuncThisArg);
-        this._viewport.showInCamera(job.root);
-        this._world.plot(job.root);
-        this._world.scheduleRepaint();
+        if(!job.root) {
+            job.rootless = true;
+        }
+        else {
+            this._viewport.showInCamera(job.root);
+            this._world.plot(job.root);
+            this._world.scheduleRepaint();
+        }
         job.callbackFunc.call(job.callbackFuncThisArg, this._window.image());
     }
     if(job.builders) {
@@ -99,6 +103,8 @@ parsegraph_ImageBuilder.prototype.cycle = function()
     //console.log("Completed render");
     this._jobs.shift();
     this._window.newImage();
-    this._world.removePlot(job.root);
+    if(job.root) {
+        this._world.removePlot(job.root);
+    }
     this.scheduleUpdate();
 };

@@ -3219,16 +3219,17 @@ parsegraph_Node.prototype.paint = function(window, timeout)
         throw new Error("A node must be a paint group in order to be painted");
     }
     if(!this.isDirty()) {
-        //console.log(this + " is not dirty");
+        //window.log(this + " is not dirty");
         return false;
     }
     else {
-        //console.log(this + " is dirty");
+        //window.log(this + " is dirty");
     }
     if(window.gl().isContextLost()) {
         return false;
     }
     if(timeout <= 0) {
+        window.log("Paint timeout=" + timeout);
         return true;
     }
 
@@ -3256,12 +3257,12 @@ parsegraph_Node.prototype.paint = function(window, timeout)
     }
 
     if(cont) {
-        //console.log(this + " Timed out during commitLayout");
+        //window.log(this + " Timed out during commitLayout");
         this._extended.commitLayoutFunc = cont;
         return true;
     }
     else {
-        //console.log(this + " Committed all layout");
+        //window.log(this + " Committed all layout");
         this._extended.commitLayoutFunc = null;
         this._extended.windowPaintGroup[wid] = this;
         savedPaintGroup = this;
@@ -3271,15 +3272,15 @@ parsegraph_Node.prototype.paint = function(window, timeout)
     while(true) {
         if(pastTime()) {
             this._extended.dirty = true;
-            //console.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
+            //window.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
             return true;
         }
 
         var paintGroup = savedPaintGroup;
-        if(paintGroup.isDirty()) {
+        var painter = paintGroup._extended.windowPainter[wid];
+        if(paintGroup.isDirty() || !painter) {
             // Paint and render nodes marked for the current group.
             //console.log("Painting " + paintGroup);
-            var painter = paintGroup._extended.windowPainter[wid];
             if(!painter) {
                 painter = new parsegraph_NodePainter(window);
                 paintGroup._extended.windowPainter[wid] = painter;
@@ -3313,7 +3314,7 @@ parsegraph_Node.prototype.paint = function(window, timeout)
     }
 
     this._extended.windowPaintGroup[wid] = null;
-    //console.log("Completed node painting");
+    //window.log("Completed node painting");
     return false;
 };
 
@@ -3425,14 +3426,17 @@ parsegraph_Node.prototype.renderOffscreen = function(window, renderWorld, render
 
 parsegraph_Node.prototype.render = function(window, camera, renderData)
 {
+    //console.log("RENDERING THE NODE");
     if(!this.localPaintGroup()) {
         throw new Error("Cannot render a node that is not a paint group");
     }
     var painter = this._extended.windowPainter[window.id()];
     if(!painter) {
+        //window.log("Node has no painter for " + window.id());
         return false;
     }
     if(this._absoluteXPos === null) {
+        //window.log("Node has no absolute pos");
         return false;
     }
 
@@ -3445,7 +3449,7 @@ parsegraph_Node.prototype.render = function(window, camera, renderData)
     s.scale(this.scale());
     s.translate(this._absoluteXPos, this._absoluteYPos);
     if(camera && !camera.containsAny(s)) {
-        //console.log("Out of bounds: " + this);
+        //window.log("Out of bounds: " + this);
         return !this._absoluteDirty;
     }
 
@@ -3458,7 +3462,7 @@ parsegraph_Node.prototype.render = function(window, camera, renderData)
 
     //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
     if(this._extended.cache && renderScale < parsegraph_CACHE_ACTIVATION_SCALE) {
-        //console.log("Rendering " + this + " from cache.");
+        window.log("Rendering " + this + " from cache.");
         var cleanRender = this._extended.cache.render(window, renderWorld, renderData, CACHED_RENDERS === 0);
         if(IMMEDIATE_RENDERS > 0) {
             //console.log("Immediately rendered " +IMMEDIATE_RENDERS + " times");
@@ -3474,10 +3478,14 @@ parsegraph_Node.prototype.render = function(window, camera, renderData)
     ++IMMEDIATE_RENDERS;
 
     //console.log("Rendering " + this + " in scene.");
+    //console.log(this.absoluteX(), this.absoluteY());
+    window.overlay().resetTransform();
+    window.overlay().scale(camera.scale() * this.absoluteScale(), camera.scale() * this.absoluteScale());
+    window.overlay().translate(camera.x() + this.absoluteX(), camera.y() + this.absoluteY());
     painter.render(renderWorld, renderScale);
 
     if(this._absoluteDirty) {
-        //console.log("Node was rendered with dirty absolute position.");
+        //window.log("Node was rendered with dirty absolute position.");
     }
     return !this.isDirty() && !this._absoluteDirty;
 };

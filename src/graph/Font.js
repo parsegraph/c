@@ -7,7 +7,7 @@ function parsegraph_GlyphPage(font)
     this.next = null;
 }
 
-function parsegraph_GlyphData(glyphPage, glyph, x, y, width, height, ascent, descent, advance)
+function parsegraph_GlyphData(glyphPage, glyph, x, y, width, height, ascent, descent, advance, radius)
 {
     this.glyphPage = glyphPage;
     this.letter = glyph;
@@ -15,10 +15,10 @@ function parsegraph_GlyphData(glyphPage, glyph, x, y, width, height, ascent, des
     this.painted = false;
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
+    this.width = width + radius*2;
     this.ascent = ascent;
     this.descent = descent;
+    this.height = this.ascent + this.descent + radius*2;
     this.advance = advance;
     this.next = null;
 }
@@ -48,6 +48,8 @@ function parsegraph_Font(fontSizePixels, fontName, fillStyle)
     this._measureCtx = this._measureCanvas.getContext("2d");
     this._measureCtx.font = this.font();
     this._measureCtx.fillStyle = this._fillStyle;
+    //this._measureCtx.textBaseline = 'top';
+    console.log("parsegraph_Font font", this._measureCtx.font, this._measureCtx.fillStyle);
 
     this._windows = {};
     this._renderCanvas = null;
@@ -60,11 +62,13 @@ function parsegraph_Font(fontSizePixels, fontName, fillStyle)
     this._currentRowHeight = 0;
 
     // Glyph atlas working position.
-    this._padding = this.fontSize() / 4;
+    this._padding = parsegraph_SDF_RADIUS*2;//this.fontSize() / 4;
     this._x = this._padding;
     this._y = this._padding;
 
     this._maxPage = 0;
+
+    this._sdf = new TinySDF(fontSizePixels, null, null, fontName);
 }
 
 parsegraph_Font.prototype.toString = function()
@@ -83,9 +87,9 @@ parsegraph_Font.prototype.getGlyph = function(glyph)
     }
     var letter = this._measureCtx.measureText(glyph);
     var letterWidth = letter.width;
-    var letterHeight = this.letterHeight();
-    var letterAscent = 0;
-    var letterDescent = 0;
+    var letterAscent = letter.actualBoundingBoxAscent || 0;
+    var letterDescent = letter.actualBoundingBoxDescent || 0;
+    var letterHeight = letterAscent + letterDescent;
     var advance = letterWidth;
 
     var glyphPage = null;
@@ -117,7 +121,7 @@ parsegraph_Font.prototype.getGlyph = function(glyph)
         this._currentRowHeight = letterHeight;
     }
 
-    var glyphData = new parsegraph_GlyphData(glyphPage, glyph, this._x, this._y, letterWidth, letterHeight, letterAscent, letterDescent, advance);
+    var glyphData = new parsegraph_GlyphData(glyphPage, glyph, this._x, this._y, letterWidth, letterHeight, letterAscent, letterDescent, advance, this._sdf.radius);
     this._glyphData[glyph] = glyphData;
 
     if(glyphPage._lastGlyph) {
@@ -200,10 +204,12 @@ parsegraph_Font.prototype.update = function(window)
         //console.log("Painting page " + page._id);
         this._renderCtx.clearRect(0, 0, pageTextureSize, pageTextureSize);
         for(var glyphData = page._firstGlyph; glyphData; glyphData = glyphData.next) {
-            this._renderCtx.fillText(
-                glyphData.letter,
+            var distanceGlyph = this._sdf.draw(glyphData.letter);
+            var imageData = this._sdf.createImageData(this._renderCtx);
+            imageData.data.set(distanceGlyph);
+            this._renderCtx.putImageData(imageData,
                 glyphData.x,
-                glyphData.y + this.fontBaseline()
+                glyphData.y
             );
             ++ctx._numGlyphs;
         }
@@ -242,8 +248,10 @@ parsegraph_Font.prototype.update = function(window)
         }
         ++pagesUpdated;
     }
-    //this._renderCanvas.style.position = "absolute";
-    //this._renderCanvas.style.pointerEvents = "none";
+    this._renderCanvas.style.position = "absolute";
+    this._renderCanvas.style.pointerEvents = "none";
+    this._renderCanvas.style.right = "0";
+    this._renderCanvas.style.top = "0";
     //document.body.appendChild(this._renderCanvas);
     if(curTexture) {
         gl.generateMipmap(gl.TEXTURE_2D);
@@ -298,11 +306,6 @@ parsegraph_Font.prototype.font = function()
 parsegraph_Font.prototype.pageTextureSize = function()
 {
     return parsegraph_MAX_PAGE_WIDTH;
-};
-
-parsegraph_Font.prototype.letterHeight = function()
-{
-    return this.fontSize() * 1.3;
 };
 
 parsegraph_Font.prototype.fontBaseline = function()

@@ -5,6 +5,19 @@ function parsegraph_Room(belt, world, roomId)
     this._belt = belt;
     this._world = world;
     this._root = new parsegraph_Node(parsegraph_BLOCK);
+    this._root.setLabel("Untitled");
+    this._itemList = [];
+
+    this._loaded = false;
+
+    this._offline = null;
+
+    this._emptyRoomActions = new parsegraph_ActionCarousel();
+    this._emptyRoomActions.addAction("Prepopulate", function() {
+        this.prepopulate(this, function(success, resp) {
+            //console.log(success, resp);
+        }, this);
+    }, this);
 
     if(roomId) {
         this._roomId = roomId;
@@ -21,6 +34,9 @@ function parsegraph_Room(belt, world, roomId)
             }
         };
         this._root.setLabel(roomId);
+    }
+    else {
+        this._offline = new parsegraph_OfflineRoom(this);
     }
 
     this._itemListeners = {};
@@ -77,6 +93,11 @@ function parsegraph_Room(belt, world, roomId)
     this._username = null;
 };
 
+parsegraph_Room.prototype.offline = function()
+{
+    return this._offline;
+};
+
 parsegraph_Room.prototype.node = function()
 {
     return this._root;
@@ -89,52 +110,47 @@ parsegraph_Room.prototype.scheduleRepaint = function()
 };
 parsegraph_Room.prototype.scheduleUpdate = parsegraph_Room.prototype.scheduleRepaint;
 
+parsegraph_Room.prototype.loaded = function()
+{
+    return this._loaded;
+};
+
 parsegraph_Room.prototype.load = function(items)
 {
+    this._loaded = true;
     this._root.disconnectNode(parsegraph_DOWNWARD);
     var car = new parsegraph_Caret(this._root);
-    car.spawnMove('d', 'u', 'c');
+    this._itemList = [];
 
     if(items.length === 0) {
         car.disconnect('d');
         car.align('d', 'c');
         var node = car.spawnMove('d', 'bu');
-        car.onClick(function(viewport) {
-            //console.log("Creating carousel");
-            var carousel = viewport.carousel();
-            carousel.clearCarousel();
-            carousel.moveCarousel(
-                node.absoluteX(),
-                node.absoluteY()
-            );
-            carousel.showCarousel();
-
-            // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
-            var actionNode = new parsegraph_Node(parsegraph_BLOCK);
-            actionNode.setLabel("Prepopulate", this.font());
-            carousel.addToCarousel(actionNode, function() {
-                this.prepopulate(this, function(success, resp) {
-                    //console.log(success, resp);
-                }, this);
-            }, this);
-            viewport.carousel().scheduleCarouselRepaint();
-        }, this);
+        this._emptyRoomActions.install(node);
         car.move('u');
         car.pull('d');
     }
-
-    for(var i = 0; i < items.length; ++i) {
-        if(i > 0) {
-            car.spawnMove('f', 'u');
+    else {
+        car.spawnMove('d', 'u', 'c');
+        for(var i = 0; i < items.length; ++i) {
+            if(i > 0) {
+                car.spawnMove('f', 'u');
+            }
+            car.push();
+            car.pull('d');
+            var item = items[i];
+            var widget = this.spawnItem(item.id, item.type, item.value, item.items);
+            this._itemList.push(widget);
+            car.connect('d', widget.node());
+            car.pop();
         }
-        car.push();
-        car.pull('d');
-        var item = items[i];
-        var widget = this.spawnItem(item.id, item.type, item.value, item.items);
-        car.connect('d', widget.node());
-        car.pop();
     }
     this.scheduleRepaint();
+};
+
+parsegraph_Room.prototype.getItem = function(index)
+{
+    return this._itemList[index];
 };
 
 parsegraph_Room.prototype.onItemEvent = function(id, event)
@@ -154,7 +170,11 @@ parsegraph_Room.prototype.setUsername = function(username)
 
 parsegraph_Room.prototype.processMessage = function(obj)
 {
+    console.log("EventStream message in process", obj);
     if(obj.event === "sessionStarted") {
+        if(!obj.guid) {
+            throw new Error("sessionStarted event must provided a session GUID");
+        }
         this._sessionId = obj.guid;
         /*if(!this._cameraProtocol) {
             this._cameraProtocol = new parsegraph_InputProtocol(this.roomId(), this.sessionId(), this.graph().input());
@@ -290,13 +310,29 @@ parsegraph_Room.prototype.onItemEvent = function(id, event)
     }
 };
 
-parsegraph_Room.prototype.listen = function(id, listener, listenerThisArg)
+parsegraph_Room.prototype.addItemListener = function(id, listener, listenerThisArg)
 {
     //console.log("Listening for " + id);
     if(!this._itemListeners[id]) {
         this._itemListeners[id] = [];
     }
     this._itemListeners[id].push([listener, listenerThisArg]);
+};
+
+parsegraph_Room.prototype.removeItemListener = function(id, listener, listenerThisArg)
+{
+    //console.log("Listening for " + id);
+    if(!this._itemListeners[id]) {
+        return false;
+    }
+    for(var i = 0; i < this._itemListeners[id].length; ++i) {
+        var listenerData = this._itemListeners[id][i];
+        if(listenerData[0] === listener && listenerData[1] === listenerThisArg) {
+            this._itemListeners.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
 };
 
 parsegraph_Room.prototype.pushListItem = function(id, type, value, cb, cbThisArg)
@@ -357,6 +393,7 @@ parsegraph_Room.prototype.prepopulate = function(cb, cbThisArg)
         throw new Error("Refusing to fire without a non-null listener");
     }
     this.request({command:"prepopulate"}, cb, cbThisArg);
+    this.scheduleRepaint();
 };
 
 parsegraph_Room.prototype.close = function()
@@ -365,11 +402,16 @@ parsegraph_Room.prototype.close = function()
 
 parsegraph_Room.prototype.request = function(reqBody, cb, cbThisArg)
 {
-    if(!this.roomId()) {
-        throw new Error("Room must have a room ID");
-    }
     if(!this.sessionId()) {
         throw new Error("Room must have a session ID");
+    }
+    reqBody.guid = this.sessionId();
+    if(this._offline) {
+        this._offline.receiveRequest(reqBody, cb, cbThisArg);
+        return;
+    }
+    if(!this.roomId()) {
+        throw new Error("Room must have a room ID");
     }
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/@" + this.roomId(), true);
@@ -436,6 +478,83 @@ parsegraph_Room.prototype.request = function(reqBody, cb, cbThisArg)
             }
         }
     };
-    reqBody.guid = this.sessionId();
     xhr.send(JSON.stringify(reqBody));
 };
+
+function parsegraph_OfflineRoom(room)
+{
+    if(!room) {
+        throw new Error("Room must be provided");
+    }
+    this._room = room;
+};
+
+parsegraph_OfflineRoom.prototype.receiveRequest = function(obj)
+{
+    if(!obj) {
+        throw new Error("Request must be provided");
+    }
+    switch(obj.command) {
+    case "prepopulate":
+        break;
+    default:
+        throw new Error("Unsupported request command: " + obj.command);
+    }
+    console.log(arguments);
+};
+
+parsegraph_OfflineRoom.prototype.start = function()
+{
+    this._room.processMessage({
+        event:"sessionStarted",
+        guid:"offline"
+    });
+    this._room.processMessage({
+        event:"join",
+        username:"test"
+    });
+    this._room.processMessage({
+        event:"initialData",
+        root:{
+            items:[]
+        }
+    });
+};
+
+function parsegraph_testRoom(out, belt, world)
+{
+    var window = new parsegraph_Window();
+    belt.addWindow(window);
+    window.setExplicitSize(500, 500);
+    var viewport = new parsegraph_Viewport(window, world);
+    window.addComponent(viewport.component());
+    out.appendChild(window.container());
+};
+
+parsegraph_Room_Tests = new parsegraph_TestSuite("parsegraph_Room");
+
+parsegraph_Room_Tests.addTest("parsegraph_Room empty", function() {
+    var belt = new parsegraph_TimingBelt();
+    var world = new parsegraph_World();
+    var room = new parsegraph_Room(belt, world);
+    room.load([]);
+});
+
+parsegraph_Room_Tests.addTest("parsegraph_Room", function(out) {
+    var belt = new parsegraph_TimingBelt();
+    var world = new parsegraph_World();
+    var room = new parsegraph_Room(belt, world);
+    world.plot(room.node());
+    room.load([
+        {id:1, type:"multislot", value:"[1,10,10,10,10]", items:[
+            {id:3, type:"multislot::plot", value:"[0,1]", items:[]}
+        ]},
+        {id:2, type:"multislot", value:"[1,1,1,1,1]", items:[]},
+    ]);
+    var multislot = room.getItem(0);
+    if(!multislot) {
+        throw new Error("Multislot must be spawned");
+    }
+
+    parsegraph_testRoom(out, belt, world);
+});

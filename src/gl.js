@@ -85,7 +85,7 @@ function parsegraph_generateRectangleTexcoords()
  *     FRAGMENT_SHADER.
  * @return {!WebGLShader} The shader.
  */
-function compileShader(gl, shaderSource, shaderType) {
+function compileShader(gl, shaderSource, shaderType, shaderName) {
   // Create the shader object
   var shader = gl.createShader(shaderType);
  
@@ -100,7 +100,7 @@ function compileShader(gl, shaderSource, shaderType) {
   var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
   if (!success) {
     // Something went wrong during compilation; get the error
-    throw new Error("Could not compile shader: " + gl.getShaderInfoLog(shader));
+      throw new Error("Could not compile " + (shaderType === gl.FRAGMENT_SHADER ? "fragment" : "vertex") + " shader " + shaderName + ": " + gl.getShaderInfoLog(shader));
   }
   }
  
@@ -191,13 +191,13 @@ function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
     var program = gl.createProgram();
     parsegraph_checkGLError(gl, "compileProgram.createProgram(shaderName='", shaderName, ")");
 
-    var compiledVertexShader = compileShader(gl, vertexShader, gl.VERTEX_SHADER);
+    var compiledVertexShader = compileShader(gl, vertexShader, gl.VERTEX_SHADER, shaderName);
     parsegraph_checkGLError(gl, "compileProgram.compile vertex shader(shaderName='", shaderName, ")");
 
     gl.attachShader(program, compiledVertexShader);
     parsegraph_checkGLError(gl, "compileProgram.attach vertex shader(shaderName='", shaderName, ")");
 
-    var compiledFragmentShader = compileShader(gl, fragShader, gl.FRAGMENT_SHADER);
+    var compiledFragmentShader = compileShader(gl, fragShader, gl.FRAGMENT_SHADER, shaderName);
     parsegraph_checkGLError(gl, "compileProgram.compile fragment shader(shaderName='", shaderName, ")");
     gl.attachShader(program, compiledFragmentShader);
     parsegraph_checkGLError(gl, "compileProgram.attach fragment shader(shaderName='", shaderName, ")");
@@ -214,6 +214,7 @@ function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
     }
 
     shaders[shaderName] = program;
+    console.log("Created shader for " + shaderName + ": " + program);
     return program;
 }
 

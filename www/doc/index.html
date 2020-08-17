@@ -1,220 +1,16 @@
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script src="/anthonylispjs-1.3.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
-    var builder = new parsegraph_ImageBuilder(300, 200);
-    var belt = builder;
-    var world = builder.world();
-    var window = builder.window();
-
-    var container = document.getElementById("parsegraph-examples");
-    function appendImage(img) {
-        container.appendChild(img);
-    };
-    function appendScene(img) {
-        var main = document.getElementById("main");
-        var div = document.createElement("div");
-        div.className = "scene";
-        var title = document.createElement("h5");
-        title.innerHTML = this.title;
-        var desc = document.createElement("p");
-        desc.innerHTML = this.desc;
-
-        var link = document.createElement("a");
-        link.href = this.link;
-        link.appendChild(img);
-
-        div.appendChild(link);
-        div.appendChild(title);
-        div.appendChild(desc);
-
-        container.appendChild(div);
-    };
-    [
-        {
-            title:"Primes",
-            desc:"Prime numbers.",
-            link:"/primes.html",
-            creator:function() {
-                var primes = new parsegraph_PrimesWidget(world);
-                var MAX_PRIME = 30;
-                belt.queueJob(function(timeout) {
-                    if(!primes.isPaused() && primes.position <= MAX_PRIME) {
-                        primes.step();
-                    }
-                    world.scheduleRepaint();
-                    return primes.position <= MAX_PRIME;
-                }, this);
-                return primes.node();
-            },
-        },
-        {
-            title:"Ulam Spiral",
-            link:"/ulam.html",
-            desc:"The Ulam Spiral.",
-            creator:function() {
-                var COUNT = 960;
-                var ulam = new parsegraph_Ulam(COUNT);
-                belt.queueJob(function(timeout) {
-                    var callAgain = ulam.step(timeout);
-                    world.scheduleRepaint();
-                    return callAgain;
-                }, this);
-                return ulam.node();
-            },
-        },
-        {
-            title:"Text",
-            desc:"International language support.",
-            link:"/text.html",
-            creator:buildTextDemo,
-        },
-        {
-            title:"Proportion",
-            desc:"Pretty display of graph alignment.",
-            link:"/proportion.html",
-            creator:function() {
-                var MAX_SIZE = 10;
-                var proportion = new parsegraph_ProportionWidget(MAX_SIZE);
-                belt.queueJob(function(timeout) {
-                    world.scheduleRepaint();
-                    return proportion.step();
-                }, this);
-                return proportion.node();
-            },
-        },
-        {
-            title:"Piers",
-            desc:"A random world of sliders.",
-            link:"/piers.html",
-            creator:function() {
-                var MAX_SIZE = 40;
-                var piers = new parsegraph_MemoryPiers(MAX_SIZE);
-                belt.queueJob(function(timeout) {
-                    var callAgain = piers.step();
-                    world.scheduleRepaint();
-                    return callAgain;
-                });
-                return piers.node();
-            },
-        },
-        {
-            title:"Animation",
-            desc:"Real-time graph animation.",
-            link:"/crease.html",
-            creator:function() {
-                var crease = new parsegraph_CreaseWidget(belt, world);
-                return crease.node();
-            },
-        },
-        {
-            title:"Corporate",
-            desc:"A graph of business positions.",
-            link:"/corporate.html",
-            creator:showCorporateStructure
-        },
-        {
-            title:"Builder",
-            desc:"Click to make more nodes.",
-            link:"/builder.html",
-            creator:function() {
-                return showFlowchartTemplate(world, belt);
-            },
-        },
-        {
-            title:"Multislot",
-            desc:"Generate a random multislot.",
-            link:"/multislot.html",
-            creator:function() {
-                var room = new parsegraph_Room(belt, world);
-                var maxSize = 25;
-                var ms = new parsegraph_Multislot(room, 1+Math.round(Math.random()*maxSize), 1+Math.round(Math.random()*maxSize), new parsegraph_Color(Math.random(), Math.random(), Math.random()), 0);
-                return ms.node();
-            },
-        },
-        {
-            title:"IP",
-            desc:"Show a subset of IP addresses in tree form.",
-            link:"/ip.html",
-            creator:function() {
-                return showIPAddresses(6);
-            },
-        },
-        {
-            title:"Chess",
-            desc:"Chess in graphs.",
-            link:"/chess.html",
-            creator:function() {
-                var chess = new parsegraph_ChessWidget();
-                return chess.node();
-            },
-        },
-        {
-            title:"Week",
-            desc:"A week by hour.",
-            link:"/week.html",
-            creator:function() {
-                return createWeek(belt, world);
-            },
-        },
-        {
-            title:"The Bible",
-            desc:"King James version of the Bible in a parsegraph.",
-            link:"/bible.html",
-            creator:function() {
-                var bible = new parsegraph_BibleWidget(belt, world);
-                var caret = new parsegraph_Caret(parsegraph_BLOCK);
-                caret.label("King James Bible");
-                caret.pull('d');
-                caret.spawnMove('d', 'u');
-                bible.getAllChapters(caret, "002_GEN", 1);
-                belt.queueJob(function(timeout) {
-                    return bible.tick();
-                });
-                return caret.root();
-            },
-        },
-        {
-            title:"Lisp",
-            desc:"First Lisp proof-of-concept",
-            link:"/lisp.html",
-            creator:function() {
-                global_env = new lisp_environment();
-                lisp_add_globals(global_env);
-
-                var bud = new parsegraph_Node(parsegraph_BUD);
-
-                var waiting = true;
-
-                var xhr = new XMLHttpRequest();
-                xhr.addEventListener("load", function() {
-                    var ast = lisp_read("(" + this.responseText + ")");
-                    var root = parsegraph_lisp(world, belt, ast);
-                    bud.connectNode(parsegraph_DOWNWARD, root);
-                    world.scheduleRepaint();
-                    belt.scheduleUpdate();
-                    waiting = false;
-                });
-                xhr.open("GET", "/surface.lisp");
-                xhr.send();
-                belt.queueJob(function(timeout) {
-                    return waiting;
-                });
-                return bud;
-            },
-        },
-    ].forEach(function(scene) {
-        if(typeof scene === "function") {
-            builder.createImage(scene, null, appendImage, this);
-        }
-        else {
-            builder.createImage(scene.creator, null, appendScene, scene);
-        }
-    });
-});
-</script>
+<style>
+body {
+grid-template-columns: 2.5% 95% 2.5%;
+grid-template-areas:
+"header header"
+". main_menu ."
+". main . "
+". footer . "
+}
+</style>
 <main>
 <div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a></div>
 <h1><a name="Manual">User Manual</a></h1>
@@ -231,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 <dt><a href="anthonylispjs">Lisp</a></dt>
 <dd>Parsegraph library for Lisp programs.</dd>
 </dl>
-<h1><a name="Examples">Parsegraph Examples</a></h1>
+<h1><a name="Examples">Examples</a></h1>
 <div id="parsegraph-examples">
 </div>
 <h1>3D Scenes</h1>

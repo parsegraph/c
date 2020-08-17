@@ -62,7 +62,13 @@ function parsegraph_AnimationTimer()
     this.fire = function() {
         that.timerId = null;
         if(that.listener) {
-            return that.listener[0].apply(that.listener[1], arguments);
+            try {
+                return that.listener[0].apply(that.listener[1], arguments);
+            }
+            catch(ex) {
+                console.log(ex);
+                alert("Error during timer: " + ex);
+            }
         }
     };
 };
@@ -71,11 +77,12 @@ parsegraph_AnimationTimer.prototype.schedule = function()
 {
     // Do nothing if the timer is already scheduled.
     if(this.timerId) {
-        return;
+        return false;
     }
 
     //console.log(new Error("Scheduling animation timer."));
     this.timerId = requestAnimationFrame(this.fire);
+    return true;
 };
 
 parsegraph_AnimationTimer.prototype.setListener = function(listener, thisArg)

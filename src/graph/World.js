@@ -335,7 +335,7 @@ parsegraph_World.prototype.paint = function(window, timeout)
         this._worldPaintingDirty = false;
     }
     else {
-        //console.log("World does not need repaint");
+        window.log("World does not need repaint");
     }
 
     if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {

@@ -1,22 +1,24 @@
 var INF = 1e20;
 
 function TinySDF(fontSize, radius, cutoff, fontFamily, fontWeight) {
+    //console.log("TinySDF (fontsize=" + fontSize + ")");
     this.fontSize = fontSize || 24;
     this.fontSizeHeight = Math.ceil(fontSize * parsegraph_LETTER_HEIGHT);
-    this.cutoff = cutoff || 0.25;
+    this.cutoff = cutoff || 0.5;
     this.fontFamily = fontFamily || 'sans-serif';
     this.fontWeight = fontWeight || 'normal';
-    this.radius = radius || 8;
+    this.radius = radius || parsegraph_SDF_RADIUS;
 
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.fontSize;
     this.canvas.height = this.fontSizeHeight;
-    document.body.appendChild(this.canvas);
+    //document.body.appendChild(this.canvas);
 
     this.ctx = this.canvas.getContext('2d');
     this.ctx.font = this.fontWeight + ' ' + this.fontSize + 'px ' + this.fontFamily;
     this.ctx.fillStyle = 'black';
     this.ctx.textBaseline = 'top';
+    //console.log("TinySDF font", this.ctx.font, this.ctx.fillStyle);
 
     // temporary arrays for the distance transform
     this.gridOuter = new Float64Array(this.fontSize * this.fontSizeHeight);
@@ -29,9 +31,15 @@ function TinySDF(fontSize, radius, cutoff, fontFamily, fontWeight) {
     this.middle = Math.round((this.fontSizeHeight / 2) * (navigator.userAgent.indexOf('Gecko/') >= 0 ? 1.2 : 1));
 }
 
+TinySDF.prototype.createImageData = function (ctx) {
+        return ctx.createImageData(this.fontSize, this.fontSizeHeight);
+};
+
 TinySDF.prototype.draw = function (char) {
     this.ctx.clearRect(0, 0, this.fontSize, this.fontSizeHeight);
-    this.ctx.fillText(char, 0, this.middle);
+    var metrics = this.ctx.measureText(char);
+    this.ctx.fillText(char, 0, this.radius + metrics.actualBoundingBoxAscent);
+    //console.log("TinySDF metrics", char, this.ctx.measureText(char));
 
     var imgData = this.ctx.getImageData(0, 0, this.fontSize, this.fontSizeHeight);
     var alphaChannel = new Uint8ClampedArray(4 * this.fontSize * this.fontSizeHeight);
@@ -42,8 +50,8 @@ TinySDF.prototype.draw = function (char) {
         this.gridInner[i] = a === 1 ? INF : a === 0 ? 0 : Math.pow(Math.max(0, a - 0.5), 2);
     }
 
-    edt(this.gridOuter, this.fontSize, this.fontSizeHeight, this.f, this.v, this.z);
-    edt(this.gridInner, this.fontSize, this.fontSizeHeight, this.f, this.v, this.z);
+    this.edt(this.gridOuter);
+    this.edt(this.gridInner);
 
     for (i = 0; i < this.fontSize * this.fontSizeHeight; i++) {
         var d = Math.sqrt(this.gridOuter[i]) - Math.sqrt(this.gridInner[i]);
@@ -59,26 +67,38 @@ TinySDF.prototype.draw = function (char) {
 };
 
 // 2D Euclidean squared distance transform by Felzenszwalb & Huttenlocher https://cs.brown.edu/~pff/papers/dt-final.pdf
-function edt(data, width, height, f, v, z) {
-    for (var x = 0; x < width; x++) edt1d(data, x, width, height, f, v, z);
-    for (var y = 0; y < height; y++) edt1d(data, y * width, 1, width, f, v, z);
+TinySDF.prototype.edt = function(grid) {
+    width = this.fontSize;
+    height = this.fontSizeHeight;
+    for (var x = 0; x < width; x++) {
+        this.edt1d(grid, x, width, height);
+    }
+    for (var y = 0; y < height; y++) {
+        this.edt1d(grid, y * width, 1, width);
+    }
 }
 
 // 1D squared distance transform
-function edt1d(grid, offset, stride, length, f, v, z) {
+TinySDF.prototype.edt1d = function(grid, offset, stride, length) {
+    //this.f = new Float64Array(this.fontSizeHeight);
+    //this.z = new Float64Array(this.fontSizeHeight + 1);
+    //this.v = new Uint16Array(this.fontSizeHeight);
+    var scanline = this.f;
+    var v = this.v;
+    var z = this.z;
     var q, k, s, r;
     v[0] = 0;
     z[0] = -INF;
     z[1] = INF;
 
     for (q = 0; q < length; q++) {
-        f[q] = grid[offset + q * stride];
+        scanline[q] = grid[offset + q * stride];
     }
 
     for (q = 1, k = 0, s = 0; q < length; q++) {
         do {
             r = v[k];
-            s = (f[q] - f[r] + q * q - r * r) / (q - r) / 2;
+            s = (scanline[q] - scanline[r] + (q * q) - (r * r)) / (q - r) / 2;
         } while (s <= z[k] && --k > -1);
 
         k++;
@@ -92,6 +112,6 @@ function edt1d(grid, offset, stride, length, f, v, z) {
             k++;
         }
         r = v[k];
-        grid[offset + q * stride] = f[r] + (q - r) * (q - r);
+        grid[offset + q * stride] = scanline[r] + (q - r) * (q - r);
     }
 }

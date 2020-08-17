@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     document.body.appendChild(window.container());
     var belt = new parsegraph_TimingBelt();
     belt.addWindow(window);
+    belt.setGovernor(false);
+    belt.setBurstIdle(true);
     parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
     var viewport = new parsegraph_Viewport(window, world);
     window.addComponent(viewport.component());
@@ -26,13 +28,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
     caret.push();
     caret.pull('d');
     caret.spawnMove('d', 'u');
-    bible.getOldTestament(caret, function() {
-        caret.pop();
-        caret.spawnMove('f', 'u');
-        bible.getNewTestament(caret);
-    }, this);
     world.plot(caret.root());
     viewport.showInCamera(caret.root());
+    bible.preload(function() {
+        bible.getOldTestament(caret, function() {
+            caret.pop();
+            caret.spawnMove('f', 'u');
+            bible.getNewTestament(caret);
+        });
+    });
     belt.queueJob(function(timeout) {
         return bible.tick();
     });

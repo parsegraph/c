@@ -5,9 +5,9 @@ parsegraph_BlockPainter_VertexShader =
 "attribute vec2 a_texCoord;\n" +
 "attribute vec4 a_color;\n" +
 "attribute vec4 a_borderColor;\n" +
-"attribute float a_borderRoundedness;\n" +
-"attribute float a_borderThickness;\n" +
-"attribute float a_aspectRatio;\n" +
+"attribute highp float a_borderRoundedness;\n" +
+"attribute highp float a_borderThickness;\n" +
+"attribute highp float a_aspectRatio;\n" +
 "\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp float borderThickness;\n" +
@@ -99,7 +99,7 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
 "\n" +
 "highp float aastep(float threshold, float value)\n" +
 "{\n" +
-    "highp float afwidth = 0.7 * length(vec2(dFdx(value), dFdy(value)));\n" +
+    "highp float afwidth = 0.9 * length(vec2(dFdx(value), dFdy(value)));\n" +
     "return smoothstep(threshold - afwidth, threshold + afwidth, value);\n" +
     //"return step(threshold, value);\n" +
 "}\n" +

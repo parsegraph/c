@@ -56,6 +56,7 @@ parsegraph_SCRIPT_FILES = \
 	src/id.js \
 	src/list.js \
 	src/gl.js \
+	src/sdf.js \
 	src/types/permissions.js \
 	src/types/room.js \
 	src/types/multislot.js \
@@ -188,3 +189,6 @@ rpm:
 	chmod +x ./rpm.sh
 	./rpm.sh
 .PHONY: rpm
+
+%.js: %.ts
+	tsc $^

@@ -163,7 +163,8 @@ function parsegraph_Line(label, text)
     // unique texture rendering of the modified glyph.
     this._glyphs = [];
     this._width = 0;
-    this._height = this.font().letterHeight();
+    this._height = 0;
+    this._text = "";
     if(arguments.length > 1 && text.length > 0) {
         this.appendText(text);
     }
@@ -220,8 +221,10 @@ parsegraph_Line.prototype.appendText = function(text)
         //console.log("LETTER: " + glyphData.letter);
         this._glyphs.push(glyphData);
         this._height = Math.max(this._height, glyphData.height);
-        this._width += glyphData.width;
+        this._width += glyphData.advance;
     }
+
+    this._text += text;
 };
 
 parsegraph_Line.prototype.insertText = function(pos, text)
@@ -242,6 +245,8 @@ parsegraph_Line.prototype.insertText = function(pos, text)
     }
 
     this._glyphs.splice.apply(this._glyphs, spliced);
+
+    this._text = this._text.slice(0, pos) + text + this._text.slice(pos + 1, this._text.length - pos);
 };
 
 parsegraph_Line.prototype.length = function()
@@ -808,26 +813,37 @@ parsegraph_Label.prototype.height = function()
 
 parsegraph_Line.prototype.drawLTRGlyphRun = function(painter, worldX, worldY, pos, fontScale, startRun, endRun)
 {
+    var overlay = painter.window().overlay();
+    painter.drawLine(this._text, worldX, worldY, fontScale);
     //parsegraph_log("Drawing LTR run from %d to %d.", startRun, endRun);
+    var maxAscent = 0;
     for(var q = startRun; q <= endRun; ++q) {
         var glyphData = this._glyphs[q];
-        painter.drawGlyph(glyphData, worldX + pos[0], worldY + pos[1], fontScale);
-        pos[0] += glyphData.advance * fontScale;
+        maxAscent = Math.max(maxAscent, glyphData.ascent);
+    }
+    for(var q = startRun; q <= endRun; ++q) {
+        var glyphData = this._glyphs[q];
+        painter.drawGlyph(glyphData, worldX + pos[0], worldY + pos[1] + maxAscent, fontScale);
+        pos[0] += (glyphData.advance-1) * fontScale;
     }
 };
 
 parsegraph_Line.prototype.drawRTLGlyphRun = function(painter, worldX, worldY, pos, fontScale, startRun, endRun)
 {
+    var overlay = painter.window().overlay();
+    painter.drawLine(this._text, worldX, worldY, fontScale);
     var runWidth = 0;
+    var maxAscent = 0;
     for(var q = startRun; q <= endRun; ++q) {
         var glyphData = this._glyphs[q];
         runWidth += glyphData.advance * fontScale;
+        maxAscent = Math.max(maxAscent, glyphData.ascent);
     }
     var advance = 0;
     for(var q = startRun; q <= endRun; ++q) {
         var glyphData = this._glyphs[q];
-        advance += glyphData.advance * fontScale;
-        painter.drawGlyph(glyphData, worldX + pos[0] + runWidth - advance, worldY + pos[1], fontScale);
+        advance += (glyphData.advance-1) * fontScale;
+        painter.drawGlyph(glyphData, worldX + pos[0] + runWidth - advance, worldY + pos[1] + maxAscent, fontScale);
     }
     pos[0] += runWidth;
 }

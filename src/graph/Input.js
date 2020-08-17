@@ -782,6 +782,8 @@ parsegraph_Input.prototype.Update = function(t)
     var scaleSpeed = 20;
 
     var needsUpdate = this._viewport.mouseVersion() !== this.mouseVersion();
+    this.window().log("Input.Update="+(this._viewport.mouseVersion() +" vs " + this.mouseVersion()));
+
     this._updateRepeatedly = false;
 
     if(this.Get(parsegraph_RESET_CAMERA_KEY) && this._viewport.gl()) {

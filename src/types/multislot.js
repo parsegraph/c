@@ -24,7 +24,31 @@ function parsegraph_Multislot(room, rowSize, columnSize, color, subtype)
 
 parsegraph_Multislot.prototype.setId = function(id)
 {
+    if(this._id) {
+        this.room().removeItemListener(this._id, this.onItemEvent, this);
+    }
     this._id = id;
+    if(this._id) {
+        this.room().addItemListener(this._id, this.onItemEvent, this);
+    }
+};
+
+parsegraph_Multislot.prototype.onItemEvent = function(obj)
+{
+    if(!this.id()) {
+        return;
+    }
+    if(obj.event === "pushListItem" && obj.list_id === this.id()) {
+        var item = obj.item;
+        if(item.type === "multislot::plot") {
+            var itemData = JSON.parse(item.value);
+            var plot = this.getPlot(itemData[0]);
+            if(!plot) {
+                throw new Error("Plot not found");
+            }
+            plot.setId(obj.item_id);
+        }
+    }
 };
 
 parsegraph_Multislot.prototype.id = function()
@@ -87,6 +111,8 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
     us.backgroundColor = this._color;
     var bs = parsegraph_copyStyle('b');
     bs.backgroundColor = this._color;
+
+    this._root.setLabel(subtype);
     if(subtype === 0) {
         var index = 0;
         for(var y = 0; y < this._columnSize; ++y) {
@@ -172,12 +198,8 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
             }
             car.push();
             for(var x = 0; x < this._rowSize; ++x) {
-                if(x > 0) {
-                    car.spawnMove('d', 'u');
-                    car.node().setBlockStyle(cs);
-                }
                 car.spawnMove('d', 's');
-                car.node().setBlockStyle(bs);
+                car.node().setBlockStyle(cs);
                 var plot = spawnPlot.call(this);
                 car.connect('f', plot.node());
                 car.pull('f');
@@ -209,12 +231,8 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
             }
             car.push();
             for(var x = 0; x < this._rowSize; ++x) {
-                if(x > 0) {
-                    car.spawnMove('d', 'u');
-                    car.node().setBlockStyle(cs);
-                }
                 car.spawnMove('d', 's');
-                car.node().setBlockStyle(bs);
+                car.node().setBlockStyle(cs);
                 car.pull('b');
                 var plot = spawnPlot.call(this);
                 car.connect('b', plot.node());
@@ -246,7 +264,7 @@ parsegraph_Multislot.prototype.build = function(car, subtype)
             car.push();
             for(var x = 0; x < this._rowSize; ++x) {
                 car.spawnMove('b', 's');
-                car.node().setBlockStyle(bs);
+                car.node().setBlockStyle(cs);
                 var plot = spawnPlot.call(this);
                 car.connect('d', plot.node());
                 car.pull('d');
@@ -278,7 +296,9 @@ parsegraph_listClasses.multislot = {
             var plotData = JSON.parse(child.value);
             var plot = multislot.getPlot(plotData[0]);
             plot.setId(child.id);
-            plot.claim(child.username);
+            if(child.username) {
+                plot.claim(child.username);
+            }
             console.log(child);
         }
         else {

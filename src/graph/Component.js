@@ -13,6 +13,8 @@ function parsegraph_Component(peer, peerType)
     this._peer = peer;
     this._peerType = peerType;
     this._window = null;
+    this._serializerFunc = null;
+    this._serializerFuncThisArg = null;
 }
 
 parsegraph_Component.prototype.toString = function()
@@ -130,4 +132,10 @@ parsegraph_Component.prototype.setContextChanged = function(contextChanged, cont
 {
     this._contextChangedFunc = contextChanged;
     this._contextChangedFuncThisArg = contextChangedThisArg;
+};
+
+parsegraph_Component.prototype.setSerializer = function(serializerFunc, serializerFuncThisArg)
+{
+    this._serializerFunc = serializerFunc;
+    this._serializerFuncThisArg = serializerFuncThisArg;
 };

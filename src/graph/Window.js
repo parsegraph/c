@@ -36,11 +36,12 @@ function parsegraph_Window()
     this._renderbuffer = null;
     this._glTexture = null;
     this._program = null;
+    this._debugLog = "";
 
     this._schedulerFunc = null;
     this._schedulerFuncThisArg = null;
 
-    // The canvas that will be drawn to.
+    // The 3D canvas that will be drawn to.
     this._canvas = document.createElement("canvas");
     //if(WebGLDebugUtils) {
         //this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
@@ -66,6 +67,19 @@ function parsegraph_Window()
     this._shaders = {};
 
     this._container.appendChild(this._canvas);
+
+    this._overlayCanvas = document.createElement("canvas");
+    this._overlayCanvas.style.position = "absolute";
+    this._overlayCanvas.style.top = "0";
+    this._overlayCanvas.style.left = "0";
+    this._overlayCanvas.style.pointerEvents = "none";
+    this._overlayCtx = this._overlayCanvas.getContext('2d');
+    this._container.appendChild(this._overlayCanvas);
+
+    this._debugPanel = document.createElement("span");
+    this._debugPanel.className = "debug";
+    this._debugPanel.innerHTML = "DEBUG";
+    //this._container.appendChild(this._debugPanel);
 
     this._layoutList = new parsegraph_LayoutList(parsegraph_COMPONENT_LAYOUT_HORIZONTAL);
 
@@ -439,9 +453,9 @@ parsegraph_Window.prototype.handleEvent = function(eventType, inputData)
         // Input data is topleft-origin.
         // Component position is bottomleft-origin.
         // Component input should be topleft-origin.
-        //console.log("Raw Y: y=" + inputData.y +", cs.h=" + compSize.height() + ", cs.y=" + compSize.y());
+        console.log("Raw Y: y=" + inputData.y +", cs.h=" + compSize.height() + ", cs.y=" + compSize.y());
         inputData.y -= this.height() - (compSize.y() + compSize.height());
-        //console.log("Adjusted Y: " + inputData.y + ", " + compSize.y());
+        console.log("Adjusted Y: " + inputData.y + ", " + compSize.y());
     }
     if(this._focusedComponent) {
         if(eventType === "touchend" || eventType === "mousemove") {
@@ -552,20 +566,32 @@ parsegraph_Window.prototype.canvas = function()
     return this._canvas;
 };
 
+parsegraph_Window.prototype.overlay = function()
+{
+    return this._overlayCtx;
+};
+
+parsegraph_Window.prototype.overlayCanvas = function()
+{
+    return this._overlayCanvas;
+};
+
 parsegraph_Window.prototype.gl = function()
 {
     if(this._gl) {
         return this._gl;
     }
     //this._gl = this._canvas.getContext("webgl2", {
-        //antialias:false
+        //antialias:true
     //});
     if(this._gl) {
-        this.render = this.renderWebgl2;
+        //this.render = this.renderWebgl2;
+        parsegraph_checkGLError(this._gl, "WebGL2 creation");
         return this._gl;
     }
     this._gl = this._canvas.getContext("webgl");
     if(this._gl) {
+        parsegraph_checkGLError(this._gl, "WebGL creation");
         return this._gl;
     }
     throw new Error("GL context is not supported");
@@ -1101,6 +1127,22 @@ parsegraph_Window.prototype.renderFramebuffer = function()
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
 
+parsegraph_Window.prototype.log = function(msg)
+{
+    this._debugLog += msg + "<br/>";
+};
+
+parsegraph_Window.prototype.clearLog = function()
+{
+    this._debugLog = "";
+    this.finalizeLog();
+};
+
+parsegraph_Window.prototype.finalizeLog = function()
+{
+    this._debugPanel.innerHTML = this._debugLog;
+};
+
 parsegraph_Window.prototype.renderBasic = function()
 {
     this._container.style.backgroundColor = this._backgroundColor.asRGB();
@@ -1144,5 +1186,8 @@ parsegraph_Window.prototype.renderBasic = function()
 
 parsegraph_Window.prototype.render = function()
 {
+    this._overlayCanvas.width = top.window.innerWidth;
+    this._overlayCanvas.height = top.window.innerHeight;
+    this._overlayCtx.clearRect(0, 0, this._overlayCanvas.width, this._overlayCanvas.height);
     return this.renderBasic();
 };

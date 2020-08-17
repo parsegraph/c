@@ -24,6 +24,7 @@
  * The number of potentially visible grid cells is determined for each axis using the camera's axis size adjusted by some constant.
  */
 parsegraph_Viewport_COUNT = 0;
+parsegraph_Viewport_TYPE = "parsegraph_Viewport";
 function parsegraph_Viewport(window, world)
 {
     if(!window) {
@@ -31,21 +32,24 @@ function parsegraph_Viewport(window, world)
     }
     this._id = ++parsegraph_Viewport_COUNT;
     // Construct the graph.
-    this._component = new parsegraph_Component(this, "parsegraph_Viewport");
+    this._component = new parsegraph_Component(this, parsegraph_Viewport_TYPE);
     this._window = window;
     this._world = world;
     this._camera = new parsegraph_Camera();
     this._carousel = new parsegraph_Carousel(this);
     this._input = new parsegraph_Input(this);
+
+    this._menu = null;
     this._menu = new parsegraph_BurgerMenu(this);
     //this._piano = new parsegraph_AudioKeyboard(this._camera);
-    this._renderedMouse = null;
+    this._renderedMouse = -1;
     this._needsRender = true;
 
     this._component.setPainter(this.paint, this);
     this._component.setRenderer(this.render, this);
     this._component.setEventHandler(this.handleEvent, this);
     this._component.setContextChanged(this.contextChanged, this);
+    this._component.setSerializer(this.serialize, this);
 };
 parsegraph_Viewport_Tests = new parsegraph_TestSuite("parsegraph_Viewport");
 
@@ -95,6 +99,14 @@ parsegraph_Viewport.prototype.handleEvent = function(eventType, eventData)
         return this._input.Update(eventData);
     }
     console.log("Unhandled event type: " + eventType);
+};
+
+parsegraph_Viewport.prototype.serialize = function()
+{
+    return {
+        componentType:parsegraph_Viewport_TYPE,
+        camera:this._camera.toJSON()
+    };
 };
 
 parsegraph_Viewport.prototype.component = function()
@@ -229,7 +241,7 @@ parsegraph_Viewport.prototype.paint = function(timeout)
         return false;
     }
     if(!this.needsRepaint()) {
-        //console.log("World does not need repainting");
+        //window.log("Viewport is not dirty");
         return false;
     }
 
@@ -279,10 +291,14 @@ parsegraph_Viewport.prototype.render = function(width, height, avoidIfPossible)
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT);
+    var overlay = this.window().overlay();
+    overlay.textBaseline = "top";
+    overlay.scale(this.camera().scale(), this.camera().scale());
+    overlay.translate(this.camera().x(), this.camera().y());
 
     var needsUpdate = this._world.render(this._window, cam);
     if(needsUpdate) {
-        //console.log("World was rendered dirty.");
+        this._window.log("World was rendered dirty.");
         this.scheduleRender();
     }
 
@@ -298,5 +314,6 @@ parsegraph_Viewport.prototype.render = function(width, height, avoidIfPossible)
         this._renderedMouse = this.input().mouseVersion();
         this._needsRender = this._needsRepaint;
     }
+
     return needsUpdate;
 };

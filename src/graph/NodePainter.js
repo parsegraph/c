@@ -714,6 +714,7 @@ parsegraph_NodePainter.prototype.paintBlock = function(node)
 
 parsegraph_NodePainter.prototype.render = function(world, scale, forceSimple)
 {
+    //console.log("RENDERING THE NODE from nodepainter");
     ++this._consecutiveRenders;
     var gl = this.gl();
     gl.disable(gl.CULL_FACE);

@@ -1,13 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Text - Rainback</title>
+<title>Room - Rainback</title>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" type="text/css" href="/environment.css"/>
 <script src="/parsegraph-1.3.js"></script>
 <script src="/parsegraph-widgets-1.3.js"></script>
 <script>
+
+function parsegraph_RoomDebugPanel()
+{
+    this._container = document.createElement("div");
+    this._container.style.width = "100%";
+    this._container.style.overflowY = "scroll";
+
+    var btn = document.createElement("button");
+    btn.innerHTML = "Spawn";
+    this._container.appendChild(btn);
+}
+
+parsegraph_RoomDebugPanel.prototype.container = function() {
+    return this._container;
+};
+
 document.addEventListener("DOMContentLoaded", function(event) {
     parsegraph_initialize();
     var window = new parsegraph_Window();
@@ -19,12 +35,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var viewport = new parsegraph_Viewport(window, world);
     window.addComponent(viewport.component());
 
-    var text = buildTextDemo();
-    world.plot(text);
-    viewport.showInCamera(text);
+    window.container().style.height = "50vh";
+    var panel = new parsegraph_RoomDebugPanel();
+    panel.container().style.height = "50vh";
+    document.body.appendChild(panel.container());
+
+    var room = new parsegraph_Room(belt, world);
+    world.plot(room.node());
+    viewport.showInCamera(room.node());
+    room.offline().start();
 });
 </script>
 </head>
-<body class="parsegraph">
+<body>
 </body>
 </html>
