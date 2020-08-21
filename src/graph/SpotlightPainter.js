@@ -1,4 +1,11 @@
-parsegraph_SpotlightPainter_VertexShader =
+import {
+    parsegraph_generateRectangleVertices,
+    parsegraph_generateRectangleTexcoords,
+    parsegraph_compileProgram
+} from '../gl';
+import { parsegraph_createPagingBuffer } from '../pagingbuffer';
+
+const parsegraph_SpotlightPainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
@@ -14,7 +21,7 @@ parsegraph_SpotlightPainter_VertexShader =
     "texCoord = a_texCoord;" +
 "}";
 
-parsegraph_SpotlightPainter_FragmentShader =
+const parsegraph_SpotlightPainter_FragmentShader =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -31,7 +38,7 @@ parsegraph_SpotlightPainter_FragmentShader =
     "gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);" +
 "}";
 
-function parsegraph_SpotlightPainter(window)
+export default function parsegraph_SpotlightPainter(window)
 {
     this._window = window;
     if(!this._window) {

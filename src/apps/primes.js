@@ -1,11 +1,21 @@
-function parsegraph_PrimesWidget(world)
+import parsegraph_Caret from '../graph/Caret';
+import parsegraph_ActionCarousel from '../parsegraph_ActionCarousel';
+import {
+    parsegraph_cloneStyle,
+    parsegraph_SLOT_MATH_STYLE
+} from '../graph/NodeStyle';
+import parsegraph_Color from '../graph/Color';
+import * as NodeType from '../graph/NodeType';
+import * as NodeDirection from '../graph/NodeDirection';
+
+export default function parsegraph_PrimesWidget(world)
 {
     this._world = world;
 
     this.knownPrimes = [];
     this.position = 2;
 
-    this.caret = new parsegraph_Caret(parsegraph_BLOCK);
+    this.caret = new parsegraph_Caret(NodeType.parsegraph_BLOCK);
     this.caret.setMathMode(true);
     this.caret.setWorld(this._world);
     this.caret.label("1");
@@ -69,8 +79,8 @@ parsegraph_PrimesWidget.prototype.step = function()
     };
 
     for(var i = 0; i < this.knownPrimes.length; ++i) {
-        var prime = this.knownPrimes[i];
-        modulus = prime.calculate(this.position);
+        let prime = this.knownPrimes[i];
+        let modulus = prime.calculate(this.position);
         if(modulus == 0) {
             // It's a multiple, so there's no chance for primality.
             this.caret.spawnMove('u', 'b');
@@ -91,11 +101,11 @@ parsegraph_PrimesWidget.prototype.step = function()
         this.caret.spawnMove('u', 'b');
         this.caret.label(this.position);
         this.caret.node()._id = this.position + ":" + this.position;
-        addHighlights.call(this, parsegraph_DOWNWARD);
+        addHighlights.call(this, NodeDirection.parsegraph_DOWNWARD);
         this.knownPrimes.push(new parsegraph_PrimesModulo(this.position));
     }
     this.caret.pop();
-    addHighlights.call(this, parsegraph_UPWARD);
+    addHighlights.call(this, NodeDirection.parsegraph_UPWARD);
 
     // Advance.
     ++(this.position);

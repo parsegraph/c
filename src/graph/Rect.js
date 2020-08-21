@@ -1,4 +1,6 @@
-function parsegraph_Rect(x, y, width, height)
+import parsegraph_TestSuite from '../TestSuite';
+
+export default function parsegraph_Rect(x, y, width, height)
 {
     this._x = x;
     this._y = y;
@@ -6,9 +8,9 @@ function parsegraph_Rect(x, y, width, height)
     this._height = height;
 }
 
-parsegraph_Rect_Tests = new parsegraph_TestSuite("parsegraph_Rect");
+const parsegraph_Rect_Tests = new parsegraph_TestSuite("parsegraph_Rect");
 
-function parsegraph_createRect(x, y, width, height)
+export function parsegraph_createRect(x, y, width, height)
 {
     return new parsegraph_Rect(x, y, width, height);
 }

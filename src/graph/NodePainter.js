@@ -1,4 +1,34 @@
-function parsegraph_NodePainter(window)
+import {
+    parsegraph_INWARD,
+    parsegraph_DOWNWARD,
+    parsegraph_UPWARD,
+    parsegraph_FORWARD,
+    parsegraph_BACKWARD,
+    parsegraph_forEachCardinalNodeDirection,
+    parsegraph_isVerticalNodeDirection,
+    parsegraph_nodeDirectionSign
+} from './NodeDirection';
+import {
+    parsegraph_checkGLError,
+    parsegraph_getTextureSize,
+} from "../gl";
+import {
+    parsegraph_SLIDER,
+    parsegraph_SCENE,
+} from './NodeType';
+import parsegraph_BlockPainter from './BlockPainter';
+import {
+    parsegraph_BACKGROUND_COLOR,
+} from './settings';
+import {
+    parsegraph_SELECTED_LINE_COLOR,
+    parsegraph_LINE_COLOR,
+    parsegraph_LINE_THICKNESS
+} from './NodeStyle';
+import parsegraph_Size from './Size';
+import parsegraph_GlyphPainter from './GlyphPainter';
+
+export default function parsegraph_NodePainter(window)
 {
     this._window = window;
 

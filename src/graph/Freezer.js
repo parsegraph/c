@@ -1,4 +1,9 @@
-parsegraph_Freezer_VertexShader =
+import {
+    parsegraph_FREEZER_TEXTURE_SCALE
+} from './settings';
+import parsegraph_Camera from './Camera';
+
+const parsegraph_Freezer_VertexShader =
 "uniform mat3 u_world;\n" +
 "" +
 "attribute vec2 a_position;" +
@@ -11,7 +16,7 @@ parsegraph_Freezer_VertexShader =
     "texCoord = a_texCoord;" +
 "}";
 
-parsegraph_Freezer_FragmentShader =
+const parsegraph_Freezer_FragmentShader =
 "uniform sampler2D u_texture;\n" +
 "varying highp vec2 texCoord;\n" +
 "\n" +
@@ -20,7 +25,7 @@ parsegraph_Freezer_FragmentShader =
     //"gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
 "}";
 
-parsegraph_FREEZER_MARGIN = 8;
+const parsegraph_FREEZER_MARGIN = 8;
 
 function parsegraph_FreezerWindow(freezer, window)
 {
@@ -132,7 +137,7 @@ parsegraph_FreezerWindow.prototype.gl = function()
     return this._gl;
 };
 
-function parsegraph_Freezer(window)
+export default function parsegraph_Freezer(window)
 {
     this._frozenNodes = [];
     this._textureScale = parsegraph_FREEZER_TEXTURE_SCALE;
@@ -291,7 +296,7 @@ parsegraph_FreezerRow.prototype.freezer = function()
     return this._freezer;
 };
 
-parsegraph_FreezerSlot_COUNT = 0;
+var parsegraph_FreezerSlot_COUNT = 0;
 
 function parsegraph_FreezerSlot(row)
 {

@@ -1,14 +1,18 @@
-parsegraph_NULL_NODE_ALIGNMENT = 0;
-parsegraph_DO_NOT_ALIGN = 1;
-parsegraph_ALIGN_NEGATIVE = 2;
-parsegraph_ALIGN_CENTER = 3;
-parsegraph_ALIGN_POSITIVE = 4;
+import {
+    parsegraph_createException,
+    parsegraph_BAD_NODE_ALIGNMENT
+} from './Exception';
+export const parsegraph_NULL_NODE_ALIGNMENT = 0;
+export const parsegraph_DO_NOT_ALIGN = 1;
+export const parsegraph_ALIGN_NEGATIVE = 2;
+export const parsegraph_ALIGN_CENTER = 3;
+export const parsegraph_ALIGN_POSITIVE = 4;
 
 // Used to align inward nodes.
-parsegraph_ALIGN_HORIZONTAL = 5;
-parsegraph_ALIGN_VERTICAL = 6;
+export const parsegraph_ALIGN_HORIZONTAL = 5;
+export const parsegraph_ALIGN_VERTICAL = 6;
 
-function parsegraph_nameNodeAlignment(given)
+export function parsegraph_nameNodeAlignment(given)
 {
     switch(given) {
         case parsegraph_NULL_NODE_ALIGNMENT:
@@ -29,7 +33,7 @@ function parsegraph_nameNodeAlignment(given)
     throw parsegraph_createException(parsegraph_BAD_NODE_ALIGNMENT, given);
 }
 
-function parsegraph_readNodeAlignment(given)
+export function parsegraph_readNodeAlignment(given)
 {
     if(typeof(given) === "number") {
         return given;

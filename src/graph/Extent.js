@@ -1,8 +1,19 @@
-parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
+import parsegraph_TestSuite from '../TestSuite';
+import {
+    parsegraph_getTimeInMillis,
+    parsegraph_TIMEOUT
+} from '../date';
+import {
+    parsegraph_FUZZINESS
+} from './settings';
+import {
+    parsegraph_fuzzyEquals
+} from '../math';
 
-parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
+const parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
+const parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
 
-function parsegraph_Extent(copy)
+export default function parsegraph_Extent(copy)
 {
     if(copy !== undefined && copy._bounds) {
         this._offset = copy._offset;
@@ -888,12 +899,12 @@ parsegraph_Extent.prototype.toDom = function(message)
     return rv;
 }
 
-function parsegraph_createExtent(copy)
+export function parsegraph_createExtent(copy)
 {
     return new parsegraph_Extent(copy);
 }
 
-parsegraph_Extent_Tests = new parsegraph_TestSuite("parsegraph_Extent");
+const parsegraph_Extent_Tests = new parsegraph_TestSuite("parsegraph_Extent");
 
 parsegraph_Extent_Tests.addTest("parsegraph_Extent.simplify", function() {
     var extent = new parsegraph_Extent();
@@ -1072,7 +1083,7 @@ parsegraph_Extent_Tests.addTest("parsegraph_Extent.combinedExtent", function(res
     }
 });
 
-parsegraph_checkExtentsEqual = function(caret, direction, expected, resultDom)
+export function parsegraph_checkExtentsEqual(caret, direction, expected, resultDom)
 {
     if(caret.node().extentsAt(direction).equals(expected)) {
         return true;

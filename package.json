@@ -1,0 +1,31 @@
+{
+  "name": "graph-js",
+  "version": "1.0.0",
+  "description": "graph-js contains the JavaScript and C implementations of the Parsegraph API. The Parsegraph API can be used to render a user-navigable 2D environment of  connected blocks, slots, scenes, sliders, and buds. The JavaScript implementation is contained in an HTML5 canvas and uses a WebGLRenderingContext. The C implementation contains an unfinished window manager-less KMS-based C port of the JavaScript API that can be used from runlevel=3 in the Fedora distro of Linux.",
+  "main": "GLWidget.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "autobuild": "webpack --watch --config webpack.config.js",
+    "build": "webpack --config webpack.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "dafrito.com:graph-js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.1",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-typescript": "^7.10.4",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "core-js": "^3.6.5"
+  }
+}

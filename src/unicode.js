@@ -7,15 +7,15 @@
     };
 }
 
-function parsegraph_Unicode() {
+export default function parsegraph_Unicode() {
     this.unicodeProperties = {};
     this.unicodeBidiCounts = {};
     this.unicodeCategoryCounts = {};
 };
 
-parsegraph_UNICODE_INSTANCE = null;
-parsegraph_UNICODE_STORAGE = localStorage;
-function parsegraph_defaultUnicode()
+let parsegraph_UNICODE_INSTANCE = null;
+let parsegraph_UNICODE_STORAGE = localStorage;
+export function parsegraph_defaultUnicode()
 {
     if(!parsegraph_UNICODE_INSTANCE) {
         parsegraph_UNICODE_INSTANCE = new parsegraph_Unicode();
@@ -23,6 +23,11 @@ function parsegraph_defaultUnicode()
         parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
     }
     return parsegraph_UNICODE_INSTANCE;
+}
+
+export function parsegraph_setDefaultUnicode(unicode)
+{
+    parsegraph_UNICODE_INSTANCE = unicode;
 }
 
 parsegraph_Unicode.prototype.get = function(codeOrLetter)
@@ -35,7 +40,7 @@ parsegraph_Unicode.prototype.get = function(codeOrLetter)
 
 {
 // SemanticCodeValue:[Isolated, Initial, Medial, Final]. Use null for non-applicable.
-var unicodeCursiveMap = {
+const unicodeCursiveMap = {
     0x627:[0xfe8d, null, null, 0xfe8e], // ALEF
     0x628:[0xfe8f, 0xfe91, 0xfe92, 0xfe90], // BEH
     0x629:[0xfe93, null, null, 0xfe94], // MARBUTA
@@ -111,7 +116,6 @@ parsegraph_Unicode.prototype.getGlyphDirection = function(text)
         default:
             throw new Error("Unrecognized character: \\u" + glyphData.letter.charCodeAt(0).toString(16));
     }
-    return null;
 };
 
 parsegraph_Unicode.prototype.cursive = function(givenLetter, prevLetter, nextLetter)
@@ -172,24 +176,22 @@ parsegraph_Unicode.prototype.cursive = function(givenLetter, prevLetter, nextLet
     return givenLetter;
 };
 
-(function() {
-    var i = 0;
-    UNICODE_codeValue = i++;
-    //UNICODE_characterName = i++;
-    UNICODE_generalCategory = i++;
-    //UNICODE_canonicalCombiningClasses = i++;
-    UNICODE_bidirectionalCategory = i++;
-    //UNICODE_decompositionMapping = i++;
-    //UNICODE_decimalDigitValue = i++;
-    //UNICODE_digitValue = i++;
-    //UNICODE_numericValue = i++;
-    //UNICODE_mirrored = i++;
-    //UNICODE_unicode10Name = i++;
-    //UNICODE_commentField = i++;
-    //UNICODE_uppercaseMapping = i++;
-    //UNICODE_lowercaseMapping = i++;
-    //UNICODE_titlecaseMapping = i++;
-})();
+let i = 0;
+const UNICODE_codeValue = i++;
+//const UNICODE_characterName = i++;
+const UNICODE_generalCategory = i++;
+//const UNICODE_canonicalCombiningClasses = i++;
+const UNICODE_bidirectionalCategory = i++;
+//const UNICODE_decompositionMapping = i++;
+//const UNICODE_decimalDigitValue = i++;
+//const UNICODE_digitValue = i++;
+//const UNICODE_numericValue = i++;
+//const UNICODE_mirrored = i++;
+//const UNICODE_unicode10Name = i++;
+//const UNICODE_commentField = i++;
+//const UNICODE_uppercaseMapping = i++;
+//const UNICODE_lowercaseMapping = i++;
+//const UNICODE_titlecaseMapping = i++;
 
 parsegraph_Unicode.prototype.loadFromString = function(t)
 {

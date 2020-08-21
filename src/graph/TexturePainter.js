@@ -1,4 +1,14 @@
-parsegraph_TexturePainter_VertexShader =
+import {
+   compileShader
+} from '../gl';
+import {
+    parsegraph_createPagingBuffer
+} from '../pagingbuffer';
+import {
+    parsegraph_createColor
+} from './Color';
+
+const parsegraph_TexturePainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "" +
 "attribute vec2 a_position;" +
@@ -14,7 +24,7 @@ parsegraph_TexturePainter_VertexShader =
    "alpha = a_alpha;" +
 "}";
 
-parsegraph_TexturePainter_FragmentShader =
+const parsegraph_TexturePainter_FragmentShader =
 "uniform sampler2D u_texture;\n" +
 "varying highp vec2 texCoord;\n" +
 "varying highp float alpha;\n" +
@@ -24,7 +34,7 @@ parsegraph_TexturePainter_FragmentShader =
     "gl_FragColor.a = gl_FragColor.a * alpha;" +
 "}";
 
-function parsegraph_TexturePainter(window, textureId, texWidth, texHeight)
+export default function parsegraph_TexturePainter(window, textureId, texWidth, texHeight)
 {
     this._gl = window.gl();
     var gl = this._gl;

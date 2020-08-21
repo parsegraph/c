@@ -1,6 +1,11 @@
 var INF = 1e20;
 
-function TinySDF(fontSize, radius, cutoff, fontFamily, fontWeight) {
+import {
+    parsegraph_LETTER_HEIGHT,
+    parsegraph_SDF_RADIUS
+} from './graph/settings';
+
+export default function TinySDF(fontSize, radius, cutoff, fontFamily, fontWeight) {
     //console.log("TinySDF (fontsize=" + fontSize + ")");
     this.fontSize = fontSize || 24;
     this.fontSizeHeight = Math.ceil(fontSize * parsegraph_LETTER_HEIGHT);

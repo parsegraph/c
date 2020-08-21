@@ -24,12 +24,15 @@ parsegraph_Test.prototype.isTest = function()
     return typeof(this._runner[0]) === "function";
 };
 
-parsegraph_Test.prototype.run = function(listener, listenerThisArg, resultDom)
+parsegraph_Test.prototype.run = function(listener, listenerThisArg, resultDom, suiteResult)
 {
+    if(!suiteResult) {
+        suiteResult = new parsegraph_TestSuiteResult();
+    }
     if(this.isTestSuite()) {
         try {
             // The runner is another test or test suite.
-            var testResult = this._runner[0].run(listener, listenerThisArg);
+            var testResult = this._runner[0].run(listener, listenerThisArg, resultDom, suiteResult);
 
             if(testResult.isSuccessful()) {
                 testStatus = "Successful";
@@ -38,6 +41,7 @@ parsegraph_Test.prototype.run = function(listener, listenerThisArg, resultDom)
             else {
                 testStatus = "Failed";
                 testResult = testResult;
+                console.log("Suite failed with result: ", testResult);
             }
         }
         catch(ex) {
@@ -50,9 +54,10 @@ parsegraph_Test.prototype.run = function(listener, listenerThisArg, resultDom)
         var testStatus = "Started";
         var testResult;
         try {
-            testResult = this._runner[0].call(this._runner[1], resultDom);
+            testResult = this._runner[0].call(this._runner[1], resultDom, suiteResult);
             if(testResult !== undefined) {
                 testStatus = "Failed";
+                console.log("Test failed with result: ", testResult);
             }
             else {
                 testStatus = "Successful";
@@ -108,9 +113,7 @@ parsegraph_TestResult.prototype.test = function()
     return this._test;
 };
 
-var parsegraph_AllTests;
-
-function parsegraph_TestSuite(name, dontAutoadd)
+export default function parsegraph_TestSuite(name, dontAutoadd)
 {
     if(name === undefined) {
         this._name = "Test";
@@ -233,10 +236,7 @@ parsegraph_TestSuiteResult.prototype.testFinished = function(result)
 
 parsegraph_TestSuiteResult.prototype.isSuccessful = function()
 {
-    return this._testsStarted > 0 &&
-        this._testsStarted == this._testsSuccessful &&
-        this._testsFailed == 0 &&
-        this._testsCrashed == 0;
+    return this._testsStarted > 0 && this._testsFailed == 0 && this._testsCrashed == 0;
 };
 
 parsegraph_TestSuiteResult.prototype.toString = function()
@@ -254,7 +254,7 @@ parsegraph_TestSuiteResult.prototype.toString = function()
     }
 };
 
-parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
+parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg, resultDom, testResults)
 {
     var notify = function() {
         if(listener) {
@@ -262,7 +262,9 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
         }
     };
 
-    var testResults = new parsegraph_TestSuiteResult();
+    if(!testResults) {
+        testResults = new parsegraph_TestSuiteResult();
+    }
 
     // Run the given listener for each test object.
     this._tests.forEach(function(test) {
@@ -275,7 +277,7 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
             testResults.testStarted();
 
             // Run the test.
-            var result = test.run(listener, listenerThisArg);
+            var result = test.run(listener, listenerThisArg, resultLine, testResults);
 
             if(result.testStatus() == "Crashed") {
                 resultLine.appendChild(document.createElement("br"));
@@ -291,7 +293,7 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
                 return;
             }
 
-            resultLine.appendChild(result.testResult().resultList());
+            //resultLine.appendChild(result.testResult().resultList());
             if(result.testStatus() === "Successful") {
                 resultLine.style.display = "none";
             }
@@ -302,7 +304,7 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
             resultLine.className = result.testStatus();
             resultLine.insertBefore(
                 document.createTextNode(": " + result.testResult()),
-                result.testResult().resultList()
+                resultLine.firstChild.nextSibling
             );
         }
         else if(test.isTest()) {
@@ -314,7 +316,7 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
             testResults.testStarted();
 
             // Run the test.
-            var result = test.run(listener, listenerThisArg, resultLine);
+            var result = test.run(listener, listenerThisArg, resultLine, testResults);
 
             testResults.testFinished(result);
             notify("TestFinished", result);
@@ -347,9 +349,9 @@ parsegraph_TestSuite.prototype.run = function(listener, listenerThisArg)
     return testResults;
 };
 
-parsegraph_AllTests = new parsegraph_TestSuite("parsegraph");
+export const parsegraph_AllTests = new parsegraph_TestSuite("parsegraph");
 
-parsegraph_TestSuite_Tests = new parsegraph_TestSuite();
+const parsegraph_TestSuite_Tests = new parsegraph_TestSuite();
 parsegraph_TestSuite_Tests.addTest(function() {
-    var ts = new parsegraph_TestSuite("Default", false);
+    new parsegraph_TestSuite("Default", false);
 });

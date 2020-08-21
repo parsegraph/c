@@ -1,4 +1,17 @@
-function parsegraph_World()
+import parsegraph_TestSuite from '../TestSuite';
+import parsegraph_Freezer from './Freezer';
+import parsegraph_CameraBox from './CameraBox';
+import {
+    parsegraph_resetNodesPainted,
+    parsegraph_outputNodesPainted
+} from "./Node";
+import { parsegraph_SLIDER } from './NodeType';
+import parsegraph_Caret from './Caret';
+import parsegraph_Rect from './Rect';
+import * as NodeDirection from './NodeDirection';
+import * as NodeType from './NodeType';
+
+export default function parsegraph_World()
 {
     // World-rendered graphs.
     this._worldPaintingDirty = true;
@@ -17,7 +30,7 @@ parsegraph_World.prototype.freezer = function()
     return this._freezer;
 };
 
-parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
+const parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
 
 parsegraph_World.prototype.contextChanged = function(isLost, window)
 {
@@ -124,7 +137,7 @@ parsegraph_World.prototype.mouseOver = function(x, y)
         return 0;
     }
 
-    if(selectedNode.type() == parsegraph_SLIDER) {
+    if(selectedNode.type() == NodeType.parsegraph_SLIDER) {
         //console.log("Selecting slider and repainting");
         selectedNode.setSelected(true);
         this.scheduleRepaint();
@@ -154,13 +167,13 @@ parsegraph_World.prototype.boundingRect = function(outRect)
         var ny = plot.absoluteY();
 
         var boundingValues = [0, 0, 0];
-        plot.extentsAt(parsegraph_FORWARD).boundingValues(boundingValues);
+        plot.extentsAt(NodeDirection.parsegraph_FORWARD).boundingValues(boundingValues);
         var h = boundingValues[0];
-        plot.extentsAt(parsegraph_DOWNWARD).boundingValues(boundingValues);
+        plot.extentsAt(NodeDirection.parsegraph_DOWNWARD).boundingValues(boundingValues);
         var w = boundingValues[0];
 
-        var be = nx - plot.extentOffsetAt(parsegraph_FORWARD);
-        var ue = ny - plot.extentOffsetAt(parsegraph_DOWNWARD);
+        var be = nx - plot.extentOffsetAt(NodeDirection.parsegraph_FORWARD);
+        var ue = ny - plot.extentOffsetAt(NodeDirection.parsegraph_DOWNWARD);
         var fe = be + w;
         var de = ue + h;
 
@@ -309,8 +322,7 @@ parsegraph_World.prototype.paint = function(window, timeout)
             i = savedState;
         }
         else {
-            parsegraph_PAINT_START = new Date();
-            parsegraph_NODES_PAINTED = 0;
+            parsegraph_resetNodesPainted();
         }
 
         while(i < this._worldRoots.length) {
@@ -338,13 +350,8 @@ parsegraph_World.prototype.paint = function(window, timeout)
         window.log("World does not need repaint");
     }
 
-    if(!this._worldPaintingDirty && parsegraph_NODES_PAINTED > 0) {
-        if(parsegraph_PAINT_START) {
-            var paintDuration = parsegraph_elapsed(parsegraph_PAINT_START);
-            //console.log("Painted " + parsegraph_NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (parsegraph_NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
-        }
-        parsegraph_NODES_PAINTED = 0;
-        parsegraph_PAINT_START = null;
+    if(!this._worldPaintingDirty) {
+        parsegraph_outputNodesPainted();
     }
 
     this._cameraBox.paint(window);

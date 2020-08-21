@@ -1,4 +1,4 @@
-function parsegraph_Method(func, funcThisArg)
+export function parsegraph_Method(func, funcThisArg)
 {
     this._func = func;
     this._funcThisArg = funcThisArg;

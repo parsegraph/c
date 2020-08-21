@@ -1,4 +1,6 @@
-function parsegraph_Color(r, g, b, a)
+import parsegraph_TestSuite from '../TestSuite';
+
+export default function parsegraph_Color(r, g, b, a)
 {
     if(arguments.length === 1) {
         g = r;
@@ -78,7 +80,7 @@ parsegraph_Color.prototype.asRGB = function() {
         Math.round(this._b * 255) + ")"
 };
 
-function parsegraph_inverseSRGBCompanding(v)
+export function parsegraph_inverseSRGBCompanding(v)
 {
     if(v <= 0.04045) {
         return v/12.92;
@@ -86,7 +88,7 @@ function parsegraph_inverseSRGBCompanding(v)
     return Math.pow((v+0.055)/1.055, 2.4);
 }
 
-function parsegraph_SRGBCompanding(v)
+export function parsegraph_SRGBCompanding(v)
 {
     if(v <= 0.0031308) {
         return v*12.92;
@@ -238,7 +240,7 @@ parsegraph_Color.prototype.interpolate = function(other, interp) {
     );
 };
 
-parsegraph_fromRGB = function(rgb, defaultAlpha)
+export function parsegraph_fromRGB(rgb, defaultAlpha)
 {
     // Default alpha to 255.
     if(arguments.length === 1) {
@@ -269,12 +271,12 @@ parsegraph_Color.prototype.equals = function(other) {
     return this.r() === other.r() && this.g() === other.g() && this.b() === other.b() && this.a() === other.a();
 };
 
-function parsegraph_createColor(r, g, b, a)
+export function parsegraph_createColor(r, g, b, a)
 {
     return new parsegraph_Color(r, g, b, a);
 }
 
-parsegraph_Color_Tests = new parsegraph_TestSuite("parsegraph_Color");
+const parsegraph_Color_Tests = new parsegraph_TestSuite("parsegraph_Color");
 
 parsegraph_Color_Tests.addTest("parsegraph_Color.simplify", function() {
 });

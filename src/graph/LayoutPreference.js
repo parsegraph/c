@@ -1,10 +1,12 @@
-parsegraph_NULL_LAYOUT_PREFERENCE = 0;
-parsegraph_PREFER_PARENT_AXIS = 1;
-parsegraph_PREFER_PERPENDICULAR_AXIS = 2;
-parsegraph_PREFER_HORIZONTAL_AXIS = 3;
-parsegraph_PREFER_VERTICAL_AXIS = 4;
+import { parsegraph_createException, parsegraph_BAD_LAYOUT_PREFERENCE } from './Exception.js';
 
-function parsegraph_nameLayoutPreference(given)
+export const parsegraph_NULL_LAYOUT_PREFERENCE = 0;
+export const parsegraph_PREFER_PARENT_AXIS = 1;
+export const parsegraph_PREFER_PERPENDICULAR_AXIS = 2;
+export const parsegraph_PREFER_HORIZONTAL_AXIS = 3;
+export const parsegraph_PREFER_VERTICAL_AXIS = 4;
+
+export function parsegraph_nameLayoutPreference(given)
 {
     switch(given) {
         case parsegraph_NULL_LAYOUT_PREFERENCE:

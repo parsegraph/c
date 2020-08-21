@@ -1,5 +1,5 @@
-parsegraph_Component_COUNT = 0;
-function parsegraph_Component(peer, peerType)
+var parsegraph_Component_COUNT = 0;
+export default function parsegraph_Component(peer, peerType)
 {
     this._id = ++parsegraph_Component_COUNT;
     this._painterFunc = null;

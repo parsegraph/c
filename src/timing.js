@@ -1,17 +1,17 @@
-parsegraph_START_TIME = new Date();
+const parsegraph_START_TIME = new Date();
 
-function parsegraph_timediffMs(a, b)
+export function parsegraph_timediffMs(a, b)
 {
     return b.getTime() - a.getTime();
 }
 
-function parsegraph_elapsed(startTime, ct)
+export function parsegraph_elapsed(startTime, ct)
 {
     ct = ct || new Date();
     return ct.getTime() - startTime.getTime();
 }
 
-function parsegraph_later(cb, cbThisArg)
+export function parsegraph_later(cb, cbThisArg)
 {
     var t = setTimeout(function() {
         cb.call(cbThisArg);
@@ -24,7 +24,7 @@ function parsegraph_later(cb, cbThisArg)
     };
 }
 
-function parsegraph_timeout(name, timeoutMs)
+export function parsegraph_timeout(name, timeoutMs)
 {
     if(arguments.length === 1) {
         if(typeof arguments[0] === "number") {
@@ -54,7 +54,7 @@ function parsegraph_timeout(name, timeoutMs)
     };
 }
 
-function parsegraph_AnimationTimer()
+export function parsegraph_AnimationTimer()
 {
     this.timerId = null;
 
@@ -111,7 +111,7 @@ parsegraph_AnimationTimer.prototype.cancel = function()
     this.timerId = null;
 };
 
-function parsegraph_TimeoutTimer()
+export function parsegraph_TimeoutTimer()
 {
     this.delay = 0;
 
@@ -174,7 +174,7 @@ parsegraph_TimeoutTimer.prototype.cancel = function()
     }
 };
 
-function parsegraph_IntervalTimer()
+export function parsegraph_IntervalTimer()
 {
     this.delay = 0;
 

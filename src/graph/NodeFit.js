@@ -1,4 +1,9 @@
-function parsegraph_nameNodeFit(given)
+export const parsegraph_NULL_NODE_FIT = 14;
+export const parsegraph_NODE_FIT_EXACT = 15;
+export const parsegraph_NODE_FIT_LOOSE = 16;
+export const parsegraph_NODE_FIT_NAIVE = 17;
+
+export function parsegraph_nameNodeFit(given)
 {
     switch(given) {
         case parsegraph_NULL_NODE_FIT:

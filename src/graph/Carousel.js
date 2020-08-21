@@ -1,4 +1,11 @@
-function parsegraph_Carousel(viewport)
+import parsegraph_FanPainter from './FanPainter';
+import {
+    matrixMultiply3x3,
+    makeScale3x3,
+    makeTranslation3x3
+} from '../gl';
+
+export default function parsegraph_Carousel(viewport)
 {
     this._viewport = viewport;
 

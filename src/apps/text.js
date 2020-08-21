@@ -1,3 +1,10 @@
+import parsegraph_Caret from '../graph/Caret';
+import {
+    parsegraph_BUD,
+    parsegraph_BLOCK,
+    parsegraph_SLOT
+} from '../graph/NodeType';
+
 var englishSentences = [
 "Hello.",
 "Good morning.",
@@ -114,7 +121,7 @@ var testLanguageNames = [
 "Hungarian",
 ];
 
-function buildTextDemo()
+export default function buildTextDemo()
 {
     var caret = new parsegraph_Caret(parsegraph_BUD);
 

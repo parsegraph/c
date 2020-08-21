@@ -1,3 +1,9 @@
+import {
+    parsegraph_SDF_RADIUS,
+    parsegraph_MAX_PAGE_WIDTH
+} from './settings';
+import TinySDF from '../sdf';
+
 function parsegraph_GlyphPage(font)
 {
     this._id = font._maxPage++;
@@ -35,8 +41,8 @@ function parsegraph_FontWindow(font, window)
  *
  * http://webglfundamentals.org/webgl/lessons/webgl-text-glyphs.html
  */
-parsegraph_Font_COUNT = 0;
-function parsegraph_Font(fontSizePixels, fontName, fillStyle)
+var parsegraph_Font_COUNT = 0;
+export default function parsegraph_Font(fontSizePixels, fontName, fillStyle)
 {
     this._id = parsegraph_Font_COUNT++;
     this._fontSize = fontSizePixels;

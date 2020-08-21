@@ -1,3 +1,11 @@
+import { parsegraph_defaultUnicode } from '../unicode';
+import parsegraph_TestSuite from '../TestSuite';
+import {
+    parsegraph_RIGHT_TO_LEFT,
+    parsegraph_defaultFont
+} from './settings';
+import parsegraph_Caret from './Caret';
+
 function parsegraph_GlyphIterator(font, text)
 {
     this.font = font;
@@ -121,7 +129,7 @@ parsegraph_GlyphIterator.prototype.next = function()
     return this.font.getGlyph(trueText);
 };
 
-parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
+const parsegraph_Label_Tests = new parsegraph_TestSuite("parsegraph_Label");
 
 parsegraph_Label_Tests.addTest("parsegraph_defaultFont", function() {
     var font = parsegraph_defaultFont();
@@ -170,7 +178,7 @@ function parsegraph_Line(label, text)
     }
 }
 
-parsegraph_Line_Tests = new parsegraph_TestSuite("parsegraph_Line");
+const parsegraph_Line_Tests = new parsegraph_TestSuite("parsegraph_Line");
 
 parsegraph_Line_Tests.addTest("new parsegraph_Line", function() {
     var font = parsegraph_defaultFont();
@@ -327,7 +335,7 @@ parsegraph_Line.prototype.glyphs = function()
 //
 //////////////////////////////////////
 
-function parsegraph_Label(font)
+export default function parsegraph_Label(font)
 {
     if(!font) {
         throw new Error("Label requires a font.");

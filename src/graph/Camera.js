@@ -1,4 +1,16 @@
-function parsegraph_Camera()
+import parsegraph_TestSuite from '../TestSuite';
+
+import { parsegraph_VFLIP } from './settings';
+import {
+    matrixMultiply3x3,
+    makeTranslation3x3,
+    makeScale3x3,
+    make2DProjection,
+    matrixTransform2D,
+    makeInverse3x3
+} from "../gl";
+
+export default function parsegraph_Camera()
 {
     this._cameraX = 0;
     this._cameraY = 0;
@@ -13,9 +25,9 @@ function parsegraph_Camera()
     this._vflip = parsegraph_VFLIP;
 };
 
-parsegraph_Camera_Tests = new parsegraph_TestSuite("parsegraph_Camera");
+const parsegraph_Camera_Tests = new parsegraph_TestSuite("parsegraph_Camera");
 
-function parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+export function parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
 {
     var viewHalfWidth = viewWidth / 2;
     var viewHalfHeight = viewHeight / 2;
@@ -74,7 +86,7 @@ parsegraph_Camera_Tests.addTest("containsAll", function() {
     }
 });
 
-function parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
+export function parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)
 {
     var viewHalfWidth = viewWidth / 2;
     var viewHalfHeight = viewHeight / 2;

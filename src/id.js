@@ -1,10 +1,8 @@
+let count = 0;
+export default function parsegraph_generateID(prefix)
 {
-    var count = 0;
-    function parsegraph_generateID(prefix)
-    {
-        if(!prefix) {
-            prefix = "parsegraph-unique";
-        }
-        return prefix + "-" + (++count);
+    if(!prefix) {
+        prefix = "parsegraph-unique";
     }
+    return prefix + "-" + (++count);
 }

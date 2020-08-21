@@ -1,4 +1,21 @@
-parsegraph_Window_VertexShader =
+import {
+    parsegraph_BACKGROUND_COLOR
+} from './settings';
+import {
+    parsegraph_LayoutList,
+    parsegraph_COMPONENT_LAYOUT_HORIZONTAL
+} from './layout';
+import {
+    parsegraph_addEventMethod,
+    normalizeWheel
+} from '../event';
+import parsegraph_Rect from "./Rect";
+import { parsegraph_checkGLError} from "../gl";
+import {
+    parsegraph_elapsed
+} from '../timing';
+
+const parsegraph_Window_VertexShader =
 "uniform mat3 u_world;\n" +
 "" +
 "attribute vec2 a_position;" +
@@ -11,7 +28,7 @@ parsegraph_Window_VertexShader =
     "texCoord = a_texCoord;" +
 "}";
 
-parsegraph_Window_FragmentShader =
+const parsegraph_Window_FragmentShader =
 "uniform sampler2D u_texture;\n" +
 "varying highp vec2 texCoord;\n" +
 "\n" +
@@ -19,13 +36,10 @@ parsegraph_Window_FragmentShader =
     "gl_FragColor = texture2D(u_texture, texCoord.st);" +
     //"gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
 "}";
-parsegraph_WINDOW_COUNT = 0;
+var parsegraph_WINDOW_COUNT = 0;
 
-function parsegraph_Window()
+export default function parsegraph_Window()
 {
-    if(!parsegraph_INITIALIZED) {
-        throw new Error("Parsegraph must be initialized using parsegraph_initialize()");
-    }
     this._id = ++parsegraph_WINDOW_COUNT;
     this._backgroundColor = parsegraph_BACKGROUND_COLOR;
 

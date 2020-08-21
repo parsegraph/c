@@ -1,4 +1,19 @@
-function parsegraph_TimingBelt()
+import {
+    parsegraph_AnimationTimer,
+    parsegraph_TimeoutTimer
+} from '../timing';
+
+import { parsegraph_Method } from '../function';
+import { parsegraph_elapsed } from "../timing";
+
+import {
+    parsegraph_GOVERNOR,
+    parsegraph_BURST_IDLE,
+    parsegraph_INTERVAL,
+    parsegraph_IDLE_MARGIN
+} from './settings';
+
+export default function parsegraph_TimingBelt()
 {
     this._windows = [];
 

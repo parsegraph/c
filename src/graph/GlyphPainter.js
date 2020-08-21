@@ -1,7 +1,17 @@
+import parsegraph_TestSuite from '../TestSuite';
+import { parsegraph_createColor } from './Color';
+import {
+    parsegraph_getTextureSize
+} from '../gl';
+import parsegraph_Window from './Window';
+import {
+    parsegraph_defaultFont
+} from './settings';
+
 // TODO Add runs of selected text
 var parsegraph_GlyphPainter_COUNT = 0;
 
-parsegraph_GlyphPainter_VertexShader =
+const parsegraph_GlyphPainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "uniform highp float u_scale;\n" +
 "" +
@@ -24,7 +34,7 @@ parsegraph_GlyphPainter_VertexShader =
    "scale = a_scale * u_scale;\n" +
 "}";
 
-parsegraph_GlyphPainter_FragmentShader =
+const parsegraph_GlyphPainter_FragmentShader =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "uniform sampler2D u_glyphTexture;\n" +
 "varying highp vec4 fragmentColor;\n" +
@@ -51,7 +61,7 @@ parsegraph_GlyphPainter_FragmentShader =
     "}" +
 "}";
 
-function parsegraph_GlyphPainter(window, font)
+export default function parsegraph_GlyphPainter(window, font)
 {
     if(!font) {
         throw new Error("Font must be provided");
@@ -488,7 +498,7 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale)
     gl.disableVertexAttribArray(this.a_scale);
 };
 
-parsegraph_GlyphPainter_Tests = new parsegraph_TestSuite("parsegraph_GlyphPainter");
+const parsegraph_GlyphPainter_Tests = new parsegraph_TestSuite("parsegraph_GlyphPainter");
 
 parsegraph_GlyphPainter_Tests.addTest("parsegraph_GlyphPainter", function() {
     var window = new parsegraph_Window();

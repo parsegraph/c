@@ -1,17 +1,24 @@
-parsegraph_MENU_ICON_TEXTURE_SIZE = 32;
-parsegraph_MENU_ICON_SIZE = 32;
-parsegraph_MENU_ICON_PADDING = parsegraph_MENU_ICON_SIZE/2;
+import parsegraph_TexturePainter from './TexturePainter';
+import {
+    matrixMultiply3x3I,
+    makeTranslation3x3
+} from '../gl';
+import parsegraph_Viewport from './Viewport';
 
-parsegraph_MENU_ICON_MAIN = 0;
-parsegraph_MENU_ICON_UNDO = 1;
-parsegraph_MENU_ICON_REDO = 2;
-parsegraph_MENU_ICON_VSPLIT = 3;
-parsegraph_MENU_ICON_HSPLIT = 4;
-parsegraph_MENU_ICON_RESET_CAMERA = 5;
-parsegraph_MENU_ICON_CLOSE = 6;
-parsegraph_MENU_ICON_DEBUG = 7;
+const parsegraph_MENU_ICON_TEXTURE_SIZE = 32;
+const parsegraph_MENU_ICON_SIZE = 32;
+const parsegraph_MENU_ICON_PADDING = parsegraph_MENU_ICON_SIZE/2;
 
-function parsegraph_BurgerMenu(viewport)
+const parsegraph_MENU_ICON_MAIN = 0;
+const parsegraph_MENU_ICON_UNDO = 1;
+const parsegraph_MENU_ICON_REDO = 2;
+const parsegraph_MENU_ICON_VSPLIT = 3;
+const parsegraph_MENU_ICON_HSPLIT = 4;
+const parsegraph_MENU_ICON_RESET_CAMERA = 5;
+const parsegraph_MENU_ICON_CLOSE = 6;
+const parsegraph_MENU_ICON_DEBUG = 7;
+
+export default function parsegraph_BurgerMenu(viewport)
 {
     this._viewport = viewport;
 

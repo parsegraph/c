@@ -17,7 +17,6 @@ debug:
 .PHONY: debug
 
 dist_bin_SCRIPTS = parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js \
 	www/UnicodeData.txt \
 	www
@@ -35,16 +34,15 @@ parsegraph.pc: parsegraph.pc.head
 # Distribute the core Javascript library.
 pkgdata_DATA = \
 	parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-widgets-$(PACKAGE_VERSION).js \
 	esprima.js \
 	www/UnicodeData.txt \
 	www/sga.css
 
 CLEANFILES = \
-	parsegraph-$(PACKAGE_VERSION).js \
-	parsegraph-widgets-$(PACKAGE_VERSION).js
+	parsegraph-$(PACKAGE_VERSION).js
 
 parsegraph_SCRIPT_FILES = \
+	src/index.js \
 	src/TestSuite.js \
 	src/math.js \
 	src/date.js \
@@ -80,8 +78,8 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/NodeFit.js \
 	src/graph/Rect.js \
 	src/graph/Size.js \
-	src/graph/Status.js \
-	src/graph/initialize.js \
+	src/graph/settings.js \
+	src/graph/NodeStyle.js \
 	src/graph/log.js \
 	src/graph/Carousel.js \
 	src/graph/BurgerMenu.js \
@@ -130,13 +128,6 @@ parsegraph_SCRIPT_FILES = \
 	src/timeline/HSunrisePainter.js \
 	src/timeline/VSunrisePainter.js
 
-parsegraph-$(PACKAGE_VERSION).js: $(parsegraph_SCRIPT_FILES)
-	rm -f $@
-	cat $^ >$@
-	echo >>$@
-	echo "/* Generated `date` */" >>$@
-	chmod 0444 $@
-
 parsegraph_WIDGET_FILES = \
 	src/types/parsegraph_JavaScriptWidget.js \
 	src/parsegraph_CameraProtocol.js \
@@ -178,12 +169,12 @@ parsegraph_WIDGET_FILES = \
 	src/apps/week.js \
 	src/apps/text.js
 
-parsegraph-widgets-$(PACKAGE_VERSION).js: $(parsegraph_WIDGET_FILES)
+parsegraph-$(PACKAGE_VERSION).js: dist/parsegraph.js
 	rm -f $@
-	cat $^ >$@
-	echo >>$@
-	echo "/* Generated `date` */" >>$@
-	chmod 0444 $@
+	cp ./dist/parsegraph.js $@
+
+dist/parsegraph.js: $(parsegraph_SCRIPT_FILES) $(parsegraph_WIDGET_FILES)
+	npm run build
 
 rpm:
 	chmod +x ./rpm.sh

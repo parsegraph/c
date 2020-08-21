@@ -1,3 +1,9 @@
+import parsegraph_Component from './Component';
+import parsegraph_Camera from './Camera';
+import parsegraph_Carousel from './Carousel';
+import parsegraph_Input from './Input';
+import parsegraph_BurgerMenu from './BurgerMenu';
+
 /**
  * TODO Add gridX and gridY camera listeners, with support for loading from an infinite grid of cells.
  *
@@ -23,9 +29,9 @@
  * Grid updates based only on camera movement. Updates are reported in terms of cells made visible in either direction.
  * The number of potentially visible grid cells is determined for each axis using the camera's axis size adjusted by some constant.
  */
-parsegraph_Viewport_COUNT = 0;
-parsegraph_Viewport_TYPE = "parsegraph_Viewport";
-function parsegraph_Viewport(window, world)
+var parsegraph_Viewport_COUNT = 0;
+const parsegraph_Viewport_TYPE = "parsegraph_Viewport";
+export default function parsegraph_Viewport(window, world)
 {
     if(!window) {
         throw new Error("A window must be provided");
@@ -51,7 +57,6 @@ function parsegraph_Viewport(window, world)
     this._component.setContextChanged(this.contextChanged, this);
     this._component.setSerializer(this.serialize, this);
 };
-parsegraph_Viewport_Tests = new parsegraph_TestSuite("parsegraph_Viewport");
 
 parsegraph_Viewport.prototype.id = function()
 {

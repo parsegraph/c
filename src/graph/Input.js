@@ -1,25 +1,42 @@
-var parsegraph_RESET_CAMERA_KEY = "Escape";
-var parsegraph_CLICK_KEY = "q";
+import {
+    parsegraph_TimeoutTimer
+} from '../timing';
+import {
+    parsegraph_CLICK_DELAY_MILLIS,
+    parsegraph_INPUT_LAYOUT_TIME
+} from './settings';
+import {
+    matrixTransform2D,
+    makeInverse3x3
+} from '../gl';
+import { parsegraph_SLIDER } from './NodeType';
 
-var parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
-var parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
-var parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
-var parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
-var parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
-var parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
-var parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
+import parsegraph_Color from './Color';
+import parsegraph_BlockPainter from './BlockPainter';
+import parsegraph_SpotlightPainter from './SpotlightPainter';
 
-var parsegraph_MIN_CAMERA_SCALE = .00125;
+const parsegraph_RESET_CAMERA_KEY = "Escape";
+const parsegraph_CLICK_KEY = "q";
 
-//var parsegraph_MOVE_UPWARD_KEY = "w";
-//var parsegraph_MOVE_DOWNWARD_KEY = "s";
-//var parsegraph_MOVE_BACKWARD_KEY = "a";
-//var parsegraph_MOVE_FORWARD_KEY = "d";
+const parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
+const parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
+const parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
+const parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
+const parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
+const parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
+const parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
-var parsegraph_ZOOM_IN_KEY = "ZoomIn";
-var parsegraph_ZOOM_OUT_KEY = "ZoomOut";
+const parsegraph_MIN_CAMERA_SCALE = .00125;
 
-function parsegraph_Input(viewport, camera)
+//const parsegraph_MOVE_UPWARD_KEY = "w";
+//const parsegraph_MOVE_DOWNWARD_KEY = "s";
+//const parsegraph_MOVE_BACKWARD_KEY = "a";
+//const parsegraph_MOVE_FORWARD_KEY = "d";
+
+const parsegraph_ZOOM_IN_KEY = "ZoomIn";
+const parsegraph_ZOOM_OUT_KEY = "ZoomOut";
+
+export default function parsegraph_Input(viewport, camera)
 {
     this._viewport = viewport;
     this._mousedownTime = null;

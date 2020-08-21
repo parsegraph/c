@@ -1,5 +1,5 @@
-parsegraph_Size_COUNT = 0;
-function parsegraph_Size()
+var parsegraph_Size_COUNT = 0;
+export default function parsegraph_Size()
 {
     this.id = parsegraph_Size_COUNT++;
     if(arguments.length > 0) {
@@ -13,7 +13,7 @@ function parsegraph_Size()
     this.length = 2;
 }
 
-function parsegraph_createSize()
+export function parsegraph_createSize()
 {
     var s = new parsegraph_Size();
     if(arguments.length > 1) {

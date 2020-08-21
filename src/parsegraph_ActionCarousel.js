@@ -1,4 +1,10 @@
-function parsegraph_ActionCarousel()
+import parsegraph_Node from './graph/Node';
+import {
+    parsegraph_defaultFont
+} from './graph/settings';
+import * as NodeType from './graph/NodeType';
+
+export default function parsegraph_ActionCarousel()
 {
     this._actions = [];
 }
@@ -7,7 +13,7 @@ parsegraph_ActionCarousel.prototype.addAction = function(action, listener, liste
 {
     if(typeof action === "string") {
         var label = action;
-        action = new parsegraph_Node(parsegraph_BLOCK);
+        action = new parsegraph_Node(NodeType.parsegraph_BLOCK);
         action.setLabel(label, parsegraph_defaultFont());
     }
     if(!listenerThisArg) {

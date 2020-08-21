@@ -1,4 +1,7 @@
-function parsegraph_CameraBox()
+import parsegraph_CameraBoxPainter from './CameraBoxPainter';
+import parsegraph_Rect from './Rect';
+
+export default function parsegraph_CameraBox()
 {
     // Camera boxes.
     this._showCameraBoxes = true;

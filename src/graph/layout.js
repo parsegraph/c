@@ -1,8 +1,8 @@
-parsegraph_COMPONENT_LAYOUT_VERTICAL = "LAYOUT_VERTICAL";
-parsegraph_COMPONENT_LAYOUT_HORIZONTAL = "LAYOUT_HORIZONTAL";
-parsegraph_COMPONENT_LAYOUT_ENTRY = "LAYOUT_ENTRY";
+export const parsegraph_COMPONENT_LAYOUT_VERTICAL = "LAYOUT_VERTICAL";
+export const parsegraph_COMPONENT_LAYOUT_HORIZONTAL = "LAYOUT_HORIZONTAL";
+export const parsegraph_COMPONENT_LAYOUT_ENTRY = "LAYOUT_ENTRY";
 
-function parsegraph_LayoutList(type, parent)
+export function parsegraph_LayoutList(type, parent)
 {
     this._type = type;
     this._parent = parent;

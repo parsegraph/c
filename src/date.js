@@ -1,4 +1,6 @@
-function parsegraph_datesEqual(a, b)
+import parsegraph_TestSuite from './TestSuite';
+
+export function parsegraph_datesEqual(a, b)
 {
     if(a == undefined || b == undefined) {
         return a == undefined && b == undefined;
@@ -6,7 +8,7 @@ function parsegraph_datesEqual(a, b)
     return a.getDate() == b.getDate() && a.getMonth() == b.getMonth() && a.getFullYear() == b.getFullYear();
 }
 
-function parsegraph_dateGreater(a, b)
+export function parsegraph_dateGreater(a, b)
 {
     if(a == undefined) {
         return false;
@@ -36,7 +38,7 @@ function parsegraph_dateGreater(a, b)
     return true;
 }
 
-parsegraph_Date_Tests = new parsegraph_TestSuite("parsegraph_Date");
+const parsegraph_Date_Tests = new parsegraph_TestSuite("parsegraph_Date");
 
 parsegraph_Date_Tests.addTest("parsegraph_dateGreater", function(dom) {
     if(parsegraph_dateGreater(
@@ -76,20 +78,20 @@ function parsegraph_getListOfMonths()
     ];
 }
 
-parsegraph_OFFSET = new Date().getTime();
-function parsegraph_getRuntimeInMillis()
+const parsegraph_OFFSET = new Date().getTime();
+export function parsegraph_getRuntimeInMillis()
 {
     return parsegraph_getTimeInMillis() - parsegraph_OFFSET;
 }
 
-function parsegraph_getTimeInMillis()
+export function parsegraph_getTimeInMillis()
 {
     return new Date().getTime();
 }
 
-parsegraph_TIMEOUT = 40000;
+export const parsegraph_TIMEOUT = 40000;
 
-function parsegraph_outputMonth(d, includeYear)
+export function parsegraph_outputMonth(d, includeYear)
 {
     var str = parsegraph_getListOfMonths()[d.getMonth()];
     if(includeYear || includeYear === undefined) {
@@ -98,7 +100,7 @@ function parsegraph_outputMonth(d, includeYear)
     return str;
 }
 
-function parsegraph_outputDate(d, includeDate, includeTime, includeToday)
+export function parsegraph_outputDate(d, includeDate, includeTime, includeToday)
 {
     var timeString = "";
     if(includeDate || includeDate === undefined) {
@@ -138,7 +140,7 @@ function parsegraph_outputDate(d, includeDate, includeTime, includeToday)
     return timeString;
 }
 
-function parsegraph_previousMonth(d)
+export function parsegraph_previousMonth(d)
 {
     d = new Date(d);
     if(d.getMonth() == 0) {
@@ -150,7 +152,7 @@ function parsegraph_previousMonth(d)
     return d;
 }
 
-function parsegraph_nextMonth(d)
+export function parsegraph_nextMonth(d)
 {
     d = new Date(d);
     if(d.getMonth() == 11) {
@@ -162,35 +164,35 @@ function parsegraph_nextMonth(d)
     return d;
 }
 
-function parsegraph_previousDay(d)
+export function parsegraph_previousDay(d)
 {
     d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     d.setDate(d.getDate() - 1);
     return d;
 }
 
-function parsegraph_nextDay(d)
+export function parsegraph_nextDay(d)
 {
     d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     d.setDate(d.getDate() + 1);
     return d;
 }
 
-function parsegraph_previousWeek(d)
+export function parsegraph_previousWeek(d)
 {
     d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     d.setDate(d.getDate() - 7);
     return d;
 }
 
-function parsegraph_nextWeek(d)
+export function parsegraph_nextWeek(d)
 {
     d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     d.setDate(d.getDate() + 7);
     return d;
 }
 
-function parsegraph_getFirstDayOfWeek(d)
+export function parsegraph_getFirstDayOfWeek(d)
 {
     while(d.getDay() != 0) {
         d = parsegraph_previousDay(d);
@@ -199,7 +201,7 @@ function parsegraph_getFirstDayOfWeek(d)
 }
 
 // From http://www.itacanet.org/the-sun-as-a-source-of-energy/part-3-calculating-solar-angles/
-function getSunriseAndSunset(inputDatetime, signedLongitude, signedLatitude)
+export function getSunriseAndSunset(inputDatetime, signedLongitude, signedLatitude)
 {
     if(isNaN(signedLongitude)) {
         throw new Error("Longitude must not be NaN");
@@ -307,17 +309,15 @@ function getSunriseAndSunset(inputDatetime, signedLongitude, signedLatitude)
     ];
 }
 
-function NormalizeTo360(n)
+export function NormalizeTo360(n)
 {
     return n - Math.floor(n / 360.0) * 360;
 }
 
-(function() {
-    var daysInMonths = [
-        0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-    ];
-    MonthToYearOffset = function(d)
-    {
-        return daysInMonths[d.getMonth()];
-    }
-})();
+var daysInMonths = [
+    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
+];
+export function MonthToYearOffset(d)
+{
+    return daysInMonths[d.getMonth()];
+}

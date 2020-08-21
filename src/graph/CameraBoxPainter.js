@@ -1,4 +1,15 @@
-function parsegraph_CameraBoxPainter(window)
+import {
+    parsegraph_defaultFont
+} from './settings';
+import {
+    parsegraph_timediffMs
+} from '../timing';
+import parsegraph_Color from './Color';
+import parsegraph_Label from './Label';
+import parsegraph_GlyphPainter from './GlyphPainter';
+import parsegraph_BlockPainter from './BlockPainter';
+
+export default function parsegraph_CameraBoxPainter(window)
 {
     this._blockPainter = new parsegraph_BlockPainter(window);
     this._glyphPainter = new parsegraph_GlyphPainter(window, parsegraph_defaultFont());

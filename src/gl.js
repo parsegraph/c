@@ -1,8 +1,22 @@
+import { parsegraph_IGNORE_GL_ERRORS } from "./graph/settings";
+import { parsegraph_VFLIP } from './graph/settings';
+
+export var parsegraph_glBufferData_BYTES = 0;
+export function parsegraph_clearPerformanceCounters()
+{
+    parsegraph_glBufferData_BYTES = 0;
+}
+
+export function parsegraph_countGLBufferBytes(size)
+{
+    parsegraph_glBufferData_BYTES += size;
+}
+
 /**
  * Returns a list of 2-D vertex coordinates that will create
  * a rectangle, centered at the specified position.
  */
-function parsegraph_generateRectangleVertices(x, y, w, h)
+export function parsegraph_generateRectangleVertices(x, y, w, h)
 {
     return [
         x - w / 2, y - h / 2,
@@ -15,12 +29,12 @@ function parsegraph_generateRectangleVertices(x, y, w, h)
     ];
 }
 
-function parsegraph_getTextureSize(gl)
+export function parsegraph_getTextureSize(gl)
 {
     return Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE));
 }
 
-function getVerts(width, length, height)
+export function getVerts(width, length, height)
 {
     return [
         // Front
@@ -61,7 +75,7 @@ function getVerts(width, length, height)
     ];
 }
 
-function parsegraph_generateRectangleTexcoords()
+export function parsegraph_generateRectangleTexcoords()
 {
     return [
         0, 0,
@@ -85,7 +99,7 @@ function parsegraph_generateRectangleTexcoords()
  *     FRAGMENT_SHADER.
  * @return {!WebGLShader} The shader.
  */
-function compileShader(gl, shaderSource, shaderType, shaderName) {
+export function compileShader(gl, shaderSource, shaderType, shaderName) {
   // Create the shader object
   var shader = gl.createShader(shaderType);
  
@@ -115,7 +129,7 @@ function compileShader(gl, shaderSource, shaderType, shaderName) {
  * @param {!WebGLShader} fragmentShader A fragment shader.
  * @return {!WebGLProgram} A program.
  */
-function createProgram(gl, vertexShader, fragmentShader) {
+export function createProgram(gl, vertexShader, fragmentShader) {
   // create a program.
   var program = gl.createProgram();
  
@@ -136,7 +150,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
   return program;
 };
 
-function parsegraph_glErrorString(gl, err)
+export function parsegraph_glErrorString(gl, err)
 {
     if(arguments.length < 2) {
         throw new Error("A GL context must be provided with the error");
@@ -153,7 +167,7 @@ function parsegraph_glErrorString(gl, err)
     }
 }
 
-function parsegraph_checkGLError()
+export function parsegraph_checkGLError()
 {
     if(parsegraph_IGNORE_GL_ERRORS) {
         return;
@@ -177,7 +191,7 @@ function parsegraph_checkGLError()
     }
 }
 
-function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
+export function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
 {
     var gl = window.gl();
     var shaders = window.shaders();
@@ -214,7 +228,7 @@ function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
     }
 
     shaders[shaderName] = program;
-    console.log("Created shader for " + shaderName + ": " + program);
+    //console.log("Created shader for " + shaderName + ": " + program);
     return program;
 }
 
@@ -228,7 +242,7 @@ function parsegraph_compileProgram(window, shaderName, vertexShader, fragShader)
  *     script tag.
  * @return {!WebGLShader} A shader.
  */
-function createShaderFromScriptTag(gl, scriptId, opt_shaderType) {
+export function createShaderFromScriptTag(gl, scriptId, opt_shaderType) {
   // look up the script tag by id.
   var shaderScript = document.getElementById(scriptId);
   if (!shaderScript) {
@@ -261,14 +275,14 @@ function createShaderFromScriptTag(gl, scriptId, opt_shaderType) {
  * @param {string} fragmentShaderId The id of the fragment shader script tag.
  * @return {!WebGLProgram} A program
  */
-function createProgramFromScripts(
+export function createProgramFromScripts(
     gl, vertexShaderId, fragmentShaderId) {
   var vertexShader = createShaderFromScriptTag(gl, vertexShaderId);
   var fragmentShader = createShaderFromScriptTag(gl, fragmentShaderId);
   return createProgram(gl, vertexShader, fragmentShader);
 }
 
-function resize(gl) {
+export function resize(gl) {
   // Get the canvas from the WebGL context
   var canvas = gl.canvas;
 
@@ -289,7 +303,7 @@ function resize(gl) {
   }
 }
 
-function matrixIdentity3x3()
+export function matrixIdentity3x3()
 {
     var arr = new Float32Array(9);
     arr[0] = 1;
@@ -298,7 +312,7 @@ function matrixIdentity3x3()
     return arr;
 }
 
-function matrixCopy3x3(src)
+export function matrixCopy3x3(src)
 {
     return [
         src[0], src[1], src[2],
@@ -307,7 +321,7 @@ function matrixCopy3x3(src)
     ];
 }
 
-function matrixMultiply3x3()
+export function matrixMultiply3x3()
 {
     if(arguments.length === 0) {
         throw new Error("At least two matrices must be provided.");
@@ -337,7 +351,7 @@ function matrixMultiply3x3()
     return rv;
 }
 
-function matrixMultiply3x3I(dest, a, b)
+export function matrixMultiply3x3I(dest, a, b)
 {
     return matrixSet3x3(dest,
         a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
@@ -352,7 +366,7 @@ function matrixMultiply3x3I(dest, a, b)
     );
 }
 
-function matrixTransform2D(world, x, y)
+export function matrixTransform2D(world, x, y)
 {
     return [
         world[0] * x + world[1] * y + world[2],
@@ -360,11 +374,11 @@ function matrixTransform2D(world, x, y)
     ];
 }
 
-function makeTranslation3x3(tx, ty) {
+export function makeTranslation3x3(tx, ty) {
     return makeTranslation3x3I(matrixIdentity3x3(), tx, ty);
 }
 
-function makeTranslation3x3I(dest, tx, ty) {
+export function makeTranslation3x3I(dest, tx, ty) {
     return matrixSet3x3(dest,
         1, 0, 0,
         0, 1, 0,
@@ -372,7 +386,7 @@ function makeTranslation3x3I(dest, tx, ty) {
     );
 }
 
-function makeRotation3x3(angleInRadians) {
+export function makeRotation3x3(angleInRadians) {
     var c = Math.cos(angleInRadians);
     var s = Math.sin(angleInRadians);
     return [
@@ -382,14 +396,14 @@ function makeRotation3x3(angleInRadians) {
     ];
 }
 
-function makeScale3x3(sx, sy) {
+export function makeScale3x3(sx, sy) {
     if(arguments.length === 1) {
         sy = sx;
     }
     return makeScale3x3I(matrixIdentity3x3(), sx, sy);
 }
 
-function matrixSet3x3(dest, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+export function matrixSet3x3(dest, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
     dest[0] = a1;
     dest[1] = a2;
     dest[2] = a3;
@@ -402,7 +416,7 @@ function matrixSet3x3(dest, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
     return dest;
 }
 
-function makeScale3x3I(dest, sx, sy) {
+export function makeScale3x3I(dest, sx, sy) {
     if(arguments.length === 2) {
         sy = sx;
     }
@@ -414,7 +428,7 @@ function makeScale3x3I(dest, sx, sy) {
 }
 
 // http://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
-function makeInverse3x3(input)
+export function makeInverse3x3(input)
 {
     var m = function(col, row) {
         return input[row * 3 + col];
@@ -439,7 +453,7 @@ function makeInverse3x3(input)
     ];
 }
 
-function midPoint(x1, y1, x2, y2)
+export function midPoint(x1, y1, x2, y2)
 {
     return [
         x1 + (x2 - x1) * .5,
@@ -447,7 +461,7 @@ function midPoint(x1, y1, x2, y2)
     ];
 }
 
-function make2DProjection(width, height, flipVertical)
+export function make2DProjection(width, height, flipVertical)
 {
     if(flipVertical === undefined) {
         flipVertical = parsegraph_VFLIP;
@@ -462,11 +476,11 @@ function make2DProjection(width, height, flipVertical)
     ];
 };
 
-function subtractVectors3D(a, b) {
+export function subtractVectors3D(a, b) {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 }
 
-function normalize3D(v) {
+export function normalize3D(v) {
   var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   // make sure we don't divide by 0.
   if (length > 0.00001) {
@@ -476,13 +490,13 @@ function normalize3D(v) {
   }
 }
 
-function cross3D(a, b) {
+export function cross3D(a, b) {
   return [a[1] * b[2] - a[2] * b[1],
           a[2] * b[0] - a[0] * b[2],
           a[0] * b[1] - a[1] * b[0]];
 }
 
-function makePerspective(fieldOfViewInRadians, aspect, near, far)
+export function makePerspective(fieldOfViewInRadians, aspect, near, far)
 {
   var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
   var rangeInv = 1.0 / (near - far);
@@ -495,7 +509,7 @@ function makePerspective(fieldOfViewInRadians, aspect, near, far)
   ];
 };
 
-function makeTranslation4x4(tx, ty, tz) {
+export function makeTranslation4x4(tx, ty, tz) {
   return [
      1,  0,  0,  0,
      0,  1,  0,  0,
@@ -504,7 +518,7 @@ function makeTranslation4x4(tx, ty, tz) {
   ];
 }
 
-function makeXRotation(angleInRadians) {
+export function makeXRotation(angleInRadians) {
   var c = Math.cos(angleInRadians);
   var s = Math.sin(angleInRadians);
 
@@ -516,7 +530,7 @@ function makeXRotation(angleInRadians) {
   ];
 };
 
-function makeYRotation(angleInRadians) {
+export function makeYRotation(angleInRadians) {
   var c = Math.cos(angleInRadians);
   var s = Math.sin(angleInRadians);
 
@@ -528,7 +542,7 @@ function makeYRotation(angleInRadians) {
   ];
 };
 
-function makeZRotation(angleInRadians) {
+export function makeZRotation(angleInRadians) {
   var c = Math.cos(angleInRadians);
   var s = Math.sin(angleInRadians);
   return [
@@ -539,7 +553,7 @@ function makeZRotation(angleInRadians) {
   ];
 }
 
-function makeScale4x4(sx, sy, sz) {
+export function makeScale4x4(sx, sy, sz) {
   return [
     sx, 0,  0,  0,
     0, sy,  0,  0,
@@ -548,7 +562,7 @@ function makeScale4x4(sx, sy, sz) {
   ];
 }
 
-function matrixMultiply4x4(a, b) {
+export function matrixMultiply4x4(a, b) {
   var a00 = a[0*4+0];
   var a01 = a[0*4+1];
   var a02 = a[0*4+2];
@@ -599,7 +613,7 @@ function matrixMultiply4x4(a, b) {
           a30 * b03 + a31 * b13 + a32 * b23 + a33 * b33];
 }
 
-function makeInverse4x4(m) {
+export function makeInverse4x4(m) {
   var m00 = m[0 * 4 + 0];
   var m01 = m[0 * 4 + 1];
   var m02 = m[0 * 4 + 2];
@@ -684,7 +698,7 @@ function makeInverse4x4(m) {
   ];
 }
 
-function matrixVectorMultiply4x4(v, m) {
+export function matrixVectorMultiply4x4(v, m) {
   var dst = [];
   for (var i = 0; i < 4; ++i) {
     dst[i] = 0.0;
@@ -699,7 +713,7 @@ function matrixVectorMultiply4x4(v, m) {
  * looks at the target, a position in 3-space, angled using the
  * up vector.
  */
-function makeLookAt(cameraPosition, target, up) {
+export function makeLookAt(cameraPosition, target, up) {
   var zAxis = normalize3D(
       subtractVectors3D(cameraPosition, target));
   var xAxis = cross3D(up, zAxis);

@@ -1,3 +1,7 @@
+import {
+    parsegraph_countGLBufferBytes
+} from './gl';
+
 function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)
 {
     if(!renderFuncThisArg) {
@@ -109,7 +113,7 @@ parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color)
  * Manages the low-level paging of vertex attributes. For
  * demonstrations of use, see any painter class.
  */
-function parsegraph_PagingBuffer(gl, program)
+export default function parsegraph_PagingBuffer(gl, program)
 {
     // Contains vertex attribute information used for drawing. Provide using
     // defineAttrib.
@@ -123,7 +127,7 @@ function parsegraph_PagingBuffer(gl, program)
     this._program = program;
 }
 
-function parsegraph_createPagingBuffer(gl, program)
+export function parsegraph_createPagingBuffer(gl, program)
 {
     return new parsegraph_PagingBuffer(gl, program);
 }
@@ -285,7 +289,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function()
             var bufferData = page.buffers[attribIndex];
             if(page.needsUpdate && bufferData.length > 0) {
                 //console.log("Pushing bytes to GL");
-                parsegraph_glBufferData_BYTES += bufferData.length;
+                parsegraph_countGLBufferBytes(bufferData.length);
                 this._gl.bufferData(
                     this._gl.ARRAY_BUFFER,
                     new Float32Array(bufferData),

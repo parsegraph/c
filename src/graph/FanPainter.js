@@ -1,5 +1,20 @@
+import parsegraph_TestSuite from '../TestSuite';
+import parsegraph_Window from './Window';
+import {
+    parsegraph_compileProgram,
+    parsegraph_generateRectangleVertices,
+    parsegraph_generateRectangleTexcoords
+} from '../gl';
+import {
+    parsegraph_createPagingBuffer
+} from '../pagingbuffer';
+import parsegraph_Color from './Color';
+import {
+    alpha_ToRadians
+} from '../alpha/Maths';
+
 // TODO Separate coloring and slicing from drawing the circle... Basically, make this actually just draw the fans we want.
-parsegraph_FanPainter_VertexShader =
+const parsegraph_FanPainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
@@ -21,7 +36,7 @@ parsegraph_FanPainter_VertexShader =
     "selectionSize = a_selectionSize;" +
 "}";
 
-parsegraph_FanPainter_FragmentShader =
+const parsegraph_FanPainter_FragmentShader =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -56,7 +71,7 @@ parsegraph_FanPainter_FragmentShader =
 /**
  * Shows a circle that allows some parts to show as selected.
  */
-function parsegraph_FanPainter(window)
+export default function parsegraph_FanPainter(window)
 {
     this._window = window;
     if(!this._window) {
@@ -88,7 +103,7 @@ function parsegraph_FanPainter(window)
     this._fanBuffer.addPage();
 };
 
-parsegraph_FanPainter_Tests = new parsegraph_TestSuite("parsegraph_FanPainter");
+const parsegraph_FanPainter_Tests = new parsegraph_TestSuite("parsegraph_FanPainter");
 
 parsegraph_FanPainter_Tests.addTest("parsegraph_FanPainter", function(resultDom) {
     var window = new parsegraph_Window();

@@ -1,4 +1,12 @@
-function parsegraph_nameNodeType(given)
+export const parsegraph_NULL_NODE_TYPE = 9;
+export const parsegraph_BUD = 10;
+export const parsegraph_SLOT = 11;
+export const parsegraph_BLOCK = 12;
+export const parsegraph_SLIDER = 13;
+export const parsegraph_SCENE = 14;
+export const parsegraph_DEFAULT_NODE_TYPE = parsegraph_BLOCK;
+
+export function parsegraph_nameNodeType(given)
 {
     switch(given) {
         case parsegraph_NULL_NODE_TYPE:
@@ -17,7 +25,7 @@ function parsegraph_nameNodeType(given)
     throw parsegraph_createException(parsegraph_BAD_NODE_TYPE, given);
 }
 
-function parsegraph_readNodeType(given)
+export function parsegraph_readNodeType(given)
 {
     if(typeof(given) === "object") {
         return given;

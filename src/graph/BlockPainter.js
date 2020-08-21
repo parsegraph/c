@@ -1,4 +1,10 @@
-parsegraph_BlockPainter_VertexShader =
+import { parsegraph_createColor } from './Color';
+import parsegraph_Rect from './Rect';
+import {
+    parsegraph_compileProgram
+} from '../gl';
+
+const parsegraph_BlockPainter_VertexShader =
 "uniform mat3 u_world;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
@@ -26,7 +32,7 @@ parsegraph_BlockPainter_VertexShader =
     "aspectRatio = a_aspectRatio;\n" +
 "}";
 
-parsegraph_BlockPainter_VertexShader_Simple =
+const parsegraph_BlockPainter_VertexShader_Simple =
 "uniform mat3 u_world;\n" +
 "\n" +
 "attribute vec2 a_position;\n" +
@@ -40,7 +46,7 @@ parsegraph_BlockPainter_VertexShader_Simple =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_FragmentShader =
+const parsegraph_BlockPainter_FragmentShader =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -83,7 +89,7 @@ parsegraph_BlockPainter_FragmentShader =
 "}";
 
 // Same as above, but using a better antialiasing technique.
-parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
+const parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "\n" +
 "#ifdef GL_ES\n" +
@@ -124,7 +130,7 @@ parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives =
     "gl_FragColor = mix(gl_FragColor, contentColor, inContent);" +
 "}";
 
-parsegraph_BlockPainter_FragmentShader_Simple =
+const parsegraph_BlockPainter_FragmentShader_Simple =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -136,7 +142,7 @@ parsegraph_BlockPainter_FragmentShader_Simple =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_SquareFragmentShader =
+const parsegraph_BlockPainter_SquareFragmentShader =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -166,7 +172,7 @@ parsegraph_BlockPainter_SquareFragmentShader =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_ShadyFragmentShader =
+const parsegraph_BlockPainter_ShadyFragmentShader =
 "#ifdef GL_ES\n" +
 "precision mediump float;\n" +
 "#endif\n" +
@@ -195,7 +201,7 @@ parsegraph_BlockPainter_ShadyFragmentShader =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_AngleFragmentShader =
+const parsegraph_BlockPainter_AngleFragmentShader =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "\n" +
 "#ifdef GL_ES\n" +
@@ -235,7 +241,7 @@ parsegraph_BlockPainter_AngleFragmentShader =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_ParenthesisFragmentShader =
+const parsegraph_BlockPainter_ParenthesisFragmentShader =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "\n" +
 "#ifdef GL_ES\n" +
@@ -272,7 +278,7 @@ parsegraph_BlockPainter_ParenthesisFragmentShader =
 "}";
 
 // Derived from https://thebookofshaders.com/07/
-parsegraph_BlockPainter_CurlyFragmentShader =
+const parsegraph_BlockPainter_CurlyFragmentShader =
 "#extension GL_OES_standard_derivatives : enable\n" +
 "\n" +
 "#ifdef GL_ES\n" +
@@ -303,9 +309,9 @@ parsegraph_BlockPainter_CurlyFragmentShader =
     "gl_FragColor = mix(gl_FragColor, contentColor, inBorder * inContent);" +
 "}";
 
-parsegraph_BlockPainter_COUNT = 0;
+var parsegraph_BlockPainter_COUNT = 0;
 
-function parsegraph_BlockPainter(window)
+export default function parsegraph_BlockPainter(window)
 {
     this._id = parsegraph_BlockPainter_COUNT++;
     this._window = window;

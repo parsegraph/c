@@ -1,4 +1,42 @@
-function parsegraph_readNodeDirection(given)
+import {
+    parsegraph_createException,
+    parsegraph_BAD_NODE_DIRECTION
+} from './Exception.js';
+
+// Node Direction
+export const parsegraph_NULL_NODE_DIRECTION = -1;
+export const parsegraph_INWARD = 0;
+export const parsegraph_OUTWARD = 1;
+export const parsegraph_DOWNWARD = 2;
+export const parsegraph_UPWARD = 3;
+export const parsegraph_BACKWARD = 4;
+export const parsegraph_FORWARD = 5;
+
+export const parsegraph_NUM_DIRECTIONS = 6;
+
+export const parsegraph_NULL_AXIS = 6;
+export const parsegraph_HORIZONTAL_AXIS = 7;
+export const parsegraph_VERTICAL_AXIS = 8;
+
+export const parsegraph_HORIZONTAL_ORDER = [
+    parsegraph_BACKWARD,
+    parsegraph_FORWARD,
+    parsegraph_DOWNWARD,
+    parsegraph_UPWARD,
+    parsegraph_INWARD,
+    parsegraph_OUTWARD
+];
+
+export const parsegraph_VERTICAL_ORDER = [
+    parsegraph_DOWNWARD,
+    parsegraph_UPWARD,
+    parsegraph_BACKWARD,
+    parsegraph_FORWARD,
+    parsegraph_INWARD,
+    parsegraph_OUTWARD
+];
+
+export function parsegraph_readNodeDirection(given)
 {
     if(typeof(given) === "number") {
         return given;
@@ -8,34 +46,28 @@ function parsegraph_readNodeDirection(given)
         case 'f':
         case 'F':
             return parsegraph_FORWARD;
-            break;
         case 'b':
         case 'B':
             return parsegraph_BACKWARD;
-            break;
         case 'u':
         case 'U':
             return parsegraph_UPWARD;
-            break;
         case 'd':
         case 'D':
             return parsegraph_DOWNWARD;
-            break;
         case 'i':
         case 'I':
             return parsegraph_INWARD;
-            break;
         case 'o':
         case 'O':
             return parsegraph_OUTWARD;
-            break;
         }
     }
 
     return parsegraph_NULL_NODE_DIRECTION;
 }
 
-function parsegraph_nameNodeDirection(given)
+export function parsegraph_nameNodeDirection(given)
 {
     switch(given) {
         case parsegraph_NULL_NODE_DIRECTION:
@@ -55,9 +87,9 @@ function parsegraph_nameNodeDirection(given)
     }
     throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION, given);
 }
-parsegraph_isNodeDirection = parsegraph_nameNodeDirection;
+export const parsegraph_isNodeDirection = parsegraph_nameNodeDirection;
 
-function parsegraph_reverseNodeDirection(given)
+export function parsegraph_reverseNodeDirection(given)
 {
     switch(given) {
         case parsegraph_NULL_NODE_DIRECTION:
@@ -78,7 +110,7 @@ function parsegraph_reverseNodeDirection(given)
     throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION, given);
 }
 
-function parsegraph_turnLeft(given)
+export function parsegraph_turnLeft(given)
 {
     switch(given) {
         case parsegraph_FORWARD:
@@ -94,28 +126,28 @@ function parsegraph_turnLeft(given)
     }
 }
 
-function parsegraph_turnRight(given)
+export function parsegraph_turnRight(given)
 {
     return parsegraph_reverseNodeDirection(
         parsegraph_turnLeft(given)
     );
 }
 
-function parsegraph_turnPositive(direction)
+export function parsegraph_turnPositive(direction)
 {
     return parsegraph_getPositiveNodeDirection(
         parsegraph_getPerpendicularAxis(direction)
     );
 }
 
-function parsegraph_turnNegative(direction)
+export function parsegraph_turnNegative(direction)
 {
     return parsegraph_reverseNodeDirection(
         parsegraph_turnPositive(direction)
     );
 }
 
-function parsegraph_isCardinalDirection(given)
+export function parsegraph_isCardinalDirection(given)
 {
     switch(given) {
     case parsegraph_NULL_NODE_DIRECTION:
@@ -131,7 +163,7 @@ function parsegraph_isCardinalDirection(given)
     throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION, given);
 }
 
-function parsegraph_nameAxis(given)
+export function parsegraph_nameAxis(given)
 {
     switch(given) {
     case parsegraph_NULL_AXIS:
@@ -143,7 +175,7 @@ function parsegraph_nameAxis(given)
     }
 }
 
-function parsegraph_getNodeDirectionAxis(given)
+export function parsegraph_getNodeDirectionAxis(given)
 {
     switch(given) {
         case parsegraph_FORWARD:
@@ -160,17 +192,17 @@ function parsegraph_getNodeDirectionAxis(given)
     throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION, given);
 }
 
-function parsegraph_isVerticalNodeDirection(given)
+export function parsegraph_isVerticalNodeDirection(given)
 {
     return parsegraph_getNodeDirectionAxis(given) === parsegraph_VERTICAL_AXIS;
 }
 
-function parsegraph_isHorizontalNodeDirection(given)
+export function parsegraph_isHorizontalNodeDirection(given)
 {
     return parsegraph_getNodeDirectionAxis(given) === parsegraph_HORIZONTAL_AXIS;
 }
 
-function parsegraph_getPerpendicularAxis(axisOrDirection)
+export function parsegraph_getPerpendicularAxis(axisOrDirection)
 {
     switch(axisOrDirection) {
         case parsegraph_HORIZONTAL_AXIS:
@@ -189,7 +221,7 @@ function parsegraph_getPerpendicularAxis(axisOrDirection)
     throw parsegraph_createException(parsegraph_BAD_AXIS, axisOrDirection);
 }
 
-function parsegraph_getPositiveNodeDirection(given)
+export function parsegraph_getPositiveNodeDirection(given)
 {
     switch(given) {
         case parsegraph_HORIZONTAL_AXIS:
@@ -203,7 +235,7 @@ function parsegraph_getPositiveNodeDirection(given)
     throw parsegraph_createException(parsegraph_BAD_AXIS, given);
 }
 
-function parsegraph_forEachCardinalNodeDirection(func, thisArg)
+export function parsegraph_forEachCardinalNodeDirection(func, thisArg)
 {
     func.call(thisArg, parsegraph_DOWNWARD);
     func.call(thisArg, parsegraph_UPWARD);
@@ -211,14 +243,14 @@ function parsegraph_forEachCardinalNodeDirection(func, thisArg)
     func.call(thisArg, parsegraph_BACKWARD);
 }
 
-function parsegraph_getNegativeNodeDirection(given)
+export function parsegraph_getNegativeNodeDirection(given)
 {
     return parsegraph_reverseNodeDirection(
         parsegraph_getPositiveNodeDirection(given)
     );
 }
 
-function parsegraph_isPositiveNodeDirection(given)
+export function parsegraph_isPositiveNodeDirection(given)
 {
     var positiveNodeDirection = parsegraph_getPositiveNodeDirection(
         parsegraph_getNodeDirectionAxis(given)
@@ -226,14 +258,14 @@ function parsegraph_isPositiveNodeDirection(given)
     return given == positiveNodeDirection;
 }
 
-function parsegraph_isNegativeNodeDirection(given)
+export function parsegraph_isNegativeNodeDirection(given)
 {
     return parsegraph_isPositiveNodeDirection(
         parsegraph_reverseNodeDirection(given)
     );
 }
 
-function parsegraph_nodeDirectionSign(given)
+export function parsegraph_nodeDirectionSign(given)
 {
     if(parsegraph_isPositiveNodeDirection(given)) {
         return 1;
@@ -241,7 +273,7 @@ function parsegraph_nodeDirectionSign(given)
     return -1;
 }
 
-function parsegraph_alternateNodeDirection(given)
+export function parsegraph_alternateNodeDirection(given)
 {
     switch(given) {
     case parsegraph_DOWNWARD:

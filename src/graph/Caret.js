@@ -1,10 +1,32 @@
-function parsegraph_Caret(nodeRoot, font)
+import * as NodeType from './NodeType';
+import * as NodeDirection from './NodeDirection';
+import parsegraph_Node from './Node';
+import {
+    parsegraph_defaultFont,
+    parsegraph_SHRINK_SCALE
+} from './settings';
+import {
+    parsegraph_BLOCK_MATH_STYLE,
+    parsegraph_SLOT_MATH_STYLE
+} from './NodeStyle';
+import parsegraph_TestSuite from '../TestSuite';
+import {
+    parsegraph_createException,
+    parsegraph_NO_NODE_FOUND
+} from './Exception';
+import * as NodeAlignment from './NodeAlignment';
+import * as NodeFit from './NodeFit';
+import parsegraph_generateID from '../id';
+import * as AxisOverlap from './AxisOverlap';
+import * as LayoutPreference from './LayoutPreference';
+
+export default function parsegraph_Caret(nodeRoot, font)
 {
     if(arguments.length === 0) {
-        nodeRoot = new parsegraph_Node(parsegraph_DEFAULT_NODE_TYPE);
+        nodeRoot = new parsegraph_Node(NodeType.parsegraph_DEFAULT_NODE_TYPE);
     }
     if(typeof nodeRoot != "object") {
-        nodeRoot = new parsegraph_Node(parsegraph_readNodeType(nodeRoot));
+        nodeRoot = new parsegraph_Node(NodeType.parsegraph_readNodeType(nodeRoot));
     }
     this._nodeRoot = nodeRoot;
 
@@ -33,10 +55,10 @@ parsegraph_Caret.prototype.setMathMode = function(mathMode)
     var curr = this.node();
     if(mathMode) {
         switch(curr.type()) {
-        case parsegraph_BLOCK:
+        case NodeType.parsegraph_BLOCK:
             curr.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
             break;
-        case parsegraph_SLOT:
+        case NodeType.parsegraph_SLOT:
             curr.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
             break;
         }
@@ -48,14 +70,14 @@ parsegraph_Caret.prototype.mathMode = function()
     return this._mathMode;
 };
 
-parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
+const parsegraph_Caret_Tests = new parsegraph_TestSuite("parsegraph_Caret");
 parsegraph_Caret_Tests.addTest("new parsegraph_Caret", function() {
     var car = new parsegraph_Caret('s');
-    var n = new parsegraph_Node(parsegraph_BLOCK);
+    var n = new parsegraph_Node(NodeType.parsegraph_BLOCK);
     car = new parsegraph_Caret(n);
     car = new parsegraph_Caret();
-    if(car.node().type() !== parsegraph_DEFAULT_NODE_TYPE) {
-        console.log(parsegraph_DEFAULT_NODE_TYPE);
+    if(car.node().type() !== NodeType.parsegraph_DEFAULT_NODE_TYPE) {
+        console.log(NodeType.parsegraph_DEFAULT_NODE_TYPE);
         return car.node().type() + " is not the default.";
     }
 });
@@ -83,34 +105,34 @@ parsegraph_Caret.prototype.node = function()
 
 parsegraph_Caret.prototype.has = function(inDirection)
 {
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
     return this.node().hasNode(inDirection);
 };
 
 parsegraph_Caret.prototype.spawn = function(inDirection, newType, newAlignmentMode)
 {
     // Interpret the given direction and type for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
-    newType = parsegraph_readNodeType(newType);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
+    newType = NodeType.parsegraph_readNodeType(newType);
 
     // Spawn a node in the given direction.
     var created = this.node().spawnNode(inDirection, newType);
 
     // Use the given alignment mode.
     if(newAlignmentMode !== undefined) {
-        newAlignmentMode = parsegraph_readNodeAlignment(newAlignmentMode);
+        newAlignmentMode = NodeAlignment.parsegraph_readNodeAlignment(newAlignmentMode);
         this.align(inDirection, newAlignmentMode);
-        if(newAlignmentMode !== parsegraph_DO_NOT_ALIGN) {
-            this.node().setNodeFit(parsegraph_NODE_FIT_EXACT);
+        if(newAlignmentMode !== NodeAlignment.parsegraph_DO_NOT_ALIGN) {
+            this.node().setNodeFit(NodeFit.parsegraph_NODE_FIT_EXACT);
         }
     }
 
     if(this._mathMode) {
         switch(newType) {
-        case parsegraph_BLOCK:
+        case NodeType.parsegraph_BLOCK:
             created.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
             break;
-        case parsegraph_SLOT:
+        case NodeType.parsegraph_SLOT:
             created.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
             break;
         }
@@ -122,7 +144,7 @@ parsegraph_Caret.prototype.spawn = function(inDirection, newType, newAlignmentMo
 parsegraph_Caret.prototype.connect = function(inDirection, node)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
 
     this.node().connectNode(inDirection, node);
 
@@ -133,7 +155,7 @@ parsegraph_Caret.prototype.disconnect = function(inDirection)
 {
     if(arguments.length > 0) {
         // Interpret the given direction for ease-of-use.
-        inDirection = parsegraph_readNodeDirection(inDirection);
+        inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
         return this.node().disconnectNode(inDirection);
     }
 
@@ -141,13 +163,13 @@ parsegraph_Caret.prototype.disconnect = function(inDirection)
         return this.node();
     }
 
-    return this.node().parentNode().disconnectNode(parsegraph_reverseNodeDirection(this.node().parentDirection()));
+    return this.node().parentNode().disconnectNode(NodeDirection.parsegraph_reverseNodeDirection(this.node().parentDirection()));
 };
 
 parsegraph_Caret.prototype.crease = function(inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
 
     var node;
     if(arguments.length === 0) {
@@ -171,7 +193,7 @@ parsegraph_Caret.prototype.setWorld = function(world)
 parsegraph_Caret.prototype.freeze = function(inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
     var node;
     if(arguments.length === 0) {
         node = this.node();
@@ -188,7 +210,7 @@ parsegraph_Caret.prototype.freeze = function(inDirection)
 parsegraph_Caret.prototype.thaw = function(inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
     var node;
     if(arguments.length === 0) {
         node = this.node();
@@ -202,7 +224,7 @@ parsegraph_Caret.prototype.thaw = function(inDirection)
 parsegraph_Caret.prototype.uncrease = function(inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
 
     var node;
     if(arguments.length === 0) {
@@ -219,7 +241,7 @@ parsegraph_Caret.prototype.uncrease = function(inDirection)
 parsegraph_Caret.prototype.isCreased = function(inDirection)
 {
     // Interpret the given direction for ease-of-use.
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
 
     var node;
     if(arguments.length === 0) {
@@ -235,7 +257,7 @@ parsegraph_Caret.prototype.creased = parsegraph_Caret.prototype.isCreased;
 
 parsegraph_Caret.prototype.erase = function(inDirection)
 {
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
     return this.node().eraseNode(inDirection);
 };
 
@@ -263,7 +285,7 @@ parsegraph_Caret_Tests.addTest("parsegraph_Caret.onKey", function() {
 
 parsegraph_Caret.prototype.move = function(toDirection)
 {
-    toDirection = parsegraph_readNodeDirection(toDirection);
+    toDirection = NodeDirection.parsegraph_readNodeDirection(toDirection);
     var dest = this.node().nodeAt(toDirection);
     if(!dest) {
         throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
@@ -338,12 +360,12 @@ parsegraph_Caret.prototype.replace = function()
     var node = this.node();
     var withContent = arguments[0];
     if(arguments.length > 1) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
         withContent = arguments[1];
     }
 
     // Set the node type.
-    withContent = parsegraph_readNodeType(withContent);
+    withContent = NodeType.parsegraph_readNodeType(withContent);
     node.setType(withContent);
     if(this._mathMode) {
         switch(newType) {
@@ -359,7 +381,7 @@ parsegraph_Caret.prototype.replace = function()
 
 parsegraph_Caret.prototype.at = function(inDirection)
 {
-    inDirection = parsegraph_readNodeDirection(inDirection);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
     if(this.node().hasNode(inDirection)) {
         return this.node().nodeAt(inDirection).type();
     }
@@ -368,53 +390,53 @@ parsegraph_Caret.prototype.at = function(inDirection)
 parsegraph_Caret.prototype.align = function(inDirection, newAlignmentMode)
 {
     // Interpret the arguments.
-    inDirection = parsegraph_readNodeDirection(inDirection);
-    newAlignmentMode = parsegraph_readNodeAlignment(newAlignmentMode);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
+    newAlignmentMode = NodeAlignment.parsegraph_readNodeAlignment(newAlignmentMode);
 
     this.node().setNodeAlignmentMode(inDirection, newAlignmentMode);
-    if(newAlignmentMode != parsegraph_DO_NOT_ALIGN) {
-        this.node().setNodeFit(parsegraph_NODE_FIT_EXACT);
+    if(newAlignmentMode != Alignment.parsegraph_DO_NOT_ALIGN) {
+        this.node().setNodeFit(NodeFit.parsegraph_NODE_FIT_EXACT);
     }
 };
 
 parsegraph_Caret.prototype.overlapAxis = function(inDirection, newAxisOverlap)
 {
     if(arguments.length === 0) {
-        this.node().setAxisOverlap(parsegraph_ALLOW_AXIS_OVERLAP);
+        this.node().setAxisOverlap(AxisOverlap.parsegraph_ALLOW_AXIS_OVERLAP);
         return;
     }
     if(arguments.length === 1) {
-        this.node().setAxisOverlap(parsegraph_readAxisOverlap(arguments[0]));
+        this.node().setAxisOverlap(AxisOverlap.parsegraph_readAxisOverlap(arguments[0]));
         return;
     }
-    inDirection = parsegraph_readNodeDirection(inDirection);
-    newAxisOverlap = parsegraph_readAxisOverlap(newAxisOverlap);
+    inDirection = NodeDirection.parsegraph_readNodeDirection(inDirection);
+    newAxisOverlap = AxisOverlap.parsegraph_readAxisOverlap(newAxisOverlap);
     this.node().setAxisOverlap(inDirection, newAxisOverlap);
 };
 parsegraph_Caret.prototype.axisOverlap = parsegraph_Caret.prototype.overlapAxis;
 
 parsegraph_Caret.prototype.pull = function(given)
 {
-    given = parsegraph_readNodeDirection(given);
-    if(this.node().isRoot() || this.node().parentDirection() === parsegraph_OUTWARD) {
-        if(parsegraph_isVerticalNodeDirection(given)) {
-            this.node().setLayoutPreference(parsegraph_PREFER_VERTICAL_AXIS);
+    given = NodeDirection.parsegraph_readNodeDirection(given);
+    if(this.node().isRoot() || this.node().parentDirection() === NodeDirection.parsegraph_OUTWARD) {
+        if(NodeDirection.parsegraph_isVerticalNodeDirection(given)) {
+            this.node().setLayoutPreference(LayoutPreference.parsegraph_PREFER_VERTICAL_AXIS);
         }
         else {
-            this.node().setLayoutPreference(parsegraph_PREFER_HORIZONTAL_AXIS);
+            this.node().setLayoutPreference(LayoutPreference.parsegraph_PREFER_HORIZONTAL_AXIS);
         }
         return;
     }
     if(
-        parsegraph_getNodeDirectionAxis(given)
-        == parsegraph_getNodeDirectionAxis(this.node().parentDirection())
+        NodeDirection.parsegraph_getNodeDirectionAxis(given)
+        == NodeDirection.parsegraph_getNodeDirectionAxis(this.node().parentDirection())
     ) {
-        //console.log(parsegraph_nameLayoutPreference(parsegraph_PREFER_PARENT_AXIS));
-        this.node().setLayoutPreference(parsegraph_PREFER_PARENT_AXIS);
+        //console.log(parsegraph_nameLayoutPreference(LayoutPreference.parsegraph_PREFER_PARENT_AXIS));
+        this.node().setLayoutPreference(LayoutPreference.parsegraph_PREFER_PARENT_AXIS);
     }
     else {
-        //console.log(parsegraph_nameLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS));
-        this.node().setLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS);
+        //console.log(parsegraph_nameLayoutPreference(LayoutPreference.parsegraph_PREFER_PERPENDICULAR_AXIS));
+        this.node().setLayoutPreference(LayoutPreference.parsegraph_PREFER_PERPENDICULAR_AXIS);
     }
 };
 
@@ -422,7 +444,7 @@ parsegraph_Caret.prototype.shrink = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
     if(node) {
         node.setScale(parsegraph_SHRINK_SCALE);
@@ -433,7 +455,7 @@ parsegraph_Caret.prototype.grow = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
     if(node) {
         node.setScale(1.0);
@@ -444,27 +466,27 @@ parsegraph_Caret.prototype.fitExact = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
-    node.setNodeFit(parsegraph_NODE_FIT_EXACT);
+    node.setNodeFit(NodeFit.parsegraph_NODE_FIT_EXACT);
 };
 
 parsegraph_Caret.prototype.fitLoose = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
-    node.setNodeFit(parsegraph_NODE_FIT_LOOSE);
+    node.setNodeFit(NodeFit.parsegraph_NODE_FIT_LOOSE);
 };
 
 parsegraph_Caret.prototype.fitNaive = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
-    node.setNodeFit(parsegraph_NODE_FIT_NAIVE);
+    node.setNodeFit(NodeFit.parsegraph_NODE_FIT_NAIVE);
 };
 
 parsegraph_Caret.prototype.label = function(/* ... */)
@@ -485,7 +507,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
             font = arguments[1];
         }
         else {
-            node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+            node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
             text = arguments[1];
             font = this.font();
             //console.log(typeof arguments[0]);
@@ -493,7 +515,7 @@ parsegraph_Caret.prototype.label = function(/* ... */)
         }
         break;
     case 3:
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
         text = arguments[1];
         font = arguments[2];
         break;
@@ -505,7 +527,7 @@ parsegraph_Caret.prototype.select = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
     node.setSelected(true);
 };
@@ -514,7 +536,7 @@ parsegraph_Caret.prototype.selected = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
     return node.isSelected();
 };
@@ -523,7 +545,7 @@ parsegraph_Caret.prototype.deselect = function()
 {
     var node = this.node();
     if(arguments.length > 0) {
-        node = node.nodeAt(parsegraph_readNodeDirection(arguments[0]));
+        node = node.nodeAt(NodeDirection.parsegraph_readNodeDirection(arguments[0]));
     }
     node.setSelected(false);
 };
