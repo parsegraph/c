@@ -17,16 +17,18 @@ import World from './graph/World';
 import TimingBelt from './graph/TimingBelt';
 import Caret from './graph/Caret';
 import buildTextDemo from './apps/text';
-import parsegraph_PrimesWidget from './apps/primes';
-import {
-    parsegraph_elapsed
-} from './timing';
+import PrimesWidget from './apps/primes';
+import { elapsed, AnimationTimer, TimeoutTimer, IntervalTimer } from './timing';
 import parsegraph_Unicode, {
     parsegraph_defaultUnicode,
     parsegraph_setDefaultUnicode
 } from './unicode';
 
 export {
+    elapsed,
+    AnimationTimer,
+    TimeoutTimer,
+    IntervalTimer,
     parsegraph_TestSuite,
     parsegraph_AllTests,
     Node,
@@ -44,8 +46,7 @@ export {
     World,
     buildTextDemo,
     Caret,
-    parsegraph_PrimesWidget,
-    parsegraph_elapsed,
+    PrimesWidget,
     parsegraph_Unicode,
     parsegraph_defaultUnicode,
     parsegraph_setDefaultUnicode

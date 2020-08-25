@@ -12,7 +12,7 @@ import {
     parsegraph_CANNOT_AFFECT_PARENT,
     parsegraph_NO_NODE_FOUND
 } from './Exception';
-import { parsegraph_elapsed } from "../timing";
+import { elapsed } from "../timing";
 
 import {
     parsegraph_RIGHT_TO_LEFT,
@@ -670,7 +670,7 @@ export function outputNodesPainted():void
         return;
     }
     if(PAINT_START) {
-        var paintDuration:number = parsegraph_elapsed(PAINT_START);
+        var paintDuration:number = elapsed(PAINT_START);
         //console.log("Painted " + NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
     }
     resetNodesPainted();
@@ -1230,8 +1230,8 @@ export default class Node
                 //console.log("First paint group of " + this + " is " + paintGroupFirst);
                 var parentsPaintGroup = this.parentNode().findPaintGroup();
                 //console.log("Parent paint group of " + this + " is " + parentsPaintGroup);
-                parsegraph_connectPaintGroup(parentsPaintGroup._paintGroupPrev, paintGroupFirst);
-                parsegraph_connectPaintGroup(this, parentsPaintGroup);
+                Node.connectPaintGroup(parentsPaintGroup._paintGroupPrev, paintGroupFirst);
+                Node.connectPaintGroup(this, parentsPaintGroup);
             }
 
             this.layoutChanged();
@@ -1252,10 +1252,10 @@ export default class Node
             // Remove the paint group's entry in the parent.
             //console.log("Node " + this + " is not a root, so adding paint groups.");
             if(paintGroupLast !== this) {
-                parsegraph_connectPaintGroup(paintGroupLast, this._paintGroupNext);
+                Node.connectPaintGroup(paintGroupLast, this._paintGroupNext);
             }
             else {
-                parsegraph_connectPaintGroup(this._paintGroupPrev, this._paintGroupNext);
+                Node.connectPaintGroup(this._paintGroupPrev, this._paintGroupNext);
             }
             this._paintGroupNext = this;
             this._paintGroupPrev = this;
@@ -3489,7 +3489,7 @@ export default class Node
                 ++i;
                 if(i % 10 === 0) {
                     var ct = new Date();
-                    var el = parsegraph_elapsed(startTime, ct);
+                    var el = elapsed(startTime, ct);
                     if(el > 4*1000) {
                         console.log(val);
                     }
@@ -3951,7 +3951,7 @@ export default class Node
             //++nodesRendered;
         } while(paintGroup !== this);
         //console.log(nodesRendered + " paint groups rendered " + (dirtyRenders > 0 ? "(" + dirtyRenders + " dirty)" : ""));
-        let renderTime:number = parsegraph_elapsed(start);
+        let renderTime:number = elapsed(start);
         if(renderTimes.length === 11) {
             renderTimes.splice(Math.floor(Math.random() * 11), 1);
         }

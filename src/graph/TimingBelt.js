@@ -1,10 +1,10 @@
 import {
-    parsegraph_AnimationTimer,
-    parsegraph_TimeoutTimer
+    AnimationTimer,
+    TimeoutTimer,
+    elapsed
 } from '../timing';
 
 import { parsegraph_Method } from '../function';
-import { parsegraph_elapsed } from "../timing";
 
 import {
     parsegraph_GOVERNOR,
@@ -18,13 +18,13 @@ export default function parsegraph_TimingBelt()
     this._windows = [];
 
     this._idleJobs = [];
-    this._renderTimer = new parsegraph_AnimationTimer();
+    this._renderTimer = new AnimationTimer();
     this._renderTimer.setListener(this.cycle, this);
 
     this._governor = parsegraph_GOVERNOR;
     this._burstIdle = parsegraph_BURST_IDLE;
     this._interval = parsegraph_INTERVAL;
-    this._idleTimer = new parsegraph_TimeoutTimer();
+    this._idleTimer = new TimeoutTimer();
     this._idleTimer.setDelay(parsegraph_INTERVAL);
     this._idleTimer.setListener(this.onIdleTimer, this);
     this._idleTimer.schedule();
@@ -84,15 +84,15 @@ parsegraph_TimingBelt.prototype.idle = function(interval)
         return;
     }
     var startTime = new Date();
-    if(interval > 0 && parsegraph_elapsed(startTime) < interval
-        && (!this._governor || !this._lastIdle || parsegraph_elapsed(this._lastIdle) > interval)
+    if(interval > 0 && elapsed(startTime) < interval
+        && (!this._governor || !this._lastIdle || elapsed(this._lastIdle) > interval)
     ) {
         //alert("Idle looping");
         do {
             //log("Idling");
             var job = this._idleJobs[0];
             try {
-                var r = job.call(interval - parsegraph_elapsed(startTime));
+                var r = job.call(interval - elapsed(startTime));
             }
             catch(ex) {
                 this._idleJobs.shift();
@@ -107,16 +107,16 @@ parsegraph_TimingBelt.prototype.idle = function(interval)
             else {
                 this.scheduleUpdate();
             }
-        } while(this._burstIdle && interval - parsegraph_elapsed(startTime) > 0 && this._idleJobs.length > 0);
+        } while(this._burstIdle && interval - elapsed(startTime) > 0 && this._idleJobs.length > 0);
         if(this._idleJobs.length > 0 && this._governor) {
             this._lastIdle = new Date();
         }
     }
     else if(this._idleJobs.length > 0) {
-        if(parsegraph_elapsed(startTime) >= interval) {
+        if(elapsed(startTime) >= interval) {
             alert("Idle suppressed because there is no remaining time in the render loop.");
         }
-        else if(this._governor && this._lastIdle && parsegraph_elapsed(this._lastIdle) > interval) {
+        else if(this._governor && this._lastIdle && elapsed(this._lastIdle) > interval) {
             alert("Idle suppressed because the last idle was too recent.");
         }
     }
@@ -136,7 +136,7 @@ parsegraph_TimingBelt.prototype.doCycle = function()
     }
 
     var interval = this._interval;
-    var windowInterval = Math.max(0, (interval - parsegraph_elapsed(startTime))/this._windows.length);
+    var windowInterval = Math.max(0, (interval - elapsed(startTime))/this._windows.length);
     var needsUpdate = false;
     var windowOffset = Math.floor(Math.random() % this._windows.length);
     if(inputChangedScene) {
@@ -145,13 +145,13 @@ parsegraph_TimingBelt.prototype.doCycle = function()
             var window = this._windows[(windowOffset + i)%this._windows.length];
             // Eagerly retrieve the GL context since this can take a while on first attempt.
             window.gl();
-            if(parsegraph_elapsed(startTime) > interval) {
+            if(elapsed(startTime) > interval) {
                 window.log("Timeout");
                 needsUpdate = true;
                 break;
             }
             needsUpdate = window.render() || needsUpdate;
-            if(parsegraph_elapsed(startTime) > interval) {
+            if(elapsed(startTime) > interval) {
                 window.log("Timeout");
                 needsUpdate = true;
                 break;
@@ -164,13 +164,13 @@ parsegraph_TimingBelt.prototype.doCycle = function()
         window.log("Paint and render");
         for(var i=0; i < this._windows.length; ++i) {
             var window = this._windows[(windowOffset + i)%this._windows.length];
-            if(parsegraph_elapsed(startTime) > interval) {
+            if(elapsed(startTime) > interval) {
                 window.log("Timeout");
                 needsUpdate = true;
                 break;
             }
             needsUpdate = window.paint(windowInterval) || needsUpdate;
-            if(parsegraph_elapsed(startTime) > interval) {
+            if(elapsed(startTime) > interval) {
                 window.log("Timeout");
                 needsUpdate = true;
                 break;
@@ -193,7 +193,7 @@ parsegraph_TimingBelt.prototype.doCycle = function()
         this.scheduleUpdate();
     }
     this._lastRender = new Date();
-    window.log("Done rendering in " + parsegraph_elapsed(startTime, this._lastRender) + "ms");
+    window.log("Done rendering in " + elapsed(startTime, this._lastRender) + "ms");
 };
 
 parsegraph_TimingBelt.prototype.cycle = function()

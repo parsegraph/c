@@ -2,21 +2,21 @@ import {
     parsegraph_defaultFont
 } from './settings';
 import {
-    parsegraph_timediffMs
+    timediffMs
 } from '../timing';
-import parsegraph_Color from './Color';
+import Color from './Color';
 import parsegraph_Label from './Label';
 import parsegraph_GlyphPainter from './GlyphPainter';
-import parsegraph_BlockPainter from './BlockPainter';
+import BlockPainter from './BlockPainter';
 
 export default function parsegraph_CameraBoxPainter(window)
 {
-    this._blockPainter = new parsegraph_BlockPainter(window);
+    this._blockPainter = new BlockPainter(window);
     this._glyphPainter = new parsegraph_GlyphPainter(window, parsegraph_defaultFont());
 
-    this._borderColor = new parsegraph_Color(1, 1, 1, 0.1);
-    this._backgroundColor = new parsegraph_Color(1, 1, 1, 0.1);
-    this._textColor = new parsegraph_Color(1, 1, 1, 1);
+    this._borderColor = new Color(1, 1, 1, 0.1);
+    this._backgroundColor = new Color(1, 1, 1, 0.1);
+    this._textColor = new Color(1, 1, 1, 1);
     this._fontSize = 24;
 }
 
@@ -40,8 +40,8 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(name, rect, scale, mous
     var painter = this._blockPainter;
 
     var now = new Date();
-    var diff = parsegraph_timediffMs(when, now);
-    var zc = new parsegraph_Color(0, 0, 0, 0);
+    var diff = timediffMs(when, now);
+    var zc = new Color(0, 0, 0, 0);
     var interp = 1;
     var fadeDelay = 500;
     var fadeLength = 1000;

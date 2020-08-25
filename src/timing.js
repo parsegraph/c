@@ -1,17 +1,17 @@
 const parsegraph_START_TIME = new Date();
 
-export function parsegraph_timediffMs(a, b)
+export function timediffMs(a, b)
 {
     return b.getTime() - a.getTime();
 }
 
-export function parsegraph_elapsed(startTime, ct)
+export function elapsed(startTime, ct)
 {
     ct = ct || new Date();
     return ct.getTime() - startTime.getTime();
 }
 
-export function parsegraph_later(cb, cbThisArg)
+export function later(cb, cbThisArg)
 {
     var t = setTimeout(function() {
         cb.call(cbThisArg);
@@ -24,7 +24,7 @@ export function parsegraph_later(cb, cbThisArg)
     };
 }
 
-export function parsegraph_timeout(name, timeoutMs)
+export function timeout(name, timeoutMs)
 {
     if(arguments.length === 1) {
         if(typeof arguments[0] === "number") {
@@ -39,9 +39,9 @@ export function parsegraph_timeout(name, timeoutMs)
         name = null;
         timeoutMs = parsegraph_TIMEOUT;
     }
-    var startTime = parsegraph_getTimeInMillis();
+    var startTime = getTimeInMillis();
     return function() {
-        if(parsegraph_getTimeInMillis() - startTime <= timeoutMs) {
+        if(getTimeInMillis() - startTime <= timeoutMs) {
             // Not timed out yet.
             return;
         }
@@ -54,7 +54,7 @@ export function parsegraph_timeout(name, timeoutMs)
     };
 }
 
-export function parsegraph_AnimationTimer()
+export function AnimationTimer()
 {
     this.timerId = null;
 
@@ -73,7 +73,7 @@ export function parsegraph_AnimationTimer()
     };
 };
 
-parsegraph_AnimationTimer.prototype.schedule = function()
+AnimationTimer.prototype.schedule = function()
 {
     // Do nothing if the timer is already scheduled.
     if(this.timerId) {
@@ -85,7 +85,7 @@ parsegraph_AnimationTimer.prototype.schedule = function()
     return true;
 };
 
-parsegraph_AnimationTimer.prototype.setListener = function(listener, thisArg)
+AnimationTimer.prototype.setListener = function(listener, thisArg)
 {
     if(!listener) {
         this.listener = null;
@@ -95,13 +95,13 @@ parsegraph_AnimationTimer.prototype.setListener = function(listener, thisArg)
     this.listener = [listener, thisArg];
 };
 
-parsegraph_AnimationTimer.prototype.scheduled = function()
+AnimationTimer.prototype.scheduled = function()
 {
     return !!this.timerId;
 };
-parsegraph_AnimationTimer.prototype.isScheduled = parsegraph_AnimationTimer.prototype.scheduled;
+AnimationTimer.prototype.isScheduled = AnimationTimer.prototype.scheduled;
 
-parsegraph_AnimationTimer.prototype.cancel = function()
+AnimationTimer.prototype.cancel = function()
 {
     if(!this.timerId) {
         return;
@@ -111,7 +111,7 @@ parsegraph_AnimationTimer.prototype.cancel = function()
     this.timerId = null;
 };
 
-export function parsegraph_TimeoutTimer()
+export function TimeoutTimer()
 {
     this.delay = 0;
 
@@ -129,17 +129,17 @@ export function parsegraph_TimeoutTimer()
     };
 };
 
-parsegraph_TimeoutTimer.prototype.setDelay = function(ms)
+TimeoutTimer.prototype.setDelay = function(ms)
 {
     this.delay = ms;
 };
 
-parsegraph_TimeoutTimer.prototype.delay = function()
+TimeoutTimer.prototype.delay = function()
 {
     return this.delay;
 };
 
-parsegraph_TimeoutTimer.prototype.schedule = function()
+TimeoutTimer.prototype.schedule = function()
 {
     if(this.timerId) {
         return;
@@ -148,7 +148,7 @@ parsegraph_TimeoutTimer.prototype.schedule = function()
     this.timerId = window.setTimeout(this.fire, this.delay);
 };
 
-parsegraph_TimeoutTimer.prototype.setListener = function(listener, thisArg)
+TimeoutTimer.prototype.setListener = function(listener, thisArg)
 {
     if(!listener) {
         this.listener = null;
@@ -160,13 +160,13 @@ parsegraph_TimeoutTimer.prototype.setListener = function(listener, thisArg)
     this.listener = [listener, thisArg];
 };
 
-parsegraph_TimeoutTimer.prototype.scheduled = function()
+TimeoutTimer.prototype.scheduled = function()
 {
     return !!this.timerId;
 };
-parsegraph_TimeoutTimer.prototype.isScheduled = parsegraph_TimeoutTimer.prototype.scheduled;
+TimeoutTimer.prototype.isScheduled = TimeoutTimer.prototype.scheduled;
 
-parsegraph_TimeoutTimer.prototype.cancel = function()
+TimeoutTimer.prototype.cancel = function()
 {
     if(this.timerId) {
         window.clearTimeout(this.timerId);
@@ -174,7 +174,7 @@ parsegraph_TimeoutTimer.prototype.cancel = function()
     }
 };
 
-export function parsegraph_IntervalTimer()
+export function IntervalTimer()
 {
     this.delay = 0;
 
@@ -194,7 +194,7 @@ export function parsegraph_IntervalTimer()
 /**
  * Sets the delay, in milliseconds.
  */
-parsegraph_IntervalTimer.prototype.setDelay = function(ms)
+IntervalTimer.prototype.setDelay = function(ms)
 {
     this.delay = ms;
 };
@@ -202,12 +202,12 @@ parsegraph_IntervalTimer.prototype.setDelay = function(ms)
 /**
  * Gets the delay, in milliseconds.
  */
-parsegraph_IntervalTimer.prototype.delay = function()
+IntervalTimer.prototype.delay = function()
 {
     return this.delay;
 };
 
-parsegraph_IntervalTimer.prototype.schedule = function()
+IntervalTimer.prototype.schedule = function()
 {
     if(this.timerId) {
         return;
@@ -216,13 +216,13 @@ parsegraph_IntervalTimer.prototype.schedule = function()
     this.timerId = window.setInterval(this.fire, this.delay);
 };
 
-parsegraph_IntervalTimer.prototype.scheduled = function()
+IntervalTimer.prototype.scheduled = function()
 {
     return !!this.timerId;
 };
-parsegraph_IntervalTimer.prototype.isScheduled = parsegraph_IntervalTimer.prototype.scheduled;
+IntervalTimer.prototype.isScheduled = IntervalTimer.prototype.scheduled;
 
-parsegraph_IntervalTimer.prototype.setListener = function(listener, thisArg)
+IntervalTimer.prototype.setListener = function(listener, thisArg)
 {
     if(!listener) {
         this.listener = null;
@@ -234,7 +234,7 @@ parsegraph_IntervalTimer.prototype.setListener = function(listener, thisArg)
     this.listener = [listener, thisArg];
 };
 
-parsegraph_IntervalTimer.prototype.cancel = function()
+IntervalTimer.prototype.cancel = function()
 {
     if(this.timerId) {
         window.clearInterval(this.timerId);

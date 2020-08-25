@@ -12,7 +12,7 @@ import {
 import Rect from "./Rect";
 import { parsegraph_checkGLError} from "../gl";
 import {
-    parsegraph_elapsed
+    elapsed
 } from '../timing';
 
 const parsegraph_Window_VertexShader =
@@ -759,7 +759,7 @@ parsegraph_Window.prototype.paint = function(timeout)
         this.forEach(function(comp) {
             needsUpdate = comp.paint(timeout / compCount) || needsUpdate;
         }, this);
-        timeout = Math.max(0, timeout - parsegraph_elapsed(startTime));
+        timeout = Math.max(0, timeout - elapsed(startTime));
     }
     return needsUpdate;
 };

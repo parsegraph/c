@@ -1,5 +1,5 @@
 import {
-    parsegraph_TimeoutTimer
+    TimeoutTimer
 } from '../timing';
 import {
     parsegraph_CLICK_DELAY_MILLIS,
@@ -9,7 +9,11 @@ import {
     matrixTransform2D,
     makeInverse3x3
 } from '../gl';
-import { Type } from './Node';
+import {
+    Type,
+    Direction,
+    Alignment
+} from './Node';
 import Color from './Color';
 import BlockPainter from './BlockPainter';
 import parsegraph_SpotlightPainter from './SpotlightPainter';
@@ -39,7 +43,7 @@ export default function parsegraph_Input(viewport, camera)
 {
     this._viewport = viewport;
     this._mousedownTime = null;
-    this._mouseupTimeout = new parsegraph_TimeoutTimer();
+    this._mouseupTimeout = new TimeoutTimer();
     this._mouseupTimeout.setListener(this.afterMouseTimeout, this);
     this._mouseupTimeout.setDelay(parsegraph_CLICK_DELAY_MILLIS);
 
@@ -162,14 +166,14 @@ parsegraph_Input.prototype.onKeydown = function(event)
                 this._focusedLabel = false;
                 break;
             case parsegraph_MOVE_BACKWARD_KEY:
-                var neighbor = node.nodeAt(parsegraph_BACKWARD);
+                var neighbor = node.nodeAt(Direction.BACKWARD);
                 if(neighbor) {
                     this._focusedNode = neighbor;
                     this._focusedLabel = true;
                     this._viewport.scheduleRepaint();
                     return;
                 }
-                neighbor = node.nodeAt(parsegraph_OUTWARD);
+                neighbor = node.nodeAt(Direction.OUTWARD);
                 if(neighbor) {
                     this._focusedNode = neighbor;
                     this._focusedLabel = true;
@@ -179,24 +183,24 @@ parsegraph_Input.prototype.onKeydown = function(event)
                 break;
             case parsegraph_MOVE_FORWARD_KEY:
                 if(
-                    node.hasNode(parsegraph_INWARD) &&
-                    node.nodeAlignmentMode(parsegraph_INWARD) != parsegraph_ALIGN_VERTICAL &&
+                    node.hasNode(Direction.INWARD) &&
+                    node.nodeAlignmentMode(Direction.INWARD) != Alignment.VERTICAL &&
                     !skipHorizontalInward
                 ) {
-                    this._focusedNode = node.nodeAt(parsegraph_INWARD);
+                    this._focusedNode = node.nodeAt(Direction.INWARD);
                     this._focusedLabel = true;
                     this._viewport.scheduleRepaint();
                     return;
                 }
                 //console.log("ArrowRight");
-                var neighbor = node.nodeAt(parsegraph_FORWARD);
+                var neighbor = node.nodeAt(Direction.FORWARD);
                 if(neighbor) {
                     this._focusedNode = neighbor;
                     this._focusedLabel = !event.ctrlKey;
                     this._viewport.scheduleRepaint();
                     return;
                 }
-                neighbor = node.nodeAt(parsegraph_OUTWARD);
+                neighbor = node.nodeAt(Direction.OUTWARD);
                 if(neighbor) {
                     //console.log("Going outward");
                     skipHorizontalInward = true;
@@ -211,7 +215,7 @@ parsegraph_Input.prototype.onKeydown = function(event)
                     }
                     var pdir = node.parentDirection();
                     node = node.nodeAt(pdir);
-                    if(pdir === parsegraph_OUTWARD) {
+                    if(pdir === Direction.OUTWARD) {
                         // Found the outward node to escape.
                         skipHorizontalInward = true;
                         break;
@@ -220,7 +224,7 @@ parsegraph_Input.prototype.onKeydown = function(event)
                 // Continue traversing using the found node.
                 continue;
             case parsegraph_MOVE_DOWNWARD_KEY:
-                neighbor = node.nodeAt(parsegraph_DOWNWARD);
+                neighbor = node.nodeAt(Direction.DOWNWARD);
                 if(neighbor) {
                     this._focusedNode = neighbor;
                     this._viewport.scheduleRepaint();
@@ -229,7 +233,7 @@ parsegraph_Input.prototype.onKeydown = function(event)
                 }
                 break;
             case parsegraph_MOVE_UPWARD_KEY:
-                neighbor = node.nodeAt(parsegraph_UPWARD);
+                neighbor = node.nodeAt(Direction.UPWARD);
                 if(neighbor) {
                     this._focusedNode = neighbor;
                     this._viewport.scheduleRepaint();
@@ -552,7 +556,7 @@ parsegraph_Input.prototype.onTouchstart = function(event)
 
 parsegraph_Input.prototype.sliderListener = function(x, y, dx, dy)
 {
-    //if(parsegraph_isVerticalNodeDirection(this._selectedSlider.parentDirection())) {
+    //if(isVerticalDirection(this._selectedSlider.parentDirection())) {
         var nodeWidth = this._selectedSlider.absoluteSize().width();
         var newVal;
         if(x <= this._selectedSlider.absoluteX() - nodeWidth / 2) {
@@ -1003,4 +1007,3 @@ function parsegraph_getproperkeyname(event)
     }
     return keyName;
 };
-
