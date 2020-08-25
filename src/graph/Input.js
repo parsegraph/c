@@ -9,10 +9,9 @@ import {
     matrixTransform2D,
     makeInverse3x3
 } from '../gl';
-import { parsegraph_SLIDER } from './NodeType';
-
-import parsegraph_Color from './Color';
-import parsegraph_BlockPainter from './BlockPainter';
+import { Type } from './Node';
+import Color from './Color';
+import BlockPainter from './BlockPainter';
 import parsegraph_SpotlightPainter from './SpotlightPainter';
 
 const parsegraph_RESET_CAMERA_KEY = "Escape";
@@ -22,8 +21,8 @@ const parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
 const parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
 const parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
 const parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
-const parsegraph_CARET_COLOR = new parsegraph_Color(0, 0, 0, .5);
-const parsegraph_FOCUSED_SPOTLIGHT_COLOR = new parsegraph_Color(1, 1, 1, .5);
+const parsegraph_CARET_COLOR = new Color(0, 0, 0, .5);
+const parsegraph_FOCUSED_SPOTLIGHT_COLOR = new Color(1, 1, 1, .5);
 const parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
 const parsegraph_MIN_CAMERA_SCALE = .00125;
@@ -599,7 +598,7 @@ parsegraph_Input.prototype.checkForNodeClick = function(x, y, onlySlider)
     //console.log("Node found for coords:", selectedNode, x, y);
 
     // Check if the selected node was a slider.
-    if(selectedNode.type() == parsegraph_SLIDER) {
+    if(selectedNode.type() == Type.SLIDER) {
         if(!onlySlider && selectedNode === this._selectedSlider) {
             //console.log(new Error("Removing slider listener"));
             this._selectedSlider = null;
@@ -874,7 +873,7 @@ parsegraph_Input.prototype.paint = function()
 {
     var window = this.window();
     if(!this._caretPainter) {
-        this._caretPainter = new parsegraph_BlockPainter(window);
+        this._caretPainter = new BlockPainter(window);
     }
     if(!this._spotlightPainter) {
         this._spotlightPainter = new parsegraph_SpotlightPainter(window);

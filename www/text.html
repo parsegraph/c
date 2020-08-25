@@ -8,13 +8,13 @@
 <script src="/parsegraph-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    var window = new parsegraph.parsegraph_Window();
-    var world = new parsegraph.parsegraph_World();
+    var window = new parsegraph.Window();
+    var world = new parsegraph.World();
     document.body.appendChild(window.container());
-    var belt = new parsegraph.parsegraph_TimingBelt();
+    var belt = new parsegraph.TimingBelt();
     belt.addWindow(window);
-    parsegraph.parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph.parsegraph_Viewport(window, world);
+    parsegraph.addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph.Viewport(window, world);
     window.addComponent(viewport.component());
 
     var text = parsegraph.buildTextDemo();

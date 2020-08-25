@@ -4,9 +4,11 @@ import {
     parsegraph_cloneStyle,
     parsegraph_SLOT_MATH_STYLE
 } from '../graph/NodeStyle';
+import {
+    Type,
+    Direction
+} from '../graph/Node';
 import parsegraph_Color from '../graph/Color';
-import * as NodeType from '../graph/NodeType';
-import * as NodeDirection from '../graph/NodeDirection';
 
 export default function parsegraph_PrimesWidget(world)
 {
@@ -15,7 +17,7 @@ export default function parsegraph_PrimesWidget(world)
     this.knownPrimes = [];
     this.position = 2;
 
-    this.caret = new parsegraph_Caret(NodeType.parsegraph_BLOCK);
+    this.caret = new parsegraph_Caret(Type.BLOCK);
     this.caret.setMathMode(true);
     this.caret.setWorld(this._world);
     this.caret.label("1");
@@ -58,7 +60,7 @@ parsegraph_PrimesWidget.prototype.step = function()
             var bs = parsegraph_cloneStyle(parsegraph_SLOT_MATH_STYLE);
             bs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
             for(var n = this; n; n = n.nodeAt(dir)) {
-                if(n.type() === parsegraph_SLOT) {
+                if(n.type() === Type.SLOT) {
                     n.setBlockStyle(bs);
                 }
             }
@@ -68,7 +70,7 @@ parsegraph_PrimesWidget.prototype.step = function()
         carousel.addAction("Unhighlight", function() {
             var bs = parsegraph_cloneStyle(parsegraph_SLOT_MATH_STYLE);
             for(var n = this; n; n = n.nodeAt(dir)) {
-                if(n.type() === parsegraph_SLOT) {
+                if(n.type() === Type.SLOT) {
                     n.setBlockStyle(bs);
                 }
             }
@@ -101,11 +103,11 @@ parsegraph_PrimesWidget.prototype.step = function()
         this.caret.spawnMove('u', 'b');
         this.caret.label(this.position);
         this.caret.node()._id = this.position + ":" + this.position;
-        addHighlights.call(this, NodeDirection.parsegraph_DOWNWARD);
+        addHighlights.call(this, Direction.DOWNWARD);
         this.knownPrimes.push(new parsegraph_PrimesModulo(this.position));
     }
     this.caret.pop();
-    addHighlights.call(this, NodeDirection.parsegraph_UPWARD);
+    addHighlights.call(this, Direction.UPWARD);
 
     // Advance.
     ++(this.position);

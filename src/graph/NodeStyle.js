@@ -1,4 +1,4 @@
-import * as NodeType from './NodeType';
+import { Type, readType } from './Node';
 import parsegraph_Color from './Color';
 import * as Settings from './settings';
 
@@ -209,30 +209,30 @@ export function parsegraph_copyStyle(type)
 
 export default function parsegraph_style(type)
 {
-    type = NodeType.parsegraph_readNodeType(type);
+    type = readType(type);
 
     switch(type) {
-    case NodeType.parsegraph_BUD:
+    case Type.BUD:
     {
         return parsegraph_BUD_STYLE;
     }
-    case NodeType.parsegraph_SLOT:
+    case Type.SLOT:
     {
         return parsegraph_SLOT_STYLE;
     }
-    case NodeType.parsegraph_BLOCK:
+    case Type.BLOCK:
     {
         return parsegraph_BLOCK_STYLE;
     }
-    case NodeType.parsegraph_SLIDER:
+    case Type.SLIDER:
     {
         return parsegraph_SLIDER_STYLE;
     }
-    case NodeType.parsegraph_SCENE:
+    case Type.SCENE:
     {
         return parsegraph_SCENE_STYLE;
     }
-    case NodeType.parsegraph_NULL_NODE_TYPE:
+    case Type.NULL:
     default:
         return null;
     }

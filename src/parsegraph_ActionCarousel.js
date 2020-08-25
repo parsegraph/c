@@ -2,7 +2,7 @@ import parsegraph_Node from './graph/Node';
 import {
     parsegraph_defaultFont
 } from './graph/settings';
-import * as NodeType from './graph/NodeType';
+import { Type } from './graph/Node';
 
 export default function parsegraph_ActionCarousel()
 {
@@ -13,7 +13,7 @@ parsegraph_ActionCarousel.prototype.addAction = function(action, listener, liste
 {
     if(typeof action === "string") {
         var label = action;
-        action = new parsegraph_Node(NodeType.parsegraph_BLOCK);
+        action = new parsegraph_Node(Type.BLOCK);
         action.setLabel(label, parsegraph_defaultFont());
     }
     if(!listenerThisArg) {

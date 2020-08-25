@@ -12,6 +12,9 @@ export const parsegraph_CANNOT_AFFECT_PARENT = 10;
 export const parsegraph_OFFSET_IS_NEGATIVE = 11;
 export const parsegraph_NODE_IS_ROOT = 12;
 export const parsegraph_BAD_LAYOUT_PREFERENCE = 13;
+export const parsegraph_BAD_AXIS_OVERLAP = 14;
+export const parsegraph_BAD_NODE_TYPE = 15;
+export const parsegraph_BAD_NODE_FIT = 16;
 
 export function parsegraph_nameStatus(given)
 {
@@ -44,6 +47,12 @@ export function parsegraph_nameStatus(given)
             return "OFFSET_IS_NEGATIVE";
         case parsegraph_BAD_LAYOUT_PREFERENCE:
             return "BAD_LAYOUT_PREFERENCE";
+        case parsegraph_BAD_AXIS_OVERLAP:
+            return "BAD_AXIS_OVERLAP";
+        case parsegraph_BAD_NODE_TYPE:
+            return "BAD_NODE_TYPE";
+        case parsegraph_BAD_NODE_FIT:
+            return "BAD_NODE_FIT";
     }
     throw parsegraph_createException(parsegraph_BAD_STATUS, given);
 }

@@ -1,4 +1,4 @@
-export function parsegraph_addEventListener(targetElement, eventName, listener, useCapture)
+export function addEventListener(targetElement, eventName, listener, useCapture)
 {
     if(useCapture === undefined) {
         // Unspecified, so default to false.
@@ -18,14 +18,14 @@ export function parsegraph_addEventListener(targetElement, eventName, listener, 
     });
 }
 
-export function parsegraph_addEventMethod(targetElement, eventName, listener, listenerThisArg, useCapture)
+export function addEventMethod(targetElement, eventName, listener, listenerThisArg, useCapture)
 {
-    return parsegraph_addEventListener(targetElement, eventName, function() {
+    return addEventListener(targetElement, eventName, function() {
         listener.apply(listenerThisArg, arguments);
     }, useCapture);
 }
 
-export function parsegraph_removeEventListener(targetElement, eventName, listener, useCapture)
+export function removeEventListener(targetElement, eventName, listener, useCapture)
 {
     if(useCapture === undefined) {
         // Unspecified, so default to false.
@@ -45,11 +45,11 @@ export function parsegraph_removeEventListener(targetElement, eventName, listene
     });
 }
 
-export function parsegraph_addButtonListener(targetElement, listener, listenerThisArg)
+export function addButtonListener(targetElement, listener, listenerThisArg)
 {
     return [
-        parsegraph_addEventMethod(targetElement, "click", listener, listenerThisArg),
-        parsegraph_addEventMethod(targetElement, "keydown", function(event) {
+        addEventMethod(targetElement, "click", listener, listenerThisArg),
+        addEventMethod(targetElement, "keydown", function(event) {
             if(event.keyCode === 32 || event.keyCode === 13) {
                 listener.call(listenerThisArg, event);
             }
@@ -206,7 +206,7 @@ export function normalizeWheel(/*object*/ event) /*object*/
 			   pixelY : pY };
 }
 
-export function parsegraph_writeError(ex)
+export function writeError(ex)
 {
     var err = "";
     switch(typeof ex) {

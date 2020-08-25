@@ -222,7 +222,8 @@ export function parsegraph_compileProgram(window, shaderName, vertexShader, frag
         if(!st) {
             throw new Error("'" + shaderName + "' shader program failed to link:\n" + gl.getProgramInfoLog (program));
         }
-        if((err = gl.getError()) != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
+        let err = gl.getError();
+        if(err != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
             throw new Error("'" + shaderName + "' shader program failed to link: " + err);
         }
     }

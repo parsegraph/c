@@ -6,10 +6,10 @@ import {
     parsegraph_COMPONENT_LAYOUT_HORIZONTAL
 } from './layout';
 import {
-    parsegraph_addEventMethod,
+    addEventMethod,
     normalizeWheel
 } from '../event';
-import parsegraph_Rect from "./Rect";
+import Rect from "./Rect";
 import { parsegraph_checkGLError} from "../gl";
 import {
     parsegraph_elapsed
@@ -107,11 +107,11 @@ export default function parsegraph_Window()
     this._lastMouseX = 0;
     this._lastMouseY = 0;
 
-    parsegraph_addEventMethod(this.container(), "focus", function(event) {
+    addEventMethod(this.container(), "focus", function(event) {
         this._focused = true;
     }, this);
 
-    parsegraph_addEventMethod(this.container(), "blur", function(event) {
+    addEventMethod(this.container(), "blur", function(event) {
         this._focused = false;
     }, this);
 
@@ -138,10 +138,10 @@ export default function parsegraph_Window()
     /**
      * The receiver of all canvas wheel events.
      */
-    parsegraph_addEventMethod(this.canvas(), "DOMMouseScroll", onWheel, this, false);
-    parsegraph_addEventMethod(this.canvas(), "mousewheel", onWheel, this, false);
+    addEventMethod(this.canvas(), "DOMMouseScroll", onWheel, this, false);
+    addEventMethod(this.canvas(), "mousewheel", onWheel, this, false);
 
-    parsegraph_addEventMethod(this.canvas(), "touchstart", function(event) {
+    addEventMethod(this.canvas(), "touchstart", function(event) {
         event.preventDefault();
         this._focused = true;
 
@@ -188,7 +188,7 @@ export default function parsegraph_Window()
         }
     }, this, true);
 
-    parsegraph_addEventMethod(this.canvas(), "touchmove", function(event) {
+    addEventMethod(this.canvas(), "touchmove", function(event) {
         if(!this._focused) {
             return;
         }
@@ -262,10 +262,10 @@ export default function parsegraph_Window()
         }
     };
 
-    parsegraph_addEventMethod(this.canvas(), "touchend", removeTouchListener, this);
-    parsegraph_addEventMethod(this.canvas(), "touchcancel", removeTouchListener, this);
+    addEventMethod(this.canvas(), "touchend", removeTouchListener, this);
+    addEventMethod(this.canvas(), "touchcancel", removeTouchListener, this);
 
-    parsegraph_addEventMethod(this.canvas(), "mousedown", function(event) {
+    addEventMethod(this.canvas(), "mousedown", function(event) {
         this._focused = true;
 
         console.log(event);
@@ -297,7 +297,7 @@ export default function parsegraph_Window()
     this._isDoubleClick = false;
     this._mouseupTimeout = 0;
 
-    parsegraph_addEventMethod(this.canvas(), "mousemove", function(event) {
+    addEventMethod(this.canvas(), "mousemove", function(event) {
         this.handleEvent("mousemove", {
             x:event.offsetX,
             y:event.offsetY,
@@ -315,10 +315,10 @@ export default function parsegraph_Window()
         });
     };
 
-    parsegraph_addEventMethod(this.canvas(), "mouseup", mouseUpListener, this);
-    parsegraph_addEventMethod(this.canvas(), "mouseout", mouseUpListener, this);
+    addEventMethod(this.canvas(), "mouseup", mouseUpListener, this);
+    addEventMethod(this.canvas(), "mouseout", mouseUpListener, this);
 
-    parsegraph_addEventMethod(this.canvas(), "keydown", function(event) {
+    addEventMethod(this.canvas(), "keydown", function(event) {
         if(event.altKey || event.metaKey) {
             //console.log("Key event had ignored modifiers");
             return;
@@ -336,7 +336,7 @@ export default function parsegraph_Window()
         });
     }, this);
 
-    parsegraph_addEventMethod(this.canvas(), "keyup", function(event) {
+    addEventMethod(this.canvas(), "keyup", function(event) {
         this.handleEvent("keyup", {
             x:this._lastMouseX,
             y:this._lastMouseY,
@@ -403,14 +403,14 @@ parsegraph_Window.prototype.getSize = function(sizeOut)
 
 parsegraph_Window.prototype.forEach = function(func, funcThisArg)
 {
-    var windowSize = new parsegraph_Rect();
+    var windowSize = new Rect();
     this.getSize(windowSize);
     return this._layoutList.forEach(func, funcThisArg, windowSize);
 };
 
 parsegraph_Window.prototype.setFocusedComponent = function(x, y)
 {
-    var compSize = new parsegraph_Rect();
+    var compSize = new Rect();
     y = this.height() - y;
     //console.log("Focusing component at (" + x + ", " + y + ")");
     if(this.forEach(function(comp, compSize) {
@@ -847,7 +847,7 @@ parsegraph_Window.prototype.renderWebgl2 = function()
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
     gl.enable(gl.SCISSOR_TEST);
     var needsUpdate = false;
-    var compSize = new parsegraph_Rect();
+    var compSize = new Rect();
     this.forEach(function(comp, compSize) {
         //console.log("Rendering: " + comp.peer().id());
         //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
@@ -917,7 +917,7 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function()
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     }
 
-    var compSize = new parsegraph_Rect();
+    var compSize = new Rect();
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
     gl.enable(gl.SCISSOR_TEST);
     this.forEach(function(comp, compSize) {
@@ -1055,7 +1055,7 @@ parsegraph_Window.prototype.renderFramebuffer = function()
         gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     }
 
-    var compSize = new parsegraph_Rect();
+    var compSize = new Rect();
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
     gl.enable(gl.SCISSOR_TEST);
     this.forEach(function(comp, compSize) {
@@ -1182,7 +1182,7 @@ parsegraph_Window.prototype.renderBasic = function()
         this.canvas().height = displayHeight;
     }
 
-    var compSize = new parsegraph_Rect();
+    var compSize = new Rect();
     var needsUpdate = false;
     gl.clearColor(this._backgroundColor.r(), this._backgroundColor.g(), this._backgroundColor.b(), this._backgroundColor.a());
     gl.enable(gl.SCISSOR_TEST);

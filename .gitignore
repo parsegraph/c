@@ -64,3 +64,4 @@ moc_*
 *.swp
 rpm.sh
 **/.dirstamp
+.~lock*

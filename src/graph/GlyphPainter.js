@@ -1,5 +1,5 @@
 import parsegraph_TestSuite from '../TestSuite';
-import { parsegraph_createColor } from './Color';
+import Color from './Color';
 import {
     parsegraph_getTextureSize
 } from '../gl';
@@ -84,8 +84,8 @@ export default function parsegraph_GlyphPainter(window, font)
     this._stride = 52;
     this._vertexBuffer = new Float32Array(this._stride/4);
 
-    this._color = parsegraph_createColor(1, 1, 1, 1);
-    this._backgroundColor = parsegraph_createColor(0, 0, 0, 0);
+    this._color = new Color(1, 1, 1, 1);
+    this._backgroundColor = new Color(0, 0, 0, 0);
 
     this._lines = [];
 };
@@ -109,7 +109,7 @@ parsegraph_GlyphPainter.prototype.color = function()
 parsegraph_GlyphPainter.prototype.setColor = function()
 {
     if(arguments.length > 1) {
-        this._color = parsegraph_createColor.apply(null, arguments);
+        this._color = new Color(...arguments);
     }
     else {
         this._color = arguments[0];
@@ -124,7 +124,7 @@ parsegraph_GlyphPainter.prototype.backgroundColor = function()
 parsegraph_GlyphPainter.prototype.setBackgroundColor = function()
 {
     if(arguments.length > 1) {
-        this._backgroundColor = parsegraph_createColor.apply(null, arguments);
+        this._backgroundColor = new Color(...arguments);
     }
     else {
         this._backgroundColor = arguments[0];

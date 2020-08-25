@@ -1,1 +1,1 @@
-const str = "";
+export const STR = "";

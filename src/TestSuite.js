@@ -355,3 +355,7 @@ const parsegraph_TestSuite_Tests = new parsegraph_TestSuite();
 parsegraph_TestSuite_Tests.addTest(function() {
     new parsegraph_TestSuite("Default", false);
 });
+parsegraph_TestSuite_Tests.addTest(function() {
+    new parsegraph_TestSuite("Default", false);
+});
+

@@ -68,16 +68,11 @@ parsegraph_SCRIPT_FILES = \
 	src/CommandClient.js \
 	src/DepthTraversal.js \
 	src/graph/Label.js \
-	src/graph/Color.js \
+	src/graph/Color.ts \
 	src/graph/Exception.js \
 	src/graph/Extent.js \
-	src/graph/AxisOverlap.js \
-	src/graph/NodeAlignment.js \
-	src/graph/NodeDirection.js \
-	src/graph/NodeType.js \
-	src/graph/NodeFit.js \
-	src/graph/Rect.js \
-	src/graph/Size.js \
+	src/graph/Rect.ts \
+	src/graph/Size.ts \
 	src/graph/settings.js \
 	src/graph/NodeStyle.js \
 	src/graph/log.js \
@@ -85,21 +80,19 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/BurgerMenu.js \
 	src/graph/CameraBox.js \
 	src/graph/Viewport.js \
-	src/graph/World.js \
+	src/graph/World.ts \
 	src/graph/parsegraph_Graph_Tests.js \
 	src/graph/Input.js \
-	src/graph/BlockPainter.js \
+	src/graph/BlockPainter.ts \
 	src/graph/SpotlightPainter.js \
 	src/graph/Font.js \
 	src/graph/GlyphPainter.js \
 	src/graph/FanPainter.js \
-	src/graph/NodePainter.js \
-	src/graph/TexturePainter.js \
-	src/graph/Caret.js \
-	src/graph/LayoutPreference.js \
-	src/graph/LayoutState.js \
+	src/graph/NodePainter.ts \
+	src/graph/TexturePainter.ts \
+	src/graph/Caret.ts \
 	src/graph/TimingBelt.js \
-	src/graph/Node.js \
+	src/graph/Node.ts \
 	src/graph/Component.js \
 	src/graph/layout.js \
 	src/graph/Freezer.js \

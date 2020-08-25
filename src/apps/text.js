@@ -1,11 +1,9 @@
 import parsegraph_Caret from '../graph/Caret';
 import {
-    parsegraph_BUD,
-    parsegraph_BLOCK,
-    parsegraph_SLOT
-} from '../graph/NodeType';
+    Type
+} from '../graph/Node';
 
-var englishSentences = [
+const englishSentences = [
 "Hello.",
 "Good morning.",
 "Good evening.",
@@ -13,7 +11,7 @@ var englishSentences = [
 "Goodbye.",
 ];
 
-var russianSentences = [
+const russianSentences = [
 "Привет.",
 "доброе утро.",
 "Добрый вечер.",
@@ -21,7 +19,7 @@ var russianSentences = [
 "Прощай.",
 ];
 
-var arabicSentences = [
+const arabicSentences = [
 "مرحبا",
 "صباح الخير",
 "مساء الخير",
@@ -29,7 +27,7 @@ var arabicSentences = [
 "إلى اللقاء",
 ];
 
-var hebrewSentences = [
+const hebrewSentences = [
 "שלום",
 "בוקר טוב",
 "ערב טוב",
@@ -37,7 +35,7 @@ var hebrewSentences = [
 "לְהִתְרָאוֹת",
 ];
 
-var devanagariSentences = [
+const devanagariSentences = [
 "नमस्ते",
 "शुभ प्रभात",
 "सुसंध्या",
@@ -45,7 +43,7 @@ var devanagariSentences = [
 "अलविदा"
 ];
 
-var greekSentences = [
+const greekSentences = [
 "γεια σας",
 "Καλημέρα.",
 "Καλό απόγευμα.",
@@ -53,7 +51,7 @@ var greekSentences = [
 "αντιο σας"
 ];
 
-var hanSentences = [
+const hanSentences = [
 "你好",
 "早上好",
 "晚上好",
@@ -61,7 +59,7 @@ var hanSentences = [
 "再见"
 ];
 
-var hangulSentences = [
+const hangulSentences = [
 "여보세요",
 "좋은 아침.",
 "안녕하세요.",
@@ -69,7 +67,7 @@ var hangulSentences = [
 "안녕"
 ];
 
-var japaneseSentences = [
+const japaneseSentences = [
 "こんにちは",
 "おはようございます",
 "こんばんは",
@@ -77,7 +75,7 @@ var japaneseSentences = [
 "さようなら"
 ];
 
-var thaiSentences = [
+const thaiSentences = [
 "สวัสดี",
 "สวัสดีตอนเช้า",
 "สวัสดีตอนเย็น",
@@ -85,7 +83,7 @@ var thaiSentences = [
 "ลาก่อน"
 ];
 
-var hungarianSentences = [
+const hungarianSentences = [
 "Szia.",
 "jó reggelt",
 "jó estét",
@@ -93,7 +91,7 @@ var hungarianSentences = [
 "viszontlátásra."
 ];
 
-var testLanguages = [
+const testLanguages = [
 englishSentences,
 russianSentences,
 arabicSentences,
@@ -107,7 +105,7 @@ thaiSentences,
 hungarianSentences,
 ];
 
-var testLanguageNames = [
+const testLanguageNames = [
 "English",
 "Russian",
 "Arabic",
@@ -123,7 +121,7 @@ var testLanguageNames = [
 
 export default function buildTextDemo()
 {
-    var caret = new parsegraph_Caret(parsegraph_BUD);
+    const caret = new parsegraph_Caret(Type.BUD);
 
     for(var i = 0; i < testLanguages.length; ++i) {
         if(i > 0) {
