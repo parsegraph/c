@@ -36,6 +36,9 @@
     "@babel/polyfill": "^7.10.4",
     "babel-loader": "^8.1.0",
     "core-js": "^3.6.5",
+    "esdoc": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0",
+    "esdoc-typescript-plugin": "^1.0.1",
     "glslify-loader": "^2.0.0",
     "raw-loader": "^4.0.1"
   }

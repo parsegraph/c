@@ -164,6 +164,10 @@ lint:
 	npx eslint --fix $(parsegraph_SCRIPT_FILES) $(parsegraph_WIDGET_FILES)
 .PHONY: lint
 
+esdoc:
+	npx esdoc
+.PHONY:
+
 parsegraph-$(PACKAGE_VERSION).js: dist/parsegraph.js
 	rm -f $@
 	cp ./dist/parsegraph.js $@
