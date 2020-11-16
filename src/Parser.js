@@ -1,9 +1,9 @@
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
 function getWholeChar(str, i) {
-  var code = str.charCodeAt(i);
+  const code = str.charCodeAt(i);
 
   if (Number.isNaN(code)) {
-    return ""; // Position not found
+    return ''; // Position not found
   }
   if (code < 0xd800 || code > 0xdfff) {
     return str.charAt(i);
@@ -13,24 +13,24 @@ function getWholeChar(str, i) {
   // surrogates as single characters)
   if (0xd800 <= code && code <= 0xdbff) {
     if (str.length <= i + 1) {
-      throw "High surrogate without following low surrogate";
+      throw 'High surrogate without following low surrogate';
     }
-    var next = str.charCodeAt(i + 1);
+    const next = str.charCodeAt(i + 1);
     if (0xdc00 > next || next > 0xdfff) {
-      throw "High surrogate without following low surrogate";
+      throw 'High surrogate without following low surrogate';
     }
     return str.charAt(i) + str.charAt(i + 1);
   }
   // Low surrogate (0xDC00 <= code && code <= 0xDFFF)
   if (i === 0) {
-    throw "Low surrogate without preceding high surrogate";
+    throw 'Low surrogate without preceding high surrogate';
   }
-  var prev = str.charCodeAt(i - 1);
+  const prev = str.charCodeAt(i - 1);
 
   // (could change last hex to 0xDB7F to treat high private
   // surrogates as single characters)
   if (0xd800 > prev || prev > 0xdbff) {
-    throw "Low surrogate without preceding high surrogate";
+    throw 'Low surrogate without preceding high surrogate';
   }
   // We can pass over low surrogates now as the second component
   // in a pair which we have already processed
@@ -59,38 +59,38 @@ function parsegraph_json_Token(type, value) {
 function parsegraph_json_error() {
   this._errorType = 0;
   this._listId = 0;
-  this._message = "";
+  this._message = '';
   this._next = null;
 }
 
 function parsegraph_nameTokenType(tokenType) {
   switch (tokenType) {
     case parsegraph_json_TRUE:
-      return "TRUE";
+      return 'TRUE';
     case parsegraph_json_FALSE:
-      return "FALSE";
+      return 'FALSE';
     case parsegraph_json_NULL:
-      return "NULL";
+      return 'NULL';
     case parsegraph_json_EOF:
-      return "EOF";
+      return 'EOF';
     case parsegraph_json_COMMA:
-      return "COMMA";
+      return 'COMMA';
     case parsegraph_json_COLON:
-      return "COLON";
+      return 'COLON';
     case parsegraph_json_LBRACK:
-      return "LBRACK";
+      return 'LBRACK';
     case parsegraph_json_RBRACK:
-      return "RBRACK";
+      return 'RBRACK';
     case parsegraph_json_LCURLY:
-      return "LCURLY";
+      return 'LCURLY';
     case parsegraph_json_RCURLY:
-      return "RCURLY";
+      return 'RCURLY';
     case parsegraph_json_STRING:
-      return "STRING";
+      return 'STRING';
     case parsegraph_json_NUMBER:
-      return "NUMBER";
+      return 'NUMBER';
     case parsegraph_json_EOL:
-      return "EOL";
+      return 'EOL';
   }
   return 0;
 }
@@ -105,7 +105,7 @@ function parsegraph_json_Lexer() {
   this._errorHead = null;
 }
 
-parsegraph_json_Lexer.prototype.feed = function (str) {
+parsegraph_json_Lexer.prototype.feed = function(str) {
   this._strings.push(str);
   // Prime if the lexer was empty.
   if (this._strings.length === 1 || this._c === null) {
@@ -113,17 +113,17 @@ parsegraph_json_Lexer.prototype.feed = function (str) {
   }
 };
 
-parsegraph_json_Lexer.prototype.save = function () {
+parsegraph_json_Lexer.prototype.save = function() {
   this._lastIndex = this._index;
   this._lastStrIndex = this._strIndex;
 };
 
-parsegraph_json_Lexer.prototype.rollback = function () {
+parsegraph_json_Lexer.prototype.rollback = function() {
   this._index = this._lastIndex;
   this._strIndex = this._lastStrIndex;
 };
 
-parsegraph_json_Lexer.prototype.commit = function () {
+parsegraph_json_Lexer.prototype.commit = function() {
   this._lastIndex = null;
   this._lastStrIndex = null;
 
@@ -133,7 +133,7 @@ parsegraph_json_Lexer.prototype.commit = function () {
   }
 };
 
-parsegraph_json_Lexer.prototype.consume = function () {
+parsegraph_json_Lexer.prototype.consume = function() {
   while (true) {
     if (this._strIndex >= this._strings.length) {
       break;
@@ -151,19 +151,19 @@ parsegraph_json_Lexer.prototype.consume = function () {
   return null;
 };
 
-parsegraph_json_Lexer.prototype.c = function () {
+parsegraph_json_Lexer.prototype.c = function() {
   return this._c;
 };
 
-parsegraph_json_Lexer.prototype.match = function (expected) {
+parsegraph_json_Lexer.prototype.match = function(expected) {
   if (this._c === expected) {
     return this.consume();
   }
   return null;
 };
 
-parsegraph_json_Lexer.prototype.error = function (str) {
-  var err = new parsegraph_json_error();
+parsegraph_json_Lexer.prototype.error = function(str) {
+  const err = new parsegraph_json_error();
   err._message = str;
   err._errorType = 0;
   err._listId = 0;
@@ -181,39 +181,39 @@ parsegraph_json_Lexer.prototype.error = function (str) {
 parsegraph_json_MAX_NAME_LENGTH = 1024;
 parsegraph_json_MAX_STRING_LENGTH = 4096;
 
-parsegraph_json_Lexer.prototype.isLETTER = function () {
+parsegraph_json_Lexer.prototype.isLETTER = function() {
   if (this.c() !== null && this.c().match(/[a-zA-Z]/)) {
     return 1;
   }
   return 0;
 };
 
-parsegraph_json_Lexer.prototype.isDIGIT = function () {
+parsegraph_json_Lexer.prototype.isDIGIT = function() {
   if (this.c() !== null && this.c().match(/\d/)) {
     return 1;
   }
   return 0;
 };
 
-parsegraph_json_Lexer.prototype.isWS = function () {
-  var c = this.c();
+parsegraph_json_Lexer.prototype.isWS = function() {
+  const c = this.c();
   if (c !== null && c.match(/\s/)) {
     return 1;
   }
   return 0;
 };
 
-parsegraph_json_Lexer.prototype.isNEWLINE = function () {
-  var c = this.c();
-  if (c !== null && (c === "\r" || c === "\n")) {
+parsegraph_json_Lexer.prototype.isNEWLINE = function() {
+  const c = this.c();
+  if (c !== null && (c === '\r' || c === '\n')) {
     return 1;
   }
   return 0;
 };
 
-parsegraph_json_Lexer.prototype.VALUE = function (expected) {
-  var rv = "";
-  var i = 0;
+parsegraph_json_Lexer.prototype.VALUE = function(expected) {
+  let rv = '';
+  const i = 0;
   while (this.isLETTER(lexer)) {
     rv += this.c(lexer);
     if (null === this.consume(lexer)) {
@@ -221,21 +221,21 @@ parsegraph_json_Lexer.prototype.VALUE = function (expected) {
     }
   }
 
-  if ("true" === rv) {
+  if ('true' === rv) {
     return new parsegraph_json_Token(parsegraph_json_TRUE);
   }
-  if ("false" === rv) {
+  if ('false' === rv) {
     return new parsegraph_json_Token(parsegraph_json_FALSE);
   }
-  if ("null" === rv) {
+  if ('null' === rv) {
     return new parsegraph_json_Token(parsegraph_json_NULL);
   }
 
-  this.error("Unexpected bareword");
+  this.error('Unexpected bareword');
   return null;
 };
 
-parsegraph_json_Lexer.prototype.WS = function () {
+parsegraph_json_Lexer.prototype.WS = function() {
   while (this.isWS() != 0 && !this.isNEWLINE()) {
     if (null === this.consume(lexer)) {
       return null;
@@ -244,14 +244,14 @@ parsegraph_json_Lexer.prototype.WS = function () {
   return true;
 };
 
-parsegraph_json_Lexer.prototype.NUMBER = function () {
+parsegraph_json_Lexer.prototype.NUMBER = function() {
   this.save();
 
-  var rv = "";
-  var i = 0;
-  var c = this.c();
+  let rv = '';
+  let i = 0;
+  let c = this.c();
 
-  if (c === "-") {
+  if (c === '-') {
     // Minus sign.
     rv += c;
     ++i;
@@ -273,7 +273,7 @@ parsegraph_json_Lexer.prototype.NUMBER = function () {
       }
       c = this.c();
     }
-  } else if (c === "0") {
+  } else if (c === '0') {
     // Zero integer part.
     rv += c;
     ++i;
@@ -283,16 +283,16 @@ parsegraph_json_Lexer.prototype.NUMBER = function () {
     }
     c = this.c();
   } else {
-    this.error("Unexpected start of numeric literal");
+    this.error('Unexpected start of numeric literal');
     return null;
   }
 
-  if (c === ".") {
+  if (c === '.') {
     // Fractional part.
     rv += c;
     ++i;
     if (!this.consume()) {
-      this.error("Unexpected end of fractional part");
+      this.error('Unexpected end of fractional part');
       return null;
     }
     while (1) {
@@ -309,20 +309,20 @@ parsegraph_json_Lexer.prototype.NUMBER = function () {
     }
   }
 
-  if (c === "e" || c === "E") {
+  if (c === 'e' || c === 'E') {
     // Scientific notation.
     rv += c;
     ++i;
     if (!this.consume()) {
-      this.error("Unexpected end of scientific notation");
+      this.error('Unexpected end of scientific notation');
       return null;
     }
     c = this.c();
-    if (c === "+" || c === "-") {
+    if (c === '+' || c === '-') {
       rv += c;
       ++i;
       if (!this.consume()) {
-        this.error("Unexpected end of scientific notation");
+        this.error('Unexpected end of scientific notation');
         return null;
       }
     }
@@ -341,22 +341,22 @@ parsegraph_json_Lexer.prototype.NUMBER = function () {
   return new parsegraph_json_Token(parsegraph_json_NUMBER, rv);
 };
 
-parsegraph_json_Lexer.prototype.STRING = function () {
+parsegraph_json_Lexer.prototype.STRING = function() {
   this.save();
-  var quote = this.c();
+  const quote = this.c();
   if (null === this.consume()) {
     this.rollback();
     return null;
   }
-  var str = "";
-  var i = 0;
+  let str = '';
+  let i = 0;
   while (i < parsegraph_json_MAX_STRING_LENGTH) {
-    var c = this.c();
+    const c = this.c();
     if (c == quote) {
       this.consume();
       break;
     }
-    if (c == "\\") {
+    if (c == '\\') {
       // Skip the next two symbols.
       str[i++] = c;
       if (null === this.consume()) {
@@ -364,7 +364,7 @@ parsegraph_json_Lexer.prototype.STRING = function () {
         return null;
       }
       if (i >= parsegraph_json_MAX_STRING_LENGTH) {
-        this.error("String too long");
+        this.error('String too long');
         return null;
       }
       str += this.c();
@@ -386,18 +386,18 @@ parsegraph_json_Lexer.prototype.STRING = function () {
   return new parsegraph_json_Token(parsegraph_json_STRING, str);
 };
 
-parsegraph_json_Lexer.prototype.nextToken = function () {
-  var matched;
+parsegraph_json_Lexer.prototype.nextToken = function() {
+  let matched;
   var c;
   while ((c = this.c()) != null) {
     switch (c) {
       case '"':
         return this.STRING();
-      case " ":
-      case "\t":
+      case ' ':
+      case '\t':
         {
           var c = this.c();
-          while (c !== null && (c === " " || c === "\t")) {
+          while (c !== null && (c === ' ' || c === '\t')) {
             if (null === this.consume()) {
               return null;
             }
@@ -405,11 +405,11 @@ parsegraph_json_Lexer.prototype.nextToken = function () {
           }
         }
         continue;
-      case "\r":
-      case "\n": {
+      case '\r':
+      case '\n': {
         this.save();
         var c = this.c();
-        while (c !== 0 && (c === "\r" || c === "\n")) {
+        while (c !== 0 && (c === '\r' || c === '\n')) {
           if (null === this.consume()) {
             this.rollback();
             return null;
@@ -419,32 +419,32 @@ parsegraph_json_Lexer.prototype.nextToken = function () {
         this.commit();
         return new parsegraph_json_Token(parsegraph_json_EOL);
       }
-      case ",":
+      case ',':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_COMMA);
-      case "[":
+      case '[':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_LBRACK);
-      case "]":
+      case ']':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_RBRACK);
-      case "{":
+      case '{':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_LCURLY);
-      case "}":
+      case '}':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_RCURLY);
-      case ":":
+      case ':':
         this.consume();
         return new parsegraph_json_Token(parsegraph_json_COLON);
       default:
-        if (this.c() === "-" || this.isDIGIT()) {
+        if (this.c() === '-' || this.isDIGIT()) {
           return this.NUMBER();
         }
         if (this.isLETTER()) {
           return this.NAME(0);
         }
-        this.error("Invalid character: " + this.c());
+        this.error('Invalid character: ' + this.c());
         return null;
     }
   }

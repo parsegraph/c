@@ -1,11 +1,11 @@
 function parsegraph_focusElement(element) {
-  return window.setTimeout(function () {
+  return window.setTimeout(function() {
     element.focus();
   });
 }
 
 function parsegraph_findSelected(selectElement) {
-  var c = selectElement.firstChild;
+  let c = selectElement.firstChild;
   while (c != null) {
     if (c.selected) {
       return c;
@@ -16,13 +16,13 @@ function parsegraph_findSelected(selectElement) {
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
 function fixedCharAt(str, idx) {
-  var ret = "";
-  str += "";
-  var end = str.length;
+  let ret = '';
+  str += '';
+  const end = str.length;
 
-  var surrogatePairs = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+  const surrogatePairs = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
   while (surrogatePairs.exec(str) != null) {
-    var li = surrogatePairs.lastIndex;
+    const li = surrogatePairs.lastIndex;
     if (li - 2 < idx) {
       idx++;
     } else {
@@ -46,21 +46,21 @@ function fixedCharAt(str, idx) {
   return ret;
 }
 
-parsegraph_Browser_Tests = new parsegraph_TestSuite("Browser");
+parsegraph_Browser_Tests = new parsegraph_TestSuite('Browser');
 
 parsegraph_Browser_Tests.addTest(
-  "arguments referenced from other closures",
-  function () {
-    var foo = function () {
-      var args = arguments;
-      return function () {
-        return args[0];
+    'arguments referenced from other closures',
+    function() {
+      const foo = function() {
+        const args = arguments;
+        return function() {
+          return args[0];
+        };
       };
-    };
 
-    var c = foo(1)(2);
-    if (c !== 1) {
-      return "Closures cannot reference external arguments.";
-    }
-  }
+      const c = foo(1)(2);
+      if (c !== 1) {
+        return 'Closures cannot reference external arguments.';
+      }
+    },
 );

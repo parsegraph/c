@@ -1,6 +1,6 @@
-import { Type, readType } from "./Node";
-import parsegraph_Color from "./Color";
-import * as Settings from "./settings";
+import {Type, readType} from './Node';
+import parsegraph_Color from './Color';
+import * as Settings from './settings';
 
 /**
  * The thickness (diameter) of the line.
@@ -9,10 +9,10 @@ export const parsegraph_LINE_THICKNESS = 12;
 
 export const parsegraph_LINE_COLOR = new parsegraph_Color(0.8, 0.8, 0.8, 0.6);
 export const parsegraph_SELECTED_LINE_COLOR = new parsegraph_Color(
-  0.8,
-  0.8,
-  0.8,
-  1
+    0.8,
+    0.8,
+    0.8,
+    1,
 );
 
 export const parsegraph_BUD_RADIUS = 8;
@@ -187,34 +187,34 @@ export const parsegraph_SLOT_MATH_STYLE = {
 parsegraph_SLOT_MATH_STYLE.borderColor.setA(1);
 
 export const parsegraph_EXTENT_BORDER_COLOR = new parsegraph_Color(
-  1,
-  1,
-  0,
-  0.1
+    1,
+    1,
+    0,
+    0.1,
 );
 export const parsegraph_EXTENT_BACKGROUND_COLOR = new parsegraph_Color(
-  1,
-  0,
-  0,
-  0.5
+    1,
+    0,
+    0,
+    0.5,
 );
 
 export const parsegraph_EXTENT_BORDER_ROUNDEDNESS = parsegraph_BUD_RADIUS;
 export const parsegraph_EXTENT_BORDER_THICKNESS = parsegraph_BUD_RADIUS;
 
 export function parsegraph_cloneStyle(style) {
-  var rv = {};
-  for (var styleName in style) {
+  const rv = {};
+  for (const styleName in style) {
     rv[styleName] = style[styleName];
   }
   return rv;
 }
 
 export function parsegraph_copyStyle(type) {
-  var rv = {};
-  var copiedStyle = parsegraph_style(type);
+  const rv = {};
+  const copiedStyle = parsegraph_style(type);
 
-  for (var styleName in copiedStyle) {
+  for (const styleName in copiedStyle) {
     rv[styleName] = copiedStyle[styleName];
   }
 
@@ -242,6 +242,6 @@ export default function parsegraph_style(type) {
     }
     case Type.NULL:
     default:
-      throw new Error("Failed to read Node style: " + arguments[0]);
+      throw new Error('Failed to read Node style: ' + arguments[0]);
   }
 }

@@ -13,27 +13,27 @@ function parsegraph_ImageBuilder(width, height) {
   this.scheduleUpdate();
 }
 
-parsegraph_ImageBuilder.prototype.scheduleUpdate = function () {
+parsegraph_ImageBuilder.prototype.scheduleUpdate = function() {
   this._renderTimer.schedule();
 };
 
-parsegraph_ImageBuilder.prototype.window = function () {
+parsegraph_ImageBuilder.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_ImageBuilder.prototype.viewport = function () {
+parsegraph_ImageBuilder.prototype.viewport = function() {
   return this._viewport;
 };
 
-parsegraph_ImageBuilder.prototype.world = function () {
+parsegraph_ImageBuilder.prototype.world = function() {
   return this._world;
 };
 
-parsegraph_ImageBuilder.prototype.createImage = function (
-  creatorFunc,
-  creatorFuncThisArg,
-  callbackFunc,
-  callbackFuncThisArg
+parsegraph_ImageBuilder.prototype.createImage = function(
+    creatorFunc,
+    creatorFuncThisArg,
+    callbackFunc,
+    callbackFuncThisArg,
 ) {
   this._jobs.push({
     creatorFunc: creatorFunc,
@@ -43,14 +43,14 @@ parsegraph_ImageBuilder.prototype.createImage = function (
   });
 };
 
-parsegraph_ImageBuilder.prototype.queueJob = function (
-  builderFunc,
-  builderFuncThisArg
+parsegraph_ImageBuilder.prototype.queueJob = function(
+    builderFunc,
+    builderFuncThisArg,
 ) {
-  var job = this._jobs[0];
+  const job = this._jobs[0];
   if (!job) {
     throw new Error(
-      "ImageBuilder must have a scene in progress to queue a builder."
+        'ImageBuilder must have a scene in progress to queue a builder.',
     );
   }
   if (!job.builders) {
@@ -59,15 +59,15 @@ parsegraph_ImageBuilder.prototype.queueJob = function (
   job.builders.push([builderFunc, builderFuncThisArg]);
 };
 
-parsegraph_ImageBuilder.prototype.cycle = function () {
-  var timeout = parsegraph_INTERVAL;
-  var startTime = new Date();
-  var timeLeft = function () {
+parsegraph_ImageBuilder.prototype.cycle = function() {
+  const timeout = parsegraph_INTERVAL;
+  const startTime = new Date();
+  const timeLeft = function() {
     return timeout - parsegraph_elapsed(startTime);
   };
-  var job = this._jobs[0];
+  const job = this._jobs[0];
   if (!job) {
-    //console.log("No scenes to build.");
+    // console.log("No scenes to build.");
     return false;
   }
   if (!job.rootless && !job.root) {
@@ -82,10 +82,10 @@ parsegraph_ImageBuilder.prototype.cycle = function () {
     job.callbackFunc.call(job.callbackFuncThisArg, this._window.image());
   }
   if (job.builders) {
-    for (var builder = job.builders[0]; builder; builder = job.builders[0]) {
-      var callAgain = builder[0].call(builder[1], timeLeft());
+    for (let builder = job.builders[0]; builder; builder = job.builders[0]) {
+      const callAgain = builder[0].call(builder[1], timeLeft());
       if (!callAgain) {
-        //console.log("Finished with builder");
+        // console.log("Finished with builder");
         job.builders.shift();
       }
       if (timeLeft() < 0) {
@@ -94,14 +94,14 @@ parsegraph_ImageBuilder.prototype.cycle = function () {
       }
     }
   }
-  var needsUpdate = job.builders && job.builders.length > 0;
+  let needsUpdate = job.builders && job.builders.length > 0;
   needsUpdate = this._window.paint(timeLeft()) || needsUpdate;
   needsUpdate = this._window.render(timeLeft()) || needsUpdate;
   if (needsUpdate) {
     this.scheduleUpdate();
     return;
   }
-  //console.log("Completed render");
+  // console.log("Completed render");
   this._jobs.shift();
   this._window.newImage();
   if (job.root) {

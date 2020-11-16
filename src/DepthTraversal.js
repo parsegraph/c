@@ -5,7 +5,7 @@ function parsegraph_DepthTraversal(root) {
   this._depth = 1;
 }
 
-parsegraph_DepthTraversal.prototype.canVisit = function () {
+parsegraph_DepthTraversal.prototype.canVisit = function() {
   return this._depth > 0;
 };
 
@@ -15,18 +15,18 @@ parsegraph_DepthTraversal.prototype.canVisit = function () {
  * visitor(node, levelState) where node is the visited node, and levelState is the
  * user-defined data common to the children under iteration.
  */
-parsegraph_DepthTraversal.prototype.visit = function (visitor, visitorThisArg) {
-  var node = this._nodes[this._nodes.length - 1];
+parsegraph_DepthTraversal.prototype.visit = function(visitor, visitorThisArg) {
+  const node = this._nodes[this._nodes.length - 1];
   if (!node) {
-    throw new Error("No node available for traversal.");
+    throw new Error('No node available for traversal.');
   }
 
   // Visit the currently positioned node.
   if (this._iterationState[this._iterationState.length - 1] != 2) {
-    var s = visitor.call(
-      visitorThisArg,
-      node,
-      this._states[this._states.length - 1]
+    const s = visitor.call(
+        visitorThisArg,
+        node,
+        this._states[this._states.length - 1],
     );
     this._states[this._states.length - 1] = s;
   }
@@ -58,31 +58,31 @@ parsegraph_DepthTraversal.prototype.visit = function (visitor, visitorThisArg) {
 };
 
 parsegraph_DepthTraversal_Tests = new parsegraph_TestSuite(
-  "parsegraph_DepthTraversal"
+    'parsegraph_DepthTraversal',
 );
 
 parsegraph_DepthTraversal_Tests.addTest(
-  "parsegraph_DepthTraversal",
-  function () {
-    var dom = document.createElement("html");
-    dom.appendChild(document.createElement("head"));
-    dom.appendChild(document.createElement("body"));
-    dom.lastChild.appendChild(document.createElement("div"));
-    dom.lastChild.lastChild.appendChild(document.createElement("p"));
-    dom.lastChild.appendChild(document.createElement("form"));
-    dom.lastChild.appendChild(document.createElement("div"));
+    'parsegraph_DepthTraversal',
+    function() {
+      const dom = document.createElement('html');
+      dom.appendChild(document.createElement('head'));
+      dom.appendChild(document.createElement('body'));
+      dom.lastChild.appendChild(document.createElement('div'));
+      dom.lastChild.lastChild.appendChild(document.createElement('p'));
+      dom.lastChild.appendChild(document.createElement('form'));
+      dom.lastChild.appendChild(document.createElement('div'));
 
-    var traversal = new parsegraph_DepthTraversal(dom);
-    var i = 0;
-    while (traversal.canVisit()) {
-      if (i > 100) {
-        throw new Error("UNSTOPPABLE");
+      const traversal = new parsegraph_DepthTraversal(dom);
+      let i = 0;
+      while (traversal.canVisit()) {
+        if (i > 100) {
+          throw new Error('UNSTOPPABLE');
+        }
+        ++i;
+        traversal.visit(function(node, levelState) {
+        // console.log(node, levelState);
+          return 'LEVEL';
+        });
       }
-      ++i;
-      traversal.visit(function (node, levelState) {
-        //console.log(node, levelState);
-        return "LEVEL";
-      });
-    }
-  }
+    },
 );

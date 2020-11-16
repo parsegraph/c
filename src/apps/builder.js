@@ -1,11 +1,11 @@
 function showFlowchartTemplate(world, belt) {
-  var caret = new parsegraph_Caret("b");
+  const caret = new parsegraph_Caret('b');
 
-  var clickChild = function () {
+  var clickChild = function() {
     // Spawn a reasonable child in an allowed direction.
-    var child;
+    let child;
 
-    var dirs;
+    let dirs;
     switch (this.type()) {
       case parsegraph_BLOCK:
         dirs = [
@@ -49,15 +49,15 @@ function showFlowchartTemplate(world, belt) {
         break;
     }
 
-    for (var i in dirs) {
-      var dir = dirs[i];
+    for (const i in dirs) {
+      const dir = dirs[i];
       if (this.hasNode(dir)) {
         continue;
       }
       if (this.type() == parsegraph_BUD && dir == parsegraph_INWARD) {
         continue;
       }
-      var t = parsegraph_BLOCK;
+      let t = parsegraph_BLOCK;
       switch (this.type()) {
         case parsegraph_BLOCK:
           t = dir == parsegraph_INWARD ? parsegraph_SLOT : parsegraph_BUD;

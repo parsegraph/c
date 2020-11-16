@@ -13,20 +13,20 @@ import Node, {
   readAxisOverlap,
   isVerticalDirection,
   getDirectionAxis,
-} from "./Node";
-import { parsegraph_defaultFont, parsegraph_SHRINK_SCALE } from "./settings";
+} from './Node';
+import {parsegraph_defaultFont, parsegraph_SHRINK_SCALE} from './settings';
 import {
   parsegraph_BLOCK_MATH_STYLE,
   parsegraph_SLOT_MATH_STYLE,
-} from "./NodeStyle";
-import parsegraph_TestSuite from "../TestSuite";
+} from './NodeStyle';
+import parsegraph_TestSuite from '../TestSuite';
 import {
   parsegraph_createException,
   parsegraph_NO_NODE_FOUND,
-} from "./Exception";
-import parsegraph_generateID from "../id";
-import parsegraph_Font from "./Font";
-import parsegraph_World from "./World";
+} from './Exception';
+import parsegraph_generateID from '../id';
+import parsegraph_Font from './Font';
+import parsegraph_World from './World';
 
 export default class Caret {
   _nodeRoot: Node;
@@ -63,7 +63,7 @@ export default class Caret {
 
   setMathMode(mathMode: boolean): void {
     this._mathMode = mathMode;
-    var curr = this.node();
+    const curr = this.node();
     if (mathMode) {
       switch (curr.type()) {
         case Type.BLOCK:
@@ -86,7 +86,7 @@ export default class Caret {
 
   font(): parsegraph_Font {
     if (!this._font) {
-      throw new Error("Caret does not have a Font");
+      throw new Error('Caret does not have a Font');
     }
     return this._font;
   }
@@ -104,9 +104,9 @@ export default class Caret {
   }
 
   spawn(
-    inDirection: Direction | string,
-    newType: Type | string,
-    newAlignmentMode?: Alignment | string
+      inDirection: Direction | string,
+      newType: Type | string,
+      newAlignmentMode?: Alignment | string,
   ): Node {
     // Interpret the given direction and type for ease-of-use.
     inDirection = readDirection(inDirection);
@@ -159,8 +159,8 @@ export default class Caret {
     }
 
     return this.node()
-      .parentNode()
-      .disconnectNode(reverseDirection(this.node().parentDirection()));
+        .parentNode()
+        .disconnectNode(reverseDirection(this.node().parentDirection()));
   }
 
   crease(inDirection?: Direction | string): void {
@@ -194,7 +194,7 @@ export default class Caret {
       node = this.node().nodeAt(inDirection);
     }
     if (!this._world) {
-      throw new Error("Caret must have a world in order to freeze nodes");
+      throw new Error('Caret must have a world in order to freeze nodes');
     }
     node.freeze(this._world.freezer());
   }
@@ -263,7 +263,7 @@ export default class Caret {
 
   move(toDirection: Direction | string): void {
     toDirection = readDirection(toDirection);
-    let dest: Node = this.node().nodeAt(toDirection);
+    const dest: Node = this.node().nodeAt(toDirection);
     if (!dest) {
       throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
     }
@@ -290,7 +290,7 @@ export default class Caret {
       return;
     }
     if (id === undefined) {
-      id = "";
+      id = '';
     }
     delete this._savedNodes[id];
   }
@@ -298,12 +298,12 @@ export default class Caret {
   restore(id: string): void {
     if (!this._savedNodes) {
       throw new Error(
-        "No saved nodes were found for the provided ID '" + id + "'"
+          'No saved nodes were found for the provided ID \'' + id + '\'',
       );
     }
-    let loadedNode: Node = this._savedNodes[id];
+    const loadedNode: Node = this._savedNodes[id];
     if (loadedNode == null) {
-      throw new Error("No node found for the provided ID '" + id + "'");
+      throw new Error('No node found for the provided ID \'' + id + '\'');
     }
     this._nodes[this._nodes.length - 1] = loadedNode;
   }
@@ -324,9 +324,9 @@ export default class Caret {
   }
 
   spawnMove(
-    inDirection: Direction | string,
-    newType: Type | string,
-    newAlignmentMode?: Alignment | string
+      inDirection: Direction | string,
+      newType: Type | string,
+      newAlignmentMode?: Alignment | string,
   ): Node {
     const created: Node = this.spawn(inDirection, newType, newAlignmentMode);
     this.move(inDirection);
@@ -367,8 +367,8 @@ export default class Caret {
   }
 
   align(
-    inDirection: Direction | string,
-    newAlignmentMode: Alignment | string
+      inDirection: Direction | string,
+      newAlignmentMode: Alignment | string,
   ): void {
     // Interpret the arguments.
     inDirection = readDirection(inDirection);
@@ -389,8 +389,8 @@ export default class Caret {
       this.node().setAxisOverlap(readAxisOverlap(args[0]));
       return;
     }
-    let inDirection: Direction = readDirection(args[0]);
-    let newAxisOverlap: AxisOverlap = readAxisOverlap(args[1]);
+    const inDirection: Direction = readDirection(args[0]);
+    const newAxisOverlap: AxisOverlap = readAxisOverlap(args[1]);
     this.node().setAxisOverlap(inDirection, newAxisOverlap);
   }
 
@@ -415,10 +415,10 @@ export default class Caret {
       getDirectionAxis(given) ===
       getDirectionAxis(this.node().parentDirection())
     ) {
-      //console.log(namePreferredAxis(PreferredAxis.PARENT));
+      // console.log(namePreferredAxis(PreferredAxis.PARENT));
       this.node().setLayoutPreference(PreferredAxis.PARENT);
     } else {
-      //console.log(namePreferredAxis(PreferredAxis.PERPENDICULAR);
+      // console.log(namePreferredAxis(PreferredAxis.PERPENDICULAR);
       this.node().setLayoutPreference(PreferredAxis.PERPENDICULAR);
     }
   }
@@ -468,7 +468,9 @@ export default class Caret {
   }
 
   label(...args: any[]) {
-    var node, text, font;
+    let node;
+    let text;
+    let font;
     switch (args.length) {
       case 0:
         return this.node().label();
@@ -478,7 +480,7 @@ export default class Caret {
         font = this.font();
         break;
       case 2:
-        if (typeof args[1] === "object") {
+        if (typeof args[1] === 'object') {
           node = this.node();
           text = args[0];
           font = args[1];
@@ -487,8 +489,8 @@ export default class Caret {
           node = node.nodeAt(readDirection(args[0]));
           text = args[1];
           font = this.font();
-          //console.log(typeof arguments[0]);
-          //console.log(typeof arguments[1]);
+          // console.log(typeof arguments[0]);
+          // console.log(typeof arguments[1]);
         }
         break;
       case 3:
@@ -502,7 +504,7 @@ export default class Caret {
   }
 
   select(inDirection?: Direction | string): void {
-    var node = this.node();
+    let node = this.node();
     if (arguments.length > 0) {
       node = node.nodeAt(readDirection(inDirection));
     }
@@ -510,7 +512,7 @@ export default class Caret {
   }
 
   selected(inDirection?: Direction | string): boolean {
-    var node = this.node();
+    let node = this.node();
     if (arguments.length > 0) {
       node = node.nodeAt(readDirection(inDirection));
     }
@@ -518,7 +520,7 @@ export default class Caret {
   }
 
   deselect(inDirection?: Direction | string): void {
-    var node = this.node();
+    let node = this.node();
     if (arguments.length > 0) {
       node = node.nodeAt(readDirection(inDirection));
     }
@@ -533,21 +535,21 @@ export default class Caret {
   }
 }
 
-const Caret_Tests = new parsegraph_TestSuite("parsegraph.Caret");
-Caret_Tests.addTest("new Caret", function () {
-  var car = new Caret("s");
-  var n = new Node(Type.BLOCK);
+const Caret_Tests = new parsegraph_TestSuite('parsegraph.Caret');
+Caret_Tests.addTest('new Caret', function() {
+  let car = new Caret('s');
+  const n = new Node(Type.BLOCK);
   car = new Caret(n);
   car = new Caret();
   if (car.node().type() !== DEFAULT_TYPE) {
     console.log(DEFAULT_TYPE);
-    return car.node().type() + " is not the default.";
+    return car.node().type() + ' is not the default.';
   }
 });
 
-Caret_Tests.addTest("Caret.onKey", function () {
-  var car = new Caret();
-  car.onKey(function () {
-    console.log("Key pressed");
+Caret_Tests.addTest('Caret.onKey', function() {
+  const car = new Caret();
+  car.onKey(function() {
+    console.log('Key pressed');
   });
 });

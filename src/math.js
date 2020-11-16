@@ -2,12 +2,12 @@ const getNumberParts_FARRAY = new Float64Array(1);
 const getNumberParts_UARRAY = new Uint8Array(getNumberParts_FARRAY.buffer);
 // http://stackoverflow.com/questions/9383593/extracting-the-exponent-and-mantissa-of-a-javascript-number
 export function getNumberParts(x) {
-  var float = getNumberParts_FARRAY;
-  var bytes = getNumberParts_UARRAY;
+  const float = getNumberParts_FARRAY;
+  const bytes = getNumberParts_UARRAY;
   float[0] = x;
 
-  var sign = bytes[7] >> 7,
-    exponent = (((bytes[7] & 0x7f) << 4) | (bytes[6] >> 4)) - 0x3ff;
+  const sign = bytes[7] >> 7;
+  const exponent = (((bytes[7] & 0x7f) << 4) | (bytes[6] >> 4)) - 0x3ff;
   bytes[7] = 0x3f;
   bytes[6] |= 0xf0;
   return {

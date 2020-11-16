@@ -4,98 +4,98 @@ function parsegraph_SequenceStep(seq, i) {
   this._active = true;
 }
 
-parsegraph_SequenceStep.prototype.setFrequency = function (freq) {
-  //if(this._lastOsc) {
-  //this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
-  //}
+parsegraph_SequenceStep.prototype.setFrequency = function(freq) {
+  // if(this._lastOsc) {
+  // this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
+  // }
   this._pitchSlider.setValue((freq - 16) / 7902);
   this._pitchSlider.layoutWasChanged();
-  //console.log(this._i, this._pitchSlider.value());
+  // console.log(this._i, this._pitchSlider.value());
 };
 
-parsegraph_SequenceStep.prototype.setActive = function (isActive) {
+parsegraph_SequenceStep.prototype.setActive = function(isActive) {
   this._active = isActive;
   if (this._active) {
-    this._onButton.setLabel("On");
+    this._onButton.setLabel('On');
   } else {
-    this._onButton.setLabel("Off");
+    this._onButton.setLabel('Off');
   }
 };
 
-parsegraph_SequenceStep.prototype.play = function (osc, gain, start, end) {
-  var len = end - start;
+parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end) {
+  const len = end - start;
   osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
-  //this._lastOsc = osc;
-  if (this._onButton.label() == "Off") {
-    //console.log("Step is off!");
+  // this._lastOsc = osc;
+  if (this._onButton.label() == 'Off') {
+    // console.log("Step is off!");
     gain.gain.setValueAtTime(0, start);
     return;
   }
-  var audio = this._seq._graph.surface().audio();
-  //gain.gain.setValueAtTime(0, start);
-  //gain.gain.linearRampToValueAtTime(1, start + .2);
-  //gain.gain.setValueAtTime(1, start + len * .8);
-  //gain.gain.linearRampToValueAtTime(0, end);
-  //console.log(this._i, start, end);
+  const audio = this._seq._graph.surface().audio();
+  // gain.gain.setValueAtTime(0, start);
+  // gain.gain.linearRampToValueAtTime(1, start + .2);
+  // gain.gain.setValueAtTime(1, start + len * .8);
+  // gain.gain.linearRampToValueAtTime(0, end);
+  // console.log(this._i, start, end);
 
-  var envelopeSize =
+  const envelopeSize =
     this._attackSlider.value() +
     this._decaySlider.value() +
     this._sustainLengthSlider.value() +
     this._releaseSlider.value();
 
-  var ae = this._attackSlider.value() / envelopeSize;
-  var de = this._decaySlider.value() / envelopeSize;
-  var se = this._sustainLengthSlider.value() / envelopeSize;
-  var re = this._releaseSlider.value() / envelopeSize;
+  const ae = this._attackSlider.value() / envelopeSize;
+  const de = this._decaySlider.value() / envelopeSize;
+  const se = this._sustainLengthSlider.value() / envelopeSize;
+  const re = this._releaseSlider.value() / envelopeSize;
 
   gain.gain.linearRampToValueAtTime(1, start + len * ae);
   gain.gain.exponentialRampToValueAtTime(
-    this._sustainLevelSlider.value(),
-    start + len * (ae + de)
+      this._sustainLevelSlider.value(),
+      start + len * (ae + de),
   );
   gain.gain.setValueAtTime(
-    this._sustainLevelSlider.value(),
-    start + len * (ae + de + se)
+      this._sustainLevelSlider.value(),
+      start + len * (ae + de + se),
   );
   gain.gain.linearRampToValueAtTime(0, start + len * (ae + de + se + re));
 };
 
-parsegraph_SequenceStep.prototype.randomize = function () {
+parsegraph_SequenceStep.prototype.randomize = function() {
   this.setFrequency(16 + Math.random() * 7902);
   this.setActive(Math.random() > 0.2);
 };
 
-parsegraph_SequenceStep.prototype.node = function () {
+parsegraph_SequenceStep.prototype.node = function() {
   if (this._node) {
     return this._node;
   }
 
   step = new parsegraph_Node(parsegraph_BLOCK);
   this._node = step;
-  var b = parsegraph_copyStyle(parsegraph_BLOCK);
+  const b = parsegraph_copyStyle(parsegraph_BLOCK);
   b.backgroundColor = new parsegraph_Color(1, 1, this._i % 2 == 0 ? 1 : 0.8, 1);
   step.setBlockStyle(b);
   step.setLabel(1 + this._i, parsegraph_defaultFont());
-  var s = step.spawnNode(parsegraph_INWARD, parsegraph_BUD);
+  const s = step.spawnNode(parsegraph_INWARD, parsegraph_BUD);
   s.setIgnoreMouse(true);
   s.setScale(0.5);
   step.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
 
-  var stepOn = s.spawnNode(parsegraph_UPWARD, parsegraph_BLOCK);
-  stepOn.setLabel(Math.random() > 0.3 ? "On" : "Off", ga);
-  stepOn.setClickListener(function () {
+  const stepOn = s.spawnNode(parsegraph_UPWARD, parsegraph_BLOCK);
+  stepOn.setLabel(Math.random() > 0.3 ? 'On' : 'Off', ga);
+  stepOn.setClickListener(function() {
     this._active = !this._active;
     if (this._active) {
-      stepOn.setLabel("Off", ga);
+      stepOn.setLabel('Off', ga);
     } else {
-      stepOn.setLabel("On", ga);
+      stepOn.setLabel('On', ga);
     }
   }, this);
   this._onButton = stepOn;
 
-  var stepLabel = s.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
-  stepLabel.setLabel("Pitch", ga);
+  const stepLabel = s.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  stepLabel.setLabel('Pitch', ga);
   stepLabel.setScale(0.5);
   var stepSlider = s.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
@@ -103,42 +103,45 @@ parsegraph_SequenceStep.prototype.node = function () {
   this._pitchSlider.setValue(Math.random());
   rootStep = step;
 
-  var ns = s.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  var tn = ns.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
-  tn.setLabel("sine", ga);
-  tn.setClickListener(function () {
-    this._type = "sine";
+  const ns = s.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  let tn = ns.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+  tn.setLabel('sine', ga);
+  tn.setClickListener(function() {
+    this._type = 'sine';
   }, this);
   tn.setScale(0.25);
-  var tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
-  tnn.setLabel("triangle", ga);
-  tnn.setClickListener(function () {
-    this._type = "triangle";
+  let tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+  tnn.setLabel('triangle', ga);
+  tnn.setClickListener(function() {
+    this._type = 'triangle';
   }, this);
   tn = tnn;
   tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
-  tnn.setLabel("sawtooth", ga);
-  tnn.setClickListener(function () {
-    this._type = "sawtooth";
+  tnn.setLabel('sawtooth', ga);
+  tnn.setClickListener(function() {
+    this._type = 'sawtooth';
   }, this);
   tn = tnn;
   tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
-  tnn.setLabel("square", ga);
-  tnn.setClickListener(function () {
-    this._type = "square";
+  tnn.setLabel('square', ga);
+  tnn.setClickListener(function() {
+    this._type = 'square';
   }, this);
   tn = tnn;
 
-  var nsl = ns.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
-  nsl.setLabel("Type", ga);
+  const nsl = ns.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  nsl.setLabel('Type', ga);
   nsl.setScale(0.5);
 
-  var prior = ns;
+  let prior = ns;
 
   // Attack
-  var attackBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  var attackLabel = attackBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
-  attackLabel.setLabel("Attack", ga);
+  const attackBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const attackLabel = attackBud.spawnNode(
+      parsegraph_BACKWARD,
+      parsegraph_BLOCK,
+  );
+  attackLabel.setLabel('Attack', ga);
   attackLabel.setScale(0.5);
   var stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
@@ -148,9 +151,9 @@ parsegraph_SequenceStep.prototype.node = function () {
   prior = attackBud;
 
   // Decay
-  var decayBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  var decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
-  decayLabel.setLabel("Decay", ga);
+  const decayBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  decayLabel.setLabel('Decay', ga);
   decayLabel.setScale(0.5);
   var stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
@@ -160,23 +163,26 @@ parsegraph_SequenceStep.prototype.node = function () {
   prior = decayBud;
 
   // Sustain
-  var sustainBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  var sustainLabel = sustainBud.spawnNode(
-    parsegraph_BACKWARD,
-    parsegraph_BLOCK
+  const sustainBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const sustainLabel = sustainBud.spawnNode(
+      parsegraph_BACKWARD,
+      parsegraph_BLOCK,
   );
-  sustainLabel.setLabel("Sustain", ga);
+  sustainLabel.setLabel('Sustain', ga);
   sustainLabel.setScale(0.5);
-  var sustainSliders = sustainBud.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+  const sustainSliders = sustainBud.spawnNode(
+      parsegraph_FORWARD,
+      parsegraph_BUD,
+  );
   sustainSliders.setScale(0.5);
   var stepSlider = sustainSliders.spawnNode(
-    parsegraph_FORWARD,
-    parsegraph_SLIDER
+      parsegraph_FORWARD,
+      parsegraph_SLIDER,
   );
 
-  var lenSlider = sustainSliders
-    .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
-    .spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  const lenSlider = sustainSliders
+      .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
+      .spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   this._sustainLengthSlider = lenSlider;
   this._sustainLengthSlider.setValue(Math.random());
 
@@ -186,12 +192,12 @@ parsegraph_SequenceStep.prototype.node = function () {
   prior = sustainBud;
 
   // Release
-  var releaseBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  var releaseLabel = releaseBud.spawnNode(
-    parsegraph_BACKWARD,
-    parsegraph_BLOCK
+  const releaseBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const releaseLabel = releaseBud.spawnNode(
+      parsegraph_BACKWARD,
+      parsegraph_BLOCK,
   );
-  releaseLabel.setLabel("Release", ga);
+  releaseLabel.setLabel('Release', ga);
   releaseLabel.setScale(0.5);
   var stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
@@ -213,12 +219,12 @@ function parsegraph_SequencerWidget(graph) {
   this._numSteps = 32;
   this._maxBpm = 2000;
   this._bpm = this._maxBpm / 2;
-  //var audio = this._graph.surface().audio();
-  //this._sink = audio.createGain();
+  // var audio = this._graph.surface().audio();
+  // this._sink = audio.createGain();
   this._detuneScale = 300;
 }
 
-parsegraph_SequencerWidget.prototype.useSynthesizer = function (synth) {
+parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth) {
   if (this._synth) {
     this._synth();
     this._synth = null;
@@ -226,13 +232,13 @@ parsegraph_SequencerWidget.prototype.useSynthesizer = function (synth) {
   if (!synth) {
     return;
   }
-  this._synth = synth.addListener(function (freq) {
+  this._synth = synth.addListener(function(freq) {
     if (!this._recording) {
       return;
     }
-    var now = this._graph.surface().audio().currentTime;
+    const now = this._graph.surface().audio().currentTime;
     if (this._playing) {
-      var t =
+      const t =
         Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
       var step = this._steps[t];
     } else {
@@ -247,35 +253,35 @@ parsegraph_SequencerWidget.prototype.useSynthesizer = function (synth) {
   }, this);
 };
 
-parsegraph_SequencerWidget.prototype.output = function () {
+parsegraph_SequencerWidget.prototype.output = function() {
   return this._sink;
 };
 
-parsegraph_SequencerWidget.prototype.onPlay = function (
-  listener,
-  listenerThisArg
+parsegraph_SequencerWidget.prototype.onPlay = function(
+    listener,
+    listenerThisArg,
 ) {
   this._listeners.push([listener, listenerThisArg]);
 };
 
-parsegraph_SequencerWidget.prototype.play = function (bpm) {
-  var audio = this._graph.surface().audio();
+parsegraph_SequencerWidget.prototype.play = function(bpm) {
+  const audio = this._graph.surface().audio();
   this._timer = audio.createConstantSource();
-  var that = this;
-  this._timer.onended = function () {
+  const that = this;
+  this._timer.onended = function() {
     that.play(that._maxBpm * that._bpmSlider.value());
   };
   this._timer.start();
 
-  var tg = audio.createGain();
+  const tg = audio.createGain();
   this._timer.connect(tg);
   tg.gain.value = 0;
   tg.connect(this._sink);
 
-  var now = audio.currentTime;
+  let now = audio.currentTime;
 
   if (this._voices) {
-    for (var type in this._voices) {
+    for (const type in this._voices) {
       var voice = this._voices[type];
       voice.osc.stop();
     }
@@ -283,7 +289,7 @@ parsegraph_SequencerWidget.prototype.play = function (bpm) {
   this._gain = audio.createGain();
   this._gain.connect(this._sink);
 
-  var sineVoice = {
+  const sineVoice = {
     osc: audio.createOscillator(),
     gain: audio.createGain(),
   };
@@ -292,72 +298,72 @@ parsegraph_SequencerWidget.prototype.play = function (bpm) {
   sineVoice.osc.connect(sineVoice.gain);
   sineVoice.gain.connect(this._gain);
   sineVoice.osc.detune.setValueAtTime(
-    this._detuneScale * (this._detuneSlider.value() - 0.5),
-    now
+      this._detuneScale * (this._detuneSlider.value() - 0.5),
+      now,
   );
 
-  var triangleVoice = {
+  const triangleVoice = {
     osc: audio.createOscillator(),
     gain: audio.createGain(),
   };
-  triangleVoice.osc.type = "triangle";
+  triangleVoice.osc.type = 'triangle';
   triangleVoice.osc.connect(triangleVoice.gain);
   triangleVoice.osc.start(now);
   triangleVoice.gain.connect(this._gain);
   triangleVoice.gain.gain.setValueAtTime(0, now);
   triangleVoice.osc.detune.setValueAtTime(
-    this._detuneScale * (this._detuneSlider.value() - 0.5),
-    now
+      this._detuneScale * (this._detuneSlider.value() - 0.5),
+      now,
   );
 
-  var sawtoothVoice = {
+  const sawtoothVoice = {
     osc: audio.createOscillator(),
     gain: audio.createGain(),
   };
-  sawtoothVoice.osc.type = "sawtooth";
+  sawtoothVoice.osc.type = 'sawtooth';
   sawtoothVoice.osc.connect(sawtoothVoice.gain);
   sawtoothVoice.osc.start(now);
   sawtoothVoice.gain.connect(this._gain);
   sawtoothVoice.gain.gain.setValueAtTime(0, now);
   sawtoothVoice.osc.detune.setValueAtTime(
-    this._detuneScale * (this._detuneSlider.value() - 0.5),
-    now
+      this._detuneScale * (this._detuneSlider.value() - 0.5),
+      now,
   );
 
-  var squareVoice = {
+  const squareVoice = {
     osc: audio.createOscillator(),
     gain: audio.createGain(),
   };
-  squareVoice.osc.type = "square";
+  squareVoice.osc.type = 'square';
   squareVoice.osc.connect(squareVoice.gain);
   squareVoice.osc.start(now);
   squareVoice.gain.connect(this._gain);
   squareVoice.gain.gain.setValueAtTime(0, now);
   squareVoice.osc.detune.setValueAtTime(
-    this._detuneScale * (this._detuneSlider.value() - 0.5),
-    now
+      this._detuneScale * (this._detuneSlider.value() - 0.5),
+      now,
   );
 
   this._voices = {};
-  this._voices["sine"] = sineVoice;
-  this._voices["triangle"] = triangleVoice;
-  this._voices["sawtooth"] = sawtoothVoice;
-  this._voices["square"] = squareVoice;
+  this._voices['sine'] = sineVoice;
+  this._voices['triangle'] = triangleVoice;
+  this._voices['sawtooth'] = sawtoothVoice;
+  this._voices['square'] = squareVoice;
 
   this._startTime = now;
   this._beatLength = 60 / bpm;
-  for (var i = 0; i < this._steps.length; ++i) {
-    var s = this._steps[i];
+  for (let i = 0; i < this._steps.length; ++i) {
+    const s = this._steps[i];
     var voice = this._voices[s._type];
     if (!voice) {
-      console.log("No voice for " + s._type);
+      console.log('No voice for ' + s._type);
       continue;
     }
     s.play(
-      voice.osc,
-      voice.gain,
-      now + (i * 60) / bpm,
-      now + ((i + 1) * 60) / bpm
+        voice.osc,
+        voice.gain,
+        now + (i * 60) / bpm,
+        now + ((i + 1) * 60) / bpm,
     );
     var last = now + ((i + 1) * 60) / bpm;
   }
@@ -367,23 +373,23 @@ parsegraph_SequencerWidget.prototype.play = function (bpm) {
   this._currentStep = null;
   this._renderTimer = new parsegraph_TimeoutTimer();
   this._renderTimer.setDelay(this._beatLength);
-  this._renderTimer.setListener(function () {
+  this._renderTimer.setListener(function() {
     now = this._graph.surface().audio().currentTime;
-    var t =
+    const t =
       Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
     this._currentStep = t;
     s = this._steps[t];
     if (s && t != this._lastSelected) {
-      //console.log("Changing step to " + t);
-      for (var i = 0; i < this._steps.length; ++i) {
+      // console.log("Changing step to " + t);
+      for (let i = 0; i < this._steps.length; ++i) {
         var s = this._steps[i];
         if (i != t) {
           var b = parsegraph_copyStyle(parsegraph_BLOCK);
           b.backgroundColor = new parsegraph_Color(
-            1,
-            1,
+              1,
+              1,
             i % 2 == 0 ? 1 : 0.8,
-            1
+            1,
           );
           s._node.setBlockStyle(b);
         } else {
@@ -397,152 +403,152 @@ parsegraph_SequencerWidget.prototype.play = function (bpm) {
     }
     this._renderTimer.schedule();
   }, this);
-  //this._renderTimer.schedule();
+  // this._renderTimer.schedule();
 };
 
-parsegraph_SequencerWidget.prototype.font = function () {
+parsegraph_SequencerWidget.prototype.font = function() {
   return parsegraph_defaultFont();
 };
 
-parsegraph_SequencerWidget.prototype.node = function () {
+parsegraph_SequencerWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  var car = new parsegraph_Caret(parsegraph_SLOT);
+  const car = new parsegraph_Caret(parsegraph_SLOT);
   this._containerNode = car.root();
-  car.label("Sequencer", this.font());
-  //car.fitExact();
+  car.label('Sequencer', this.font());
+  // car.fitExact();
 
   this._containerNode.setNodeAlignmentMode(
-    parsegraph_INWARD,
-    parsegraph_ALIGN_VERTICAL
+      parsegraph_INWARD,
+      parsegraph_ALIGN_VERTICAL,
   );
-  var onOff = this._containerNode.spawnNode(
-    parsegraph_INWARD,
-    parsegraph_BLOCK
+  const onOff = this._containerNode.spawnNode(
+      parsegraph_INWARD,
+      parsegraph_BLOCK,
   );
-  onOff.setLabel("Play", this.font());
+  onOff.setLabel('Play', this.font());
   this._onButton = onOff;
 
   this._recordButton = onOff.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
-  this._recordButton.setLabel("Record", this.font());
+  this._recordButton.setLabel('Record', this.font());
 
-  this._recordButton.setClickListener(function () {
+  this._recordButton.setClickListener(function() {
     this._recording = !this._recording;
     if (this._recording) {
       // Now recording
       var b = parsegraph_copyStyle(parsegraph_BLOCK);
       b.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
       this._recordButton.setBlockStyle(b);
-      this._recordButton.setLabel("Recording");
+      this._recordButton.setLabel('Recording');
     } else {
       var b = parsegraph_copyStyle(parsegraph_BLOCK);
       this._recordButton.setBlockStyle(b);
-      this._recordButton.setLabel("Record");
+      this._recordButton.setLabel('Record');
     }
     this._recordButton.layoutWasChanged();
     this._graph.scheduleRepaint();
   }, this);
 
-  var bpmSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+  const bpmSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
   bpmSlider.setValue(0.5);
-  bpmSlider.setChangeListener(function () {
+  bpmSlider.setChangeListener(function() {
     bpmSlider.value();
   }, this);
   this._bpmSlider = bpmSlider;
 
   this._playing = false;
-  onOff.setClickListener(function () {
+  onOff.setClickListener(function() {
     this._playing = !this._playing;
     if (this._playing) {
-      //onOff.setLabel("Stop", this.font());
-      var v = bpmSlider.value();
-      var bpm = v * this._maxBpm;
+      // onOff.setLabel("Stop", this.font());
+      const v = bpmSlider.value();
+      const bpm = v * this._maxBpm;
       this.play(bpm);
     } else {
-      onOff.setLabel("Play", this.font());
+      onOff.setLabel('Play', this.font());
     }
   }, this);
 
   this._resetButton = this._recordButton.spawnNode(
-    parsegraph_FORWARD,
-    parsegraph_BLOCK
+      parsegraph_FORWARD,
+      parsegraph_BLOCK,
   );
-  this._resetButton.setLabel("Reset", this.font());
-  this._resetButton.setClickListener(function () {
-    var newFreq = 440;
-    for (var i = 0; i < this._numSteps; ++i) {
-      var step = this._steps[i];
+  this._resetButton.setLabel('Reset', this.font());
+  this._resetButton.setClickListener(function() {
+    const newFreq = 440;
+    for (let i = 0; i < this._numSteps; ++i) {
+      const step = this._steps[i];
       step.setFrequency(newFreq);
       step.setActive(false);
     }
   }, this);
 
   this._randomizeButton = this._resetButton.spawnNode(
-    parsegraph_FORWARD,
-    parsegraph_BLOCK
+      parsegraph_FORWARD,
+      parsegraph_BLOCK,
   );
-  this._randomizeButton.setLabel("Randomize", this.font());
-  this._randomizeButton.setClickListener(function () {
-    for (var i = 0; i < this._numSteps; ++i) {
-      var step = this._steps[i];
+  this._randomizeButton.setLabel('Randomize', this.font());
+  this._randomizeButton.setClickListener(function() {
+    for (let i = 0; i < this._numSteps; ++i) {
+      const step = this._steps[i];
       step.randomize();
       step.setActive(false);
     }
   }, this);
 
   this._detuneSlider = this._randomizeButton.spawnNode(
-    parsegraph_DOWNWARD,
-    parsegraph_SLIDER
+      parsegraph_DOWNWARD,
+      parsegraph_SLIDER,
   );
   this._detuneSlider.setValue(0.5);
-  this._detuneSlider.setChangeListener(function () {
-    for (var i = 0; i < this._voices.length; ++i) {
-      var voice = this._voices[i];
+  this._detuneSlider.setChangeListener(function() {
+    for (let i = 0; i < this._voices.length; ++i) {
+      const voice = this._voices[i];
       voice.osc.detune.setValueAtTime(
-        this._detuneScale * (this._detuneSlider.value() - 0.5),
-        voice.osc.context.currentTime
+          this._detuneScale * (this._detuneSlider.value() - 0.5),
+          voice.osc.context.currentTime,
       );
     }
   }, this);
 
-  var n = car.spawn(
-    parsegraph_DOWNWARD,
-    parsegraph_BUD,
-    parsegraph_ALIGN_CENTER
+  const n = car.spawn(
+      parsegraph_DOWNWARD,
+      parsegraph_BUD,
+      parsegraph_ALIGN_CENTER,
   );
   car.pull(parsegraph_DOWNWARD);
-  var l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
-  var y = parsegraph_copyStyle(parsegraph_BLOCK);
+  const l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
+  const y = parsegraph_copyStyle(parsegraph_BLOCK);
   y.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
   l.setBlockStyle(y);
-  l.setLabel("Oscillator", this.font());
-  var rootStep = n;
-  var voices = ["sine", "sawtooth", "square", "triangle"];
-  for (var i = 0; i < this._numSteps; ++i) {
-    var newStep = new parsegraph_SequenceStep(this, i);
-    var v = voices[Math.floor(Math.random() * voices.length)];
+  l.setLabel('Oscillator', this.font());
+  let rootStep = n;
+  const voices = ['sine', 'sawtooth', 'square', 'triangle'];
+  for (let i = 0; i < this._numSteps; ++i) {
+    const newStep = new parsegraph_SequenceStep(this, i);
+    const v = voices[Math.floor(Math.random() * voices.length)];
     newStep._type = v;
     this._steps.push(newStep);
     rootStep.connectNode(parsegraph_FORWARD, newStep.node());
     rootStep = newStep.node();
     rootStep.setClickListener(
-      function () {
-        var that = this[0];
-        var i = this[1];
-        if (that._playing) {
-          return true;
-        }
-        that._currentStep = i;
-        return false;
-      },
-      [this, i]
+        function() {
+          const that = this[0];
+          const i = this[1];
+          if (that._playing) {
+            return true;
+          }
+          that._currentStep = i;
+          return false;
+        },
+        [this, i],
     );
   }
   var addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
-  addStep.setLabel("+", this.font());
+  addStep.setLabel('+', this.font());
 
   var addStep = n.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  addStep.setLabel("+", this.font());
+  addStep.setLabel('+', this.font());
   return this._containerNode;
 };

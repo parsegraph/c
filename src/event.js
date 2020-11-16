@@ -1,8 +1,8 @@
 export function addEventListener(
-  targetElement,
-  eventName,
-  listener,
-  useCapture
+    targetElement,
+    eventName,
+    listener,
+    useCapture,
 ) {
   if (useCapture === undefined) {
     // Unspecified, so default to false.
@@ -14,36 +14,36 @@ export function addEventListener(
   }
 
   // Internet Explorer before IE 9.
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     if (!/^on/.test(eventName)) {
-      eventName = "on" + eventName;
+      eventName = 'on' + eventName;
     }
     targetElement.attachEvent(eventName, listener);
   });
 }
 
 export function addEventMethod(
-  targetElement,
-  eventName,
-  listener,
-  listenerThisArg,
-  useCapture
-) {
-  return addEventListener(
     targetElement,
     eventName,
-    function () {
-      listener.apply(listenerThisArg, arguments);
-    },
-    useCapture
+    listener,
+    listenerThisArg,
+    useCapture,
+) {
+  return addEventListener(
+      targetElement,
+      eventName,
+      function() {
+        listener.apply(listenerThisArg, arguments);
+      },
+      useCapture,
   );
 }
 
 export function removeEventListener(
-  targetElement,
-  eventName,
-  listener,
-  useCapture
+    targetElement,
+    eventName,
+    listener,
+    useCapture,
 ) {
   if (useCapture === undefined) {
     // Unspecified, so default to false.
@@ -55,9 +55,9 @@ export function removeEventListener(
   }
 
   // Internet Explorer before IE 9.
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     if (!/^on/.test(eventName)) {
-      eventName = "on" + eventName;
+      eventName = 'on' + eventName;
     }
     targetElement.detachEvent(eventName, listener);
   });
@@ -65,16 +65,16 @@ export function removeEventListener(
 
 export function addButtonListener(targetElement, listener, listenerThisArg) {
   return [
-    addEventMethod(targetElement, "click", listener, listenerThisArg),
+    addEventMethod(targetElement, 'click', listener, listenerThisArg),
     addEventMethod(
-      targetElement,
-      "keydown",
-      function (event) {
-        if (event.keyCode === 32 || event.keyCode === 13) {
-          listener.call(listenerThisArg, event);
-        }
-      },
-      this
+        targetElement,
+        'keydown',
+        function(event) {
+          if (event.keyCode === 32 || event.keyCode === 13) {
+            listener.call(listenerThisArg, event);
+          }
+        },
+        this,
     ),
   ];
 }
@@ -180,34 +180,34 @@ export function addButtonListener(targetElement, listener, listenerThisArg) {
  *         Firefox v4/Win7  |     undefined    |       3
  *
  */
-export function normalizeWheel(/*object*/ event) {
-  /*object*/
+export function normalizeWheel(/* object*/ event) {
+  /* object*/
   // Reasonable defaults
-  let PIXEL_STEP = 10;
-  let LINE_HEIGHT = 40;
-  let PAGE_HEIGHT = 800;
+  const PIXEL_STEP = 10;
+  const LINE_HEIGHT = 40;
+  const PAGE_HEIGHT = 800;
 
-  var sX = 0,
-    sY = 0, // spinX, spinY
-    pX = 0,
-    pY = 0; // pixelX, pixelY
+  let sX = 0;
+  let sY = 0; // spinX, spinY
+  let pX = 0;
+  let pY = 0; // pixelX, pixelY
 
   // Legacy
-  if ("detail" in event) {
+  if ('detail' in event) {
     sY = event.detail;
   }
-  if ("wheelDelta" in event) {
+  if ('wheelDelta' in event) {
     sY = -event.wheelDelta / 120;
   }
-  if ("wheelDeltaY" in event) {
+  if ('wheelDeltaY' in event) {
     sY = -event.wheelDeltaY / 120;
   }
-  if ("wheelDeltaX" in event) {
+  if ('wheelDeltaX' in event) {
     sX = -event.wheelDeltaX / 120;
   }
 
   // side scrolling on FF with DOMMouseScroll
-  if ("axis" in event && event.axis === event.HORIZONTAL_AXIS) {
+  if ('axis' in event && event.axis === event.HORIZONTAL_AXIS) {
     sX = sY;
     sY = 0;
   }
@@ -215,10 +215,10 @@ export function normalizeWheel(/*object*/ event) {
   pX = sX * PIXEL_STEP;
   pY = sY * PIXEL_STEP;
 
-  if ("deltaY" in event) {
+  if ('deltaY' in event) {
     pY = event.deltaY;
   }
-  if ("deltaX" in event) {
+  if ('deltaX' in event) {
     pX = event.deltaX;
   }
 
@@ -242,22 +242,22 @@ export function normalizeWheel(/*object*/ event) {
     sY = pY < 1 ? -1 : 1;
   }
 
-  return { spinX: sX, spinY: sY, pixelX: pX, pixelY: pY };
+  return {spinX: sX, spinY: sY, pixelX: pX, pixelY: pY};
 }
 
 export function writeError(ex) {
-  var err = "";
+  let err = '';
   switch (typeof ex) {
-    case "string":
-    case "number":
-    case "boolean":
-    case "function":
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'function':
       err += ex;
       break;
-    case "object":
-      if (typeof ex.toString == "function") {
+    case 'object':
+      if (typeof ex.toString == 'function') {
         err += ex.toString();
-      } else if (typeof ex.toJSON == "function") {
+      } else if (typeof ex.toJSON == 'function') {
         err += ex.toJSON();
       } else {
         err += ex;

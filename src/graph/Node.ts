@@ -11,8 +11,8 @@ import {
   parsegraph_BAD_NODE_FIT,
   parsegraph_CANNOT_AFFECT_PARENT,
   parsegraph_NO_NODE_FOUND,
-} from "./Exception";
-import { elapsed } from "../timing";
+} from './Exception';
+import {elapsed} from '../timing';
 
 import {
   parsegraph_RIGHT_TO_LEFT,
@@ -20,38 +20,38 @@ import {
   parsegraph_CACHE_ACTIVATION_SCALE,
   parsegraph_INTERVAL,
   parsegraph_defaultFont,
-} from "./settings.js";
+} from './settings.js';
 
 import parsegraph_style, {
   parsegraph_BUD_LEAF_SEPARATION,
   parsegraph_LINE_THICKNESS,
   parsegraph_BUD_TO_BUD_VERTICAL_SEPARATION,
-} from "./NodeStyle.js";
+} from './NodeStyle.js';
 
 import {
   matrixIdentity3x3,
   makeScale3x3I,
   makeTranslation3x3I,
   matrixMultiply3x3I,
-} from "../gl";
+} from '../gl';
 
-import Rect from "./Rect";
-import Size from "./Size";
-import parsegraph_Extent from "./Extent";
-import parsegraph_Label from "./Label";
-import parsegraph_Viewport from "./Viewport";
-import parsegraph_Window from "./Window";
-import NodePainter from "./NodePainter";
-import parsegraph_Camera from "./Camera";
-import parsegraph_Color from "./Color";
-import parsegraph_Freezer from "./Freezer";
-import parsegraph_Font from "./Font";
+import Rect from './Rect';
+import Size from './Size';
+import parsegraph_Extent from './Extent';
+import parsegraph_Label from './Label';
+import parsegraph_Viewport from './Viewport';
+import parsegraph_Window from './Window';
+import NodePainter from './NodePainter';
+import parsegraph_Camera from './Camera';
+import parsegraph_Color from './Color';
+import parsegraph_Freezer from './Freezer';
+import parsegraph_Font from './Font';
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Direction and Axis
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 // Node Direction
 export enum Direction {
@@ -90,28 +90,28 @@ export const VERTICAL_ORDER: Direction[] = [
 ];
 
 export function readDirection(given: string | Direction): Direction {
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
-  if (typeof given === "string") {
+  if (typeof given === 'string') {
     switch (given.charAt(0)) {
-      case "f":
-      case "F":
+      case 'f':
+      case 'F':
         return Direction.FORWARD;
-      case "b":
-      case "B":
+      case 'b':
+      case 'B':
         return Direction.BACKWARD;
-      case "u":
-      case "U":
+      case 'u':
+      case 'U':
         return Direction.UPWARD;
-      case "d":
-      case "D":
+      case 'd':
+      case 'D':
         return Direction.DOWNWARD;
-      case "i":
-      case "I":
+      case 'i':
+      case 'I':
         return Direction.INWARD;
-      case "o":
-      case "O":
+      case 'o':
+      case 'O':
         return Direction.OUTWARD;
     }
   }
@@ -122,19 +122,19 @@ export function readDirection(given: string | Direction): Direction {
 export function nameDirection(given: Direction): string {
   switch (given) {
     case Direction.NULL:
-      return "NULL";
+      return 'NULL';
     case Direction.FORWARD:
-      return "FORWARD";
+      return 'FORWARD';
     case Direction.BACKWARD:
-      return "BACKWARD";
+      return 'BACKWARD';
     case Direction.DOWNWARD:
-      return "DOWNWARD";
+      return 'DOWNWARD';
     case Direction.UPWARD:
-      return "UPWARD";
+      return 'UPWARD';
     case Direction.INWARD:
-      return "INWARD";
+      return 'INWARD';
     case Direction.OUTWARD:
-      return "OUTWARD";
+      return 'OUTWARD';
   }
   throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION, given);
 }
@@ -205,11 +205,11 @@ export function isCardinalDirection(given: Direction): boolean {
 export function nameAxis(given: Axis): string {
   switch (given) {
     case Axis.NULL:
-      return "NULL";
+      return 'NULL';
     case Axis.VERTICAL:
-      return "VERTICAL";
+      return 'VERTICAL';
     case Axis.HORIZONTAL:
-      return "HORIZONTAL";
+      return 'HORIZONTAL';
   }
 }
 
@@ -276,7 +276,7 @@ export function getNegativeDirection(given: Axis): Direction {
 }
 
 export function isPositiveDirection(given: Direction): boolean {
-  let positiveDirection = getPositiveDirection(getDirectionAxis(given));
+  const positiveDirection = getPositiveDirection(getDirectionAxis(given));
   return given === positiveDirection;
 }
 
@@ -300,11 +300,11 @@ export function alternateDirection(given: Direction): Direction {
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Alignment
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum Alignment {
   NULL = 0,
@@ -320,49 +320,49 @@ export enum Alignment {
 export function nameAlignment(given: Alignment): string {
   switch (given) {
     case Alignment.NULL:
-      return "NULL";
+      return 'NULL';
     case Alignment.NONE:
-      return "NONE";
+      return 'NONE';
     case Alignment.NEGATIVE:
-      return "NEGATIVE";
+      return 'NEGATIVE';
     case Alignment.CENTER:
-      return "CENTER";
+      return 'CENTER';
     case Alignment.POSITIVE:
-      return "POSITIVE";
+      return 'POSITIVE';
     case Alignment.INWARD_HORIZONTAL:
-      return "HORIZONTAL";
+      return 'HORIZONTAL';
     case Alignment.INWARD_VERTICAL:
-      return "VERTICAL";
+      return 'VERTICAL';
   }
   throw parsegraph_createException(parsegraph_BAD_NODE_ALIGNMENT, given);
 }
 
 export function readAlignment(given: string | Alignment): Alignment {
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
-  if (typeof given === "string") {
+  if (typeof given === 'string') {
     given = given.toLowerCase();
     switch (given) {
-      case "none":
-      case "no":
+      case 'none':
+      case 'no':
         return Alignment.NONE;
-      case "negative":
-      case "neg":
-      case "n":
+      case 'negative':
+      case 'neg':
+      case 'n':
         return Alignment.NEGATIVE;
-      case "positive":
-      case "pos":
-      case "p":
+      case 'positive':
+      case 'pos':
+      case 'p':
         return Alignment.POSITIVE;
-      case "center":
-      case "c":
+      case 'center':
+      case 'c':
         return Alignment.CENTER;
-      case "vertical":
-      case "v":
+      case 'vertical':
+      case 'v':
         return Alignment.INWARD_VERTICAL;
-      case "horizontal":
-      case "h":
+      case 'horizontal':
+      case 'h':
         return Alignment.INWARD_HORIZONTAL;
     }
   }
@@ -370,11 +370,11 @@ export function readAlignment(given: string | Alignment): Alignment {
   return Alignment.NULL;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Axis Overlap
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum AxisOverlap {
   NULL = 18,
@@ -386,44 +386,44 @@ export enum AxisOverlap {
 export function nameAxisOverlap(given: AxisOverlap): string {
   switch (given) {
     case AxisOverlap.NULL:
-      return "NULL";
+      return 'NULL';
     case AxisOverlap.ALLOWED:
-      return "ALLOWED";
+      return 'ALLOWED';
     case AxisOverlap.PREVENTED:
-      return "PREVENTED";
+      return 'PREVENTED';
     case AxisOverlap.DEFAULT:
-      return "DEFAULT";
+      return 'DEFAULT';
   }
   throw parsegraph_createException(parsegraph_BAD_AXIS_OVERLAP);
 }
 
 export function readAxisOverlap(given: string): AxisOverlap {
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
-  if (typeof given === "string") {
+  if (typeof given === 'string') {
     given = given.toLowerCase();
     switch (given) {
-      case "a":
-      case "allow":
+      case 'a':
+      case 'allow':
         return AxisOverlap.ALLOWED;
-      case "p":
-      case "prevent":
+      case 'p':
+      case 'prevent':
         return AxisOverlap.PREVENTED;
-      case "d":
-      case "def":
-      case "default":
+      case 'd':
+      case 'def':
+      case 'default':
         return AxisOverlap.DEFAULT;
     }
   }
   return AxisOverlap.NULL;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Node Types
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum Type {
   NULL = 9,
@@ -439,60 +439,60 @@ export const DEFAULT_TYPE: Type = Type.BLOCK;
 export function nameType(given: Type): string {
   switch (given) {
     case Type.NULL:
-      return "NULL";
+      return 'NULL';
     case Type.SLOT:
-      return "SLOT";
+      return 'SLOT';
     case Type.BLOCK:
-      return "BLOCK";
+      return 'BLOCK';
     case Type.BUD:
-      return "BUD";
+      return 'BUD';
     case Type.SLIDER:
-      return "SLIDER";
+      return 'SLIDER';
     case Type.SCENE:
-      return "SCENE";
+      return 'SCENE';
   }
   throw parsegraph_createException(parsegraph_BAD_NODE_TYPE, given);
 }
 
 export function readType(given: string | Type): Type {
-  if (typeof given === "object") {
+  if (typeof given === 'object') {
     return given;
   }
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
-  if (typeof given === "string") {
+  if (typeof given === 'string') {
     given = given.toLowerCase().substring(0, 3);
 
     switch (given) {
       // 'b' is ambiguous, but blocks are more common, so assume that.
-      case "b":
-      case "bl":
-      case "blo":
+      case 'b':
+      case 'bl':
+      case 'blo':
         return Type.BLOCK;
-      case "u":
-      case "bu":
-      case "bud":
+      case 'u':
+      case 'bu':
+      case 'bud':
         return Type.BUD;
-      case "s":
-      case "sl":
-      case "slo":
+      case 's':
+      case 'sl':
+      case 'slo':
         return Type.SLOT;
-      case "sli":
+      case 'sli':
         return Type.SLIDER;
-      case "sc":
-      case "sce":
+      case 'sc':
+      case 'sce':
         return Type.SCENE;
     }
   }
   return Type.NULL;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Node Fit
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum Fit {
   NULL = 14,
@@ -504,41 +504,41 @@ export enum Fit {
 export function nameFit(given: Fit): string {
   switch (given) {
     case Fit.NULL:
-      return "NULL";
+      return 'NULL';
     case Fit.EXACT:
-      return "EXACT";
+      return 'EXACT';
     case Fit.LOOSE:
-      return "LOOSE";
+      return 'LOOSE';
     case Fit.NAIVE:
-      return "NAIVE";
+      return 'NAIVE';
   }
   throw parsegraph_createException(parsegraph_BAD_NODE_FIT);
 }
 
 export function readFit(given: string): Fit {
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
   given = given.toLowerCase();
   switch (given) {
-    case "e":
-    case "exact":
+    case 'e':
+    case 'exact':
       return Fit.EXACT;
-    case "l":
-    case "loose":
+    case 'l':
+    case 'loose':
       return Fit.LOOSE;
-    case "n":
-    case "naive":
+    case 'n':
+    case 'naive':
       return Fit.NAIVE;
   }
   return Fit.NULL;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Preferred Axis
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum PreferredAxis {
   NULL = 0,
@@ -551,50 +551,50 @@ export enum PreferredAxis {
 export function namePreferredAxis(given: PreferredAxis): string {
   switch (given) {
     case PreferredAxis.NULL:
-      return "NULL";
+      return 'NULL';
     case PreferredAxis.PARENT:
-      return "PARENT";
+      return 'PARENT';
     case PreferredAxis.PERPENDICULAR:
-      return "PERPENDICULAR";
+      return 'PERPENDICULAR';
     case PreferredAxis.HORIZONTAL:
-      return "HORIZONTAL";
+      return 'HORIZONTAL';
     case PreferredAxis.VERTICAL:
-      return "VERTICAL";
+      return 'VERTICAL';
   }
   throw parsegraph_createException(parsegraph_BAD_LAYOUT_PREFERENCE, given);
 }
 
 export function readPreferredAxis(given: string | number): PreferredAxis {
-  if (typeof given === "number") {
+  if (typeof given === 'number') {
     return given;
   }
   given = given.toLowerCase();
   switch (given) {
-    case "pa":
-    case "par":
-    case "parent":
+    case 'pa':
+    case 'par':
+    case 'parent':
       return PreferredAxis.PARENT;
-    case "pe":
-    case "perp":
-    case "perpendicular":
+    case 'pe':
+    case 'perp':
+    case 'perpendicular':
       return PreferredAxis.PERPENDICULAR;
-    case "v":
-    case "vert":
-    case "vertical":
+    case 'v':
+    case 'vert':
+    case 'vertical':
       return PreferredAxis.VERTICAL;
-    case "h":
-    case "horz":
-    case "horizontal":
+    case 'h':
+    case 'horz':
+    case 'horizontal':
       return PreferredAxis.HORIZONTAL;
   }
   return PreferredAxis.NULL;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Layout State
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export enum LayoutState {
   NULL = 0,
@@ -606,22 +606,22 @@ export enum LayoutState {
 export function nameLayoutState(given: LayoutState): string {
   switch (given) {
     case LayoutState.NULL:
-      return "NULL";
+      return 'NULL';
     case LayoutState.NEEDS_COMMIT:
-      return "NEEDS_COMMIT";
+      return 'NEEDS_COMMIT';
     case LayoutState.COMMITTED:
-      return "COMMITTED";
+      return 'COMMITTED';
     case LayoutState.IN_COMMIT:
-      return "IN_COMMIT";
+      return 'IN_COMMIT';
   }
   throw parsegraph_createException(parsegraph_BAD_LAYOUT_STATE, given);
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Rendering Metrics
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 let NODES_PAINTED: number = 0;
 let PAINT_START: Date = null;
@@ -640,22 +640,22 @@ export function outputNodesPainted(): void {
     return;
   }
   if (PAINT_START) {
-    var paintDuration: number = elapsed(PAINT_START);
-    //console.log("Painted " + NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
+    const paintDuration: number = elapsed(PAINT_START);
+    // console.log("Painted " + NODES_PAINTED + " nodes over " + (paintDuration/1000) + "s. (" + (NODES_PAINTED/(paintDuration/1000)) + " nodes/sec)");
   }
   resetNodesPainted();
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Tab Usability
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 export function parsegraph_chainTab(
-  a: Node,
-  b: Node,
-  swappedOut?: Node[]
+    a: Node,
+    b: Node,
+    swappedOut?: Node[],
 ): void {
   a.ensureExtended();
   b.ensureExtended();
@@ -663,7 +663,7 @@ export function parsegraph_chainTab(
     swappedOut[0] = a ? a._extended.nextTabNode : null;
     swappedOut[1] = b ? b._extended.prevTabNode : null;
   }
-  //console.log(a, b);
+  // console.log(a, b);
   if (a) {
     a._extended.nextTabNode = b;
   }
@@ -676,20 +676,20 @@ export function parsegraph_chainAllTabs(): void {
   if (arguments.length < 2) {
     return;
   }
-  var firstNode: Node = arguments[0];
-  var lastNode: Node = arguments[arguments.length - 1];
+  const firstNode: Node = arguments[0];
+  const lastNode: Node = arguments[arguments.length - 1];
 
-  for (var i = 0; i <= arguments.length - 2; ++i) {
+  for (let i = 0; i <= arguments.length - 2; ++i) {
     parsegraph_chainTab(arguments[i], arguments[i + 1]);
   }
   parsegraph_chainTab(lastNode, firstNode);
 }
 
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 //
 // Node
 //
-//////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
 class NeighborData {
   owner: Node;
@@ -793,8 +793,8 @@ class NodeRenderData {
 
 let Node_COUNT: number = 0;
 
-let renderTimes: number[] = [];
-let renderData: NodeRenderData = new NodeRenderData();
+const renderTimes: number[] = [];
+const renderData: NodeRenderData = new NodeRenderData();
 let CACHED_RENDERS: number = 0;
 let IMMEDIATE_RENDERS: number = 0;
 export default class Node {
@@ -843,7 +843,7 @@ export default class Node {
       new parsegraph_Extent(),
     ];
     this._neighbors = [];
-    for (var i = 0; i < NUM_DIRECTIONS; ++i) {
+    for (let i = 0; i < NUM_DIRECTIONS; ++i) {
       this._neighbors.push(null);
     }
     this._parentNeighbor = null;
@@ -894,7 +894,7 @@ export default class Node {
   }
 
   root(): Node {
-    var p: Node = this;
+    let p: Node = this;
     while (!p.isRoot()) {
       p = p.parentNode();
     }
@@ -902,7 +902,7 @@ export default class Node {
   }
 
   toString(): string {
-    return "[Node " + this._id + "]";
+    return '[Node ' + this._id + ']';
   }
 
   x(): number {
@@ -944,20 +944,20 @@ export default class Node {
       this._absoluteVersion ===
         this.parentNode().findPaintGroup()._absoluteVersion
     ) {
-      //console.log(this + " does not need an absolute version update, so just return.");
+      // console.log(this + " does not need an absolute version update, so just return.");
       return;
     }
-    //console.log(this + " needs an absolute version update");
+    // console.log(this + " needs an absolute version update");
     this._absoluteXPos = null;
     this._absoluteYPos = null;
     this._absoluteScale = null;
 
     // Retrieve a stack of nodes to determine the absolute position.
-    var node = this;
-    var nodeList = [];
-    var parentScale = 1.0;
-    var scale = 1.0;
-    var neededVersion;
+    let node = this;
+    const nodeList = [];
+    let parentScale = 1.0;
+    let scale = 1.0;
+    let neededVersion;
     if (!this.isRoot()) {
       neededVersion = this.parentNode().findPaintGroup()._absoluteVersion;
     }
@@ -968,7 +968,7 @@ export default class Node {
         break;
       }
 
-      var par = node.nodeParent();
+      const par = node.nodeParent();
       if (!par._absoluteDirty && par._absoluteVersion === neededVersion) {
         // Just use the parent's absolute position to start.
         this._absoluteXPos = par._absoluteXPos;
@@ -983,8 +983,8 @@ export default class Node {
     }
 
     // nodeList contains [directionToThis, directionToParent, ..., directionFromRoot];
-    for (var i = nodeList.length - 1; i >= 0; --i) {
-      var directionToChild = nodeList[i];
+    for (let i = nodeList.length - 1; i >= 0; --i) {
+      const directionToChild = nodeList[i];
 
       this._absoluteXPos += node.x() * parentScale;
       this._absoluteYPos += node.y() * parentScale;
@@ -997,15 +997,15 @@ export default class Node {
         node._absoluteDirty = false;
         if (!node.isRoot()) {
           node._absoluteVersion = node
-            .parentNode()
-            .findPaintGroup()._absoluteVersion;
+              .parentNode()
+              .findPaintGroup()._absoluteVersion;
         }
       }
       scale *= node.scaleAt(directionToChild);
       node = node.nodeAt(directionToChild);
     }
 
-    //console.log(this + " has absolute pos " + this._absoluteXPos + ", " + this._absoluteYPos);
+    // console.log(this + " has absolute pos " + this._absoluteXPos + ", " + this._absoluteYPos);
     this._absoluteXPos += node.x() * parentScale;
     this._absoluteYPos += node.y() * parentScale;
     this._absoluteScale = scale;
@@ -1049,15 +1049,15 @@ export default class Node {
 
   commitGroupPos(): void {
     if (this._hasGroupPos) {
-      //console.log(this + " does not need a position update.");
+      // console.log(this + " does not need a position update.");
       return;
     }
 
     // Retrieve a stack of nodes to determine the group position.
-    var node = this;
-    var nodeList = [];
-    var parentScale = 1.0;
-    var scale = 1.0;
+    let node = this;
+    const nodeList = [];
+    let parentScale = 1.0;
+    let scale = 1.0;
     while (true) {
       if (node.isRoot() || node.localPaintGroup()) {
         this._groupXPos = 0;
@@ -1065,7 +1065,7 @@ export default class Node {
         break;
       }
 
-      var par = node.nodeParent();
+      const par = node.nodeParent();
       if (par._groupXPos !== null) {
         // Just use the parent's position to start.
         this._groupXPos = par._groupXPos;
@@ -1080,8 +1080,8 @@ export default class Node {
     }
 
     // nodeList contains [directionToThis, directionToParent, ..., directionFromGroupParent];
-    for (var i = nodeList.length - 1; i >= 0; --i) {
-      var directionToChild = nodeList[i];
+    for (let i = nodeList.length - 1; i >= 0; --i) {
+      const directionToChild = nodeList[i];
 
       if (i !== nodeList.length - 1) {
         this._groupXPos += node.x() * parentScale;
@@ -1092,7 +1092,7 @@ export default class Node {
       scale *= node.scaleAt(directionToChild);
       node = node.nodeAt(directionToChild);
     }
-    //console.log("Assigning scale for " + this + " to " + scale);
+    // console.log("Assigning scale for " + this + " to " + scale);
     this._groupScale = scale;
 
     if (!this.localPaintGroup()) {
@@ -1108,7 +1108,7 @@ export default class Node {
       this.commitLayoutIteratively();
     }
     if (this._groupXPos === null || isNaN(this._groupXPos)) {
-      throw new Error("Group X position must not be " + this._groupXPos);
+      throw new Error('Group X position must not be ' + this._groupXPos);
     }
     return this._groupXPos;
   }
@@ -1133,12 +1133,12 @@ export default class Node {
   }
 
   removeFromLayout(inDirection: Direction): void {
-    var disconnected: Node = this.nodeAt(inDirection);
+    const disconnected: Node = this.nodeAt(inDirection);
     if (!disconnected) {
       return;
     }
-    var layoutBefore: Node = this.findEarlierLayoutSibling(inDirection);
-    var earliestDisc: Node = disconnected.findLayoutHead(disconnected);
+    const layoutBefore: Node = this.findEarlierLayoutSibling(inDirection);
+    const earliestDisc: Node = disconnected.findLayoutHead(disconnected);
 
     if (layoutBefore) {
       Node.connectLayout(layoutBefore, disconnected._layoutNext);
@@ -1149,18 +1149,18 @@ export default class Node {
   }
 
   insertIntoLayout(inDirection: Direction): void {
-    var node: Node = this.nodeAt(inDirection);
+    const node: Node = this.nodeAt(inDirection);
     if (!node) {
       return;
     }
 
-    var nodeHead: Node = node.findLayoutHead();
+    const nodeHead: Node = node.findLayoutHead();
 
-    var layoutAfter: Node = this.findLaterLayoutSibling(inDirection);
-    var layoutBefore: Node = this.findEarlierLayoutSibling(inDirection);
+    const layoutAfter: Node = this.findLaterLayoutSibling(inDirection);
+    const layoutBefore: Node = this.findEarlierLayoutSibling(inDirection);
 
-    var nodeTail: Node = node;
-    //console.log(this + ".connectNode(" + nameDirection(inDirection) + ", " + node + ") layoutBefore=" + layoutBefore + " layoutAfter=" + layoutAfter + " nodeHead=" + nodeHead);
+    const nodeTail: Node = node;
+    // console.log(this + ".connectNode(" + nameDirection(inDirection) + ", " + node + ") layoutBefore=" + layoutBefore + " layoutAfter=" + layoutAfter + " nodeHead=" + nodeHead);
 
     if (layoutBefore) {
       Node.connectLayout(layoutBefore, nodeHead);
@@ -1185,22 +1185,22 @@ export default class Node {
     this.ensureExtended();
 
     if (paintGroup) {
-      //console.log(this + " is becoming a paint group.");
+      // console.log(this + " is becoming a paint group.");
       this._extended.isPaintGroup = true;
 
       if (this.isRoot()) {
         // Do nothing; this node was already an implied paint group.
       } else {
         this.parentNode().removeFromLayout(
-          reverseDirection(this.parentDirection())
+            reverseDirection(this.parentDirection()),
         );
-        var paintGroupFirst = this.findFirstPaintGroup();
-        //console.log("First paint group of " + this + " is " + paintGroupFirst);
-        var parentsPaintGroup = this.parentNode().findPaintGroup();
-        //console.log("Parent paint group of " + this + " is " + parentsPaintGroup);
+        const paintGroupFirst = this.findFirstPaintGroup();
+        // console.log("First paint group of " + this + " is " + paintGroupFirst);
+        const parentsPaintGroup = this.parentNode().findPaintGroup();
+        // console.log("Parent paint group of " + this + " is " + parentsPaintGroup);
         Node.connectPaintGroup(
-          parentsPaintGroup._paintGroupPrev,
-          paintGroupFirst
+            parentsPaintGroup._paintGroupPrev,
+            paintGroupFirst,
         );
         Node.connectPaintGroup(this, parentsPaintGroup);
       }
@@ -1215,15 +1215,15 @@ export default class Node {
     this.thaw();
     this._extended.isPaintGroup = false;
 
-    //console.log(this + " is no longer a paint group.");
+    // console.log(this + " is no longer a paint group.");
     if (!this.isRoot()) {
-      var paintGroupLast = this.findLastPaintGroup();
+      const paintGroupLast = this.findLastPaintGroup();
       this.parentNode().insertIntoLayout(
-        reverseDirection(this.parentDirection())
+          reverseDirection(this.parentDirection()),
       );
 
       // Remove the paint group's entry in the parent.
-      //console.log("Node " + this + " is not a root, so adding paint groups.");
+      // console.log("Node " + this + " is not a root, so adding paint groups.");
       if (paintGroupLast !== this) {
         Node.connectPaintGroup(paintGroupLast, this._paintGroupNext);
       } else {
@@ -1232,7 +1232,7 @@ export default class Node {
       this._paintGroupNext = this;
       this._paintGroupPrev = this;
 
-      var pg = this.parentNode().findPaintGroup();
+      const pg = this.parentNode().findPaintGroup();
       for (var n = pg._layoutNext; n !== pg; n = n._layoutNext) {
         n._currentPaintGroup = pg;
       }
@@ -1244,7 +1244,7 @@ export default class Node {
   }
 
   findFirstPaintGroup(): Node {
-    var candidate: Node = this._layoutNext;
+    let candidate: Node = this._layoutNext;
     while (candidate !== this) {
       if (candidate.localPaintGroup()) {
         break;
@@ -1255,7 +1255,7 @@ export default class Node {
   }
 
   findLastPaintGroup(): Node {
-    var candidate: Node = this._layoutPrev;
+    let candidate: Node = this._layoutPrev;
     while (candidate !== this) {
       if (candidate.localPaintGroup()) {
         break;
@@ -1267,18 +1267,18 @@ export default class Node {
 
   ensureExtended(): ExtendedNode {
     if (!this._extended) {
-      //console.log(new Error("Extending"));
+      // console.log(new Error("Extending"));
       this._extended = new ExtendedNode();
     }
     return this._extended;
   }
 
   markDirty(): void {
-    //console.log(this + " marked dirty");
+    // console.log(this + " marked dirty");
     this.ensureExtended();
     this._extended.dirty = true;
     this._extended.commitLayoutFunc = null;
-    for (var wid in this._extended.windowPaintGroup) {
+    for (const wid in this._extended.windowPaintGroup) {
       this._extended.windowPaintGroup[wid] = null;
     }
   }
@@ -1291,7 +1291,7 @@ export default class Node {
     this.ensureExtended();
     if (!window) {
       throw new Error(
-        "A window must be provided for a NodePainter to be selected"
+          'A window must be provided for a NodePainter to be selected',
       );
     }
     return this._extended.windowPainter[window.id()];
@@ -1299,7 +1299,7 @@ export default class Node {
 
   findPaintGroup(): Node {
     if (!this._currentPaintGroup) {
-      var node: Node = this;
+      let node: Node = this;
       while (!node.isRoot()) {
         if (node.localPaintGroup()) {
           break;
@@ -1312,7 +1312,7 @@ export default class Node {
       }
       this._currentPaintGroup = node;
     } else {
-      //console.log("Returning cached paint group " + this._currentPaintGroup._id + " for node " + this._id);
+      // console.log("Returning cached paint group " + this._currentPaintGroup._id + " for node " + this._id);
     }
     return this._currentPaintGroup;
   }
@@ -1322,7 +1322,7 @@ export default class Node {
   }
 
   backdropColor(): parsegraph_Color {
-    var node: Node = this;
+    let node: Node = this;
     if (node.isSelected()) {
       return node.blockStyle().backgroundColor;
     }
@@ -1339,7 +1339,7 @@ export default class Node {
       }
       node = node.parentNode();
     }
-    throw new Error("Unreachable");
+    throw new Error('Unreachable');
   }
 
   setClickListener(listener: Function, thisArg?: object): void {
@@ -1356,7 +1356,7 @@ export default class Node {
     this.ensureExtended();
     this._extended.clickListener = listener;
     this._extended.clickListenerThisArg = thisArg;
-    //console.log("Set click listener for node " + this._id);
+    // console.log("Set click listener for node " + this._id);
   }
 
   setChangeListener(listener: Function, thisArg?: object): void {
@@ -1373,11 +1373,11 @@ export default class Node {
     this.ensureExtended();
     this._extended.changeListener = listener;
     this._extended.changeListenerThisArg = thisArg;
-    //console.log("Set change listener for node " + this._id);
+    // console.log("Set change listener for node " + this._id);
   }
 
   isClickable(): boolean {
-    var hasLabel =
+    const hasLabel =
       this._label && !isNaN(this._label._x) && this._label.editable();
     return (
       this.type() === Type.SLIDER ||
@@ -1418,8 +1418,8 @@ export default class Node {
       return;
     }
     return this._extended.changeListener.apply(
-      this._extended.changeListenerThisArg,
-      arguments
+        this._extended.changeListenerThisArg,
+        arguments,
     );
   }
 
@@ -1429,8 +1429,8 @@ export default class Node {
       return;
     }
     return this._extended.clickListener.call(
-      this._extended.clickListenerThisArg,
-      viewport
+        this._extended.clickListenerThisArg,
+        viewport,
     );
   }
 
@@ -1462,8 +1462,8 @@ export default class Node {
       return;
     }
     return this._extended.keyListener.apply(
-      this._extended.keyListenerThisArg,
-      arguments
+        this._extended.keyListenerThisArg,
+        arguments,
     );
   }
 
@@ -1517,7 +1517,7 @@ export default class Node {
       throw parsegraph_createException(parsegraph_BAD_AXIS, axis);
     }
 
-    var result: [Direction, Direction] = [Direction.NULL, Direction.NULL];
+    const result: [Direction, Direction] = [Direction.NULL, Direction.NULL];
 
     if (this.hasNode(getNegativeDirection(axis))) {
       result[0] = getNegativeDirection(axis);
@@ -1548,8 +1548,8 @@ export default class Node {
   }
 
   dumpPaintGroups(): Node[] {
-    var pgs: Node[] = [];
-    var pg: Node = this;
+    const pgs: Node[] = [];
+    let pg: Node = this;
     do {
       pg = pg._paintGroupNext;
       pgs.push(pg);
@@ -1558,7 +1558,7 @@ export default class Node {
   }
 
   nodeAt(atDirection: Direction): Node {
-    var n: NeighborData = this._neighbors[atDirection];
+    const n: NeighborData = this._neighbors[atDirection];
     if (!n) {
       if (this._parentNeighbor && this.parentDirection() === atDirection) {
         return this._parentNeighbor.owner;
@@ -1569,7 +1569,7 @@ export default class Node {
   }
 
   spawnNode(spawnDirection: Direction, newType: Type): Node {
-    var created = this.connectNode(spawnDirection, new Node(newType));
+    const created = this.connectNode(spawnDirection, new Node(newType));
     created.setLayoutPreference(PreferredAxis.PERPENDICULAR);
 
     // Use the node fitting of the parent.
@@ -1578,61 +1578,61 @@ export default class Node {
     return created;
   }
 
-  static connectLayout = function (a: Node, b: Node): void {
-    //console.log("connecting " +  a._id + " to " + b._id);
+  static connectLayout = function(a: Node, b: Node): void {
+    // console.log("connecting " +  a._id + " to " + b._id);
     a._layoutNext = b;
     b._layoutPrev = a;
   };
 
-  static connectPaintGroup = function (a: Node, b: Node): void {
+  static connectPaintGroup = function(a: Node, b: Node): void {
     a._paintGroupNext = b;
     b._paintGroupPrev = a;
-    //console.log("Connecting paint groups " + a + " to " + b);
+    // console.log("Connecting paint groups " + a + " to " + b);
   };
 
   connectNode(inDirection: Direction, node: Node): Node {
-    //console.log("Connecting " + node + " to " + this + " in the " + nameDirection(inDirection) + " direction.");
+    // console.log("Connecting " + node + " to " + this + " in the " + nameDirection(inDirection) + " direction.");
 
     // Ensure the node can be connected in the given direction.
     if (inDirection == Direction.OUTWARD) {
       throw new Error(
-        "By rule, nodes cannot be spawned in the outward direction."
+          'By rule, nodes cannot be spawned in the outward direction.',
       );
     }
     if (inDirection == Direction.NULL) {
-      throw new Error("Nodes cannot be spawned in the null node direction.");
+      throw new Error('Nodes cannot be spawned in the null node direction.');
     }
     if (inDirection == this.parentDirection()) {
       throw new Error(
-        "Cannot connect a node in the parent's direction (" +
+          'Cannot connect a node in the parent\'s direction (' +
           nameDirection(inDirection) +
-          ")"
+          ')',
       );
     }
     if (this.hasNode(inDirection)) {
       throw new Error(
-        "Cannot connect a node in the already occupied " +
+          'Cannot connect a node in the already occupied ' +
           nameDirection(inDirection) +
-          " direction."
+          ' direction.',
       );
     }
     if (this.type() == Type.SLIDER) {
-      throw new Error("Sliders cannot have child nodes.");
+      throw new Error('Sliders cannot have child nodes.');
     }
     if (this.type() == Type.SCENE && inDirection == Direction.INWARD) {
-      throw new Error("Scenes cannot have inward nodes.");
+      throw new Error('Scenes cannot have inward nodes.');
     }
     if (node.parentDirection() !== Direction.NULL) {
-      throw new Error("Node to connect must not have a parent.");
+      throw new Error('Node to connect must not have a parent.');
     }
     if (node.hasNode(reverseDirection(inDirection))) {
       throw new Error(
-        "Node to connect must not have a node in the connecting direction."
+          'Node to connect must not have a node in the connecting direction.',
       );
     }
 
     // Connect the node.
-    var neighbor = this.ensureNeighbor(inDirection);
+    const neighbor = this.ensureNeighbor(inDirection);
     neighbor.node = node;
     node.assignParent(this, inDirection);
 
@@ -1650,11 +1650,11 @@ export default class Node {
     } else {
       this.insertIntoLayout(inDirection);
       if (node._paintGroupNext !== node) {
-        //console.log("Adding this node's implicit child paintgroups to the parent");
+        // console.log("Adding this node's implicit child paintgroups to the parent");
         var pg = this.findPaintGroup();
         var paintGroupLast = pg._paintGroupPrev;
         var nodeFirst = node._paintGroupNext;
-        var nodeLast = node._paintGroupPrev;
+        const nodeLast = node._paintGroupPrev;
         Node.connectPaintGroup(paintGroupLast, nodeFirst);
         Node.connectPaintGroup(nodeLast, pg);
         node._paintGroupPrev = node;
@@ -1670,26 +1670,26 @@ export default class Node {
   disconnectNode(inDirection?: Direction): Node {
     if (arguments.length === 0) {
       if (this.isRoot()) {
-        throw new Error("Cannot disconnect a root node.");
+        throw new Error('Cannot disconnect a root node.');
       }
       return this.parentNode().disconnectNode(
-        reverseDirection(this.parentDirection())
+          reverseDirection(this.parentDirection()),
       );
     }
     if (!this.hasNode(inDirection)) {
       return;
     }
     // Disconnect the node.
-    var neighbor = this._neighbors[inDirection];
-    var disconnected = neighbor.node;
+    const neighbor = this._neighbors[inDirection];
+    const disconnected = neighbor.node;
 
     if (!disconnected.localPaintGroup()) {
       this.removeFromLayout(inDirection);
     }
-    var paintGroupFirst = disconnected.findFirstPaintGroup();
+    const paintGroupFirst = disconnected.findFirstPaintGroup();
     Node.connectPaintGroup(
-      paintGroupFirst._paintGroupPrev,
-      disconnected._paintGroupNext
+        paintGroupFirst._paintGroupPrev,
+        disconnected._paintGroupNext,
     );
     Node.connectPaintGroup(disconnected, paintGroupFirst);
 
@@ -1726,11 +1726,11 @@ export default class Node {
   }
 
   findEarlierLayoutSibling(inDirection: Direction): Node {
-    var layoutBefore;
-    var dirs = this.layoutOrder();
-    var pastDir = false;
-    for (var i = dirs.length - 1; i >= 0; --i) {
-      var dir = dirs[i];
+    let layoutBefore;
+    const dirs = this.layoutOrder();
+    let pastDir = false;
+    for (let i = dirs.length - 1; i >= 0; --i) {
+      const dir = dirs[i];
       if (dir === inDirection) {
         pastDir = true;
         continue;
@@ -1742,7 +1742,7 @@ export default class Node {
         continue;
       }
       if (this.hasNode(dir)) {
-        var candidate = this.nodeAt(dir);
+        const candidate = this.nodeAt(dir);
         if (candidate && !candidate.localPaintGroup()) {
           layoutBefore = candidate;
           break;
@@ -1753,12 +1753,12 @@ export default class Node {
   }
 
   findLaterLayoutSibling(inDirection: Direction): Node {
-    var layoutAfter;
-    var dirs = this.layoutOrder();
-    var pastDir = false;
-    for (var i = 0; i < dirs.length; ++i) {
-      var dir = dirs[i];
-      //console.log(nameDirection(dir) + " pastDir=" + pastDir);
+    let layoutAfter;
+    const dirs = this.layoutOrder();
+    let pastDir = false;
+    for (let i = 0; i < dirs.length; ++i) {
+      const dir = dirs[i];
+      // console.log(nameDirection(dir) + " pastDir=" + pastDir);
       if (dir === inDirection) {
         pastDir = true;
         continue;
@@ -1770,7 +1770,7 @@ export default class Node {
         continue;
       }
       if (this.hasNode(dir)) {
-        var candidate = this.nodeAt(dir);
+        const candidate = this.nodeAt(dir);
         if (candidate && !candidate.localPaintGroup()) {
           layoutAfter = candidate;
           break;
@@ -1781,14 +1781,14 @@ export default class Node {
   }
 
   findLayoutHead(excludeThisNode?: Node): Node {
-    var deeplyLinked = this;
-    var foundOne;
+    let deeplyLinked = this;
+    let foundOne;
     while (true) {
       foundOne = false;
-      var dirs = deeplyLinked.layoutOrder();
-      for (var i = 0; i < dirs.length; ++i) {
-        var dir = dirs[i];
-        var candidate = deeplyLinked.nodeAt(dir);
+      const dirs = deeplyLinked.layoutOrder();
+      for (let i = 0; i < dirs.length; ++i) {
+        const dir = dirs[i];
+        const candidate = deeplyLinked.nodeAt(dir);
         if (
           candidate &&
           candidate != excludeThisNode &&
@@ -1808,13 +1808,13 @@ export default class Node {
   }
 
   eachChild(visitor: Function, visitorThisArg?: object): void {
-    var dirs = this.layoutOrder();
-    for (var i = 0; i < dirs.length; ++i) {
-      var dir = dirs[i];
+    const dirs = this.layoutOrder();
+    for (let i = 0; i < dirs.length; ++i) {
+      const dir = dirs[i];
       if (!this.isRoot() && dir === this.parentDirection()) {
         continue;
       }
-      var node = this.nodeAt(dir);
+      const node = this.nodeAt(dir);
       if (node) {
         visitor.call(visitorThisArg, node, dir);
       }
@@ -1860,63 +1860,63 @@ export default class Node {
     // The vertical extents have length in the vertical direction.
     outPos.setWidth(this.extentsAt(Direction.DOWNWARD).boundingValues()[0]);
 
-    //console.log("Extent Size = " + outPos.width() + " " + outPos.height());
+    // console.log("Extent Size = " + outPos.width() + " " + outPos.height());
 
     return outPos;
   }
 
   setLayoutPreference(given: PreferredAxis): void {
-    var b =
-      this.parentDirection() === Direction.BACKWARD
-        ? null
-        : this.nodeAt(Direction.BACKWARD);
-    var f =
-      this.parentDirection() === Direction.FORWARD
-        ? null
-        : this.nodeAt(Direction.FORWARD);
-    var u =
-      this.parentDirection() === Direction.UPWARD
-        ? null
-        : this.nodeAt(Direction.UPWARD);
-    var d =
-      this.parentDirection() === Direction.DOWNWARD
-        ? null
-        : this.nodeAt(Direction.DOWNWARD);
-    var firstHorz = b || f;
+    const b =
+      this.parentDirection() === Direction.BACKWARD ?
+        null :
+        this.nodeAt(Direction.BACKWARD);
+    const f =
+      this.parentDirection() === Direction.FORWARD ?
+        null :
+        this.nodeAt(Direction.FORWARD);
+    const u =
+      this.parentDirection() === Direction.UPWARD ?
+        null :
+        this.nodeAt(Direction.UPWARD);
+    const d =
+      this.parentDirection() === Direction.DOWNWARD ?
+        null :
+        this.nodeAt(Direction.DOWNWARD);
+    let firstHorz = b || f;
     if (firstHorz) {
       firstHorz = firstHorz.findLayoutHead();
     }
-    var lastHorz = f || b;
-    var firstVert = d || u;
+    const lastHorz = f || b;
+    let firstVert = d || u;
     if (firstVert) {
       firstVert = firstVert.findLayoutHead();
     }
-    var lastVert = u || d;
+    const lastVert = u || d;
 
-    var horzToVert = function () {
-      //console.log("horzToVert exec");
+    const horzToVert = function() {
+      // console.log("horzToVert exec");
       if (!firstHorz || !firstVert) {
         return;
       }
-      var aa = firstHorz._layoutPrev;
-      var dd = lastVert._layoutNext;
+      const aa = firstHorz._layoutPrev;
+      const dd = lastVert._layoutNext;
       Node.connectLayout(aa, firstVert);
       Node.connectLayout(lastHorz, dd);
       Node.connectLayout(lastVert, firstHorz);
     };
-    var vertToHorz = function () {
-      //console.log("vertToHorz exec");
+    const vertToHorz = function() {
+      // console.log("vertToHorz exec");
       if (!firstHorz || !firstVert) {
         return;
       }
-      var aa = firstHorz._layoutPrev;
-      var dd = lastVert._layoutNext;
-      //console.log("aa=" + aa._id);
-      //console.log("dd=" + dd._id);
-      //console.log("firstHorz=" + firstHorz._id);
-      //console.log("lastVert=" + lastVert._id);
-      //console.log("lastHorz=" + lastHorz._id);
-      //console.log("firstVert=" + firstVert._id);
+      const aa = firstHorz._layoutPrev;
+      const dd = lastVert._layoutNext;
+      // console.log("aa=" + aa._id);
+      // console.log("dd=" + dd._id);
+      // console.log("firstHorz=" + firstHorz._id);
+      // console.log("lastVert=" + lastVert._id);
+      // console.log("lastHorz=" + lastHorz._id);
+      // console.log("firstVert=" + firstVert._id);
       Node.connectLayout(aa, firstHorz);
       Node.connectLayout(lastVert, dd);
       Node.connectLayout(lastHorz, firstVert);
@@ -1927,8 +1927,8 @@ export default class Node {
         given !== PreferredAxis.HORIZONTAL
       ) {
         throw new Error(
-          "Unallowed layout preference: " +
-            parsegraph_nameLayoutPreference(given)
+            'Unallowed layout preference: ' +
+            parsegraph_nameLayoutPreference(given),
         );
       }
       if (this._layoutPreference === given) {
@@ -1945,14 +1945,14 @@ export default class Node {
       return;
     }
 
-    var curCanon = this.canonicalLayoutPreference();
+    const curCanon = this.canonicalLayoutPreference();
     this._layoutPreference = given;
-    var newCanon = this.canonicalLayoutPreference();
+    const newCanon = this.canonicalLayoutPreference();
     if (curCanon === newCanon) {
       return;
     }
 
-    var paxis = getDirectionAxis(this.parentDirection());
+    const paxis = getDirectionAxis(this.parentDirection());
     if (curCanon === PreferredAxis.PARENT) {
       if (paxis === Axis.HORIZONTAL) {
         horzToVert.call(this);
@@ -1972,26 +1972,26 @@ export default class Node {
 
   showNodeInCamera(cam: parsegraph_Camera): void {
     this.commitLayoutIteratively();
-    var bodySize = this.absoluteSize();
+    const bodySize = this.absoluteSize();
 
     const bodyRect = new Rect(
-      this.absoluteX(),
-      this.absoluteY(),
-      bodySize[0],
-      bodySize[1]
+        this.absoluteX(),
+        this.absoluteY(),
+        bodySize[0],
+        bodySize[1],
     );
-    //if(cam.ContainsAll(bodyRect)) {
-    //return;
-    //}
+    // if(cam.ContainsAll(bodyRect)) {
+    // return;
+    // }
 
-    var nodeScale = this.absoluteScale();
+    const nodeScale = this.absoluteScale();
 
-    var camScale = cam.scale();
-    var screenWidth = cam.width();
-    var screenHeight = cam.height();
+    const camScale = cam.scale();
+    const screenWidth = cam.width();
+    const screenHeight = cam.height();
 
-    var scaleAdjustment;
-    var widthIsBigger =
+    let scaleAdjustment;
+    const widthIsBigger =
       screenWidth / (bodySize[0] * nodeScale) <
       screenHeight / (bodySize[1] * nodeScale);
     if (widthIsBigger) {
@@ -2005,37 +2005,38 @@ export default class Node {
       cam.setScale(scaleAdjustment);
     }
 
-    var ax = this.absoluteX();
-    var ay = this.absoluteY();
+    const ax = this.absoluteX();
+    const ay = this.absoluteY();
     cam.setOrigin(
-      -ax + screenWidth / (scaleAdjustment * 2),
-      -ay + screenHeight / (scaleAdjustment * 2)
+        -ax + screenWidth / (scaleAdjustment * 2),
+        -ay + screenHeight / (scaleAdjustment * 2),
     );
   }
 
   showInCamera(cam: parsegraph_Camera, onlyScaleIfNecessary: boolean): void {
-    //console.log("Showing node in camera");
+    // console.log("Showing node in camera");
     this.commitLayoutIteratively();
-    var bodySize = this.extentSize();
-    var nodeScale = this.absoluteScale();
-    var camScale = cam.scale();
-    var screenWidth = cam.width();
-    var screenHeight = cam.height();
+    const bodySize = this.extentSize();
+    const nodeScale = this.absoluteScale();
+    const camScale = cam.scale();
+    const screenWidth = cam.width();
+    const screenHeight = cam.height();
     if (Number.isNaN(screenWidth) || Number.isNaN(screenHeight)) {
       throw new Error(
-        "Camera size must be set before a node can be shown in it."
+          'Camera size must be set before a node can be shown in it.',
       );
     }
 
     // Adjust camera scale.
-    var scaleAdjustment;
-    var widthIsBigger = screenWidth / bodySize[0] < screenHeight / bodySize[1];
+    let scaleAdjustment;
+    const widthIsBigger =
+      screenWidth / bodySize[0] < screenHeight / bodySize[1];
     if (widthIsBigger) {
       scaleAdjustment = screenWidth / bodySize[0];
     } else {
       scaleAdjustment = screenHeight / bodySize[1];
     }
-    var scaleMaxed = scaleAdjustment > parsegraph_NATURAL_VIEWPORT_SCALE;
+    const scaleMaxed = scaleAdjustment > parsegraph_NATURAL_VIEWPORT_SCALE;
     if (scaleMaxed) {
       scaleAdjustment = parsegraph_NATURAL_VIEWPORT_SCALE;
     }
@@ -2046,8 +2047,9 @@ export default class Node {
     }
 
     // Get node extents.
-    var x, y;
-    var bv = [null, null, null];
+    let x;
+    let y;
+    const bv = [null, null, null];
     this.extentsAt(Direction.BACKWARD).boundingValues(bv);
     x = bv[2] * nodeScale;
     this.extentsAt(Direction.UPWARD).boundingValues(bv);
@@ -2061,23 +2063,23 @@ export default class Node {
     }
 
     // Move camera into position.
-    var ax = this.absoluteX();
-    var ay = this.absoluteY();
+    const ax = this.absoluteX();
+    const ay = this.absoluteY();
     cam.setOrigin(x - ax, y - ay);
   }
 
   setNodeAlignmentMode(
-    inDirection: Direction | Alignment,
-    newAlignmentMode?: Aligment
+      inDirection: Direction | Alignment,
+      newAlignmentMode?: Aligment,
   ): void {
     if (arguments.length === 1) {
       return this.parentNode().setNodeAlignmentMode(
-        reverseDirection(this.parentDirection()),
-        arguments[0]
+          reverseDirection(this.parentDirection()),
+          arguments[0],
       );
     }
     this.ensureNeighbor(inDirection).alignmentMode = newAlignmentMode;
-    //console.log(parsegraph_nameNodeAlignment(newAlignmentMode));
+    // console.log(parsegraph_nameNodeAlignment(newAlignmentMode));
     this.layoutWasChanged(inDirection);
   }
 
@@ -2089,13 +2091,13 @@ export default class Node {
   }
 
   setAxisOverlap(
-    inDirection: Direction | AxisOverlap,
-    newAxisOverlap?: AxisOverlap
+      inDirection: Direction | AxisOverlap,
+      newAxisOverlap?: AxisOverlap,
   ): void {
     if (arguments.length === 1) {
       return this.parentNode().setAxisOverlap(
-        reverseDirection(this.parentDirection()),
-        arguments[0]
+          reverseDirection(this.parentDirection()),
+          arguments[0],
       );
     }
     this.ensureNeighbor(inDirection).allowAxisOverlap = newAxisOverlap;
@@ -2105,7 +2107,7 @@ export default class Node {
   axisOverlap(inDirection?: Direction): AxisOverlap {
     if (arguments.length === 0) {
       return this.parentNode().axisOverlap(
-        reverseDirection(this.parentDirection())
+          reverseDirection(this.parentDirection()),
       );
     }
     if (this._neighbors[inDirection]) {
@@ -2130,7 +2132,7 @@ export default class Node {
 
   setValue(newValue: any, report?: boolean): void {
     this.ensureExtended();
-    //console.log("Setting value to ", newValue);
+    // console.log("Setting value to ", newValue);
     if (this._extended.value === newValue) {
       return;
     }
@@ -2206,7 +2208,7 @@ export default class Node {
   }
 
   sizeIn(direction: Direction, bodySize?: Size): number {
-    var rv = this.size(bodySize);
+    const rv = this.size(bodySize);
     if (isVerticalDirection(direction)) {
       return rv.height() / 2;
     } else {
@@ -2222,7 +2224,7 @@ export default class Node {
     bodySize = this.sizeWithoutPadding(bodySize);
     bodySize[0] += 2 * this.horizontalPadding() + 2 * this.borderThickness();
     bodySize[1] += 2 * this.verticalPadding() + 2 * this.borderThickness();
-    //console.log("Calculated " + parsegraph_nameNodeType(this.type()) + " node size of (" + bodySize[0] + ", " + bodySize[1] + ")");
+    // console.log("Calculated " + parsegraph_nameNodeType(this.type()) + " node size of (" + bodySize[0] + ", " + bodySize[1] + ")");
     return bodySize;
   }
 
@@ -2244,7 +2246,7 @@ export default class Node {
     }
     this._parentNeighbor = fromNode.neighborAt(parentDirection);
     if (!this._parentNeighbor) {
-      throw new Error("Parent neighbor must be found when being assigned.");
+      throw new Error('Parent neighbor must be found when being assigned.');
     }
   }
 
@@ -2253,7 +2255,7 @@ export default class Node {
   }
 
   setSelected(selected: boolean): void {
-    //console.log(new Error("setSelected(" + selected + ")"));
+    // console.log(new Error("setSelected(" + selected + ")"));
     this.ensureExtended().selected = selected;
   }
 
@@ -2276,7 +2278,7 @@ export default class Node {
   }
 
   horizontalSeparation(direction: Direction): number {
-    var style = this.blockStyle();
+    const style = this.blockStyle();
 
     if (
       this.hasNode(direction) &&
@@ -2289,101 +2291,101 @@ export default class Node {
   }
 
   inNodeBody(
-    x: number,
-    y: number,
-    userScale: number,
-    bodySize?: Size
+      x: number,
+      y: number,
+      userScale: number,
+      bodySize?: Size,
   ): boolean {
-    var s = this.size(bodySize);
-    var ax = this.absoluteX();
-    var ay = this.absoluteY();
-    var aScale = this.absoluteScale();
+    const s = this.size(bodySize);
+    const ax = this.absoluteX();
+    const ay = this.absoluteY();
+    const aScale = this.absoluteScale();
     if (x < userScale * ax - (userScale * aScale * s.width()) / 2) {
-      //console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
+      // console.log("Given coords are outside this node's body. (Horizontal minimum exceeds X-coord)");
       return false;
     }
     if (x > userScale * ax + (userScale * aScale * s.width()) / 2) {
-      //console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
+      // console.log("Given coords are outside this node's body. (X-coord exceeds horizontal maximum)");
       return false;
     }
     if (y < userScale * ay - (userScale * aScale * s.height()) / 2) {
-      //console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
+      // console.log("Given coords are outside this node's body. (Vertical minimum exceeds Y-coord)");
       return false;
     }
     if (y > userScale * ay + (userScale * aScale * s.height()) / 2) {
-      //console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
+      // console.log("Given coords are outside this node's body. (Y-coord exceeds vertical maximum)");
       return false;
     }
-    //console.log("Within node body" + this);
+    // console.log("Within node body" + this);
     return true;
   }
 
   inNodeExtents(
-    x: number,
-    y: number,
-    userScale: number,
-    extentSize?: Size
+      x: number,
+      y: number,
+      userScale: number,
+      extentSize?: Size,
   ): boolean {
-    var ax = this.absoluteX();
-    var ay = this.absoluteY();
-    var aScale = this.absoluteScale();
+    const ax = this.absoluteX();
+    const ay = this.absoluteY();
+    const aScale = this.absoluteScale();
     extentSize = this.extentSize(extentSize);
 
-    //console.log("Checking node extent of size (" + extentSize[0] + ", " + extentSize[1] + ") at absolute X, Y origin of " + ax + ", " + ay");
+    // console.log("Checking node extent of size (" + extentSize[0] + ", " + extentSize[1] + ") at absolute X, Y origin of " + ax + ", " + ay");
     if (aScale != 1) {
-      //console.log("Node absolute scale is " + aScale);
+      // console.log("Node absolute scale is " + aScale);
     }
     if (userScale != 1) {
-      //console.log("User scale is " + userScale);
+      // console.log("User scale is " + userScale);
     }
-    //console.log("Position to test is (" + x + ", " + y + ")");
+    // console.log("Position to test is (" + x + ", " + y + ")");
 
-    //this.dump();
-    var forwardMin =
+    // this.dump();
+    const forwardMin =
       userScale * ax -
       userScale * aScale * this.extentOffsetAt(Direction.DOWNWARD);
     if (x < forwardMin) {
-      //console.log("Test X value of " + x + " is behind horizontal node minimum of " + forwardMin + ".");
+      // console.log("Test X value of " + x + " is behind horizontal node minimum of " + forwardMin + ".");
       return false;
     }
-    var forwardMax =
+    const forwardMax =
       userScale * ax -
       userScale * aScale * this.extentOffsetAt(Direction.DOWNWARD) +
       userScale * aScale * extentSize.width();
-    //console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + extentSize.width());
+    // console.log("ForwardMax = " + forwardMax + " = ax=" + this.absoluteX() + " - offset=" + this.extentOffsetAt(parsegraph_DOWNWARD) + " + width=" + extentSize.width());
     if (x > forwardMax) {
-      //console.log("Test X value of " + x + " is ahead of horizontal node maximum of " + forwardMax + ".");
+      // console.log("Test X value of " + x + " is ahead of horizontal node maximum of " + forwardMax + ".");
       return false;
     }
-    var vertMin =
+    const vertMin =
       userScale * ay -
       userScale * aScale * this.extentOffsetAt(Direction.FORWARD);
     if (y < vertMin) {
-      //console.log("Test Y value of " + y + " is above node vertical minimum of " + vertMin + ".");
+      // console.log("Test Y value of " + y + " is above node vertical minimum of " + vertMin + ".");
       return false;
     }
-    var vertMax =
+    const vertMax =
       userScale * ay -
       userScale * aScale * this.extentOffsetAt(Direction.FORWARD) +
       userScale * aScale * extentSize.height();
     if (y > vertMax) {
-      //console.log("Test Y value of " + y + " is beneath node vertical maximum of " + vertMax + ".");
+      // console.log("Test Y value of " + y + " is beneath node vertical maximum of " + vertMax + ".");
       return false;
     }
-    //console.log("Test value is in within node extent.");
+    // console.log("Test value is in within node extent.");
     return true;
   }
 
   nodeUnderCoords(x: number, y: number, userScale?: number): Node {
-    //console.log("nodeUnderCoords: " + x + ", " + y)
+    // console.log("nodeUnderCoords: " + x + ", " + y)
     if (userScale === undefined) {
       userScale = 1;
     }
 
-    var extentSize: Size = new Size();
-    var candidates: Node[] = [this];
+    const extentSize: Size = new Size();
+    const candidates: Node[] = [this];
 
-    var addCandidate = function (node: Node, direction: Direction) {
+    const addCandidate = function(node: Node, direction: Direction) {
       if (direction !== undefined) {
         if (!node.hasChildAt(direction)) {
           return;
@@ -2396,10 +2398,10 @@ export default class Node {
       candidates.push(node);
     };
 
-    var FORCE_SELECT_PRIOR = null;
+    const FORCE_SELECT_PRIOR = null;
     while (candidates.length > 0) {
-      var candidate = candidates[candidates.length - 1];
-      //console.log("Checking node " + candidate._id + " = " + candidate.label());
+      const candidate = candidates[candidates.length - 1];
+      // console.log("Checking node " + candidate._id + " = " + candidate.label());
 
       if (candidate === FORCE_SELECT_PRIOR) {
         candidates.pop();
@@ -2407,24 +2409,24 @@ export default class Node {
       }
 
       if (candidate.inNodeBody(x, y, userScale, extentSize)) {
-        //console.log("Click is in node body");
+        // console.log("Click is in node body");
         if (candidate.hasNode(Direction.INWARD)) {
           if (
             candidate
-              .nodeAt(Direction.INWARD)
-              .inNodeExtents(x, y, userScale, extentSize)
+                .nodeAt(Direction.INWARD)
+                .inNodeExtents(x, y, userScale, extentSize)
           ) {
-            //console.log("Testing inward node");
+            // console.log("Testing inward node");
             candidates.push(FORCE_SELECT_PRIOR);
             candidates.push(candidate.nodeAt(Direction.INWARD));
             continue;
           } else {
-            //console.log("Click not in inward extents");
+            // console.log("Click not in inward extents");
           }
         }
 
         // Found the node.
-        //console.log("Mouse under node " + candidate._id);
+        // console.log("Mouse under node " + candidate._id);
         return candidate;
       }
       // Not within this node, so remove it as a candidate.
@@ -2433,10 +2435,10 @@ export default class Node {
       // Test if the click is within any child.
       if (!candidate.inNodeExtents(x, y, userScale, extentSize)) {
         // Nope, so continue the search.
-        //console.log("Click is not in node extents.");
+        // console.log("Click is not in node extents.");
         continue;
       }
-      //console.log("Click is in node extent");
+      // console.log("Click is in node extent");
 
       // It is potentially within some child, so search the children.
       if (
@@ -2477,60 +2479,60 @@ export default class Node {
       }
     }
 
-    //console.log("Found nothing.");
+    // console.log("Found nothing.");
     return null;
   }
 
   sizeWithoutPadding(bodySize?: Size): Size {
     // Find the size of this node's drawing area.
-    var style = this.blockStyle();
+    const style = this.blockStyle();
     if (this._label && !this._label.isEmpty()) {
       if (!bodySize) {
-        //console.log(new Error("Creating size"));
+        // console.log(new Error("Creating size"));
         bodySize = new Size();
       }
-      var scaling = style.fontSize / this._label.font().fontSize();
+      const scaling = style.fontSize / this._label.font().fontSize();
       bodySize[0] = this._label.width() * scaling;
       bodySize[1] = this._label.height() * scaling;
       if (isNaN(bodySize[0]) || isNaN(bodySize[1])) {
-        throw new Error("Label returned a NaN size.");
+        throw new Error('Label returned a NaN size.');
       }
     } else if (!bodySize) {
-      //console.log(new Error("Creating size"));
+      // console.log(new Error("Creating size"));
       bodySize = new Size(style.minWidth, style.minHeight);
     } else {
       bodySize[0] = style.minWidth;
       bodySize[1] = style.minHeight;
     }
     if (this.hasNode(Direction.INWARD)) {
-      var nestedNode = this.nodeAt(Direction.INWARD);
-      var nestedSize = nestedNode.extentSize();
-      var scale = nestedNode.scale();
+      const nestedNode = this.nodeAt(Direction.INWARD);
+      const nestedSize = nestedNode.extentSize();
+      const scale = nestedNode.scale();
 
       if (
         this.nodeAlignmentMode(Direction.INWARD) == Alignment.INWARD_VERTICAL
       ) {
         // Align vertical.
         bodySize.setWidth(
-          Math.max(bodySize.width(), scale * nestedSize.width())
+            Math.max(bodySize.width(), scale * nestedSize.width()),
         );
 
         if (this.label()) {
           // Allow for the content's size.
           bodySize.setHeight(
-            Math.max(
-              style.minHeight,
-              bodySize.height() +
+              Math.max(
+                  style.minHeight,
+                  bodySize.height() +
                 this.verticalPadding() +
-                scale * nestedSize.height()
-            )
+                scale * nestedSize.height(),
+              ),
           );
         } else {
           bodySize.setHeight(
-            Math.max(
-              bodySize.height(),
-              scale * nestedSize.height() + 2 * this.verticalPadding()
-            )
+              Math.max(
+                  bodySize.height(),
+                  scale * nestedSize.height() + 2 * this.verticalPadding(),
+              ),
           );
         }
       } else {
@@ -2538,28 +2540,28 @@ export default class Node {
         if (this.label()) {
           // Allow for the content's size.
           bodySize.setWidth(
-            bodySize.width() +
+              bodySize.width() +
               this.horizontalPadding() +
-              scale * nestedSize.width()
+              scale * nestedSize.width(),
           );
         } else {
           bodySize.setWidth(
-            Math.max(bodySize.width(), scale * nestedSize.width())
+              Math.max(bodySize.width(), scale * nestedSize.width()),
           );
         }
 
         bodySize.setHeight(
-          Math.max(
-            bodySize.height(),
-            scale * nestedSize.height() + 2 * this.verticalPadding()
-          )
+            Math.max(
+                bodySize.height(),
+                scale * nestedSize.height() + 2 * this.verticalPadding(),
+            ),
         );
       }
     }
 
     // Buds appear circular
     if (this.type() == Type.BUD) {
-      var aspect = bodySize.width() / bodySize.height();
+      const aspect = bodySize.width() / bodySize.height();
       if (aspect < 2 && aspect > 1 / 2) {
         bodySize.setWidth(Math.max(bodySize.width(), bodySize.height()));
         bodySize.setHeight(bodySize.width());
@@ -2571,13 +2573,13 @@ export default class Node {
     return bodySize;
   }
 
-  static findConsecutiveLength = function (node: Node, inDirection: Direction) {
+  static findConsecutiveLength = function(node: Node, inDirection: Direction) {
     // Exclude some directions that cannot be calculated.
     if (!isCardinalDirection(inDirection)) {
       throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
     }
 
-    let directionAxis: Axis = getDirectionAxis(inDirection);
+    const directionAxis: Axis = getDirectionAxis(inDirection);
     if (directionAxis === Axis.NULL) {
       // This should be impossible.
       throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
@@ -2630,24 +2632,24 @@ export default class Node {
       return;
     }
 
-    var initExtent = function (
-      inDirection: Direction,
-      length: number,
-      size: number,
-      offset: number
+    const initExtent = function(
+        inDirection: Direction,
+        length: number,
+        size: number,
+        offset: number,
     ) {
-      var extent = this.extentsAt(inDirection);
+      const extent = this.extentsAt(inDirection);
       extent.clear();
       extent.appendLS(length, size);
       this.setExtentOffsetAt(inDirection, offset);
-      //console.log(new Error("OFFSET = " + offset));
+      // console.log(new Error("OFFSET = " + offset));
     };
 
-    var bodySize: Size,
-      lineBounds: Size,
-      bv: [number, number, number],
-      firstSize: Size,
-      secondSize: Size;
+    let bodySize: Size;
+    let lineBounds: Size;
+    let bv: [number, number, number];
+    let firstSize: Size;
+    let secondSize: Size;
     if (cld) {
       bodySize = cld.bodySize;
       lineBounds = cld.lineBounds;
@@ -2664,50 +2666,50 @@ export default class Node {
 
     // This node's horizontal bottom, used with downward nodes.
     initExtent.call(
-      this,
-      Direction.DOWNWARD,
-      // Length:
-      bodySize.width(),
-      // Size:
-      bodySize.height() / 2,
-      // Offset to body center:
-      bodySize.width() / 2
+        this,
+        Direction.DOWNWARD,
+        // Length:
+        bodySize.width(),
+        // Size:
+        bodySize.height() / 2,
+        // Offset to body center:
+        bodySize.width() / 2,
     );
 
     // This node's horizontal top, used with upward nodes.
     initExtent.call(
-      this,
-      Direction.UPWARD,
-      // Length:
-      bodySize.width(),
-      // Size:
-      bodySize.height() / 2,
-      // Offset to body center:
-      bodySize.width() / 2
+        this,
+        Direction.UPWARD,
+        // Length:
+        bodySize.width(),
+        // Size:
+        bodySize.height() / 2,
+        // Offset to body center:
+        bodySize.width() / 2,
     );
 
     // This node's vertical back, used with backward nodes.
     initExtent.call(
-      this,
-      Direction.BACKWARD,
-      // Length:
-      bodySize.height(),
-      // Size:
-      bodySize.width() / 2,
-      // Offset to body center:
-      bodySize.height() / 2
+        this,
+        Direction.BACKWARD,
+        // Length:
+        bodySize.height(),
+        // Size:
+        bodySize.width() / 2,
+        // Offset to body center:
+        bodySize.height() / 2,
     );
 
     // This node's vertical front, used with forward nodes.
     initExtent.call(
-      this,
-      Direction.FORWARD,
-      // Length:
-      bodySize.height(),
-      // Size:
-      bodySize.width() / 2,
-      // Offset to body center:
-      bodySize.height() / 2
+        this,
+        Direction.FORWARD,
+        // Length:
+        bodySize.height(),
+        // Size:
+        bodySize.width() / 2,
+        // Offset to body center:
+        bodySize.height() / 2,
     );
 
     /**
@@ -2719,14 +2721,14 @@ export default class Node {
      *
      * The result is in this node's space.
      */
-    var getAlignment = function (childDirection: Direction): number {
+    const getAlignment = function(childDirection: Direction): number {
       // Calculate the alignment adjustment for both nodes.
-      var child = this.nodeAt(childDirection);
-      var axis = getPerpendicularAxis(getDirectionAxis(childDirection));
+      const child = this.nodeAt(childDirection);
+      const axis = getPerpendicularAxis(getDirectionAxis(childDirection));
 
-      var rv;
+      let rv;
 
-      var alignmentMode = this.nodeAlignmentMode(childDirection);
+      const alignmentMode = this.nodeAlignmentMode(childDirection);
       switch (alignmentMode) {
         case Alignment.NULL:
           throw parsegraph_createException(parsegraph_BAD_NODE_ALIGNMENT);
@@ -2739,13 +2741,13 @@ export default class Node {
           break;
         case Alignment.CENTER: {
           const negativeLength: number = Node.findConsecutiveLength(
-            child,
-            getNegativeDirection(axis)
+              child,
+              getNegativeDirection(axis),
           );
 
           const positiveLength: number = Node.findConsecutiveLength(
-            child,
-            getPositiveDirection(axis)
+              child,
+              getPositiveDirection(axis),
           );
 
           const halfLength: number = (negativeLength + positiveLength) / 2;
@@ -2764,7 +2766,7 @@ export default class Node {
           rv = -Node.findConsecutiveLength(child, getPositiveDirection(axis));
           break;
       }
-      //console.log("Found alignment of " + rv);
+      // console.log("Found alignment of " + rv);
       return rv * this.scaleAt(childDirection);
     };
 
@@ -2779,24 +2781,24 @@ export default class Node {
      *
      * The child's position is in this node's space.
      */
-    var positionChild = function (
-      childDirection: Direction,
-      alignment: Alignment,
-      separation: number
+    const positionChild = function(
+        childDirection: Direction,
+        alignment: Alignment,
+        separation: number,
     ): void {
       // Validate arguments.
       if (separation < 0) {
-        throw new Error("separation must always be positive.");
+        throw new Error('separation must always be positive.');
       }
       if (!isCardinalDirection(childDirection)) {
         throw parsegraph_createException(parsegraph_BAD_NODE_DIRECTION);
       }
-      let child: Node = this.nodeAt(childDirection);
-      let reversedDirection: Direction = reverseDirection(childDirection);
+      const child: Node = this.nodeAt(childDirection);
+      const reversedDirection: Direction = reverseDirection(childDirection);
 
       // Save alignment parameters.
       this._neighbors[childDirection].alignmentOffset = alignment;
-      //console.log("Alignment = " + alignment);
+      // console.log("Alignment = " + alignment);
       this._neighbors[childDirection].separation = separation;
 
       // Determine the line length.
@@ -2811,27 +2813,27 @@ export default class Node {
         }
       } else {
         extentSize = child
-          .extentsAt(reversedDirection)
-          .sizeAt(
-            this._neighbors[childDirection].node.extentOffsetAt(
-              reversedDirection
-            ) -
-              alignment / this.scaleAt(childDirection)
-          );
+            .extentsAt(reversedDirection)
+            .sizeAt(
+                this._neighbors[childDirection].node.extentOffsetAt(
+                    reversedDirection,
+                ) -
+              alignment / this.scaleAt(childDirection),
+            );
       }
       lineLength = separation - this.scaleAt(childDirection) * extentSize;
       this._neighbors[childDirection].lineLength = lineLength;
-      //console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
+      // console.log("Line length: " + lineLength + ", separation: " + separation + ", extentSize: " + extentSize);
 
       // Set the position.
-      var dirSign = directionSign(childDirection);
+      const dirSign = directionSign(childDirection);
       if (isVerticalDirection(childDirection)) {
         // The child is positioned vertically.
         this.setPosAt(childDirection, alignment, dirSign * separation);
       } else {
         this.setPosAt(childDirection, dirSign * separation, alignment);
       }
-      /*console.log(
+      /* console.log(
                 nameDirection(childDirection) + " " +
                 nameType(child.type()) + "'s position set to (" +
                 this._neighbors[childDirection].xPos + ", " + this._neighbors[childDirection].yPos + ")"
@@ -2849,71 +2851,71 @@ export default class Node {
      * separation is the distance from the center of this node to the center
      * of the node in the specified direction.
      */
-    var combineExtents = function (
-      childDirection: Direction,
-      alignment: Alignment,
-      separation: number
+    const combineExtents = function(
+        childDirection: Direction,
+        alignment: Alignment,
+        separation: number,
     ): void {
-      let child: Node = this.nodeAt(childDirection);
+      const child: Node = this.nodeAt(childDirection);
 
       /**
        * Combine an extent.
        *
        * lengthAdjustment and sizeAdjustment are in this node's space.
        */
-      var combineExtent = function (
-        direction: Direction,
-        lengthAdjustment: number,
-        sizeAdjustment: number
+      const combineExtent = function(
+          direction: Direction,
+          lengthAdjustment: number,
+          sizeAdjustment: number,
       ): void {
-        /*console.log(
+        /* console.log(
                     "combineExtent(" +
                     nameDirection(direction) + ", " +
                     lengthAdjustment + ", " +
                     sizeAdjustment + ")"
                 );*/
         // Calculate the new offset to this node's center.
-        let lengthOffset =
+        const lengthOffset =
           this.extentOffsetAt(direction) +
           lengthAdjustment -
           this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
         // Combine the two extents in the given direction.
-        /*console.log("Combining " + nameDirection(direction) + ", " );
+        /* console.log("Combining " + nameDirection(direction) + ", " );
                 console.log("Child: " + nameLayoutState(child._layoutState));
                 console.log("Length offset: " + lengthOffset);
                 console.log("Size adjustment: " + sizeAdjustment);
                 console.log("ExtentOffset : " + this._neighbors[direction].extentOffset);
                 console.log("Scaled child ExtentOffset : " + (this.scaleAt(childDirection) * child.extentOffsetAt(direction)));*/
-        let e: parsegraph_Extent = this.extentsAt(direction);
-        let scale: number = this.scaleAt(childDirection);
+        const e: parsegraph_Extent = this.extentsAt(direction);
+        const scale: number = this.scaleAt(childDirection);
         if (this.nodeFit() == Fit.LOOSE) {
           e.combineExtentAndSimplify(
-            child.extentsAt(direction),
-            lengthOffset,
-            sizeAdjustment,
-            scale,
-            bv
+              child.extentsAt(direction),
+              lengthOffset,
+              sizeAdjustment,
+              scale,
+              bv,
           );
         } else {
           e.combineExtent(
-            child.extentsAt(direction),
-            lengthOffset,
-            sizeAdjustment,
-            scale
+              child.extentsAt(direction),
+              lengthOffset,
+              sizeAdjustment,
+              scale,
           );
         }
 
         // Adjust the length offset to remain positive.
         if (lengthOffset < 0) {
-          //console.log("Adjusting negative extent offset.");
+          // console.log("Adjusting negative extent offset.");
           this.setExtentOffsetAt(
-            direction,
-            this.extentOffsetAt(direction) + Math.abs(lengthOffset)
+              direction,
+              this.extentOffsetAt(direction) + Math.abs(lengthOffset),
           );
         }
 
-        /*console.log(
+        /* console.log(
                     "New "
                     + nameDirection(direction)
                     + " extent offset = "
@@ -2925,7 +2927,7 @@ export default class Node {
 
         // Assert the extent offset is positive.
         if (this.extentOffsetAt(direction) < 0) {
-          throw new Error("Extent offset must not be negative.");
+          throw new Error('Extent offset must not be negative.');
         }
       };
 
@@ -2970,9 +2972,9 @@ export default class Node {
     /**
      * Layout a single node in the given direction.
      */
-    var layoutSingle = function (
-      direction: Direction,
-      allowAxisOverlap: boolean
+    const layoutSingle = function(
+        direction: Direction,
+        allowAxisOverlap: boolean,
     ): boolean {
       if (!this.hasNode(direction)) {
         return;
@@ -2987,61 +2989,61 @@ export default class Node {
           break;
       }
 
-      /*console.log(
+      /* console.log(
                 "Laying out single " + nameDirection(direction) + " child, "
                 + (allowAxisOverlap ? "with " : "without ") + "axis overlap."
             );*/
 
       // Get the alignment for the children.
-      let alignment: number = getAlignment.call(this, direction);
-      //console.log("Calculated alignment of " + alignment + ".");
+      const alignment: number = getAlignment.call(this, direction);
+      // console.log("Calculated alignment of " + alignment + ".");
 
-      var child: Node = this.nodeAt(direction);
-      var reversed: Direction = reverseDirection(direction);
-      var childExtent: parsegraph_Extent = child.extentsAt(reversed);
+      const child: Node = this.nodeAt(direction);
+      const reversed: Direction = reverseDirection(direction);
+      const childExtent: parsegraph_Extent = child.extentsAt(reversed);
 
       if (child._layoutState !== LayoutState.COMMITTED) {
         this._layoutState = LayoutState.NEEDS_COMMIT;
-        //console.log(Node.getLayoutNodes(child.findPaintGroup()));
-        //console.log(namePreferredAxis(child._layoutPreference));
-        //console.log("Child's paint group is dirty: " + child.findPaintGroup().isDirty());
-        //console.log(nameDirection(direction) + " Child " + nameType(child.type()) + " " + (child._id) + " does not have a committed layout. Child's layout state is " + nameLayoutState(child._layoutState), child);
+        // console.log(Node.getLayoutNodes(child.findPaintGroup()));
+        // console.log(namePreferredAxis(child._layoutPreference));
+        // console.log("Child's paint group is dirty: " + child.findPaintGroup().isDirty());
+        // console.log(nameDirection(direction) + " Child " + nameType(child.type()) + " " + (child._id) + " does not have a committed layout. Child's layout state is " + nameLayoutState(child._layoutState), child);
         return true;
       }
 
       // Separate the child from this node.
       let separationFromChild: number = this.extentsAt(direction).separation(
-        childExtent,
-        this.extentOffsetAt(direction) +
+          childExtent,
+          this.extentOffsetAt(direction) +
           alignment -
           this.scaleAt(direction) * child.extentOffsetAt(reversed),
-        allowAxisOverlap,
-        this.scaleAt(direction),
-        parsegraph_LINE_THICKNESS / 2
+          allowAxisOverlap,
+          this.scaleAt(direction),
+          parsegraph_LINE_THICKNESS / 2,
       );
-      //console.log("Calculated unpadded separation of " + separationFromChild + ".");
+      // console.log("Calculated unpadded separation of " + separationFromChild + ".");
 
       // Add padding and ensure the child is not separated less than
       // it would be if the node was not offset by alignment.
       child.size(firstSize);
       if (getDirectionAxis(direction) == Axis.VERTICAL) {
         separationFromChild = Math.max(
-          separationFromChild,
-          this.scaleAt(direction) * (firstSize.height() / 2) +
-            bodySize.height() / 2
+            separationFromChild,
+            this.scaleAt(direction) * (firstSize.height() / 2) +
+            bodySize.height() / 2,
         );
         separationFromChild +=
           this.verticalSeparation(direction) * this.scaleAt(direction);
       } else {
         separationFromChild = Math.max(
-          separationFromChild,
-          this.scaleAt(direction) * (firstSize.width() / 2) +
-            bodySize.width() / 2
+            separationFromChild,
+            this.scaleAt(direction) * (firstSize.width() / 2) +
+            bodySize.width() / 2,
         );
         separationFromChild +=
           this.horizontalSeparation(direction) * this.scaleAt(direction);
       }
-      //console.log("Calculated padded separation of " + separationFromChild + ".");
+      // console.log("Calculated padded separation of " + separationFromChild + ".");
 
       // Set the node's position.
       positionChild.call(this, direction, alignment, separationFromChild);
@@ -3053,10 +3055,10 @@ export default class Node {
     /**
      * Layout a pair of nodes in the given directions.
      */
-    var layoutAxis = function (
-      firstDirection: Direction,
-      secondDirection: Direction,
-      allowAxisOverlap: boolean
+    const layoutAxis = function(
+        firstDirection: Direction,
+        secondDirection: Direction,
+        allowAxisOverlap: boolean,
     ): boolean {
       if (
         firstDirection === secondDirection &&
@@ -3103,39 +3105,42 @@ export default class Node {
         return;
       }
 
-      /*console.log(
+      /* console.log(
                 "Laying out " +
                 nameDirection(firstDirection) + " and " +
                 nameDirection(secondDirection) + " children."
             );*/
 
       // This node has first-axis children in both directions.
-      let firstNode: Node = this.nodeAt(firstDirection);
-      let secondNode: Node = this.nodeAt(secondDirection);
+      const firstNode: Node = this.nodeAt(firstDirection);
+      const secondNode: Node = this.nodeAt(secondDirection);
 
       // Get the alignments for the children.
-      let firstNodeAlignment: number = getAlignment.call(this, firstDirection);
-      let secondNodeAlignment: number = getAlignment.call(
-        this,
-        secondDirection
+      const firstNodeAlignment: number = getAlignment.call(
+          this,
+          firstDirection,
       );
-      //console.log("First alignment: " + firstNodeAlignment);
-      //console.log("Second alignment: " + secondNodeAlignment);
+      const secondNodeAlignment: number = getAlignment.call(
+          this,
+          secondDirection,
+      );
+      // console.log("First alignment: " + firstNodeAlignment);
+      // console.log("Second alignment: " + secondNodeAlignment);
 
       let separationBetweenChildren: number = firstNode
-        .extentsAt(secondDirection)
-        .separation(
-          secondNode.extentsAt(firstDirection),
-          (this.scaleAt(secondDirection) / this.scaleAt(firstDirection)) *
+          .extentsAt(secondDirection)
+          .separation(
+              secondNode.extentsAt(firstDirection),
+              (this.scaleAt(secondDirection) / this.scaleAt(firstDirection)) *
             (secondNodeAlignment - secondNode.extentOffsetAt(firstDirection)) -
             (firstNodeAlignment - firstNode.extentOffsetAt(secondDirection)),
-          true,
-          this.scaleAt(secondDirection) / this.scaleAt(firstDirection),
-          0
-        );
+              true,
+              this.scaleAt(secondDirection) / this.scaleAt(firstDirection),
+              0,
+          );
       separationBetweenChildren *= this.scaleAt(firstDirection);
 
-      //console.log("Separation between children=" + separationBetweenChildren);
+      // console.log("Separation between children=" + separationBetweenChildren);
 
       /*
             var firstExtent = this.extentsAt(firstDirection);
@@ -3199,32 +3204,32 @@ export default class Node {
       // Allow some overlap if we have both first-axis sides, but
       // nothing ahead on the second axis.
       let separationFromFirst: number = this.extentsAt(
-        firstDirection
+          firstDirection,
       ).separation(
-        firstNode.extentsAt(secondDirection),
-        this.extentOffsetAt(firstDirection) +
+          firstNode.extentsAt(secondDirection),
+          this.extentOffsetAt(firstDirection) +
           firstNodeAlignment -
           this.scaleAt(firstDirection) *
             firstNode.extentOffsetAt(secondDirection),
-        firstAxisOverlap,
-        this.scaleAt(firstDirection),
-        parsegraph_LINE_THICKNESS / 2
+          firstAxisOverlap,
+          this.scaleAt(firstDirection),
+          parsegraph_LINE_THICKNESS / 2,
       );
 
       let separationFromSecond: number = this.extentsAt(
-        secondDirection
+          secondDirection,
       ).separation(
-        secondNode.extentsAt(firstDirection),
-        this.extentOffsetAt(secondDirection) +
+          secondNode.extentsAt(firstDirection),
+          this.extentOffsetAt(secondDirection) +
           secondNodeAlignment -
           this.scaleAt(secondDirection) *
             secondNode.extentOffsetAt(firstDirection),
-        secondAxisOverlap,
-        this.scaleAt(secondDirection),
-        parsegraph_LINE_THICKNESS / 2
+          secondAxisOverlap,
+          this.scaleAt(secondDirection),
+          parsegraph_LINE_THICKNESS / 2,
       );
 
-      /*console.log(
+      /* console.log(
                 "Separation from this " + nameType(this.type()) + " to " +
                 nameDirection(firstDirection) + " " +
                 nameType(this.nodeAt(firstDirection).type()) + "=" +
@@ -3250,15 +3255,15 @@ export default class Node {
 
         // Center them as much as possible.
         separationFromFirst = Math.max(
-          separationFromFirst,
-          separationBetweenChildren / 2
+            separationFromFirst,
+            separationBetweenChildren / 2,
         );
         separationFromSecond = Math.max(
-          separationFromSecond,
-          separationBetweenChildren / 2
+            separationFromSecond,
+            separationBetweenChildren / 2,
         );
       } else {
-        //separationBetweenChildren
+        // separationBetweenChildren
         //    < separationFromFirst + separationFromSecond
         // The separation between children is less than what this node
         // needs to separate each child from itself, so do nothing to
@@ -3269,36 +3274,36 @@ export default class Node {
       secondNode.size(secondSize);
       if (getDirectionAxis(firstDirection) === Axis.VERTICAL) {
         separationFromFirst = Math.max(
-          separationFromFirst,
-          this.scaleAt(firstDirection) * (firstSize.height() / 2) +
-            bodySize.height() / 2
+            separationFromFirst,
+            this.scaleAt(firstDirection) * (firstSize.height() / 2) +
+            bodySize.height() / 2,
         );
         separationFromFirst +=
           this.verticalSeparation(firstDirection) *
           this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
-          separationFromSecond,
-          this.scaleAt(secondDirection) * (secondSize.height() / 2) +
-            bodySize.height() / 2
+            separationFromSecond,
+            this.scaleAt(secondDirection) * (secondSize.height() / 2) +
+            bodySize.height() / 2,
         );
         separationFromSecond +=
           this.verticalSeparation(secondDirection) *
           this.scaleAt(secondDirection);
       } else {
         separationFromFirst = Math.max(
-          separationFromFirst,
-          this.scaleAt(firstDirection) * (firstSize.width() / 2) +
-            bodySize.width() / 2
+            separationFromFirst,
+            this.scaleAt(firstDirection) * (firstSize.width() / 2) +
+            bodySize.width() / 2,
         );
         separationFromFirst +=
           this.horizontalSeparation(firstDirection) *
           this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
-          separationFromSecond,
-          this.scaleAt(secondDirection) * (secondSize.width() / 2) +
-            bodySize.width() / 2
+            separationFromSecond,
+            this.scaleAt(secondDirection) * (secondSize.width() / 2) +
+            bodySize.width() / 2,
         );
         separationFromSecond +=
           this.horizontalSeparation(secondDirection) *
@@ -3307,30 +3312,30 @@ export default class Node {
 
       // Set the positions of the nodes.
       positionChild.call(
-        this,
-        firstDirection,
-        firstNodeAlignment,
-        separationFromFirst
+          this,
+          firstDirection,
+          firstNodeAlignment,
+          separationFromFirst,
       );
       positionChild.call(
-        this,
-        secondDirection,
-        secondNodeAlignment,
-        separationFromSecond
+          this,
+          secondDirection,
+          secondNodeAlignment,
+          separationFromSecond,
       );
 
       // Combine their extents.
       combineExtents.call(
-        this,
-        firstDirection,
-        firstNodeAlignment,
-        separationFromFirst
+          this,
+          firstDirection,
+          firstNodeAlignment,
+          separationFromFirst,
       );
       combineExtents.call(
-        this,
-        secondDirection,
-        secondNodeAlignment,
-        separationFromSecond
+          this,
+          secondDirection,
+          secondNodeAlignment,
+          separationFromSecond,
       );
     };
 
@@ -3346,10 +3351,10 @@ export default class Node {
         // Root-like, so just lay out both axes.
         if (
           layoutAxis.call(
-            this,
-            Direction.BACKWARD,
-            Direction.FORWARD,
-            !this.hasNode(Direction.UPWARD) && !this.hasNode(Direction.DOWNWARD)
+              this,
+              Direction.BACKWARD,
+              Direction.FORWARD,
+              !this.hasNode(Direction.UPWARD) && !this.hasNode(Direction.DOWNWARD),
           )
         ) {
           this._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3366,11 +3371,11 @@ export default class Node {
         // Root-like, so just lay out both axes.
         if (
           layoutAxis.call(
-            this,
-            Direction.UPWARD,
-            Direction.DOWNWARD,
-            !this.hasNode(Direction.BACKWARD) &&
-              !this.hasNode(Direction.FORWARD)
+              this,
+              Direction.UPWARD,
+              Direction.DOWNWARD,
+              !this.hasNode(Direction.BACKWARD) &&
+              !this.hasNode(Direction.FORWARD),
           )
         ) {
           this._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3389,21 +3394,21 @@ export default class Node {
     } else {
       // Layout based upon the axis preference.
       if (this.canonicalLayoutPreference() == PreferredAxis.PERPENDICULAR) {
-        let firstAxis: Axis = getPerpendicularAxis(this.parentDirection());
+        const firstAxis: Axis = getPerpendicularAxis(this.parentDirection());
 
         // Check for nodes perpendicular to parent's direction
-        let hasFirstAxisNodes: [Direction, Direction] = this.hasNodes(
-          firstAxis
+        const hasFirstAxisNodes: [Direction, Direction] = this.hasNodes(
+            firstAxis,
         );
-        let oppositeFromParent: Direction = reverseDirection(
-          this.parentDirection()
+        const oppositeFromParent: Direction = reverseDirection(
+            this.parentDirection(),
         );
         if (
           layoutAxis.call(
-            this,
-            hasFirstAxisNodes[0],
-            hasFirstAxisNodes[1],
-            false
+              this,
+              hasFirstAxisNodes[0],
+              hasFirstAxisNodes[1],
+              false,
           )
         ) {
           this._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3420,22 +3425,22 @@ export default class Node {
         }
       } else {
         // Layout this node's second-axis child, if that child exists.
-        let oppositeFromParent: Direction = reverseDirection(
-          this.parentDirection()
+        const oppositeFromParent: Direction = reverseDirection(
+            this.parentDirection(),
         );
 
         // Check for nodes perpendicular to parent's direction
-        let perpendicularNodes: [Direction, Direction] = this.hasNodes(
-          getPerpendicularAxis(this.parentDirection())
+        const perpendicularNodes: [Direction, Direction] = this.hasNodes(
+            getPerpendicularAxis(this.parentDirection()),
         );
 
         if (this.hasNode(oppositeFromParent)) {
           // Layout the second-axis child.
           if (
             layoutSingle.call(
-              this,
-              oppositeFromParent,
-              true //perpendicularNodes[0] !== Direction.NULL || perpendicularNodes[1] !== Direction.NULL
+                this,
+                oppositeFromParent,
+                true, // perpendicularNodes[0] !== Direction.NULL || perpendicularNodes[1] !== Direction.NULL
             )
           ) {
             this._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3445,10 +3450,10 @@ export default class Node {
 
         if (
           layoutAxis.call(
-            this,
-            perpendicularNodes[0],
-            perpendicularNodes[1],
-            true
+              this,
+              perpendicularNodes[0],
+              perpendicularNodes[1],
+              true,
           )
         ) {
           this._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3457,23 +3462,23 @@ export default class Node {
       }
     }
 
-    var addLineBounds = function (given: Direction) {
+    const addLineBounds = function(given: Direction) {
       if (!this.hasChild(given)) {
         return;
       }
 
-      let perpAxis: Axis = getPerpendicularAxis(given);
-      let dirSign: number = directionSign(given);
+      const perpAxis: Axis = getPerpendicularAxis(given);
+      const dirSign: number = directionSign(given);
 
       let positiveOffset: number = this.extentOffsetAt(
-        getPositiveDirection(perpAxis)
+          getPositiveDirection(perpAxis),
       );
       let negativeOffset: number = this.extentOffsetAt(
-        getNegativeDirection(perpAxis)
+          getNegativeDirection(perpAxis),
       );
 
       if (dirSign < 0) {
-        let lineSize: number = this.sizeIn(given, lineBounds);
+        const lineSize: number = this.sizeIn(given, lineBounds);
         positiveOffset -= lineSize + this.lineLengthAt(given);
         negativeOffset -= lineSize + this.lineLengthAt(given);
       }
@@ -3486,16 +3491,16 @@ export default class Node {
         } else {
           lineSize = bodySize.width() / 2;
         }
-        //lineSize = this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2;
+        // lineSize = this.scaleAt(given) * parsegraph_LINE_THICKNESS / 2;
         this.extentsAt(getPositiveDirection(perpAxis)).combineBound(
-          positiveOffset,
-          this.lineLengthAt(given),
-          lineSize
+            positiveOffset,
+            this.lineLengthAt(given),
+            lineSize,
         );
         this.extentsAt(getNegativeDirection(perpAxis)).combineBound(
-          negativeOffset,
-          this.lineLengthAt(given),
-          lineSize
+            negativeOffset,
+            this.lineLengthAt(given),
+            lineSize,
         );
       }
     };
@@ -3504,40 +3509,40 @@ export default class Node {
     forEachCardinalDirection(addLineBounds, this);
 
     if (this.hasNode(Direction.INWARD)) {
-      let nestedNode: Node = this.nodeAt(Direction.INWARD);
+      const nestedNode: Node = this.nodeAt(Direction.INWARD);
       if (nestedNode._layoutState !== LayoutState.COMMITTED) {
         this._layoutState = LayoutState.NEEDS_COMMIT;
         return true;
       }
-      let nestedSize: Size = nestedNode.extentSize(firstSize);
+      const nestedSize: Size = nestedNode.extentSize(firstSize);
       if (
         this.nodeAlignmentMode(Direction.INWARD) === Alignment.INWARD_VERTICAL
       ) {
         this.setPosAt(
-          Direction.INWARD,
-          nestedNode.scale() *
+            Direction.INWARD,
+            nestedNode.scale() *
             (nestedNode.extentOffsetAt(Direction.DOWNWARD) -
               nestedSize.width() / 2),
-          bodySize.height() / 2 -
+            bodySize.height() / 2 -
             this.verticalPadding() -
             this.borderThickness() +
             nestedNode.scale() *
               (-nestedSize.height() +
-                nestedNode.extentOffsetAt(Direction.FORWARD))
+                nestedNode.extentOffsetAt(Direction.FORWARD)),
         );
       } else {
-        //console.log(this.horizontalPadding(), this.borderThickness());
+        // console.log(this.horizontalPadding(), this.borderThickness());
         this.setPosAt(
-          Direction.INWARD,
-          bodySize.width() / 2 -
+            Direction.INWARD,
+            bodySize.width() / 2 -
             this.horizontalPadding() -
             this.borderThickness() +
             nestedNode.scale() *
               (-nestedSize.width() +
                 nestedNode.extentOffsetAt(Direction.DOWNWARD)),
-          nestedNode.scale() *
+            nestedNode.scale() *
             (nestedNode.extentOffsetAt(Direction.FORWARD) -
-              nestedSize.height() / 2)
+              nestedSize.height() / 2),
         );
       }
     }
@@ -3554,29 +3559,29 @@ export default class Node {
     }
 
     let layoutPhase = 1;
-    let rootPaintGroup: Node = this;
+    const rootPaintGroup: Node = this;
     let paintGroup: Node = null;
     let root: Node = null;
     let node: Node = null;
-    let cld: CommitLayoutData = new CommitLayoutData();
+    const cld: CommitLayoutData = new CommitLayoutData();
 
     // Traverse the graph depth-first, committing each node's layout in turn.
-    let commitLayoutLoop: Function = function (timeout: number): Function {
+    const commitLayoutLoop: Function = function(timeout: number): Function {
       if (timeout <= 0) {
         return commitLayoutLoop;
       }
-      let startTime: Date = new Date();
+      const startTime: Date = new Date();
       let i: number = 0;
-      var pastTime = function (val?: any) {
+      const pastTime = function(val?: any) {
         ++i;
         if (i % 10 === 0) {
-          var ct = new Date();
-          var el = elapsed(startTime, ct);
+          const ct = new Date();
+          const el = elapsed(startTime, ct);
           if (el > 4 * 1000) {
             console.log(val);
           }
           if (el > 5 * 1000) {
-            throw new Error("Commit Layout is taking too long");
+            throw new Error('Commit Layout is taking too long');
           }
           if (timeout !== undefined && el > timeout) {
             return true;
@@ -3587,15 +3592,15 @@ export default class Node {
       // Commit layout for all nodes.
       while (layoutPhase === 1) {
         if (paintGroup === null) {
-          //console.log("Beginning new commit layout phase 1");
+          // console.log("Beginning new commit layout phase 1");
           paintGroup = rootPaintGroup._paintGroupNext;
           root = paintGroup;
           node = root;
         } else {
-          //console.log("Continuing commit layout phase 1");
+          // console.log("Continuing commit layout phase 1");
         }
         if (pastTime(node._id)) {
-          //console.log("Ran out of time between groups during phase 1 (Commit layout, timeout=" + timeout +")");
+          // console.log("Ran out of time between groups during phase 1 (Commit layout, timeout=" + timeout +")");
           return commitLayoutLoop;
         }
         if (root.needsCommit()) {
@@ -3607,14 +3612,14 @@ export default class Node {
               node.commitLayout(cld);
               if (node.needsCommit()) {
                 // Node had a child that needed a commit, so reset the layout.
-                //console.log("Resetting layout");
+                // console.log("Resetting layout");
                 paintGroup = null;
                 return commitLayoutLoop;
               }
               node._currentPaintGroup = paintGroup;
             }
             if (pastTime(node._id)) {
-              //console.log("Ran out of time mid-group during phase 1 (Commit layout)");
+              // console.log("Ran out of time mid-group during phase 1 (Commit layout)");
               return commitLayoutLoop;
             }
           } while (node !== root);
@@ -3622,7 +3627,7 @@ export default class Node {
           cld.needsPosition = cld.needsPosition || root.needsPosition();
         }
         if (paintGroup === rootPaintGroup) {
-          //console.log("Commit layout phase 1 done");
+          // console.log("Commit layout phase 1 done");
           ++layoutPhase;
           paintGroup = null;
           break;
@@ -3633,22 +3638,22 @@ export default class Node {
       }
       // Calculate position.
       while (cld.needsPosition && layoutPhase === 2) {
-        //console.log("Now in layout phase 2");
+        // console.log("Now in layout phase 2");
         if (paintGroup === null) {
-          //console.log("Beginning layout phase 2");
+          // console.log("Beginning layout phase 2");
           paintGroup = rootPaintGroup;
           root = paintGroup;
           node = root;
         } else {
-          //console.log("Continuing layout phase 2");
+          // console.log("Continuing layout phase 2");
         }
-        //console.log("Processing position for ", paintGroup);
+        // console.log("Processing position for ", paintGroup);
         if (pastTime(paintGroup._id)) {
-          //console.log("Ran out of time between groups during phase 2 (Commit group position). Next node is ", paintGroup);
+          // console.log("Ran out of time between groups during phase 2 (Commit group position). Next node is ", paintGroup);
           return commitLayoutLoop;
         }
         if (paintGroup.needsPosition() || node) {
-          //console.log(paintGroup + " needs a position update");
+          // console.log(paintGroup + " needs a position update");
           if (!node) {
             node = paintGroup;
           }
@@ -3659,20 +3664,20 @@ export default class Node {
             node.commitGroupPos();
             node = node._layoutPrev;
             if (pastTime(node._id)) {
-              //console.log("Ran out of time mid-group during phase 2 (Commit group position). Next node is ", node);
+              // console.log("Ran out of time mid-group during phase 2 (Commit group position). Next node is ", node);
               paintGroup._hasGroupPos = false;
               return commitLayoutLoop;
             }
           } while (node !== root);
         } else {
-          //console.log(paintGroup + " does not need a position update.");
+          // console.log(paintGroup + " does not need a position update.");
         }
         ++paintGroup._absoluteVersion;
         paintGroup._absoluteDirty = true;
         paintGroup.commitAbsolutePos();
         paintGroup = paintGroup._paintGroupPrev;
         if (paintGroup === rootPaintGroup) {
-          //console.log("Commit layout phase 2 done");
+          // console.log("Commit layout phase 2 done");
           ++layoutPhase;
           break;
         }
@@ -3706,7 +3711,7 @@ export default class Node {
   }
 
   layoutWasChanged(changeDirection?: Direction): void {
-    //console.log("layoutWasChanged(" + (changeDirection != null ? nameDirection(changeDirection) : "null") +")")
+    // console.log("layoutWasChanged(" + (changeDirection != null ? nameDirection(changeDirection) : "null") +")")
     // Disallow null change directions.
     if (arguments.length === 0 || changeDirection === undefined) {
       changeDirection = Direction.INWARD;
@@ -3717,8 +3722,8 @@ export default class Node {
 
     let node: Node = this;
     while (node !== null) {
-      //console.log("Node " + node + " has layout changed");
-      var oldLayoutState = node._layoutState;
+      // console.log("Node " + node + " has layout changed");
+      const oldLayoutState = node._layoutState;
 
       // Set the needs layout flag.
       node._layoutState = LayoutState.NEEDS_COMMIT;
@@ -3753,7 +3758,7 @@ export default class Node {
 
   freeze(freezer: parsegraph_Freezer): void {
     if (!this.localPaintGroup()) {
-      throw new Error("A node must be a paint group in order to be frozen.");
+      throw new Error('A node must be a paint group in order to be frozen.');
     }
     this.ensureExtended().cache = freezer.cache(this);
   }
@@ -3764,7 +3769,7 @@ export default class Node {
 
   thaw(): void {
     if (!this.localPaintGroup()) {
-      throw new Error("A node must be a paint group in order to be thawed.");
+      throw new Error('A node must be a paint group in order to be thawed.');
     }
     if (this.ensureExtended().cache) {
       this.ensureExtended().cache.invalidate();
@@ -3783,13 +3788,13 @@ export default class Node {
       return VERTICAL_ORDER;
     }
     if (this.canonicalLayoutPreference() === PreferredAxis.PERPENDICULAR) {
-      //console.log("PREFER PERP");
+      // console.log("PREFER PERP");
       if (getDirectionAxis(this.parentDirection()) === Axis.HORIZONTAL) {
         return VERTICAL_ORDER;
       }
       return HORIZONTAL_ORDER;
     }
-    //console.log("PREFER PARALLEL TO PARENT: " + namePreferredAxis(this._layoutPreference));
+    // console.log("PREFER PARALLEL TO PARENT: " + namePreferredAxis(this._layoutPreference));
     // Parallel preference.
     if (getDirectionAxis(this.parentDirection()) === Axis.HORIZONTAL) {
       return HORIZONTAL_ORDER;
@@ -3837,7 +3842,7 @@ export default class Node {
     if (!this.isRoot()) {
       this.disconnectNode();
     }
-    this._neighbors.forEach(function (neighbor: NeighborData): void {
+    this._neighbors.forEach(function(neighbor: NeighborData): void {
       // Clear all children.
       neighbor.node = null;
     }, this);
@@ -3847,24 +3852,24 @@ export default class Node {
 
   dumpExtentBoundingRect(): void {
     // extent.boundingValues() returns [totalLength, minSize, maxSize]
-    let backwardOffset: number = this.extentOffsetAt(Direction.BACKWARD);
+    const backwardOffset: number = this.extentOffsetAt(Direction.BACKWARD);
     this.extentsAt(Direction.BACKWARD).dump(
-      "Backward extent (center at " + backwardOffset + ")"
+        'Backward extent (center at ' + backwardOffset + ')',
     );
 
-    let forwardOffset: number = this.extentOffsetAt(Direction.FORWARD);
+    const forwardOffset: number = this.extentOffsetAt(Direction.FORWARD);
     this.extentsAt(Direction.FORWARD).dump(
-      "Forward extent (center at " + forwardOffset + ")"
+        'Forward extent (center at ' + forwardOffset + ')',
     );
 
-    let downwardOffset: number = this.extentOffsetAt(Direction.DOWNWARD);
+    const downwardOffset: number = this.extentOffsetAt(Direction.DOWNWARD);
     this.extentsAt(Direction.DOWNWARD).dump(
-      "Downward extent (center at " + downwardOffset + ")"
+        'Downward extent (center at ' + downwardOffset + ')',
     );
 
-    let upwardOffset: number = this.extentOffsetAt(Direction.UPWARD);
+    const upwardOffset: number = this.extentOffsetAt(Direction.UPWARD);
     this.extentsAt(Direction.UPWARD).dump(
-      "Upward extent (center at " + upwardOffset + ")"
+        'Upward extent (center at ' + upwardOffset + ')',
     );
 
     /*
@@ -3886,8 +3891,8 @@ export default class Node {
     let node: Node = this;
     do {
       node.markDirty();
-      for (let wid: string in node._extended.windowPainter) {
-        let painter: NodePainter = node._extended.windowPainter[wid];
+      for (const wid: string in node._extended.windowPainter) {
+        const painter: NodePainter = node._extended.windowPainter[wid];
         if (window.id() == parseInt(wid)) {
           painter.contextChanged(isLost);
         }
@@ -3898,51 +3903,51 @@ export default class Node {
 
   paint(window: parsegraph_Window, timeout: number): boolean {
     if (!this.localPaintGroup()) {
-      throw new Error("A node must be a paint group in order to be painted");
+      throw new Error('A node must be a paint group in order to be painted');
     }
     if (!this.isDirty()) {
-      //window.log(this + " is not dirty");
+      // window.log(this + " is not dirty");
       return false;
     } else {
-      //window.log(this + " is dirty");
+      // window.log(this + " is dirty");
     }
     if (window.gl().isContextLost()) {
       return false;
     }
     if (timeout <= 0) {
-      window.log("Paint timeout=" + timeout);
+      window.log('Paint timeout=' + timeout);
       return true;
     }
 
     const t: number = new Date().getTime();
-    const pastTime: Function = function (): boolean {
-      let isPast: boolean =
+    const pastTime: Function = function(): boolean {
+      const isPast: boolean =
         timeout !== undefined && new Date().getTime() - t > timeout;
       if (isPast) {
-        //console.log("Past time: timeout=" + timeout + ", elapsed="+(new Date().getTime() - t));
+        // console.log("Past time: timeout=" + timeout + ", elapsed="+(new Date().getTime() - t));
       }
       return isPast;
     };
 
     // Load saved state.
-    let wid: number = window.id();
+    const wid: number = window.id();
     let savedPaintGroup: Node = this._extended.windowPaintGroup[wid];
 
     let cont: Function;
     if (this._extended.commitLayoutFunc) {
-      //console.log("Continuing commit layout in progress");
+      // console.log("Continuing commit layout in progress");
       cont = this._extended.commitLayoutFunc(timeout);
     } else if (!savedPaintGroup) {
-      //console.log("Starting new commit layout");
+      // console.log("Starting new commit layout");
       cont = this.commitLayoutIteratively(timeout);
     }
 
     if (cont) {
-      //window.log(this + " Timed out during commitLayout");
+      // window.log(this + " Timed out during commitLayout");
       this._extended.commitLayoutFunc = cont;
       return true;
     } else {
-      //window.log(this + " Committed all layout");
+      // window.log(this + " Committed all layout");
       this._extended.commitLayoutFunc = null;
       this._extended.windowPaintGroup[wid] = this;
       savedPaintGroup = this;
@@ -3952,27 +3957,27 @@ export default class Node {
     while (true) {
       if (pastTime()) {
         this._extended.dirty = true;
-        //window.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
+        // window.log("Ran out of time during painting (timeout=" + timeout + "). is " + savedPaintGroup);
         return true;
       }
 
-      let paintGroup: Node = savedPaintGroup;
+      const paintGroup: Node = savedPaintGroup;
       let painter: NodePainter = paintGroup._extended.windowPainter[wid];
       if (paintGroup.isDirty() || !painter) {
         // Paint and render nodes marked for the current group.
-        //console.log("Painting " + paintGroup);
+        // console.log("Painting " + paintGroup);
         if (!painter) {
           painter = new NodePainter(window);
           paintGroup._extended.windowPainter[wid] = painter;
         }
-        let counts: { [key: string]: number } = {};
+        const counts: { [key: string]: number } = {};
         let node: Node = paintGroup;
         do {
-          //console.log("Counting node " + node);
+          // console.log("Counting node " + node);
           painter.countNode(node, counts);
           node = node._layoutPrev;
         } while (node !== paintGroup);
-        //console.log("Glyphs: " + counts.numGlyphs);
+        // console.log("Glyphs: " + counts.numGlyphs);
         painter.initBlockBuffer(counts);
         node = paintGroup;
         do {
@@ -3993,32 +3998,32 @@ export default class Node {
     }
 
     this._extended.windowPaintGroup[wid] = null;
-    //window.log("Completed node painting");
+    // window.log("Completed node painting");
     return false;
   }
 
   renderIteratively(
-    window: parsegraph_Window,
-    camera: parsegraph_Camera
+      window: parsegraph_Window,
+      camera: parsegraph_Camera,
   ): boolean {
     CACHED_RENDERS = 0;
     IMMEDIATE_RENDERS = 0;
     const start: Date = new Date();
-    //console.log("Rendering iteratively");
+    // console.log("Rendering iteratively");
     let paintGroup: Node = this;
     let dirtyRenders: number = 0;
-    //let nodesRendered:number = 0;
+    // let nodesRendered:number = 0;
     let heaviestPaintGroup: Node = null;
     let mostRenders: number = 0;
 
     do {
       if (!paintGroup.localPaintGroup() && !paintGroup.isRoot()) {
         throw new Error(
-          "Paint group chain must not refer to a non-paint group"
+            'Paint group chain must not refer to a non-paint group',
         );
       }
-      //console.log("Rendering node " + paintGroup);
-      let painter: NodePainter = paintGroup.painter(window);
+      // console.log("Rendering node " + paintGroup);
+      const painter: NodePainter = paintGroup.painter(window);
       if (!paintGroup.render(window, camera, renderData)) {
         ++dirtyRenders;
       } else if (painter._consecutiveRenders > 1) {
@@ -4032,21 +4037,21 @@ export default class Node {
         }
       }
       paintGroup = paintGroup._paintGroupPrev;
-      //++nodesRendered;
+      // ++nodesRendered;
     } while (paintGroup !== this);
-    //console.log(nodesRendered + " paint groups rendered " + (dirtyRenders > 0 ? "(" + dirtyRenders + " dirty)" : ""));
-    let renderTime: number = elapsed(start);
+    // console.log(nodesRendered + " paint groups rendered " + (dirtyRenders > 0 ? "(" + dirtyRenders + " dirty)" : ""));
+    const renderTime: number = elapsed(start);
     if (renderTimes.length === 11) {
       renderTimes.splice(Math.floor(Math.random() * 11), 1);
     }
     if (mostRenders > 1) {
       renderTimes.push(renderTime);
-      renderTimes.sort(function (a, b) {
+      renderTimes.sort(function(a, b) {
         return a - b;
       });
-      var meanRenderTime = renderTimes[Math.floor(renderTimes.length / 2)];
+      const meanRenderTime = renderTimes[Math.floor(renderTimes.length / 2)];
       if (meanRenderTime > parsegraph_INTERVAL / 2) {
-        /*console.log("Freezing heaviest node " + heaviestPaintGroup + " (weight=" + heaviestPaintGroup.painter(window).weight() + ") because rendering took " + meanRenderTime + "ms (most renders = " + mostRenders + ")");
+        /* console.log("Freezing heaviest node " + heaviestPaintGroup + " (weight=" + heaviestPaintGroup.painter(window).weight() + ") because rendering took " + meanRenderTime + "ms (most renders = " + mostRenders + ")");
                 let str:string = "[";
                 for(var i = 0; i < renderTimes.length; ++i) {
                     if(i > 0) {
@@ -4067,9 +4072,9 @@ export default class Node {
     let heaviestNode: Node = this;
     do {
       if (node._extended) {
-        let painter: NodePainter = node._extended.windowPainter[window.id()];
+        const painter: NodePainter = node._extended.windowPainter[window.id()];
         if (painter) {
-          let nodeWeight: number = painter.weight();
+          const nodeWeight: number = painter.weight();
           if (heaviest < nodeWeight) {
             heaviestNode = node;
             heaviest = nodeWeight;
@@ -4082,13 +4087,13 @@ export default class Node {
   }
 
   renderOffscreen(
-    window: parsegraph_Window,
-    renderWorld: number[],
-    renderScale: number[],
-    forceSimple: boolean
+      window: parsegraph_Window,
+      renderWorld: number[],
+      renderScale: number[],
+      forceSimple: boolean,
   ): boolean {
     if (!this.localPaintGroup()) {
-      throw new Error("Cannot render a node that is not a paint group");
+      throw new Error('Cannot render a node that is not a paint group');
     }
     const painter: NodePainter = this._extended.windowPainter[window.id()];
     if (!painter) {
@@ -4098,21 +4103,21 @@ export default class Node {
   }
 
   render(
-    window: parsegraph_Window,
-    camera: parsegraph_Camera,
-    renderData: NodeRenderData
+      window: parsegraph_Window,
+      camera: parsegraph_Camera,
+      renderData: NodeRenderData,
   ): boolean {
-    //console.log("RENDERING THE NODE");
+    // console.log("RENDERING THE NODE");
     if (!this.localPaintGroup()) {
-      throw new Error("Cannot render a node that is not a paint group");
+      throw new Error('Cannot render a node that is not a paint group');
     }
     const painter: NodePainter = this._extended.windowPainter[window.id()];
     if (!painter) {
-      //window.log("Node has no painter for " + window.id());
+      // window.log("Node has no painter for " + window.id());
       return false;
     }
     if (this._absoluteXPos === null) {
-      //window.log("Node has no absolute pos");
+      // window.log("Node has no absolute pos");
       return false;
     }
 
@@ -4125,90 +4130,90 @@ export default class Node {
     s.scale(this.scale());
     s.translate(this._absoluteXPos, this._absoluteYPos);
     if (camera && !camera.containsAny(s)) {
-      //window.log("Out of bounds: " + this);
+      // window.log("Out of bounds: " + this);
       return !this._absoluteDirty;
     }
 
     const world: number[] = camera.project();
     makeScale3x3I(renderData.scaleMat, this._absoluteScale);
     makeTranslation3x3I(
-      renderData.transMat,
-      this._absoluteXPos,
-      this._absoluteYPos
+        renderData.transMat,
+        this._absoluteXPos,
+        this._absoluteYPos,
     );
     matrixMultiply3x3I(
-      renderData.worldMat,
-      renderData.scaleMat,
-      renderData.transMat
+        renderData.worldMat,
+        renderData.scaleMat,
+        renderData.transMat,
     );
     const renderWorld: number[] = matrixMultiply3x3I(
-      renderData.worldMat,
-      renderData.worldMat,
-      world
+        renderData.worldMat,
+        renderData.worldMat,
+        world,
     );
     const renderScale: number =
       this._absoluteScale * (camera ? camera.scale() : 1);
 
-    //console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
+    // console.log("Rendering paint group: " + this.absoluteX() + " " + this.absoluteY() + " " + this.absoluteScale());
     if (
       this._extended.cache &&
       renderScale < parsegraph_CACHE_ACTIVATION_SCALE
     ) {
-      window.log("Rendering " + this + " from cache.");
-      var cleanRender = this._extended.cache.render(
-        window,
-        renderWorld,
-        renderData,
-        CACHED_RENDERS === 0
+      window.log('Rendering ' + this + ' from cache.');
+      const cleanRender = this._extended.cache.render(
+          window,
+          renderWorld,
+          renderData,
+          CACHED_RENDERS === 0,
       );
       if (IMMEDIATE_RENDERS > 0) {
-        //console.log("Immediately rendered " +IMMEDIATE_RENDERS + " times");
+        // console.log("Immediately rendered " +IMMEDIATE_RENDERS + " times");
         IMMEDIATE_RENDERS = 0;
       }
       ++CACHED_RENDERS;
       return cleanRender && !this._absoluteDirty;
     }
     if (CACHED_RENDERS > 0) {
-      //console.log("Rendered from cache " + CACHED_RENDERS + " times");
+      // console.log("Rendered from cache " + CACHED_RENDERS + " times");
       CACHED_RENDERS = 0;
     }
     ++IMMEDIATE_RENDERS;
 
-    //console.log("Rendering " + this + " in scene.");
-    //console.log(this.absoluteX(), this.absoluteY());
+    // console.log("Rendering " + this + " in scene.");
+    // console.log(this.absoluteX(), this.absoluteY());
     window.overlay().resetTransform();
     window
-      .overlay()
-      .scale(
-        camera.scale() * this.absoluteScale(),
-        camera.scale() * this.absoluteScale()
-      );
+        .overlay()
+        .scale(
+            camera.scale() * this.absoluteScale(),
+            camera.scale() * this.absoluteScale(),
+        );
     window
-      .overlay()
-      .translate(camera.x() + this.absoluteX(), camera.y() + this.absoluteY());
+        .overlay()
+        .translate(camera.x() + this.absoluteX(), camera.y() + this.absoluteY());
     painter.render(renderWorld, renderScale);
 
     if (this._absoluteDirty) {
-      //window.log("Node was rendered with dirty absolute position.");
+      // window.log("Node was rendered with dirty absolute position.");
     }
     return !this.isDirty() && !this._absoluteDirty;
   }
 }
 
 export function labeledBud(label: string, font?: parsegraph_Font): Node {
-  let node: Node = new Node(Type.BUD);
+  const node: Node = new Node(Type.BUD);
   node.setLabel(label, font);
   return node;
 }
 
 export function labeledSlot(label: string, font?: parsegraph_Font): Node {
-  let node: Node = new Node(Type.SLOT);
+  const node: Node = new Node(Type.SLOT);
   node.setLabel(label, font);
   return node;
 }
 
 export function labeledBlock(label: string, font?: parsegraph_Font): Node {
-  let node: Node = new Node(Type.BLOCK);
+  const node: Node = new Node(Type.BLOCK);
   node.setLabel(label, font);
   return node;
 }

@@ -1,6 +1,6 @@
-export const parsegraph_COMPONENT_LAYOUT_VERTICAL = "LAYOUT_VERTICAL";
-export const parsegraph_COMPONENT_LAYOUT_HORIZONTAL = "LAYOUT_HORIZONTAL";
-export const parsegraph_COMPONENT_LAYOUT_ENTRY = "LAYOUT_ENTRY";
+export const parsegraph_COMPONENT_LAYOUT_VERTICAL = 'LAYOUT_VERTICAL';
+export const parsegraph_COMPONENT_LAYOUT_HORIZONTAL = 'LAYOUT_HORIZONTAL';
+export const parsegraph_COMPONENT_LAYOUT_ENTRY = 'LAYOUT_ENTRY';
 
 export function parsegraph_LayoutList(type, parent) {
   this._type = type;
@@ -8,51 +8,51 @@ export function parsegraph_LayoutList(type, parent) {
   this._entries = [];
 }
 
-parsegraph_LayoutList.prototype.setEntry = function (comp) {
+parsegraph_LayoutList.prototype.setEntry = function(comp) {
   if (this._entries[0]) {
-    throw new Error("A layout list must not change its entry once set");
+    throw new Error('A layout list must not change its entry once set');
   }
   this._entries[0] = comp;
 };
 
-parsegraph_LayoutList.prototype.component = function () {
+parsegraph_LayoutList.prototype.component = function() {
   return this._entries[0];
 };
 
-parsegraph_LayoutList.prototype.type = function () {
+parsegraph_LayoutList.prototype.type = function() {
   return this._type;
 };
 
-parsegraph_LayoutList.prototype.addWithType = function (comp, layoutType) {
+parsegraph_LayoutList.prototype.addWithType = function(comp, layoutType) {
   if (
     layoutType !== parsegraph_COMPONENT_LAYOUT_HORIZONTAL &&
     layoutType !== parsegraph_COMPONENT_LAYOUT_VERTICAL
   ) {
     throw new Error(
-      "LayoutList type must be horizontal or vertical when adding with type."
+        'LayoutList type must be horizontal or vertical when adding with type.',
     );
   }
   var entry;
   if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
     if (this._parent && layoutType === this._parent.type()) {
       var entry = new parsegraph_LayoutList(
-        parsegraph_COMPONENT_LAYOUT_ENTRY,
-        this._parent
+          parsegraph_COMPONENT_LAYOUT_ENTRY,
+          this._parent,
       );
       entry.setEntry(comp);
-      for (var i in this._parent._entries) {
+      for (const i in this._parent._entries) {
         if (this._parent._entries[i] === this) {
           this._parent._entries.splice(i + 1, 0, entry);
           return;
         }
       }
-      throw new Error("Failed to insert entry into parent");
+      throw new Error('Failed to insert entry into parent');
     }
-    //console.log("Changing list from entry");
+    // console.log("Changing list from entry");
     this._type = layoutType;
     var firstEntry = new parsegraph_LayoutList(
-      parsegraph_COMPONENT_LAYOUT_ENTRY,
-      this
+        parsegraph_COMPONENT_LAYOUT_ENTRY,
+        this,
     );
     firstEntry.setEntry(this.component());
     entry = new parsegraph_LayoutList(parsegraph_COMPONENT_LAYOUT_ENTRY, this);
@@ -67,37 +67,37 @@ parsegraph_LayoutList.prototype.addWithType = function (comp, layoutType) {
     (this._entries.length === 1 &&
       this._entries[0].type() === parsegraph_COMPONENT_LAYOUT_ENTRY)
   ) {
-    //console.log("Repurposing list");
+    // console.log("Repurposing list");
     this._type = layoutType;
     entry = new parsegraph_LayoutList(parsegraph_COMPONENT_LAYOUT_ENTRY, this);
     entry.setEntry(comp);
     this._entries.push(entry);
   } else {
-    //console.log("Creating nested list");
+    // console.log("Creating nested list");
     var firstEntry = new parsegraph_LayoutList(layoutType, this);
     firstEntry.addWithType(comp, layoutType);
     this._entries.push(firstEntry);
   }
 };
 
-parsegraph_LayoutList.prototype.addVertical = function (comp) {
+parsegraph_LayoutList.prototype.addVertical = function(comp) {
   return this.addWithType(comp, parsegraph_COMPONENT_LAYOUT_VERTICAL);
 };
 
-parsegraph_LayoutList.prototype.addHorizontal = function (comp) {
+parsegraph_LayoutList.prototype.addHorizontal = function(comp) {
   return this.addWithType(comp, parsegraph_COMPONENT_LAYOUT_HORIZONTAL);
 };
 
-parsegraph_LayoutList.prototype.forEach = function (
-  func,
-  funcThisArg,
-  compSize
+parsegraph_LayoutList.prototype.forEach = function(
+    func,
+    funcThisArg,
+    compSize,
 ) {
   if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
     return func.call(funcThisArg, this.component(), compSize);
   }
-  var entrySize = compSize ? compSize.clone() : null;
-  for (var i in this._entries) {
+  const entrySize = compSize ? compSize.clone() : null;
+  for (const i in this._entries) {
     if (compSize) {
       if (this._type === parsegraph_COMPONENT_LAYOUT_HORIZONTAL) {
         entrySize.setWidth(compSize.width() / this._entries.length);
@@ -105,25 +105,25 @@ parsegraph_LayoutList.prototype.forEach = function (
       } else {
         entrySize.setHeight(compSize.height() / this._entries.length);
         entrySize.setY(
-          compSize.y() + (this._entries.length - 1 - i) * entrySize.height()
+            compSize.y() + (this._entries.length - 1 - i) * entrySize.height(),
         );
       }
     }
-    var entry = this._entries[i];
+    const entry = this._entries[i];
     if (entry.forEach(func, funcThisArg, entrySize)) {
       return true;
     }
   }
 };
 
-parsegraph_LayoutList.prototype.isEmpty = function () {
+parsegraph_LayoutList.prototype.isEmpty = function() {
   return this._entries.length === 0;
 };
 
-parsegraph_LayoutList.prototype.getPrevious = function (target) {
-  var prior = null;
+parsegraph_LayoutList.prototype.getPrevious = function(target) {
+  let prior = null;
   if (
-    this.forEach(function (comp) {
+    this.forEach(function(comp) {
       if (target === comp) {
         return true;
       }
@@ -135,11 +135,11 @@ parsegraph_LayoutList.prototype.getPrevious = function (target) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.getNext = function (target) {
-  var next = null;
-  var found = false;
+parsegraph_LayoutList.prototype.getNext = function(target) {
+  let next = null;
+  let found = false;
   if (
-    this.forEach(function (comp) {
+    this.forEach(function(comp) {
       if (found) {
         next = comp;
         return true;
@@ -154,12 +154,12 @@ parsegraph_LayoutList.prototype.getNext = function (target) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.remove = function (comp) {
+parsegraph_LayoutList.prototype.remove = function(comp) {
   if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
-    throw new Error("A layoutList entry cannot remove itself");
+    throw new Error('A layoutList entry cannot remove itself');
   }
-  for (var i in this._entries) {
-    var entry = this._entries[i];
+  for (const i in this._entries) {
+    const entry = this._entries[i];
     if (entry.type() === parsegraph_COMPONENT_LAYOUT_ENTRY) {
       if (entry.component() === comp) {
         this._entries.splice(i, 1);
@@ -177,13 +177,13 @@ parsegraph_LayoutList.prototype.remove = function (comp) {
   return false;
 };
 
-parsegraph_LayoutList.prototype.contains = function (comp) {
+parsegraph_LayoutList.prototype.contains = function(comp) {
   if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
     return this.component() === comp ? this : null;
   }
-  for (var i in this._entries) {
-    var entry = this._entries[i];
-    var found = entry.contains(comp);
+  for (const i in this._entries) {
+    const entry = this._entries[i];
+    const found = entry.contains(comp);
     if (found) {
       return found;
     }
@@ -191,13 +191,13 @@ parsegraph_LayoutList.prototype.contains = function (comp) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.count = function () {
+parsegraph_LayoutList.prototype.count = function() {
   if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
     return this.component() ? 1 : 0;
   }
-  var c = 0;
-  for (var i in this._entries) {
-    var entry = this._entries[i];
+  let c = 0;
+  for (const i in this._entries) {
+    const entry = this._entries[i];
     c += entry.count();
   }
   return c;

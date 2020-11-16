@@ -1,5 +1,5 @@
 function parsegraph_Ulam(COUNT) {
-  this.caret = new parsegraph_Caret("u");
+  this.caret = new parsegraph_Caret('u');
   this.caret.setMathMode(true);
 
   this.maxNumber = COUNT;
@@ -16,35 +16,35 @@ function parsegraph_Ulam(COUNT) {
 
   this.computePrimes(4);
   this.caret.fitExact();
-  this.spawnNumber("d", 4);
-  this.spawnNumber("f", 3);
-  this.spawnNumber("d", 2);
-  this.spawnNumber("b", 1);
+  this.spawnNumber('d', 4);
+  this.spawnNumber('f', 3);
+  this.spawnNumber('d', 2);
+  this.spawnNumber('b', 1);
   this.rowSize = 4;
 }
 
-parsegraph_Ulam.prototype.spawnNumber = function (dir, num) {
+parsegraph_Ulam.prototype.spawnNumber = function(dir, num) {
   this.caret.spawnMove(dir, this.getType(num));
   this.caret.label(num);
-  this.caret.node()._id = "Ulam " + num;
-  this.caret.overlapAxis("a");
+  this.caret.node()._id = 'Ulam ' + num;
+  this.caret.overlapAxis('a');
 };
 
-parsegraph_Ulam.prototype.step = function (timeout) {
-  var maxNumber = this.rowSize * this.rowSize;
+parsegraph_Ulam.prototype.step = function(timeout) {
+  const maxNumber = this.rowSize * this.rowSize;
   if (!this.computePrimes(maxNumber, timeout)) {
     return true;
   }
 
-  //console.log("Position=" + this.position + " RowSize=" + this.rowSize);
+  // console.log("Position=" + this.position + " RowSize=" + this.rowSize);
   this.caret.moveToRoot();
-  var prior = this.caret.disconnect("d");
+  const prior = this.caret.disconnect('d');
 
-  this.spawnNumber("d", maxNumber);
+  this.spawnNumber('d', maxNumber);
   this.caret.fitExact();
   this.caret.crease();
   for (var i = 1; i < this.rowSize; ++i) {
-    this.spawnNumber("f", maxNumber - i);
+    this.spawnNumber('f', maxNumber - i);
     if (i > this.rowSize - 2) {
       this.caret.fitLoose();
     } else {
@@ -55,7 +55,7 @@ parsegraph_Ulam.prototype.step = function (timeout) {
   this.caret.fitExact();
   num = maxNumber - this.rowSize + 1;
   for (var i = 1; i < this.rowSize; ++i) {
-    this.spawnNumber("d", --num);
+    this.spawnNumber('d', --num);
     if (i === 1 || i > this.rowSize - 2) {
       this.caret.fitLoose();
     } else {
@@ -65,7 +65,7 @@ parsegraph_Ulam.prototype.step = function (timeout) {
   this.caret.crease();
   this.caret.fitExact();
   for (var i = 1; i < this.rowSize; ++i) {
-    this.spawnNumber("b", --num);
+    this.spawnNumber('b', --num);
     if (i === 1 || i > this.rowSize - 2) {
       this.caret.fitLoose();
     } else {
@@ -75,7 +75,7 @@ parsegraph_Ulam.prototype.step = function (timeout) {
   this.caret.crease();
   this.caret.fitExact();
   for (var i = 2; i < this.rowSize; ++i) {
-    this.spawnNumber("u", --num);
+    this.spawnNumber('u', --num);
     if (i === 2 || i > this.rowSize - 2) {
       this.caret.fitLoose();
     } else {
@@ -84,43 +84,43 @@ parsegraph_Ulam.prototype.step = function (timeout) {
   }
   this.caret.crease();
   this.caret.fitExact();
-  this.caret.connect("f", prior);
+  this.caret.connect('f', prior);
   this.rowSize += 2;
   return this.inProgress();
 };
 
-parsegraph_Ulam.prototype.node = function () {
+parsegraph_Ulam.prototype.node = function() {
   return this.caret.root();
 };
 
-parsegraph_Ulam.prototype.inProgress = function () {
+parsegraph_Ulam.prototype.inProgress = function() {
   return this.candidate < this.maxNumber;
 };
 
-parsegraph_Ulam.prototype.getType = function (pos) {
+parsegraph_Ulam.prototype.getType = function(pos) {
   return pos in this.primeMap ? parsegraph_BLOCK : parsegraph_SLOT;
 };
 
-parsegraph_Ulam.prototype.computePrimes = function (max, timeout) {
+parsegraph_Ulam.prototype.computePrimes = function(max, timeout) {
   function makeModulo(frequency) {
-    var target = 0;
-    var object = {};
+    let target = 0;
+    const object = {};
 
-    object.calculate = function (number) {
+    object.calculate = function(number) {
       while (number > target) {
         target += frequency;
       }
       return target - number;
     };
 
-    object.value = function () {
+    object.value = function() {
       return frequency;
     };
 
     return object;
   }
 
-  var startTime = new Date();
+  const startTime = new Date();
 
   while (this.candidate <= max) {
     if (this.candidate % 100 === 0) {
@@ -128,9 +128,9 @@ parsegraph_Ulam.prototype.computePrimes = function (max, timeout) {
         return false;
       }
     }
-    var isPrime = true;
-    for (var i = 0; i < this.knownPrimes.length; ++i) {
-      var prime = this.knownPrimes[i];
+    let isPrime = true;
+    for (let i = 0; i < this.knownPrimes.length; ++i) {
+      const prime = this.knownPrimes[i];
       modulus = prime.calculate(this.candidate);
       if (modulus == 0) {
         // It's a multiple, so there's no chance for primality.

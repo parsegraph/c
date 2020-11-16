@@ -46,27 +46,27 @@ function alpha_Camera() {
   this.SetParent(this.GetInvisiblePhysical(this));
 }
 
-alpha_Camera.prototype.toJSON = function () {
+alpha_Camera.prototype.toJSON = function() {
   return {
     position: this.position.toJSON(),
     orientation: this.orientation.toJSON(),
   };
 };
 
-alpha_Camera.prototype.restore = function (json) {
+alpha_Camera.prototype.restore = function(json) {
   this.position.restore(json.position);
   this.orientation.restore(json.orientation);
   console.log(this.toJSON());
 };
 
-alpha_Camera_Tests = new parsegraph_TestSuite("alpha_Camera");
+alpha_Camera_Tests = new parsegraph_TestSuite('alpha_Camera');
 
-alpha_Camera_Tests.addTest("alpha_Camera", function (resultDom) {
-  var window = new parsegraph_Window();
-  var widget = new alpha_GLWidget(window);
-  var cam = new alpha_Camera();
+alpha_Camera_Tests.addTest('alpha_Camera', function(resultDom) {
+  const window = new parsegraph_Window();
+  const widget = new alpha_GLWidget(window);
+  const cam = new alpha_Camera();
 
-  //console.log(cam.GetModelMatrix().toString());
+  // console.log(cam.GetModelMatrix().toString());
   cam.GetViewMatrix();
 });
 
@@ -76,32 +76,32 @@ alpha_Camera_Tests.addTest("alpha_Camera", function (resultDom) {
 
 // -- we set FOV in degrees
 // -- we get in radians;
-alpha_Camera.prototype.SetFovX = function (fovX) {
+alpha_Camera.prototype.SetFovX = function(fovX) {
   this.fovX = alpha_toRadians(fovX);
   this.projectionDirty = true;
 };
 
-alpha_Camera.prototype.SetFovY = function (fovY) {
+alpha_Camera.prototype.SetFovY = function(fovY) {
   this.fovY = alpha_toRadians(fovY);
   this.projectionDirty = true;
 };
 
-alpha_Camera.prototype.GetFovX = function () {
+alpha_Camera.prototype.GetFovX = function() {
   // autoadjust if fovX == 0
-  var fovX = this.fovX;
+  let fovX = this.fovX;
   if (!fovX || fovX == 0) {
-    var aspect = this.width / this.height;
+    const aspect = this.width / this.height;
     fovX = this.fovY * aspect;
   }
 
   return fovX;
 };
 
-alpha_Camera.prototype.GetFovY = function () {
-  var fovY = this.fovY;
+alpha_Camera.prototype.GetFovY = function() {
+  let fovY = this.fovY;
   // autoadjust if fovY == 0
   if (!fovY || fovY == 0) {
-    var aspect = this.width / this.height;
+    const aspect = this.width / this.height;
     fovY = this.fovX / aspect;
   }
   return fovY;
@@ -113,13 +113,13 @@ alpha_Camera.prototype.GetFovY = function () {
 // width = width of the viewport
 // distance = distance of eyes from viewport
 // use the same units for both;
-alpha_Camera.prototype.SetProperFOV = function (vpWidth, eyeDistance) {
-  var fovx = Math.atan((vpWidth * 0.5) / eyeDistance) * 2;
+alpha_Camera.prototype.SetProperFOV = function(vpWidth, eyeDistance) {
+  const fovx = Math.atan((vpWidth * 0.5) / eyeDistance) * 2;
   this.SetFovY(0); // set this to autoadjust;
   this.SetFovX(alpha_toDegrees(fovx)); // and set this to the proper fov;
 };
 
-alpha_Camera.prototype.SetZoom = function (factor) {
+alpha_Camera.prototype.SetZoom = function(factor) {
   if (factor < 1) {
     return false; // assholes
   }
@@ -129,30 +129,30 @@ alpha_Camera.prototype.SetZoom = function (factor) {
   return this.zoomFactor;
 };
 
-alpha_Camera.prototype.GetZoom = function () {
+alpha_Camera.prototype.GetZoom = function() {
   return this.zoomFactor;
 };
 
-alpha_Camera.prototype.SetZoomSpeed = function (speed) {
+alpha_Camera.prototype.SetZoomSpeed = function(speed) {
   this.zoomSpeed = speed;
   return this.zoomSpeed;
 };
 
-alpha_Camera.prototype.ZoomIn = function (bind, elapsed) {
+alpha_Camera.prototype.ZoomIn = function(bind, elapsed) {
   if (!bind || bind <= 0) {
     return false;
   } else if (bind > 1) {
     bind = 1;
   }
 
-  var zoom = this.zoomFactor + Math.pow(this.zoomSpeed, bind * elapsed);
+  let zoom = this.zoomFactor + Math.pow(this.zoomSpeed, bind * elapsed);
   if (zoom < 1) {
     zoom = 1;
   }
   return this.SetZoom(zoom);
 };
 
-alpha_Camera.prototype.ZoomOut = function (bind, elapsed) {
+alpha_Camera.prototype.ZoomOut = function(bind, elapsed) {
   if (!bind || !elapsed) {
     return false;
   }
@@ -163,20 +163,20 @@ alpha_Camera.prototype.ZoomOut = function (bind, elapsed) {
     bind = 1;
   }
 
-  var zoom = this.zoomFactor - Math.pow(this.zoomSpeed, bind * elapsed);
+  let zoom = this.zoomFactor - Math.pow(this.zoomSpeed, bind * elapsed);
   if (zoom < 1) {
     zoom = 1;
   }
   return this.SetZoom(zoom);
 };
 
-alpha_Camera.prototype.CancelZoom = function () {
+alpha_Camera.prototype.CancelZoom = function() {
   return this.SetZoom(1);
 };
 
 // continues to zoom until the zoom is reached;
 // broken until I am less tired
-alpha_Camera.prototype.ZoomUntil = function (zoom, bind, elapsed) {
+alpha_Camera.prototype.ZoomUntil = function(zoom, bind, elapsed) {
   if (!zoom || !bind || !elapsed) {
     return false;
   }
@@ -184,7 +184,7 @@ alpha_Camera.prototype.ZoomUntil = function (zoom, bind, elapsed) {
     return false;
   }
 
-  var factor = this.zoomFactor;
+  const factor = this.zoomFactor;
   if (zoom > factor) {
     // need to increase zoom;
     if (this.ZoomIn(1, elapsed) > factor) {
@@ -198,36 +198,36 @@ alpha_Camera.prototype.ZoomUntil = function (zoom, bind, elapsed) {
 };
 
 // anything further than this is clipped
-alpha_Camera.prototype.SetFarDistance = function (distance) {
+alpha_Camera.prototype.SetFarDistance = function(distance) {
   this.farDistance = distance;
   this.projectionDirty = true;
 };
 
-alpha_Camera.prototype.GetFarDistance = function () {
+alpha_Camera.prototype.GetFarDistance = function() {
   return this.farDistance;
 };
 
 // anything nearer than this is clipped
-alpha_Camera.prototype.SetNearDistance = function (distance) {
+alpha_Camera.prototype.SetNearDistance = function(distance) {
   this.nearDistance = distance;
   this.projectionDirty = true;
 };
 
-alpha_Camera.prototype.GetNearDistance = function () {
+alpha_Camera.prototype.GetNearDistance = function() {
   return this.nearDistance;
 };
 
-alpha_Camera.prototype.UpdateProjection = function (width, height) {
+alpha_Camera.prototype.UpdateProjection = function(width, height) {
   this.width = width;
   this.height = height;
 
   this.projectionMatrix.Set(
-    makePerspective(
-      this.GetFovX() / this.zoomFactor,
-      this.width / this.height,
-      this.nearDistance,
-      this.farDistance
-    )
+      makePerspective(
+          this.GetFovX() / this.zoomFactor,
+          this.width / this.height,
+          this.nearDistance,
+          this.farDistance,
+      ),
   );
   this.projectionDirty = false;
   return this.projectionMatrix;
@@ -237,42 +237,42 @@ alpha_Camera.prototype.UpdateProjection = function (width, height) {
 // ------------ Rotation ---------------
 // -------------------------------------
 
-alpha_Camera.prototype.SetOrientation = function () {
+alpha_Camera.prototype.SetOrientation = function() {
   this.orientation.Set.apply(this.orientation, arguments);
   this.modelDirty = true;
 };
 
 // returns as Quaternion
-alpha_Camera.prototype.GetOrientation = function () {
+alpha_Camera.prototype.GetOrientation = function() {
   return this.orientation;
 };
 
 // in radians / second
-alpha_Camera.prototype.SetRotationSpeeds = function (x, y) {
-  var rSpeed = this.rotationSpeed;
+alpha_Camera.prototype.SetRotationSpeeds = function(x, y) {
+  const rSpeed = this.rotationSpeed;
   rSpeed[0] = x;
   rSpeed[1] = y;
 };
 
-alpha_Camera.prototype.GetRotationSpeeds = function () {
-  var rSpeed = this.rotationSpeed;
+alpha_Camera.prototype.GetRotationSpeeds = function() {
+  const rSpeed = this.rotationSpeed;
   return rSpeed;
 };
 
-alpha_Camera.prototype.SetRotationSpeed = function (speed) {
-  var rSpeed = this.rotationSpeed;
+alpha_Camera.prototype.SetRotationSpeed = function(speed) {
+  const rSpeed = this.rotationSpeed;
   rSpeed[0] = speed;
   rSpeed[1] = speed;
 };
 
-alpha_Camera.prototype.Pitch = function (angle) {
+alpha_Camera.prototype.Pitch = function(angle) {
   // if you aren't rotating about an angle, then you aren't rotating
   if (angle == 0) {
     return;
   }
 
   // preventing tons of tiny adjustments
-  var pi_2 = Math.PI / 2;
+  const pi_2 = Math.PI / 2;
   if (this.pitch >= pi_2 && angle > 0) {
     return false;
   }
@@ -280,7 +280,7 @@ alpha_Camera.prototype.Pitch = function (angle) {
     return false;
   }
 
-  var pitch = this.pitch + angle;
+  let pitch = this.pitch + angle;
 
   if (pitch < -pi_2) {
     // reduce the angle so that it makes pitch == -pi;
@@ -296,63 +296,63 @@ alpha_Camera.prototype.Pitch = function (angle) {
 
   this.pitch = pitch;
   // now rotate by that angle about the x axis;
-  var q = new alpha_Quaternion();
+  const q = new alpha_Quaternion();
   q.FromAxisAndAngle(1, 0, 0, angle);
   this.SetOrientation(this.orientation.Multiplied(q));
 };
 
-alpha_Camera.prototype.Turn = function (angle) {
+alpha_Camera.prototype.Turn = function(angle) {
   // if you aren't rotating about an angle, then you aren't rotating
   if (angle == 0) {
     return;
   }
 
-  var q = new alpha_Quaternion();
+  const q = new alpha_Quaternion();
   q.FromAxisAndAngle(0, 1, 0, angle);
   this.SetOrientation(q.Multiply(this.GetOrientation()));
 };
 
 // these rotations take place at the speeds set by rotationSpeed
-alpha_Camera.prototype.TurnLeft = function (elapsed) {
-  var angle = elapsed * this.rotationSpeed[1];
+alpha_Camera.prototype.TurnLeft = function(elapsed) {
+  const angle = elapsed * this.rotationSpeed[1];
   this.Turn(angle);
 };
 
-alpha_Camera.prototype.TurnRight = function (elapsed) {
-  var angle = elapsed * this.rotationSpeed[1];
+alpha_Camera.prototype.TurnRight = function(elapsed) {
+  const angle = elapsed * this.rotationSpeed[1];
   this.Turn(-angle);
 };
 
-alpha_Camera.prototype.PitchUp = function (elapsed) {
-  var angle = elapsed * this.rotationSpeed[0];
+alpha_Camera.prototype.PitchUp = function(elapsed) {
+  const angle = elapsed * this.rotationSpeed[0];
   if (angle !== 0) {
-    //console.log("Pitch up " + angle);
+    // console.log("Pitch up " + angle);
     this.Pitch(angle);
   }
 };
 
-alpha_Camera.prototype.PitchDown = function (elapsed) {
-  var angle = elapsed * this.rotationSpeed[0];
+alpha_Camera.prototype.PitchDown = function(elapsed) {
+  const angle = elapsed * this.rotationSpeed[0];
   if (angle !== 0) {
-    //console.log("Pitch down " + angle);
+    // console.log("Pitch down " + angle);
     this.Pitch(angle);
   }
 };
 
 // set which axis you want to align to
-alpha_Camera.prototype.AlignParentToMy = function (x, y) {
-  var q = new alpha_Quaternion();
+alpha_Camera.prototype.AlignParentToMy = function(x, y) {
+  let q = new alpha_Quaternion();
   if (x == 0) {
     x = false;
   }
   if (y == 0) {
     y = false;
   }
-  var pitch = this.pitch;
+  const pitch = this.pitch;
   // no matter what, when we leave here there will be no pitch;
   this.pitch = 0;
 
-  var parent = this.GetParent();
+  const parent = this.GetParent();
   // if we want to match yaw only
   if (y && !x) {
     // find the quaternion of our pitch; inverted.
@@ -395,8 +395,8 @@ alpha_Camera.prototype.AlignParentToMy = function (x, y) {
 // -------------------------------------
 
 // send as x,y,z or vector
-alpha_Camera.prototype.SetPosition = function (x, y, z) {
-  //console.log(new Error("Setting position to " + x + " " + y + " " + z));
+alpha_Camera.prototype.SetPosition = function(x, y, z) {
+  // console.log(new Error("Setting position to " + x + " " + y + " " + z));
   if (y == undefined) {
     y = x[1];
     z = x[2];
@@ -407,16 +407,16 @@ alpha_Camera.prototype.SetPosition = function (x, y, z) {
   return this.position;
 };
 
-alpha_Camera.prototype.SetRange = function (range) {
+alpha_Camera.prototype.SetRange = function(range) {
   return this.SetPosition(0, 0, range);
 };
 
 // return as Vector
-alpha_Camera.prototype.GetPosition = function () {
+alpha_Camera.prototype.GetPosition = function() {
   return this.position;
 };
 
-alpha_Camera.prototype.ChangePosition = function (x, y, z) {
+alpha_Camera.prototype.ChangePosition = function(x, y, z) {
   if (y === undefined) {
     y = x[1];
     z = x[2];
@@ -426,7 +426,7 @@ alpha_Camera.prototype.ChangePosition = function (x, y, z) {
 };
 
 // offset from the physical
-alpha_Camera.prototype.SetOffset = function (x, y, z) {
+alpha_Camera.prototype.SetOffset = function(x, y, z) {
   if (y == undefined) {
     y = x[1];
     z = x[2];
@@ -437,11 +437,11 @@ alpha_Camera.prototype.SetOffset = function (x, y, z) {
 };
 
 // return as Vector
-alpha_Camera.prototype.GetOffset = function () {
+alpha_Camera.prototype.GetOffset = function() {
   return this.offset;
 };
 
-alpha_Camera.prototype.ChangeOffset = function (x, y, z) {
+alpha_Camera.prototype.ChangeOffset = function(x, y, z) {
   if (y == undefined) {
     y = x[1];
     z = x[2];
@@ -454,18 +454,18 @@ alpha_Camera.prototype.ChangeOffset = function (x, y, z) {
 // -----------  MOVEMENT --------------------
 // ------------------------------------------
 
-alpha_Camera.prototype.SetMaxRange = function (maxRange) {
+alpha_Camera.prototype.SetMaxRange = function(maxRange) {
   this.maxRange = maxRange;
   return this.maxRange;
 };
 
-alpha_Camera.prototype.GetMaxRange = function () {
+alpha_Camera.prototype.GetMaxRange = function() {
   return this.maxRange;
 };
 
 // camera movement is easy; it can only move in and out
-alpha_Camera.prototype.Warp = function (distance) {
-  var z = this.position[2];
+alpha_Camera.prototype.Warp = function(distance) {
+  const z = this.position[2];
 
   // preventing tons of tiny adjustments
   if (z <= 0 && distance < 0) {
@@ -476,7 +476,7 @@ alpha_Camera.prototype.Warp = function (distance) {
   }
 
   // add it to our current position to get our new position
-  /*var cz = z + distance;
+  /* var cz = z + distance;
     if(cz < 0) {
         distance = -z;
     }
@@ -487,11 +487,11 @@ alpha_Camera.prototype.Warp = function (distance) {
   this.ChangePosition(0, 0, distance);
 };
 
-alpha_Camera.prototype.WarpIn = function (distance) {
+alpha_Camera.prototype.WarpIn = function(distance) {
   this.Warp(-distance);
 };
 
-alpha_Camera.prototype.WarpOut = function (distance) {
+alpha_Camera.prototype.WarpOut = function(distance) {
   this.Warp(distance);
 };
 // alias for end-user use
@@ -503,21 +503,21 @@ alpha_Camera.prototype.WarpOut = function (distance) {
 // -- since we can only move in one direction
 // -- there isn't any velocity
 // -- these are the commands needed for expected movement
-alpha_Camera.prototype.SetSpeed = function (speed) {
+alpha_Camera.prototype.SetSpeed = function(speed) {
   this.speed = speed;
 };
 
-alpha_Camera.prototype.GetSpeed = function () {
+alpha_Camera.prototype.GetSpeed = function() {
   return this.speed;
 };
 
-alpha_Camera.prototype.MoveForward = function (elapsed) {
-  var distance = elapsed * this.speed;
+alpha_Camera.prototype.MoveForward = function(elapsed) {
+  const distance = elapsed * this.speed;
   this.Warp(-distance);
 };
 
-alpha_Camera.prototype.MoveBackward = function (elapsed) {
-  var distance = elapsed * this.speed;
+alpha_Camera.prototype.MoveBackward = function(elapsed) {
+  const distance = elapsed * this.speed;
   this.Warp(distance);
 };
 
@@ -526,16 +526,16 @@ alpha_Camera.prototype.MoveBackward = function (elapsed) {
 // ------------------------------------------
 
 // CAMERAS MAKE THE BEST PARENTS
-alpha_Camera.prototype.IsGoodLineageFor = function (prospectiveChild) {
+alpha_Camera.prototype.IsGoodLineageFor = function(prospectiveChild) {
   return true;
 };
 
-alpha_Camera.prototype.GetInvisiblePhysical = function (parent) {
-  var position;
-  var orientation;
+alpha_Camera.prototype.GetInvisiblePhysical = function(parent) {
+  let position;
+  let orientation;
 
   if (this.parent) {
-    var currentParent = this.GetParent();
+    const currentParent = this.GetParent();
     position = currentParent.GetPosition();
     orientation = currentParent.GetOrientation();
   } else {
@@ -544,7 +544,7 @@ alpha_Camera.prototype.GetInvisiblePhysical = function (parent) {
     orientation = this.orientation;
   }
 
-  var p = new alpha_Physical(this);
+  const p = new alpha_Physical(this);
   p.SetPosition(position);
   p.SetOrientation(orientation);
   if (this.parent) {
@@ -554,7 +554,7 @@ alpha_Camera.prototype.GetInvisiblePhysical = function (parent) {
 };
 
 // enables free floating
-alpha_Camera.prototype.Disengage = function () {
+alpha_Camera.prototype.Disengage = function() {
   if (!this.freefloating) {
     this.reengage = this.parent;
     this.SetParent(this.GetInvisiblePhysical(this));
@@ -563,9 +563,9 @@ alpha_Camera.prototype.Disengage = function () {
 };
 
 // sends it back to its previous physical
-alpha_Camera.prototype.Engage = function () {
+alpha_Camera.prototype.Engage = function() {
   if (this.freefloating) {
-    //this.parent.Destroy(); // get rid of the invisible fucker
+    // this.parent.Destroy(); // get rid of the invisible fucker
     // if called from setparent reengage is already updated
     // just set this bool so we don't go in an infinite loop
     // been there, it sucks  -- GOD
@@ -575,7 +575,7 @@ alpha_Camera.prototype.Engage = function () {
   }
 };
 
-alpha_Camera.prototype.SetParent = function (parent) {
+alpha_Camera.prototype.SetParent = function(parent) {
   // setting the camera to itself sets it to an invisble physical
   if (this == parent) {
     this.Disengage();
@@ -595,7 +595,7 @@ alpha_Camera.prototype.SetParent = function (parent) {
   this.parent = parent;
 };
 
-alpha_Camera.prototype.GetParent = function () {
+alpha_Camera.prototype.GetParent = function() {
   return this.parent;
 };
 
@@ -604,16 +604,16 @@ alpha_Camera.prototype.GetParent = function () {
 // ----------------------------------------------
 
 // -- combine position, offset and orientation into a matrix;
-alpha_Camera.prototype.GetModelMatrix = function () {
+alpha_Camera.prototype.GetModelMatrix = function() {
   if (this.modelDirty) {
-    var p = this.position;
-    var o = this.offset;
-    var r = this.orientation;
-    //console.log("position=", p.toString());
-    //console.log("offset=", o.toString());
-    //console.log("orientation=", r.toString());
+    const p = this.position;
+    const o = this.offset;
+    const r = this.orientation;
+    // console.log("position=", p.toString());
+    // console.log("offset=", o.toString());
+    // console.log("orientation=", r.toString());
     this.modelMatrix.FromVectorAroundQuaternionAtVector(p, r, o); // oh yea;
-    //console.log("modelMat=", this.modelMatrix.toString());
+    // console.log("modelMat=", this.modelMatrix.toString());
     this.modelDirty = false;
   }
   return this.modelMatrix;
@@ -624,8 +624,8 @@ alpha_Camera.prototype.GetModelMatrix = function () {
 // C -> A -> B -> C
 // Stops:----^
 // Mults as (C * A * B):Inverse()
-alpha_Camera.prototype.GetViewMatrix = function (requestor) {
-  var parent = this.parent;
+alpha_Camera.prototype.GetViewMatrix = function(requestor) {
+  const parent = this.parent;
   if (requestor) {
     // the camera is always loaded first(properly)
     // therefore if something other than the camera asks for camera info
@@ -635,14 +635,14 @@ alpha_Camera.prototype.GetViewMatrix = function (requestor) {
     requestor = this;
   }
 
-  //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
+  // console.log("this.modelMatrix:\n" + this.GetModelMatrix());
   if (parent && parent != requestor) {
-    var ancestors = parent.GetViewMatrix(requestor);
-    //console.log("this.modelMatrix:\n" + this.GetModelMatrix());
-    //console.log("parent.viewMatrix:\n" + ancestors.toString());
-    //console.log("modelMatrix * ancestors:\n" + this.GetModelMatrix().Multiplied(ancestors));
+    const ancestors = parent.GetViewMatrix(requestor);
+    // console.log("this.modelMatrix:\n" + this.GetModelMatrix());
+    // console.log("parent.viewMatrix:\n" + ancestors.toString());
+    // console.log("modelMatrix * ancestors:\n" + this.GetModelMatrix().Multiplied(ancestors));
     this.viewMatrix = this.GetModelMatrix().Multiplied(ancestors);
-    //console.log("this.viewMatrix:\n" + this.viewMatrix.toString());
+    // console.log("this.viewMatrix:\n" + this.viewMatrix.toString());
     return this.viewMatrix;
   } else {
     // you could also do a dummy identity matrix as the ancestor

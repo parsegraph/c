@@ -6,15 +6,15 @@ function showSpiral(COUNT) {
   COUNT = Math.min(100, COUNT);
 
   // Enter
-  var spawnDir = parsegraph_FORWARD;
-  var spiralType = parsegraph_BUD;
+  let spawnDir = parsegraph_FORWARD;
+  const spiralType = parsegraph_BUD;
 
-  var caret = new parsegraph_Caret(spiralType);
+  const caret = new parsegraph_Caret(spiralType);
   caret.spawnMove(spawnDir, spiralType);
 
   caret.push();
-  for (var i = COUNT; i >= 2; --i) {
-    for (var j = 1; j < 2; ++j) {
+  for (let i = COUNT; i >= 2; --i) {
+    for (let j = 1; j < 2; ++j) {
       caret.spawnMove(spawnDir, spiralType);
     }
     spawnDir = parsegraph_turnLeft(spawnDir);

@@ -1,9 +1,9 @@
 function showIPAddresses(maxDepth) {
-  var COUNT = 2;
+  let COUNT = 2;
   COUNT = Math.max(2, COUNT);
-  var MAX_DEPTH = maxDepth || 15;
+  const MAX_DEPTH = maxDepth || 15;
 
-  var caret = new parsegraph_Caret(parsegraph_BLOCK);
+  const caret = new parsegraph_Caret(parsegraph_BLOCK);
 
   function showLevel(depth, index) {
     if (depth === undefined) {
@@ -12,36 +12,36 @@ function showIPAddresses(maxDepth) {
     if (index === undefined) {
       index = 0;
     }
-    var calc = Math.pow(COUNT, depth - 1) + index;
+    const calc = Math.pow(COUNT, depth - 1) + index;
     if (depth === MAX_DEPTH) {
       // Just spawn a block.
-      caret.spawnMove("d", "block");
-      //caret.label("Index=" + index + ", depth=" + depth + ", calc=" + calc);
-      //caret.label(index);
+      caret.spawnMove('d', 'block');
+      // caret.label("Index=" + index + ", depth=" + depth + ", calc=" + calc);
+      // caret.label(index);
 
       // Indicate that we are a leaf.
       return false;
     }
 
-    for (var i = 0; i < COUNT; ++i) {
+    for (let i = 0; i < COUNT; ++i) {
       if (i === 0) {
-        caret.spawnMove("d", "bud", parsegraph_ALIGN_CENTER);
+        caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
         caret.crease();
-        caret.pull("d");
+        caret.pull('d');
         caret.push();
-        //caret.label(" ");
+        // caret.label(" ");
       } else {
-        caret.spawnMove("f", "bud");
-        //caret.label(" ");
+        caret.spawnMove('f', 'bud');
+        // caret.label(" ");
       }
       if (showLevel(depth + 1, i)) {
-        caret.replace("u", "block");
-        //caret.label(index);
+        caret.replace('u', 'block');
+        // caret.label(index);
       } else {
-        //caret.label(" ");
+        // caret.label(" ");
       }
       caret.shrink();
-      caret.move("u");
+      caret.move('u');
     }
     caret.pop();
 

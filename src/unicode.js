@@ -1,9 +1,9 @@
 {
-  var ltrChars =
-      "A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF" +
-      "\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF",
-    rtlChars = "\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC",
-    rtlDirCheck = new RegExp("^[^" + ltrChars + "]*[" + rtlChars + "]");
+  const ltrChars =
+    'A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF' +
+    '\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF';
+  const rtlChars = '\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC';
+  const rtlDirCheck = new RegExp('^[^' + ltrChars + ']*[' + rtlChars + ']');
   function isRTL(s) {
     return rtlDirCheck.test(s);
   }
@@ -16,11 +16,11 @@ export default function parsegraph_Unicode() {
 }
 
 let parsegraph_UNICODE_INSTANCE = null;
-let parsegraph_UNICODE_STORAGE = localStorage;
+const parsegraph_UNICODE_STORAGE = localStorage;
 export function parsegraph_defaultUnicode() {
   if (!parsegraph_UNICODE_INSTANCE) {
     parsegraph_UNICODE_INSTANCE = new parsegraph_Unicode();
-    //parsegraph_UNICODE_INSTANCE.load();
+    // parsegraph_UNICODE_INSTANCE.load();
     parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
   }
   return parsegraph_UNICODE_INSTANCE;
@@ -30,8 +30,8 @@ export function parsegraph_setDefaultUnicode(unicode) {
   parsegraph_UNICODE_INSTANCE = unicode;
 }
 
-parsegraph_Unicode.prototype.get = function (codeOrLetter) {
-  if (typeof codeOrLetter === "number") {
+parsegraph_Unicode.prototype.get = function(codeOrLetter) {
+  if (typeof codeOrLetter === 'number') {
     return this.unicodeProperties[codeOrLetter];
   }
   return this.unicodeProperties[codeOrLetter.charCodeAt(0)];
@@ -71,70 +71,70 @@ parsegraph_Unicode.prototype.get = function (codeOrLetter) {
     0x64a: [0xfef1, 0xfef3, 0xfef4, 0xfef2], // YEH,
   };
 
-  parsegraph_Unicode.prototype.getCursiveMapping = function (t) {
-    if (typeof t !== "number") {
+  parsegraph_Unicode.prototype.getCursiveMapping = function(t) {
+    if (typeof t !== 'number') {
       t = t.charCodeAt(0);
     }
     return unicodeCursiveMap[t];
   };
 }
 
-parsegraph_Unicode.prototype.getGlyphDirection = function (text) {
-  var data = this.get(text);
+parsegraph_Unicode.prototype.getGlyphDirection = function(text) {
+  const data = this.get(text);
   if (!data) {
     return null;
   }
   switch (data[UNICODE_bidirectionalCategory]) {
-    case "L":
-    case "LRE":
-    case "LRO":
-    case "EN":
-    case "ES":
-    case "ET":
+    case 'L':
+    case 'LRE':
+    case 'LRO':
+    case 'EN':
+    case 'ES':
+    case 'ET':
       // Left-to-right.
-      return "L";
-    case "R":
-    case "AL":
-    case "AN":
-    case "RLE":
-    case "RLO":
+      return 'L';
+    case 'R':
+    case 'AL':
+    case 'AN':
+    case 'RLE':
+    case 'RLO':
       // Right-to-left
-      return "R";
-    case "PDF":
-    case "CS":
-    case "ON":
-    case "WS":
-    case "BN":
-    case "S":
-    case "NSM":
-    case "B":
+      return 'R';
+    case 'PDF':
+    case 'CS':
+    case 'ON':
+    case 'WS':
+    case 'BN':
+    case 'S':
+    case 'NSM':
+    case 'B':
       // Neutral characters
       return null;
     default:
       throw new Error(
-        "Unrecognized character: \\u" +
-          glyphData.letter.charCodeAt(0).toString(16)
+          'Unrecognized character: \\u' +
+          glyphData.letter.charCodeAt(0).toString(16),
       );
   }
 };
 
-parsegraph_Unicode.prototype.cursive = function (
-  givenLetter,
-  prevLetter,
-  nextLetter
+parsegraph_Unicode.prototype.cursive = function(
+    givenLetter,
+    prevLetter,
+    nextLetter,
 ) {
-  var cursiveMapping = this.getCursiveMapping(givenLetter);
+  const cursiveMapping = this.getCursiveMapping(givenLetter);
   if (!cursiveMapping) {
     return null;
   }
-  var prevCursiveMapping = null;
+  let prevCursiveMapping = null;
   if (prevLetter) {
     prevCursiveMapping = this.getCursiveMapping(prevLetter);
   }
   if (!prevCursiveMapping) {
     prevLetter = null;
   }
-  var nextCursiveMapping = null;
+  let nextCursiveMapping = null;
   if (nextLetter) {
     nextCursiveMapping = this.getCursiveMapping(nextLetter);
   }
@@ -147,9 +147,9 @@ parsegraph_Unicode.prototype.cursive = function (
       if (cursiveMapping[2]) {
         givenLetter = cursiveMapping[2]; // medial
       }
-      //else if(cursiveMapping[3]) {
-      //givenLetter = cursiveMapping[3]; // final
-      //}
+      // else if(cursiveMapping[3]) {
+      // givenLetter = cursiveMapping[3]; // final
+      // }
       else {
         givenLetter = cursiveMapping[0]; // isolated
       }
@@ -176,56 +176,56 @@ parsegraph_Unicode.prototype.cursive = function (
 
 let i = 0;
 const UNICODE_codeValue = i++;
-//const UNICODE_characterName = i++;
+// const UNICODE_characterName = i++;
 const UNICODE_generalCategory = i++;
-//const UNICODE_canonicalCombiningClasses = i++;
+// const UNICODE_canonicalCombiningClasses = i++;
 const UNICODE_bidirectionalCategory = i++;
-//const UNICODE_decompositionMapping = i++;
-//const UNICODE_decimalDigitValue = i++;
-//const UNICODE_digitValue = i++;
-//const UNICODE_numericValue = i++;
-//const UNICODE_mirrored = i++;
-//const UNICODE_unicode10Name = i++;
-//const UNICODE_commentField = i++;
-//const UNICODE_uppercaseMapping = i++;
-//const UNICODE_lowercaseMapping = i++;
-//const UNICODE_titlecaseMapping = i++;
+// const UNICODE_decompositionMapping = i++;
+// const UNICODE_decimalDigitValue = i++;
+// const UNICODE_digitValue = i++;
+// const UNICODE_numericValue = i++;
+// const UNICODE_mirrored = i++;
+// const UNICODE_unicode10Name = i++;
+// const UNICODE_commentField = i++;
+// const UNICODE_uppercaseMapping = i++;
+// const UNICODE_lowercaseMapping = i++;
+// const UNICODE_titlecaseMapping = i++;
 
-parsegraph_Unicode.prototype.loadFromString = function (t) {
-  var lines = 0;
-  var start = 0;
-  var ws = /[\n\r]/;
-  for (var i = 0; i < t.length; ++i) {
+parsegraph_Unicode.prototype.loadFromString = function(t) {
+  let lines = 0;
+  let start = 0;
+  const ws = /[\n\r]/;
+  for (let i = 0; i < t.length; ++i) {
     if (ws.test(t[i])) {
-      var charData = t.substring(start, i).split(";");
+      const charData = t.substring(start, i).split(';');
       if (lines < 100) {
-        //console.log(charData);
+        // console.log(charData);
       }
       start = i + 1;
       ++lines;
 
-      var charNamedData = [
+      const charNamedData = [
         parseInt(charData[0], 16), // codeValue
-        //charData[1], // characterName
+        // charData[1], // characterName
         charData[2], // generalCategory
-        //charData[3], // canonicalCombiningClasses
+        // charData[3], // canonicalCombiningClasses
         charData[4], // bidirectionalCategory
-        //charData[5], // decompositionMapping
-        //parseInt(charData[6]), // decimalDigitValue
-        //parseFloat(charData[7]), // digitValue
-        //charData[8], // numericValue
-        //charData[9], // mirrored
-        //charData[10], // unicode10Name
-        //charData[11], // commentField
-        //parseInt(charData[12], 16), // uppercaseMapping
-        //parseInt(charData[13], 16), // lowercaseMapping
-        //parseInt(charData[14], 16) // titlecaseMapping
+        // charData[5], // decompositionMapping
+        // parseInt(charData[6]), // decimalDigitValue
+        // parseFloat(charData[7]), // digitValue
+        // charData[8], // numericValue
+        // charData[9], // mirrored
+        // charData[10], // unicode10Name
+        // charData[11], // commentField
+        // parseInt(charData[12], 16), // uppercaseMapping
+        // parseInt(charData[13], 16), // lowercaseMapping
+        // parseInt(charData[14], 16) // titlecaseMapping
       ];
       this.unicodeProperties[charNamedData[UNICODE_codeValue]] = charNamedData;
 
       if (!(charNamedData.bidirectionalCategory in this.unicodeBidiCounts)) {
         this.unicodeBidiCounts[
-          charNamedData[UNICODE_bidirectionalCategory]
+            charNamedData[UNICODE_bidirectionalCategory]
         ] = 1;
       } else {
         ++this.unicodeBidiCounts[charNamedData[UNICODE_bidirectionalCategory]];
@@ -237,57 +237,57 @@ parsegraph_Unicode.prototype.loadFromString = function (t) {
       }
     }
   }
-  //console.log("Text received: " + t.length + " bytes, " + lines + " lines");
+  // console.log("Text received: " + t.length + " bytes, " + lines + " lines");
 };
 
-parsegraph_Unicode.prototype.isArabic = function (letter) {
-  if (typeof letter !== "number") {
+parsegraph_Unicode.prototype.isArabic = function(letter) {
+  if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
-  var data = this.get(letter);
+  const data = this.get(letter);
   if (!data) {
     return false;
   }
-  var cv = data[UNICODE_codeValue];
+  const cv = data[UNICODE_codeValue];
   return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.isMark = function (letter) {
-  if (typeof letter !== "number") {
+parsegraph_Unicode.prototype.isMark = function(letter) {
+  if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
-  var data = this.get(letter);
+  const data = this.get(letter);
   if (!data) {
     return false;
   }
-  var cat = data[UNICODE_generalCategory];
-  return cat === "Mn" || cat === "Mc" || cat === "Me";
+  const cat = data[UNICODE_generalCategory];
+  return cat === 'Mn' || cat === 'Mc' || cat === 'Me';
 };
 
-parsegraph_Unicode.prototype.isArabicDiacritic = function (letter) {
-  if (typeof letter !== "number") {
+parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
+  if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
-  var data = this.get(letter);
+  const data = this.get(letter);
   if (!data) {
     return false;
   }
-  var cv = data[UNICODE_codeValue];
+  const cv = data[UNICODE_codeValue];
   return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.load = function (dbURL, storage) {
+parsegraph_Unicode.prototype.load = function(dbURL, storage) {
   if (this._loaded) {
     return;
   }
-  //console.log(new Error("LOADING UNICODE"));
+  // console.log(new Error("LOADING UNICODE"));
   if (!dbURL) {
-    dbURL = "/UnicodeData.txt";
+    dbURL = '/UnicodeData.txt';
   }
-  var storageKey = "UNICODE@" + dbURL;
-  var that = this;
-  var complete = function () {
-    //console.log("Time till unicode parsed: " + parsegraph_elapsed(parsegraph_START_TIME));
+  const storageKey = 'UNICODE@' + dbURL;
+  const that = this;
+  const complete = function() {
+    // console.log("Time till unicode parsed: " + parsegraph_elapsed(parsegraph_START_TIME));
     that._loaded = true;
     if (that.onLoad) {
       that.onLoad();
@@ -297,7 +297,7 @@ parsegraph_Unicode.prototype.load = function (dbURL, storage) {
     }
   };
   if (storage) {
-    var unicode = storage.getItem(storageKey);
+    let unicode = storage.getItem(storageKey);
     if (unicode) {
       try {
         unicode = JSON.parse(unicode);
@@ -307,21 +307,21 @@ parsegraph_Unicode.prototype.load = function (dbURL, storage) {
         complete.call(this);
         return;
       } catch (ex) {
-        console.log("Failed to read stored Unicode data");
+        console.log('Failed to read stored Unicode data');
         console.log(ex);
         storage.removeItem(storageKey);
       }
     }
   }
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", dbURL);
-  xhr.onreadystatechange = function () {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', dbURL);
+  xhr.onreadystatechange = function() {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      //console.log("Time till unicode received: " + parsegraph_elapsed(parsegraph_START_TIME));
+      // console.log("Time till unicode received: " + parsegraph_elapsed(parsegraph_START_TIME));
       that.loadFromString(xhr.responseText);
       complete.call(that);
       if (storage) {
-        var unicodeData = {
+        const unicodeData = {
           unicodeCategoryCounts: that.unicodeCategoryCounts,
           unicodeBidiCounts: that.unicodeBidiCounts,
           unicodeProperties: that.unicodeProperties,
@@ -333,19 +333,19 @@ parsegraph_Unicode.prototype.load = function (dbURL, storage) {
         }
       }
     } else {
-      //console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
+      // console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
     }
   };
   xhr.send();
 };
 
-parsegraph_Unicode.prototype.loaded = function () {
+parsegraph_Unicode.prototype.loaded = function() {
   return this._loaded;
 };
 
-parsegraph_Unicode.prototype.setOnLoad = function (onLoad, onLoadThisArg) {
+parsegraph_Unicode.prototype.setOnLoad = function(onLoad, onLoadThisArg) {
   if (this._loaded) {
-    throw new Error("Unicode character database is already loaded");
+    throw new Error('Unicode character database is already loaded');
   }
   this._onLoad = onLoad;
   this._onLoadThisArg = onLoadThisArg;

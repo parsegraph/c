@@ -1,16 +1,16 @@
-import parsegraph_TestSuite from "../TestSuite";
-import parsegraph_Freezer from "./Freezer";
-import parsegraph_CameraBox from "./CameraBox";
+import parsegraph_TestSuite from '../TestSuite';
+import parsegraph_Freezer from './Freezer';
+import parsegraph_CameraBox from './CameraBox';
 import Node, {
   resetNodesPainted,
   outputNodesPainted,
   Direction,
   Type,
-} from "./Node";
-import Caret from "./Caret";
-import parsegraph_Rect from "./Rect";
-import parsegraph_Window from "./Window";
-import parsegraph_Camera from "./Camera";
+} from './Node';
+import Caret from './Caret';
+import parsegraph_Rect from './Rect';
+import parsegraph_Window from './Window';
+import parsegraph_Camera from './Camera';
 
 export default class World {
   _worldPaintingDirty: boolean;
@@ -49,7 +49,7 @@ export default class World {
 
   plot(node: Node | Caret): void {
     if (!node) {
-      throw new Error("Node must not be null");
+      throw new Error('Node must not be null');
     }
     if (node instanceof Caret) {
       // Passed a Caret.
@@ -87,12 +87,12 @@ export default class World {
     if (this._nodeUnderCursor === selectedNode) {
       // The node under cursor is already the node under cursor, so don't
       // do anything.
-      //console.log("Node was the same");
+      // console.log("Node was the same");
       return selectedNode ? 1 : 0;
     }
 
     if (this._nodeUnderCursor && this._nodeUnderCursor !== selectedNode) {
-      //console.log("Node is changing, so repainting.");
+      // console.log("Node is changing, so repainting.");
       this._nodeUnderCursor.setSelected(false);
       this.scheduleRepaint();
     }
@@ -100,16 +100,16 @@ export default class World {
     this._nodeUnderCursor = selectedNode;
     if (!selectedNode) {
       // No node was actually found.
-      //console.log("No node actually found.");
+      // console.log("No node actually found.");
       return 0;
     }
 
     if (selectedNode.type() == Type.SLIDER) {
-      //console.log("Selecting slider and repainting");
+      // console.log("Selecting slider and repainting");
       selectedNode.setSelected(true);
       this.scheduleRepaint();
     } else if (selectedNode.hasClickListener() && !selectedNode.isSelected()) {
-      //console.log("Selecting node and repainting");
+      // console.log("Selecting node and repainting");
       selectedNode.setSelected(true);
       this.scheduleRepaint();
     } else {
@@ -123,7 +123,7 @@ export default class World {
     if (!outRect) {
       outRect = new parsegraph_Rect(0, 0, 0, 0);
     }
-    this._worldRoots.forEach(function (plot) {
+    this._worldRoots.forEach(function(plot) {
       plot.commitLayoutIteratively();
 
       // Get plot extent data.
@@ -190,7 +190,7 @@ export default class World {
   }
 
   scheduleRepaint(): void {
-    //console.log(new Error("Scheduling repaint"));
+    // console.log(new Error("Scheduling repaint"));
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
   }
@@ -244,12 +244,12 @@ export default class World {
     if (gl.isContextLost()) {
       return false;
     }
-    //console.log("Painting world, timeout=" + timeout);
+    // console.log("Painting world, timeout=" + timeout);
     const t: number = new Date().getTime();
-    const pastTime: Function = function () {
+    const pastTime: Function = function() {
       return timeout !== undefined && new Date().getTime() - t > timeout;
     };
-    const timeRemaining: Function = function () {
+    const timeRemaining: Function = function() {
       if (timeout === undefined) {
         return timeout;
       }
@@ -257,7 +257,7 @@ export default class World {
     };
 
     if (this._worldPaintingDirty) {
-      //console.log("World needs repaint");
+      // console.log("World needs repaint");
       // Restore the last state.
       let i: number = 0;
       let savedState: number;
@@ -276,7 +276,7 @@ export default class World {
         }
         const plot: Node = this._worldRoots[i];
         if (!plot.localPaintGroup()) {
-          throw new Error("World root must have a paint group");
+          throw new Error('World root must have a paint group');
         }
         const needsUpdate: boolean = plot.paint(window, timeRemaining());
         if (needsUpdate) {
@@ -286,10 +286,10 @@ export default class World {
 
         ++i;
       }
-      //console.log("Done painting");
+      // console.log("Done painting");
       this._worldPaintingDirty = false;
     } else {
-      window.log("World does not need repaint");
+      window.log('World does not need repaint');
     }
 
     if (!this._worldPaintingDirty) {
@@ -316,12 +316,12 @@ export default class World {
   }
 }
 
-const parsegraph_World_Tests = new parsegraph_TestSuite("parsegraph_World");
+const parsegraph_World_Tests = new parsegraph_TestSuite('parsegraph_World');
 
-parsegraph_World_Tests.addTest("parsegraph_World.plot", function () {
-  var w = new World();
+parsegraph_World_Tests.addTest('parsegraph_World.plot', function() {
+  const w = new World();
 
-  var f = 0;
+  let f = 0;
   try {
     f = 1;
     w.plot(null);
@@ -330,13 +330,13 @@ parsegraph_World_Tests.addTest("parsegraph_World.plot", function () {
     f = 3;
   }
   if (f != 3) {
-    return "parsegraph_plot must fail with null node";
+    return 'parsegraph_plot must fail with null node';
   }
 });
 
-parsegraph_World_Tests.addTest("world.plot with caret", function () {
-  let w = new World();
-  let car = new Caret("b");
+parsegraph_World_Tests.addTest('world.plot with caret', function() {
+  const w = new World();
+  const car = new Caret('b');
   let f = 0;
   try {
     f = 1;
@@ -346,17 +346,17 @@ parsegraph_World_Tests.addTest("world.plot with caret", function () {
     f = ex;
   }
   if (f != 2) {
-    return "parsegraph_plot must handle being passed a Caret: " + f;
+    return 'parsegraph_plot must handle being passed a Caret: ' + f;
   }
 });
 
-parsegraph_World_Tests.addTest("boundingRect", function () {
-  let w = new World();
-  let car = new Caret("b");
+parsegraph_World_Tests.addTest('boundingRect', function() {
+  const w = new World();
+  const car = new Caret('b');
   w.plot(car);
-  let r = w.boundingRect();
-  //console.log(r);
+  const r = w.boundingRect();
+  // console.log(r);
   if (isNaN(r.width())) {
-    return "Width must not be NaN";
+    return 'Width must not be NaN';
   }
 });

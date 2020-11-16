@@ -2,8 +2,8 @@ let parsegraph_Size_COUNT: number = 0;
 export default class Size {
   id: number;
   length: number;
-  "0": number;
-  "1": number;
+  '0': number;
+  '1': number;
 
   constructor(w?: number, h?: number) {
     this.id = parsegraph_Size_COUNT++;
@@ -52,6 +52,6 @@ export default class Size {
   }
 
   toString(): string {
-    return "[w=" + this.width() + ", h=" + this.height() + "]";
+    return '[w=' + this.width() + ', h=' + this.height() + ']';
   }
 }

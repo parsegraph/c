@@ -13,43 +13,43 @@ function parsegraph_AudioKeyboard(camera) {
   this._paintingDirty = true;
 }
 
-parsegraph_AudioKeyboard.prototype.prepared = function () {
+parsegraph_AudioKeyboard.prototype.prepared = function() {
   return !!this._gl;
 };
 
-parsegraph_AudioKeyboard.prototype.prepare = function (
-  gl,
-  glyphAtlas,
-  shaders
+parsegraph_AudioKeyboard.prototype.prepare = function(
+    gl,
+    glyphAtlas,
+    shaders,
 ) {
   this._gl = gl;
   this._glyphAtlas = glyphAtlas;
   this._shaders = shaders;
 };
 
-parsegraph_AudioKeyboard.prototype.paint = function () {
+parsegraph_AudioKeyboard.prototype.paint = function() {
   if (!this._paintingDirty) {
     return;
   }
-  var white = new parsegraph_Color(1, 1, 1, 1);
-  var highlight = 0.2;
-  var whiteBorder = new parsegraph_Color(
-    1 - highlight,
-    1 - highlight,
-    1 - highlight,
-    1
+  const white = new parsegraph_Color(1, 1, 1, 1);
+  const highlight = 0.2;
+  const whiteBorder = new parsegraph_Color(
+      1 - highlight,
+      1 - highlight,
+      1 - highlight,
+      1,
   );
-  var black = new parsegraph_Color(0, 0, 0, 1);
-  var blackBorder = new parsegraph_Color(
-    2 * highlight,
-    2 * highlight,
-    2 * highlight,
-    1
+  const black = new parsegraph_Color(0, 0, 0, 1);
+  const blackBorder = new parsegraph_Color(
+      2 * highlight,
+      2 * highlight,
+      2 * highlight,
+      1,
   );
   if (!this._whiteKeyPainter) {
     this._whiteKeyPainter = new parsegraph_BlockPainter(
-      this._gl,
-      this._shaders
+        this._gl,
+        this._shaders,
     );
     this._whiteKeyPainter.setBorderColor(whiteBorder);
     this._whiteKeyPainter.setBackgroundColor(white);
@@ -58,8 +58,8 @@ parsegraph_AudioKeyboard.prototype.paint = function () {
   }
   if (!this._blackKeyPainter) {
     this._blackKeyPainter = new parsegraph_BlockPainter(
-      this._gl,
-      this._shaders
+        this._gl,
+        this._shaders,
     );
     this._blackKeyPainter.setBorderColor(blackBorder);
     this._blackKeyPainter.setBackgroundColor(black);
@@ -67,35 +67,35 @@ parsegraph_AudioKeyboard.prototype.paint = function () {
     this._blackKeyPainter.clear();
   }
 
-  var maxKeys = 1000;
+  const maxKeys = 1000;
   this._whiteKeyPainter.initBuffer(maxKeys);
   this._blackKeyPainter.initBuffer(maxKeys);
 
-  var borderRoundedess = 2;
-  var borderThickness = 2;
+  const borderRoundedess = 2;
+  const borderThickness = 2;
 
-  var whiteKeyWidth = 36;
-  var whiteKeyHeight = 210;
+  const whiteKeyWidth = 36;
+  const whiteKeyHeight = 210;
   for (var i = 0; i < maxKeys; ++i) {
     this._whiteKeyPainter.drawBlock(
-      this._worldX + whiteKeyWidth * i + whiteKeyWidth / 2,
-      this._worldY + whiteKeyHeight / 2,
-      whiteKeyWidth,
-      whiteKeyHeight,
-      borderRoundedess,
-      borderThickness,
-      this._userScale
+        this._worldX + whiteKeyWidth * i + whiteKeyWidth / 2,
+        this._worldY + whiteKeyHeight / 2,
+        whiteKeyWidth,
+        whiteKeyHeight,
+        borderRoundedess,
+        borderThickness,
+        this._userScale,
     );
   }
 
-  var blackKeyWidth = 22.5;
-  var blackKeyHeight = 138;
+  const blackKeyWidth = 22.5;
+  const blackKeyHeight = 138;
   for (var i = 0; i < maxKeys; ++i) {
     if (i == maxKeys - 1) {
       continue;
     }
-    var wx = this._worldX + whiteKeyWidth * (i + 0.5);
-    var kx = 0;
+    const wx = this._worldX + whiteKeyWidth * (i + 0.5);
+    let kx = 0;
     switch (i % 7) {
       case 0:
         kx = wx + blackKeyWidth * (25 / 36);
@@ -118,41 +118,41 @@ parsegraph_AudioKeyboard.prototype.paint = function () {
         continue;
     }
     this._blackKeyPainter.drawBlock(
-      kx,
-      this._worldY + blackKeyHeight / 2,
-      blackKeyWidth,
-      blackKeyHeight,
-      borderRoundedess,
-      borderThickness,
-      this._userScale
+        kx,
+        this._worldY + blackKeyHeight / 2,
+        blackKeyWidth,
+        blackKeyHeight,
+        borderRoundedess,
+        borderThickness,
+        this._userScale,
     );
   }
   this._paintingDirty = false;
 };
 
-parsegraph_AudioKeyboard.prototype.setOrigin = function (x, y) {
+parsegraph_AudioKeyboard.prototype.setOrigin = function(x, y) {
   this._worldX = x;
   this._worldY = y;
 
   if (Number.isNaN(this._worldX)) {
-    throw new Error("WorldX must not be NaN.");
+    throw new Error('WorldX must not be NaN.');
   }
   if (Number.isNaN(this._worldY)) {
-    throw new Error("WorldY must not be NaN.");
+    throw new Error('WorldY must not be NaN.');
   }
 };
 
-parsegraph_AudioKeyboard.prototype.setScale = function (scale) {
+parsegraph_AudioKeyboard.prototype.setScale = function(scale) {
   this._userScale = scale;
   if (Number.isNaN(this._userScale)) {
-    throw new Error("Scale must not be NaN.");
+    throw new Error('Scale must not be NaN.');
   }
 };
 
-parsegraph_AudioKeyboard.prototype.render = function (world, scale) {
+parsegraph_AudioKeyboard.prototype.render = function(world, scale) {
   this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
-  //this._gl.disable(this._gl.DEPTH_TEST);
-  //this._gl.disable(this._gl.BLEND);
+  // this._gl.disable(this._gl.DEPTH_TEST);
+  // this._gl.disable(this._gl.BLEND);
   this._whiteKeyPainter.render(world, scale);
   this._blackKeyPainter.render(world, scale);
 };

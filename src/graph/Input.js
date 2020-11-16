@@ -1,35 +1,35 @@
-import { TimeoutTimer } from "../timing";
+import {TimeoutTimer} from '../timing';
 import {
   parsegraph_CLICK_DELAY_MILLIS,
   parsegraph_INPUT_LAYOUT_TIME,
   parsegraph_SLIDER_NUDGE,
-} from "./settings";
-import { matrixTransform2D, makeInverse3x3 } from "../gl";
-import { Type, Direction, Alignment } from "./Node";
-import Color from "./Color";
-import BlockPainter from "./BlockPainter";
-import parsegraph_SpotlightPainter from "./SpotlightPainter";
+} from './settings';
+import {matrixTransform2D, makeInverse3x3} from '../gl';
+import {Type, Direction, Alignment} from './Node';
+import Color from './Color';
+import BlockPainter from './BlockPainter';
+import parsegraph_SpotlightPainter from './SpotlightPainter';
 
-const parsegraph_RESET_CAMERA_KEY = "Escape";
-const parsegraph_CLICK_KEY = "q";
+const parsegraph_RESET_CAMERA_KEY = 'Escape';
+const parsegraph_CLICK_KEY = 'q';
 
-const parsegraph_MOVE_UPWARD_KEY = "ArrowUp";
-const parsegraph_MOVE_DOWNWARD_KEY = "ArrowDown";
-const parsegraph_MOVE_BACKWARD_KEY = "ArrowLeft";
-const parsegraph_MOVE_FORWARD_KEY = "ArrowRight";
+const parsegraph_MOVE_UPWARD_KEY = 'ArrowUp';
+const parsegraph_MOVE_DOWNWARD_KEY = 'ArrowDown';
+const parsegraph_MOVE_BACKWARD_KEY = 'ArrowLeft';
+const parsegraph_MOVE_FORWARD_KEY = 'ArrowRight';
 const parsegraph_CARET_COLOR = new Color(0, 0, 0, 0.5);
 const parsegraph_FOCUSED_SPOTLIGHT_COLOR = new Color(1, 1, 1, 0.5);
 const parsegraph_FOCUSED_SPOTLIGHT_SCALE = 6;
 
 const parsegraph_MIN_CAMERA_SCALE = 0.00125;
 
-//const parsegraph_MOVE_UPWARD_KEY = "w";
-//const parsegraph_MOVE_DOWNWARD_KEY = "s";
-//const parsegraph_MOVE_BACKWARD_KEY = "a";
-//const parsegraph_MOVE_FORWARD_KEY = "d";
+// const parsegraph_MOVE_UPWARD_KEY = "w";
+// const parsegraph_MOVE_DOWNWARD_KEY = "s";
+// const parsegraph_MOVE_BACKWARD_KEY = "a";
+// const parsegraph_MOVE_FORWARD_KEY = "d";
 
-const parsegraph_ZOOM_IN_KEY = "ZoomIn";
-const parsegraph_ZOOM_OUT_KEY = "ZoomOut";
+const parsegraph_ZOOM_IN_KEY = 'ZoomIn';
+const parsegraph_ZOOM_OUT_KEY = 'ZoomOut';
 
 export default function parsegraph_Input(viewport, camera) {
   this._viewport = viewport;
@@ -38,7 +38,7 @@ export default function parsegraph_Input(viewport, camera) {
   this._mouseupTimeout.setListener(this.afterMouseTimeout, this);
   this._mouseupTimeout.setDelay(parsegraph_CLICK_DELAY_MILLIS);
 
-  var attachedMouseListener = null;
+  const attachedMouseListener = null;
 
   this._updateRepeatedly = false;
 
@@ -65,9 +65,9 @@ export default function parsegraph_Input(viewport, camera) {
   this.listener = null;
 }
 
-parsegraph_Input.prototype.adjustSelectedSlider = function (
-  newVal,
-  isAbsolute
+parsegraph_Input.prototype.adjustSelectedSlider = function(
+    newVal,
+    isAbsolute,
 ) {
   if (!this._selectedSlider) {
     return;
@@ -82,7 +82,7 @@ parsegraph_Input.prototype.adjustSelectedSlider = function (
   this.world().scheduleRepaint();
 };
 
-parsegraph_Input.prototype.setSelectedSlider = function (delta) {
+parsegraph_Input.prototype.setSelectedSlider = function(delta) {
   if (this._selectedSlider) {
     this._selectedSlider.layoutWasChanged();
   }
@@ -91,16 +91,16 @@ parsegraph_Input.prototype.setSelectedSlider = function (delta) {
   this._viewport.scheduleRepaint();
 };
 
-parsegraph_Input.prototype.onKeydown = function (event) {
-  var keyName = parsegraph_getproperkeyname(event);
+parsegraph_Input.prototype.onKeydown = function(event) {
+  const keyName = parsegraph_getproperkeyname(event);
   this._viewport.showInCamera(null);
-  //console.log("Keydown " + selectedSlider);
+  // console.log("Keydown " + selectedSlider);
   if (this._selectedSlider) {
     if (event.key.length === 0) {
       return;
     }
 
-    var diff = parsegraph_SLIDER_NUDGE;
+    const diff = parsegraph_SLIDER_NUDGE;
     switch (event.key) {
       case parsegraph_MOVE_BACKWARD_KEY:
         this.adjustSelectedSlider(-diff, false);
@@ -108,9 +108,9 @@ parsegraph_Input.prototype.onKeydown = function (event) {
       case parsegraph_MOVE_FORWARD_KEY:
         this.adjustSelectedSlider(diff, false);
         return;
-      case "Space":
-      case "Spacebar":
-      case " ":
+      case 'Space':
+      case 'Spacebar':
+      case ' ':
       case parsegraph_RESET_CAMERA_KEY:
         this._selectedSlider.layoutWasChanged();
         this._attachedMouseListener = null;
@@ -125,7 +125,7 @@ parsegraph_Input.prototype.onKeydown = function (event) {
     }
     if (this._focusedNode._label && event.ctrlKey) {
       if (this._focusedNode._label.ctrlKey(event.key)) {
-        //console.log("LAYOUT CHANGED");
+        // console.log("LAYOUT CHANGED");
         this._focusedNode.layoutWasChanged();
         this._viewport.scheduleRepaint();
         return;
@@ -134,7 +134,7 @@ parsegraph_Input.prototype.onKeydown = function (event) {
       this._focusedNode.hasKeyListener() &&
       this._focusedNode.key(event.key) !== false
     ) {
-      //console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
+      // console.log("KEY PRESSED FOR LISTENER; LAYOUT CHANGED");
       this._focusedNode.layoutWasChanged();
       this._viewport.scheduleRepaint();
       return;
@@ -143,16 +143,16 @@ parsegraph_Input.prototype.onKeydown = function (event) {
       this._focusedNode._label.editable() &&
       this._focusedNode._label.key(event.key)
     ) {
-      //console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
+      // console.log("LABEL ACCEPTS KEY; LAYOUT CHANGED");
       this._focusedNode.layoutWasChanged();
       this._viewport.scheduleRepaint();
       return;
     }
     // Didn't move the caret, so interpret it as a key move
     // on the node itself.
-    var node = this._focusedNode;
-    var skipHorizontalInward = event.ctrlKey;
-    var skipVerticalInward = event.ctrlKey;
+    let node = this._focusedNode;
+    let skipHorizontalInward = event.ctrlKey;
+    const skipVerticalInward = event.ctrlKey;
     while (true) {
       switch (event.key) {
         case parsegraph_RESET_CAMERA_KEY:
@@ -186,7 +186,7 @@ parsegraph_Input.prototype.onKeydown = function (event) {
             this._viewport.scheduleRepaint();
             return;
           }
-          //console.log("ArrowRight");
+          // console.log("ArrowRight");
           var neighbor = node.nodeAt(Direction.FORWARD);
           if (neighbor) {
             this._focusedNode = neighbor;
@@ -196,7 +196,7 @@ parsegraph_Input.prototype.onKeydown = function (event) {
           }
           neighbor = node.nodeAt(Direction.OUTWARD);
           if (neighbor) {
-            //console.log("Going outward");
+            // console.log("Going outward");
             skipHorizontalInward = true;
             node = neighbor;
             continue;
@@ -207,7 +207,7 @@ parsegraph_Input.prototype.onKeydown = function (event) {
               // The focused node is not within an inward node.
               return;
             }
-            var pdir = node.parentDirection();
+            const pdir = node.parentDirection();
             node = node.nodeAt(pdir);
             if (pdir === Direction.OUTWARD) {
               // Found the outward node to escape.
@@ -235,12 +235,12 @@ parsegraph_Input.prototype.onKeydown = function (event) {
             return;
           }
           break;
-        case "Backspace":
+        case 'Backspace':
           break;
-        case "Tab":
-          var toNode = event.shiftKey
-            ? this._focusedNode._extended.prevTabNode
-            : this._focusedNode._extended.nextTabNode;
+        case 'Tab':
+          var toNode = event.shiftKey ?
+            this._focusedNode._extended.prevTabNode :
+            this._focusedNode._extended.nextTabNode;
           if (toNode) {
             this._focusedNode = toNode;
             this._viewport.scheduleRepaint();
@@ -248,9 +248,9 @@ parsegraph_Input.prototype.onKeydown = function (event) {
           }
           // Fall through otherwise.
           break;
-        case "Enter":
+        case 'Enter':
           if (this._focusedNode.hasKeyListener()) {
-            if (this._focusedNode.key("Enter")) {
+            if (this._focusedNode.key('Enter')) {
               // Node handled it.
               break;
             }
@@ -274,23 +274,23 @@ parsegraph_Input.prototype.onKeydown = function (event) {
 
   if (this.keydowns[keyName]) {
     // Already processed.
-    //console.log("Key event, but already processed.");
+    // console.log("Key event, but already processed.");
     return;
   }
   this.keydowns[keyName] = new Date();
 
   switch (keyName) {
     case parsegraph_CLICK_KEY:
-      //console.log("Q key for click pressed!");
+      // console.log("Q key for click pressed!");
       var mouseInWorld = matrixTransform2D(
-        makeInverse3x3(this.camera().worldMatrix()),
-        event.x,
-        event.y
+          makeInverse3x3(this.camera().worldMatrix()),
+          event.x,
+          event.y,
       );
       if (
         this._viewport
-          .carousel()
-          .clickCarousel(mouseInWorld[0], mouseInWorld[1], true)
+            .carousel()
+            .clickCarousel(mouseInWorld[0], mouseInWorld[1], true)
       ) {
         return;
       }
@@ -314,9 +314,9 @@ parsegraph_Input.prototype.onKeydown = function (event) {
   return false;
 };
 
-parsegraph_Input.prototype.onKeyup = function (event) {
-  var keyName = parsegraph_getproperkeyname(event);
-  //console.log(keyName);
+parsegraph_Input.prototype.onKeyup = function(event) {
+  const keyName = parsegraph_getproperkeyname(event);
+  // console.log(keyName);
 
   if (!this.keydowns[keyName]) {
     // Already processed.
@@ -327,16 +327,16 @@ parsegraph_Input.prototype.onKeyup = function (event) {
   switch (keyName) {
     case parsegraph_CLICK_KEY:
       var mouseInWorld = matrixTransform2D(
-        makeInverse3x3(this.camera().worldMatrix()),
-        event.x,
-        event.y
+          makeInverse3x3(this.camera().worldMatrix()),
+          event.x,
+          event.y,
       );
       if (
         this._viewport
-          .carousel()
-          .clickCarousel(mouseInWorld[0], mouseInWorld[1], false)
+            .carousel()
+            .clickCarousel(mouseInWorld[0], mouseInWorld[1], false)
       ) {
-        //console.log("Carousel processed event.");
+        // console.log("Carousel processed event.");
         return;
       }
     // fall through
@@ -352,14 +352,14 @@ parsegraph_Input.prototype.onKeyup = function (event) {
   return false;
 };
 
-parsegraph_Input.prototype.onWheel = function (event) {
+parsegraph_Input.prototype.onWheel = function(event) {
   // Adjust the scale.
-  var numSteps = event.spinY > 0 ? -1 : 1;
+  const numSteps = event.spinY > 0 ? -1 : 1;
   if (this._selectedSlider) {
     this.adjustSelectedSlider(numSteps * parsegraph_SLIDER_NUDGE, false);
     return true;
   }
-  var camera = this.camera();
+  const camera = this.camera();
   if (numSteps > 0 || camera.scale() >= parsegraph_MIN_CAMERA_SCALE) {
     this._viewport.showInCamera(null);
     camera.zoomToPoint(Math.pow(1.1, numSteps), event.x, event.y);
@@ -368,14 +368,14 @@ parsegraph_Input.prototype.onWheel = function (event) {
   return true;
 };
 
-parsegraph_Input.prototype.camera = function () {
+parsegraph_Input.prototype.camera = function() {
   return this._viewport.camera();
 };
 
-parsegraph_Input.prototype.onTouchzoom = function (event) {
+parsegraph_Input.prototype.onTouchzoom = function(event) {
   // Zoom.
-  var dist = Math.sqrt(Math.pow(event.dx, 2) + Math.pow(event.dy, 2));
-  var cam = this.camera();
+  const dist = Math.sqrt(Math.pow(event.dx, 2) + Math.pow(event.dy, 2));
+  const cam = this.camera();
   if (dist != 0 && this._zoomTouchDistance != 0) {
     this._viewport.showInCamera(null);
     cam.zoomToPoint(dist / this._zoomTouchDistance, event.x, event.y);
@@ -387,7 +387,7 @@ parsegraph_Input.prototype.onTouchzoom = function (event) {
   return false;
 };
 
-parsegraph_Input.prototype.onTouchmove = function (event) {
+parsegraph_Input.prototype.onTouchmove = function(event) {
   if (event.multiple) {
     return false;
   }
@@ -396,42 +396,42 @@ parsegraph_Input.prototype.onTouchmove = function (event) {
   if (!this._viewport.carousel().isCarouselShown()) {
     // Move.
     this.camera().adjustOrigin(
-      event.dx / camera.scale(),
-      event.dy / camera.scale()
+        event.dx / camera.scale(),
+        event.dy / camera.scale(),
     );
     return true;
   }
   return this._viewport.carousel().mouseOverCarousel(event.x, event.y);
 };
 
-parsegraph_Input.prototype.mouseDragListener = function (x, y, dx, dy) {
+parsegraph_Input.prototype.mouseDragListener = function(x, y, dx, dy) {
   this.mouseChanged();
   this._clickedNode = null;
   this._viewport.showInCamera(null);
-  var camera = this.camera();
+  const camera = this.camera();
   camera.adjustOrigin(dx / camera.scale(), dy / camera.scale());
   return true;
 };
 
-parsegraph_Input.prototype.menu = function () {
+parsegraph_Input.prototype.menu = function() {
   return this._viewport.menu();
 };
 
-parsegraph_Input.prototype.onMousedown = function (event) {
+parsegraph_Input.prototype.onMousedown = function(event) {
   if (this.menu().onMousedown(event.x, event.y)) {
-    //console.log("Menu click processed.");
+    // console.log("Menu click processed.");
     return;
   }
 
-  var mouseInWorld = matrixTransform2D(
-    makeInverse3x3(this.camera().worldMatrix()),
-    event.x,
-    event.y
+  const mouseInWorld = matrixTransform2D(
+      makeInverse3x3(this.camera().worldMatrix()),
+      event.x,
+      event.y,
   );
   this.mouseChanged();
 
   if (this.carousel().clickCarousel(mouseInWorld[0], mouseInWorld[1], true)) {
-    //console.log("Carousel click processed.");
+    // console.log("Carousel click processed.");
     return;
   }
 
@@ -444,10 +444,10 @@ parsegraph_Input.prototype.onMousedown = function (event) {
     this._spotlightPainter.clear();
   }
 
-  //console.log("Checking for node");
+  // console.log("Checking for node");
   this._mousedownTime = new Date();
   if (this.checkForNodeClick(mouseInWorld[0], mouseInWorld[1], true)) {
-    //console.log("Node clicked.");
+    // console.log("Node clicked.");
     return true;
   }
 
@@ -456,35 +456,35 @@ parsegraph_Input.prototype.onMousedown = function (event) {
   }
 
   this._attachedMouseListener = this.mouseDragListener;
-  //console.log("Repainting graph");
+  // console.log("Repainting graph");
   return true;
 };
 
-parsegraph_Input.prototype.onMousemove = function (event) {
+parsegraph_Input.prototype.onMousemove = function(event) {
   if (this._viewport.menu().onMousemove(event.x, event.y)) {
     return true;
   }
 
-  var mouseInWorld = matrixTransform2D(
-    makeInverse3x3(this.camera().worldMatrix()),
-    event.x,
-    event.y
+  const mouseInWorld = matrixTransform2D(
+      makeInverse3x3(this.camera().worldMatrix()),
+      event.x,
+      event.y,
   );
 
   if (this._viewport.carousel().isCarouselShown()) {
     this.mouseChanged();
 
     var overClickable = this._viewport
-      .carousel()
-      .mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
+        .carousel()
+        .mouseOverCarousel(mouseInWorld[0], mouseInWorld[1]);
     switch (overClickable) {
       case 2:
-        this._viewport.window().setCursor("pointer");
+        this._viewport.window().setCursor('pointer');
         break;
       case 1:
         break;
       case 0:
-        this._viewport.window().setCursor("auto");
+        this._viewport.window().setCursor('auto');
         break;
     }
 
@@ -494,39 +494,39 @@ parsegraph_Input.prototype.onMousemove = function (event) {
   // Moving during a mousedown i.e. dragging (or zooming)
   if (this._attachedMouseListener) {
     return this._attachedMouseListener(
-      mouseInWorld[0],
-      mouseInWorld[1],
-      event.dx,
-      event.dy
+        mouseInWorld[0],
+        mouseInWorld[1],
+        event.dx,
+        event.dy,
     );
   }
 
   // Just a mouse moving over the (focused) canvas.
   var overClickable;
   if (!this._viewport.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
-    //console.log("Couldn't commit layout in time");
+    // console.log("Couldn't commit layout in time");
     overClickable = 1;
   } else {
     overClickable = this._viewport
-      .world()
-      .mouseOver(mouseInWorld[0], mouseInWorld[1]);
+        .world()
+        .mouseOver(mouseInWorld[0], mouseInWorld[1]);
   }
   switch (overClickable) {
     case 2:
-      this._viewport.window().setCursor("pointer");
+      this._viewport.window().setCursor('pointer');
       break;
     case 1:
-      //console.log("World not ready");
+      // console.log("World not ready");
       break;
     case 0:
-      this._viewport.window().setCursor("auto");
+      this._viewport.window().setCursor('auto');
       break;
   }
   this.mouseChanged();
   return true;
 };
 
-parsegraph_Input.prototype.onTouchstart = function (event) {
+parsegraph_Input.prototype.onTouchstart = function(event) {
   if (event.multiple) {
     return false;
   }
@@ -534,33 +534,33 @@ parsegraph_Input.prototype.onTouchstart = function (event) {
 
   this.mouseChanged();
 
-  var mouseInWorld = matrixTransform2D(
-    makeInverse3x3(this.camera().worldMatrix()),
-    event.x,
-    event.y
+  const mouseInWorld = matrixTransform2D(
+      makeInverse3x3(this.camera().worldMatrix()),
+      event.x,
+      event.y,
   );
 
   // Get the current mouse position, in world space.
-  //alert(camera.worldMatrix());
+  // alert(camera.worldMatrix());
   if (
     this._viewport
-      .carousel()
-      .clickCarousel(mouseInWorld[0], mouseInWorld[1], true)
+        .carousel()
+        .clickCarousel(mouseInWorld[0], mouseInWorld[1], true)
   ) {
-    //console.log("Carousel click processed.");
+    // console.log("Carousel click processed.");
     return;
   }
 
-  /*if(this.checkForNodeClick(event.x, event.y)) {
+  /* if(this.checkForNodeClick(event.x, event.y)) {
         // A significant node was clicked.
         return true;
     }*/
 };
 
-parsegraph_Input.prototype.sliderListener = function (x, y, dx, dy) {
-  //if(isVerticalDirection(this._selectedSlider.parentDirection())) {
-  var nodeWidth = this._selectedSlider.absoluteSize().width();
-  var newVal;
+parsegraph_Input.prototype.sliderListener = function(x, y, dx, dy) {
+  // if(isVerticalDirection(this._selectedSlider.parentDirection())) {
+  const nodeWidth = this._selectedSlider.absoluteSize().width();
+  let newVal;
   if (x <= this._selectedSlider.absoluteX() - nodeWidth / 2) {
     // To the left!
     newVal = 0;
@@ -569,17 +569,17 @@ parsegraph_Input.prototype.sliderListener = function (x, y, dx, dy) {
     newVal = 1;
   } else {
     // In between.
-    //console.log("x=" + x);
-    //console.log("selectedSlider.absoluteX()=" + this._selectedSlider.absoluteX());
-    //console.log("PCT: " + (x - this._selectedSlider.absoluteX()));
-    //console.log("In between: " + ((nodeWidth/2 + x - this._selectedSlider.absoluteX()) / nodeWidth));
+    // console.log("x=" + x);
+    // console.log("selectedSlider.absoluteX()=" + this._selectedSlider.absoluteX());
+    // console.log("PCT: " + (x - this._selectedSlider.absoluteX()));
+    // console.log("In between: " + ((nodeWidth/2 + x - this._selectedSlider.absoluteX()) / nodeWidth));
     newVal = (nodeWidth / 2 + x - this._selectedSlider.absoluteX()) / nodeWidth;
   }
   this.adjustSelectedSlider(newVal, true);
   this._selectedSlider.layoutWasChanged();
   this._viewport.scheduleRepaint();
   this.world().scheduleRepaint();
-  //}
+  // }
   if (this._selectedSlider.hasClickListener()) {
     this._selectedSlider.click(this._viewport);
   }
@@ -588,29 +588,29 @@ parsegraph_Input.prototype.sliderListener = function (x, y, dx, dy) {
   return true;
 };
 
-parsegraph_Input.prototype.checkForNodeClick = function (x, y, onlySlider) {
+parsegraph_Input.prototype.checkForNodeClick = function(x, y, onlySlider) {
   if (!this.world().commitLayout(parsegraph_INPUT_LAYOUT_TIME)) {
     return null;
   }
-  var selectedNode = this.world().nodeUnderCoords(x, y);
+  const selectedNode = this.world().nodeUnderCoords(x, y);
   if (!selectedNode) {
-    //console.log("No node found under coords:", x, y);
+    // console.log("No node found under coords:", x, y);
     return null;
   }
 
-  //console.log("Node found for coords:", selectedNode, x, y);
+  // console.log("Node found for coords:", selectedNode, x, y);
 
   // Check if the selected node was a slider.
   if (selectedNode.type() == Type.SLIDER) {
     if (!onlySlider && selectedNode === this._selectedSlider) {
-      //console.log(new Error("Removing slider listener"));
+      // console.log(new Error("Removing slider listener"));
       this._selectedSlider = null;
       this._attachedMouseListener = null;
       this._viewport.scheduleRepaint();
       this.world().scheduleRepaint();
       return null;
     }
-    //console.log("Slider node!");
+    // console.log("Slider node!");
     this._selectedSlider = selectedNode;
     this._attachedMouseListener = this.sliderListener;
     this._attachedMouseListener(x, y, 0, 0);
@@ -619,45 +619,45 @@ parsegraph_Input.prototype.checkForNodeClick = function (x, y, onlySlider) {
     return selectedNode;
   }
 
-  //if(onlySlider) {
-  //return null;
-  //}
+  // if(onlySlider) {
+  // return null;
+  // }
 
   // Check if the selected node has a click listener.
   if (selectedNode.hasClickListener()) {
-    //console.log("Selected Node has click listener", selectedNode);
-    var rv = selectedNode.click(this._viewport);
+    // console.log("Selected Node has click listener", selectedNode);
+    const rv = selectedNode.click(this._viewport);
     if (rv !== false) {
       return selectedNode;
     }
   }
 
   // Check if the label was clicked.
-  //console.log("Clicked");
-  var selectedLabel = selectedNode._label;
+  // console.log("Clicked");
+  const selectedLabel = selectedNode._label;
   if (
     selectedLabel &&
     !Number.isNaN(selectedLabel._x) &&
     selectedLabel.editable()
   ) {
-    //console.log("Clicked label");
+    // console.log("Clicked label");
     selectedLabel.click(
-      (x - selectedLabel._x) / selectedLabel._scale,
-      (y - selectedLabel._y) / selectedLabel._scale
+        (x - selectedLabel._x) / selectedLabel._scale,
+        (y - selectedLabel._y) / selectedLabel._scale,
     );
-    //console.log(selectedLabel.caretLine());
-    //console.log(selectedLabel.caretPos());
+    // console.log(selectedLabel.caretLine());
+    // console.log(selectedLabel.caretPos());
     this._focusedLabel = true;
     this._focusedNode = selectedNode;
     this._viewport.scheduleRepaint();
     return selectedNode;
   }
   if (selectedNode && !selectedNode.ignoresMouse()) {
-    //console.log("Setting focusedNode to ", selectedNode);
+    // console.log("Setting focusedNode to ", selectedNode);
     this._focusedNode = selectedNode;
     this._focusedLabel = false;
     this._viewport.scheduleRepaint();
-    //console.log("Selected Node has nothing", selectedNode);
+    // console.log("Selected Node has nothing", selectedNode);
     return selectedNode;
   } else {
     this._clickedNode = selectedNode;
@@ -666,7 +666,7 @@ parsegraph_Input.prototype.checkForNodeClick = function (x, y, onlySlider) {
   return null;
 };
 
-parsegraph_Input.prototype.afterMouseTimeout = function () {
+parsegraph_Input.prototype.afterMouseTimeout = function() {
   // Cancel the timer if we have found a double click
   this._mouseupTimeout.cancel();
 
@@ -681,24 +681,24 @@ parsegraph_Input.prototype.afterMouseTimeout = function () {
   this._clicksDetected = 0;
 };
 
-parsegraph_Input.prototype.onMouseup = function (event) {
-  //console.log("MOUSEUP");
-  var mouseInWorld = matrixTransform2D(
-    makeInverse3x3(this.camera().worldMatrix()),
-    event.x,
-    event.y
+parsegraph_Input.prototype.onMouseup = function(event) {
+  // console.log("MOUSEUP");
+  const mouseInWorld = matrixTransform2D(
+      makeInverse3x3(this.camera().worldMatrix()),
+      event.x,
+      event.y,
   );
 
   if (
     this._viewport
-      .carousel()
-      .clickCarousel(mouseInWorld[0], mouseInWorld[1], false)
+        .carousel()
+        .clickCarousel(mouseInWorld[0], mouseInWorld[1], false)
   ) {
-    //console.log("Carousel handled event.");
+    // console.log("Carousel handled event.");
     return true;
   }
   if (!this._attachedMouseListener) {
-    //console.log("No attached listener");
+    // console.log("No attached listener");
     return false;
   }
   this._attachedMouseListener = null;
@@ -718,34 +718,34 @@ parsegraph_Input.prototype.onMouseup = function (event) {
     }
     this._mouseupTimeout.schedule();
   } else {
-    //console.log("Click missed timeout");
+    // console.log("Click missed timeout");
   }
   return false;
 };
 
-parsegraph_Input.prototype.onTouchend = function (event) {
+parsegraph_Input.prototype.onTouchend = function(event) {
   if (event.multiple) {
     return false;
   }
   this._zoomTouchDistance = 0;
   return this.onMouseup(event);
-  var mouseInWorld = matrixTransform2D(
-    makeInverse3x3(this.camera().worldMatrix()),
-    event.x,
-    event.y
+  const mouseInWorld = matrixTransform2D(
+      makeInverse3x3(this.camera().worldMatrix()),
+      event.x,
+      event.y,
   );
 
   this._viewport
-    .carousel()
-    .clickCarousel(mouseInWorld[0], mouseInWorld[1], false);
+      .carousel()
+      .clickCarousel(mouseInWorld[0], mouseInWorld[1], false);
 
-  var WINDOW = 10;
+  const WINDOW = 10;
 
   if (
     event.startTime != null &&
     Date.now() - event.startTime < parsegraph_CLICK_DELAY_MILLIS
   ) {
-    //alert("touchend (" + lastMouseX + ", " + lastMouseY + ")=(" + Math.round(mouseInWorld[0]) + ", " + Math.round(mouseInWorld[1]) + ") [" + this.camera().width() + ", " + this.camera().height() + "]");
+    // alert("touchend (" + lastMouseX + ", " + lastMouseY + ")=(" + Math.round(mouseInWorld[0]) + ", " + Math.round(mouseInWorld[1]) + ") [" + this.camera().width() + ", " + this.camera().height() + "]");
     if (this.checkForNodeClick(mouseInWorld[0], mouseInWorld[1])) {
       // A significant node was clicked.
       return true;
@@ -754,7 +754,7 @@ parsegraph_Input.prototype.onTouchend = function (event) {
   return false;
 };
 
-parsegraph_Input.prototype.SetListener = function (listener, thisArg) {
+parsegraph_Input.prototype.SetListener = function(listener, thisArg) {
   if (!listener) {
     this.listener = null;
     return;
@@ -765,23 +765,23 @@ parsegraph_Input.prototype.SetListener = function (listener, thisArg) {
   this.listener = [listener, thisArg];
 };
 
-parsegraph_Input.prototype.UpdateRepeatedly = function () {
+parsegraph_Input.prototype.UpdateRepeatedly = function() {
   return this._updateRepeatedly || this._viewport.carousel().updateRepeatedly();
 };
 
-parsegraph_Input.prototype.mouseVersion = function () {
+parsegraph_Input.prototype.mouseVersion = function() {
   return this._mouseVersion;
 };
 
-parsegraph_Input.prototype.mouseChanged = function () {
+parsegraph_Input.prototype.mouseChanged = function() {
   ++this._mouseVersion;
 };
 
-parsegraph_Input.prototype.resetCamera = function (complete) {
-  var defaultScale = 0.25;
-  var cam = this.camera();
-  var x = this._viewport.gl().drawingBufferWidth / 2;
-  var y = this._viewport.gl().drawingBufferHeight / 2;
+parsegraph_Input.prototype.resetCamera = function(complete) {
+  const defaultScale = 0.25;
+  const cam = this.camera();
+  let x = this._viewport.gl().drawingBufferWidth / 2;
+  let y = this._viewport.gl().drawingBufferHeight / 2;
   if (!complete && cam.x() === x && cam.y() === y) {
     cam.setScale(defaultScale);
   } else {
@@ -794,17 +794,17 @@ parsegraph_Input.prototype.resetCamera = function (complete) {
   }
 };
 
-parsegraph_Input.prototype.Update = function (t) {
-  var cam = this.camera();
+parsegraph_Input.prototype.Update = function(t) {
+  const cam = this.camera();
 
-  var xSpeed = 1000 / cam.scale();
-  var ySpeed = 1000 / cam.scale();
-  var scaleSpeed = 20;
+  const xSpeed = 1000 / cam.scale();
+  const ySpeed = 1000 / cam.scale();
+  const scaleSpeed = 20;
 
-  var needsUpdate = this._viewport.mouseVersion() !== this.mouseVersion();
+  let needsUpdate = this._viewport.mouseVersion() !== this.mouseVersion();
   this.window().log(
-    "Input.Update=" +
-      (this._viewport.mouseVersion() + " vs " + this.mouseVersion())
+      'Input.Update=' +
+      (this._viewport.mouseVersion() + ' vs ' + this.mouseVersion()),
   );
 
   this._updateRepeatedly = false;
@@ -821,11 +821,11 @@ parsegraph_Input.prototype.Update = function (t) {
     this.Get(parsegraph_MOVE_DOWNWARD_KEY)
   ) {
     this._updateRepeatedly = true;
-    var x =
+    const x =
       cam.x() +
       (this.Elapsed(parsegraph_MOVE_BACKWARD_KEY, t) * xSpeed +
         this.Elapsed(parsegraph_MOVE_FORWARD_KEY, t) * -xSpeed);
-    var y =
+    const y =
       cam.y() +
       (this.Elapsed(parsegraph_MOVE_UPWARD_KEY, t) * ySpeed +
         this.Elapsed(parsegraph_MOVE_DOWNWARD_KEY, t) * -ySpeed);
@@ -837,57 +837,57 @@ parsegraph_Input.prototype.Update = function (t) {
     this._updateRepeatedly = true;
     needsUpdate = true;
     cam.zoomToPoint(
-      Math.pow(1.1, scaleSpeed * this.Elapsed(parsegraph_ZOOM_OUT_KEY, t)),
-      this._viewport.gl().drawingBufferWidth / 2,
-      this._viewport.gl().drawingBufferHeight / 2
+        Math.pow(1.1, scaleSpeed * this.Elapsed(parsegraph_ZOOM_OUT_KEY, t)),
+        this._viewport.gl().drawingBufferWidth / 2,
+        this._viewport.gl().drawingBufferHeight / 2,
     );
   }
   if (this.Get(parsegraph_ZOOM_IN_KEY)) {
-    //console.log("Continuing to zoom out");
+    // console.log("Continuing to zoom out");
     this._updateRepeatedly = true;
     needsUpdate = true;
     if (cam.scale() >= parsegraph_MIN_CAMERA_SCALE) {
       cam.zoomToPoint(
-        Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
-        this._viewport.gl().drawingBufferWidth / 2,
-        this._viewport.gl().drawingBufferHeight / 2
+          Math.pow(1.1, -scaleSpeed * this.Elapsed(parsegraph_ZOOM_IN_KEY, t)),
+          this._viewport.gl().drawingBufferWidth / 2,
+          this._viewport.gl().drawingBufferHeight / 2,
       );
     }
   }
 
-  //var x = cam.x();
-  //var y = cam.y();
-  //var r = this._viewport.world().boundingRect();
-  //x = Math.max(x, r.x() - r.width()/2);
-  //x = Math.min(x, r.x() + r.width()/2);
-  //y = Math.max(y, r.y() - r.height()/2);
-  //y = Math.min(y, r.y() + r.height()/2);
-  //console.log("BR", x, y, r);
-  //cam.setOrigin(x, y);
+  // var x = cam.x();
+  // var y = cam.y();
+  // var r = this._viewport.world().boundingRect();
+  // x = Math.max(x, r.x() - r.width()/2);
+  // x = Math.min(x, r.x() + r.width()/2);
+  // y = Math.max(y, r.y() - r.height()/2);
+  // y = Math.min(y, r.y() + r.height()/2);
+  // console.log("BR", x, y, r);
+  // cam.setOrigin(x, y);
 
   return needsUpdate;
 };
 
-parsegraph_Input.prototype.Get = function (key) {
+parsegraph_Input.prototype.Get = function(key) {
   return this.keydowns[key] ? 1 : 0;
 };
 
-parsegraph_Input.prototype.Elapsed = function (key, t) {
-  var v = this.keydowns[key];
+parsegraph_Input.prototype.Elapsed = function(key, t) {
+  const v = this.keydowns[key];
   if (!v) {
     return 0;
   }
-  var elapsed = (t.getTime() - v.getTime()) / 1000;
+  const elapsed = (t.getTime() - v.getTime()) / 1000;
   this.keydowns[key] = t;
   return elapsed;
 };
 
-parsegraph_Input.prototype.window = function () {
+parsegraph_Input.prototype.window = function() {
   return this._viewport.window();
 };
 
-parsegraph_Input.prototype.paint = function () {
-  var window = this.window();
+parsegraph_Input.prototype.paint = function() {
+  const window = this.window();
   if (!this._caretPainter) {
     this._caretPainter = new BlockPainter(window);
   }
@@ -905,48 +905,48 @@ parsegraph_Input.prototype.paint = function () {
     return;
   }
 
-  var label = this._focusedNode._label;
+  const label = this._focusedNode._label;
   if (!label || !label.editable() || !this._focusedLabel) {
-    var s = this._focusedNode.absoluteSize();
-    var srad = Math.min(
-      parsegraph_FOCUSED_SPOTLIGHT_SCALE *
+    const s = this._focusedNode.absoluteSize();
+    const srad = Math.min(
+        parsegraph_FOCUSED_SPOTLIGHT_SCALE *
         s.width() *
         this._focusedNode.absoluteScale(),
-      parsegraph_FOCUSED_SPOTLIGHT_SCALE *
+        parsegraph_FOCUSED_SPOTLIGHT_SCALE *
         s.height() *
-        this._focusedNode.absoluteScale()
+        this._focusedNode.absoluteScale(),
     );
     this._spotlightPainter.drawSpotlight(
-      this._focusedNode.absoluteX(),
-      this._focusedNode.absoluteY(),
-      srad,
-      this._spotlightColor
+        this._focusedNode.absoluteX(),
+        this._focusedNode.absoluteY(),
+        srad,
+        this._spotlightColor,
     );
     return;
   }
 
-  var cr = label.getCaretRect();
+  const cr = label.getCaretRect();
   if (label._x != null && label._y != null) {
     this._caretPainter.drawBlock(
-      label._x + cr.x() * label._scale,
-      label._y + cr.y() * label._scale,
-      label._scale * cr.width(),
-      label._scale * cr.height(),
-      0.01,
-      0.02,
-      1
+        label._x + cr.x() * label._scale,
+        label._y + cr.y() * label._scale,
+        label._scale * cr.width(),
+        label._scale * cr.height(),
+        0.01,
+        0.02,
+        1,
     );
   }
 };
 
-parsegraph_Input.prototype.focusedNode = function () {
+parsegraph_Input.prototype.focusedNode = function() {
   return this._focusedNode;
 };
 
-parsegraph_Input.prototype.setFocusedNode = function (focusedNode) {
+parsegraph_Input.prototype.setFocusedNode = function(focusedNode) {
   this._focusedNode = focusedNode;
-  var selectedNode = this._focusedNode;
-  //console.log("Clicked");
+  const selectedNode = this._focusedNode;
+  // console.log("Clicked");
   this._focusedLabel =
     selectedNode &&
     selectedNode._label &&
@@ -954,23 +954,23 @@ parsegraph_Input.prototype.setFocusedNode = function (focusedNode) {
     selectedNode._label.editable();
 };
 
-parsegraph_Input.prototype.focusedLabel = function () {
+parsegraph_Input.prototype.focusedLabel = function() {
   return this._focusedLabel;
 };
 
-parsegraph_Input.prototype.carousel = function () {
+parsegraph_Input.prototype.carousel = function() {
   return this._viewport.carousel();
 };
 
-parsegraph_Input.prototype.menu = function () {
+parsegraph_Input.prototype.menu = function() {
   return this._viewport.menu();
 };
 
-parsegraph_Input.prototype.world = function () {
+parsegraph_Input.prototype.world = function() {
   return this._viewport.world();
 };
 
-parsegraph_Input.prototype.contextChanged = function (isLost) {
+parsegraph_Input.prototype.contextChanged = function(isLost) {
   if (this._caretPainter) {
     this._caretPainter.contextChanged(isLost);
   }
@@ -979,8 +979,8 @@ parsegraph_Input.prototype.contextChanged = function (isLost) {
   }
 };
 
-parsegraph_Input.prototype.render = function (world, scale) {
-  var gl = this._viewport.gl();
+parsegraph_Input.prototype.render = function(world, scale) {
+  const gl = this._viewport.gl();
   if (this._caretPainter) {
     gl.disable(gl.CULL_FACE);
     gl.disable(gl.DEPTH_TEST);
@@ -994,48 +994,48 @@ parsegraph_Input.prototype.render = function (world, scale) {
 };
 
 function parsegraph_getproperkeyname(event) {
-  var keyName = event.key;
-  //console.log(keyName + " " + event.keyCode);
+  let keyName = event.key;
+  // console.log(keyName + " " + event.keyCode);
   switch (keyName) {
-    case "Enter":
+    case 'Enter':
       return keyName;
-    case "Escape":
+    case 'Escape':
       return keyName;
-    case "ArrowLeft":
+    case 'ArrowLeft':
       return keyName;
-    case "ArrowUp":
+    case 'ArrowUp':
       return keyName;
-    case "ArrowRight":
+    case 'ArrowRight':
       return keyName;
-    case "ArrowDown":
+    case 'ArrowDown':
       return keyName;
-    case "-":
-      return "ZoomIn";
-    case "_":
-      return "ZoomIn";
-    case "+":
-      return "ZoomOut";
-    case "=":
-      return "ZoomOut";
+    case '-':
+      return 'ZoomIn';
+    case '_':
+      return 'ZoomIn';
+    case '+':
+      return 'ZoomOut';
+    case '=':
+      return 'ZoomOut';
   }
   switch (event.keyCode) {
     case 13:
-      keyName = "Enter";
+      keyName = 'Enter';
       break;
     case 27:
-      keyName = "Escape";
+      keyName = 'Escape';
       break;
     case 37:
-      keyName = "ArrowLeft";
+      keyName = 'ArrowLeft';
       break;
     case 38:
-      keyName = "ArrowUp";
+      keyName = 'ArrowUp';
       break;
     case 39:
-      keyName = "ArrowRight";
+      keyName = 'ArrowRight';
       break;
     case 40:
-      keyName = "ArrowDown";
+      keyName = 'ArrowDown';
       break;
   }
   return keyName;

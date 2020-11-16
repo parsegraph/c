@@ -15,8 +15,8 @@ function alpha_BuildCubeStructure() {
 }
 
 function alpha_BuildSlabStructure() {
-  var slabStructure = alpha_BuildCubeStructure();
-  for (var i = 0; i <= 3; ++i) {
+  const slabStructure = alpha_BuildCubeStructure();
+  for (let i = 0; i <= 3; ++i) {
     slabStructure[i].Add(0, -0.5, 0);
   }
   return slabStructure;
@@ -24,49 +24,49 @@ function alpha_BuildSlabStructure() {
 
 function alpha_standardBlockTypes(BlockTypes) {
   if (!BlockTypes) {
-    throw new Error("BlockTypes must not be null");
+    throw new Error('BlockTypes must not be null');
   }
 
   // skins
-  var white = new alpha_Color(1, 1, 1);
-  var dbrown = new alpha_Color("#3b2921");
-  var lbrown = new alpha_Color("#604b42");
-  var ggreen = new alpha_Color("#0b9615");
-  var gray = new alpha_Color("#5e5a5e");
-  var lgray = new alpha_Color("#726f72");
+  const white = new alpha_Color(1, 1, 1);
+  const dbrown = new alpha_Color('#3b2921');
+  const lbrown = new alpha_Color('#604b42');
+  const ggreen = new alpha_Color('#0b9615');
+  const gray = new alpha_Color('#5e5a5e');
+  const lgray = new alpha_Color('#726f72');
 
-  //top to bottom
+  // top to bottom
   // counter-clockwise
   // front to back
-  var dirt = new alpha_Skin(
-    [lbrown, lbrown, lbrown, lbrown], // top
-    [lbrown, lbrown, dbrown, dbrown], // front
-    [lbrown, lbrown, dbrown, dbrown], // left
-    [lbrown, lbrown, dbrown, dbrown], // back
-    [lbrown, lbrown, dbrown, dbrown], // right
-    [dbrown, dbrown, dbrown, dbrown] // bottom
+  const dirt = new alpha_Skin(
+      [lbrown, lbrown, lbrown, lbrown], // top
+      [lbrown, lbrown, dbrown, dbrown], // front
+      [lbrown, lbrown, dbrown, dbrown], // left
+      [lbrown, lbrown, dbrown, dbrown], // back
+      [lbrown, lbrown, dbrown, dbrown], // right
+      [dbrown, dbrown, dbrown, dbrown], // bottom
   );
 
-  var grass = new alpha_Skin(
-    [ggreen, ggreen, ggreen, ggreen], // top
-    [lbrown, lbrown, dbrown, dbrown], // front
-    [lbrown, lbrown, dbrown, dbrown], // left
-    [lbrown, lbrown, dbrown, dbrown], // back
-    [lbrown, lbrown, dbrown, dbrown], // right
-    [dbrown, dbrown, dbrown, dbrown] //bottom
+  const grass = new alpha_Skin(
+      [ggreen, ggreen, ggreen, ggreen], // top
+      [lbrown, lbrown, dbrown, dbrown], // front
+      [lbrown, lbrown, dbrown, dbrown], // left
+      [lbrown, lbrown, dbrown, dbrown], // back
+      [lbrown, lbrown, dbrown, dbrown], // right
+      [dbrown, dbrown, dbrown, dbrown], // bottom
   );
 
-  var stone = new alpha_Skin(
-    [lgray, gray, lgray, gray], // top
-    [lgray, gray, lgray, gray], // front
-    [lgray, gray, lgray, gray], // left
-    [lgray, gray, lgray, gray], // back
-    [lgray, gray, lgray, gray], // right
-    [lgray, gray, lgray, gray], // bottom
-    [lgray, gray, lgray, gray], // misc
-    [lgray, gray, lgray, gray], // misc
-    [lgray, gray, lgray, gray], // misc
-    [lgray, gray, lgray, gray] // misc
+  const stone = new alpha_Skin(
+      [lgray, gray, lgray, gray], // top
+      [lgray, gray, lgray, gray], // front
+      [lgray, gray, lgray, gray], // left
+      [lgray, gray, lgray, gray], // back
+      [lgray, gray, lgray, gray], // right
+      [lgray, gray, lgray, gray], // bottom
+      [lgray, gray, lgray, gray], // misc
+      [lgray, gray, lgray, gray], // misc
+      [lgray, gray, lgray, gray], // misc
+      [lgray, gray, lgray, gray], // misc
   );
 
   // draw everthing in a face:
@@ -85,7 +85,7 @@ function alpha_standardBlockTypes(BlockTypes) {
   //          \|_________\| v5
   //          v6  BACK
 
-  //the relative directions are pretty messy
+  // the relative directions are pretty messy
 
   // right now our cubes are centered on their position
   // later we may offset them so a cubes vertices are always an int;
@@ -106,11 +106,11 @@ function alpha_standardBlockTypes(BlockTypes) {
   // top to bottom
   // counter-clockwise
   // front to back
-  var CUBE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  const CUBE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
 
-  BlockTypes.Create("stone", "cube", stone, CUBE);
-  BlockTypes.Create("dirt", "cube", dirt, CUBE);
-  BlockTypes.Create("grass", "cube", grass, CUBE);
+  BlockTypes.Create('stone', 'cube', stone, CUBE);
+  BlockTypes.Create('dirt', 'cube', dirt, CUBE);
+  BlockTypes.Create('grass', 'cube', grass, CUBE);
 
   // a slope lowers vertices 1 and 2 to 6 and 5;
   var slopeStructure = alpha_BuildCubeStructure();
@@ -127,8 +127,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   Right = new alpha_Face(alpha_TRIANGLES, v[2], v[1], v[7]);
   Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "slope", stone, SLOPE);
+  const SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'slope', stone, SLOPE);
 
   // there are 4 simple sloped corners for a fullsized cube;
   // split the top face into two triangles
@@ -155,8 +155,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Left = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
   var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
 
-  var CORNER_SLOPE = new alpha_Shape(Top, Front, Left, Bottom);
-  BlockTypes.Load("stone", "corner_slope", stone, CORNER_SLOPE);
+  const CORNER_SLOPE = new alpha_Shape(Top, Front, Left, Bottom);
+  BlockTypes.Load('stone', 'corner_slope', stone, CORNER_SLOPE);
 
   var ibcslopeStructure = alpha_BuildCubeStructure();
   v = ibcslopeStructure;
@@ -171,20 +171,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var INVERTED_CORNER_SLOPE = new alpha_Shape(
-    Top,
-    Slope,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const INVERTED_CORNER_SLOPE = new alpha_Shape(
+      Top,
+      Slope,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "inverted_corner_slope",
-    stone,
-    INVERTED_CORNER_SLOPE
+      'stone',
+      'inverted_corner_slope',
+      stone,
+      INVERTED_CORNER_SLOPE,
   );
 
   // pyramid corner ( 1 top, 3 bottom )
@@ -200,8 +200,14 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Front = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
   var Left = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-  var PYRAMID_CORNER = new alpha_Shape(TopLeft, TopRight, Front, Left, Bottom);
-  BlockTypes.Load("stone", "pyramid_corner", stone, PYRAMID_CORNER);
+  const PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Bottom,
+  );
+  BlockTypes.Load('stone', 'pyramid_corner', stone, PYRAMID_CORNER);
 
   // inverted pyramid corner ( 3 top, 1 bottom )
   var ipcorner = alpha_BuildCubeStructure();
@@ -217,20 +223,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var INVERTED_PYRAMID_CORNER = new alpha_Shape(
-    TopLeft,
-    TopRight,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const INVERTED_PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "inverted_pyramid_corner",
-    stone,
-    INVERTED_PYRAMID_CORNER
+      'stone',
+      'inverted_pyramid_corner',
+      stone,
+      INVERTED_PYRAMID_CORNER,
   );
 
   var v = alpha_BuildSlabStructure();
@@ -240,9 +246,9 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Back = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-  var SLAB = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  const SLAB = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
 
-  BlockTypes.Load("stone", "slab", stone, SLAB);
+  BlockTypes.Load('stone', 'slab', stone, SLAB);
 
   // a slope lowers vertices 1 and 2 to 6 and 5;
   var slopeStructure = alpha_BuildCubeStructure();
@@ -258,8 +264,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_TRIANGLES, v[2], v[1], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SLAB_SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "slab_slope", stone, SLAB_SLOPE);
+  const SLAB_SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'slab_slope', stone, SLAB_SLOPE);
 
   var bcslopeStructure = alpha_BuildCubeStructure();
   var v = bcslopeStructure;
@@ -272,8 +278,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Left = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
   var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
 
-  var SLAB_CORNER = new alpha_Shape(Top, Front, Left, Bottom);
-  BlockTypes.Load("stone", "slab_corner", stone, SLAB_CORNER);
+  const SLAB_CORNER = new alpha_Shape(Top, Front, Left, Bottom);
+  BlockTypes.Load('stone', 'slab_corner', stone, SLAB_CORNER);
 
   var ibcslopeStructure = alpha_BuildCubeStructure();
   var v = ibcslopeStructure;
@@ -287,16 +293,16 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SLAB_INVERTED_CORNER = new alpha_Shape(
-    Top,
-    Slope,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SLAB_INVERTED_CORNER = new alpha_Shape(
+      Top,
+      Slope,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
-  BlockTypes.Load("stone", "slab_inverted_corner", stone, SLAB_INVERTED_CORNER);
+  BlockTypes.Load('stone', 'slab_inverted_corner', stone, SLAB_INVERTED_CORNER);
 
   // pyramid corner ( 1 top, 3 bottom )
   var pcorner = alpha_BuildCubeStructure();
@@ -310,14 +316,14 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Front = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
   var Left = new alpha_Face(alpha_TRIANGLES, v[3], v[6], v[5]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-  var SLAB_PYRAMID_CORNER = new alpha_Shape(
-    TopLeft,
-    TopRight,
-    Front,
-    Left,
-    Bottom
+  const SLAB_PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Bottom,
   );
-  BlockTypes.Load("stone", "slab_pyramid_corner", stone, SLAB_PYRAMID_CORNER);
+  BlockTypes.Load('stone', 'slab_pyramid_corner', stone, SLAB_PYRAMID_CORNER);
 
   // inverted pyramid corner ( 3 top, 1 bottom )
   var ipcorner = alpha_BuildSlabStructure();
@@ -332,20 +338,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SLAB_INVERTED_PYRAMID_CORNER = new alpha_Shape(
-    TopLeft,
-    TopRight,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SLAB_INVERTED_PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "slab_inverted_pyramid_corner",
-    stone,
-    SLAB_INVERTED_PYRAMID_CORNER
+      'stone',
+      'slab_inverted_pyramid_corner',
+      stone,
+      SLAB_INVERTED_PYRAMID_CORNER,
   );
 
   // a slope lowers vertices 1 and 2 to 6 and 5;
@@ -362,8 +368,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SHALLOW_SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "shallow_slope", stone, SHALLOW_SLOPE);
+  const SHALLOW_SLOPE = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'shallow_slope', stone, SHALLOW_SLOPE);
 
   // there are 4 simple sloped corners for a fullsized cube;
   // split the top face into two triangles
@@ -392,16 +398,16 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SHALLOW_CORNER = new alpha_Shape(
-    Top,
-    Slope,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SHALLOW_CORNER = new alpha_Shape(
+      Top,
+      Slope,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
-  BlockTypes.Load("stone", "shallow_corner", stone, SHALLOW_CORNER);
+  BlockTypes.Load('stone', 'shallow_corner', stone, SHALLOW_CORNER);
 
   var v = alpha_BuildCubeStructure();
   // 3 top, 1 bottom;
@@ -414,20 +420,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SHALLOW_INVERTED_CORNER = new alpha_Shape(
-    Top,
-    Slope,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SHALLOW_INVERTED_CORNER = new alpha_Shape(
+      Top,
+      Slope,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "shallow_inverted_corner",
-    stone,
-    SHALLOW_INVERTED_CORNER
+      'stone',
+      'shallow_inverted_corner',
+      stone,
+      SHALLOW_INVERTED_CORNER,
   );
 
   // pyramid corner ( 1 top, 3 bottom )
@@ -444,20 +450,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Back = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-  var SHALLOW_PYRAMID_CORNER = new alpha_Shape(
-    TopLeft,
-    TopRight,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SHALLOW_PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "shallow_pyramid_corner",
-    stone,
-    SHALLOW_PYRAMID_CORNER
+      'stone',
+      'shallow_pyramid_corner',
+      stone,
+      SHALLOW_PYRAMID_CORNER,
   );
 
   // inverted pyramid corner ( 3 top, 1 bottom )
@@ -473,20 +479,20 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var SHALLOW_INVERTED_PYRAMID_CORNER = new alpha_Shape(
-    TopLeft,
-    TopRight,
-    Front,
-    Left,
-    Back,
-    Right,
-    Bottom
+  const SHALLOW_INVERTED_PYRAMID_CORNER = new alpha_Shape(
+      TopLeft,
+      TopRight,
+      Front,
+      Left,
+      Back,
+      Right,
+      Bottom,
   );
   BlockTypes.Load(
-    "stone",
-    "shallow_inverted_pyramid_corner",
-    stone,
-    SHALLOW_INVERTED_PYRAMID_CORNER
+      'stone',
+      'shallow_inverted_pyramid_corner',
+      stone,
+      SHALLOW_INVERTED_PYRAMID_CORNER,
   );
 
   // an angled slab is a half slab cut in a right triangle
@@ -498,9 +504,9 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Left = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[5]);
   var Back = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
   var Bottom = new alpha_Face(alpha_TRIANGLES, v[6], v[7], v[5]);
-  var ANGLED_SLAB = new alpha_Shape(Top, Front, Left, Back, Bottom);
+  const ANGLED_SLAB = new alpha_Shape(Top, Front, Left, Back, Bottom);
 
-  BlockTypes.Load("stone", "angled_slab", stone, ANGLED_SLAB);
+  BlockTypes.Load('stone', 'angled_slab', stone, ANGLED_SLAB);
 
   // half-slab
   var v = alpha_BuildSlabStructure();
@@ -515,12 +521,12 @@ function alpha_standardBlockTypes(BlockTypes) {
   var Back = new alpha_Face(alpha_QUADS, v[1], v[0], v[5], v[4]);
   var Right = new alpha_Face(alpha_QUADS, v[2], v[1], v[4], v[7]);
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
-  var HALF_SLAB = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  const HALF_SLAB = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
 
-  BlockTypes.Load("stone", "half_slab", stone, HALF_SLAB);
+  BlockTypes.Load('stone', 'half_slab', stone, HALF_SLAB);
 
   // stairs
-  var stairStructure = [
+  const stairStructure = [
     new alpha_Vector(-0.5, 0.5, 0), // 0 -- top
     new alpha_Vector(0.5, 0.5, 0), // 1 -- top
     new alpha_Vector(0.5, 0.5, -0.5), // 2 -- top
@@ -535,34 +541,34 @@ function alpha_standardBlockTypes(BlockTypes) {
     new alpha_Vector(0.5, 0, 0.5), // 11 -- mid
   ];
   var v = stairStructure;
-  var Flight1Top = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
-  var Flight1Front = new alpha_Face(alpha_QUADS, v[1], v[0], v[8], v[9]);
-  var Flight2Top = new alpha_Face(alpha_QUADS, v[9], v[8], v[10], v[11]);
-  var Flight2Front = new alpha_Face(alpha_QUADS, v[11], v[10], v[5], v[4]);
+  const Flight1Top = new alpha_Face(alpha_QUADS, v[2], v[3], v[0], v[1]);
+  const Flight1Front = new alpha_Face(alpha_QUADS, v[1], v[0], v[8], v[9]);
+  const Flight2Top = new alpha_Face(alpha_QUADS, v[9], v[8], v[10], v[11]);
+  const Flight2Front = new alpha_Face(alpha_QUADS, v[11], v[10], v[5], v[4]);
   var Front = new alpha_Face(alpha_QUADS, v[3], v[2], v[7], v[6]);
-  var LeftTop = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[8]);
-  var LeftBot = new alpha_Face(alpha_QUADS, v[8], v[6], v[5], v[10]);
+  const LeftTop = new alpha_Face(alpha_QUADS, v[0], v[3], v[6], v[8]);
+  const LeftBot = new alpha_Face(alpha_QUADS, v[8], v[6], v[5], v[10]);
 
-  var RightTop = new alpha_Face(alpha_QUADS, v[2], v[1], v[9], v[7]);
-  var RightBot = new alpha_Face(alpha_QUADS, v[9], v[11], v[4], v[7]);
+  const RightTop = new alpha_Face(alpha_QUADS, v[2], v[1], v[9], v[7]);
+  const RightBot = new alpha_Face(alpha_QUADS, v[9], v[11], v[4], v[7]);
 
   var Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var STAIRS = new alpha_Shape(
-    Flight1Top,
-    Flight1Front,
-    Flight2Top,
-    Flight2Front,
-    Front,
-    LeftTop,
-    LeftBot,
+  const STAIRS = new alpha_Shape(
+      Flight1Top,
+      Flight1Front,
+      Flight2Top,
+      Flight2Front,
+      Front,
+      LeftTop,
+      LeftBot,
 
-    RightTop,
-    RightBot,
-    Bottom
+      RightTop,
+      RightBot,
+      Bottom,
   );
 
-  BlockTypes.Load("stone", "stairs", stone, STAIRS);
+  BlockTypes.Load('stone', 'stairs', stone, STAIRS);
 
   // medium corner; lowers 1 and 3 to mid range
   // and 2 to bottom
@@ -578,8 +584,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var MED_CORNER = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "med_corner", stone, MED_CORNER);
+  const MED_CORNER = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'med_corner', stone, MED_CORNER);
 
   // medium corner; lowers 1 to midrange
   // and 2 to bottom
@@ -594,8 +600,8 @@ function alpha_standardBlockTypes(BlockTypes) {
   Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var MED_CORNER2 = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "med_corner2", stone, MED_CORNER2);
+  const MED_CORNER2 = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'med_corner2', stone, MED_CORNER2);
 
   // medium corner; lowers 1 and 3 to mid range
   // and 2 to bottom
@@ -610,6 +616,6 @@ function alpha_standardBlockTypes(BlockTypes) {
   Right = new alpha_Face(alpha_TRIANGLES, v[2], v[4], v[7]);
   Bottom = new alpha_Face(alpha_QUADS, v[6], v[7], v[4], v[5]);
 
-  var MED_CORNER3 = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
-  BlockTypes.Load("stone", "med_corner3", stone, MED_CORNER3);
+  const MED_CORNER3 = new alpha_Shape(Top, Front, Left, Back, Right, Bottom);
+  BlockTypes.Load('stone', 'med_corner3', stone, MED_CORNER3);
 }

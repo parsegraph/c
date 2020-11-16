@@ -24,7 +24,7 @@
 	if elapsed == 0 then
 		done = false;
 		return
-	
+
 	end
 	if done then return end;
 	done = true;
@@ -45,12 +45,12 @@ function alpha_Input(surface, camera) {
   this.grabbed = null;
 }
 
-alpha_Input.prototype.onKeyup = function (event) {
+alpha_Input.prototype.onKeyup = function(event) {
   this[event.key.toLowerCase()] = null;
   return true;
 };
 
-alpha_Input.prototype.onKeydown = function (event) {
+alpha_Input.prototype.onKeydown = function(event) {
   if (this.onKeyDown(event.key)) {
     return;
   }
@@ -64,17 +64,19 @@ alpha_Input.prototype.onKeydown = function (event) {
 function alpha_GetButtonName(buttonIndex) {
   switch (event.button) {
     case 0:
-      return "LeftMouseButton";
+      return 'LeftMouseButton';
     case 2:
-      return "RightMouseButton";
+      return 'RightMouseButton';
     case 1:
-      return "MiddleMouseButton";
+      return 'MiddleMouseButton';
   }
   return null;
 }
 
-alpha_Input.prototype.onMousedown = function (event) {
-  var button, x, y;
+alpha_Input.prototype.onMousedown = function(event) {
+  let button;
+  let x;
+  let y;
   button = alpha_GetButtonName(event.button);
   x = event.x;
   y = event.y;
@@ -88,8 +90,10 @@ alpha_Input.prototype.onMousedown = function (event) {
   return true;
 };
 
-alpha_Input.prototype.onMouseup = function (event) {
-  var button, x, y;
+alpha_Input.prototype.onMouseup = function(event) {
+  let button;
+  let x;
+  let y;
   button = alpha_GetButtonName(event.button);
   x = event.clientX;
   y = event.clientY;
@@ -101,8 +105,9 @@ alpha_Input.prototype.onMouseup = function (event) {
   return true;
 };
 
-alpha_Input.prototype.onMousemove = function (event) {
-  var x, y;
+alpha_Input.prototype.onMousemove = function(event) {
+  let x;
+  let y;
   x = event.x;
   y = event.y;
   this.endX = x;
@@ -110,8 +115,8 @@ alpha_Input.prototype.onMousemove = function (event) {
   return true;
 };
 
-alpha_Input.prototype.onWheel = function (event) {
-  var wheel = event.spinY;
+alpha_Input.prototype.onWheel = function(event) {
+  const wheel = event.spinY;
   if (wheel > 0) {
     this.mouseWheelUp = this.mouseWheelUp + wheel;
   } else {
@@ -121,78 +126,78 @@ alpha_Input.prototype.onWheel = function (event) {
   return true;
 };
 
-alpha_Input.prototype.onKeyDown = function () {
+alpha_Input.prototype.onKeyDown = function() {
   if (this._keyDownListener) {
     return this._keyDownListener.apply(this._keyDownThisObject, arguments);
   }
   return false;
 };
 
-alpha_Input.prototype.SetOnKeyDown = function (listener, thisObject) {
+alpha_Input.prototype.SetOnKeyDown = function(listener, thisObject) {
   this._keyDownListener = listener;
   this._keyDownThisObject = thisObject;
 };
 
-alpha_Input.prototype.Get = function (key) {
+alpha_Input.prototype.Get = function(key) {
   return this[key] ? 1 : 0;
 };
 
-alpha_Input.prototype.SetMouseSensitivityX = function (sensitivity) {
+alpha_Input.prototype.SetMouseSensitivityX = function(sensitivity) {
   this.mouseSensitivityX = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityX = function () {
+alpha_Input.prototype.GetMouseSensitivityX = function() {
   return this.mouseSensitivityX;
 };
 
-alpha_Input.prototype.SetMouseSensitivityY = function (sensitivity) {
+alpha_Input.prototype.SetMouseSensitivityY = function(sensitivity) {
   this.mouseSensitivityY = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityY = function () {
+alpha_Input.prototype.GetMouseSensitivityY = function() {
   return this.mouseSensitivityY;
 };
 
 // quick set both of them
-alpha_Input.prototype.SetMouseSensitivity = function (sensitivity) {
+alpha_Input.prototype.SetMouseSensitivity = function(sensitivity) {
   this.SetMouseSensitivityX(sensitivity);
   this.SetMouseSensitivityY(sensitivity);
 };
 
-alpha_Input.prototype.MouseLeft = function () {
+alpha_Input.prototype.MouseLeft = function() {
   if (this.endX < this.startX) {
-    var change = this.startX - this.endX;
-    //console.log("mouse has moved right " + change);
+    const change = this.startX - this.endX;
+    // console.log("mouse has moved right " + change);
     return change * this.GetMouseSensitivityX();
   }
 
   return 0;
 };
 
-alpha_Input.prototype.MouseRight = function () {
+alpha_Input.prototype.MouseRight = function() {
   if (this.endX > this.startX) {
-    var change = this.endX - this.startX;
-    //console.log("mouse has moved left " + change);
+    const change = this.endX - this.startX;
+    // console.log("mouse has moved left " + change);
     return change * this.GetMouseSensitivityX();
   }
 
   return 0;
 };
 
-alpha_Input.prototype.MouseUp = function () {
+alpha_Input.prototype.MouseUp = function() {
   if (this.endY > this.startY) {
-    var change = this.endY - this.startY;
-    //console.log("mouse has moved down " + change);
+    const change = this.endY - this.startY;
+    // console.log("mouse has moved down " + change);
     return change * this.GetMouseSensitivityY();
   }
 
   return 0;
 };
 
-alpha_Input.prototype.MouseDown = function () {
+alpha_Input.prototype.MouseDown = function() {
   if (this.endY < this.startY) {
-    var change = this.endY - this.startY;
-    //console.log("mouse has moved up " + change);
+    const change = this.endY - this.startY;
+    // console.log("mouse has moved up " + change);
     return change * this.GetMouseSensitivityY();
   }
 
@@ -202,77 +207,77 @@ alpha_Input.prototype.MouseDown = function () {
 // mouse wheel data is stored in 1/8 of a degree
 // this returns how many ticks of a mousewheel of standard resolution
 // has been seen before an Input:Update()
-alpha_Input.prototype.MouseWheelUp = function () {
+alpha_Input.prototype.MouseWheelUp = function() {
   return this.mouseWheelUp / 120;
 };
 
-alpha_Input.prototype.MouseWheelDown = function () {
+alpha_Input.prototype.MouseWheelDown = function() {
   return this.mouseWheelDown / 120;
 };
 
-alpha_Input.prototype.MouseWheelDegreesUp = function () {
+alpha_Input.prototype.MouseWheelDegreesUp = function() {
   return this.mouseWheelUp / 8;
 };
 
-alpha_Input.prototype.MouseWheelDegreesDown = function () {
+alpha_Input.prototype.MouseWheelDegreesDown = function() {
   return this.mouseWheelDown / 8;
 };
 
 /**
  * Sets the start to the end, and clears mousewheel totals.
  */
-alpha_Input.prototype.Update = function (elapsed) {
-  //console.log("Updating with elapsed: " + elapsed);
-  if (this.Get("Shift") > 0) {
+alpha_Input.prototype.Update = function(elapsed) {
+  // console.log("Updating with elapsed: " + elapsed);
+  if (this.Get('Shift') > 0) {
     elapsed = elapsed * 10;
   }
 
-  if (this.Get("Shift") > 0) {
+  if (this.Get('Shift') > 0) {
     elapsed = elapsed / 10;
   }
 
-  //console.log("LeftMouseButton: " + this.Get("LeftMouseButton"));
-  //console.log("MouseLeft: " + this.MouseLeft() * elapsed);
-  //console.log("MouseLeft: " + (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
-  //console.log("LeftMouse: " + this.Get("LeftMouseButton"));
-  //console.log("TurnLeft: " + this.MouseLeft() * elapsed);
+  // console.log("LeftMouseButton: " + this.Get("LeftMouseButton"));
+  // console.log("MouseLeft: " + this.MouseLeft() * elapsed);
+  // console.log("MouseLeft: " + (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
+  // console.log("LeftMouse: " + this.Get("LeftMouseButton"));
+  // console.log("TurnLeft: " + this.MouseLeft() * elapsed);
   this.camera
-    .GetParent()
-    .TurnLeft(this.Get("LeftMouseButton") * this.MouseLeft() * elapsed);
+      .GetParent()
+      .TurnLeft(this.Get('LeftMouseButton') * this.MouseLeft() * elapsed);
   this.camera
-    .GetParent()
-    .TurnRight(this.Get("LeftMouseButton") * this.MouseRight() * elapsed);
+      .GetParent()
+      .TurnRight(this.Get('LeftMouseButton') * this.MouseRight() * elapsed);
   this.camera
-    .GetParent()
-    .PitchUp(-this.Get("LeftMouseButton") * this.MouseUp() * elapsed);
+      .GetParent()
+      .PitchUp(-this.Get('LeftMouseButton') * this.MouseUp() * elapsed);
   this.camera
-    .GetParent()
-    .PitchDown(this.Get("LeftMouseButton") * this.MouseDown() * elapsed);
+      .GetParent()
+      .PitchDown(this.Get('LeftMouseButton') * this.MouseDown() * elapsed);
   this.camera.MoveForward(this.MouseWheelDegreesUp() * elapsed);
   this.camera.MoveBackward(this.MouseWheelDegreesDown() * elapsed);
-  //this.camera.ZoomIn(this.Get("y"), elapsed);
-  //this.camera.ZoomOut(this.Get("h"), elapsed);
+  // this.camera.ZoomIn(this.Get("y"), elapsed);
+  // this.camera.ZoomOut(this.Get("h"), elapsed);
 
-  this.camera.GetParent().MoveForward(100 * this.Get("t") * elapsed);
-  this.camera.GetParent().MoveBackward(100 * this.Get("g") * elapsed);
-  this.camera.GetParent().MoveLeft(100 * this.Get("f") * elapsed);
-  this.camera.GetParent().MoveRight(100 * this.Get("h") * elapsed);
+  this.camera.GetParent().MoveForward(100 * this.Get('t') * elapsed);
+  this.camera.GetParent().MoveBackward(100 * this.Get('g') * elapsed);
+  this.camera.GetParent().MoveLeft(100 * this.Get('f') * elapsed);
+  this.camera.GetParent().MoveRight(100 * this.Get('h') * elapsed);
 
-  this.camera.GetParent().MoveForward(this.Get("w") * elapsed);
-  this.camera.GetParent().MoveBackward(this.Get("s") * elapsed);
-  this.camera.GetParent().MoveLeft(this.Get("a") * elapsed);
-  this.camera.GetParent().MoveRight(this.Get("d") * elapsed);
-  this.camera.GetParent().MoveUp(this.Get(" ") * elapsed);
-  this.camera.GetParent().MoveDown(this.Get("Shift") * elapsed);
+  this.camera.GetParent().MoveForward(this.Get('w') * elapsed);
+  this.camera.GetParent().MoveBackward(this.Get('s') * elapsed);
+  this.camera.GetParent().MoveLeft(this.Get('a') * elapsed);
+  this.camera.GetParent().MoveRight(this.Get('d') * elapsed);
+  this.camera.GetParent().MoveUp(this.Get(' ') * elapsed);
+  this.camera.GetParent().MoveDown(this.Get('Shift') * elapsed);
 
-  this.camera.GetParent().YawLeft(this.Get("j") * elapsed);
-  this.camera.GetParent().YawRight(this.Get("l") * elapsed);
-  this.camera.GetParent().PitchUp(this.Get("k") * elapsed);
-  this.camera.GetParent().PitchDown(this.Get("i") * elapsed);
-  this.camera.GetParent().RollLeft(this.Get("u") * elapsed);
-  this.camera.GetParent().RollRight(this.Get("o") * elapsed);
+  this.camera.GetParent().YawLeft(this.Get('j') * elapsed);
+  this.camera.GetParent().YawRight(this.Get('l') * elapsed);
+  this.camera.GetParent().PitchUp(this.Get('k') * elapsed);
+  this.camera.GetParent().PitchDown(this.Get('i') * elapsed);
+  this.camera.GetParent().RollLeft(this.Get('u') * elapsed);
+  this.camera.GetParent().RollRight(this.Get('o') * elapsed);
 
-  if (this.Get("RightMouseButton") > 0) {
+  if (this.Get('RightMouseButton') > 0) {
     if (!this._done) {
       this.camera.AlignParentToMy(false, true);
       this._done = true;

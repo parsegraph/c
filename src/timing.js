@@ -10,10 +10,10 @@ export function elapsed(startTime, ct) {
 }
 
 export function later(cb, cbThisArg) {
-  var t = setTimeout(function () {
+  let t = setTimeout(function() {
     cb.call(cbThisArg);
   }, 0);
-  return function () {
+  return function() {
     if (t) {
       clearTimeout(t);
       t = null;
@@ -23,7 +23,7 @@ export function later(cb, cbThisArg) {
 
 export function timeout(name, timeoutMs) {
   if (arguments.length === 1) {
-    if (typeof arguments[0] === "number") {
+    if (typeof arguments[0] === 'number') {
       name = null;
       timeoutMs = arguments[0];
     } else {
@@ -33,8 +33,8 @@ export function timeout(name, timeoutMs) {
     name = null;
     timeoutMs = parsegraph_TIMEOUT;
   }
-  var startTime = getTimeInMillis();
-  return function () {
+  const startTime = getTimeInMillis();
+  return function() {
     if (getTimeInMillis() - startTime <= timeoutMs) {
       // Not timed out yet.
       return;
@@ -43,42 +43,42 @@ export function timeout(name, timeoutMs) {
     // Report the timeout.
     if (name) {
       throw new Error(
-        "Timeout '" + name + "' after " + timeoutMs + "msecs exceeded."
+          'Timeout \'' + name + '\' after ' + timeoutMs + 'msecs exceeded.',
       );
     }
-    throw new Error("Timeout after " + timeoutMs + "msecs exceeded.");
+    throw new Error('Timeout after ' + timeoutMs + 'msecs exceeded.');
   };
 }
 
 export function AnimationTimer() {
   this.timerId = null;
 
-  var that = this;
-  this.fire = function () {
+  const that = this;
+  this.fire = function() {
     that.timerId = null;
     if (that.listener) {
       try {
         return that.listener[0].apply(that.listener[1], arguments);
       } catch (ex) {
         console.log(ex);
-        alert("Error during timer: " + ex);
+        alert('Error during timer: ' + ex);
       }
     }
   };
 }
 
-AnimationTimer.prototype.schedule = function () {
+AnimationTimer.prototype.schedule = function() {
   // Do nothing if the timer is already scheduled.
   if (this.timerId) {
     return false;
   }
 
-  //console.log(new Error("Scheduling animation timer."));
+  // console.log(new Error("Scheduling animation timer."));
   this.timerId = requestAnimationFrame(this.fire);
   return true;
 };
 
-AnimationTimer.prototype.setListener = function (listener, thisArg) {
+AnimationTimer.prototype.setListener = function(listener, thisArg) {
   if (!listener) {
     this.listener = null;
     return;
@@ -87,12 +87,12 @@ AnimationTimer.prototype.setListener = function (listener, thisArg) {
   this.listener = [listener, thisArg];
 };
 
-AnimationTimer.prototype.scheduled = function () {
+AnimationTimer.prototype.scheduled = function() {
   return !!this.timerId;
 };
 AnimationTimer.prototype.isScheduled = AnimationTimer.prototype.scheduled;
 
-AnimationTimer.prototype.cancel = function () {
+AnimationTimer.prototype.cancel = function() {
   if (!this.timerId) {
     return;
   }
@@ -109,8 +109,8 @@ export function TimeoutTimer() {
   /**
    * Forwards event arguments to the listener.
    */
-  var that = this;
-  this.fire = function () {
+  const that = this;
+  this.fire = function() {
     that.timerId = null;
     if (that.listener) {
       return that.listener[0].apply(that.listener[1], arguments);
@@ -118,15 +118,15 @@ export function TimeoutTimer() {
   };
 }
 
-TimeoutTimer.prototype.setDelay = function (ms) {
+TimeoutTimer.prototype.setDelay = function(ms) {
   this.delay = ms;
 };
 
-TimeoutTimer.prototype.delay = function () {
+TimeoutTimer.prototype.delay = function() {
   return this.delay;
 };
 
-TimeoutTimer.prototype.schedule = function () {
+TimeoutTimer.prototype.schedule = function() {
   if (this.timerId) {
     return;
   }
@@ -134,7 +134,7 @@ TimeoutTimer.prototype.schedule = function () {
   this.timerId = window.setTimeout(this.fire, this.delay);
 };
 
-TimeoutTimer.prototype.setListener = function (listener, thisArg) {
+TimeoutTimer.prototype.setListener = function(listener, thisArg) {
   if (!listener) {
     this.listener = null;
     return;
@@ -145,12 +145,12 @@ TimeoutTimer.prototype.setListener = function (listener, thisArg) {
   this.listener = [listener, thisArg];
 };
 
-TimeoutTimer.prototype.scheduled = function () {
+TimeoutTimer.prototype.scheduled = function() {
   return !!this.timerId;
 };
 TimeoutTimer.prototype.isScheduled = TimeoutTimer.prototype.scheduled;
 
-TimeoutTimer.prototype.cancel = function () {
+TimeoutTimer.prototype.cancel = function() {
   if (this.timerId) {
     window.clearTimeout(this.timerId);
     this.timerId = null;
@@ -165,8 +165,8 @@ export function IntervalTimer() {
   /**
    * Forwards event arguments to the listener.
    */
-  var that = this;
-  this.fire = function () {
+  const that = this;
+  this.fire = function() {
     if (that.listener) {
       return that.listener[0].apply(that.listener[1], arguments);
     }
@@ -176,18 +176,18 @@ export function IntervalTimer() {
 /**
  * Sets the delay, in milliseconds.
  */
-IntervalTimer.prototype.setDelay = function (ms) {
+IntervalTimer.prototype.setDelay = function(ms) {
   this.delay = ms;
 };
 
 /**
  * Gets the delay, in milliseconds.
  */
-IntervalTimer.prototype.delay = function () {
+IntervalTimer.prototype.delay = function() {
   return this.delay;
 };
 
-IntervalTimer.prototype.schedule = function () {
+IntervalTimer.prototype.schedule = function() {
   if (this.timerId) {
     return;
   }
@@ -195,12 +195,12 @@ IntervalTimer.prototype.schedule = function () {
   this.timerId = window.setInterval(this.fire, this.delay);
 };
 
-IntervalTimer.prototype.scheduled = function () {
+IntervalTimer.prototype.scheduled = function() {
   return !!this.timerId;
 };
 IntervalTimer.prototype.isScheduled = IntervalTimer.prototype.scheduled;
 
-IntervalTimer.prototype.setListener = function (listener, thisArg) {
+IntervalTimer.prototype.setListener = function(listener, thisArg) {
   if (!listener) {
     this.listener = null;
     return;
@@ -211,7 +211,7 @@ IntervalTimer.prototype.setListener = function (listener, thisArg) {
   this.listener = [listener, thisArg];
 };
 
-IntervalTimer.prototype.cancel = function () {
+IntervalTimer.prototype.cancel = function() {
   if (this.timerId) {
     window.clearInterval(this.timerId);
     this.timerId = null;

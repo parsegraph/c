@@ -1,20 +1,20 @@
 function parsegraph_authenticate(listener, listenerThisArg) {
   if (!listener) {
-    throw new Error("Refusing to fire without a non-null listener");
+    throw new Error('Refusing to fire without a non-null listener');
   }
 
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   if (!listenerThisArg) {
     listenerThisArg = xhr;
   }
-  xhr.open("POST", "/authenticate", true);
-  //xhr.setRequestHeader("Accept", "application/json");
-  xhr.onreadystatechange = function () {
+  xhr.open('POST', '/authenticate', true);
+  // xhr.setRequestHeader("Accept", "application/json");
+  xhr.onreadystatechange = function() {
     if (xhr.readyState !== XMLHttpRequest.DONE) {
       return;
     }
     try {
-      var loginResponse = JSON.parse(xhr.responseText);
+      const loginResponse = JSON.parse(xhr.responseText);
       listener.call(listenerThisArg, xhr.status === 200, loginResponse);
     } catch (ex) {
       listener.call(listenerThisArg, ex);
@@ -26,42 +26,42 @@ function parsegraph_authenticate(listener, listenerThisArg) {
 }
 
 function parsegraph_beginUserLogin(
-  username,
-  password,
-  remember,
-  listener,
-  listenerThisArg
+    username,
+    password,
+    remember,
+    listener,
+    listenerThisArg,
 ) {
   if (!listener) {
-    throw new Error("Refusing to fire without a non-null listener");
+    throw new Error('Refusing to fire without a non-null listener');
   }
 
-  var loginRequest = new XMLHttpRequest();
+  const loginRequest = new XMLHttpRequest();
   if (!listenerThisArg) {
     listenerThisArg = loginRequest;
   }
-  loginRequest.open("POST", "/user?command=parsegraph_beginUserLogin");
-  loginRequest.setRequestHeader("Accept", "application/json");
+  loginRequest.open('POST', '/user?command=parsegraph_beginUserLogin');
+  loginRequest.setRequestHeader('Accept', 'application/json');
   loginRequest.setRequestHeader(
-    "Content-Type",
-    "application/x-www-form-urlencoded"
+      'Content-Type',
+      'application/x-www-form-urlencoded',
   );
   loginRequest.send(
-    "username=" +
+      'username=' +
       username +
-      "&password=" +
+      '&password=' +
       password +
-      "&remember=" +
-      (!!remember ? "1" : "0")
+      '&remember=' +
+      (!!remember ? '1' : '0'),
   );
 
-  loginRequest.addEventListener("load", function () {
+  loginRequest.addEventListener('load', function() {
     try {
-      var loginResponse = JSON.parse(loginRequest.responseText);
+      const loginResponse = JSON.parse(loginRequest.responseText);
       listener.call(
-        listenerThisArg,
-        loginRequest.status === 200,
-        loginResponse
+          listenerThisArg,
+          loginRequest.status === 200,
+          loginResponse,
       );
     } catch (ex) {
       console.log(ex);
@@ -74,21 +74,21 @@ function parsegraph_beginUserLogin(
 
 function parsegraph_endUserLogin(listener, listenerThisArg) {
   if (!listener) {
-    throw new Error("Refusing to fire without a non-null listener");
+    throw new Error('Refusing to fire without a non-null listener');
   }
 
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   if (!listenerThisArg) {
     listenerThisArg = xhr;
   }
-  xhr.open("POST", "/logout");
-  xhr.setRequestHeader("Accept", "application/json");
+  xhr.open('POST', '/logout');
+  xhr.setRequestHeader('Accept', 'application/json');
   xhr.send();
 
-  xhr.addEventListener("load", function () {
+  xhr.addEventListener('load', function() {
     try {
       if (xhr.status === 200) {
-        var loginResponse = JSON.parse(xhr.responseText);
+        const loginResponse = JSON.parse(xhr.responseText);
         listener.call(listenerThisArg, true, loginResponse);
       } else {
         listener.call(listenerThisArg, false, xhr.responseText);
@@ -102,30 +102,30 @@ function parsegraph_endUserLogin(listener, listenerThisArg) {
 }
 
 function parsegraph_createNewUser(
-  username,
-  password,
-  listener,
-  listenerThisArg
+    username,
+    password,
+    listener,
+    listenerThisArg,
 ) {
-  var loginRequest = new XMLHttpRequest();
-  loginRequest.open("POST", "/user?command=parsegraph_createNewUser");
-  loginRequest.setRequestHeader("Accept", "application/json");
+  const loginRequest = new XMLHttpRequest();
+  loginRequest.open('POST', '/user?command=parsegraph_createNewUser');
+  loginRequest.setRequestHeader('Accept', 'application/json');
   loginRequest.setRequestHeader(
-    "Content-Type",
-    "application/x-www-form-urlencoded"
+      'Content-Type',
+      'application/x-www-form-urlencoded',
   );
-  loginRequest.send("username=" + username + "&password=" + password);
+  loginRequest.send('username=' + username + '&password=' + password);
 
   if (!listener) {
-    throw new Error("Refusing to fire without a non-null listener");
+    throw new Error('Refusing to fire without a non-null listener');
   }
   if (!listenerThisArg) {
     listenerThisArg = loginRequest;
   }
 
-  loginRequest.addEventListener("load", function () {
+  loginRequest.addEventListener('load', function() {
     try {
-      var loginResponse = JSON.parse(loginRequest.responseText);
+      const loginResponse = JSON.parse(loginRequest.responseText);
       if (loginResponse.session_selector) {
         // Succeeded.
         listener.call(listenerThisArg, true, loginResponse);
@@ -141,45 +141,45 @@ function parsegraph_createNewUser(
 }
 
 function parsegraph_passwordNode(listener, listenerThisArg) {
-  var bbs = parsegraph_copyStyle(parsegraph_BLOCK);
+  const bbs = parsegraph_copyStyle(parsegraph_BLOCK);
   bbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
   bbs.borderColor = new parsegraph_Color(0.5, 0.5, 0.5, 1);
   bbs.minWidth = parsegraph_BUD_RADIUS * 80;
-  var node = new parsegraph_Node(parsegraph_BLOCK);
+  const node = new parsegraph_Node(parsegraph_BLOCK);
   node.setBlockStyle(bbs);
 
-  var nbs = parsegraph_copyStyle(parsegraph_BUD);
+  const nbs = parsegraph_copyStyle(parsegraph_BUD);
 
   if (!listenerThisArg) {
     listenerThisArg = this;
   }
 
-  var pos = 0;
-  var pw = "";
+  let pos = 0;
+  let pw = '';
 
-  var inner = new parsegraph_Node(parsegraph_BLOCK);
+  const inner = new parsegraph_Node(parsegraph_BLOCK);
   inner.setBlockStyle(nbs);
-  var last = inner;
+  let last = inner;
 
-  node.setKeyListener(function (key) {
+  node.setKeyListener(function(key) {
     if (listener && listener.call(listenerThisArg, key)) {
       return true;
     }
     switch (key) {
-      case "Escape":
-      case "Shift":
-      case "Control":
-      case "Tab":
-      case "ArrowUp":
-      case "ArrowDown":
+      case 'Escape':
+      case 'Shift':
+      case 'Control':
+      case 'Tab':
+      case 'ArrowUp':
+      case 'ArrowDown':
         break;
-      case "ArrowLeft":
+      case 'ArrowLeft':
         pos = Math.max(pos - 1, 0);
         break;
-      case "ArrowRight":
+      case 'ArrowRight':
         pos = Math.min(pos + 1, pw.length - 1);
         break;
-      case "Backspace":
+      case 'Backspace':
         pw = pw.slice(0, pos - 1) + pw.slice(pos);
         pos = Math.max(pos - 1, 0);
         if (last === inner) {
@@ -190,7 +190,7 @@ function parsegraph_passwordNode(listener, listenerThisArg) {
           last = newLast;
         }
         break;
-      case "Delete":
+      case 'Delete':
         pw = pw.slice(0, pos) + pw.slice(pos + 1);
         if (last === inner) {
           node.disconnectNode(parsegraph_INWARD);
@@ -206,8 +206,8 @@ function parsegraph_passwordNode(listener, listenerThisArg) {
         if (last === inner && inner.isRoot()) {
           node.connectNode(parsegraph_INWARD, inner);
           node.setNodeAlignmentMode(
-            parsegraph_INWARD,
-            parsegraph_ALIGN_VERTICAL
+              parsegraph_INWARD,
+              parsegraph_ALIGN_VERTICAL,
           );
         } else {
           last = last.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
@@ -258,65 +258,65 @@ function parsegraph_LoginWidget(surface, graph) {
 }
 
 // Authenticate an existing session (does not expose the session to JS)
-parsegraph_LoginWidget.prototype.authenticate = function () {
-  this.onAuthenticate.call(this, true, { username: "" });
-  //parsegraph_later(function() {
-  //this.onAuthenticate.call(this, true, {username:"dafrito"});
-  //}, this);
-  //parsegraph_authenticate(this.onAuthenticate, this);
-  //if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
-  //parsegraph_authenticate(this.onAuthenticate, this);
-  //}
+parsegraph_LoginWidget.prototype.authenticate = function() {
+  this.onAuthenticate.call(this, true, {username: ''});
+  // parsegraph_later(function() {
+  // this.onAuthenticate.call(this, true, {username:"dafrito"});
+  // }, this);
+  // parsegraph_authenticate(this.onAuthenticate, this);
+  // if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+  // parsegraph_authenticate(this.onAuthenticate, this);
+  // }
 };
 
 // Log out.
-parsegraph_LoginWidget.prototype.logout = function () {
+parsegraph_LoginWidget.prototype.logout = function() {
   parsegraph_endUserLogin(this.onLogout, this);
 };
 
-parsegraph_LoginWidget.prototype.onLogout = function (res, result) {
+parsegraph_LoginWidget.prototype.onLogout = function(res, result) {
   if (res === true) {
     if (this._logoutListener) {
       this._logoutListener.call(
-        this._logoutListenerThisArg,
-        true,
-        result,
-        this._containerNode
+          this._logoutListenerThisArg,
+          true,
+          result,
+          this._containerNode,
       );
     }
-    window.location.href = "/";
+    window.location.href = '/';
     this._containerNode.disconnectNode(parsegraph_DOWNWARD);
   } else if (res === false) {
-    console.log("Logout failed: " + result);
+    console.log('Logout failed: ' + result);
   } else {
-    console.log("Exception occurred during logout:", arguments);
+    console.log('Exception occurred during logout:', arguments);
   }
 };
 
 // Log in.
-parsegraph_LoginWidget.prototype.login = function () {
-  //console.log(new Error("Logging in"));
-  var username = this._usernameField._label.getText();
-  var password = this._passwordField.value();
+parsegraph_LoginWidget.prototype.login = function() {
+  // console.log(new Error("Logging in"));
+  const username = this._usernameField._label.getText();
+  const password = this._passwordField.value();
   parsegraph_beginUserLogin(
-    username,
-    password,
-    this.isRemembering(),
-    this.onLogin,
-    this
+      username,
+      password,
+      this.isRemembering(),
+      this.onLogin,
+      this,
   );
 };
 
 // Create new user.
-parsegraph_LoginWidget.prototype.createNewUser = function () {
-  var username = this._usernameField._label.getText();
-  var password = this._passwordField.value();
+parsegraph_LoginWidget.prototype.createNewUser = function() {
+  const username = this._usernameField._label.getText();
+  const password = this._passwordField.value();
   parsegraph_createNewUser(username, password, this.onLogin, this);
 };
 
-parsegraph_LoginWidget.prototype.setLoginListener = function (
-  listener,
-  listenerThisArg
+parsegraph_LoginWidget.prototype.setLoginListener = function(
+    listener,
+    listenerThisArg,
 ) {
   if (!listenerThisArg) {
     listenerThisArg = this;
@@ -325,9 +325,9 @@ parsegraph_LoginWidget.prototype.setLoginListener = function (
   this._loginListenerThisArg = listenerThisArg;
 };
 
-parsegraph_LoginWidget.prototype.setLogoutListener = function (
-  listener,
-  listenerThisArg
+parsegraph_LoginWidget.prototype.setLogoutListener = function(
+    listener,
+    listenerThisArg,
 ) {
   if (!listenerThisArg) {
     listenerThisArg = this;
@@ -336,9 +336,9 @@ parsegraph_LoginWidget.prototype.setLogoutListener = function (
   this._logoutListenerThisArg = listenerThisArg;
 };
 
-parsegraph_LoginWidget.prototype.onLogin = function (res, userLogin) {
-  console.log(new Error("onLogin"), res, userLogin);
-  var resNode;
+parsegraph_LoginWidget.prototype.onLogin = function(res, userLogin) {
+  console.log(new Error('onLogin'), res, userLogin);
+  let resNode;
   if (res === true) {
     this._loginForm = null;
 
@@ -349,16 +349,16 @@ parsegraph_LoginWidget.prototype.onLogin = function (res, userLogin) {
     this._graph.input().setFocusedNode(null);
     this._graph.scheduleRepaint();
 
-    /*if(localStorage.getItem("parsegraph_LoginWidget_remember") !== null) {
+    /* if(localStorage.getItem("parsegraph_LoginWidget_remember") !== null) {
             localStorage.setItem("parsegraph_LoginWidget_remember", userLogin.username);
         }*/
 
     if (this._loginListener) {
       return this._loginListener.call(
-        this._loginListenerThisArg,
-        res,
-        userLogin,
-        this._containerNode
+          this._loginListenerThisArg,
+          res,
+          userLogin,
+          this._containerNode,
       );
     }
   } else if (res === false) {
@@ -370,35 +370,35 @@ parsegraph_LoginWidget.prototype.onLogin = function (res, userLogin) {
     this._graph.scheduleRepaint();
   } else {
     // Exception.
-    console.log("Login response", res);
+    console.log('Login response', res);
     this._containerNode.disconnectNode(parsegraph_DOWNWARD);
     resNode = new parsegraph_Node(parsegraph_BLOCK);
     resNode.setLabel(
-      "An exception occurred during processing and was logged.",
-      this._graph.font()
+        'An exception occurred during processing and was logged.',
+        this._graph.font(),
     );
     this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
     this._graph.scheduleRepaint();
   }
 };
 
-parsegraph_LoginWidget.prototype.loggedInForm = function () {
+parsegraph_LoginWidget.prototype.loggedInForm = function() {
   if (this._loggedInForm) {
     return this._loggedInForm;
   }
 
-  var car = new parsegraph_Caret(parsegraph_BLOCK);
+  const car = new parsegraph_Caret(parsegraph_BLOCK);
 
   function toggleFullScreen() {
-    var doc = window.document;
-    var docEl = this._surface._canvas;
+    const doc = window.document;
+    const docEl = this._surface._canvas;
 
-    var requestFullScreen =
+    const requestFullScreen =
       docEl.requestFullscreen ||
       docEl.mozRequestFullScreen ||
       docEl.webkitRequestFullScreen ||
       docEl.msRequestFullscreen;
-    var cancelFullScreen =
+    const cancelFullScreen =
       doc.exitFullscreen ||
       doc.mozCancelFullScreen ||
       doc.webkitExitFullscreen ||
@@ -416,29 +416,29 @@ parsegraph_LoginWidget.prototype.loggedInForm = function () {
     }
   }
 
-  car.root().setClickListener(function () {
-    var node = car.root();
-    var carousel = this.graph().carousel();
+  car.root().setClickListener(function() {
+    const node = car.root();
+    const carousel = this.graph().carousel();
     carousel.clearCarousel();
     carousel.moveCarousel(node.absoluteX(), node.absoluteY());
     carousel.showCarousel();
 
     // Action actionNode, infoDescription, actionFunc, actionFuncThisArg
-    var actionNode = new parsegraph_Node(parsegraph_BLOCK);
-    actionNode.setLabel("Leave", this.font());
+    let actionNode = new parsegraph_Node(parsegraph_BLOCK);
+    actionNode.setLabel('Leave', this.font());
     carousel.addToCarousel(actionNode, this.leave, this);
     actionNode = new parsegraph_Node(parsegraph_BLOCK);
-    actionNode.setLabel("Log out", this.font());
+    actionNode.setLabel('Log out', this.font());
     carousel.addToCarousel(actionNode, this.logout, this);
 
     actionNode = new parsegraph_Node(parsegraph_BLOCK);
-    actionNode.setLabel("Fullscreen", this.font());
+    actionNode.setLabel('Fullscreen', this.font());
     carousel.addToCarousel(
-      actionNode,
-      function () {
-        toggleFullScreen.call(this);
-      },
-      this
+        actionNode,
+        function() {
+          toggleFullScreen.call(this);
+        },
+        this,
     );
     this.graph().carousel().scheduleCarouselRepaint();
   }, this);
@@ -448,16 +448,16 @@ parsegraph_LoginWidget.prototype.loggedInForm = function () {
   return this._loggedInForm;
 };
 
-parsegraph_LoginWidget.prototype.leave = function () {
-  window.location = "/";
+parsegraph_LoginWidget.prototype.leave = function() {
+  window.location = '/';
 };
 
-parsegraph_LoginWidget.prototype.graph = function () {
+parsegraph_LoginWidget.prototype.graph = function() {
   return this._graph;
 };
 
-parsegraph_LoginWidget.prototype.onAuthenticate = function (res, userLogin) {
-  var resNode;
+parsegraph_LoginWidget.prototype.onAuthenticate = function(res, userLogin) {
+  let resNode;
   if (res === true) {
     this._containerNode.disconnectNode(parsegraph_INWARD);
     resNode = this.loggedInForm();
@@ -466,85 +466,85 @@ parsegraph_LoginWidget.prototype.onAuthenticate = function (res, userLogin) {
     this._graph.input().setFocusedNode(null);
     this._graph.scheduleRepaint();
 
-    /*if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+    /* if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
             localStorage.setItem("parsegraph_LoginWidget_remember", userLogin.username);
         }*/
     if (this._loginListener) {
       return this._loginListener.call(
-        this._loginListenerThisArg,
-        res,
-        userLogin,
-        this._containerNode
+          this._loginListenerThisArg,
+          res,
+          userLogin,
+          this._containerNode,
       );
     }
   } else if (res === false) {
-    //localStorage.removeItem("parsegraph_LoginWidget_remember");
+    // localStorage.removeItem("parsegraph_LoginWidget_remember");
     this._containerNode.disconnectNode(parsegraph_DOWNWARD);
     resNode = new parsegraph_Node(parsegraph_BLOCK);
     resNode.setLabel(userLogin.result, this._graph.font());
     this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
     this._graph.scheduleRepaint();
   } else {
-    //localStorage.removeItem("parsegraph_LoginWidget_remember");
+    // localStorage.removeItem("parsegraph_LoginWidget_remember");
     // Exception.
     console.log(res);
     this._containerNode.disconnectNode(parsegraph_DOWNWARD);
     resNode = new parsegraph_Node(parsegraph_BLOCK);
     resNode.setLabel(
-      "An exception occurred during processing and was logged.",
-      this._graph.font()
+        'An exception occurred during processing and was logged.',
+        this._graph.font(),
     );
     this._containerNode.connectNode(parsegraph_DOWNWARD, resNode);
     this._graph.scheduleRepaint();
   }
 };
 
-parsegraph_LoginWidget.prototype.font = function () {
+parsegraph_LoginWidget.prototype.font = function() {
   return parsegraph_defaultFont();
 };
 
-parsegraph_LoginWidget.prototype.setTitle = function (title) {
+parsegraph_LoginWidget.prototype.setTitle = function(title) {
   this._title = title;
 };
 
-parsegraph_LoginWidget.prototype.title = function () {
+parsegraph_LoginWidget.prototype.title = function() {
   return this._title;
 };
 
-parsegraph_LoginWidget.prototype.root = function () {
+parsegraph_LoginWidget.prototype.root = function() {
   if (!this._root) {
-    var car = new parsegraph_Caret(parsegraph_SLOT);
+    const car = new parsegraph_Caret(parsegraph_SLOT);
     car.label(this.title());
     this._containerNode = car.root();
     this._containerNode.setIgnoreMouse(true);
-    //if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
+    // if(localStorage.getItem("parsegraph_LoginWidget_remember")) {
     this._containerNode.connectNode(parsegraph_INWARD, this.authenticateForm());
     this._containerNode.setNodeAlignmentMode(
-      parsegraph_INWARD,
-      parsegraph_ALIGN_VERTICAL
+        parsegraph_INWARD,
+        parsegraph_ALIGN_VERTICAL,
     );
-    //}
-    //else {
-    //this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
-    //this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
-    //}
+    // }
+    // else {
+    // this._containerNode.connectNode(parsegraph_INWARD, this.loginForm());
+    // this._containerNode.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
+    // }
     this._root = car.root();
   }
   return this._root;
 };
 
-parsegraph_LoginWidget.prototype.authenticateForm = function () {
+parsegraph_LoginWidget.prototype.authenticateForm = function() {
   if (this._authenticateForm) {
     return this._authenticateForm;
   }
 
-  var car = new parsegraph_Caret(parsegraph_BLOCK);
+  const car = new parsegraph_Caret(parsegraph_BLOCK);
   car.setFont(this.font());
-  var remembered = "1"; // localStorage.getItem("parsegraph_LoginWidget_remember");
-  if (remembered !== "1" && remembered !== "0") {
+  const remembered = '1'; // localStorage.getItem("parsegraph_LoginWidget_remember");
+  if (remembered !== '1' && remembered !== '0') {
     car.label(remembered);
   } else {
-    car.label("Authenticate");
+    car.label('Authenticate');
   }
   car.node().setKeyListener(this.authenticate, this);
   car.node().setClickListener(this.authenticate, this);
@@ -553,60 +553,60 @@ parsegraph_LoginWidget.prototype.authenticateForm = function () {
   return this._authenticateForm;
 };
 
-parsegraph_LoginWidget.prototype.loginForm = function () {
+parsegraph_LoginWidget.prototype.loginForm = function() {
   if (this._loginForm) {
     return this._loginForm;
   }
 
-  var nbs = parsegraph_copyStyle(parsegraph_BLOCK);
+  const nbs = parsegraph_copyStyle(parsegraph_BLOCK);
   nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
   nbs.borderColor = new parsegraph_Color(0.5, 0.5, 0.5, 1);
   nbs.minWidth = parsegraph_BUD_RADIUS * 80;
 
-  var car = new parsegraph_Caret(parsegraph_BUD);
+  const car = new parsegraph_Caret(parsegraph_BUD);
 
   this._loginForm = car.root();
   car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
-  car.label("Username");
-  car.node().setClickListener(function () {
+  car.label('Username');
+  car.node().setClickListener(function() {
     this.graph().input().setFocusedNode(this._usernameField);
     return true;
   }, this);
   car.move(parsegraph_FORWARD);
-  car.pull("b");
+  car.pull('b');
   this._usernameField = car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-  var tf = car.node();
-  tf.setClickListener = function () {
-    var l = tf.label();
+  const tf = car.node();
+  tf.setClickListener = function() {
+    const l = tf.label();
     alert(l);
   };
   car.node().setBlockStyle(nbs);
-  car.label("");
+  car.label('');
   car.node()._label.setEditable(true);
   car.move(parsegraph_BACKWARD);
 
   car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
   car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
-  car.label("Password");
+  car.label('Password');
   car.move(parsegraph_FORWARD);
-  var graph = this._graph;
+  const graph = this._graph;
   this._passwordField = car.connect(
-    parsegraph_FORWARD,
-    parsegraph_passwordNode(function (key) {
-      if (
-        key === "ArrowLeft" ||
-        key === "ArrowRight" ||
-        key === "ArrowUp" ||
-        key === "ArrowDown"
-      ) {
-        return false;
-      }
-      graph.scheduleRepaint();
-      if (key === "Enter") {
-        this.login();
-        return true;
-      }
-    }, this)
+      parsegraph_FORWARD,
+      parsegraph_passwordNode(function(key) {
+        if (
+          key === 'ArrowLeft' ||
+        key === 'ArrowRight' ||
+        key === 'ArrowUp' ||
+        key === 'ArrowDown'
+        ) {
+          return false;
+        }
+        graph.scheduleRepaint();
+        if (key === 'Enter') {
+          this.login();
+          return true;
+        }
+      }, this),
   );
 
   car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
@@ -616,61 +616,61 @@ parsegraph_LoginWidget.prototype.loginForm = function () {
   car.node().setBlockStyle(this._cbs);
 
   car.node().setClickListener(this.toggleRemember, this);
-  car.node().setKeyListener(function (key) {
-    if (key === "Enter" || key === " ") {
+  car.node().setKeyListener(function(key) {
+    if (key === 'Enter' || key === ' ') {
       this.toggleRemember();
     }
   }, this);
 
   car.pull(parsegraph_FORWARD);
   car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
-  car.label("Remember log in");
+  car.label('Remember log in');
   car.node().setClickListener(this.toggleRemember, this);
   car.pop();
 
   car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
   this._leaveButton = car.spawnMove(parsegraph_BACKWARD, parsegraph_BLOCK);
   car.node().setBlockStyle(this._bbs);
-  car.label("Leave");
+  car.label('Leave');
   car.node().setClickListener(this.leave, this);
   car.node().setKeyListener(this.leave, this);
-  car.move("f");
+  car.move('f');
 
   this._loginButton = car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
   car.node().setBlockStyle(this._bbs);
-  car.label("Log in");
+  car.label('Log in');
   car.node().setClickListener(this.login, this);
   car.node().setKeyListener(this.login, this);
 
   this._createUserButton = car.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
   car.node().setBlockStyle(this._bbs);
-  car.label("Create user");
+  car.label('Create user');
   car.node().setClickListener(this.createNewUser, this);
   car.node().setKeyListener(this.createNewUser, this);
 
   parsegraph_chainAllTabs(
-    this._usernameField,
-    this._passwordField,
-    this._rememberCheck,
-    this._loginButton,
-    this._createUserButton
+      this._usernameField,
+      this._passwordField,
+      this._rememberCheck,
+      this._loginButton,
+      this._createUserButton,
   );
 
   return this._loginForm;
 };
 
-parsegraph_LoginWidget.prototype.isRemembering = function () {
+parsegraph_LoginWidget.prototype.isRemembering = function() {
   return this._rememberCheck.blockStyle() === this._scbs;
 };
 
-parsegraph_LoginWidget.prototype.toggleRemember = function () {
+parsegraph_LoginWidget.prototype.toggleRemember = function() {
   this._rememberCheck.setBlockStyle(
-    this.isRemembering() ? this._cbs : this._scbs
+    this.isRemembering() ? this._cbs : this._scbs,
   );
   if (this.isRemembering()) {
-    //localStorage.setItem("parsegraph_LoginWidget_remember", "1");
+    // localStorage.setItem("parsegraph_LoginWidget_remember", "1");
   } else {
-    //localStorage.removeItem("parsegraph_LoginWidget_remember");
+    // localStorage.removeItem("parsegraph_LoginWidget_remember");
   }
   this._graph.scheduleRepaint();
 };

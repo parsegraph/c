@@ -1,84 +1,84 @@
-import { parsegraph_BACKGROUND_COLOR } from "./settings";
+import {parsegraph_BACKGROUND_COLOR} from './settings';
 import {
   parsegraph_LayoutList,
   parsegraph_COMPONENT_LAYOUT_HORIZONTAL,
-} from "./layout";
-import { addEventMethod, normalizeWheel } from "../event";
-import Rect from "./Rect";
-import { parsegraph_checkGLError } from "../gl";
-import { elapsed } from "../timing";
+} from './layout';
+import {addEventMethod, normalizeWheel} from '../event';
+import Rect from './Rect';
+import {parsegraph_checkGLError} from '../gl';
+import {elapsed} from '../timing';
 
 const parsegraph_Window_VertexShader =
-  "uniform mat3 u_world;\n" +
-  "" +
-  "attribute vec2 a_position;" +
-  "attribute vec2 a_texCoord;" +
-  "" +
-  "varying highp vec2 texCoord;" +
-  "" +
-  "void main() {" +
-  "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
-  "texCoord = a_texCoord;" +
-  "}";
+  'uniform mat3 u_world;\n' +
+  '' +
+  'attribute vec2 a_position;' +
+  'attribute vec2 a_texCoord;' +
+  '' +
+  'varying highp vec2 texCoord;' +
+  '' +
+  'void main() {' +
+  'gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);' +
+  'texCoord = a_texCoord;' +
+  '}';
 
 const parsegraph_Window_FragmentShader =
-  "uniform sampler2D u_texture;\n" +
-  "varying highp vec2 texCoord;\n" +
-  "\n" +
-  "void main() {\n" +
-  "gl_FragColor = texture2D(u_texture, texCoord.st);" +
-  //"gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
-  "}";
-var parsegraph_WINDOW_COUNT = 0;
+  'uniform sampler2D u_texture;\n' +
+  'varying highp vec2 texCoord;\n' +
+  '\n' +
+  'void main() {\n' +
+  'gl_FragColor = texture2D(u_texture, texCoord.st);' +
+  // "gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
+  '}';
+let parsegraph_WINDOW_COUNT = 0;
 
 export default function parsegraph_Window() {
   this._id = ++parsegraph_WINDOW_COUNT;
   this._backgroundColor = parsegraph_BACKGROUND_COLOR;
 
-  this._container = document.createElement("div");
-  this._container.className = "parsegraph_Window";
+  this._container = document.createElement('div');
+  this._container.className = 'parsegraph_Window';
 
   this._framebuffer = null;
   this._renderbuffer = null;
   this._glTexture = null;
   this._program = null;
-  this._debugLog = "";
+  this._debugLog = '';
 
   this._schedulerFunc = null;
   this._schedulerFuncThisArg = null;
 
   // The 3D canvas that will be drawn to.
-  this._canvas = document.createElement("canvas");
-  //if(WebGLDebugUtils) {
-  //this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
-  //}
-  var that = this;
+  this._canvas = document.createElement('canvas');
+  // if(WebGLDebugUtils) {
+  // this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
+  // }
+  const that = this;
   this._canvas.addEventListener(
-    "webglcontextlost",
-    function (event) {
-      console.log("Context lost");
-      event.preventDefault();
-      that.onContextChanged(true);
-    },
-    false
+      'webglcontextlost',
+      function(event) {
+        console.log('Context lost');
+        event.preventDefault();
+        that.onContextChanged(true);
+      },
+      false,
   );
   this._canvas.addEventListener(
-    "webglcontextrestored",
-    function () {
-      console.log("Context restored");
-      that.onContextChanged(false);
-    },
-    false
+      'webglcontextrestored',
+      function() {
+        console.log('Context restored');
+        that.onContextChanged(false);
+      },
+      false,
   );
   this._canvas.addEventListener(
-    "contextmenu",
-    function (e) {
-      e.preventDefault();
-    },
-    false
+      'contextmenu',
+      function(e) {
+        e.preventDefault();
+      },
+      false,
   );
-  this._canvas.style.display = "block";
-  this._canvas.setAttribute("tabIndex", 0);
+  this._canvas.style.display = 'block';
+  this._canvas.setAttribute('tabIndex', 0);
 
   // GL content, not created until used.
   this._gl = null;
@@ -86,21 +86,21 @@ export default function parsegraph_Window() {
 
   this._container.appendChild(this._canvas);
 
-  this._overlayCanvas = document.createElement("canvas");
-  this._overlayCanvas.style.position = "absolute";
-  this._overlayCanvas.style.top = "0";
-  this._overlayCanvas.style.left = "0";
-  this._overlayCanvas.style.pointerEvents = "none";
-  this._overlayCtx = this._overlayCanvas.getContext("2d");
+  this._overlayCanvas = document.createElement('canvas');
+  this._overlayCanvas.style.position = 'absolute';
+  this._overlayCanvas.style.top = '0';
+  this._overlayCanvas.style.left = '0';
+  this._overlayCanvas.style.pointerEvents = 'none';
+  this._overlayCtx = this._overlayCanvas.getContext('2d');
   this._container.appendChild(this._overlayCanvas);
 
-  this._debugPanel = document.createElement("span");
-  this._debugPanel.className = "debug";
-  this._debugPanel.innerHTML = "DEBUG";
-  //this._container.appendChild(this._debugPanel);
+  this._debugPanel = document.createElement('span');
+  this._debugPanel.className = 'debug';
+  this._debugPanel.innerHTML = 'DEBUG';
+  // this._container.appendChild(this._debugPanel);
 
   this._layoutList = new parsegraph_LayoutList(
-    parsegraph_COMPONENT_LAYOUT_HORIZONTAL
+      parsegraph_COMPONENT_LAYOUT_HORIZONTAL,
   );
 
   this._textureSize = NaN;
@@ -114,21 +114,21 @@ export default function parsegraph_Window() {
   this._lastMouseY = 0;
 
   addEventMethod(
-    this.container(),
-    "focus",
-    function (event) {
-      this._focused = true;
-    },
-    this
+      this.container(),
+      'focus',
+      function(event) {
+        this._focused = true;
+      },
+      this,
   );
 
   addEventMethod(
-    this.container(),
-    "blur",
-    function (event) {
-      this._focused = false;
-    },
-    this
+      this.container(),
+      'blur',
+      function(event) {
+        this._focused = false;
+      },
+      this,
   );
 
   this._monitoredTouches = [];
@@ -136,143 +136,143 @@ export default function parsegraph_Window() {
 
   this._needsUpdate = true;
 
-  var onWheel = function (event) {
+  const onWheel = function(event) {
     event.preventDefault();
 
     // Get the mouse coordinates, relative to bottom-left of the canvas.
-    var boundingRect = this.canvas().getBoundingClientRect();
-    var x = event.offsetX - boundingRect.left;
-    var y = event.offsetY - boundingRect.top;
+    const boundingRect = this.canvas().getBoundingClientRect();
+    const x = event.offsetX - boundingRect.left;
+    const y = event.offsetY - boundingRect.top;
 
-    //console.log("Wheel event", wheel);
-    var e = normalizeWheel(event);
+    // console.log("Wheel event", wheel);
+    const e = normalizeWheel(event);
     e.x = event.offsetX;
     e.y = event.offsetY;
-    this.handleEvent("wheel", e);
+    this.handleEvent('wheel', e);
   };
 
   /**
    * The receiver of all canvas wheel events.
    */
-  addEventMethod(this.canvas(), "DOMMouseScroll", onWheel, this, false);
-  addEventMethod(this.canvas(), "mousewheel", onWheel, this, false);
+  addEventMethod(this.canvas(), 'DOMMouseScroll', onWheel, this, false);
+  addEventMethod(this.canvas(), 'mousewheel', onWheel, this, false);
 
   addEventMethod(
-    this.canvas(),
-    "touchstart",
-    function (event) {
-      event.preventDefault();
-      this._focused = true;
+      this.canvas(),
+      'touchstart',
+      function(event) {
+        event.preventDefault();
+        this._focused = true;
 
-      for (var i = 0; i < event.changedTouches.length; ++i) {
-        var touch = event.changedTouches[i];
-        var touchX = touch.pageX;
-        var touchY = touch.pageY;
-        var touchRec = {
-          identifier: touch.identifier,
-          x: touchX,
-          y: touchY,
-          startX: touchX,
-          startY: touchY,
-          touchstart: null,
-        };
-        this._monitoredTouches.push(touchRec);
-        this._lastMouseX = touchX;
-        this._lastMouseY = touchY;
+        for (let i = 0; i < event.changedTouches.length; ++i) {
+          const touch = event.changedTouches[i];
+          const touchX = touch.pageX;
+          const touchY = touch.pageY;
+          const touchRec = {
+            identifier: touch.identifier,
+            x: touchX,
+            y: touchY,
+            startX: touchX,
+            startY: touchY,
+            touchstart: null,
+          };
+          this._monitoredTouches.push(touchRec);
+          this._lastMouseX = touchX;
+          this._lastMouseY = touchY;
 
-        this.handleEvent("touchstart", {
-          multiple: this._monitoredTouches.length != 1,
-          x: touchX,
-          y: touchY,
-          dx: 0,
-          dy: 0,
-        });
+          this.handleEvent('touchstart', {
+            multiple: this._monitoredTouches.length != 1,
+            x: touchX,
+            y: touchY,
+            dx: 0,
+            dy: 0,
+          });
 
-        touchRec.touchstart = Date.now();
-        this._touchstartTime = Date.now();
-      }
+          touchRec.touchstart = Date.now();
+          this._touchstartTime = Date.now();
+        }
 
-      if (this.numActiveTouches() > 1) {
+        if (this.numActiveTouches() > 1) {
         // Zoom.
-        var zoomCenter = midPoint(
-          this._monitoredTouches[0].x,
-          this._monitoredTouches[0].y,
-          this._monitoredTouches[1].x,
-          this._monitoredTouches[1].y
-        );
-        this.handleEvent("touchzoom", {
-          x: zoomCenter[0],
-          y: zoomCenter[1],
-          dx: this._monitoredTouches[1].x - this._monitoredTouches[0].x,
-          dy: this._monitoredTouches[1].y - this._monitoredTouches[0].y,
-        });
-      }
-    },
-    this,
-    true
+          const zoomCenter = midPoint(
+              this._monitoredTouches[0].x,
+              this._monitoredTouches[0].y,
+              this._monitoredTouches[1].x,
+              this._monitoredTouches[1].y,
+          );
+          this.handleEvent('touchzoom', {
+            x: zoomCenter[0],
+            y: zoomCenter[1],
+            dx: this._monitoredTouches[1].x - this._monitoredTouches[0].x,
+            dy: this._monitoredTouches[1].y - this._monitoredTouches[0].y,
+          });
+        }
+      },
+      this,
+      true,
   );
 
   addEventMethod(
-    this.canvas(),
-    "touchmove",
-    function (event) {
-      if (!this._focused) {
-        return;
-      }
-      event.preventDefault();
-      //console.log("touchmove", event);
+      this.canvas(),
+      'touchmove',
+      function(event) {
+        if (!this._focused) {
+          return;
+        }
+        event.preventDefault();
+        // console.log("touchmove", event);
 
-      for (var i = 0; i < event.changedTouches.length; ++i) {
-        var touch = event.changedTouches[i];
-        var touchRecord = this.getTouchByIdentifier(touch.identifier);
+        for (let i = 0; i < event.changedTouches.length; ++i) {
+          const touch = event.changedTouches[i];
+          const touchRecord = this.getTouchByIdentifier(touch.identifier);
 
-        var touchX = touch.pageX;
-        var touchY = touch.pageY;
-        this.handleEvent("touchmove", {
-          multiple: this._monitoredTouches.length != 1,
-          x: touchX,
-          y: touchY,
-          dx: touchX - touchRecord.x,
-          dy: touchY - touchRecord.y,
-        });
-        touchRecord.x = touchX;
-        touchRecord.y = touchY;
-        this._lastMouseX = touchX;
-        this._lastMouseY = touchY;
-      }
+          const touchX = touch.pageX;
+          const touchY = touch.pageY;
+          this.handleEvent('touchmove', {
+            multiple: this._monitoredTouches.length != 1,
+            x: touchX,
+            y: touchY,
+            dx: touchX - touchRecord.x,
+            dy: touchY - touchRecord.y,
+          });
+          touchRecord.x = touchX;
+          touchRecord.y = touchY;
+          this._lastMouseX = touchX;
+          this._lastMouseY = touchY;
+        }
 
-      if (this.numActiveTouches() > 1) {
-        var zoomCenter = midPoint(
-          this._monitoredTouches[0].x,
-          this._monitoredTouches[0].y,
-          this._monitoredTouches[1].x,
-          this._monitoredTouches[1].y
-        );
-        this.handleEvent("touchzoom", {
-          x: zoomCenter[0],
-          y: zoomCenter[1],
-          dx: this._monitoredTouches[1].x - this._monitoredTouches[0].x,
-          dy: this._monitoredTouches[1].y - this._monitoredTouches[0].y,
-        });
-      }
-    },
-    this
+        if (this.numActiveTouches() > 1) {
+          const zoomCenter = midPoint(
+              this._monitoredTouches[0].x,
+              this._monitoredTouches[0].y,
+              this._monitoredTouches[1].x,
+              this._monitoredTouches[1].y,
+          );
+          this.handleEvent('touchzoom', {
+            x: zoomCenter[0],
+            y: zoomCenter[1],
+            dx: this._monitoredTouches[1].x - this._monitoredTouches[0].x,
+            dy: this._monitoredTouches[1].y - this._monitoredTouches[0].y,
+          });
+        }
+      },
+      this,
   );
 
-  var removeTouchListener = function (event) {
-    //alert
-    //console.log("touchend");
-    for (var i = 0; i < event.changedTouches.length; ++i) {
-      var touch = event.changedTouches[i];
-      var touchData = this.removeTouchByIdentifier(touch.identifier);
+  const removeTouchListener = function(event) {
+    // alert
+    // console.log("touchend");
+    for (let i = 0; i < event.changedTouches.length; ++i) {
+      const touch = event.changedTouches[i];
+      const touchData = this.removeTouchByIdentifier(touch.identifier);
     }
 
     if (
       this._touchstartTime != null &&
       Date.now() - this._touchstartTime < parsegraph_CLICK_DELAY_MILLIS
     ) {
-      var that = this;
-      this._touchendTimeout = setTimeout(function () {
+      const that = this;
+      this._touchendTimeout = setTimeout(function() {
         that._touchendTimeout = null;
 
         if (isDoubleTouch) {
@@ -287,7 +287,7 @@ export default function parsegraph_Window() {
     }
 
     if (
-      this.handleEvent("touchend", {
+      this.handleEvent('touchend', {
         x: this._lastMouseX,
         y: this._lastMouseY,
         startTime: this._touchstartTime,
@@ -298,120 +298,120 @@ export default function parsegraph_Window() {
     }
   };
 
-  addEventMethod(this.canvas(), "touchend", removeTouchListener, this);
-  addEventMethod(this.canvas(), "touchcancel", removeTouchListener, this);
+  addEventMethod(this.canvas(), 'touchend', removeTouchListener, this);
+  addEventMethod(this.canvas(), 'touchcancel', removeTouchListener, this);
 
   addEventMethod(
-    this.canvas(),
-    "mousedown",
-    function (event) {
-      this._focused = true;
+      this.canvas(),
+      'mousedown',
+      function(event) {
+        this._focused = true;
 
-      console.log(event);
-      this._lastMouseX = event.offsetX;
-      this._lastMouseY = event.offsetY;
+        console.log(event);
+        this._lastMouseX = event.offsetX;
+        this._lastMouseY = event.offsetY;
 
-      //console.log("Setting mousedown time");
-      this._mousedownTime = Date.now();
+        // console.log("Setting mousedown time");
+        this._mousedownTime = Date.now();
 
-      if (
-        this.handleEvent("mousedown", {
-          x: this._lastMouseX,
-          y: this._lastMouseY,
-          button: event.button,
-          startTime: this._mousedownTime,
-        })
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.canvas().focus();
-      }
+        if (
+          this.handleEvent('mousedown', {
+            x: this._lastMouseX,
+            y: this._lastMouseY,
+            button: event.button,
+            startTime: this._mousedownTime,
+          })
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          this.canvas().focus();
+        }
 
-      // This click is a second click following a recent click; it's a double-click.
-      if (this._mouseupTimeout) {
-        window.clearTimeout(this._mouseupTimeout);
-        this._mouseupTimeout = null;
-        this._isDoubleClick = true;
-      }
-    },
-    this
+        // This click is a second click following a recent click; it's a double-click.
+        if (this._mouseupTimeout) {
+          window.clearTimeout(this._mouseupTimeout);
+          this._mouseupTimeout = null;
+          this._isDoubleClick = true;
+        }
+      },
+      this,
   );
 
   this._isDoubleClick = false;
   this._mouseupTimeout = 0;
 
   addEventMethod(
-    this.canvas(),
-    "mousemove",
-    function (event) {
-      this.handleEvent("mousemove", {
-        x: event.offsetX,
-        y: event.offsetY,
-        dx: event.offsetX - this._lastMouseX,
-        dy: event.offsetY - this._lastMouseY,
-      });
-      this._lastMouseX = event.offsetX;
-      this._lastMouseY = event.offsetY;
-    },
-    this
+      this.canvas(),
+      'mousemove',
+      function(event) {
+        this.handleEvent('mousemove', {
+          x: event.offsetX,
+          y: event.offsetY,
+          dx: event.offsetX - this._lastMouseX,
+          dy: event.offsetY - this._lastMouseY,
+        });
+        this._lastMouseX = event.offsetX;
+        this._lastMouseY = event.offsetY;
+      },
+      this,
   );
 
-  var mouseUpListener = function (event) {
-    this.handleEvent("mouseup", {
+  const mouseUpListener = function(event) {
+    this.handleEvent('mouseup', {
       x: this._lastMouseX,
       y: this._lastMouseY,
     });
   };
 
-  addEventMethod(this.canvas(), "mouseup", mouseUpListener, this);
-  addEventMethod(this.canvas(), "mouseout", mouseUpListener, this);
+  addEventMethod(this.canvas(), 'mouseup', mouseUpListener, this);
+  addEventMethod(this.canvas(), 'mouseout', mouseUpListener, this);
 
   addEventMethod(
-    this.canvas(),
-    "keydown",
-    function (event) {
-      if (event.altKey || event.metaKey) {
-        //console.log("Key event had ignored modifiers");
-        return;
-      }
-      if (event.ctrlKey && event.shiftKey) {
-        return;
-      }
+      this.canvas(),
+      'keydown',
+      function(event) {
+        if (event.altKey || event.metaKey) {
+        // console.log("Key event had ignored modifiers");
+          return;
+        }
+        if (event.ctrlKey && event.shiftKey) {
+          return;
+        }
 
-      this.handleEvent("keydown", {
-        x: this._lastMouseX,
-        y: this._lastMouseY,
-        key: event.key,
-        keyCode: event.keyCode,
-        ctrlKey: event.ctrlKey,
-      });
-    },
-    this
+        this.handleEvent('keydown', {
+          x: this._lastMouseX,
+          y: this._lastMouseY,
+          key: event.key,
+          keyCode: event.keyCode,
+          ctrlKey: event.ctrlKey,
+        });
+      },
+      this,
   );
 
   addEventMethod(
-    this.canvas(),
-    "keyup",
-    function (event) {
-      this.handleEvent("keyup", {
-        x: this._lastMouseX,
-        y: this._lastMouseY,
-        key: event.key,
-        keyCode: event.keyCode,
-        ctrlKey: event.ctrlKey,
-      });
-    },
-    this
+      this.canvas(),
+      'keyup',
+      function(event) {
+        this.handleEvent('keyup', {
+          x: this._lastMouseX,
+          y: this._lastMouseY,
+          key: event.key,
+          keyCode: event.keyCode,
+          ctrlKey: event.ctrlKey,
+        });
+      },
+      this,
   );
 }
 
-parsegraph_Window.prototype.isOffscreen = function () {
+parsegraph_Window.prototype.isOffscreen = function() {
   return false;
 };
 
-parsegraph_Window.prototype.numActiveTouches = function () {
-  var realMonitoredTouches = 0;
-  this._monitoredTouches.forEach(function (touchRec) {
+parsegraph_Window.prototype.numActiveTouches = function() {
+  let realMonitoredTouches = 0;
+  this._monitoredTouches.forEach(function(touchRec) {
     if (touchRec.touchstart) {
       realMonitoredTouches++;
     }
@@ -419,71 +419,71 @@ parsegraph_Window.prototype.numActiveTouches = function () {
   return realMonitoredTouches;
 };
 
-parsegraph_Window.prototype.numComponents = function () {
+parsegraph_Window.prototype.numComponents = function() {
   return this._layoutList.count();
 };
 
-parsegraph_Window.prototype.setCursor = function (cursorType) {
+parsegraph_Window.prototype.setCursor = function(cursorType) {
   this.canvas().style.cursor = cursorType;
 };
 
-parsegraph_Window.prototype.focusedComponent = function () {
+parsegraph_Window.prototype.focusedComponent = function() {
   return this._focused ? this._focusedComponent : null;
 };
 
-parsegraph_Window.prototype.layout = function (target) {
-  var targetSize = null;
-  this.forEach(function (comp, compSize) {
+parsegraph_Window.prototype.layout = function(target) {
+  let targetSize = null;
+  this.forEach(function(comp, compSize) {
     if (target === comp) {
       targetSize = compSize;
       return true;
     }
   }, this);
   if (!targetSize) {
-    throw new Error("Layout target must be a child component of this window");
+    throw new Error('Layout target must be a child component of this window');
   }
   return targetSize;
 };
 
-parsegraph_Window.prototype.getSize = function (sizeOut) {
+parsegraph_Window.prototype.getSize = function(sizeOut) {
   sizeOut.setX(0);
   sizeOut.setY(0);
   sizeOut.setWidth(this.width());
   sizeOut.setHeight(this.height());
 };
 
-parsegraph_Window.prototype.forEach = function (func, funcThisArg) {
-  var windowSize = new Rect();
+parsegraph_Window.prototype.forEach = function(func, funcThisArg) {
+  const windowSize = new Rect();
   this.getSize(windowSize);
   return this._layoutList.forEach(func, funcThisArg, windowSize);
 };
 
-parsegraph_Window.prototype.setFocusedComponent = function (x, y) {
-  var compSize = new Rect();
+parsegraph_Window.prototype.setFocusedComponent = function(x, y) {
+  const compSize = new Rect();
   y = this.height() - y;
-  //console.log("Focusing component at (" + x + ", " + y + ")");
+  // console.log("Focusing component at (" + x + ", " + y + ")");
   if (
-    this.forEach(function (comp, compSize) {
+    this.forEach(function(comp, compSize) {
       if (!comp.hasEventHandler()) {
         return;
       }
-      //console.log("Component size", compSize);
+      // console.log("Component size", compSize);
       if (x < compSize.x() || y < compSize.y()) {
-        //console.log("Component is greater than X or Y (" + compSize.x() + ", " + compSize.y() + ")");
+        // console.log("Component is greater than X or Y (" + compSize.x() + ", " + compSize.y() + ")");
         return;
       }
       if (
         x > compSize.x() + compSize.width() ||
         y > compSize.y() + compSize.height()
       ) {
-        //console.log("Component is lesser than X or Y");
+        // console.log("Component is lesser than X or Y");
         return;
       }
       if (this._focusedComponent !== comp && this._focusedComponent) {
-        this._focusedComponent.handleEvent("blur");
+        this._focusedComponent.handleEvent('blur');
       }
       this._focusedComponent = comp;
-      //console.log("Found focused component: " + comp);
+      // console.log("Found focused component: " + comp);
       return true;
     }, this)
   ) {
@@ -491,28 +491,28 @@ parsegraph_Window.prototype.setFocusedComponent = function (x, y) {
   }
   // No component was focused.
   if (this._focusedComponent) {
-    this._focusedComponent.handleEvent("blur");
+    this._focusedComponent.handleEvent('blur');
   }
   this._focusedComponent = null;
 };
 
-parsegraph_Window.prototype.handleEvent = function (eventType, inputData) {
-  if (eventType === "tick") {
-    var needsUpdate = false;
-    this.forEach(function (comp) {
-      needsUpdate = comp.handleEvent("tick", inputData) || needsUpdate;
+parsegraph_Window.prototype.handleEvent = function(eventType, inputData) {
+  if (eventType === 'tick') {
+    let needsUpdate = false;
+    this.forEach(function(comp) {
+      needsUpdate = comp.handleEvent('tick', inputData) || needsUpdate;
     }, this);
     return needsUpdate;
   }
   if (
-    eventType === "touchstart" ||
-    eventType === "wheel" ||
-    eventType === "touchmove" ||
-    eventType === "mousedown"
+    eventType === 'touchstart' ||
+    eventType === 'wheel' ||
+    eventType === 'touchmove' ||
+    eventType === 'mousedown'
   ) {
     this.setFocusedComponent(inputData.x, inputData.y);
     if (!this._focusedComponent) {
-      //console.log("No focused component");
+      // console.log("No focused component");
       return;
     }
     var compSize = this.layout(this._focusedComponent);
@@ -521,18 +521,18 @@ parsegraph_Window.prototype.handleEvent = function (eventType, inputData) {
     // Component position is bottomleft-origin.
     // Component input should be topleft-origin.
     console.log(
-      "Raw Y: y=" +
+        'Raw Y: y=' +
         inputData.y +
-        ", cs.h=" +
+        ', cs.h=' +
         compSize.height() +
-        ", cs.y=" +
-        compSize.y()
+        ', cs.y=' +
+        compSize.y(),
     );
     inputData.y -= this.height() - (compSize.y() + compSize.height());
-    console.log("Adjusted Y: " + inputData.y + ", " + compSize.y());
+    console.log('Adjusted Y: ' + inputData.y + ', ' + compSize.y());
   }
   if (this._focusedComponent) {
-    if (eventType === "touchend" || eventType === "mousemove") {
+    if (eventType === 'touchend' || eventType === 'mousemove') {
       var compSize = this.layout(this._focusedComponent);
       inputData.x -= compSize.x();
       inputData.y -= this.height() - (compSize.y() + compSize.height());
@@ -545,8 +545,8 @@ parsegraph_Window.prototype.handleEvent = function (eventType, inputData) {
   return false;
 };
 
-parsegraph_Window.prototype.getTouchByIdentifier = function (identifier) {
-  for (var i = 0; i < this._monitoredTouches.length; ++i) {
+parsegraph_Window.prototype.getTouchByIdentifier = function(identifier) {
+  for (let i = 0; i < this._monitoredTouches.length; ++i) {
     if (this._monitoredTouches[i].identifier == identifier) {
       return this._monitoredTouches[i];
     }
@@ -554,9 +554,9 @@ parsegraph_Window.prototype.getTouchByIdentifier = function (identifier) {
   return null;
 };
 
-parsegraph_Window.prototype.removeTouchByIdentifier = function (identifier) {
-  var touch = null;
-  for (var i = 0; i < this._monitoredTouches.length; ++i) {
+parsegraph_Window.prototype.removeTouchByIdentifier = function(identifier) {
+  let touch = null;
+  for (let i = 0; i < this._monitoredTouches.length; ++i) {
     if (this._monitoredTouches[i].identifier == identifier) {
       touch = this._monitoredTouches.splice(i--, 1)[0];
       break;
@@ -565,42 +565,42 @@ parsegraph_Window.prototype.removeTouchByIdentifier = function (identifier) {
   return touch;
 };
 
-parsegraph_Window.prototype.scheduleUpdate = function () {
-  //console.log("Window is scheduling update");
+parsegraph_Window.prototype.scheduleUpdate = function() {
+  // console.log("Window is scheduling update");
   if (this._schedulerFunc) {
     this._schedulerFunc.call(this._schedulerFuncThisArg, this);
   }
 };
 
-parsegraph_Window.prototype.setOnScheduleUpdate = function (
-  schedulerFunc,
-  schedulerFuncThisArg
+parsegraph_Window.prototype.setOnScheduleUpdate = function(
+    schedulerFunc,
+    schedulerFuncThisArg,
 ) {
   this._schedulerFunc = schedulerFunc;
   this._schedulerFuncThisArg = schedulerFuncThisArg;
 };
 
-parsegraph_Window.prototype.lastMouseCoords = function () {
+parsegraph_Window.prototype.lastMouseCoords = function() {
   return [this._lastMouseX, this._lastMouseY];
 };
 
-parsegraph_Window.prototype.lastMouseX = function () {
+parsegraph_Window.prototype.lastMouseX = function() {
   return this._lastMouseX;
 };
 
-parsegraph_Window.prototype.lastMouseY = function () {
+parsegraph_Window.prototype.lastMouseY = function() {
   return this._lastMouseY;
 };
 
-parsegraph_Window.prototype.id = function () {
+parsegraph_Window.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Window.prototype.shaders = function () {
+parsegraph_Window.prototype.shaders = function() {
   return this._shaders;
 };
 
-parsegraph_Window.prototype.textureSize = function () {
+parsegraph_Window.prototype.textureSize = function() {
   if (this._gl.isContextLost()) {
     return NaN;
   }
@@ -610,64 +610,64 @@ parsegraph_Window.prototype.textureSize = function () {
   return this._textureSize;
 };
 
-parsegraph_Window.prototype.onContextChanged = function (isLost) {
+parsegraph_Window.prototype.onContextChanged = function(isLost) {
   if (isLost) {
-    var keys = [];
-    for (var k in this._shaders) {
+    const keys = [];
+    for (const k in this._shaders) {
       keys.push(k);
     }
-    for (var i in keys) {
+    for (const i in keys) {
       delete this._shaders[keys[i]];
     }
   }
-  this.forEach(function (comp) {
+  this.forEach(function(comp) {
     if (comp.contextChanged) {
       comp.contextChanged(isLost, this);
     }
   }, this);
 };
 
-parsegraph_Window.prototype.canvas = function () {
+parsegraph_Window.prototype.canvas = function() {
   return this._canvas;
 };
 
-parsegraph_Window.prototype.overlay = function () {
+parsegraph_Window.prototype.overlay = function() {
   return this._overlayCtx;
 };
 
-parsegraph_Window.prototype.overlayCanvas = function () {
+parsegraph_Window.prototype.overlayCanvas = function() {
   return this._overlayCanvas;
 };
 
-parsegraph_Window.prototype.gl = function () {
+parsegraph_Window.prototype.gl = function() {
   if (this._gl) {
     return this._gl;
   }
-  //this._gl = this._canvas.getContext("webgl2", {
-  //antialias:true
-  //});
+  // this._gl = this._canvas.getContext("webgl2", {
+  // antialias:true
+  // });
   if (this._gl) {
-    //this.render = this.renderWebgl2;
-    parsegraph_checkGLError(this._gl, "WebGL2 creation");
+    // this.render = this.renderWebgl2;
+    parsegraph_checkGLError(this._gl, 'WebGL2 creation');
     return this._gl;
   }
-  this._gl = this._canvas.getContext("webgl");
+  this._gl = this._canvas.getContext('webgl');
   if (this._gl) {
-    parsegraph_checkGLError(this._gl, "WebGL creation");
+    parsegraph_checkGLError(this._gl, 'WebGL creation');
     return this._gl;
   }
-  throw new Error("GL context is not supported");
+  throw new Error('GL context is not supported');
 };
 
-parsegraph_Window.prototype.setGL = function (gl) {
+parsegraph_Window.prototype.setGL = function(gl) {
   this._gl = gl;
 };
 
-parsegraph_Window.prototype.setAudio = function (audio) {
+parsegraph_Window.prototype.setAudio = function(audio) {
   this._audio = audio;
 };
 
-parsegraph_Window.prototype.startAudio = function () {
+parsegraph_Window.prototype.startAudio = function() {
   if (!this._audio) {
     try {
       this._audio = new AudioContext();
@@ -675,36 +675,36 @@ parsegraph_Window.prototype.startAudio = function () {
       console.log(ex);
     }
     if (this._audio == null) {
-      throw new Error("AudioContext is not supported");
+      throw new Error('AudioContext is not supported');
     }
   }
   return this.audio();
 };
 
-parsegraph_Window.prototype.audio = function () {
+parsegraph_Window.prototype.audio = function() {
   return this._audio;
 };
 
-parsegraph_Window.prototype.resize = function (w, h) {
-  this.container().style.width = typeof w === "number" ? w + "px" : w;
+parsegraph_Window.prototype.resize = function(w, h) {
+  this.container().style.width = typeof w === 'number' ? w + 'px' : w;
   if (arguments.length === 1) {
     h = w;
   }
-  this.container().style.height = typeof h === "number" ? h + "px" : h;
+  this.container().style.height = typeof h === 'number' ? h + 'px' : h;
 };
 
-parsegraph_Window.prototype.setExplicitSize = function (w, h) {
+parsegraph_Window.prototype.setExplicitSize = function(w, h) {
   this._explicitWidth = w;
   this._explicitHeight = h;
   this.resize(w, h);
 };
 
-parsegraph_Window.prototype.getWidth = function () {
+parsegraph_Window.prototype.getWidth = function() {
   return this._explicitWidth || this.container().clientWidth;
 };
 parsegraph_Window.prototype.width = parsegraph_Window.prototype.getWidth;
 
-parsegraph_Window.prototype.getHeight = function () {
+parsegraph_Window.prototype.getHeight = function() {
   return this._explicitHeight || this.container().clientHeight;
 };
 parsegraph_Window.prototype.height = parsegraph_Window.prototype.getHeight;
@@ -712,82 +712,82 @@ parsegraph_Window.prototype.height = parsegraph_Window.prototype.getHeight;
 /**
  * Returns the container that holds the canvas for this graph.
  */
-parsegraph_Window.prototype.container = function () {
+parsegraph_Window.prototype.container = function() {
   return this._container;
 };
 
-parsegraph_Window.prototype.addWidget = function (widget) {
+parsegraph_Window.prototype.addWidget = function(widget) {
   return this.addComponent(widget.component());
 };
 
-parsegraph_Window.prototype.addComponent = function (comp) {
+parsegraph_Window.prototype.addComponent = function(comp) {
   return this.addHorizontal(comp, null);
 };
 
-parsegraph_Window.prototype.addHorizontal = function (comp, other) {
+parsegraph_Window.prototype.addHorizontal = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
     this._layoutList.addHorizontal(comp);
     return;
   }
-  var container = this._layoutList.contains(other);
+  const container = this._layoutList.contains(other);
   if (!container) {
-    throw new Error("Window must contain the given reference component");
+    throw new Error('Window must contain the given reference component');
   }
   container.addHorizontal(comp);
 };
 
-parsegraph_Window.prototype.addVertical = function (comp, other) {
+parsegraph_Window.prototype.addVertical = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
     this._layoutList.addVertical(comp);
     return;
   }
-  var container = this._layoutList.contains(other);
+  const container = this._layoutList.contains(other);
   if (!container) {
-    throw new Error("Window must contain the given reference component");
+    throw new Error('Window must contain the given reference component');
   }
   container.addVertical(comp);
   console.log(this._layoutList);
   console.log(this._layoutList);
 };
 
-parsegraph_Window.prototype.removeComponent = function (compToRemove) {
+parsegraph_Window.prototype.removeComponent = function(compToRemove) {
   this.scheduleUpdate();
   if (compToRemove === this._focusedComponent) {
     if (this._focusedComponent) {
-      this._focusedComponent.handleEvent("blur");
+      this._focusedComponent.handleEvent('blur');
     }
-    var prior = this._layoutList.getPrevious(compToRemove);
-    var next = this._layoutList.getNext(compToRemove);
+    const prior = this._layoutList.getPrevious(compToRemove);
+    const next = this._layoutList.getNext(compToRemove);
     this._focusedComponent = prior || next;
   }
   return this._layoutList.remove(compToRemove);
 };
 
-parsegraph_Window.prototype.tick = function (startTime) {
-  var needsUpdate = false;
-  this.forEach(function (comp) {
-    needsUpdate = comp.handleEvent("tick", startTime) || needsUpdate;
+parsegraph_Window.prototype.tick = function(startTime) {
+  let needsUpdate = false;
+  this.forEach(function(comp) {
+    needsUpdate = comp.handleEvent('tick', startTime) || needsUpdate;
   }, this);
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.paint = function (timeout) {
+parsegraph_Window.prototype.paint = function(timeout) {
   if (this.gl().isContextLost()) {
     return;
   }
-  //console.log("Painting window");
+  // console.log("Painting window");
   this._shaders.gl = this.gl();
   this._shaders.timeout = timeout;
 
-  var needsUpdate = false;
-  var startTime = new Date();
-  var compCount = this.numComponents();
+  let needsUpdate = false;
+  const startTime = new Date();
+  const compCount = this.numComponents();
   while (timeout > 0) {
-    this.forEach(function (comp) {
+    this.forEach(function(comp) {
       needsUpdate = comp.paint(timeout / compCount) || needsUpdate;
     }, this);
     timeout = Math.max(0, timeout - elapsed(startTime));
@@ -795,7 +795,7 @@ parsegraph_Window.prototype.paint = function (timeout) {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.setBackground = function (color) {
+parsegraph_Window.prototype.setBackground = function(color) {
   if (arguments.length > 1) {
     return this.setBackground(parsegraph_createColor.apply(this, arguments));
   }
@@ -805,37 +805,37 @@ parsegraph_Window.prototype.setBackground = function (color) {
 /**
  * Retrieves the current background color.
  */
-parsegraph_Window.prototype.backgroundColor = function () {
+parsegraph_Window.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
 
 /**
  * Returns whether the window has a nonzero client width and height.
  */
-parsegraph_Window.prototype.canProject = function () {
-  var displayWidth = this.getWidth();
-  var displayHeight = this.getHeight();
+parsegraph_Window.prototype.canProject = function() {
+  const displayWidth = this.getWidth();
+  const displayHeight = this.getHeight();
 
   return displayWidth != 0 && displayHeight != 0;
 };
 
-parsegraph_Window.prototype.renderWebgl2 = function () {
+parsegraph_Window.prototype.renderWebgl2 = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
-  var gl = this.gl();
+  const gl = this.gl();
   if (this.gl().isContextLost()) {
     return false;
   }
-  //console.log("Rendering window");
+  // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-      "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
     );
   }
 
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth = this.container().clientWidth;
-  var displayHeight = this.container().clientHeight;
+  const displayWidth = this.container().clientWidth;
+  const displayHeight = this.container().clientHeight;
   // Check if the canvas is not the same size.
   if (
     this.canvas().width != displayWidth ||
@@ -851,32 +851,32 @@ parsegraph_Window.prototype.renderWebgl2 = function () {
     this._renderbuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     gl.renderbufferStorageMultisample(
-      gl.RENDERBUFFER,
-      gl.getParameter(gl.MAX_SAMPLES),
-      gl.RGBA8,
-      displayWidth,
-      displayHeight
+        gl.RENDERBUFFER,
+        gl.getParameter(gl.MAX_SAMPLES),
+        gl.RGBA8,
+        displayWidth,
+        displayHeight,
     );
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
     gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.RENDERBUFFER,
-      this._renderbuffer
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.RENDERBUFFER,
+        this._renderbuffer,
     );
 
     this._glTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
     gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      displayWidth,
-      displayHeight,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        displayWidth,
+        displayHeight,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        null,
     );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -885,11 +885,11 @@ parsegraph_Window.prototype.renderWebgl2 = function () {
     this._framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
     gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      this._glTexture,
-      0
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        this._glTexture,
+        0,
     );
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._multisampleFramebuffer);
@@ -899,23 +899,23 @@ parsegraph_Window.prototype.renderWebgl2 = function () {
   }
 
   gl.clearColor(
-    this._backgroundColor.r(),
-    this._backgroundColor.g(),
-    this._backgroundColor.b(),
-    this._backgroundColor.a()
+      this._backgroundColor.r(),
+      this._backgroundColor.g(),
+      this._backgroundColor.b(),
+      this._backgroundColor.a(),
   );
   gl.enable(gl.SCISSOR_TEST);
-  var needsUpdate = false;
-  var compSize = new Rect();
-  this.forEach(function (comp, compSize) {
-    //console.log("Rendering: " + comp.peer().id());
-    //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+  let needsUpdate = false;
+  const compSize = new Rect();
+  this.forEach(function(comp, compSize) {
+    // console.log("Rendering: " + comp.peer().id());
+    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
-      compSize.x(),
-      compSize.y(),
-      compSize.width(),
-      compSize.height()
+        compSize.x(),
+        compSize.y(),
+        compSize.width(),
+        compSize.height(),
     );
     needsUpdate =
       comp.render(compSize.width(), compSize.height(), true) || needsUpdate;
@@ -928,36 +928,36 @@ parsegraph_Window.prototype.renderWebgl2 = function () {
   gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
   gl.clearBufferfv(gl.COLOR, 0, [1.0, 1.0, 1.0, 1.0]);
   gl.blitFramebuffer(
-    0,
-    0,
-    displayWidth,
-    displayHeight,
-    0,
-    0,
-    displayWidth,
-    displayHeight,
-    gl.COLOR_BUFFER_BIT,
-    gl.LINEAR
+      0,
+      0,
+      displayWidth,
+      displayHeight,
+      0,
+      0,
+      displayWidth,
+      displayHeight,
+      gl.COLOR_BUFFER_BIT,
+      gl.LINEAR,
   );
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
+parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
-  var gl = this.gl();
+  const gl = this.gl();
   if (this.gl().isContextLost()) {
     return;
   }
-  //console.log("Rendering window");
+  // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-      "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
     );
   }
 
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth = this.container().clientWidth;
-  var displayHeight = this.container().clientHeight;
+  const displayWidth = this.container().clientWidth;
+  const displayHeight = this.container().clientHeight;
   // Check if the canvas is not the same size.
   if (
     this.canvas().width != displayWidth ||
@@ -968,23 +968,23 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
     this.canvas().height = displayHeight;
   }
 
-  var multisample = 8;
-  var backbufferWidth = multisample * displayWidth;
-  var backbufferHeight = multisample * displayHeight;
+  const multisample = 8;
+  const backbufferWidth = multisample * displayWidth;
+  const backbufferHeight = multisample * displayHeight;
 
   if (!this._framebuffer) {
     this._glTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
     gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      backbufferWidth,
-      backbufferHeight,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        backbufferWidth,
+        backbufferHeight,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        null,
     );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -995,51 +995,51 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     gl.renderbufferStorage(
-      gl.RENDERBUFFER,
-      gl.DEPTH_COMPONENT16,
-      backbufferWidth,
-      backbufferHeight
+        gl.RENDERBUFFER,
+        gl.DEPTH_COMPONENT16,
+        backbufferWidth,
+        backbufferHeight,
     );
     gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      this._glTexture,
-      0
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        this._glTexture,
+        0,
     );
     gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_ATTACHMENT,
-      gl.RENDERBUFFER,
-      this._renderbuffer
+        gl.FRAMEBUFFER,
+        gl.DEPTH_ATTACHMENT,
+        gl.RENDERBUFFER,
+        this._renderbuffer,
     );
   } else {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
   }
 
-  var compSize = new Rect();
+  const compSize = new Rect();
   gl.clearColor(
-    this._backgroundColor.r(),
-    this._backgroundColor.g(),
-    this._backgroundColor.b(),
-    this._backgroundColor.a()
+      this._backgroundColor.r(),
+      this._backgroundColor.g(),
+      this._backgroundColor.b(),
+      this._backgroundColor.a(),
   );
   gl.enable(gl.SCISSOR_TEST);
-  this.forEach(function (comp, compSize) {
-    //console.log("Rendering: " + comp.peer().id());
-    //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+  this.forEach(function(comp, compSize) {
+    // console.log("Rendering: " + comp.peer().id());
+    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
     gl.scissor(
-      multisample * compSize.x(),
-      multisample * compSize.y(),
-      multisample * compSize.width(),
-      multisample * compSize.height()
+        multisample * compSize.x(),
+        multisample * compSize.y(),
+        multisample * compSize.width(),
+        multisample * compSize.height(),
     );
     gl.viewport(
-      multisample * compSize.x(),
-      multisample * compSize.y(),
-      multisample * compSize.width(),
-      multisample * compSize.height()
+        multisample * compSize.x(),
+        multisample * compSize.y(),
+        multisample * compSize.width(),
+        multisample * compSize.height(),
     );
     comp.render(compSize.width(), compSize.height(), true);
   }, this);
@@ -1049,28 +1049,28 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
 
   if (!this._program) {
     this._program = parsegraph_compileProgram(
-      this,
-      "parsegraph_Window",
-      parsegraph_Window_VertexShader,
-      parsegraph_Window_FragmentShader
+        this,
+        'parsegraph_Window',
+        parsegraph_Window_VertexShader,
+        parsegraph_Window_FragmentShader,
     );
-    this.u_world = gl.getUniformLocation(this._program, "u_world");
-    this.u_texture = gl.getUniformLocation(this._program, "u_texture");
-    this.a_position = gl.getAttribLocation(this._program, "a_position");
-    this.a_texCoord = gl.getAttribLocation(this._program, "a_texCoord");
+    this.u_world = gl.getUniformLocation(this._program, 'u_world');
+    this.u_texture = gl.getUniformLocation(this._program, 'u_texture');
+    this.a_position = gl.getAttribLocation(this._program, 'a_position');
+    this.a_texCoord = gl.getAttribLocation(this._program, 'a_texCoord');
   }
   gl.useProgram(this._program);
 
   gl.activeTexture(gl.TEXTURE0);
-  //console.log("Using texture " + frag.slot()._id);
+  // console.log("Using texture " + frag.slot()._id);
   gl.enableVertexAttribArray(this.a_position);
   gl.enableVertexAttribArray(this.a_texCoord);
   gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
   gl.uniform1i(this.u_texture, 0);
   gl.uniformMatrix3fv(
-    this.u_world,
-    false,
-    make2DProjection(displayWidth, displayHeight)
+      this.u_world,
+      false,
+      make2DProjection(displayWidth, displayHeight),
   );
 
   gl.viewport(0, 0, displayWidth, displayHeight);
@@ -1079,27 +1079,27 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
 
-  var arr = new Float32Array(6 * 4);
+  const arr = new Float32Array(6 * 4);
   arr[0] = 0;
   arr[1] = 0;
   arr[2] = 0;
   arr[3] = (multisample * displayHeight) / backbufferHeight;
-  //arr[2] = 0;
-  //arr[3] = 0;
+  // arr[2] = 0;
+  // arr[3] = 0;
 
   arr[4] = displayWidth;
   arr[5] = 0;
   arr[6] = (multisample * displayWidth) / backbufferWidth;
   arr[7] = (multisample * displayHeight) / backbufferHeight;
-  //arr[6] = 1;
-  //arr[7] = 0;
+  // arr[6] = 1;
+  // arr[7] = 0;
 
   arr[8] = displayWidth;
   arr[9] = displayHeight;
   arr[10] = arr[6];
   arr[11] = 0;
-  //arr[10] = 1;
-  //arr[11] = 1;
+  // arr[10] = 1;
+  // arr[11] = 1;
 
   arr[12] = arr[0];
   arr[13] = arr[1];
@@ -1117,16 +1117,16 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
   arr[23] = arr[11];
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 
-  var FLOAT_SIZE = 4;
-  var stride = 4 * FLOAT_SIZE;
+  const FLOAT_SIZE = 4;
+  const stride = 4 * FLOAT_SIZE;
   gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, stride, 0);
   gl.vertexAttribPointer(
-    this.a_texCoord,
-    2,
-    gl.FLOAT,
-    false,
-    stride,
-    2 * FLOAT_SIZE
+      this.a_texCoord,
+      2,
+      gl.FLOAT,
+      false,
+      stride,
+      2 * FLOAT_SIZE,
   );
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
@@ -1136,21 +1136,21 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function () {
  *
  * Throws if canProject() returns false.
  */
-parsegraph_Window.prototype.renderFramebuffer = function () {
-  var gl = this.gl();
+parsegraph_Window.prototype.renderFramebuffer = function() {
+  const gl = this.gl();
   if (this.gl().isContextLost()) {
     return;
   }
-  //console.log("Rendering window");
+  // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-      "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
     );
   }
 
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth = this.width();
-  var displayHeight = this.height();
+  const displayWidth = this.width();
+  const displayHeight = this.height();
   // Check if the canvas is not the same size.
   if (
     this.canvas().width != displayWidth ||
@@ -1161,22 +1161,22 @@ parsegraph_Window.prototype.renderFramebuffer = function () {
     this.canvas().height = displayHeight;
   }
 
-  var backbufferWidth = displayWidth;
-  var backbufferHeight = displayHeight;
+  const backbufferWidth = displayWidth;
+  const backbufferHeight = displayHeight;
 
   if (!this._framebuffer) {
     this._glTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
     gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      backbufferWidth,
-      backbufferHeight,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        backbufferWidth,
+        backbufferHeight,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        null,
     );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -1187,46 +1187,46 @@ parsegraph_Window.prototype.renderFramebuffer = function () {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
     gl.renderbufferStorage(
-      gl.RENDERBUFFER,
-      gl.DEPTH_COMPONENT16,
-      backbufferWidth,
-      backbufferHeight
+        gl.RENDERBUFFER,
+        gl.DEPTH_COMPONENT16,
+        backbufferWidth,
+        backbufferHeight,
     );
     gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      this._glTexture,
-      0
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        this._glTexture,
+        0,
     );
     gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_ATTACHMENT,
-      gl.RENDERBUFFER,
-      this._renderbuffer
+        gl.FRAMEBUFFER,
+        gl.DEPTH_ATTACHMENT,
+        gl.RENDERBUFFER,
+        this._renderbuffer,
     );
   } else {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
   }
 
-  var compSize = new Rect();
+  const compSize = new Rect();
   gl.clearColor(
-    this._backgroundColor.r(),
-    this._backgroundColor.g(),
-    this._backgroundColor.b(),
-    this._backgroundColor.a()
+      this._backgroundColor.r(),
+      this._backgroundColor.g(),
+      this._backgroundColor.b(),
+      this._backgroundColor.a(),
   );
   gl.enable(gl.SCISSOR_TEST);
-  this.forEach(function (comp, compSize) {
-    //console.log("Rendering: " + comp.peer().id());
-    //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+  this.forEach(function(comp, compSize) {
+    // console.log("Rendering: " + comp.peer().id());
+    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
-      compSize.x(),
-      compSize.y(),
-      compSize.width(),
-      compSize.height()
+        compSize.x(),
+        compSize.y(),
+        compSize.width(),
+        compSize.height(),
     );
     comp.render(compSize.width(), compSize.height(), true);
   }, this);
@@ -1236,28 +1236,28 @@ parsegraph_Window.prototype.renderFramebuffer = function () {
 
   if (!this._program) {
     this._program = parsegraph_compileProgram(
-      this,
-      "parsegraph_Window",
-      parsegraph_Window_VertexShader,
-      parsegraph_Window_FragmentShader
+        this,
+        'parsegraph_Window',
+        parsegraph_Window_VertexShader,
+        parsegraph_Window_FragmentShader,
     );
-    this.u_world = gl.getUniformLocation(this._program, "u_world");
-    this.u_texture = gl.getUniformLocation(this._program, "u_texture");
-    this.a_position = gl.getAttribLocation(this._program, "a_position");
-    this.a_texCoord = gl.getAttribLocation(this._program, "a_texCoord");
+    this.u_world = gl.getUniformLocation(this._program, 'u_world');
+    this.u_texture = gl.getUniformLocation(this._program, 'u_texture');
+    this.a_position = gl.getAttribLocation(this._program, 'a_position');
+    this.a_texCoord = gl.getAttribLocation(this._program, 'a_texCoord');
   }
   gl.useProgram(this._program);
 
   gl.activeTexture(gl.TEXTURE0);
-  //console.log("Using texture " + frag.slot()._id);
+  // console.log("Using texture " + frag.slot()._id);
   gl.enableVertexAttribArray(this.a_position);
   gl.enableVertexAttribArray(this.a_texCoord);
   gl.bindTexture(gl.TEXTURE_2D, this._glTexture);
   gl.uniform1i(this.u_texture, 0);
   gl.uniformMatrix3fv(
-    this.u_world,
-    false,
-    make2DProjection(displayWidth, displayHeight)
+      this.u_world,
+      false,
+      make2DProjection(displayWidth, displayHeight),
   );
 
   gl.viewport(0, 0, displayWidth, displayHeight);
@@ -1266,27 +1266,27 @@ parsegraph_Window.prototype.renderFramebuffer = function () {
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
 
-  var arr = new Float32Array(6 * 4);
+  const arr = new Float32Array(6 * 4);
   arr[0] = 0;
   arr[1] = 0;
   arr[2] = 0;
   arr[3] = displayHeight / backbufferHeight;
-  //arr[2] = 0;
-  //arr[3] = 0;
+  // arr[2] = 0;
+  // arr[3] = 0;
 
   arr[4] = displayWidth;
   arr[5] = 0;
   arr[6] = displayWidth / backbufferWidth;
   arr[7] = displayHeight / backbufferHeight;
-  //arr[6] = 1;
-  //arr[7] = 0;
+  // arr[6] = 1;
+  // arr[7] = 0;
 
   arr[8] = displayWidth;
   arr[9] = displayHeight;
   arr[10] = arr[6];
   arr[11] = 0;
-  //arr[10] = 1;
-  //arr[11] = 1;
+  // arr[10] = 1;
+  // arr[11] = 1;
 
   arr[12] = arr[0];
   arr[13] = arr[1];
@@ -1304,50 +1304,50 @@ parsegraph_Window.prototype.renderFramebuffer = function () {
   arr[23] = arr[11];
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 
-  var FLOAT_SIZE = 4;
-  var stride = 4 * FLOAT_SIZE;
+  const FLOAT_SIZE = 4;
+  const stride = 4 * FLOAT_SIZE;
   gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, stride, 0);
   gl.vertexAttribPointer(
-    this.a_texCoord,
-    2,
-    gl.FLOAT,
-    false,
-    stride,
-    2 * FLOAT_SIZE
+      this.a_texCoord,
+      2,
+      gl.FLOAT,
+      false,
+      stride,
+      2 * FLOAT_SIZE,
   );
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
 
-parsegraph_Window.prototype.log = function (msg) {
-  this._debugLog += msg + "<br/>";
+parsegraph_Window.prototype.log = function(msg) {
+  this._debugLog += msg + '<br/>';
 };
 
-parsegraph_Window.prototype.clearLog = function () {
-  this._debugLog = "";
+parsegraph_Window.prototype.clearLog = function() {
+  this._debugLog = '';
   this.finalizeLog();
 };
 
-parsegraph_Window.prototype.finalizeLog = function () {
+parsegraph_Window.prototype.finalizeLog = function() {
   this._debugPanel.innerHTML = this._debugLog;
 };
 
-parsegraph_Window.prototype.renderBasic = function () {
+parsegraph_Window.prototype.renderBasic = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
-  var gl = this.gl();
+  const gl = this.gl();
   if (this.gl().isContextLost()) {
     return false;
   }
-  //console.log("Rendering window");
+  // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-      "Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window's container to fix."
+        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
     );
   }
 
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth = this.width();
-  var displayHeight = this.height();
+  const displayWidth = this.width();
+  const displayHeight = this.height();
   // Check if the canvas is not the same size.
   if (
     this.canvas().width != displayWidth ||
@@ -1358,24 +1358,24 @@ parsegraph_Window.prototype.renderBasic = function () {
     this.canvas().height = displayHeight;
   }
 
-  var compSize = new Rect();
-  var needsUpdate = false;
+  const compSize = new Rect();
+  let needsUpdate = false;
   gl.clearColor(
-    this._backgroundColor.r(),
-    this._backgroundColor.g(),
-    this._backgroundColor.b(),
-    this._backgroundColor.a()
+      this._backgroundColor.r(),
+      this._backgroundColor.g(),
+      this._backgroundColor.b(),
+      this._backgroundColor.a(),
   );
   gl.enable(gl.SCISSOR_TEST);
-  this.forEach(function (comp, compSize) {
-    //console.log("Rendering: " + comp.peer().id());
-    //console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+  this.forEach(function(comp, compSize) {
+    // console.log("Rendering: " + comp.peer().id());
+    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
-      compSize.x(),
-      compSize.y(),
-      compSize.width(),
-      compSize.height()
+        compSize.x(),
+        compSize.y(),
+        compSize.width(),
+        compSize.height(),
     );
     needsUpdate =
       comp.render(compSize.width(), compSize.height()) || needsUpdate;
@@ -1385,14 +1385,14 @@ parsegraph_Window.prototype.renderBasic = function () {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.render = function () {
+parsegraph_Window.prototype.render = function() {
   this._overlayCanvas.width = top.window.innerWidth;
   this._overlayCanvas.height = top.window.innerHeight;
   this._overlayCtx.clearRect(
-    0,
-    0,
-    this._overlayCanvas.width,
-    this._overlayCanvas.height
+      0,
+      0,
+      this._overlayCanvas.width,
+      this._overlayCanvas.height,
   );
   return this.renderBasic();
 };

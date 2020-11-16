@@ -1,15 +1,15 @@
-import { parsegraph_defaultFont } from "./settings";
-import { timediffMs } from "../timing";
-import Color from "./Color";
-import parsegraph_Label from "./Label";
-import parsegraph_GlyphPainter from "./GlyphPainter";
-import BlockPainter from "./BlockPainter";
+import {parsegraph_defaultFont} from './settings';
+import {timediffMs} from '../timing';
+import Color from './Color';
+import parsegraph_Label from './Label';
+import parsegraph_GlyphPainter from './GlyphPainter';
+import BlockPainter from './BlockPainter';
 
 export default function parsegraph_CameraBoxPainter(window) {
   this._blockPainter = new BlockPainter(window);
   this._glyphPainter = new parsegraph_GlyphPainter(
-    window,
-    parsegraph_defaultFont()
+      window,
+      parsegraph_defaultFont(),
   );
 
   this._borderColor = new Color(1, 1, 1, 0.1);
@@ -18,7 +18,7 @@ export default function parsegraph_CameraBoxPainter(window) {
   this._fontSize = 24;
 }
 
-parsegraph_CameraBoxPainter.prototype.contextChanged = function (isLost) {
+parsegraph_CameraBoxPainter.prototype.contextChanged = function(isLost) {
   if (!isLost) {
     return;
   }
@@ -26,27 +26,27 @@ parsegraph_CameraBoxPainter.prototype.contextChanged = function (isLost) {
   this._glyphPainter.contextChanged(isLost);
 };
 
-parsegraph_CameraBoxPainter.prototype.clear = function () {
+parsegraph_CameraBoxPainter.prototype.clear = function() {
   this._glyphPainter.clear();
   this._blockPainter.clear();
 };
 
-parsegraph_CameraBoxPainter.prototype.drawBox = function (
-  name,
-  rect,
-  scale,
-  mouseX,
-  mouseY,
-  when
+parsegraph_CameraBoxPainter.prototype.drawBox = function(
+    name,
+    rect,
+    scale,
+    mouseX,
+    mouseY,
+    when,
 ) {
-  var painter = this._blockPainter;
+  const painter = this._blockPainter;
 
-  var now = new Date();
-  var diff = timediffMs(when, now);
-  var zc = new Color(0, 0, 0, 0);
-  var interp = 1;
-  var fadeDelay = 500;
-  var fadeLength = 1000;
+  const now = new Date();
+  const diff = timediffMs(when, now);
+  const zc = new Color(0, 0, 0, 0);
+  let interp = 1;
+  const fadeDelay = 500;
+  const fadeLength = 1000;
   if (diff > fadeDelay) {
     interp = 1 - (diff - fadeDelay) / fadeLength;
   }
@@ -58,19 +58,19 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function (
   this._glyphPainter.backgroundColor().setA(interp);
 
   painter.drawBlock(
-    rect.x(),
-    rect.y(),
-    rect.width(),
-    rect.height(),
-    0.01,
-    0.1,
-    scale
+      rect.x(),
+      rect.y(),
+      rect.width(),
+      rect.height(),
+      0.01,
+      0.1,
+      scale,
   );
-  var font = this._glyphPainter.font();
-  var label = new parsegraph_Label(font);
+  const font = this._glyphPainter.font();
+  const label = new parsegraph_Label(font);
   label.setText(name);
-  var lw = (label.width() * (this._fontSize / font.fontSize())) / scale;
-  var lh = (label.height() * (this._fontSize / font.fontSize())) / scale;
+  const lw = (label.width() * (this._fontSize / font.fontSize())) / scale;
+  const lh = (label.height() * (this._fontSize / font.fontSize())) / scale;
 
   if (mouseX === undefined) {
     mouseX = rect.width() / 2 - lw;
@@ -88,16 +88,16 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function (
   }
 
   label.paint(
-    this._glyphPainter,
-    rect.x() - lw / 2 - rect.width() / 2 + mouseX / scale,
-    rect.y() - lh / 2 - rect.height() / 2 + mouseY / scale,
-    this._fontSize / font.fontSize() / scale
+      this._glyphPainter,
+      rect.x() - lw / 2 - rect.width() / 2 + mouseX / scale,
+      rect.y() - lh / 2 - rect.height() / 2 + mouseY / scale,
+      this._fontSize / font.fontSize() / scale,
   );
 
   return interp > 0;
 };
 
-parsegraph_CameraBoxPainter.prototype.render = function (world, scale) {
+parsegraph_CameraBoxPainter.prototype.render = function(world, scale) {
   this._blockPainter.render(world, scale);
   this._glyphPainter.render(world, scale);
 };

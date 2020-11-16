@@ -1,58 +1,58 @@
 alpha_WeetPainter_VertexShader =
-  "uniform mat4 u_world;\n" +
-  "\n" +
-  "attribute vec4 a_position;\n" +
-  "attribute vec4 a_color;\n" +
-  "\n" +
-  "varying vec4 contentColor;\n" +
-  "\n" +
-  "void main() {\n" +
-  "gl_Position = u_world * a_position;" +
-  "contentColor = a_color;" +
-  "}";
+  'uniform mat4 u_world;\n' +
+  '\n' +
+  'attribute vec4 a_position;\n' +
+  'attribute vec4 a_color;\n' +
+  '\n' +
+  'varying vec4 contentColor;\n' +
+  '\n' +
+  'void main() {\n' +
+  'gl_Position = u_world * a_position;' +
+  'contentColor = a_color;' +
+  '}';
 
 alpha_WeetPainter_FragmentShader =
-  "#ifdef GL_ES\n" +
-  "precision mediump float;\n" +
-  "#endif\n" +
-  "" +
-  "varying vec4 contentColor;\n" +
-  "\n" +
-  "void main() {\n" +
-  "gl_FragColor = contentColor;" +
-  "}";
+  '#ifdef GL_ES\n' +
+  'precision mediump float;\n' +
+  '#endif\n' +
+  '' +
+  'varying vec4 contentColor;\n' +
+  '\n' +
+  'void main() {\n' +
+  'gl_FragColor = contentColor;' +
+  '}';
 
 /**
  * Draws 3d faces in a solid color.
  */
 function alpha_WeetPainter(window) {
   if (!window) {
-    throw new Error("A Window must be provided when creating a WeetPainter");
+    throw new Error('A Window must be provided when creating a WeetPainter');
   }
   this.gl = window.gl();
   this._numCubes = null;
 
   this.faceProgram = parsegraph_compileProgram(
-    window,
-    "alpha_WeetPainter",
-    alpha_WeetPainter_VertexShader,
-    alpha_WeetPainter_FragmentShader
+      window,
+      'alpha_WeetPainter',
+      alpha_WeetPainter_VertexShader,
+      alpha_WeetPainter_FragmentShader,
   );
 
   // Prepare attribute buffers.
-  this.a_position = this.gl.getAttribLocation(this.faceProgram, "a_position");
-  this.a_color = this.gl.getAttribLocation(this.faceProgram, "a_color");
+  this.a_position = this.gl.getAttribLocation(this.faceProgram, 'a_position');
+  this.a_color = this.gl.getAttribLocation(this.faceProgram, 'a_color');
 
   // Cache program locations.
-  this.u_world = this.gl.getUniformLocation(this.faceProgram, "u_world");
+  this.u_world = this.gl.getUniformLocation(this.faceProgram, 'u_world');
 }
 
 {
-  var cubeSize = 1;
-  var width = cubeSize;
-  var length = cubeSize;
-  var height = cubeSize;
-  var cv = [
+  const cubeSize = 1;
+  const width = cubeSize;
+  const length = cubeSize;
+  const height = cubeSize;
+  const cv = [
     // Front
     [-width, length, height], // v0
     [width, length, height], // v1
@@ -87,7 +87,7 @@ function alpha_WeetPainter(window) {
     [width, -length, -height], // v7
     [-width, -length, -height], // v6
     [-width, length, -height], // v3
-    [width, length, -height], //v2
+    [width, length, -height], // v2
   ];
   alpha_CUBE_VERTICES = cv;
 
@@ -101,26 +101,26 @@ function alpha_WeetPainter(window) {
   ];
 }
 
-alpha_WeetPainter.prototype.Init = function (numCubes) {
+alpha_WeetPainter.prototype.Init = function(numCubes) {
   if (!this._posBuffer) {
     this._posBuffer = this.gl.createBuffer();
   }
   this._data = new Float32Array(numCubes * 6 * 6 * 4);
-  //console.log("Data is " + this._data.length + " floats large");
+  // console.log("Data is " + this._data.length + " floats large");
   this._dataX = 0;
 
   if (!this._colorBuffer) {
     this._colorBuffer = this.gl.createBuffer();
   }
   this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._colorBuffer);
-  var colorData = this._data;
-  var x = 0;
-  for (var i = 0; i < numCubes; ++i) {
+  const colorData = this._data;
+  let x = 0;
+  for (let i = 0; i < numCubes; ++i) {
     // Cube
-    for (var j = 0; j < 6; ++j) {
+    for (let j = 0; j < 6; ++j) {
       // Face
-      var col = alpha_CUBE_COLORS[j];
-      for (var k = 0; k < 6; ++k) {
+      const col = alpha_CUBE_COLORS[j];
+      for (let k = 0; k < 6; ++k) {
         // Vertex
         colorData[x++] = col[0];
         colorData[x++] = col[1];
@@ -129,25 +129,25 @@ alpha_WeetPainter.prototype.Init = function (numCubes) {
       }
     }
   }
-  //console.log("color floats rendered = " + 4*x);
+  // console.log("color floats rendered = " + 4*x);
   this.gl.bufferData(this.gl.ARRAY_BUFFER, colorData, this.gl.STATIC_DRAW);
   this._numCubes = numCubes;
 };
 
-alpha_WeetPainter.prototype.Cube = function (m) {
+alpha_WeetPainter.prototype.Cube = function(m) {
   if (!this._data) {
-    throw new Error("Init must be called first");
+    throw new Error('Init must be called first');
   }
-  var drawFace = function (c1, c2, c3, c4, color) {
-    var drawVert = function (v) {
-      var x = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[12];
-      var y = m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[13];
-      var z = m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[14];
+  const drawFace = function(c1, c2, c3, c4, color) {
+    const drawVert = function(v) {
+      const x = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[12];
+      const y = m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[13];
+      const z = m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[14];
       this._data[this._dataX++] = x;
       this._data[this._dataX++] = y;
       this._data[this._dataX++] = z;
       this._data[this._dataX++] = 1.0;
-      //console.log("(" + x + ", " + y + ", " + z+ ")");
+      // console.log("(" + x + ", " + y + ", " + z+ ")");
     };
 
     drawVert.call(this, c1);
@@ -158,8 +158,8 @@ alpha_WeetPainter.prototype.Cube = function (m) {
     drawVert.call(this, c4);
   };
 
-  var cv = alpha_CUBE_VERTICES;
-  var cc = alpha_CUBE_COLORS;
+  const cv = alpha_CUBE_VERTICES;
+  const cc = alpha_CUBE_COLORS;
   // Front, COLOR
   drawFace.call(this, cv[0], cv[1], cv[2], cv[3], cc[0]);
   // Back
@@ -174,26 +174,26 @@ alpha_WeetPainter.prototype.Cube = function (m) {
   drawFace.call(this, cv[20], cv[21], cv[22], cv[23], cc[4]);
 };
 
-alpha_WeetPainter.prototype.Clear = function () {
+alpha_WeetPainter.prototype.Clear = function() {
   if (!this._data) {
     return;
   }
   this._dataX = 0;
 };
 
-alpha_WeetPainter.prototype.Draw = function (viewMatrix) {
+alpha_WeetPainter.prototype.Draw = function(viewMatrix) {
   if (!viewMatrix) {
-    throw new Error("A viewMatrix must be provided");
+    throw new Error('A viewMatrix must be provided');
   }
 
   // Render faces.
-  var gl = this.gl;
-  //gl.disable(gl.CULL_FACE);
+  const gl = this.gl;
+  // gl.disable(gl.CULL_FACE);
   gl.useProgram(this.faceProgram);
   gl.uniformMatrix4fv(this.u_world, false, viewMatrix.toArray());
 
   gl.bindBuffer(gl.ARRAY_BUFFER, this._posBuffer);
-  //console.log("dataX * sizeof(float = " + 4*this._dataX);
+  // console.log("dataX * sizeof(float = " + 4*this._dataX);
   gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.STREAM_DRAW);
   gl.vertexAttribPointer(this.a_position, 4, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(this.a_position);
@@ -202,7 +202,7 @@ alpha_WeetPainter.prototype.Draw = function (viewMatrix) {
   gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
   gl.vertexAttribPointer(this.a_color, 4, gl.FLOAT, false, 0, 0);
 
-  //console.log("num rendered = " + (this._dataX / 4));
+  // console.log("num rendered = " + (this._dataX / 4));
   gl.drawArrays(gl.TRIANGLES, 0, this._dataX / 4);
 
   gl.disableVertexAttribArray(this.a_position);

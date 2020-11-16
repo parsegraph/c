@@ -1,34 +1,34 @@
 function createWeek(belt, world) {
-  var car = new parsegraph_Caret(parsegraph_BUD);
+  const car = new parsegraph_Caret(parsegraph_BUD);
   [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ].forEach(function (weekday, i) {
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ].forEach(function(weekday, i) {
     if (i !== 0) {
-      car.spawnMove("f", "bu");
+      car.spawnMove('f', 'bu');
     }
 
     car.connect(
-      "d",
-      createDay(
-        i,
-        null,
-        null,
-        null,
-        null,
-        function () {
-          belt.scheduleUpdate();
-          world.scheduleRepaint();
-        },
-        this
-      )
+        'd',
+        createDay(
+            i,
+            null,
+            null,
+            null,
+            null,
+            function() {
+              belt.scheduleUpdate();
+              world.scheduleRepaint();
+            },
+            this,
+        ),
     );
-    car.pull("d");
+    car.pull('d');
   }, this);
   return car.root();
 }

@@ -1,8 +1,8 @@
-import parsegraph_Component from "./Component";
-import parsegraph_Camera from "./Camera";
-import parsegraph_Carousel from "./Carousel";
-import parsegraph_Input from "./Input";
-import parsegraph_BurgerMenu from "./BurgerMenu";
+import parsegraph_Component from './Component';
+import parsegraph_Camera from './Camera';
+import parsegraph_Carousel from './Carousel';
+import parsegraph_Input from './Input';
+import parsegraph_BurgerMenu from './BurgerMenu';
 
 /**
  * TODO Add gridX and gridY camera listeners, with support for loading from an infinite grid of cells.
@@ -29,11 +29,11 @@ import parsegraph_BurgerMenu from "./BurgerMenu";
  * Grid updates based only on camera movement. Updates are reported in terms of cells made visible in either direction.
  * The number of potentially visible grid cells is determined for each axis using the camera's axis size adjusted by some constant.
  */
-var parsegraph_Viewport_COUNT = 0;
-const parsegraph_Viewport_TYPE = "parsegraph_Viewport";
+let parsegraph_Viewport_COUNT = 0;
+const parsegraph_Viewport_TYPE = 'parsegraph_Viewport';
 export default function parsegraph_Viewport(window, world) {
   if (!window) {
-    throw new Error("A window must be provided");
+    throw new Error('A window must be provided');
   }
   this._id = ++parsegraph_Viewport_COUNT;
   // Construct the graph.
@@ -46,7 +46,7 @@ export default function parsegraph_Viewport(window, world) {
 
   this._menu = null;
   this._menu = new parsegraph_BurgerMenu(this);
-  //this._piano = new parsegraph_AudioKeyboard(this._camera);
+  // this._piano = new parsegraph_AudioKeyboard(this._camera);
   this._renderedMouse = -1;
   this._needsRender = true;
 
@@ -57,145 +57,145 @@ export default function parsegraph_Viewport(window, world) {
   this._component.setSerializer(this.serialize, this);
 }
 
-parsegraph_Viewport.prototype.id = function () {
+parsegraph_Viewport.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Viewport.prototype.handleEvent = function (eventType, eventData) {
-  if (eventType === "blur") {
+parsegraph_Viewport.prototype.handleEvent = function(eventType, eventData) {
+  if (eventType === 'blur') {
     this._menu.closeMenu();
     return true;
   }
-  if (eventType === "wheel") {
+  if (eventType === 'wheel') {
     return this._input.onWheel(eventData);
   }
-  if (eventType === "touchmove") {
+  if (eventType === 'touchmove') {
     return this._input.onTouchmove(eventData);
   }
-  if (eventType === "touchzoom") {
+  if (eventType === 'touchzoom') {
     return this._input.onTouchzoom(eventData);
   }
-  if (eventType === "touchstart") {
+  if (eventType === 'touchstart') {
     this._nodeShown = null;
     return this._input.onTouchstart(eventData);
   }
-  if (eventType === "touchend") {
+  if (eventType === 'touchend') {
     return this._input.onTouchend(eventData);
   }
-  if (eventType === "mousedown") {
+  if (eventType === 'mousedown') {
     return this._input.onMousedown(eventData);
   }
-  if (eventType === "mousemove") {
+  if (eventType === 'mousemove') {
     return this._input.onMousemove(eventData);
   }
-  if (eventType === "mouseup") {
+  if (eventType === 'mouseup') {
     return this._input.onMouseup(eventData);
   }
-  if (eventType === "keydown") {
+  if (eventType === 'keydown') {
     return this._input.onKeydown(eventData);
   }
-  if (eventType === "keyup") {
+  if (eventType === 'keyup') {
     return this._input.onKeyup(eventData);
   }
-  if (eventType === "tick") {
+  if (eventType === 'tick') {
     return this._input.Update(eventData);
   }
-  console.log("Unhandled event type: " + eventType);
+  console.log('Unhandled event type: ' + eventType);
 };
 
-parsegraph_Viewport.prototype.serialize = function () {
+parsegraph_Viewport.prototype.serialize = function() {
   return {
     componentType: parsegraph_Viewport_TYPE,
     camera: this._camera.toJSON(),
   };
 };
 
-parsegraph_Viewport.prototype.component = function () {
+parsegraph_Viewport.prototype.component = function() {
   return this._component;
 };
 
-parsegraph_Viewport.prototype.width = function () {
+parsegraph_Viewport.prototype.width = function() {
   return this._window.layout(this.component()).width();
 };
 
-parsegraph_Viewport.prototype.x = function () {
+parsegraph_Viewport.prototype.x = function() {
   return this._window.layout(this.component()).x();
 };
 
-parsegraph_Viewport.prototype.y = function () {
+parsegraph_Viewport.prototype.y = function() {
   return this._window.layout(this.component()).y();
 };
 
-parsegraph_Viewport.prototype.height = function () {
+parsegraph_Viewport.prototype.height = function() {
   return this._window.layout(this.component()).height();
 };
 
-parsegraph_Viewport.prototype.setLayout = function (layout) {
+parsegraph_Viewport.prototype.setLayout = function(layout) {
   this._component.setLayout(layout);
 };
 
-parsegraph_Viewport.prototype.layout = function (window, outSize) {
+parsegraph_Viewport.prototype.layout = function(window, outSize) {
   return this._component.layout(window, outSize);
 };
 
-parsegraph_Viewport.prototype.shaders = function () {
+parsegraph_Viewport.prototype.shaders = function() {
   return this.window().shaders();
 };
 
-parsegraph_Viewport.prototype.window = function () {
+parsegraph_Viewport.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_Viewport.prototype.gl = function () {
+parsegraph_Viewport.prototype.gl = function() {
   return this._window.gl();
 };
 
-parsegraph_Viewport.prototype.contextChanged = function (isLost) {
-  var window = this.window();
+parsegraph_Viewport.prototype.contextChanged = function(isLost) {
+  const window = this.window();
   this._world.contextChanged(isLost, window);
   this._carousel.contextChanged(isLost);
   this._input.contextChanged(isLost);
   this._menu.contextChanged(isLost);
 };
 
-parsegraph_Viewport.prototype.world = function () {
+parsegraph_Viewport.prototype.world = function() {
   return this._world;
 };
 
-parsegraph_Viewport.prototype.carousel = function () {
+parsegraph_Viewport.prototype.carousel = function() {
   return this._carousel;
 };
 
-parsegraph_Viewport.prototype.menu = function () {
+parsegraph_Viewport.prototype.menu = function() {
   return this._menu;
 };
 
-parsegraph_Viewport.prototype.camera = function () {
+parsegraph_Viewport.prototype.camera = function() {
   return this._camera;
 };
 
-parsegraph_Viewport.prototype.input = function () {
+parsegraph_Viewport.prototype.input = function() {
   return this._input;
 };
 
-parsegraph_Viewport.prototype.dispose = function () {
+parsegraph_Viewport.prototype.dispose = function() {
   this._menu.dispose();
 };
 
-parsegraph_Viewport.prototype.scheduleRepaint = function () {
-  //console.log("Viewport is scheduling repaint");
+parsegraph_Viewport.prototype.scheduleRepaint = function() {
+  // console.log("Viewport is scheduling repaint");
   this._component.scheduleUpdate();
   this._needsRepaint = true;
   this._needsRender = true;
 };
 
-parsegraph_Viewport.prototype.scheduleRender = function () {
-  //console.log("Viewport is scheduling render");
+parsegraph_Viewport.prototype.scheduleRender = function() {
+  // console.log("Viewport is scheduling render");
   this._component.scheduleUpdate();
   this._needsRender = true;
 };
 
-parsegraph_Viewport.prototype.needsRepaint = function () {
+parsegraph_Viewport.prototype.needsRepaint = function() {
   return (
     this._needsRepaint ||
     this._world.needsRepaint() ||
@@ -204,7 +204,7 @@ parsegraph_Viewport.prototype.needsRepaint = function () {
   );
 };
 
-parsegraph_Viewport.prototype.needsRender = function () {
+parsegraph_Viewport.prototype.needsRender = function() {
   return (
     this.needsRepaint() ||
     this._needsRender ||
@@ -212,7 +212,7 @@ parsegraph_Viewport.prototype.needsRender = function () {
   );
 };
 
-parsegraph_Viewport.prototype.plot = function () {
+parsegraph_Viewport.prototype.plot = function() {
   return this.world().plot.apply(this.world(), arguments);
 };
 
@@ -221,14 +221,14 @@ parsegraph_Viewport.prototype.plot = function () {
  *
  * Returns true if the graph completed painting.
  */
-parsegraph_Viewport.prototype.paint = function (timeout) {
-  var window = this._window;
-  var gl = this._window.gl();
+parsegraph_Viewport.prototype.paint = function(timeout) {
+  const window = this._window;
+  const gl = this._window.gl();
   if (gl.isContextLost()) {
     return false;
   }
   if (!this.needsRepaint()) {
-    //window.log("Viewport is not dirty");
+    // window.log("Viewport is not dirty");
     return false;
   }
 
@@ -236,7 +236,7 @@ parsegraph_Viewport.prototype.paint = function (timeout) {
   var needsUpdate = this._world.paint(window, timeout) || needsUpdate;
 
   this._input.paint();
-  //this._piano.paint();
+  // this._piano.paint();
   if (needsUpdate) {
     this.scheduleRepaint();
   } else {
@@ -246,25 +246,25 @@ parsegraph_Viewport.prototype.paint = function (timeout) {
   return needsUpdate;
 };
 
-parsegraph_Viewport.prototype.mouseVersion = function () {
+parsegraph_Viewport.prototype.mouseVersion = function() {
   return this._renderedMouse;
 };
 
-parsegraph_Viewport.prototype.showInCamera = function (node) {
+parsegraph_Viewport.prototype.showInCamera = function(node) {
   this._nodeShown = node;
   this.scheduleRender();
 };
 
-parsegraph_Viewport.prototype.render = function (
-  width,
-  height,
-  avoidIfPossible
+parsegraph_Viewport.prototype.render = function(
+    width,
+    height,
+    avoidIfPossible,
 ) {
-  var gl = this._window.gl();
+  const gl = this._window.gl();
   if (gl.isContextLost()) {
     return false;
   }
-  var cam = this.camera();
+  const cam = this.camera();
   if (!cam.setSize(width, height) && avoidIfPossible && !this.needsRender()) {
     return false;
   } else {
@@ -277,21 +277,21 @@ parsegraph_Viewport.prototype.render = function (
   }
 
   gl.clear(gl.COLOR_BUFFER_BIT);
-  var overlay = this.window().overlay();
-  overlay.textBaseline = "top";
+  const overlay = this.window().overlay();
+  overlay.textBaseline = 'top';
   overlay.scale(this.camera().scale(), this.camera().scale());
   overlay.translate(this.camera().x(), this.camera().y());
 
-  var needsUpdate = this._world.render(this._window, cam);
+  const needsUpdate = this._world.render(this._window, cam);
   if (needsUpdate) {
-    this._window.log("World was rendered dirty.");
+    this._window.log('World was rendered dirty.');
     this.scheduleRender();
   }
 
   gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
-  var world = cam.project();
+  const world = cam.project();
   this._input.render(world, cam.scale());
-  //this._piano.render(world, cam.scale());
+  // this._piano.render(world, cam.scale());
   if (
     !this._window.isOffscreen() &&
     this._window.focusedComponent() &&

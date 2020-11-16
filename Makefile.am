@@ -162,6 +162,14 @@ parsegraph_WIDGET_FILES = \
 	src/apps/week.js \
 	src/apps/text.js
 
+prettier:
+	npx prettier --write src www
+.PHONY: prettier
+
+lint:
+	npx eslint --fix $(parsegraph_SCRIPT_FILES) $(parsegraph_WIDGET_FILES)
+.PHONY: lint
+
 parsegraph-$(PACKAGE_VERSION).js: dist/parsegraph.js
 	rm -f $@
 	cp ./dist/parsegraph.js $@

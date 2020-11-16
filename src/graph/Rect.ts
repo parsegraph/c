@@ -1,4 +1,4 @@
-import parsegraph_TestSuite from "../TestSuite";
+import parsegraph_TestSuite from '../TestSuite';
 
 export default class Rect {
   _x: number;
@@ -105,15 +105,15 @@ export default class Rect {
 
   toString(): string {
     return (
-      "[Rect x=" +
+      '[Rect x=' +
       this.x() +
-      ", y=" +
+      ', y=' +
       this.y() +
-      ", w=" +
+      ', w=' +
       this.width() +
-      ", h=" +
+      ', h=' +
       this.height() +
-      "]"
+      ']'
     );
   }
 
@@ -141,20 +141,20 @@ export default class Rect {
       this._height = bheight;
       return;
     }
-    var ax = this._x;
-    var ay = this._y;
-    var awidth = this._width;
-    var aheight = this._height;
+    const ax = this._x;
+    const ay = this._y;
+    const awidth = this._width;
+    const aheight = this._height;
 
-    var leftEdge = Math.min(ax - awidth / 2, bx - bwidth / 2);
-    var rightEdge = Math.max(ax + awidth / 2, bx + bwidth / 2);
-    var topEdge = Math.min(ay - aheight / 2, by - bheight / 2);
-    var bottomEdge = Math.max(ay + aheight / 2, by + bheight / 2);
+    const leftEdge = Math.min(ax - awidth / 2, bx - bwidth / 2);
+    const rightEdge = Math.max(ax + awidth / 2, bx + bwidth / 2);
+    const topEdge = Math.min(ay - aheight / 2, by - bheight / 2);
+    const bottomEdge = Math.max(ay + aheight / 2, by + bheight / 2);
 
-    var w = rightEdge - leftEdge;
-    var h = bottomEdge - topEdge;
-    var x = leftEdge + w / 2;
-    var y = topEdge + h / 2;
+    const w = rightEdge - leftEdge;
+    const h = bottomEdge - topEdge;
+    const x = leftEdge + w / 2;
+    const y = topEdge + h / 2;
 
     this._x = x;
     this._y = y;
@@ -163,42 +163,42 @@ export default class Rect {
   }
 }
 
-const parsegraph_Rect_Tests = new parsegraph_TestSuite("parsegraph_Rect");
+const parsegraph_Rect_Tests = new parsegraph_TestSuite('parsegraph_Rect');
 
-parsegraph_Rect_Tests.addTest("vMin", function () {
-  var r = new Rect(0, 0, 200, 200);
+parsegraph_Rect_Tests.addTest('vMin', function() {
+  const r = new Rect(0, 0, 200, 200);
   if (r.vMin() !== -100) {
-    return "vMin, expected -100, got " + r.vMin();
+    return 'vMin, expected -100, got ' + r.vMin();
   }
 });
 
-parsegraph_Rect_Tests.addTest("vMax", function () {
-  var r = new Rect(0, 0, 200, 200);
+parsegraph_Rect_Tests.addTest('vMax', function() {
+  const r = new Rect(0, 0, 200, 200);
   if (r.vMax() !== 100) {
-    return "vMax, expected 100, got " + r.vMax();
+    return 'vMax, expected 100, got ' + r.vMax();
   }
 });
 
-parsegraph_Rect_Tests.addTest("hMin", function () {
-  var r = new Rect(0, 0, 300, 200);
+parsegraph_Rect_Tests.addTest('hMin', function() {
+  const r = new Rect(0, 0, 300, 200);
   if (r.hMin() !== -150) {
-    return "vMin, expected -150, got " + r.vMin();
+    return 'vMin, expected -150, got ' + r.vMin();
   }
 });
 
-parsegraph_Rect_Tests.addTest("hMax", function () {
-  var r = new Rect(0, 0, 300, 200);
+parsegraph_Rect_Tests.addTest('hMax', function() {
+  const r = new Rect(0, 0, 300, 200);
   if (r.hMax() !== 150) {
-    return "hMax, expected 150, got " + r.vMax();
+    return 'hMax, expected 150, got ' + r.vMax();
   }
 });
 
-parsegraph_Rect_Tests.addTest("include", function () {
-  var r = new Rect(0, 0, 200, 200);
+parsegraph_Rect_Tests.addTest('include', function() {
+  const r = new Rect(0, 0, 200, 200);
   r.include(0, 400, 200, 200);
 
   if (r.vMax() !== new Rect(0, 400, 200, 200).vMax()) {
-    return "vMax failed to adjust";
+    return 'vMax failed to adjust';
   }
-  //console.log(r);
+  // console.log(r);
 });

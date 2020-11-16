@@ -1,9 +1,9 @@
 function buildSelection(graph, COUNT) {
-  var caret = new parsegraph_Caret(parsegraph_BLOCK);
+  const caret = new parsegraph_Caret(parsegraph_BLOCK);
   caret.push();
 
-  var d = parsegraph_FORWARD;
-  for (var i = 0; i < COUNT; ++i) {
+  let d = parsegraph_FORWARD;
+  for (let i = 0; i < COUNT; ++i) {
     if (i % 3 == 0) {
       caret.spawn(d, parsegraph_BLOCK);
     } else if (i % 2 == 0) {
@@ -21,12 +21,12 @@ function buildSelection(graph, COUNT) {
   }
   caret.pop();
 
-  var addBlock = function () {
+  const addBlock = function() {
     graph.scheduleRepaint();
 
     caret.moveToRoot();
-    var d = parsegraph_FORWARD;
-    for (var i = 0; i < COUNT; ++i) {
+    let d = parsegraph_FORWARD;
+    for (let i = 0; i < COUNT; ++i) {
       if (caret.selected()) {
         caret.deselect();
       } else {
@@ -37,7 +37,7 @@ function buildSelection(graph, COUNT) {
     }
   };
 
-  var scheduleAddBlock = function () {
+  var scheduleAddBlock = function() {
     addBlock();
     window.setTimeout(scheduleAddBlock, 1000);
   };

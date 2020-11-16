@@ -1,12 +1,12 @@
-import { parsegraph_countGLBufferBytes } from "./gl";
+import {parsegraph_countGLBufferBytes} from './gl';
 
 function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg) {
   if (!renderFuncThisArg) {
     renderFuncThisArg = this;
   }
   if (!renderFunc) {
-    renderFunc = function (gl, numIndices) {
-      //console.log("Drawing " + numIndices + " indices");
+    renderFunc = function(gl, numIndices) {
+      // console.log("Drawing " + numIndices + " indices");
       gl.drawArrays(gl.TRIANGLES, 0, numIndices);
     };
   }
@@ -18,18 +18,18 @@ function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg) {
   this.renderFuncThisArg = renderFuncThisArg;
 
   // Add a buffer entry for each vertex attribute.
-  pagingBuffer._attribs.forEach(function () {
+  pagingBuffer._attribs.forEach(function() {
     this.buffers.push([]);
     this.glBuffers.push(null);
   }, this);
 }
 
-parsegraph_BufferPage.prototype.isEmpty = function () {
+parsegraph_BufferPage.prototype.isEmpty = function() {
   if (this.buffers.length === 0) {
     return true;
   }
-  for (var j = 0; j < this.buffers.length; ++j) {
-    var buffer = this.buffers[j];
+  for (let j = 0; j < this.buffers.length; ++j) {
+    const buffer = this.buffers[j];
     if (buffer.length === 0) {
       return true;
     }
@@ -44,35 +44,37 @@ parsegraph_BufferPage.prototype.isEmpty = function () {
  * Adds each of the specified values to the working buffer. If the value is an
  * array, each of its internal values are added.
  */
-parsegraph_BufferPage.prototype.appendData = function (attribIndex /*, ... */) {
+parsegraph_BufferPage.prototype.appendData = function(
+    attribIndex, /* , ... */
+) {
   // Ensure attribIndex points to a valid attribute.
   if (attribIndex < 0 || attribIndex > this.buffers.length - 1) {
-    throw new Error("attribIndex is out of range. Given: " + attribIndex);
+    throw new Error('attribIndex is out of range. Given: ' + attribIndex);
   }
-  if (typeof attribIndex !== "number") {
-    throw new Error("attribIndex must be a number.");
+  if (typeof attribIndex !== 'number') {
+    throw new Error('attribIndex must be a number.');
   }
 
   /**
    * Adds the specified value to the current vertex attribute buffer.
    */
-  var pagingBuffer = this;
-  var appendValue = function (value) {
-    var numAdded = 0;
-    if (typeof value.forEach == "function") {
-      value.forEach(function (x) {
+  const pagingBuffer = this;
+  var appendValue = function(value) {
+    let numAdded = 0;
+    if (typeof value.forEach == 'function') {
+      value.forEach(function(x) {
         numAdded += appendValue.call(this, x);
       }, this);
       return numAdded;
     }
-    if (typeof value.length == "number") {
-      for (var i = 0; i < value.length; ++i) {
+    if (typeof value.length == 'number') {
+      for (let i = 0; i < value.length; ++i) {
         numAdded += appendValue.call(this, value[i]);
       }
       return numAdded;
     }
-    if (Number.isNaN(value) || typeof value != "number") {
-      throw new Error("Value is not a number: " + value);
+    if (Number.isNaN(value) || typeof value != 'number') {
+      throw new Error('Value is not a number: ' + value);
     }
     this.buffers[attribIndex].push(value);
     this.needsUpdate = true;
@@ -81,28 +83,28 @@ parsegraph_BufferPage.prototype.appendData = function (attribIndex /*, ... */) {
   };
 
   // Add each argument individually.
-  var cumulativeAdded = 0;
-  for (var i = 1; i < arguments.length; ++i) {
+  let cumulativeAdded = 0;
+  for (let i = 1; i < arguments.length; ++i) {
     cumulativeAdded += appendValue.call(this, arguments[i]);
   }
   return cumulativeAdded;
 };
 
-parsegraph_BufferPage.prototype.appendRGB = function (attribIndex, color) {
-  if (typeof color.r == "function") {
+parsegraph_BufferPage.prototype.appendRGB = function(attribIndex, color) {
+  if (typeof color.r == 'function') {
     return this.appendData(attribIndex, color.r(), color.g(), color.b());
   }
   return this.appendData(attribIndex, color.r, color.g, color.b);
 };
 
-parsegraph_BufferPage.prototype.appendRGBA = function (attribIndex, color) {
-  if (typeof color.r == "function") {
+parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color) {
+  if (typeof color.r == 'function') {
     return this.appendData(
-      attribIndex,
-      color.r(),
-      color.g(),
-      color.b(),
-      color.a()
+        attribIndex,
+        color.r(),
+        color.g(),
+        color.b(),
+        color.a(),
     );
   }
   return this.appendData(attribIndex, color.r, color.g, color.b, color.a);
@@ -129,12 +131,12 @@ export function parsegraph_createPagingBuffer(gl, program) {
   return new parsegraph_PagingBuffer(gl, program);
 }
 
-parsegraph_PagingBuffer.prototype.isEmpty = function () {
+parsegraph_PagingBuffer.prototype.isEmpty = function() {
   // Check each page's buffer, failing early if possible.
   if (this._pages.length === 0) {
     return true;
   }
-  for (var i = 0; i < this._pages.length; ++i) {
+  for (let i = 0; i < this._pages.length; ++i) {
     if (this._pages[i].isEmpty()) {
       return true;
     }
@@ -142,9 +144,9 @@ parsegraph_PagingBuffer.prototype.isEmpty = function () {
   return false;
 };
 
-parsegraph_PagingBuffer.prototype.addPage = function (
-  renderFunc,
-  renderFuncThisArg
+parsegraph_PagingBuffer.prototype.addPage = function(
+    renderFunc,
+    renderFuncThisArg,
 ) {
   ++this._currentPage;
 
@@ -154,7 +156,7 @@ parsegraph_PagingBuffer.prototype.addPage = function (
   }
 
   // Create a new page.
-  var page = new parsegraph_BufferPage(this, renderFunc, renderFuncThisArg);
+  const page = new parsegraph_BufferPage(this, renderFunc, renderFuncThisArg);
 
   // Add the page.
   this._pages.push(page);
@@ -164,9 +166,9 @@ parsegraph_PagingBuffer.prototype.addPage = function (
   return page;
 };
 
-parsegraph_PagingBuffer.prototype.getWorkingPage = function () {
+parsegraph_PagingBuffer.prototype.getWorkingPage = function() {
   if (this._pages.length === 0) {
-    throw new Error("Refusing to create a new page; call addPage()");
+    throw new Error('Refusing to create a new page; call addPage()');
   }
   return this._pages[this._currentPage];
 };
@@ -178,21 +180,21 @@ parsegraph_PagingBuffer.prototype.getWorkingPage = function () {
  * numComponents - the number of components in the named attribute type (1, 2, 3, or 4)
  * drawMode - the WebGL draw mode. Defaults to gl.STATIC_DRAW
  */
-parsegraph_PagingBuffer.prototype.defineAttrib = function (
-  name,
-  numComponents,
-  drawMode
+parsegraph_PagingBuffer.prototype.defineAttrib = function(
+    name,
+    numComponents,
+    drawMode,
 ) {
   if (drawMode == undefined) {
     drawMode = this._gl.STATIC_DRAW;
   }
   // Add a new buffer entry for this new attribute.
-  this._pages.forEach(function (page) {
+  this._pages.forEach(function(page) {
     page.buffers.push([]);
     page.glBuffers.push(null);
   });
 
-  var attrib = {
+  const attrib = {
     name: name,
     numComponents: numComponents,
     drawMode: drawMode,
@@ -205,32 +207,32 @@ parsegraph_PagingBuffer.prototype.defineAttrib = function (
   return this._attribs.length - 1;
 };
 
-parsegraph_PagingBuffer.prototype.appendRGB = function (/**/) {
-  var page = this.getWorkingPage();
+parsegraph_PagingBuffer.prototype.appendRGB = function(/**/) {
+  const page = this.getWorkingPage();
   return page.appendRGB.apply(page, arguments);
 };
 
-parsegraph_PagingBuffer.prototype.appendRGBA = function (/**/) {
-  var page = this.getWorkingPage();
+parsegraph_PagingBuffer.prototype.appendRGBA = function(/**/) {
+  const page = this.getWorkingPage();
   return page.appendRGBA.apply(page, arguments);
 };
 
-parsegraph_PagingBuffer.prototype.appendData = function (/**/) {
-  var page = this.getWorkingPage();
+parsegraph_PagingBuffer.prototype.appendData = function(/**/) {
+  const page = this.getWorkingPage();
   return page.appendData.apply(page, arguments);
 };
 
 /**
  * Deletes all buffers and empties values.
  */
-parsegraph_PagingBuffer.prototype.clear = function () {
+parsegraph_PagingBuffer.prototype.clear = function() {
   // Clear the buffers for all pages.
-  this._pages.forEach(function (page) {
-    this._attribs.forEach(function (attrib, attribIndex) {
-      //if(page.glBuffers[attribIndex] != null) {
-      //this._gl.deleteBuffer(page.glBuffers[attribIndex]);
-      //page.glBuffers[attribIndex] = null;
-      //}
+  this._pages.forEach(function(page) {
+    this._attribs.forEach(function(attrib, attribIndex) {
+      // if(page.glBuffers[attribIndex] != null) {
+      // this._gl.deleteBuffer(page.glBuffers[attribIndex]);
+      // page.glBuffers[attribIndex] = null;
+      // }
       page.buffers[attribIndex] = [];
     }, this);
     page.needsUpdate = true;
@@ -247,11 +249,11 @@ parsegraph_PagingBuffer.prototype.clear = function () {
  * where numVertices is calculated from the appended data size / component count. The least-filled
  * buffer is used for the size, if the sizes differ.
  */
-parsegraph_PagingBuffer.prototype.renderPages = function () {
-  var count = 0;
+parsegraph_PagingBuffer.prototype.renderPages = function() {
+  let count = 0;
 
   // Enable used vertex attributes.
-  this._attribs.forEach(function (attrib) {
+  this._attribs.forEach(function(attrib) {
     if (attrib.location == -1) {
       return;
     }
@@ -259,15 +261,15 @@ parsegraph_PagingBuffer.prototype.renderPages = function () {
   }, this);
 
   // Draw each page.
-  this._pages.forEach(function (page, index) {
+  this._pages.forEach(function(page, index) {
     if (index > this._currentPage) {
       return;
     }
 
-    var numIndices;
+    let numIndices;
 
     // Prepare each vertex attribute.
-    this._attribs.forEach(function (attrib, attribIndex) {
+    this._attribs.forEach(function(attrib, attribIndex) {
       if (attrib.location == -1) {
         return;
       }
@@ -278,36 +280,36 @@ parsegraph_PagingBuffer.prototype.renderPages = function () {
       this._gl.bindBuffer(this._gl.ARRAY_BUFFER, page.glBuffers[attribIndex]);
 
       // Load buffer data if the page needs an update.
-      var bufferData = page.buffers[attribIndex];
+      const bufferData = page.buffers[attribIndex];
       if (page.needsUpdate && bufferData.length > 0) {
-        //console.log("Pushing bytes to GL");
+        // console.log("Pushing bytes to GL");
         parsegraph_countGLBufferBytes(bufferData.length);
         this._gl.bufferData(
-          this._gl.ARRAY_BUFFER,
-          new Float32Array(bufferData),
-          attrib.drawMode
+            this._gl.ARRAY_BUFFER,
+            new Float32Array(bufferData),
+            attrib.drawMode,
         );
       }
 
       // Set up the vertex attribute pointer.
       this._gl.vertexAttribPointer(
-        attrib.location,
-        attrib.numComponents,
-        this._gl.FLOAT,
-        false,
-        0,
-        0
+          attrib.location,
+          attrib.numComponents,
+          this._gl.FLOAT,
+          false,
+          0,
+          0,
       );
 
-      var thisNumIndices = bufferData.length / attrib.numComponents;
+      const thisNumIndices = bufferData.length / attrib.numComponents;
       if (Math.round(thisNumIndices) != thisNumIndices) {
         throw new Error(
-          "Odd number of indices for attrib " +
+            'Odd number of indices for attrib ' +
             attrib.name +
-            ". Wanted " +
+            '. Wanted ' +
             Math.round(thisNumIndices) +
-            ", but got " +
-            thisNumIndices
+            ', but got ' +
+            thisNumIndices,
         );
       }
       if (numIndices == undefined) {
@@ -327,7 +329,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function () {
   }, this);
 
   // Disable used variables.
-  this._attribs.forEach(function (attrib) {
+  this._attribs.forEach(function(attrib) {
     if (attrib.location == -1) {
       return;
     }

@@ -3,29 +3,29 @@ function parsegraph_SynthWidget(graph) {
   this._id = parsegraph_SynthWidget_COUNT++;
   this._graph = graph;
   this._containerNode = null;
-  this._oscType = "sine";
+  this._oscType = 'sine';
   this._oscDetune = 0;
   this._types = {};
 
   this._listeners = [];
 }
 
-parsegraph_SynthWidget.prototype.build = function (audio) {
-  var oscillator = audio.createOscillator();
+parsegraph_SynthWidget.prototype.build = function(audio) {
+  const oscillator = audio.createOscillator();
   oscillator.frequency.value = this._oscFrequency;
   oscillator.type = this._oscType;
   oscillator.detune.value = this._oscDetune;
   return oscillator;
 };
 
-parsegraph_SynthWidget.prototype.addListener = function (
-  listener,
-  listenerThisArg
+parsegraph_SynthWidget.prototype.addListener = function(
+    listener,
+    listenerThisArg,
 ) {
-  var l = [listener, listenerThisArg];
+  const l = [listener, listenerThisArg];
   this._listeners.push(l);
-  return function () {
-    for (var i = 0; i < this._listeners.length; ++i) {
+  return function() {
+    for (let i = 0; i < this._listeners.length; ++i) {
       if (this._listeners[i] === l) {
         this._listeners.splice(i, 1);
       }
@@ -33,22 +33,22 @@ parsegraph_SynthWidget.prototype.addListener = function (
   };
 };
 
-parsegraph_SynthWidget.prototype.notePlayed = function (freq) {
-  for (var i = 0; i < this._listeners.length; ++i) {
-    var l = this._listeners[i];
+parsegraph_SynthWidget.prototype.notePlayed = function(freq) {
+  for (let i = 0; i < this._listeners.length; ++i) {
+    const l = this._listeners[i];
     l[0].call(l[1], freq);
   }
 };
 
-parsegraph_SynthWidget.prototype.setOscillatorType = function (oscType) {
+parsegraph_SynthWidget.prototype.setOscillatorType = function(oscType) {
   this._oscType = oscType;
 };
 
-parsegraph_SynthWidget.prototype.setOscillatorDetune = function (value) {
+parsegraph_SynthWidget.prototype.setOscillatorDetune = function(value) {
   this._oscDetune = value;
 };
 
-parsegraph_SynthWidget.prototype.play = function (freq) {
+parsegraph_SynthWidget.prototype.play = function(freq) {
   if (!this._keyListener) {
     return;
   }
@@ -56,47 +56,47 @@ parsegraph_SynthWidget.prototype.play = function (freq) {
   this.notePlayed(freq);
 };
 
-parsegraph_SynthWidget.prototype.onPlay = function (
-  keyListener,
-  keyListenerThisArg
+parsegraph_SynthWidget.prototype.onPlay = function(
+    keyListener,
+    keyListenerThisArg,
 ) {
   this._keyListener = keyListener;
   this._keyListenerThisArg = keyListenerThisArg;
 };
 
-parsegraph_SynthWidget.prototype.refreshTypes = function () {
+parsegraph_SynthWidget.prototype.refreshTypes = function() {
   updateUnsel();
-  for (var type in this._types) {
+  for (const type in this._types) {
     this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
   }
 };
 
-parsegraph_SynthWidget.prototype.node = function () {
-  var FS = 500;
-  var MAXFS = 3000;
+parsegraph_SynthWidget.prototype.node = function() {
+  const FS = 500;
+  const MAXFS = 3000;
   if (!this._containerNode) {
-    var car = new parsegraph_Caret(parsegraph_BLOCK);
+    const car = new parsegraph_Caret(parsegraph_BLOCK);
     this._containerNode = car.root();
-    car.label("Synthesizer");
-    //car.fitExact();
+    car.label('Synthesizer');
+    // car.fitExact();
 
     car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
     car.pull(parsegraph_DOWNWARD);
     car.push();
     car.shrink();
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
-    car.label("Type");
+    car.label('Type');
     car.push();
-    ["sine", "square", "sawtooth", "triangle"].forEach(function (oscType, i) {
-      var t = oscType === this._oscType ? "b" : "s";
+    ['sine', 'square', 'sawtooth', 'triangle'].forEach(function(oscType, i) {
+      const t = oscType === this._oscType ? 'b' : 's';
       if (i == 0) {
-        car.spawnMove("i", t, "v");
+        car.spawnMove('i', t, 'v');
         car.shrink();
       } else {
-        car.spawnMove("f", t);
+        car.spawnMove('f', t);
       }
       this._types[oscType] = car.node();
-      car.onClick(function () {
+      car.onClick(function() {
         this.setOscillatorType(oscType);
         this.refreshTypes();
         return true;
@@ -110,19 +110,19 @@ parsegraph_SynthWidget.prototype.node = function () {
     // Detune
     car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
-    car.label("Detune");
+    car.label('Detune');
     car.push();
-    var detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
-    car.onChange(function () {
+    const detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    car.onChange(function() {
       this.setOscillatorDetune(detuneSlider.value() * 200);
-      console.log("Detune: " + this._oscDetune.value);
+      console.log('Detune: ' + this._oscDetune.value);
     }, this);
     car.pop();
 
     car.moveToRoot();
 
-    var keyBlock = parsegraph_copyStyle("s");
-    //keyBlock.minHeight = keyBlock.minHeight * 10;
+    const keyBlock = parsegraph_copyStyle('s');
+    // keyBlock.minHeight = keyBlock.minHeight * 10;
     keyBlock.horizontalSeparation = 0;
     keyBlock.verticalSeparation = 0;
     keyBlock.fontSize = parsegraph_FONT_SIZE / 3;
@@ -235,25 +235,25 @@ parsegraph_SynthWidget.prototype.node = function () {
       7040.0,
       7458.62,
       7902.13,
-    ].forEach(function (freq, i) {
-      var key;
+    ].forEach(function(freq, i) {
+      let key;
       if (i % 12 == 0) {
         if (i != 0) {
           car.pop();
         }
-        key = car.spawnMove("d", "s");
+        key = car.spawnMove('d', 's');
         if (i == 0) {
           key
-            .parentNode()
-            .setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+              .parentNode()
+              .setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
         }
         car.push();
       } else {
-        key = car.spawnMove("f", "s");
+        key = car.spawnMove('f', 's');
       }
       car.label(freq);
       key.setBlockStyle(keyBlock);
-      key.setClickListener(function () {
+      key.setClickListener(function() {
         this.play(freq);
       }, this);
     }, this);

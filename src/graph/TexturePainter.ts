@@ -1,35 +1,35 @@
-import { parsegraph_compileProgram } from "../gl";
+import {parsegraph_compileProgram} from '../gl';
 import parsegraph_PagingBuffer, {
   parsegraph_createPagingBuffer,
-} from "../pagingbuffer";
-import Color from "./Color";
-import parsegraph_Window from "./Window";
+} from '../pagingbuffer';
+import Color from './Color';
+import parsegraph_Window from './Window';
 
 const parsegraph_TexturePainter_VertexShader =
-  "uniform mat3 u_world;\n" +
-  "" +
-  "attribute vec2 a_position;" +
-  "attribute vec2 a_texCoord;" +
-  "attribute float a_alpha;" +
-  "" +
-  "varying highp vec2 texCoord;" +
-  "varying highp float alpha;" +
-  "" +
-  "void main() {" +
-  "gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);" +
-  "texCoord = a_texCoord;" +
-  "alpha = a_alpha;" +
-  "}";
+  'uniform mat3 u_world;\n' +
+  '' +
+  'attribute vec2 a_position;' +
+  'attribute vec2 a_texCoord;' +
+  'attribute float a_alpha;' +
+  '' +
+  'varying highp vec2 texCoord;' +
+  'varying highp float alpha;' +
+  '' +
+  'void main() {' +
+  'gl_Position = vec4((u_world * vec3(a_position, 1.0)).xy, 0.0, 1.0);' +
+  'texCoord = a_texCoord;' +
+  'alpha = a_alpha;' +
+  '}';
 
 const parsegraph_TexturePainter_FragmentShader =
-  "uniform sampler2D u_texture;\n" +
-  "varying highp vec2 texCoord;\n" +
-  "varying highp float alpha;\n" +
-  "\n" +
-  "void main() {\n" +
-  "gl_FragColor = texture2D(u_texture, texCoord.st);" +
-  "gl_FragColor.a = gl_FragColor.a * alpha;" +
-  "}";
+  'uniform sampler2D u_texture;\n' +
+  'varying highp vec2 texCoord;\n' +
+  'varying highp float alpha;\n' +
+  '\n' +
+  'void main() {\n' +
+  'gl_FragColor = texture2D(u_texture, texCoord.st);' +
+  'gl_FragColor.a = gl_FragColor.a * alpha;' +
+  '}';
 
 export default class TexturePainter {
   _gl;
@@ -50,19 +50,19 @@ export default class TexturePainter {
   _alpha: number;
 
   constructor(
-    window: parsegraph_Window,
-    textureId: number,
-    texWidth: number,
-    texHeight: number
+      window: parsegraph_Window,
+      textureId: number,
+      texWidth: number,
+      texHeight: number,
   ) {
     this._gl = window.gl();
 
     // Compile the shader program.
     this._textureProgram = parsegraph_compileProgram(
-      window,
-      "parsegraph_TexturePainter",
-      parsegraph_TexturePainter_VertexShader,
-      parsegraph_TexturePainter_FragmentShader
+        window,
+        'parsegraph_TexturePainter',
+        parsegraph_TexturePainter_VertexShader,
+        parsegraph_TexturePainter_FragmentShader,
     );
     this._texture = textureId;
     this._texWidth = texWidth;
@@ -70,20 +70,20 @@ export default class TexturePainter {
 
     // Prepare attribute buffers.
     this._buffer = parsegraph_createPagingBuffer(
-      this._gl,
-      this._textureProgram
+        this._gl,
+        this._textureProgram,
     );
-    this.a_position = this._buffer.defineAttrib("a_position", 2);
-    this.a_color = this._buffer.defineAttrib("a_color", 4);
-    this.a_backgroundColor = this._buffer.defineAttrib("a_backgroundColor", 4);
-    this.a_texCoord = this._buffer.defineAttrib("a_texCoord", 2);
-    this.a_alpha = this._buffer.defineAttrib("a_alpha", 1);
+    this.a_position = this._buffer.defineAttrib('a_position', 2);
+    this.a_color = this._buffer.defineAttrib('a_color', 4);
+    this.a_backgroundColor = this._buffer.defineAttrib('a_backgroundColor', 4);
+    this.a_texCoord = this._buffer.defineAttrib('a_texCoord', 2);
+    this.a_alpha = this._buffer.defineAttrib('a_alpha', 1);
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(this._textureProgram, "u_world");
+    this.u_world = this._gl.getUniformLocation(this._textureProgram, 'u_world');
     this.u_texture = this._gl.getUniformLocation(
-      this._textureProgram,
-      "u_texture"
+        this._textureProgram,
+        'u_texture',
     );
 
     this._color = new Color(1, 1, 1, 1);
@@ -102,35 +102,35 @@ export default class TexturePainter {
   }
 
   drawWholeTexture(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    scale: number
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      scale: number,
   ): void {
     return this.drawTexture(
-      0,
-      0,
-      this._texWidth,
-      this._texHeight,
-      x,
-      y,
-      width,
-      height,
-      scale
+        0,
+        0,
+        this._texWidth,
+        this._texHeight,
+        x,
+        y,
+        width,
+        height,
+        scale,
     );
   }
 
   drawTexture(
-    iconX: number,
-    iconY: number,
-    iconWidth: number,
-    iconHeight: number,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    scale: number
+      iconX: number,
+      iconY: number,
+      iconWidth: number,
+      iconHeight: number,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      scale: number,
   ) {
     // Append position data.
     this._buffer.appendData(this.a_position, [
@@ -169,7 +169,7 @@ export default class TexturePainter {
       iconX / this._texWidth,
       iconY / this._texHeight,
     ]);
-    for (var i = 0; i < 6; ++i) {
+    for (let i = 0; i < 6; ++i) {
       this._buffer.appendData(this.a_alpha, this._alpha);
     }
   }

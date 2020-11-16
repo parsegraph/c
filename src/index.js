@@ -1,5 +1,5 @@
-import parsegraph_TestSuite, { parsegraph_AllTests } from "./TestSuite";
-import Rect from "./graph/Rect";
+import parsegraph_TestSuite, {parsegraph_AllTests} from './TestSuite';
+import Rect from './graph/Rect';
 import Node, {
   Direction,
   Axis,
@@ -9,23 +9,23 @@ import Node, {
   labeledBlock,
   labeledBud,
   labeledSlot,
-} from "./graph/Node";
-import parsegraph_showGraph from "./graph/showGraph";
-import { addEventMethod } from "./event";
-import Viewport from "./graph/Viewport";
-import Window from "./graph/Window";
-import World from "./graph/World";
-import TimingBelt from "./graph/TimingBelt";
-import Caret from "./graph/Caret";
-import buildTextDemo from "./apps/text";
-import PrimesWidget from "./apps/primes";
-import MemoryPiers from "./apps/piers";
-import { elapsed, AnimationTimer, TimeoutTimer, IntervalTimer } from "./timing";
+} from './graph/Node';
+import parsegraph_showGraph from './graph/showGraph';
+import {addEventMethod} from './event';
+import Viewport from './graph/Viewport';
+import Window from './graph/Window';
+import World from './graph/World';
+import TimingBelt from './graph/TimingBelt';
+import Caret from './graph/Caret';
+import buildTextDemo from './apps/text';
+import PrimesWidget from './apps/primes';
+import MemoryPiers from './apps/piers';
+import {elapsed, AnimationTimer, TimeoutTimer, IntervalTimer} from './timing';
 import parsegraph_Unicode, {
   parsegraph_defaultUnicode,
   parsegraph_setDefaultUnicode,
-} from "./unicode";
-import { CREASE } from "./graph/settings";
+} from './unicode';
+import {CREASE} from './graph/settings';
 
 export const BUD = Type.BUD;
 export const SLOT = Type.SLOT;
