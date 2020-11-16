@@ -113,13 +113,7 @@ parsegraph_SCRIPT_FILES = \
 	src/alpha/WeetPainter.js \
 	src/Parser.js \
 	src/user.js \
-	src/graph/Camera.js \
-	src/timeline/HTimeline.js \
-	src/timeline/VTimeline.js \
-	src/timeline/HSlicePainter.js \
-	src/timeline/VSlicePainter.js \
-	src/timeline/HSunrisePainter.js \
-	src/timeline/VSunrisePainter.js
+	src/graph/Camera.js
 
 parsegraph_WIDGET_FILES = \
 	src/types/parsegraph_JavaScriptWidget.js \
