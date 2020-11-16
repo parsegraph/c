@@ -3,7 +3,8 @@ import {
 } from '../timing';
 import {
     parsegraph_CLICK_DELAY_MILLIS,
-    parsegraph_INPUT_LAYOUT_TIME
+    parsegraph_INPUT_LAYOUT_TIME,
+    parsegraph_SLIDER_NUDGE
 } from './settings';
 import {
     matrixTransform2D,

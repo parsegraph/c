@@ -8,18 +8,17 @@
 <script src="/parsegraph-1.3.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
-    var window = new parsegraph_Window();
-    var world = new parsegraph_World();
+    var window = new parsegraph.Window();
+    var world = new parsegraph.World();
     document.body.appendChild(window.container());
-    var belt = new parsegraph_TimingBelt();
+    var belt = new parsegraph.TimingBelt();
     belt.addWindow(window);
-    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph_Viewport(window, world);
+    parsegraph.addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+    var viewport = new parsegraph.Viewport(window, world);
     window.addComponent(viewport.component());
 
     var MAX_SIZE = 400;
-    var piers = new parsegraph_MemoryPiers(MAX_SIZE);
+    var piers = new parsegraph.MemoryPiers(MAX_SIZE);
     world.plot(piers.node());
     viewport.showInCamera(piers.node());
 
@@ -29,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         belt.scheduleUpdate();
         world.scheduleRepaint();
         if(!callAgain) {
-            console.log("Done in " + parsegraph_elapsed(totalStart) + "ms");
+            console.log("Done in " + parsegraph.elapsed(totalStart) + "ms");
         }
         return callAgain;
     });

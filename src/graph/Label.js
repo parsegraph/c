@@ -5,6 +5,7 @@ import {
     parsegraph_defaultFont
 } from './settings';
 import parsegraph_Caret from './Caret';
+import Rect from './Rect';
 
 function parsegraph_GlyphIterator(font, text)
 {
@@ -777,7 +778,7 @@ parsegraph_Label.prototype.caretPos = function()
 parsegraph_Label.prototype.getCaretRect = function(outRect)
 {
     if(!outRect) {
-        outRect = new parsegraph_Rect();
+        outRect = new Rect();
     }
     var y = 0;
     for(var i = 0; i < this._caretLine; ++i) {

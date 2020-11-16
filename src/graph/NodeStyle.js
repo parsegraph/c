@@ -234,6 +234,6 @@ export default function parsegraph_style(type)
     }
     case Type.NULL:
     default:
-        return null;
+        throw new Error("Failed to read Node style: " + arguments[0]);
     }
 };

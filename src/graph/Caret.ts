@@ -43,7 +43,9 @@ export default class Caret {
         if(arguments.length === 0) {
             this._nodeRoot = new Node(DEFAULT_TYPE);
         }
-        else {
+        else if (args[0] instanceof Node) {
+            this._nodeRoot = args[0];
+        } else {
             this._nodeRoot = new Node(readType(args[0]));
         }
 

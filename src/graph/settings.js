@@ -106,7 +106,7 @@ export const parsegraph_NATURAL_GROUP_SIZE = 250;
 export const parsegraph_FIT_LOOSE = false;
 
 // Whether graphs should be creased.
-export const parsegraph_CREASE = true;
+export const CREASE = false;
 
 export const parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 

@@ -1,126 +1,37 @@
-function parsegraph_MemoryPiers(COUNT)
+import Caret from '../graph/Caret';
+import { Type } from '../graph/Node';
+
+export default class MemoryPiers
 {
-    this.maxSize = COUNT;
-    if(!this.maxSize) {
-        throw new Error("Max size must be provided.");
-    }
-    this.size = 0;
-    this.caret = new parsegraph_Caret(parsegraph_BUD);
-}
-
-parsegraph_MemoryPiers.prototype.step = function()
-{
-    if(this.size >= this.maxSize) {
-        return false;
-    }
-    var caret = this.caret;
-    caret.spawnMove('f', 'bud');
-    caret.label(1 + this.size);
-
-    // Build NUM_COLUMNS columns, comprised of some additional horizontal
-    // nodes depending on position.
-    var NUM_COLUMNS = this.maxSize;
-    caret.push();
-
-    // Build the column
-    var COLUMN_LENGTH = NUM_COLUMNS;
-    for(var j = 0; j < COLUMN_LENGTH; ++j) {
-        var r = Math.floor(Math.random() * 4);
-        r = 0;
-        if(r % 4 == 0) {
-            if(this.size % 2 == 0) {
-                if(j === 0) {
-                    caret.pull('d');
-                }
-                caret.spawnMove('d', 'slot');
-            }
-            else {
-                if(j === 0) {
-                    caret.pull('u');
-                }
-                caret.spawnMove('u', 'slot');
-            }
+    constructor(COUNT) {
+        this.maxSize = COUNT;
+        if(!this.maxSize) {
+            throw new Error("Max size must be provided.");
         }
-        else {
-            if(this.size % 2 == 0) {
-                if(j === 0) {
-                    caret.pull('d');
-                }
-                caret.spawnMove('d', 'slot');
-            }
-            else {
-                if(j === 0) {
-                    caret.pull('u');
-                }
-                caret.spawnMove('u', 'slot');
-            }
-        }
-        if(j === 0) {
-            caret.crease();
-        }
-
-        r = Math.floor(Math.random() * 2);
-        if(r % 2 == 0) {
-            caret.pull('b');
-            caret.spawnMove('b', 'block');
-            caret.spawn('d', 'slider');
-            caret.move('f');
-        }
-        r = Math.floor(Math.random() * 2);
-        if(r % 2 == 0) {
-            caret.pull('f');
-            caret.spawnMove('f', 'block');
-            caret.spawn('d', 'slider');
-            caret.move('b');
-        }
+        this.size = 0;
+        this.caret = new Caret(Type.BUD);
     }
 
-    if(!caret.has('f')) {
-        caret.pull('f');
+    step() {
+        if(this.size >= this.maxSize) {
+            return false;
+        }
+        var caret = this.caret;
         caret.spawnMove('f', 'bud');
-        caret.spawn('f', 'bud');
-        caret.move('b');
-    }
-    if(!caret.has('b')) {
-        caret.pull('b');
-        caret.spawnMove('b', 'bud');
-        caret.spawn('b', 'bud');
-        caret.move('f');
-    }
+        caret.label(1 + this.size);
 
-    caret.pop();
-
-    // Spawn a bud, if we need to.
-    ++this.size;
-    return true;
-};
-
-parsegraph_MemoryPiers.prototype.node = function()
-{
-    return this.caret.root();
-};
-
-function showMemoryBlocks(graph, COUNT)
-{
-    var caret = new parsegraph_Caret(parsegraph_BUD);
-
-    // Enter.
-    caret.fitLoose();
-    caret.spawnMove('f', 'bud');
-
-    // Build NUM_COLUMNS columns, comprised of some additional horizontal
-    // nodes depending on position.
-    var NUM_COLUMNS = COUNT;
-    for(var i = 0; i < NUM_COLUMNS; ++i) {
+        // Build NUM_COLUMNS columns, comprised of some additional horizontal
+        // nodes depending on position.
+        var NUM_COLUMNS = this.maxSize;
         caret.push();
-        caret.crease();
 
         // Build the column
         var COLUMN_LENGTH = NUM_COLUMNS;
         for(var j = 0; j < COLUMN_LENGTH; ++j) {
             var r = Math.floor(Math.random() * 4);
+            r = 0;
             if(r % 4 == 0) {
-                if(i % 2 == 0) {
+                if(this.size % 2 == 0) {
                     if(j === 0) {
                         caret.pull('d');
                     }
@@ -134,7 +45,7 @@ function showMemoryBlocks(graph, COUNT)
                 }
             }
             else {
-                if(i % 2 == 0) {
+                if(this.size % 2 == 0) {
                     if(j === 0) {
                         caret.pull('d');
                     }
@@ -146,6 +57,9 @@ function showMemoryBlocks(graph, COUNT)
                     }
                     caret.spawnMove('u', 'slot');
                 }
+            }
+            if(j === 0) {
+                caret.crease();
             }
 
             r = Math.floor(Math.random() * 2);
@@ -180,10 +94,11 @@ function showMemoryBlocks(graph, COUNT)
         caret.pop();
 
         // Spawn a bud, if we need to.
-        if(i < NUM_COLUMNS) {
-            caret.spawnMove('f', 'bud');
-        }
+        ++this.size;
+        return true;
     }
 
-    return caret.root();
+    node() {
+        return this.caret.root();
+    }
 }
