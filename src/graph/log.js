@@ -1,4 +1,3 @@
-function parsegraph_log(msg)
-{
-    return console.log(msg);
+function parsegraph_log(msg) {
+  return console.log(msg);
 }

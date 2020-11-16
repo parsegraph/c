@@ -1,43 +1,81 @@
 <main>
-<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-FanPainter">FanPainter</a></div>
-<h1>Parsegraph FanPainter</h1>
-Shows a circle that allows some parts to show as selected.
-<h3>Contents</h3>
-<ol>
-<li><a href="#parsegraph_FanPainter">new parsegraph_FanPainter(gl)</a>
-<li><a href="#.selectDeg">.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</a>
-<li><a href="#.selectRad">.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</a>
-<li><a href="#.setAscendingRadiusfunction">.setAscendingRadiusfunction(ascendingRadius)</a>
-<li><a href="#.setDescendingRadius">.setDescendingRadius(descendingRadius)</a>
-<li><a href="#setSelectionAngle">setSelectionAngle(selectionAngle)</a>
-<li><a href="#.clear">.clear()</a>
-<li><a href="#.render">.render(viewMatrix)</a>
-</ol>
-<h3><a name="parsegraph_FanPainter">new parsegraph_FanPainter(gl)</a></h3>
-Creates a new painter of radius 250 using the given GL context.
-<ul>
-<li>Throws an Error if a GL context is not given.
-</ul>
-<h3><a name=".selectDeg">.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</a></h3>
-Draws a selection at the given world coordinates highlighting the given angle with the
-given Colors.
-<h3><a name=".selectRad">.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</a></h3>
-Draws a selection at the given world coordinates highlighting the given angle with the
-given Colors.
-<h3><a name=".setAscendingRadiusfunction">.setAscendingRadiusfunction(ascendingRadius)</a></h3>
-Sets the distance from the center to the brightest point.
-<h3><a name=".setDescendingRadius">.setDescendingRadius(descendingRadius)</a></h3>
-Sets the distance from the brightest point, to the invisible outer edge.
-<h3><a name="setSelectionAngle">.setSelectionAngle(selectionAngle)</a></h3>
-Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area of radial brightness.
-<p>
-If null is given, no selection highlight is drawn. This is the default.
-<h3><a name="setSelectionSize">.setSelectionSize(selectionSize)</a></h3>
-Sets the selection angle in radians from [0, 2*Math.PI], which is the size of the selected highlight.
-<p>
-If null is given, no selection highlight is drawn. This is the default.
-<h3><a name=".clear">.clear()</a></h3>
-Clears all buffers.
-<h3><a name=".render">.render(viewMatrix)</a></h3>
-Renders all painted fans using the given matrix.
+  <div class="breadcrumb">
+    <a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo;
+    <a href="/doc/graph">Parsegraph</a> &raquo;
+    <a href="/doc/graph-FanPainter">FanPainter</a>
+  </div>
+  <h1>Parsegraph FanPainter</h1>
+  Shows a circle that allows some parts to show as selected.
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#parsegraph_FanPainter">new parsegraph_FanPainter(gl)</a></li>
+    <li>
+      <a href="#.selectDeg"
+        >.selectDeg(userX, userY, startAngle, spanAngle, startColor,
+        endColor)</a
+      >
+    </li>
+    <li>
+      <a href="#.selectRad"
+        >.selectRad(userX, userY, startAngle, spanAngle, startColor,
+        endColor)</a
+      >
+    </li>
+    <li>
+      <a href="#.setAscendingRadiusfunction"
+        >.setAscendingRadiusfunction(ascendingRadius)</a
+      >
+    </li>
+    <li>
+      <a href="#.setDescendingRadius">.setDescendingRadius(descendingRadius)</a>
+    </li>
+    <li><a href="#setSelectionAngle">setSelectionAngle(selectionAngle)</a></li>
+    <li><a href="#.clear">.clear()</a></li>
+    <li><a href="#.render">.render(viewMatrix)</a></li>
+  </ol>
+
+  <h3><a name="parsegraph_FanPainter">new parsegraph_FanPainter(gl)</a></h3>
+  Creates a new painter of radius 250 using the given GL context.
+  <ul>
+    <li>Throws an Error if a GL context is not given.</li>
+  </ul>
+
+  <h3>
+    <a name=".selectDeg"
+      >.selectDeg(userX, userY, startAngle, spanAngle, startColor, endColor)</a
+    >
+  </h3>
+  Draws a selection at the given world coordinates highlighting the given angle
+  with the given Colors.
+  <h3>
+    <a name=".selectRad"
+      >.selectRad(userX, userY, startAngle, spanAngle, startColor, endColor)</a
+    >
+  </h3>
+  Draws a selection at the given world coordinates highlighting the given angle
+  with the given Colors.
+  <h3>
+    <a name=".setAscendingRadiusfunction"
+      >.setAscendingRadiusfunction(ascendingRadius)</a
+    >
+  </h3>
+  Sets the distance from the center to the brightest point.
+  <h3>
+    <a name=".setDescendingRadius">.setDescendingRadius(descendingRadius)</a>
+  </h3>
+  Sets the distance from the brightest point, to the invisible outer edge.
+  <h3><a name="setSelectionAngle">.setSelectionAngle(selectionAngle)</a></h3>
+  Sets the selection angle in radians from [-Math.PI, Math.PI], which is an area
+  of radial brightness.
+  <p>If null is given, no selection highlight is drawn. This is the default.</p>
+
+  <h3><a name="setSelectionSize">.setSelectionSize(selectionSize)</a></h3>
+  Sets the selection angle in radians from [0, 2*Math.PI], which is the size of
+  the selected highlight.
+  <p>If null is given, no selection highlight is drawn. This is the default.</p>
+
+  <h3><a name=".clear">.clear()</a></h3>
+  Clears all buffers.
+  <h3><a name=".render">.render(viewMatrix)</a></h3>
+  Renders all painted fans using the given matrix.
 </main>

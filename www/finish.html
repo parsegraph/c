@@ -1,281 +1,276 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Parsegraph.com</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-}
+  <head>
+    <title>Parsegraph.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+      }
 
-.parsegraph_Surface {
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-}
+      .parsegraph_Surface {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+      }
 
-div {
-    text-align: center;
-    position: absolute;
-}
+      div {
+        text-align: center;
+        position: absolute;
+      }
 
-.controls {
-    margin: auto;
-    position: absolute;
-    pointer-events: none;
-    width: 100%;
-}
+      .controls {
+        margin: auto;
+        position: absolute;
+        pointer-events: none;
+        width: 100%;
+      }
 
-.controls > form button {
-    pointer-events: auto;
-}
+      .controls > form button {
+        pointer-events: auto;
+      }
 
-@media only screen and (max-width: 980px) {
+      @media only screen and (max-width: 980px) {
+        .controls {
+          display: none;
+        }
 
-.controls {
-    display: none;
-}
+        body > div {
+          width: 100%;
+        }
 
-body > div {
-    width: 100%;
-}
+        body > div input {
+          clear: left;
+        }
+      }
+    </style>
+    <script src="parsegraph-1.3.js"></script>
+    <script src="esprima.js"></script>
+    <script>
+      function createStyles(surface, graph) {
+        nbs = parsegraph_copyStyle(parsegraph_BLOCK);
+        nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+        nbs.borderColor = new parsegraph_Color(0.5, 0.5, 0.5, 1);
+        nbs.minWidth = parsegraph_BUD_RADIUS * 80;
 
-body > div input {
-    clear: left;
-}
+        bbs = parsegraph_copyStyle(parsegraph_BLOCK);
+        bbs.backgroundColor = new parsegraph_Color(1, 1, 0.5, 1);
+        bbs.borderColor = new parsegraph_Color(0.5, 0.5, 0, 1);
+      }
 
-}
-</style>
-<script src="parsegraph-1.3.js"></script>
-<script src="esprima.js"></script>
-<script>
+      function createChatGraph(surface, graph) {
+        var car = new parsegraph_Caret(parsegraph_BUD);
+        car.setGlyphAtlas(graph.glyphAtlas());
 
-function createStyles(surface, graph)
-{
-nbs = parsegraph_copyStyle(parsegraph_BLOCK);
-nbs.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
-nbs.borderColor = new parsegraph_Color(.5, .5, .5, 1);
-nbs.minWidth = parsegraph_BUD_RADIUS * 80;
+        var m = 25;
 
-bbs = parsegraph_copyStyle(parsegraph_BLOCK);
-bbs.backgroundColor = new parsegraph_Color(1, 1, .5, 1);
-bbs.borderColor = new parsegraph_Color(.5, .5, 0, 1);
-}
-
-function createChatGraph(surface, graph)
-{
-    var car = new parsegraph_Caret(parsegraph_BUD);
-    car.setGlyphAtlas(graph.glyphAtlas());
-
-    var m = 25;
-
-    car.push();
-    car.spawnMove(parsegraph_BACKWARD, parsegraph_BUD);
-    for(var i = 0; i < m; ++i) {
-        car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
-        car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
-        if(i === 0) {
+        car.push();
+        car.spawnMove(parsegraph_BACKWARD, parsegraph_BUD);
+        for (var i = 0; i < m; ++i) {
+          car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+          car.spawn(parsegraph_FORWARD, parsegraph_BLOCK);
+          if (i === 0) {
             car.move(parsegraph_FORWARD);
             car.node().setBlockStyle(nbs);
             car.label("");
             car.node()._label.setEditable(true);
             car.move(parsegraph_BACKWARD);
+          }
         }
-    }
-    car.pop();
+        car.pop();
 
-    car.push();
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    for(var i = 0; i < m; ++i) {
-        car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
-        car.spawn(parsegraph_BACKWARD, parsegraph_BLOCK);
-    }
-    car.pop();
+        car.push();
+        car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+        for (var i = 0; i < m; ++i) {
+          car.spawnMove(parsegraph_UPWARD, parsegraph_BUD);
+          car.spawn(parsegraph_BACKWARD, parsegraph_BLOCK);
+        }
+        car.pop();
 
-    return car.root();
-}
+        return car.root();
+      }
 
-var sceneNode;
-function createLoginGraph(surface, graph)
-{
-    var car = new parsegraph_Caret(parsegraph_BUD);
-    car.setGlyphAtlas(graph.glyphAtlas());
-    car.push();
-    var n = createChatGraph(surface, graph);
-    car.connect(parsegraph_UPWARD, n);
-    car.pop();
+      var sceneNode;
+      function createLoginGraph(surface, graph) {
+        var car = new parsegraph_Caret(parsegraph_BUD);
+        car.setGlyphAtlas(graph.glyphAtlas());
+        car.push();
+        var n = createChatGraph(surface, graph);
+        car.connect(parsegraph_UPWARD, n);
+        car.pop();
 
-    var widget = new parsegraph_LoginWidget(surface, graph);
-    car.connect(parsegraph_DOWNWARD, widget.root());
-    widget.authenticate();
-    car.move(parsegraph_DOWNWARD);
+        var widget = new parsegraph_LoginWidget(surface, graph);
+        car.connect(parsegraph_DOWNWARD, widget.root());
+        widget.authenticate();
+        car.move(parsegraph_DOWNWARD);
 
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
-    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+        car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+        car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SCENE);
-    var scene = new alpha_WeetCubeWidget(surface);
-    car.node().setScene(scene);
-    sceneNode = car.node();
-    sceneNode.layoutWasChanged();
+        car.spawnMove(parsegraph_DOWNWARD, parsegraph_SCENE);
+        var scene = new alpha_WeetCubeWidget(surface);
+        car.node().setScene(scene);
+        sceneNode = car.node();
+        sceneNode.layoutWasChanged();
 
-    var n = createWeetcubesModel(surface, graph, scene);
-    car.connect(parsegraph_DOWNWARD, n);
-    car.align(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+        var n = createWeetcubesModel(surface, graph, scene);
+        car.connect(parsegraph_DOWNWARD, n);
+        car.align(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
 
-    return car.root();
-}
+        return car.root();
+      }
 
-function createWeetcubesModel(surface, graph, scene)
-{
-    var car = new parsegraph_Caret(parsegraph_BUD);
-    car.setGlyphAtlas(graph.glyphAtlas());
-    car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-    car.spawn(parsegraph_FORWARD, parsegraph_BUD);
+      function createWeetcubesModel(surface, graph, scene) {
+        var car = new parsegraph_Caret(parsegraph_BUD);
+        car.setGlyphAtlas(graph.glyphAtlas());
+        car.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+        car.spawn(parsegraph_FORWARD, parsegraph_BUD);
 
-    car.pull(parsegraph_DOWNWARD);
+        car.pull(parsegraph_DOWNWARD);
 
-    car.move(parsegraph_BACKWARD);
-    car.label("x");
-    var s = new parsegraph_Node(parsegraph_SLIDER);
-    car.connect(parsegraph_DOWNWARD, s);
-    car.pull(parsegraph_DOWNWARD);
-    s.setClickListener(function() {
-        sceneNode.scene().setXMax(Math.round(Math.max(2, this.value() * 25)));
-    }, s);
-    s.setValue(scene._xMax / 25);
+        car.move(parsegraph_BACKWARD);
+        car.label("x");
+        var s = new parsegraph_Node(parsegraph_SLIDER);
+        car.connect(parsegraph_DOWNWARD, s);
+        car.pull(parsegraph_DOWNWARD);
+        s.setClickListener(function () {
+          sceneNode.scene().setXMax(Math.round(Math.max(2, this.value() * 25)));
+        }, s);
+        s.setValue(scene._xMax / 25);
 
-    car.move(parsegraph_FORWARD);
-    car.label("y");
-    var s = new parsegraph_Node(parsegraph_SLIDER);
-    car.connect(parsegraph_DOWNWARD, s);
-    car.pull(parsegraph_DOWNWARD);
-    s.setClickListener(function() {
-        sceneNode.scene().setYMax(Math.round(Math.max(2, this.value() * 25)));
-    }, s);
-    s.setValue(scene._yMax / 25);
+        car.move(parsegraph_FORWARD);
+        car.label("y");
+        var s = new parsegraph_Node(parsegraph_SLIDER);
+        car.connect(parsegraph_DOWNWARD, s);
+        car.pull(parsegraph_DOWNWARD);
+        s.setClickListener(function () {
+          sceneNode.scene().setYMax(Math.round(Math.max(2, this.value() * 25)));
+        }, s);
+        s.setValue(scene._yMax / 25);
 
-    car.move(parsegraph_FORWARD);
-    car.label("z");
-    var s = new parsegraph_Node(parsegraph_SLIDER);
-    car.connect(parsegraph_DOWNWARD, s);
-    car.pull(parsegraph_DOWNWARD);
-    s.setClickListener(function() {
-        sceneNode.scene().setZMax(Math.round(Math.max(2, this.value() * 25)));
-    }, s);
-    s.setValue(scene._zMax / 25);
+        car.move(parsegraph_FORWARD);
+        car.label("z");
+        var s = new parsegraph_Node(parsegraph_SLIDER);
+        car.connect(parsegraph_DOWNWARD, s);
+        car.pull(parsegraph_DOWNWARD);
+        s.setClickListener(function () {
+          sceneNode.scene().setZMax(Math.round(Math.max(2, this.value() * 25)));
+        }, s);
+        s.setValue(scene._zMax / 25);
 
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    car.label("rotq");
-    var s = new parsegraph_Node(parsegraph_SLIDER);
-    car.connect(parsegraph_DOWNWARD, s);
-    s.setClickListener(function() {
-        sceneNode.scene().setRotq(this.value() * 360);
-    }, s);
-    s.setValue(scene.rotq / 360);
+        car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+        car.label("rotq");
+        var s = new parsegraph_Node(parsegraph_SLIDER);
+        car.connect(parsegraph_DOWNWARD, s);
+        s.setClickListener(function () {
+          sceneNode.scene().setRotq(this.value() * 360);
+        }, s);
+        s.setValue(scene.rotq / 360);
 
-    sceneNode.scene().setUpdateListener(function() {
-        s.setValue(sceneNode.scene().rotq / 360);
-    });
+        sceneNode.scene().setUpdateListener(function () {
+          s.setValue(sceneNode.scene().rotq / 360);
+        });
 
-    return car.root();
-}
+        return car.root();
+      }
 
-function init(main)
-{
-    try {
-        parsegraph_initialize();
-        var surface = new parsegraph_Surface();
-        var graph = new parsegraph_Graph(surface);
-        createStyles(surface, graph);
-        main.appendChild(surface.container());
+      function init(main) {
+        try {
+          parsegraph_initialize();
+          var surface = new parsegraph_Surface();
+          var graph = new parsegraph_Graph(surface);
+          createStyles(surface, graph);
+          main.appendChild(surface.container());
 
-        var uni = new parsegraph_Unicode();
-        uni.onLoad = function() {
+          var uni = new parsegraph_Unicode();
+          uni.onLoad = function () {
             graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
             graph.glyphAtlas().setUnicode(uni);
 
             graph.world().plot(createLoginGraph(surface, graph));
 
             var cameraName = "parsegraph_camera";
-            if(localStorage.getItem(cameraName) != null) {
-                try {
-                    var cameraData = JSON.parse(localStorage.getItem(cameraName));
-                    graph.camera().restore(cameraData);
-                } catch(e) {
-                    console.log(
-                        "Failed to parse saved camera state.\n" + parsegraph_writeError(e)
-                    );
-                }
+            if (localStorage.getItem(cameraName) != null) {
+              try {
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
+              } catch (e) {
+                console.log(
+                  "Failed to parse saved camera state.\n" +
+                    parsegraph_writeError(e)
+                );
+              }
             }
 
             // Schedule the repaint.
             var renderTimer = new parsegraph_AnimationTimer();
             var start = alpha_GetTime();
-            renderTimer.setListener(function() {
-                graph.input().Update(new Date());
-                var t = alpha_GetTime();
-                sceneNode.scene().Tick(t - start);
-                sceneNode.layoutWasChanged();
-                graph.scheduleRepaint();
-                start = t;
-                if(graph.needsRepaint()) {
-                    surface.paint(50);
-                }
-                surface.render();
-                if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                    renderTimer.schedule();
-                }
-            });
-            graph.input().SetListener(function(affectedPaint) {
-                if(affectedPaint) {
-                    graph.scheduleRepaint();
-                }
+            renderTimer.setListener(function () {
+              graph.input().Update(new Date());
+              var t = alpha_GetTime();
+              sceneNode.scene().Tick(t - start);
+              sceneNode.layoutWasChanged();
+              graph.scheduleRepaint();
+              start = t;
+              if (graph.needsRepaint()) {
+                surface.paint(50);
+              }
+              surface.render();
+              if (graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
                 renderTimer.schedule();
+              }
+            });
+            graph.input().SetListener(function (affectedPaint) {
+              if (affectedPaint) {
+                graph.scheduleRepaint();
+              }
+              renderTimer.schedule();
             });
             renderTimer.schedule();
-            graph.onScheduleRepaint = function() {
-                renderTimer.schedule();
+            graph.onScheduleRepaint = function () {
+              renderTimer.schedule();
             };
 
             var backgroundAudioForcer = new parsegraph_IntervalTimer();
             backgroundAudioForcer.setDelay(0);
-            backgroundAudioForcer.setListener(function() {
-                // Set the render flag.
-                var t = alpha_GetTime();
-                var elapsed = t - start;
-                var updateAudio = audioUpdate === null || (t - audioUpdate > .1);
-                widget.Tick(elapsed, frozen, updateAudio);
-                if(!frozen || !widget.cubePainter) {
-                    surface.paint(elapsed, frozen, updateAudio);
-                }
-                if(updateAudio) {
-                    audioUpdate = t;
-                }
-                start = t;
+            backgroundAudioForcer.setListener(function () {
+              // Set the render flag.
+              var t = alpha_GetTime();
+              var elapsed = t - start;
+              var updateAudio = audioUpdate === null || t - audioUpdate > 0.1;
+              widget.Tick(elapsed, frozen, updateAudio);
+              if (!frozen || !widget.cubePainter) {
+                surface.paint(elapsed, frozen, updateAudio);
+              }
+              if (updateAudio) {
+                audioUpdate = t;
+              }
+              start = t;
             }, this);
             backgroundAudioForcer.schedule();
 
-            surface.addRenderer(function() {
-                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
+            surface.addRenderer(function () {
+              localStorage.setItem(
+                cameraName,
+                JSON.stringify(graph.camera().toJSON())
+              );
             });
-        };
-        uni.load();
-        parsegraph_UNICODE_INSTANCE = uni;
-    } catch(ex) {
-        alert("Init: " + parsegraph_writeError(ex));
-        throw ex;
-    }
-}
+          };
+          uni.load();
+          parsegraph_UNICODE_INSTANCE = uni;
+        } catch (ex) {
+          alert("Init: " + parsegraph_writeError(ex));
+          throw ex;
+        }
+      }
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    init(document.body);
-});
-</script>
-</head>
-<body>
-</body>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        init(document.body);
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

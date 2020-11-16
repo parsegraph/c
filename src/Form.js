@@ -1,411 +1,411 @@
-function parsegraph_Form(name)
-{
-    // Save the form name.
-    if(name === undefined) {
-        name = "form";
-    }
-    this._name = name;
+function parsegraph_Form(name) {
+  // Save the form name.
+  if (name === undefined) {
+    name = "form";
+  }
+  this._name = name;
 
-    this._listeners = [];
-    this._fields = [];
+  this._listeners = [];
+  this._fields = [];
 
-    // Used in creating field IDs for label names.
-    this._formID = parsegraph_generateID() + "-" + this.name();
+  // Used in creating field IDs for label names.
+  this._formID = parsegraph_generateID() + "-" + this.name();
 
-    // Create the form.
-    this._formView = document.createElement("form");
-    this._formView.id = this._formID;
-    this._formView.className = "parsegraph-form " + this.name();
+  // Create the form.
+  this._formView = document.createElement("form");
+  this._formView.id = this._formID;
+  this._formView.className = "parsegraph-form " + this.name();
 
-    // Ensure the form is not submitted.
-    parsegraph_addEventMethod(this._formView, "submit", function(event) {
-        event.preventDefault();
-    }, this);
+  // Ensure the form is not submitted.
+  parsegraph_addEventMethod(
+    this._formView,
+    "submit",
+    function (event) {
+      event.preventDefault();
+    },
+    this
+  );
 }
 
-parsegraph_createForm = function(name)
-{
-    return new parsegraph_Form(name);
+parsegraph_createForm = function (name) {
+  return new parsegraph_Form(name);
 };
 
-parsegraph_Form.prototype.asDOM = function()
-{
-    return this._formView;
+parsegraph_Form.prototype.asDOM = function () {
+  return this._formView;
 };
 
 // Add functions to add HTML elements with text content.
-[
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "div",
-    "span",
-    "p"
-].forEach(function(elementType) {
-    parsegraph_Form.prototype[elementType] = function(content) {
-        var element = this.appendElement(elementType);
-        if(content !== undefined) {
-            element.innerHTML = content;
-        }
-        return element;
-    };
+["h1", "h2", "h3", "h4", "h5", "h6", "div", "span", "p"].forEach(function (
+  elementType
+) {
+  parsegraph_Form.prototype[elementType] = function (content) {
+    var element = this.appendElement(elementType);
+    if (content !== undefined) {
+      element.innerHTML = content;
+    }
+    return element;
+  };
 });
 
-parsegraph_Form.prototype.appendElement = function(elementType)
-{
-    this._formView.appendChild(document.createElement(elementType));
-    return this._formView.lastChild;
+parsegraph_Form.prototype.appendElement = function (elementType) {
+  this._formView.appendChild(document.createElement(elementType));
+  return this._formView.lastChild;
 };
 
-parsegraph_Form.prototype.addFieldElement = function(type, name, value, choices)
-{
-    var field = {
-        "type":type,
-        "name":name,
-        "value":value,
-        "choices":choices,
-        "isButton":function() {
-            return field.type == "submit" || field.type == "button";
-        },
-        "hasValue":function() {
-            return !field.isButton() && field.type != "label";
-        }
-    };
-    this._fields.push(field);
+parsegraph_Form.prototype.addFieldElement = function (
+  type,
+  name,
+  value,
+  choices
+) {
+  var field = {
+    type: type,
+    name: name,
+    value: value,
+    choices: choices,
+    isButton: function () {
+      return field.type == "submit" || field.type == "button";
+    },
+    hasValue: function () {
+      return !field.isButton() && field.type != "label";
+    },
+  };
+  this._fields.push(field);
 
-    var fieldID = this._formID + "-" + field.name;
-    var fieldClass = this.name() + "-" + field.name;
-    var fieldElement;
+  var fieldID = this._formID + "-" + field.name;
+  var fieldClass = this.name() + "-" + field.name;
+  var fieldElement;
 
-    // Textarea are handled separately.
-    if(field.type == "textarea") {
-        fieldElement = this.appendElement("textarea");
-        fieldElement.id = fieldID;
-        fieldElement.name = field.name;
-        fieldElement.className = fieldClass;
-        if(field.value !== undefined) {
-            fieldElement.innerHTML = field.value;
-        }
-        parsegraph_addEventMethod(fieldElement, "change", function() {
-            this.value(field.name, fieldElement.value, "set");
-        }, this);
-        this.addListener(function(name, value) {
-            if(name != field.name) {
-                return;
-            }
-            fieldElement.innerHTML = value;
-        });
-        field.element = fieldElement;
-        return field;
+  // Textarea are handled separately.
+  if (field.type == "textarea") {
+    fieldElement = this.appendElement("textarea");
+    fieldElement.id = fieldID;
+    fieldElement.name = field.name;
+    fieldElement.className = fieldClass;
+    if (field.value !== undefined) {
+      fieldElement.innerHTML = field.value;
     }
+    parsegraph_addEventMethod(
+      fieldElement,
+      "change",
+      function () {
+        this.value(field.name, fieldElement.value, "set");
+      },
+      this
+    );
+    this.addListener(function (name, value) {
+      if (name != field.name) {
+        return;
+      }
+      fieldElement.innerHTML = value;
+    });
+    field.element = fieldElement;
+    return field;
+  }
 
-    // Label types.
-    if(field.type === "label") {
-        fieldElement = this.appendElement("label");
-        fieldElement.htmlFor = fieldID;
-        fieldElement.innerHTML = field.value;
-        fieldElement.className = fieldClass;
-        field.element = fieldElement;
-        return field;
-    }
+  // Label types.
+  if (field.type === "label") {
+    fieldElement = this.appendElement("label");
+    fieldElement.htmlFor = fieldID;
+    fieldElement.innerHTML = field.value;
+    fieldElement.className = fieldClass;
+    field.element = fieldElement;
+    return field;
+  }
 
-    // Buttons are handled separately.
-    if(field.type == "submit" || field.type == "button") {
-        fieldElement = this.appendElement("button");
-        fieldElement.type = field.type;
-        fieldElement.id = fieldID;
-        fieldElement.name = field.name;
-        fieldElement.className = fieldClass;
-
-        // Set the label and value to the field value.
-        fieldElement.innerHTML = field.value;
-        if(field.value !== undefined) {
-            fieldElement.value = field.value;
-        }
-
-        // Listen for button clicks.
-        var onChange = function() {
-            this.value(field.name, fieldElement.value, "click");
-        };
-        if(field.type == "submit") {
-            // Submit buttons automatically handle key presses.
-            parsegraph_addEventMethod(fieldElement, "click", onChange, this);
-        }
-        else {
-            parsegraph_addButtonListener(fieldElement, onChange, this);
-        }
-
-        // Update the button label when the value changes.
-        this.addListener(function(name, value, action) {
-            if(name != field.name || action == "click") {
-                return;
-            }
-            if(fieldElement.value == value) {
-                return;
-            }
-
-            // Set the field element's value to the new field value.
-            fieldElement.innerHTML = value;
-            if(value !== undefined) {
-                fieldElement.value = value;
-            }
-        });
-
-        field.element = fieldElement;
-        return field;
-    }
-
-    if(field.type == "select") {
-        fieldElement = this.appendElement("select")
-        field.choices.forEach(function(choice) {
-            var childElement = document.createElement("option");
-            if(typeof(choice) == "object") {
-                childElement.value = choice.value;
-                childElement.innerHTML = choice.label;
-            } else {
-                childElement.value = choice;
-                childElement.innerHTML = choice;
-            }
-            if(field.value == choice) {
-                childElement.selected = true;
-            }
-            fieldElement.appendChild(childElement);
-        });
-
-        parsegraph_addEventMethod(fieldElement, "change", function() {
-            var selected = parsegraph_findSelected(fieldElement);
-            if(selected == null) {
-                this.value(field.name, null, "click");
-                return;
-            }
-            this.value(field.name, selected.value, "click");
-        }, this);
-    }
-    else if(field.type == "checkbox") {
-        fieldElement = this.appendElement("input");
-
-        // Check the checkbox if the value is truthy.
-        if(field.value) {
-            fieldElement.checked = field.value;
-        }
-    }
-    else {
-        // Basic inputs.
-        fieldElement = this.appendElement("input");
-
-        if(field.value !== undefined) {
-            // The form field has a value, so assign it.
-            fieldElement.value = field.value;
-        }
-    }
-
-    // Assign properties for finding the element in the HTML document.
-    if(field.type != "label") {
-        fieldElement.id = fieldID;
-        fieldElement.type = field.type;
-        fieldElement.name = field.name;
-    }
+  // Buttons are handled separately.
+  if (field.type == "submit" || field.type == "button") {
+    fieldElement = this.appendElement("button");
+    fieldElement.type = field.type;
+    fieldElement.id = fieldID;
+    fieldElement.name = field.name;
     fieldElement.className = fieldClass;
 
-    // Update the form values using field DOM events.
-    if(field.type == "checkbox") {
-        // Text-oriented types fire on change events.
-        parsegraph_addEventMethod(fieldElement, "change", function() {
-            this.value(field.name, fieldElement.checked);
-        }, this);
-        this.addListener(function(name, value) {
-            if(name != field.name) {
-                return;
-            }
-            fieldElement.checked = value;
-        }, this);
+    // Set the label and value to the field value.
+    fieldElement.innerHTML = field.value;
+    if (field.value !== undefined) {
+      fieldElement.value = field.value;
     }
-    else {
-        // Text-oriented types fire on change events.
-        parsegraph_addEventMethod(fieldElement, "change", function() {
-            this.value(field.name, fieldElement.value);
-        }, this);
-        this.addListener(function(name, value) {
-            if(name != field.name) {
-                return;
-            }
-            fieldElement.value = field.value;
-        }, this);
+
+    // Listen for button clicks.
+    var onChange = function () {
+      this.value(field.name, fieldElement.value, "click");
+    };
+    if (field.type == "submit") {
+      // Submit buttons automatically handle key presses.
+      parsegraph_addEventMethod(fieldElement, "click", onChange, this);
+    } else {
+      parsegraph_addButtonListener(fieldElement, onChange, this);
     }
+
+    // Update the button label when the value changes.
+    this.addListener(function (name, value, action) {
+      if (name != field.name || action == "click") {
+        return;
+      }
+      if (fieldElement.value == value) {
+        return;
+      }
+
+      // Set the field element's value to the new field value.
+      fieldElement.innerHTML = value;
+      if (value !== undefined) {
+        fieldElement.value = value;
+      }
+    });
 
     field.element = fieldElement;
     return field;
-};
+  }
 
-parsegraph_Form.prototype.clone = function()
-{
-    var copy = parsegraph_createForm(name);
-    this.eachField(function(field) {
-        copy[field.type](
-            field.name,
-            field.value,
-            field.choices
-        );
-    }, this);
-    return copy;
-};
+  if (field.type == "select") {
+    fieldElement = this.appendElement("select");
+    field.choices.forEach(function (choice) {
+      var childElement = document.createElement("option");
+      if (typeof choice == "object") {
+        childElement.value = choice.value;
+        childElement.innerHTML = choice.label;
+      } else {
+        childElement.value = choice;
+        childElement.innerHTML = choice;
+      }
+      if (field.value == choice) {
+        childElement.selected = true;
+      }
+      fieldElement.appendChild(childElement);
+    });
 
-parsegraph_Form.prototype.load = function(src)
-{
-    if(Array.isArray(src)) {
-        // Treat src as a JSON array.
-        for(var i = 0; i < src.length; ++i) {
-            var field = src[i];
-            this.value(field.name, field.value);
+    parsegraph_addEventMethod(
+      fieldElement,
+      "change",
+      function () {
+        var selected = parsegraph_findSelected(fieldElement);
+        if (selected == null) {
+          this.value(field.name, null, "click");
+          return;
         }
+        this.value(field.name, selected.value, "click");
+      },
+      this
+    );
+  } else if (field.type == "checkbox") {
+    fieldElement = this.appendElement("input");
+
+    // Check the checkbox if the value is truthy.
+    if (field.value) {
+      fieldElement.checked = field.value;
     }
-    else {
-        // Treat src as a JSON object.
-        for(var name in src) {
-            this.value(name, src[name]);
-        }
+  } else {
+    // Basic inputs.
+    fieldElement = this.appendElement("input");
+
+    if (field.value !== undefined) {
+      // The form field has a value, so assign it.
+      fieldElement.value = field.value;
     }
-};
+  }
 
-parsegraph_Form.prototype.jsonArray = function()
-{
-    var serialized = [];
-    this.eachField(function(field) {
-        if(!field.hasValue()) {
-            return;
-        }
-        serialized.push({
-            "name":field.name,
-            "value":field.value
-        });
+  // Assign properties for finding the element in the HTML document.
+  if (field.type != "label") {
+    fieldElement.id = fieldID;
+    fieldElement.type = field.type;
+    fieldElement.name = field.name;
+  }
+  fieldElement.className = fieldClass;
+
+  // Update the form values using field DOM events.
+  if (field.type == "checkbox") {
+    // Text-oriented types fire on change events.
+    parsegraph_addEventMethod(
+      fieldElement,
+      "change",
+      function () {
+        this.value(field.name, fieldElement.checked);
+      },
+      this
+    );
+    this.addListener(function (name, value) {
+      if (name != field.name) {
+        return;
+      }
+      fieldElement.checked = value;
     }, this);
-    return serialized;
-};
-
-parsegraph_Form.prototype.jsonObject = function()
-{
-    var serialized = {};
-    this.eachField(function(field) {
-        if(!field.hasValue()) {
-            return;
-        }
-        serialized[field.name] = field.value;
+  } else {
+    // Text-oriented types fire on change events.
+    parsegraph_addEventMethod(
+      fieldElement,
+      "change",
+      function () {
+        this.value(field.name, fieldElement.value);
+      },
+      this
+    );
+    this.addListener(function (name, value) {
+      if (name != field.name) {
+        return;
+      }
+      fieldElement.value = field.value;
     }, this);
-    return serialized;
+  }
+
+  field.element = fieldElement;
+  return field;
 };
 
-parsegraph_Form.prototype.name = function()
-{
-    return this._name;
+parsegraph_Form.prototype.clone = function () {
+  var copy = parsegraph_createForm(name);
+  this.eachField(function (field) {
+    copy[field.type](field.name, field.value, field.choices);
+  }, this);
+  return copy;
+};
+
+parsegraph_Form.prototype.load = function (src) {
+  if (Array.isArray(src)) {
+    // Treat src as a JSON array.
+    for (var i = 0; i < src.length; ++i) {
+      var field = src[i];
+      this.value(field.name, field.value);
+    }
+  } else {
+    // Treat src as a JSON object.
+    for (var name in src) {
+      this.value(name, src[name]);
+    }
+  }
+};
+
+parsegraph_Form.prototype.jsonArray = function () {
+  var serialized = [];
+  this.eachField(function (field) {
+    if (!field.hasValue()) {
+      return;
+    }
+    serialized.push({
+      name: field.name,
+      value: field.value,
+    });
+  }, this);
+  return serialized;
+};
+
+parsegraph_Form.prototype.jsonObject = function () {
+  var serialized = {};
+  this.eachField(function (field) {
+    if (!field.hasValue()) {
+      return;
+    }
+    serialized[field.name] = field.value;
+  }, this);
+  return serialized;
+};
+
+parsegraph_Form.prototype.name = function () {
+  return this._name;
 };
 
 // Create functions to quickly add fields of these types.
 [
-    ["label"],
-    ["text"],
-    ["textarea"],
-    ["password"],
-    ["checkbox"],
-    ["button"],
-    ["submit"],
-    ["select", "dropdown", "comboBox", "combo"]
-].forEach(function(field) {
-    var fieldType = field[0];
+  ["label"],
+  ["text"],
+  ["textarea"],
+  ["password"],
+  ["checkbox"],
+  ["button"],
+  ["submit"],
+  ["select", "dropdown", "comboBox", "combo"],
+].forEach(function (field) {
+  var fieldType = field[0];
 
-    /**
-     * Adds a field element of this type.
-     */
-    var addFieldElement = function(name, value, choices) {
-        this.addFieldElement(fieldType, name, value, choices);
-    };
+  /**
+   * Adds a field element of this type.
+   */
+  var addFieldElement = function (name, value, choices) {
+    this.addFieldElement(fieldType, name, value, choices);
+  };
 
-    /**
-     * Adds a label and a field element of this type.
-     */
-    var addField = function(name, label, value, choices) {
-        var labelElement = this.addFieldElement("label", name, label);
-        labelElement.element.className += " " + fieldType + "-label";
-        this.addFieldElement(fieldType, name, value, choices);
-    };
+  /**
+   * Adds a label and a field element of this type.
+   */
+  var addField = function (name, label, value, choices) {
+    var labelElement = this.addFieldElement("label", name, label);
+    labelElement.element.className += " " + fieldType + "-label";
+    this.addFieldElement(fieldType, name, value, choices);
+  };
 
-    // Add a e.g. checkbox() and checkboxField() methods.
-    field.forEach(function(fieldName) {
-        parsegraph_Form.prototype[fieldName] = addFieldElement;
-        parsegraph_Form.prototype[fieldName + "Field"] = addField;
-    });
+  // Add a e.g. checkbox() and checkboxField() methods.
+  field.forEach(function (fieldName) {
+    parsegraph_Form.prototype[fieldName] = addFieldElement;
+    parsegraph_Form.prototype[fieldName + "Field"] = addField;
+  });
 });
 
-parsegraph_Form.prototype.value = function(name, value, action)
-{
-    var field = this.getFieldByName(name);
-    if(field == undefined) {
-        return;
+parsegraph_Form.prototype.value = function (name, value, action) {
+  var field = this.getFieldByName(name);
+  if (field == undefined) {
+    return;
+  }
+  if (action === undefined) {
+    action = "set";
+  }
+  if (value !== undefined) {
+    if (action == "set" && field.value === value) {
+      return;
     }
-    if(action === undefined) {
-        action = "set";
-    }
-    if(value !== undefined) {
-        if(action == "set" && field.value === value) {
-            return;
-        }
-        field.value = value;
-        this.update(name, value, action);
-    }
-    return field.value;
+    field.value = value;
+    this.update(name, value, action);
+  }
+  return field.value;
 };
 
-parsegraph_Form.prototype.clear = function()
-{
-    this.eachField(function(field) {
-        if(field.type == "button" || field.type == "submit" || field.type == "label") {
-            return;
-        }
-        this.value(field.name, null, "set");
-    }, this);
-};
-
-parsegraph_Form.prototype.getFieldByName = function(name)
-{
-    var labelField = null;
-    for(var i = 0; i < this._fields.length; ++i) {
-        var field = this._fields[i];
-        if(field.name == name) {
-            if(field.type != "label") {
-                return field;
-            }
-            labelField = field;
-        }
+parsegraph_Form.prototype.clear = function () {
+  this.eachField(function (field) {
+    if (
+      field.type == "button" ||
+      field.type == "submit" ||
+      field.type == "label"
+    ) {
+      return;
     }
-    return labelField;
+    this.value(field.name, null, "set");
+  }, this);
 };
 
-parsegraph_Form.prototype.elementFor = function(fieldName)
-{
-    var field = this.getFieldByName(fieldName);
-    if(field) {
-        return field.element;
+parsegraph_Form.prototype.getFieldByName = function (name) {
+  var labelField = null;
+  for (var i = 0; i < this._fields.length; ++i) {
+    var field = this._fields[i];
+    if (field.name == name) {
+      if (field.type != "label") {
+        return field;
+      }
+      labelField = field;
     }
-    return null;
+  }
+  return labelField;
 };
 
-parsegraph_Form.prototype.eachField = function(visitor, visitorThisArg)
-{
-    for(var i = 0; i < this._fields.length; ++i) {
-        visitor.call(visitorThisArg, this._fields[i]);
-    }
+parsegraph_Form.prototype.elementFor = function (fieldName) {
+  var field = this.getFieldByName(fieldName);
+  if (field) {
+    return field.element;
+  }
+  return null;
 };
 
-parsegraph_Form.prototype.addListener = function(listener, thisArg)
-{
-    this._listeners.push([listener, thisArg]);
+parsegraph_Form.prototype.eachField = function (visitor, visitorThisArg) {
+  for (var i = 0; i < this._fields.length; ++i) {
+    visitor.call(visitorThisArg, this._fields[i]);
+  }
 };
 
-parsegraph_Form.prototype.update = function(name, value, action)
-{
-    this._listeners.forEach(function(listener) {
-        listener[0].call(listener[1], name, value, action);
-    }, this);
+parsegraph_Form.prototype.addListener = function (listener, thisArg) {
+  this._listeners.push([listener, thisArg]);
+};
+
+parsegraph_Form.prototype.update = function (name, value, action) {
+  this._listeners.forEach(function (listener) {
+    listener[0].call(listener[1], name, value, action);
+  }, this);
 };

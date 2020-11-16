@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Multislot - Rainback</title>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<script src="/parsegraph-1.3.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
-    var window = new parsegraph_Window();
-    var world = new parsegraph_World();
-    document.body.appendChild(window.container());
-    var belt = new parsegraph_TimingBelt();
-    belt.addWindow(window);
-    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph_Viewport(window, world);
-    window.addComponent(viewport.component());
+  <head>
+    <title>Multislot - Rainback</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <script src="/parsegraph-1.3.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        parsegraph_initialize();
+        var window = new parsegraph_Window();
+        var world = new parsegraph_World();
+        document.body.appendChild(window.container());
+        var belt = new parsegraph_TimingBelt();
+        belt.addWindow(window);
+        parsegraph_addEventMethod(
+          top.window,
+          "resize",
+          belt.scheduleUpdate,
+          belt
+        );
+        var viewport = new parsegraph_Viewport(window, world);
+        window.addComponent(viewport.component());
 
-    var room = new parsegraph_Room(belt, world);
-    var maxSize = 25;
-    var ms = new parsegraph_Multislot(room, 1+Math.round(Math.random()*maxSize), 1+Math.round(Math.random()*maxSize), new parsegraph_Color(Math.random(), Math.random(), Math.random()), 0);
-    world.plot(ms.node());
-    viewport.showInCamera(ms.node());
-});
-</script>
-</head>
-<body>
-</body>
+        var room = new parsegraph_Room(belt, world);
+        var maxSize = 25;
+        var ms = new parsegraph_Multislot(
+          room,
+          1 + Math.round(Math.random() * maxSize),
+          1 + Math.round(Math.random() * maxSize),
+          new parsegraph_Color(Math.random(), Math.random(), Math.random()),
+          0
+        );
+        world.plot(ms.node());
+        viewport.showInCamera(ms.node());
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

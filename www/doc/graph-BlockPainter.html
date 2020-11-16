@@ -1,52 +1,94 @@
 <main>
-<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-BlockPainter">BlockPainter</a></div>
-<h1>Parsegraph BlockPainter</h1>
-BlockPainter paints blocks, buds, and lines.
-<h3>Contents</h3>
-<ol>
-<li><a href="#parsegraph_BlockPainter">new parsegraph_BlockPainter(gl, shaders)</a>
-<li><a href="#.bounds">.bounds()</a>
-<li><a href="#.borderColor">.borderColor()</a>
-<li><a href="#.setBorderColor">.setBorderColor(borderColor)</a>
-<li><a href="#.backgroundColor">.backgroundColor()</a>
-<li><a href="#.setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
-<li><a href="#.initBuffer">.initBuffer(numBlocks)</a>
-<li><a href="#.clear">.clear()</a>
-<li><a href="#.drawBlock">.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</a>
-<li><a href="#.render">.render(world)</a>
-</ol>
-<h3><a name="parsegraph_BlockPainter">new parsegraph_BlockPainter(gl, shaders)</a></h3>
-Creates a new BlockPainter using the given WebGL context.
-<dl>
-<dt>gl</dt>
-<dd>A WebGL context.</dd>
-<dt>shaders</dt>
-<dd>A map of shader names to their program IDs, allowing for reuse between many painters.</dd>
-</dl>
-<h3><a name=".bounds">.bounds()</a></h3>
-Returns the computed bounding rect for all the blocks rendered by this painter.
-<h3><a name=".borderColor">.borderColor()</a></h3>
-Returns the border color used for future drawing commands.
-<h3><a name=".setBorderColor">.setBorderColor(borderColor)</a></h3>
-Sets the border color used for future drawing commands.
-<h3><a name=".backgroundColor">.backgroundColor()</a></h3>
-Returns the background color used for future drawing commands.
-<h3><a name=".setBackgroundColor">.setBackgroundColor(backgroundColor)</a></h3>
-Sets the background color used for future drawing commands.
-<h3><a name=".initBuffer">.initBuffer(numBlocks)</a></h3>
-Initializes the painter for painting up to the specified number of blocks.
-<h3><a name=".clear">.clear()</a></h3>
-Releases GL resources, resets all counters, and resets the computed bounding rect.
-<h3><a name=".drawBlock">.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness, borderScale)</a></h3>
-Draws a block, centered at the given world coordinates, of the specified size (also in world coordinates).
-<dl>
-<dt>borderRoundedness</dt>
-<dd>A value between zero and one, inclusive, where zero is square and one is circular.</dd>
-<dt>borderThickness</dt>
-<dd>A value between zero and one, inclusive, where zero is no border, and one is a completely filled border.</dd>
-<dt>borderScale</dt>
-<dd>A value used to scale the border values so that they appear proportionate.</dd>
-</dl>
-<h3><a name=".render">.render(world)</a></h3>
-Uses this painter's WebGL context to draw all specified blocks transformed using the given world matrix.
+  <div class="breadcrumb">
+    <a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo;
+    <a href="/doc/graph">Parsegraph</a> &raquo;
+    <a href="/doc/graph-BlockPainter">BlockPainter</a>
+  </div>
+  <h1>Parsegraph BlockPainter</h1>
+  BlockPainter paints blocks, buds, and lines.
+  <h3>Contents</h3>
+  <ol>
+    <li>
+      <a href="#parsegraph_BlockPainter"
+        >new parsegraph_BlockPainter(gl, shaders)</a
+      >
+    </li>
+    <li><a href="#.bounds">.bounds()</a></li>
+    <li><a href="#.borderColor">.borderColor()</a></li>
+    <li><a href="#.setBorderColor">.setBorderColor(borderColor)</a></li>
+    <li><a href="#.backgroundColor">.backgroundColor()</a></li>
+    <li>
+      <a href="#.setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
+    </li>
+    <li><a href="#.initBuffer">.initBuffer(numBlocks)</a></li>
+    <li><a href="#.clear">.clear()</a></li>
+    <li>
+      <a href="#.drawBlock"
+        >.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness,
+        borderScale)</a
+      >
+    </li>
+    <li><a href="#.render">.render(world)</a></li>
+  </ol>
+
+  <h3>
+    <a name="parsegraph_BlockPainter"
+      >new parsegraph_BlockPainter(gl, shaders)</a
+    >
+  </h3>
+  Creates a new BlockPainter using the given WebGL context.
+  <dl>
+    <dt>gl</dt>
+    <dd>A WebGL context.</dd>
+    <dt>shaders</dt>
+    <dd>
+      A map of shader names to their program IDs, allowing for reuse between
+      many painters.
+    </dd>
+  </dl>
+  <h3><a name=".bounds">.bounds()</a></h3>
+  Returns the computed bounding rect for all the blocks rendered by this
+  painter.
+  <h3><a name=".borderColor">.borderColor()</a></h3>
+  Returns the border color used for future drawing commands.
+  <h3><a name=".setBorderColor">.setBorderColor(borderColor)</a></h3>
+  Sets the border color used for future drawing commands.
+  <h3><a name=".backgroundColor">.backgroundColor()</a></h3>
+  Returns the background color used for future drawing commands.
+  <h3>
+    <a name=".setBackgroundColor">.setBackgroundColor(backgroundColor)</a>
+  </h3>
+  Sets the background color used for future drawing commands.
+  <h3><a name=".initBuffer">.initBuffer(numBlocks)</a></h3>
+  Initializes the painter for painting up to the specified number of blocks.
+  <h3><a name=".clear">.clear()</a></h3>
+  Releases GL resources, resets all counters, and resets the computed bounding
+  rect.
+  <h3>
+    <a name=".drawBlock"
+      >.drawBlock(cx, cy, width, height, borderRoundedness, borderThickness,
+      borderScale)</a
+    >
+  </h3>
+  Draws a block, centered at the given world coordinates, of the specified size
+  (also in world coordinates).
+  <dl>
+    <dt>borderRoundedness</dt>
+    <dd>
+      A value between zero and one, inclusive, where zero is square and one is
+      circular.
+    </dd>
+    <dt>borderThickness</dt>
+    <dd>
+      A value between zero and one, inclusive, where zero is no border, and one
+      is a completely filled border.
+    </dd>
+    <dt>borderScale</dt>
+    <dd>
+      A value used to scale the border values so that they appear proportionate.
+    </dd>
+  </dl>
+  <h3><a name=".render">.render(world)</a></h3>
+  Uses this painter's WebGL context to draw all specified blocks transformed
+  using the given world matrix.
 </main>

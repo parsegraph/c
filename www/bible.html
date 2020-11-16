@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>King James Bible</title>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<script src="/parsegraph-1.3.js"></script>
-<script>
+  <head>
+    <title>King James Bible</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <script src="/parsegraph-1.3.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        parsegraph_initialize();
+        var window = new parsegraph_Window();
+        var world = new parsegraph_World();
+        document.body.appendChild(window.container());
+        var belt = new parsegraph_TimingBelt();
+        belt.addWindow(window);
+        belt.setGovernor(false);
+        belt.setBurstIdle(true);
+        parsegraph_addEventMethod(
+          top.window,
+          "resize",
+          belt.scheduleUpdate,
+          belt
+        );
+        var viewport = new parsegraph_Viewport(window, world);
+        window.addComponent(viewport.component());
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
-    var window = new parsegraph_Window();
-    var world = new parsegraph_World();
-    document.body.appendChild(window.container());
-    var belt = new parsegraph_TimingBelt();
-    belt.addWindow(window);
-    belt.setGovernor(false);
-    belt.setBurstIdle(true);
-    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph_Viewport(window, world);
-    window.addComponent(viewport.component());
-
-    var bible = new parsegraph_BibleWidget(belt, world);
-    var caret = new parsegraph_Caret(parsegraph_BLOCK);
-    caret.label("King James Bible");
-    caret.push();
-    caret.pull('d');
-    caret.spawnMove('d', 'u');
-    world.plot(caret.root());
-    viewport.showInCamera(caret.root());
-    bible.preload(function() {
-        bible.getOldTestament(caret, function() {
+        var bible = new parsegraph_BibleWidget(belt, world);
+        var caret = new parsegraph_Caret(parsegraph_BLOCK);
+        caret.label("King James Bible");
+        caret.push();
+        caret.pull("d");
+        caret.spawnMove("d", "u");
+        world.plot(caret.root());
+        viewport.showInCamera(caret.root());
+        bible.preload(function () {
+          bible.getOldTestament(caret, function () {
             caret.pop();
-            caret.spawnMove('f', 'u');
+            caret.spawnMove("f", "u");
             bible.getNewTestament(caret);
+          });
         });
-    });
-    belt.queueJob(function(timeout) {
-        return bible.tick();
-    });
-});
-</script>
-</head>
-<body>
-</body>
+        belt.queueJob(function (timeout) {
+          return bible.tick();
+        });
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

@@ -1,45 +1,49 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Primes - Rainback</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<script src="/parsegraph-1.3.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function(event) {
-    var window = new parsegraph.Window();
-    var world = new parsegraph.World();
-    document.body.appendChild(window.container());
-    var belt = new parsegraph.TimingBelt();
-    belt.addWindow(window);
-    parsegraph.addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph.Viewport(window, world);
-    window.addComponent(viewport.component());
+  <head>
+    <title>Primes - Rainback</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <script src="/parsegraph-1.3.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        var window = new parsegraph.Window();
+        var world = new parsegraph.World();
+        document.body.appendChild(window.container());
+        var belt = new parsegraph.TimingBelt();
+        belt.addWindow(window);
+        parsegraph.addEventMethod(
+          top.window,
+          "resize",
+          belt.scheduleUpdate,
+          belt
+        );
+        var viewport = new parsegraph.Viewport(window, world);
+        window.addComponent(viewport.component());
 
-    var primes = new parsegraph.PrimesWidget(world);
-    world.plot(primes.node());
+        var primes = new parsegraph.PrimesWidget(world);
+        world.plot(primes.node());
 
-    viewport.showInCamera(primes.node());
+        viewport.showInCamera(primes.node());
 
-    var totalStart = new Date();
-    var MAX_PRIME = 3000;
-    belt.setGovernor(false);
-    belt.setBurstIdle(true);
-    belt.queueJob(function(timeout) {
-        //console.log("Processing primes: " + primes.position + " of " + MAX_PRIME)
-        if(!primes.isPaused() && primes.position <= MAX_PRIME) {
+        var totalStart = new Date();
+        var MAX_PRIME = 3000;
+        belt.setGovernor(false);
+        belt.setBurstIdle(true);
+        belt.queueJob(function (timeout) {
+          //console.log("Processing primes: " + primes.position + " of " + MAX_PRIME)
+          if (!primes.isPaused() && primes.position <= MAX_PRIME) {
             primes.step();
-        }
-        belt.scheduleUpdate();
-        world.scheduleRepaint();
-        if(primes.position > MAX_PRIME) {
+          }
+          belt.scheduleUpdate();
+          world.scheduleRepaint();
+          if (primes.position > MAX_PRIME) {
             console.log("Done in " + parsegraph.elapsed(totalStart) + "ms");
-        }
-        return primes.position <= MAX_PRIME;
-    });
-});
-</script>
-</head>
-<body>
-</body>
+          }
+          return primes.position <= MAX_PRIME;
+        });
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

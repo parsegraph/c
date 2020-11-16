@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Room - Rainback</title>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<script src="/parsegraph-1.3.js"></script>
-<script>
+  <head>
+    <title>Room - Rainback</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <script src="/parsegraph-1.3.js"></script>
+    <script>
+      function parsegraph_RoomDebugPanel() {
+        this._container = document.createElement("div");
+        this._container.style.width = "100%";
+        this._container.style.overflowY = "scroll";
 
-function parsegraph_RoomDebugPanel()
-{
-    this._container = document.createElement("div");
-    this._container.style.width = "100%";
-    this._container.style.overflowY = "scroll";
+        var btn = document.createElement("button");
+        btn.innerHTML = "Spawn";
+        this._container.appendChild(btn);
+      }
 
-    var btn = document.createElement("button");
-    btn.innerHTML = "Spawn";
-    this._container.appendChild(btn);
-}
+      parsegraph_RoomDebugPanel.prototype.container = function () {
+        return this._container;
+      };
 
-parsegraph_RoomDebugPanel.prototype.container = function() {
-    return this._container;
-};
+      document.addEventListener("DOMContentLoaded", function (event) {
+        parsegraph_initialize();
+        var window = new parsegraph_Window();
+        var world = new parsegraph_World();
+        document.body.appendChild(window.container());
+        var belt = new parsegraph_TimingBelt();
+        belt.addWindow(window);
+        parsegraph_addEventMethod(
+          top.window,
+          "resize",
+          belt.scheduleUpdate,
+          belt
+        );
+        var viewport = new parsegraph_Viewport(window, world);
+        window.addComponent(viewport.component());
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    parsegraph_initialize();
-    var window = new parsegraph_Window();
-    var world = new parsegraph_World();
-    document.body.appendChild(window.container());
-    var belt = new parsegraph_TimingBelt();
-    belt.addWindow(window);
-    parsegraph_addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph_Viewport(window, world);
-    window.addComponent(viewport.component());
+        window.container().style.height = "50vh";
+        var panel = new parsegraph_RoomDebugPanel();
+        panel.container().style.height = "50vh";
+        document.body.appendChild(panel.container());
 
-    window.container().style.height = "50vh";
-    var panel = new parsegraph_RoomDebugPanel();
-    panel.container().style.height = "50vh";
-    document.body.appendChild(panel.container());
-
-    var room = new parsegraph_Room(belt, world);
-    world.plot(room.node());
-    viewport.showInCamera(room.node());
-    room.offline().start();
-});
-</script>
-</head>
-<body>
-</body>
+        var room = new parsegraph_Room(belt, world);
+        world.plot(room.node());
+        viewport.showInCamera(room.node());
+        room.offline().start();
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

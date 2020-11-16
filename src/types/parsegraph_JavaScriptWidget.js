@@ -3,12 +3,11 @@
  *
  * Requires Esprima.
  */
-function parsegraph_JavaScriptWidget(graph)
-{
-    this.graph = graph;
-    this.caret = new parsegraph_Caret('b');
-    this.caret.label("Program");
-};
+function parsegraph_JavaScriptWidget(graph) {
+  this.graph = graph;
+  this.caret = new parsegraph_Caret("b");
+  this.caret.label("Program");
+}
 
 /**
  * Builds a child node in the given direcction. The caret is left at a position
@@ -27,142 +26,140 @@ function parsegraph_JavaScriptWidget(graph)
  * I expect inDir to be either parsegraph_INWARD, parsegraph_FORWARD, or
  * parsegraph_DOWNWARD.
  */
-parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
-{
-    inDir = parsegraph_readNodeDirection(inDir);
-    var car = this.caret;
-    switch(child.type) {
+parsegraph_JavaScriptWidget.prototype.buildChild = function (child, inDir) {
+  inDir = parsegraph_readNodeDirection(inDir);
+  var car = this.caret;
+  switch (child.type) {
     case "Identifier":
-        // Identifiers are plain ol' slots.
-        car.spawnMove(inDir, 's');
-        car.label(child.name);
-        break;
-    case 'Literal':
-        // Identifiers are plain ol' slots.
-        car.spawnMove(inDir, 's');
-        car.label(child.raw);
-        break;
-    case 'ExpressionStatement':
-        // Expression statements are drawn directly; make no visual note of the nested statement.
-        this.buildChild(child.expression, inDir);
-        break;
-    case 'ReturnStatement':
-        // Return statements have the keyword plus any value, in-order.
-        car.spawnMove(inDir, 'b');
-        car.label('return');
-        if(child.argument) {
-            this.buildChild(child.argument, inDir);
-        }
-        break;
-    case 'BinaryExpression':
-    case 'AssignmentExpression':
-        this.buildChild(child.left, inDir);
+      // Identifiers are plain ol' slots.
+      car.spawnMove(inDir, "s");
+      car.label(child.name);
+      break;
+    case "Literal":
+      // Identifiers are plain ol' slots.
+      car.spawnMove(inDir, "s");
+      car.label(child.raw);
+      break;
+    case "ExpressionStatement":
+      // Expression statements are drawn directly; make no visual note of the nested statement.
+      this.buildChild(child.expression, inDir);
+      break;
+    case "ReturnStatement":
+      // Return statements have the keyword plus any value, in-order.
+      car.spawnMove(inDir, "b");
+      car.label("return");
+      if (child.argument) {
+        this.buildChild(child.argument, inDir);
+      }
+      break;
+    case "BinaryExpression":
+    case "AssignmentExpression":
+      this.buildChild(child.left, inDir);
 
-        // Inward nodes, once inside, spawn forward.
-        if(inDir === parsegraph_INWARD) {
-            inDir = parsegraph_FORWARD;
-        }
-        car.spawnMove(inDir, 'bu');
+      // Inward nodes, once inside, spawn forward.
+      if (inDir === parsegraph_INWARD) {
+        inDir = parsegraph_FORWARD;
+      }
+      car.spawnMove(inDir, "bu");
+      car.label(child.operator);
+      this.buildChild(child.right, inDir);
+      break;
+    case "MemberExpression":
+      this.buildChild(child.object, inDir);
+
+      // Inward nodes, once inside, spawn forward.
+      if (inDir === parsegraph_INWARD) {
+        inDir = parsegraph_FORWARD;
+      }
+
+      // Spawn the operator.
+      car.spawnMove(inDir, "bu");
+      car.label(".");
+
+      // Spawn the property name.
+      this.buildChild(child.property, inDir);
+      break;
+    case "UpdateExpression":
+    case "UnaryExpression":
+      if (child.prefix) {
+        // Spawn the prefix operator.
+        car.spawnMove(inDir, "bu");
         car.label(child.operator);
-        this.buildChild(child.right, inDir);
-        break;
-    case 'MemberExpression':
-        this.buildChild(child.object, inDir);
 
         // Inward nodes, once inside, spawn forward.
-        if(inDir === parsegraph_INWARD) {
-            inDir = parsegraph_FORWARD;
+        if (inDir === parsegraph_INWARD) {
+          inDir = parsegraph_FORWARD;
         }
 
-        // Spawn the operator.
-        car.spawnMove(inDir, 'bu');
-        car.label('.');
+        // Spawn the value.
+        this.buildChild(child.argument, inDir);
+      } else {
+        // Spawn the value.
+        this.buildChild(child.argument, inDir);
 
-        // Spawn the property name.
-        this.buildChild(child.property, inDir);
-        break;
-    case 'UpdateExpression':
-    case 'UnaryExpression':
-        if(child.prefix) {
-            // Spawn the prefix operator.
-            car.spawnMove(inDir, 'bu');
-            car.label(child.operator);
-
-            // Inward nodes, once inside, spawn forward.
-            if(inDir === parsegraph_INWARD) {
-                inDir = parsegraph_FORWARD;
-            }
-
-            // Spawn the value.
-            this.buildChild(child.argument, inDir);
+        // Inward nodes, once inside, spawn forward.
+        if (inDir === parsegraph_INWARD) {
+          inDir = parsegraph_FORWARD;
         }
-        else {
-            // Spawn the value.
-            this.buildChild(child.argument, inDir);
 
-            // Inward nodes, once inside, spawn forward.
-            if(inDir === parsegraph_INWARD) {
-                inDir = parsegraph_FORWARD;
-            }
+        // Spawn the postfix operator.
+        car.spawnMove(inDir, "bu");
+        car.label(child.operator);
+      }
+      break;
+    case "ThisExpression":
+      car.spawnMove(inDir, "s");
+      car.label("this");
+      break;
+    case "BreakStatement":
+      car.spawnMove(inDir, "b");
+      car.label("break");
+      break;
+    case "EmptyStatement":
+      car.spawnMove(inDir, "bu");
+      car.label(";");
+      break;
+    case "WhileStatement":
+      car.spawnMove(inDir, "b");
+      car.label("while");
+      car.push();
+      this.buildChild(child.test, "f");
+      car.pop();
+      if (child.body) {
+        car.spawnMove("d", "bu");
+        this.buildChild(child.body, "f", "f");
+      }
+      break;
+    case "BlockStatement":
+      this.buildBody(child, inDir, parsegraph_turnRight(inDir));
+      break;
+    case "ForStatement":
+      car.spawnMove(inDir, "b");
+      car.label("for");
 
-            // Spawn the postfix operator.
-            car.spawnMove(inDir, 'bu');
-            car.label(child.operator);
-        }
-        break;
-    case 'ThisExpression':
-        car.spawnMove(inDir, 's');
-        car.label('this');
-        break;
-    case 'BreakStatement':
-        car.spawnMove(inDir, 'b');
-        car.label('break');
-        break;
-    case 'EmptyStatement':
-        car.spawnMove(inDir, 'bu');
-        car.label(';');
-        break;
-    case 'WhileStatement':
-        car.spawnMove(inDir, 'b');
-        car.label('while');
-        car.push();
-        this.buildChild(child.test, 'f');
-        car.pop();
-        if(child.body) {
-            car.spawnMove('d', 'bu');
-            this.buildChild(child.body, 'f', 'f');
-        }
-        break;
-    case 'BlockStatement':
-        this.buildBody(child, inDir, parsegraph_turnRight(inDir));
-        break;
-    case 'ForStatement':
-        car.spawnMove(inDir, 'b');
-        car.label('for');
+      car.push();
+      car.pull("f");
+      car.align("f", "c");
+      car.spawnMove("f", "bu");
 
-        car.push();
-        car.pull('f');
-        car.align('f', 'c');
-        car.spawnMove('f', 'bu');
+      car.push();
+      this.buildChild(child.init, "f");
+      car.pop();
+      car.pull("f");
 
-        car.push();
-        this.buildChild(child.init, 'f');
-        car.pop();
-        car.pull('f');
+      car.spawnMove("d", "bu");
 
-        car.spawnMove('d', 'bu');
+      car.push();
+      this.buildChild(child.test, "f");
+      car.pop();
 
-        car.push();
-        this.buildChild(child.test, 'f');
-        car.pop();
+      car.spawnMove("d", "bu");
+      this.buildChild(child.update, "f");
+      car.pop();
 
-        car.spawnMove('d', 'bu');
-        this.buildChild(child.update, 'f');
-        car.pop();
-
-        this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
-        break;
-/*    case 'ArrayExpression':
+      this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
+      break;
+    /*    case 'ArrayExpression':
         car.spawnMove(inDir, 'b');
 
         for(var i = 0; i < child.elements.length; ++i) {
@@ -189,32 +186,31 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
         break;
 */
     case "CallExpression":
-        car.spawnMove(inDir, 'b');
-        car.push();
-        this.buildChild(child.callee, 'i');
-        car.pop();
-        if(inDir === parsegraph_INWARD) {
-            inDir = parsegraph_FORWARD;
-        }
+      car.spawnMove(inDir, "b");
+      car.push();
+      this.buildChild(child.callee, "i");
+      car.pop();
+      if (inDir === parsegraph_INWARD) {
+        inDir = parsegraph_FORWARD;
+      }
 
-        // Arguments
-        car.pull(inDir);
-        car.spawnMove(inDir, 'b');
-        for(var i = 0; i < child.arguments.length; ++i) {
-            var arg = child.arguments[i];
-            if(i === 0) {
-                car.shrink();
-                this.buildChild(arg, 'i');
-            }
-            else {
-                this.buildChild(arg, 'f');
-            }
-            if(i < child.arguments.length - 1) {
-                car.spawnMove('f', 'bu');
-                car.label(',');
-            }
+      // Arguments
+      car.pull(inDir);
+      car.spawnMove(inDir, "b");
+      for (var i = 0; i < child.arguments.length; ++i) {
+        var arg = child.arguments[i];
+        if (i === 0) {
+          car.shrink();
+          this.buildChild(arg, "i");
+        } else {
+          this.buildChild(arg, "f");
         }
-        break;
+        if (i < child.arguments.length - 1) {
+          car.spawnMove("f", "bu");
+          car.label(",");
+        }
+      }
+      break;
     /*
     case 'NewExpression':
         car.spawnMove(inDir, 'b');
@@ -243,97 +239,96 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
 
         break;
 */
-    case 'IfStatement':
-        car.spawnMove(inDir, 'b');
-        car.label('if');
+    case "IfStatement":
+      car.spawnMove(inDir, "b");
+      car.label("if");
+      car.push();
+      car.pull(inDir);
+      this.buildChild(child.test, "i");
+      car.pop();
+
+      inDir = parsegraph_alternateNodeDirection(inDir);
+      car.spawnMove(inDir, "bu");
+      car.shrink();
+      car.label("then");
+
+      car.push();
+      inDir = parsegraph_alternateNodeDirection(inDir);
+      car.pull(inDir);
+      if (parsegraph_isVerticalNodeDirection(inDir)) {
+        car.align(inDir, "center");
+      }
+      this.buildChild(child.consequent, inDir);
+      car.pop();
+
+      if (child.alternate) {
+        if (inDir === parsegraph_DOWNWARD) {
+          car.spawnMove("f", "bu");
+        } else {
+          car.spawnMove("d", "bu");
+        }
+        car.label("else");
+        if (parsegraph_isVerticalNodeDirection(inDir)) {
+          car.align(inDir, "center");
+        }
+        this.buildChild(child.alternate, inDir);
+      }
+
+      break;
+    case "VariableDeclaration":
+      car.spawnMove(inDir, "b");
+      car.label(child.kind);
+      for (var i = 0; i < child.declarations.length; ++i) {
+        var decl = child.declarations[i];
         car.push();
-        car.pull(inDir);
-        this.buildChild(child.test, 'i');
+        switch (decl.type) {
+          case "VariableDeclarator":
+            this.buildChild(decl.id, "i");
+            break;
+          default:
+            throw new Error("NYI");
+        }
         car.pop();
 
-        inDir = parsegraph_alternateNodeDirection(inDir);
-        car.spawnMove(inDir, 'bu');
-        car.shrink();
-        car.label("then");
-
-        car.push();
-        inDir = parsegraph_alternateNodeDirection(inDir);
-        car.pull(inDir);
-        if(parsegraph_isVerticalNodeDirection(inDir)) {
-            car.align(inDir, 'center');
+        if (decl.init) {
+          car.push();
+          car.spawnMove("f", "bu");
+          car.label("=");
+          this.buildChild(decl.init, "f");
+          car.pop();
         }
-        this.buildChild(child.consequent, inDir);
-        car.pop();
-
-        if(child.alternate) {
-            if(inDir === parsegraph_DOWNWARD) {
-                car.spawnMove('f', 'bu');
-            }
-            else {
-                car.spawnMove('d', 'bu');
-            }
-            car.label("else");
-            if(parsegraph_isVerticalNodeDirection(inDir)) {
-                car.align(inDir, 'center');
-            }
-            this.buildChild(child.alternate, inDir);
-        }
-
-        break;
-    case 'VariableDeclaration':
-        car.spawnMove(inDir, 'b');
-        car.label(child.kind);
-        for(var i = 0; i < child.declarations.length; ++i) {
-            var decl = child.declarations[i];
-            car.push();
-            switch(decl.type) {
-            case "VariableDeclarator":
-                this.buildChild(decl.id, 'i');
-                break;
-            default:
-                throw new Error("NYI");
-            }
-            car.pop();
-
-            if(decl.init) {
-                car.push();
-                car.spawnMove('f', 'bu');
-                car.label('=');
-                this.buildChild(decl.init, 'f');
-                car.pop();
-            }
-        }
-        break;
+      }
+      break;
     case "FunctionExpression":
     case "FunctionDeclaration":
-        car.spawnMove(inDir, 'b');
-        car.label('function');
+      car.spawnMove(inDir, "b");
+      car.label("function");
+      car.push();
+
+      // Name
+      if (child.id) {
         car.push();
-
-        // Name
-        if(child.id) {
-            car.push();
-            this.buildChild(child.id, 'i');
-            car.pop();
-        }
-
-        // Parameters.
-        car.pull(inDir);
-        car.spawnMove(inDir, 'b');
-        for(var i = 0; i < child.params; ++i) {
-            car.spawnMove(inDir, 's');
-        }
+        this.buildChild(child.id, "i");
         car.pop();
+      }
 
-        // Body.
-        this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
-        car.shrink(parsegraph_DOWNWARD);
-        break;
+      // Parameters.
+      car.pull(inDir);
+      car.spawnMove(inDir, "b");
+      for (var i = 0; i < child.params; ++i) {
+        car.spawnMove(inDir, "s");
+      }
+      car.pop();
+
+      // Body.
+      this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
+      car.shrink(parsegraph_DOWNWARD);
+      break;
     default:
-        car.spawnMove(inDir, 'b');
-        car.label(child.type);
-        break;
-    }
+      car.spawnMove(inDir, "b");
+      car.label(child.type);
+      break;
+  }
 };
 
 /**
@@ -343,66 +338,68 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir)
  * If spawnDir === parsegraph_FORWARD, then the child graph will be downward and centered.
  * If spawnDir === parsegraph_DOWNWARD, then the child graph will be forward and narrow.
  */
-parsegraph_JavaScriptWidget.prototype.buildBody = function(ast, inDir, spawnDir)
-{
-    if(ast.body.length === 0) {
-        return;
-    }
+parsegraph_JavaScriptWidget.prototype.buildBody = function (
+  ast,
+  inDir,
+  spawnDir
+) {
+  if (ast.body.length === 0) {
+    return;
+  }
 
-    var car = this.caret;
-    car.push();
+  var car = this.caret;
+  car.push();
 
-    if(ast.body.length === 1) {
-        car.pull(spawnDir);
-        this.buildChild(ast.body[0], spawnDir);
-        car.pop();
-        return;
-    }
-
-    car.spawn(inDir, 'bu');
-    if(spawnDir === parsegraph_FORWARD) {
-        car.align(inDir, 'center');
-    }
-    car.move(inDir);
-    for(var i = 0; i < ast.body.length; ++i) {
-        if(i > 0) {
-            car.spawnMove(spawnDir, 'bu');
-        }
-
-        var realSpawnDir = parsegraph_alternateNodeDirection(spawnDir);
-        car.pull(realSpawnDir);
-        car.push();
-        this.buildChild(ast.body[i], realSpawnDir);
-        car.pop();
-    }
+  if (ast.body.length === 1) {
+    car.pull(spawnDir);
+    this.buildChild(ast.body[0], spawnDir);
     car.pop();
+    return;
+  }
+
+  car.spawn(inDir, "bu");
+  if (spawnDir === parsegraph_FORWARD) {
+    car.align(inDir, "center");
+  }
+  car.move(inDir);
+  for (var i = 0; i < ast.body.length; ++i) {
+    if (i > 0) {
+      car.spawnMove(spawnDir, "bu");
+    }
+
+    var realSpawnDir = parsegraph_alternateNodeDirection(spawnDir);
+    car.pull(realSpawnDir);
+    car.push();
+    this.buildChild(ast.body[i], realSpawnDir);
+    car.pop();
+  }
+  car.pop();
 };
 
-parsegraph_JavaScriptWidget.prototype.load = function(url)
-{
-    var that = this;
-    function buildTree() {
-        if(!esprima) {
-            throw new Error("Esprima must be included.");
-        }
-        var ast = esprima.parse(this.responseText);
-
-        var car = that.caret;
-        car.moveToRoot();
-        car.erase('f');
-        car.erase('d');
-
-        car.label(url);
-        car.spawnMove('i', 's');
-        car.label(ast.sourceType);
-        car.move('o');
-
-        that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_FORWARD);
-
-        that.graph.scheduleRepaint();
+parsegraph_JavaScriptWidget.prototype.load = function (url) {
+  var that = this;
+  function buildTree() {
+    if (!esprima) {
+      throw new Error("Esprima must be included.");
     }
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener("load", buildTree);
-    oReq.open("GET", url);
-    oReq.send();
+    var ast = esprima.parse(this.responseText);
+
+    var car = that.caret;
+    car.moveToRoot();
+    car.erase("f");
+    car.erase("d");
+
+    car.label(url);
+    car.spawnMove("i", "s");
+    car.label(ast.sourceType);
+    car.move("o");
+
+    that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_FORWARD);
+
+    that.graph.scheduleRepaint();
+  }
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener("load", buildTree);
+  oReq.open("GET", url);
+  oReq.send();
 };

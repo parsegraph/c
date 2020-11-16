@@ -1,173 +1,187 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Tests - Parsegraph</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<style>
-body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #111;
-    color: #eee;
-}
+  <head>
+    <title>Tests - Parsegraph</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #111;
+        color: #eee;
+      }
 
-body > div {
-    width: 100%;
-    margin: 1em 0;
-    text-align: center;
-    position: absolute;
-}
+      body > div {
+        width: 100%;
+        margin: 1em 0;
+        text-align: center;
+        position: absolute;
+      }
 
-.parsegraph_Graph {
-    width: 500px;
-    height: 500px;
-}
+      .parsegraph_Graph {
+        width: 500px;
+        height: 500px;
+      }
 
-.Successful {
-    color: green;
-}
+      .Successful {
+        color: green;
+      }
 
-.Crashed {
-    color: maroon;
-}
+      .Crashed {
+        color: maroon;
+      }
 
-.Failed {
-    color: red;
-}
+      .Failed {
+        color: red;
+      }
 
-@media only screen and (max-width: 980px) {
-
-body > div {
-    width: 100%;
-}
-
-body > div input {
-    clear: left;
-}
-
-}
-</style>
-<script src="parsegraph-1.3.js"></script>
-<script>
-
-function createScriptTextarea(url)
-{
-    var ta = document.createElement("textarea");
-    ta.style.width = "400px";
-    ta.style.height = "400px";
-    try {
-        if(ta.spellcheck) {
-            ta.spellcheck = false;
+      @media only screen and (max-width: 980px) {
+        body > div {
+          width: 100%;
         }
-    }
-    catch(ex) {
-        // Pass
-    }
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url);
-    xhr.addEventListener("load", function() {
-        ta.appendChild(document.createTextNode(xhr.responseText));
-        TA = ta;
-    });
-    xhr.send();
+        body > div input {
+          clear: left;
+        }
+      }
+    </style>
+    <script src="parsegraph-1.3.js"></script>
+    <script>
+      function createScriptTextarea(url) {
+        var ta = document.createElement("textarea");
+        ta.style.width = "400px";
+        ta.style.height = "400px";
+        try {
+          if (ta.spellcheck) {
+            ta.spellcheck = false;
+          }
+        } catch (ex) {
+          // Pass
+        }
 
-    return ta;
-}
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        xhr.addEventListener("load", function () {
+          ta.appendChild(document.createTextNode(xhr.responseText));
+          TA = ta;
+        });
+        xhr.send();
 
-function createScriptGraph(url, uni)
-{
-    var surface = new parsegraph_Surface();
-    var graph = new parsegraph_Graph(surface);
-    var atlas = new parsegraph_GlyphAtlas(
-        parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-    );
-    atlas.setUnicode(uni);
-    graph.setGlyphAtlas(atlas);
-    surface.resize(400, "50vh");
+        return ta;
+      }
 
-    var car = new parsegraph_Caret('bu');
-    car.setGlyphAtlas(atlas);
-    graph.plot(car);
-    console.log("createScriptGraph");
-    GRAPH = graph;
+      function createScriptGraph(url, uni) {
+        var surface = new parsegraph_Surface();
+        var graph = new parsegraph_Graph(surface);
+        var atlas = new parsegraph_GlyphAtlas(
+          parsegraph_UPSCALED_FONT_SIZE,
+          "sans-serif",
+          "white"
+        );
+        atlas.setUnicode(uni);
+        graph.setGlyphAtlas(atlas);
+        surface.resize(400, "50vh");
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url);
-    xhr.addEventListener("load", function() {
-        var ln = 0;
-        xhr.responseText.split(/\n/).forEach(function(l) {
-            if(ln % 100) {
-                car.crease();
+        var car = new parsegraph_Caret("bu");
+        car.setGlyphAtlas(atlas);
+        graph.plot(car);
+        console.log("createScriptGraph");
+        GRAPH = graph;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        xhr.addEventListener("load", function () {
+          var ln = 0;
+          xhr.responseText.split(/\n/).forEach(function (l) {
+            if (ln % 100) {
+              car.crease();
             }
-            car.spawnMove('f', 'b');
+            car.spawnMove("f", "b");
             car.label(l);
-            car.move('b');
-            car.spawnMove('d', 'bu');
+            car.move("b");
+            car.spawnMove("d", "bu");
             graph.scheduleRepaint();
             ++ln;
+          });
         });
-    });
-    xhr.send();
+        xhr.send();
 
-    // Schedule the repaint.
-    var renderTimer = new parsegraph_AnimationTimer();
-    renderTimer.setListener(function() {
-        graph.input().Update(new Date());
-        if(graph.needsRepaint()) {
+        // Schedule the repaint.
+        var renderTimer = new parsegraph_AnimationTimer();
+        renderTimer.setListener(function () {
+          graph.input().Update(new Date());
+          if (graph.needsRepaint()) {
             surface.paint(50);
-        }
-        //console.log("Rendering");
-        surface.render();
-        if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+          }
+          //console.log("Rendering");
+          surface.render();
+          if (graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
             renderTimer.schedule();
-        }
-    });
-    graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
-        if(affectedPaint) {
-            graph.scheduleRepaint();
-        }
-        renderTimer.schedule();
-        if(inputAffectedCamera) {
-            localStorage.setItem("parsegraph_world_camera", JSON.stringify(graph.camera().toJSON()));
-        }
-    });
-    renderTimer.schedule();
-    graph.onScheduleRepaint = function() {
-        renderTimer.schedule();
-    };
-
-    return surface.container();
-}
-
-document.addEventListener("DOMContentLoaded", function(event) {
-    var main = document.body;
-
-    var uni = new parsegraph.parsegraph_Unicode();
-    uni.onLoad = function() {
-        main.style.backgroundColor = "grey";
-        var hasFailed = false;
-        var result = parsegraph.parsegraph_AllTests.run(function(eventName, result) {
-            if(eventName == "TestFinished" && result.testStatus() != "Successful") {
-                hasFailed = true;
-                main.style.backgroundColor = "#844";
+          }
+        });
+        graph
+          .input()
+          .SetListener(function (
+            affectedPaint,
+            eventSource,
+            inputAffectedCamera
+          ) {
+            if (affectedPaint) {
+              graph.scheduleRepaint();
             }
-            else if(!hasFailed && eventName == "TestFinished" && result.testStatus() == "Successful") {
-                main.style.backgroundColor = "green";
+            renderTimer.schedule();
+            if (inputAffectedCamera) {
+              localStorage.setItem(
+                "parsegraph_world_camera",
+                JSON.stringify(graph.camera().toJSON())
+              );
             }
-        }, this);
-        result.connect(main);
-    };
-    uni.load();
-    parsegraph.parsegraph_setDefaultUnicode(uni);
+          });
+        renderTimer.schedule();
+        graph.onScheduleRepaint = function () {
+          renderTimer.schedule();
+        };
 
-    //var ta = createScriptGraph("parsegraph-1.3.js");
-    //main.appendChild(ta);
-});
-</script>
-</head>
-<body>
-</body>
+        return surface.container();
+      }
+
+      document.addEventListener("DOMContentLoaded", function (event) {
+        var main = document.body;
+
+        var uni = new parsegraph.parsegraph_Unicode();
+        uni.onLoad = function () {
+          main.style.backgroundColor = "grey";
+          var hasFailed = false;
+          var result = parsegraph.parsegraph_AllTests.run(function (
+            eventName,
+            result
+          ) {
+            if (
+              eventName == "TestFinished" &&
+              result.testStatus() != "Successful"
+            ) {
+              hasFailed = true;
+              main.style.backgroundColor = "#844";
+            } else if (
+              !hasFailed &&
+              eventName == "TestFinished" &&
+              result.testStatus() == "Successful"
+            ) {
+              main.style.backgroundColor = "green";
+            }
+          },
+          this);
+          result.connect(main);
+        };
+        uni.load();
+        parsegraph.parsegraph_setDefaultUnicode(uni);
+
+        //var ta = createScriptGraph("parsegraph-1.3.js");
+        //main.appendChild(ta);
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

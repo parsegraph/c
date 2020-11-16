@@ -1,26 +1,43 @@
 <main>
-<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-LayoutState">LayoutState</a></div>
-<h1>Parsegraph LayoutState</h1>
-Enumeration of Node layout states.
-<h3>Contents</h3>
-<ol>
-<li><a href="#parsegraph_NULL_LAYOUT_STATE">parsegraph_NULL_LAYOUT_STATE</a>
-<li><a href="#parsegraph_NEEDS_COMMIT">parsegraph_NEEDS_COMMIT</a>
-<li><a href="#parsegraph_COMMITTED_LAYOUT">parsegraph_COMMITTED_LAYOUT</a>
-<li><a href="#parsegraph_IN_COMMIT">parsegraph_IN_COMMIT</a>
-<li><a href="#parsegraph_nameLayoutState">parsegraph_nameLayoutState(given)</a>
-</ol>
-<h3><a name="parsegraph_NULL_LAYOUT_STATE">parsegraph_NULL_LAYOUT_STATE</a></h3>
-Constant that refers to a null layout state.
-<h3><a name="parsegraph_NEEDS_COMMIT">parsegraph_NEEDS_COMMIT</a></h3>
-Constant that indicates the Node requires a commit.
-<h3><a name="parsegraph_COMMITTED_LAYOUT">parsegraph_COMMITTED_LAYOUT</a></h3>
-Constant that indicates the Node has committed its layout.
-<h3><a name="parsegraph_IN_COMMIT">parsegraph_IN_COMMIT</a></h3>
-Constant that indicates the Node is in the process of committing its layout.
-<h3><a name="parsegraph_nameLayoutState">parsegraph_nameLayoutState(given)</a></h3>
-Returns a string that describes the given layout state.
-<ul>
-<li>Throws an error if the given layout state constant is unrecognized.
-</ul>
+  <div class="breadcrumb">
+    <a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo;
+    <a href="/doc/graph">Parsegraph</a> &raquo;
+    <a href="/doc/graph-LayoutState">LayoutState</a>
+  </div>
+  <h1>Parsegraph LayoutState</h1>
+  Enumeration of Node layout states.
+  <h3>Contents</h3>
+  <ol>
+    <li>
+      <a href="#parsegraph_NULL_LAYOUT_STATE">parsegraph_NULL_LAYOUT_STATE</a>
+    </li>
+    <li><a href="#parsegraph_NEEDS_COMMIT">parsegraph_NEEDS_COMMIT</a></li>
+    <li>
+      <a href="#parsegraph_COMMITTED_LAYOUT">parsegraph_COMMITTED_LAYOUT</a>
+    </li>
+    <li><a href="#parsegraph_IN_COMMIT">parsegraph_IN_COMMIT</a></li>
+    <li>
+      <a href="#parsegraph_nameLayoutState"
+        >parsegraph_nameLayoutState(given)</a
+      >
+    </li>
+  </ol>
+
+  <h3>
+    <a name="parsegraph_NULL_LAYOUT_STATE">parsegraph_NULL_LAYOUT_STATE</a>
+  </h3>
+  Constant that refers to a null layout state.
+  <h3><a name="parsegraph_NEEDS_COMMIT">parsegraph_NEEDS_COMMIT</a></h3>
+  Constant that indicates the Node requires a commit.
+  <h3><a name="parsegraph_COMMITTED_LAYOUT">parsegraph_COMMITTED_LAYOUT</a></h3>
+  Constant that indicates the Node has committed its layout.
+  <h3><a name="parsegraph_IN_COMMIT">parsegraph_IN_COMMIT</a></h3>
+  Constant that indicates the Node is in the process of committing its layout.
+  <h3>
+    <a name="parsegraph_nameLayoutState">parsegraph_nameLayoutState(given)</a>
+  </h3>
+  Returns a string that describes the given layout state.
+  <ul>
+    <li>Throws an error if the given layout state constant is unrecognized.</li>
+  </ul>
 </main>

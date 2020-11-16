@@ -1,81 +1,116 @@
 <main>
-<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Camera">Camera</a></div>
-<h1>Parsegraph Camera</h1>
-The camera controls input from the user on a surface to manage visualization of a 2D orthographic world.
-<h3>Contents</h3>
-<ol>
-<li><a href="#parsegraph_CLICK_DELAY_MILLIS">parsegraph_CLICK_DELAY_MILLIS</a>
-<li><a href="#parsegraph_Camera">new parsegraph_Camera(surface)</a>
-<li><a href="#parsegraph_containsAll">parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</a>
-<li><a href="#parsegraph_containsAny">parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</a>
-<li><a href="#.zoomToPoint">.zoomToPoint(scaleFactor, x, y)</a>
-<li><a href="#.setOrigin">.setOrigin(x, y)</a>
-<li><a href="#.toJSON">.toJSON()</a>
-<li><a href="#.restore">.restore(json)</a>
-<li><a href="#.surface">.surface()</a>
-<li><a href="#.graph">.graph()</a>
-<li><a href="#.scale">.scale()</a>
-<li><a href="#.x">.x()</a>
-<li><a href="#.y">.y()</a>
-<li><a href="#.setScale">.setScale(scale)</a>
-<li><a href="#.contains">.contains(rect)</a>
-<li><a href="#.toString">.toString()</a>
-<li><a href="#.adjustOrigin">.adjustOrigin(x, y)</a>
-<li><a href="#.worldMatrix">.worldMatrix()</a>
-<li><a href="#.aspectRatio">.aspectRatio()</a>
-<li><a href="#.width">.width()</a>
-<li><a href="#.height">.height()</a>
-<li><a href="#.canProject">.canProject()</a>
-<li><a href="#.project">.project()</a>
-</ol>
-<h3><a name="parsegraph_CLICK_DELAY_MILLIS">parsegraph_CLICK_DELAY_MILLIS</a></h3>
-The amount of delay between clicks, in milliseconds, that will be allowed before the hope for a double-click is abandoned.
-<h3><a name="parsegraph_Camera">new parsegraph_Camera(surface)</a></h3>
-Creates a new parsegraph_Camera using the given surface, positioned at the origin, with a scale of 1.
-<p>
-An error is thrown if no surface is provided.
-<h3><a name="parsegraph_containsAll">parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</a></h3>
-Returns whether the specified viewport contains all of the specified rect.
-<h3><a name="parsegraph_containsAny">parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx, cy, width, height)</a></h3>
-Returns whether the specified viewport contains any of the specified rect.
-<h3><a name=".zoomToPoint">.zoomToPoint(scaleFactor, x, y)</a></h3>
-Zooms to the given point.
-<h3><a name=".setOrigin">.setOrigin(x, y)</a></h3>
-Sets the camera's origin to the specified position.
-<h3><a name=".toJSON">.toJSON()</a></h3>
-Returns a new JSON that can be passed to JSON.stringify() and used with .restore() to recreate this camera's current state.
-<h3><a name=".restore">.restore(json)</a></h3>
-Changes this camera's state to the given JSON object, as defined by .toJSON().
-<h3><a name=".surface">.surface()</a></h3>
-Returns the surface used by this camera.
-<h3><a name=".graph">.graph()</a></h3>
-Same as .surface(). Used for backwards compat.
-<h3><a name=".scale">.scale()</a></h3>
-Returns this camera's current scale.
-<h3><a name=".x">.x()</a></h3>
-Returns this camera's current position along the X-axis.
-<h3><a name=".y">.y()</a></h3>
-Returns this camera's current position along the Y-axis.
-<h3><a name=".setScale">.setScale(scale)</a></h3>
-Sets this camera's scale to the given value.
-<h3><a name=".contains">.contains(rect)</a></h3>
-Returns whether this camera's orthogonal viewport contains any of the given rect.
-<h3><a name=".toString">.toString()</a></h3>
-Returns a programmer-friendly string representation of this camera.
-<h3><a name=".adjustOrigin">.adjustOrigin(x, y)</a></h3>
-Adjusts this camera's origin by the given delta.
-<h3><a name=".worldMatrix">.worldMatrix()</a></h3>
-Computes and returns a new world matrix that represents this camera's current position.
-<h3><a name=".aspectRatio">.aspectRatio()</a></h3>
-Returns this camera's aspect ratio, as computed during project().
-<h3><a name=".width">.width()</a></h3>
-Returns this camera's viewport width, as computed during project().
-<h3><a name=".height">.height()</a></h3>
-Returns this camera's viewport height, as computed during project().
-<h3><a name=".canProject">.canProject()</a></h3>
-Returns whether this camera's surface has usable dimensions.
-<h3><a name=".project">.project()</a></h3>
-Returns a new projection matrix for this camera and sets the computed viewport dimensions and aspect ratio.
-<p>
-Throws an error if canProject() returns false.
+  <div class="breadcrumb">
+    <a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo;
+    <a href="/doc/graph">Parsegraph</a> &raquo;
+    <a href="/doc/graph-Camera">Camera</a>
+  </div>
+  <h1>Parsegraph Camera</h1>
+  The camera controls input from the user on a surface to manage visualization
+  of a 2D orthographic world.
+  <h3>Contents</h3>
+  <ol>
+    <li>
+      <a href="#parsegraph_CLICK_DELAY_MILLIS">parsegraph_CLICK_DELAY_MILLIS</a>
+    </li>
+    <li><a href="#parsegraph_Camera">new parsegraph_Camera(surface)</a></li>
+    <li>
+      <a href="#parsegraph_containsAll"
+        >parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx,
+        cy, width, height)</a
+      >
+    </li>
+    <li>
+      <a href="#parsegraph_containsAny"
+        >parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx,
+        cy, width, height)</a
+      >
+    </li>
+    <li><a href="#.zoomToPoint">.zoomToPoint(scaleFactor, x, y)</a></li>
+    <li><a href="#.setOrigin">.setOrigin(x, y)</a></li>
+    <li><a href="#.toJSON">.toJSON()</a></li>
+    <li><a href="#.restore">.restore(json)</a></li>
+    <li><a href="#.surface">.surface()</a></li>
+    <li><a href="#.graph">.graph()</a></li>
+    <li><a href="#.scale">.scale()</a></li>
+    <li><a href="#.x">.x()</a></li>
+    <li><a href="#.y">.y()</a></li>
+    <li><a href="#.setScale">.setScale(scale)</a></li>
+    <li><a href="#.contains">.contains(rect)</a></li>
+    <li><a href="#.toString">.toString()</a></li>
+    <li><a href="#.adjustOrigin">.adjustOrigin(x, y)</a></li>
+    <li><a href="#.worldMatrix">.worldMatrix()</a></li>
+    <li><a href="#.aspectRatio">.aspectRatio()</a></li>
+    <li><a href="#.width">.width()</a></li>
+    <li><a href="#.height">.height()</a></li>
+    <li><a href="#.canProject">.canProject()</a></li>
+    <li><a href="#.project">.project()</a></li>
+  </ol>
+
+  <h3>
+    <a name="parsegraph_CLICK_DELAY_MILLIS">parsegraph_CLICK_DELAY_MILLIS</a>
+  </h3>
+  The amount of delay between clicks, in milliseconds, that will be allowed
+  before the hope for a double-click is abandoned.
+  <h3><a name="parsegraph_Camera">new parsegraph_Camera(surface)</a></h3>
+  Creates a new parsegraph_Camera using the given surface, positioned at the
+  origin, with a scale of 1.
+  <p>An error is thrown if no surface is provided.</p>
+
+  <h3>
+    <a name="parsegraph_containsAll"
+      >parsegraph_containsAll(viewportX, viewportY, viewWidth, viewHeight, cx,
+      cy, width, height)</a
+    >
+  </h3>
+  Returns whether the specified viewport contains all of the specified rect.
+  <h3>
+    <a name="parsegraph_containsAny"
+      >parsegraph_containsAny(viewportX, viewportY, viewWidth, viewHeight, cx,
+      cy, width, height)</a
+    >
+  </h3>
+  Returns whether the specified viewport contains any of the specified rect.
+  <h3><a name=".zoomToPoint">.zoomToPoint(scaleFactor, x, y)</a></h3>
+  Zooms to the given point.
+  <h3><a name=".setOrigin">.setOrigin(x, y)</a></h3>
+  Sets the camera's origin to the specified position.
+  <h3><a name=".toJSON">.toJSON()</a></h3>
+  Returns a new JSON that can be passed to JSON.stringify() and used with
+  .restore() to recreate this camera's current state.
+  <h3><a name=".restore">.restore(json)</a></h3>
+  Changes this camera's state to the given JSON object, as defined by .toJSON().
+  <h3><a name=".surface">.surface()</a></h3>
+  Returns the surface used by this camera.
+  <h3><a name=".graph">.graph()</a></h3>
+  Same as .surface(). Used for backwards compat.
+  <h3><a name=".scale">.scale()</a></h3>
+  Returns this camera's current scale.
+  <h3><a name=".x">.x()</a></h3>
+  Returns this camera's current position along the X-axis.
+  <h3><a name=".y">.y()</a></h3>
+  Returns this camera's current position along the Y-axis.
+  <h3><a name=".setScale">.setScale(scale)</a></h3>
+  Sets this camera's scale to the given value.
+  <h3><a name=".contains">.contains(rect)</a></h3>
+  Returns whether this camera's orthogonal viewport contains any of the given
+  rect.
+  <h3><a name=".toString">.toString()</a></h3>
+  Returns a programmer-friendly string representation of this camera.
+  <h3><a name=".adjustOrigin">.adjustOrigin(x, y)</a></h3>
+  Adjusts this camera's origin by the given delta.
+  <h3><a name=".worldMatrix">.worldMatrix()</a></h3>
+  Computes and returns a new world matrix that represents this camera's current
+  position.
+  <h3><a name=".aspectRatio">.aspectRatio()</a></h3>
+  Returns this camera's aspect ratio, as computed during project().
+  <h3><a name=".width">.width()</a></h3>
+  Returns this camera's viewport width, as computed during project().
+  <h3><a name=".height">.height()</a></h3>
+  Returns this camera's viewport height, as computed during project().
+  <h3><a name=".canProject">.canProject()</a></h3>
+  Returns whether this camera's surface has usable dimensions.
+  <h3><a name=".project">.project()</a></h3>
+  Returns a new projection matrix for this camera and sets the computed viewport
+  dimensions and aspect ratio.
+  <p>Throws an error if canProject() returns false.</p>
 </main>

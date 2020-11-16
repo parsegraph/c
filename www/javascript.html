@@ -1,148 +1,159 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>JavaScript - Parsegraph</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-}
+  <head>
+    <title>JavaScript - Parsegraph</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+      }
 
-.parsegraph_Surface {
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-}
+      .parsegraph_Surface {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+      }
 
-div {
-    text-align: center;
-    position: absolute;
-}
+      div {
+        text-align: center;
+        position: absolute;
+      }
 
-.controls {
-    margin: auto;
-    position: absolute;
-    pointer-events: none;
-    width: 100%;
-}
+      .controls {
+        margin: auto;
+        position: absolute;
+        pointer-events: none;
+        width: 100%;
+      }
 
-.controls > form button {
-    pointer-events: auto;
-}
+      .controls > form button {
+        pointer-events: auto;
+      }
 
-@media only screen and (max-width: 980px) {
-
-.controls {
-    display: none;
-}
-
-body > div {
-    width: 100%;
-}
-
-body > div input {
-    clear: left;
-}
-
-}
-</style>
-<script src="parsegraph-1.3.js"></script>
-<script src="esprima.js"></script>
-<script>
-
-function init()
-{
-    try {
-        parsegraph_initialize();
-        var main = document.body;
-
-        // Create the surface.
-        var surface = new parsegraph_Surface();
-        main.appendChild(surface.container());
-
-        var graph = new parsegraph_Graph(surface);
-        GRAPH = graph;
-
-        var uni = new parsegraph_Unicode();
-        uni.onLoad = function() {
-        graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
-        graph.glyphAtlas().setUnicode(uni);
-
-        var widget = new parsegraph_JavaScriptWidget(graph);
-        widget.load("parsegraph-1.0.js");
-        graph.world().plot(widget.caret.root());
-
-        var cameraName = "parsegraph_javascript_camera";
-        if(localStorage.getItem(cameraName) != null) {
-            try {
-                var cameraData = JSON.parse(localStorage.getItem(cameraName));
-                graph.camera().restore(cameraData);
-            } catch(e) {
-                console.log("Failed to parse saved camera state.\n" + parsegraph_writeError(e));
-            }
+      @media only screen and (max-width: 980px) {
+        .controls {
+          display: none;
         }
 
-        var cameraProtocol = new parsegraph_CameraProtocol(new WebSocket(
-            "ws://localhost/camera/", "parsegraph-camera-protocol"
-        ), graph.camera(),
-            function(obj) {
+        body > div {
+          width: 100%;
+        }
+
+        body > div input {
+          clear: left;
+        }
+      }
+    </style>
+    <script src="parsegraph-1.3.js"></script>
+    <script src="esprima.js"></script>
+    <script>
+      function init() {
+        try {
+          parsegraph_initialize();
+          var main = document.body;
+
+          // Create the surface.
+          var surface = new parsegraph_Surface();
+          main.appendChild(surface.container());
+
+          var graph = new parsegraph_Graph(surface);
+          GRAPH = graph;
+
+          var uni = new parsegraph_Unicode();
+          uni.onLoad = function () {
+            graph.setGlyphAtlas(parsegraph_buildGlyphAtlas());
+            graph.glyphAtlas().setUnicode(uni);
+
+            var widget = new parsegraph_JavaScriptWidget(graph);
+            widget.load("parsegraph-1.0.js");
+            graph.world().plot(widget.caret.root());
+
+            var cameraName = "parsegraph_javascript_camera";
+            if (localStorage.getItem(cameraName) != null) {
+              try {
+                var cameraData = JSON.parse(localStorage.getItem(cameraName));
+                graph.camera().restore(cameraData);
+              } catch (e) {
+                console.log(
+                  "Failed to parse saved camera state.\n" +
+                    parsegraph_writeError(e)
+                );
+              }
+            }
+
+            var cameraProtocol = new parsegraph_CameraProtocol(
+              new WebSocket(
+                "ws://localhost/camera/",
+                "parsegraph-camera-protocol"
+              ),
+              graph.camera(),
+              function (obj) {
                 graph.cameraBox().setCamera("dafrito", obj);
-            }
-        );
+              }
+            );
 
-        var chatProtocol = new parsegraph_ChatProtocol(new WebSocket(
-            "ws://localhost/chat/", "parsegraph-chat-protocol"
-        ), function(obj) {
-            //console.log("Message received: ", obj);
-        });
+            var chatProtocol = new parsegraph_ChatProtocol(
+              new WebSocket("ws://localhost/chat/", "parsegraph-chat-protocol"),
+              function (obj) {
+                //console.log("Message received: ", obj);
+              }
+            );
 
-        // Schedule the repaint.
-        var renderTimer = new parsegraph_AnimationTimer();
-        renderTimer.setListener(function() {
-            graph.input().Update(new Date());
-            if(graph.needsRepaint()) {
+            // Schedule the repaint.
+            var renderTimer = new parsegraph_AnimationTimer();
+            renderTimer.setListener(function () {
+              graph.input().Update(new Date());
+              if (graph.needsRepaint()) {
                 surface.paint(50);
-            }
-            surface.render();
-            if(graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
-                if(graph.input().UpdateRepeatedly()) {
-                    cameraProtocol.update();
+              }
+              surface.render();
+              if (graph.input().UpdateRepeatedly() || graph.needsRepaint()) {
+                if (graph.input().UpdateRepeatedly()) {
+                  cameraProtocol.update();
                 }
                 renderTimer.schedule();
-            }
-        });
-        graph.input().SetListener(function(affectedPaint, eventSource, inputAffectedCamera) {
-            if(affectedPaint) {
-                graph.scheduleRepaint();
-            }
-            // Contrive a message to send over chat.
-            chatProtocol.send(eventSource);
+              }
+            });
+            graph
+              .input()
+              .SetListener(function (
+                affectedPaint,
+                eventSource,
+                inputAffectedCamera
+              ) {
+                if (affectedPaint) {
+                  graph.scheduleRepaint();
+                }
+                // Contrive a message to send over chat.
+                chatProtocol.send(eventSource);
+                renderTimer.schedule();
+                if (inputAffectedCamera) {
+                  cameraProtocol.update();
+                  localStorage.setItem(
+                    cameraName,
+                    JSON.stringify(graph.camera().toJSON())
+                  );
+                }
+              });
             renderTimer.schedule();
-            if(inputAffectedCamera) {
-                cameraProtocol.update();
-                localStorage.setItem(cameraName, JSON.stringify(graph.camera().toJSON()));
-            }
-        });
-        renderTimer.schedule();
-        graph.onScheduleRepaint = function() {
-            renderTimer.schedule();
-        };
-        };
-        parsegraph_UNICODE_INSTANCE = uni;
-        uni.load();
-    } catch(ex) {
-        alert("Init: " + parsegraph_writeError(ex));
-        throw ex;
-    }
-}
+            graph.onScheduleRepaint = function () {
+              renderTimer.schedule();
+            };
+          };
+          parsegraph_UNICODE_INSTANCE = uni;
+          uni.load();
+        } catch (ex) {
+          alert("Init: " + parsegraph_writeError(ex));
+          throw ex;
+        }
+      }
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    init();
-});
-</script>
-</head>
-<body>
-</body>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        init();
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

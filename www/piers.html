@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Memory Piers - Rainback</title>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="/environment.css"/>
-<script src="/parsegraph-1.3.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function(event) {
-    var window = new parsegraph.Window();
-    var world = new parsegraph.World();
-    document.body.appendChild(window.container());
-    var belt = new parsegraph.TimingBelt();
-    belt.addWindow(window);
-    parsegraph.addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-    var viewport = new parsegraph.Viewport(window, world);
-    window.addComponent(viewport.component());
+  <head>
+    <title>Memory Piers - Rainback</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/environment.css" />
+    <script src="/parsegraph-1.3.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function (event) {
+        var window = new parsegraph.Window();
+        var world = new parsegraph.World();
+        document.body.appendChild(window.container());
+        var belt = new parsegraph.TimingBelt();
+        belt.addWindow(window);
+        parsegraph.addEventMethod(
+          top.window,
+          "resize",
+          belt.scheduleUpdate,
+          belt
+        );
+        var viewport = new parsegraph.Viewport(window, world);
+        window.addComponent(viewport.component());
 
-    var MAX_SIZE = 400;
-    var piers = new parsegraph.MemoryPiers(MAX_SIZE);
-    world.plot(piers.node());
-    viewport.showInCamera(piers.node());
+        var MAX_SIZE = 400;
+        var piers = new parsegraph.MemoryPiers(MAX_SIZE);
+        world.plot(piers.node());
+        viewport.showInCamera(piers.node());
 
-    var totalStart = new Date();
-    belt.queueJob(function(timeout) {
-        var callAgain = piers.step();
-        belt.scheduleUpdate();
-        world.scheduleRepaint();
-        if(!callAgain) {
+        var totalStart = new Date();
+        belt.queueJob(function (timeout) {
+          var callAgain = piers.step();
+          belt.scheduleUpdate();
+          world.scheduleRepaint();
+          if (!callAgain) {
             console.log("Done in " + parsegraph.elapsed(totalStart) + "ms");
-        }
-        return callAgain;
-    });
-});
-</script>
-</head>
-<body>
-</body>
+          }
+          return callAgain;
+        });
+      });
+    </script>
+  </head>
+  <body></body>
 </html>

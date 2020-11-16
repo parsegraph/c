@@ -1,66 +1,94 @@
 <main>
-<div class="breadcrumb"><a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo; <a href="/doc/graph">Parsegraph</a> &raquo; <a href="/doc/graph-Color">Color</a></div>
-<h1>Parsegraph Color</h1>
-Alpha-containing Color object. Component values are between 0 and 1, inclusive.
-<h3>Contents</h3>
-<ol>
-<li><a href="#parsegraph_Color">new parsegraph_Color(r, g, b)</a>
-<li><a href="#parsegraph_Color">new parsegraph_Color(r, g, b, a)</a>
-<li><a href="#.r">.r()</a>
-<li><a href="#.g">.g()</a>
-<li><a href="#.b">.b()</a>
-<li><a href="#.a">.a()</a>
-<li><a href="#.setR">.setR(value)</a>
-<li><a href="#.setG">.setG(value)</a>
-<li><a href="#.setB">.setB(value)</a>
-<li><a href="#.setA">.setA(value)</a>
-<li><a href="#.multiply">.multiply(other)</a>
-<li><a href="#.premultiply">.premultiply(other)</a>
-<li><a href="#.asRGB">.asRGB(other)</a>
-<li><a href="#parsegraph_fromRGB">parsegraph_fromRGB(rgb)</a>
-<li><a href="#parsegraph_fromRGB">parsegraph_fromRGB(rgb, defaultAlpha)</a>
-<li><a href="#.clone">.clone()</a>
-<li><a href="#.equals">.equals(other)</a>
-<li><a href="#parsegraph_createColor">parsegraph_createColor(r, g, b, a)</a>
-</ol>
-<h3><a name="parsegraph_Color">new parsegraph_Color(r, g, b)</a></h3>
-Creates a new Color object, with the specified values, clamped between 0 and 1, inclusive.
-<p>
-The alpha is assumed to be 1.
-<h3>new <a name="parsegraph_Color">parsegraph_Color(r, g, b, a)</a></h3>
-Creates a new Color object with the specified values, clamped between 0 and 1, inclusive.
-<h3><a name=".r">.r()</a></h3>
-Returns the red component of this color, a value between 0 and 1, inclusive.
-<h3><a name=".g">.g()</a></h3>
-Returns the green component of this color, a value between 0 and 1, inclusive.
-<h3><a name=".b">.b()</a></h3>
-Returns the blue component of this color, a value between 0 and 1, inclusive.
-<h3><a name=".a">.a()</a></h3>
-Returns the alpha component of this color, a value between 0 and 1, inclusive.
-<h3><a name=".setA">.setA(value)</a></h3>
-Sets the alpha component of this color to the given value. The value is clamped to 0 and 1, inclusive.
-<h3><a name=".setR">.setR(value)</a></h3>
-Sets the alpha component of this color to the given value. The value is clamped to 0 and 1, inclusive.
-<h3><a name=".setG">.setG(value)</a></h3>
-Sets the green component of this color to the given value. The value is clamped to 0 and 1, inclusive.
-<h3><a name=".setB">.setB(value)</a></h3>
-Sets the blue component of this color to the given value. The value is clamped to 0 and 1, inclusive.
-<h3><a name=".multiply">.multiply(other)</a></h3>
-Creates and returns a new color equal to each component of this color, multiplied by its complement component in the given color.
-<h3><a name=".premultiply">.premultiply(other)</a></h3>
-Creates and returns a new Color that is this color, alpha-blended with the given color. If this color is opaque, then the returned color is equal to this color.
-<h3><a name=".asRGB">.asRGB()</a></h3>
-Returns a string of the form "rgb(255, 255, 255)" for white and "rgb(0, 0, 0)" for black.
-<h3><a name="parsegraph_fromRGB">parsegraph_fromRGB(rgb, defaultAlpha)</a></h3>
-Extracts a color from an RGB string, formatted like asRGB() would return. If the RGB string lacks an alpha value, defaultAlpha is used.
-<h3><a name="parsegraph_fromRGB">parsegraph_fromRGB(rgb)</a></h3>
-Same as <code>parsegraph_fromRGB(rgb, 255).</code>
-<h3><a name=".clone">.clone()</a></h3>
-Creates a new Color equal to this color.
-<h3><a name=".equals">.equals(others)</a></h3>
-Returns true if all components of this color are equal to their complement component in the given color.
-<h3><a name=".interpolate">.interpolate(other, lerp)</a></h3>
-Creates and returns a new Color that is pleasantly interpolated, as determined by the value <code>lerp</code>, between this color and the given color. <code>lerp</code> is a clamped value between 0 and 1, inclusive.
-<h3><a name="parsegraph_createColor">parsegraph_createColor(r, g, b, a)</a></h3>
-Alias for <code>new parsegraph_Color(r, g, b, a)</code>.
+  <div class="breadcrumb">
+    <a href="/">Home</a> &raquo; <a href="/doc">Docs</a> &raquo;
+    <a href="/doc/graph">Parsegraph</a> &raquo;
+    <a href="/doc/graph-Color">Color</a>
+  </div>
+  <h1>Parsegraph Color</h1>
+  Alpha-containing Color object. Component values are between 0 and 1,
+  inclusive.
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#parsegraph_Color">new parsegraph_Color(r, g, b)</a></li>
+    <li><a href="#parsegraph_Color">new parsegraph_Color(r, g, b, a)</a></li>
+    <li><a href="#.r">.r()</a></li>
+    <li><a href="#.g">.g()</a></li>
+    <li><a href="#.b">.b()</a></li>
+    <li><a href="#.a">.a()</a></li>
+    <li><a href="#.setR">.setR(value)</a></li>
+    <li><a href="#.setG">.setG(value)</a></li>
+    <li><a href="#.setB">.setB(value)</a></li>
+    <li><a href="#.setA">.setA(value)</a></li>
+    <li><a href="#.multiply">.multiply(other)</a></li>
+    <li><a href="#.premultiply">.premultiply(other)</a></li>
+    <li><a href="#.asRGB">.asRGB(other)</a></li>
+    <li><a href="#parsegraph_fromRGB">parsegraph_fromRGB(rgb)</a></li>
+    <li>
+      <a href="#parsegraph_fromRGB">parsegraph_fromRGB(rgb, defaultAlpha)</a>
+    </li>
+    <li><a href="#.clone">.clone()</a></li>
+    <li><a href="#.equals">.equals(other)</a></li>
+    <li>
+      <a href="#parsegraph_createColor">parsegraph_createColor(r, g, b, a)</a>
+    </li>
+  </ol>
+
+  <h3><a name="parsegraph_Color">new parsegraph_Color(r, g, b)</a></h3>
+  Creates a new Color object, with the specified values, clamped between 0 and
+  1, inclusive.
+  <p>The alpha is assumed to be 1.</p>
+
+  <h3>new <a name="parsegraph_Color">parsegraph_Color(r, g, b, a)</a></h3>
+  Creates a new Color object with the specified values, clamped between 0 and 1,
+  inclusive.
+  <h3><a name=".r">.r()</a></h3>
+  Returns the red component of this color, a value between 0 and 1, inclusive.
+  <h3><a name=".g">.g()</a></h3>
+  Returns the green component of this color, a value between 0 and 1, inclusive.
+  <h3><a name=".b">.b()</a></h3>
+  Returns the blue component of this color, a value between 0 and 1, inclusive.
+  <h3><a name=".a">.a()</a></h3>
+  Returns the alpha component of this color, a value between 0 and 1, inclusive.
+  <h3><a name=".setA">.setA(value)</a></h3>
+  Sets the alpha component of this color to the given value. The value is
+  clamped to 0 and 1, inclusive.
+  <h3><a name=".setR">.setR(value)</a></h3>
+  Sets the alpha component of this color to the given value. The value is
+  clamped to 0 and 1, inclusive.
+  <h3><a name=".setG">.setG(value)</a></h3>
+  Sets the green component of this color to the given value. The value is
+  clamped to 0 and 1, inclusive.
+  <h3><a name=".setB">.setB(value)</a></h3>
+  Sets the blue component of this color to the given value. The value is clamped
+  to 0 and 1, inclusive.
+  <h3><a name=".multiply">.multiply(other)</a></h3>
+  Creates and returns a new color equal to each component of this color,
+  multiplied by its complement component in the given color.
+  <h3><a name=".premultiply">.premultiply(other)</a></h3>
+  Creates and returns a new Color that is this color, alpha-blended with the
+  given color. If this color is opaque, then the returned color is equal to this
+  color.
+  <h3><a name=".asRGB">.asRGB()</a></h3>
+  Returns a string of the form "rgb(255, 255, 255)" for white and "rgb(0, 0, 0)"
+  for black.
+  <h3>
+    <a name="parsegraph_fromRGB">parsegraph_fromRGB(rgb, defaultAlpha)</a>
+  </h3>
+  Extracts a color from an RGB string, formatted like asRGB() would return. If
+  the RGB string lacks an alpha value, defaultAlpha is used.
+  <h3><a name="parsegraph_fromRGB">parsegraph_fromRGB(rgb)</a></h3>
+  Same as <code>parsegraph_fromRGB(rgb, 255).</code>
+  <h3><a name=".clone">.clone()</a></h3>
+  Creates a new Color equal to this color.
+  <h3><a name=".equals">.equals(others)</a></h3>
+  Returns true if all components of this color are equal to their complement
+  component in the given color.
+  <h3><a name=".interpolate">.interpolate(other, lerp)</a></h3>
+  Creates and returns a new Color that is pleasantly interpolated, as determined
+  by the value <code>lerp</code>, between this color and the given color.
+  <code>lerp</code> is a clamped value between 0 and 1, inclusive.
+  <h3>
+    <a name="parsegraph_createColor">parsegraph_createColor(r, g, b, a)</a>
+  </h3>
+  Alias for <code>new parsegraph_Color(r, g, b, a)</code>.
 </main>

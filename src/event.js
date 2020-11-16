@@ -1,61 +1,83 @@
-export function addEventListener(targetElement, eventName, listener, useCapture)
-{
-    if(useCapture === undefined) {
-        // Unspecified, so default to false.
-        useCapture = false;
-    }
-    if(targetElement.addEventListener) {
-        // Standard way.
-        return targetElement.addEventListener(eventName, listener, useCapture);
-    }
+export function addEventListener(
+  targetElement,
+  eventName,
+  listener,
+  useCapture
+) {
+  if (useCapture === undefined) {
+    // Unspecified, so default to false.
+    useCapture = false;
+  }
+  if (targetElement.addEventListener) {
+    // Standard way.
+    return targetElement.addEventListener(eventName, listener, useCapture);
+  }
 
-    // Internet Explorer before IE 9.
-    window.setTimeout(function() {
-        if(!/^on/.test(eventName)) {
-            eventName = "on" + eventName;
+  // Internet Explorer before IE 9.
+  window.setTimeout(function () {
+    if (!/^on/.test(eventName)) {
+      eventName = "on" + eventName;
+    }
+    targetElement.attachEvent(eventName, listener);
+  });
+}
+
+export function addEventMethod(
+  targetElement,
+  eventName,
+  listener,
+  listenerThisArg,
+  useCapture
+) {
+  return addEventListener(
+    targetElement,
+    eventName,
+    function () {
+      listener.apply(listenerThisArg, arguments);
+    },
+    useCapture
+  );
+}
+
+export function removeEventListener(
+  targetElement,
+  eventName,
+  listener,
+  useCapture
+) {
+  if (useCapture === undefined) {
+    // Unspecified, so default to false.
+    useCapture = false;
+  }
+  if (targetElement.removeEventListener) {
+    // Standard way.
+    return targetElement.removeEventListener(eventName, listener, useCapture);
+  }
+
+  // Internet Explorer before IE 9.
+  window.setTimeout(function () {
+    if (!/^on/.test(eventName)) {
+      eventName = "on" + eventName;
+    }
+    targetElement.detachEvent(eventName, listener);
+  });
+}
+
+export function addButtonListener(targetElement, listener, listenerThisArg) {
+  return [
+    addEventMethod(targetElement, "click", listener, listenerThisArg),
+    addEventMethod(
+      targetElement,
+      "keydown",
+      function (event) {
+        if (event.keyCode === 32 || event.keyCode === 13) {
+          listener.call(listenerThisArg, event);
         }
-        targetElement.attachEvent(eventName, listener);
-    });
+      },
+      this
+    ),
+  ];
 }
-
-export function addEventMethod(targetElement, eventName, listener, listenerThisArg, useCapture)
-{
-    return addEventListener(targetElement, eventName, function() {
-        listener.apply(listenerThisArg, arguments);
-    }, useCapture);
-}
-
-export function removeEventListener(targetElement, eventName, listener, useCapture)
-{
-    if(useCapture === undefined) {
-        // Unspecified, so default to false.
-        useCapture = false;
-    }
-    if(targetElement.removeEventListener) {
-        // Standard way.
-        return targetElement.removeEventListener(eventName, listener, useCapture);
-    }
-
-    // Internet Explorer before IE 9.
-    window.setTimeout(function() {
-        if(!/^on/.test(eventName)) {
-            eventName = "on" + eventName;
-        }
-        targetElement.detachEvent(eventName, listener);
-    });
-}
-
-export function addButtonListener(targetElement, listener, listenerThisArg)
-{
-    return [
-        addEventMethod(targetElement, "click", listener, listenerThisArg),
-        addEventMethod(targetElement, "keydown", function(event) {
-            if(event.keyCode === 32 || event.keyCode === 13) {
-                listener.call(listenerThisArg, event);
-            }
-        }, this)
-    ];
-};
 
 // From https://github.com/facebook/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
 /**
@@ -158,75 +180,89 @@ export function addButtonListener(targetElement, listener, listenerThisArg)
  *         Firefox v4/Win7  |     undefined    |       3
  *
  */
-export function normalizeWheel(/*object*/ event) /*object*/
-{
-    // Reasonable defaults
-    let PIXEL_STEP  = 10;
-    let LINE_HEIGHT = 40;
-    let PAGE_HEIGHT = 800;
+export function normalizeWheel(/*object*/ event) {
+  /*object*/
+  // Reasonable defaults
+  let PIXEL_STEP = 10;
+  let LINE_HEIGHT = 40;
+  let PAGE_HEIGHT = 800;
 
-  var sX = 0, sY = 0,       // spinX, spinY
-      pX = 0, pY = 0;       // pixelX, pixelY
+  var sX = 0,
+    sY = 0, // spinX, spinY
+    pX = 0,
+    pY = 0; // pixelX, pixelY
 
-	  // Legacy
-	  if ('detail'      in event) { sY = event.detail; }
-	  if ('wheelDelta'  in event) { sY = -event.wheelDelta / 120; }
-	  if ('wheelDeltaY' in event) { sY = -event.wheelDeltaY / 120; }
-	  if ('wheelDeltaX' in event) { sX = -event.wheelDeltaX / 120; }
+  // Legacy
+  if ("detail" in event) {
+    sY = event.detail;
+  }
+  if ("wheelDelta" in event) {
+    sY = -event.wheelDelta / 120;
+  }
+  if ("wheelDeltaY" in event) {
+    sY = -event.wheelDeltaY / 120;
+  }
+  if ("wheelDeltaX" in event) {
+    sX = -event.wheelDeltaX / 120;
+  }
 
-	  // side scrolling on FF with DOMMouseScroll
-	  if ( 'axis' in event && event.axis === event.HORIZONTAL_AXIS ) {
-		sX = sY;
-		sY = 0;
-	  }
+  // side scrolling on FF with DOMMouseScroll
+  if ("axis" in event && event.axis === event.HORIZONTAL_AXIS) {
+    sX = sY;
+    sY = 0;
+  }
 
-	  pX = sX * PIXEL_STEP;
-	  pY = sY * PIXEL_STEP;
+  pX = sX * PIXEL_STEP;
+  pY = sY * PIXEL_STEP;
 
-	  if ('deltaY' in event) { pY = event.deltaY; }
-	  if ('deltaX' in event) { pX = event.deltaX; }
+  if ("deltaY" in event) {
+    pY = event.deltaY;
+  }
+  if ("deltaX" in event) {
+    pX = event.deltaX;
+  }
 
-	  if ((pX || pY) && event.deltaMode) {
-		if (event.deltaMode == 1) {          // delta in LINE units
-		  pX *= LINE_HEIGHT;
-		  pY *= LINE_HEIGHT;
-		} else {                             // delta in PAGE units
-		  pX *= PAGE_HEIGHT;
-		  pY *= PAGE_HEIGHT;
-		}
-	  }
+  if ((pX || pY) && event.deltaMode) {
+    if (event.deltaMode == 1) {
+      // delta in LINE units
+      pX *= LINE_HEIGHT;
+      pY *= LINE_HEIGHT;
+    } else {
+      // delta in PAGE units
+      pX *= PAGE_HEIGHT;
+      pY *= PAGE_HEIGHT;
+    }
+  }
 
-	  // Fall-back if spin cannot be determined
-	  if (pX && !sX) { sX = (pX < 1) ? -1 : 1; }
-	  if (pY && !sY) { sY = (pY < 1) ? -1 : 1; }
+  // Fall-back if spin cannot be determined
+  if (pX && !sX) {
+    sX = pX < 1 ? -1 : 1;
+  }
+  if (pY && !sY) {
+    sY = pY < 1 ? -1 : 1;
+  }
 
-	  return { spinX  : sX,
-			   spinY  : sY,
-			   pixelX : pX,
-			   pixelY : pY };
+  return { spinX: sX, spinY: sY, pixelX: pX, pixelY: pY };
 }
 
-export function writeError(ex)
-{
-    var err = "";
-    switch(typeof ex) {
+export function writeError(ex) {
+  var err = "";
+  switch (typeof ex) {
     case "string":
     case "number":
     case "boolean":
     case "function":
-        err += ex;
-        break;
+      err += ex;
+      break;
     case "object":
-        if(typeof ex.toString == "function") {
-            err += ex.toString();
-        }
-        else if(typeof ex.toJSON == "function") {
-            err += ex.toJSON();
-        }
-        else {
-            err += ex;
-        }
-        break;
-    }
-    return err;
-};
+      if (typeof ex.toString == "function") {
+        err += ex.toString();
+      } else if (typeof ex.toJSON == "function") {
+        err += ex.toJSON();
+      } else {
+        err += ex;
+      }
+      break;
+  }
+  return err;
+}

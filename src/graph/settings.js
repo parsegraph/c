@@ -1,5 +1,5 @@
-import parsegraph_Color from './Color';
-import parsegraph_Font from './Font';
+import parsegraph_Color from "./Color";
+import parsegraph_Font from "./Font";
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -26,7 +26,7 @@ export const parsegraph_IGNORE_GL_ERRORS = true;
 export const parsegraph_INTERVAL = 15;
 
 // How often the idle timer is run when the application is not being rendered.
-export const parsegraph_BACKGROUND_INTERVAL = parsegraph_INTERVAL*4;
+export const parsegraph_BACKGROUND_INTERVAL = parsegraph_INTERVAL * 4;
 
 // Whether idle loops are limited to being called only as often as parsegraph_INTERVAL.
 export const parsegraph_GOVERNOR = true;
@@ -44,8 +44,8 @@ export const parsegraph_MAX_PAGE_WIDTH = 512;
 export const parsegraph_NATURAL_VIEWPORT_SCALE = 0.5;
 
 // The maximum scale where nodes will be rendered from a cache.
-export const parsegraph_FREEZER_TEXTURE_SCALE = .01;
-export const parsegraph_CACHE_ACTIVATION_SCALE = .01;
+export const parsegraph_FREEZER_TEXTURE_SCALE = 0.01;
+export const parsegraph_CACHE_ACTIVATION_SCALE = 0.01;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -78,19 +78,21 @@ export const parsegraph_IDLE_MARGIN = 1;
 
 export const parsegraph_FONT_SIZE = 72;
 export const parsegraph_FONT_UPSCALE = 1;
-export const parsegraph_UPSCALED_FONT_SIZE = parsegraph_FONT_UPSCALE*parsegraph_FONT_SIZE;
+export const parsegraph_UPSCALED_FONT_SIZE =
+  parsegraph_FONT_UPSCALE * parsegraph_FONT_SIZE;
 export const parsegraph_LETTER_HEIGHT = 2.0;
 export const parsegraph_SDF_RADIUS = 8;
 
 var parsegraph_DEFAULT_FONT = null;
-export function parsegraph_defaultFont()
-{
-    if(!parsegraph_DEFAULT_FONT) {
-        parsegraph_DEFAULT_FONT = new parsegraph_Font(
-            parsegraph_UPSCALED_FONT_SIZE, "sans-serif", "white"
-        );
-    }
-    return parsegraph_DEFAULT_FONT;
+export function parsegraph_defaultFont() {
+  if (!parsegraph_DEFAULT_FONT) {
+    parsegraph_DEFAULT_FONT = new parsegraph_Font(
+      parsegraph_UPSCALED_FONT_SIZE,
+      "sans-serif",
+      "white"
+    );
+  }
+  return parsegraph_DEFAULT_FONT;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -111,13 +113,16 @@ export const CREASE = false;
 export const parsegraph_MAX_PRESS_RELEASE_DELAY = 1.5 * 1000;
 
 // The scale at which shrunk nodes are shrunk.
-export const parsegraph_SHRINK_SCALE = .85;
+export const parsegraph_SHRINK_SCALE = 0.85;
 
 // Background color.
 export const parsegraph_BACKGROUND_COLOR = new parsegraph_Color(
-    0, 47/255, 57/255, 1
-    //256/255, 255/255, 255/255, 1
-    //45/255, 84/255, 127/255, 1
+  0,
+  47 / 255,
+  57 / 255,
+  1
+  //256/255, 255/255, 255/255, 1
+  //45/255, 84/255, 127/255, 1
 );
 
 //////////////////////////////////////////////////////////////////////////////
@@ -128,4 +133,3 @@ export const parsegraph_BACKGROUND_COLOR = new parsegraph_Color(
 
 // Values are considered equal if their difference is less than this value.
 export const parsegraph_FUZZINESS = 1e-6;
-
