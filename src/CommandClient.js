@@ -1,4 +1,4 @@
-parsegraph_safeParse = function(text) {
+const parsegraph_safeParse = function(text) {
   if (text === undefined) {
     throw new Error('Text is undefined.');
   }
@@ -21,7 +21,7 @@ parsegraph_safeParse = function(text) {
  * as a JSON object. If the XHR response does not properly
  * parse, then a new JSON object is given.
  */
-parsegraph_safeParseCallback = function(callback, callbackThisArg) {
+const parsegraph_safeParseCallback = function(callback, callbackThisArg) {
   return function(xhr) {
     if (callback != undefined) {
       callback.call(callbackThisArg, parsegraph_safeParse(xhr.responseText));

@@ -27,7 +27,7 @@ function parsegraph_Form(name) {
   );
 }
 
-parsegraph_createForm = function(name) {
+const parsegraph_createForm = function(name) {
   return new parsegraph_Form(name);
 };
 
