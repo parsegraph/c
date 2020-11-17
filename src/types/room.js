@@ -1,4 +1,4 @@
-listClasses = {};
+const listClasses = {};
 
 export default function Room(belt, world, roomId) {
   this._belt = belt;
@@ -229,7 +229,7 @@ Room.prototype.sessionId = function() {
 };
 
 Room.prototype.spawnItem = function(id, type, value, items) {
-  const klass = parsegraph_listClasses[type];
+  const klass = listClasses[type];
   if (!klass) {
     throw new Error('Block type not recognized: ' + type);
   }
