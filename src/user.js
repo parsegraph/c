@@ -1,3 +1,8 @@
+/**
+ * Adds user commands to the provided client.
+ *
+ * @param {CommandClient} client the client to add
+ */
 export default function addUserCommands(client) {
   // Start a new login.
   client.beginUserLogin = function(
