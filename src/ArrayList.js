@@ -1,3 +1,5 @@
+const parsegraph_TestSuite = require('./TestSuite')
+
 function parsegraph_ArrayList() {
   this.data = [];
   this._length = 0;
@@ -39,8 +41,10 @@ parsegraph_ArrayList.prototype.at = function(i) {
   return this.data[i];
 };
 
-parsegraph_ArrayList_Tests = new parsegraph_TestSuite('parsegraph_ArrayList');
+const parsegraph_ArrayList_Tests = new parsegraph_TestSuite('parsegraph_ArrayList');
 
 parsegraph_ArrayList_Tests.addTest('new parsegraph_ArrayList', function() {
   const l = new parsegraph_ArrayList();
 });
+
+module.exports = parsegraph_ArrayList;
