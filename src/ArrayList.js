@@ -1,4 +1,4 @@
-const parsegraph_TestSuite = require('./TestSuite')
+const parsegraph_TestSuite = require('./TestSuite');
 
 function parsegraph_ArrayList() {
   this.data = [];

@@ -1,4 +1,4 @@
-function parsegraph_addUserCommands(client) {
+export default function addUserCommands(client) {
   // Start a new login.
   client.beginUserLogin = function(
       username,
