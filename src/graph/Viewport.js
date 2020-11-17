@@ -241,8 +241,8 @@ parsegraph_Viewport.prototype.paint = function(timeout) {
     return false;
   }
 
-  var needsUpdate = this._carousel.paint();
-  var needsUpdate = this._world.paint(window, timeout) || needsUpdate;
+  let needsUpdate = this._carousel.paint();
+  needsUpdate = this._world.paint(window, timeout) || needsUpdate;
 
   this._input.paint();
   // this._piano.paint();
