@@ -491,7 +491,8 @@ OfflineRoom.prototype.receiveRequest = function(obj) {
     default:
       throw new Error('Unsupported request command: ' + obj.command);
   }
-  console.log(arguments);
+  // Changed to pass in obj instead of arguments
+  console.log(obj);
 };
 
 OfflineRoom.prototype.start = function() {

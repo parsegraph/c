@@ -1,4 +1,4 @@
-function parsegraph_setListOwner(room, id, ownerName, cb, cbThisArg) {
+export default function setListOwner(room, id, ownerName, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/changeowner', true);
   xhr.setRequestHeader('Accept', 'application/json');
@@ -24,7 +24,7 @@ function parsegraph_setListOwner(room, id, ownerName, cb, cbThisArg) {
   xhr.send('username=' + ownerName + '&world_session=' + room.sessionId());
 }
 
-function parsegraph_setListGroup(room, id, group, cb, cbThisArg) {
+export default function setListGroup(room, id, group, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/changegroup', true);
   xhr.setRequestHeader('Accept', 'application/json');
@@ -50,7 +50,7 @@ function parsegraph_setListGroup(room, id, group, cb, cbThisArg) {
   xhr.send('group=' + group + '&world_session=' + room.sessionId());
 }
 
-function parsegraph_setListPermissions(room, id, perms, cb, cbThisArg) {
+export default function setListPermissions(room, id, perms, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/permissions', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -77,7 +77,7 @@ function parsegraph_setListPermissions(room, id, perms, cb, cbThisArg) {
   xhr.send(JSON.stringify(perms));
 }
 
-function parsegraph_PermissionsForm(room, id) {
+export default function PermissionsForm(room, id) {
   this._room = room;
   this.id = id;
 
@@ -88,7 +88,9 @@ function parsegraph_PermissionsForm(room, id) {
   ownerForm.method = 'post';
   this.ownerForm = ownerForm;
   ownerForm.innerHTML =
-    '<h3>Owner</h3><div><label for="owner">Owner:</label><input type="text" name="owner"><input type="submit" value="Change owner"></div>';
+    '<h3>Owner</h3><div><label for="owner">Owner:</label>' +
+    '<input type="text" name="owner">' +
+    '<input type="submit" value="Change owner"></div>';
   container.appendChild(ownerForm);
   let sub = ownerForm.childNodes[1].childNodes[2];
   const that = this;
@@ -97,7 +99,7 @@ function parsegraph_PermissionsForm(room, id) {
       alert('No list item ID associated with this form');
       return;
     }
-    parsegraph_setListOwner(
+    setListOwner(
         room,
         that.id,
         ownerForm.childNodes[1].childNodes[1].value,
@@ -112,7 +114,9 @@ function parsegraph_PermissionsForm(room, id) {
   groupForm.method = 'post';
   this.groupForm = groupForm;
   groupForm.innerHTML =
-    '<h3>Group</h3><div><label for="group">Group:</label><input type="text" name="group"><input type="submit" value="Change group"></div>';
+    '<h3>Group</h3><div><label for="group">Group:</label>' +
+    '<input type="text" name="group">' +
+    '<input type="submit" value="Change group"></div>';
   container.appendChild(groupForm);
   sub = groupForm.childNodes[1].childNodes[2];
   parsegraph_addEventListener(sub, 'click', function(e) {
@@ -134,9 +138,15 @@ function parsegraph_PermissionsForm(room, id) {
   permissionForm.className = 'standard';
   permissionForm.method = 'post';
   permissionForm.innerHTML =
-    '<h3>Permissions</h3><table style="margin:auto"><tr><td><td>Access<td>Change</tr><tr><td>User</td><td><input type="checkbox" name="user_access"><td><input type="checkbox" name="user_change"></tr>' +
-    '<tr><td>Group</td><td><input type="checkbox" name="group_access"><td><input type="checkbox" name="group_change"></tr>' +
-    '<tr><td>Global</td><td><input type="checkbox" name="global_access"><td><input type="checkbox" name="global_change"></tr></table><input type="submit" value="Update permissions">';
+    '<h3>Permissions</h3>' +
+    '<table style="margin:auto"><tr><td><td>Access<td>Change</tr>' +
+    '<tr><td>User</td><td><input type="checkbox" name="user_access">' +
+    '<td><input type="checkbox" name="user_change"></tr>' +
+    '<tr><td>Group</td><td><input type="checkbox" name="group_access">' +
+    '<td><input type="checkbox" name="group_change"></tr>' +
+    '<tr><td>Global</td><td><input type="checkbox" name="global_access"><td>' +
+    '<input type="checkbox" name="global_change"></tr>' +
+    '</table><input type="submit" value="Update permissions">';
   container.appendChild(permissionForm);
   sub = permissionForm.childNodes[2];
   this.permForm = permissionForm;
@@ -164,7 +174,7 @@ function parsegraph_PermissionsForm(room, id) {
       alert('No list item ID associated with this form');
       return;
     }
-    parsegraph_setListPermissions(
+    setListPermissions(
         room,
         that.id,
         {
@@ -184,11 +194,11 @@ function parsegraph_PermissionsForm(room, id) {
   this.form = container;
 }
 
-parsegraph_PermissionsForm.prototype.container = function() {
+PermissionsForm.prototype.container = function() {
   return this.form;
 };
 
-parsegraph_PermissionsForm.prototype.refresh = function() {
+PermissionsForm.prototype.refresh = function() {
   const roomId = this._room.roomId();
   if (arguments.length > 0) {
     this.id = arguments[0];

@@ -1,6 +1,6 @@
-parsegraph_OnOffWidget_COUNT = 0;
-function parsegraph_OnOffWidget(graph, sink) {
-  this._id = parsegraph_OnOffWidget_COUNT++;
+onOffWidgetCount = 0;
+export default function OnOffWidget(graph, sink) {
+  this._id = onOffWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._onListener = null;
@@ -10,7 +10,7 @@ function parsegraph_OnOffWidget(graph, sink) {
   this._isOn = false;
 }
 
-parsegraph_OnOffWidget.prototype.turnOff = function() {
+OnOffWidget.prototype.turnOff = function() {
   if (!this._isOn) {
     return;
   }
@@ -20,7 +20,7 @@ parsegraph_OnOffWidget.prototype.turnOff = function() {
   }
 };
 
-parsegraph_OnOffWidget.prototype.setOnOff = function(
+OnOffWidget.prototype.setOnOff = function(
     offListener,
     offListenerThisArg,
 ) {
@@ -28,7 +28,7 @@ parsegraph_OnOffWidget.prototype.setOnOff = function(
   this._offListenerThisArg = offListenerThisArg;
 };
 
-parsegraph_OnOffWidget.prototype.turnOn = function() {
+OnOffWidget.prototype.turnOn = function() {
   if (this._isOn) {
     return;
   }
@@ -38,11 +38,11 @@ parsegraph_OnOffWidget.prototype.turnOn = function() {
   }
 };
 
-parsegraph_OnOffWidget.prototype.value = function() {
+OnOffWidget.prototype.value = function() {
   return this._isOn;
 };
 
-parsegraph_OnOffWidget.prototype.setOnOn = function(
+OnOffWidget.prototype.setOnOn = function(
     onListener,
     onListenerThisArg,
 ) {
@@ -50,10 +50,10 @@ parsegraph_OnOffWidget.prototype.setOnOn = function(
   this._onListenerThisArg = onListenerThisArg;
 };
 
-parsegraph_OnOffWidget.prototype.node = function() {
+OnOffWidget.prototype.node = function() {
   if (!this._containerNode) {
     // Switch case.
-    const car = new parsegraph_Caret(parsegraph_SLOT);
+    const car = new Caret(parsegraph_SLOT);
     this._containerNode = car.root();
     car.node().setIgnoreMouse(true);
     car.shrink();
@@ -66,8 +66,8 @@ parsegraph_OnOffWidget.prototype.node = function() {
       return true;
     }, this);
     const blackStyle = parsegraph_copyStyle(parsegraph_SLOT);
-    blackStyle.backgroundColor = new parsegraph_Color(0, 0, 0, 1);
-    blackStyle.fontColor = new parsegraph_Color(1, 0, 0, 1);
+    blackStyle.backgroundColor = new Color(0, 0, 0, 1);
+    blackStyle.fontColor = new Color(1, 0, 0, 1);
     car.node().setBlockStyle(blackStyle);
 
     // On button.
@@ -78,8 +78,8 @@ parsegraph_OnOffWidget.prototype.node = function() {
       return true;
     }, this);
     const whiteStyle = parsegraph_copyStyle(parsegraph_SLOT);
-    whiteStyle.borderColor = new parsegraph_Color(0.2, 0.2, 0.2, 1);
-    whiteStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+    whiteStyle.borderColor = new Color(0.2, 0.2, 0.2, 1);
+    whiteStyle.backgroundColor = new Color(1, 1, 1, 1);
     car.node().setBlockStyle(whiteStyle);
   }
   return this._containerNode;

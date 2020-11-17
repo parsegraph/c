@@ -2,10 +2,11 @@
  * Creates a parsegraph that models the loaded JavaScript file.
  *
  * Requires Esprima.
+ * @param {graph} graph
  */
-function parsegraph_JavaScriptWidget(graph) {
+export default function JavaScriptWidget(graph) {
   this.graph = graph;
-  this.caret = new parsegraph_Caret('b');
+  this.caret = new Caret('b');
   this.caret.label('Program');
 }
 
@@ -14,10 +15,10 @@ function parsegraph_JavaScriptWidget(graph) {
  * where another child node could be spawned in that direction.
  *
  * Some children do not nest themselves, so they will consist of several nodes
- * in a given direction. This means that popping back to before the child was created
- * will not yield a place for a node to be spawned in that direction. This is not
- * as common as the child consisting of a single node, so it must be the case to
- * keep in mind when constructing trees.
+ * in a given direction. This means that popping back to before the child was
+ * created will not yield a place for a node to be spawned in that direction.
+ * This is not as common as the child consisting of a single node, so it must
+ * be the case to keep in mind when constructing trees.
  *
  *  | downward inDir
  *  +== forward spawnDir
@@ -26,7 +27,7 @@ function parsegraph_JavaScriptWidget(graph) {
  * I expect inDir to be either parsegraph_INWARD, parsegraph_FORWARD, or
  * parsegraph_DOWNWARD.
  */
-parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
+JavaScriptWidget.prototype.buildChild = function(child, inDir) {
   inDir = parsegraph_readNodeDirection(inDir);
   const car = this.caret;
   switch (child.type) {
@@ -41,7 +42,9 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       car.label(child.raw);
       break;
     case 'ExpressionStatement':
-      // Expression statements are drawn directly; make no visual note of the nested statement.
+      /* Expression statements are drawn directly; make no visual
+       * note of the nested statement.
+       */
       this.buildChild(child.expression, inDir);
       break;
     case 'ReturnStatement':
@@ -57,8 +60,8 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       this.buildChild(child.left, inDir);
 
       // Inward nodes, once inside, spawn forward.
-      if (inDir === parsegraph_INWARD) {
-        inDir = parsegraph_FORWARD;
+      if (inDir === INWARD) {
+        inDir = FORWARD;
       }
       car.spawnMove(inDir, 'bu');
       car.label(child.operator);
@@ -68,8 +71,8 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       this.buildChild(child.object, inDir);
 
       // Inward nodes, once inside, spawn forward.
-      if (inDir === parsegraph_INWARD) {
-        inDir = parsegraph_FORWARD;
+      if (inDir === INWARD) {
+        inDir = FORWARD;
       }
 
       // Spawn the operator.
@@ -87,8 +90,8 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
         car.label(child.operator);
 
         // Inward nodes, once inside, spawn forward.
-        if (inDir === parsegraph_INWARD) {
-          inDir = parsegraph_FORWARD;
+        if (inDir === INWARD) {
+          inDir = FORWARD;
         }
 
         // Spawn the value.
@@ -98,8 +101,8 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
         this.buildChild(child.argument, inDir);
 
         // Inward nodes, once inside, spawn forward.
-        if (inDir === parsegraph_INWARD) {
-          inDir = parsegraph_FORWARD;
+        if (inDir === INWARD) {
+          inDir = FORWARD;
         }
 
         // Spawn the postfix operator.
@@ -190,14 +193,14 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       car.push();
       this.buildChild(child.callee, 'i');
       car.pop();
-      if (inDir === parsegraph_INWARD) {
-        inDir = parsegraph_FORWARD;
+      if (inDir === INWARD) {
+        inDir = FORWARD;
       }
 
       // Arguments
       car.pull(inDir);
       car.spawnMove(inDir, 'b');
-      for (var i = 0; i < child.arguments.length; ++i) {
+      for (let i = 0; i < child.arguments.length; ++i) {
         const arg = child.arguments[i];
         if (i === 0) {
           car.shrink();
@@ -217,8 +220,8 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
         car.label('new');
         this.buildChild(child.callee, 'i');
 
-        if(inDir === parsegraph_INWARD) {
-            inDir = parsegraph_FORWARD;
+        if(inDir === INWARD) {
+            inDir = FORWARD;
         }
 
         // Arguments
@@ -262,7 +265,7 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       car.pop();
 
       if (child.alternate) {
-        if (inDir === parsegraph_DOWNWARD) {
+        if (inDir === DOWNWARD) {
           car.spawnMove('f', 'bu');
         } else {
           car.spawnMove('d', 'bu');
@@ -278,7 +281,7 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
     case 'VariableDeclaration':
       car.spawnMove(inDir, 'b');
       car.label(child.kind);
-      for (var i = 0; i < child.declarations.length; ++i) {
+      for (let i = 0; i < child.declarations.length; ++i) {
         const decl = child.declarations[i];
         car.push();
         switch (decl.type) {
@@ -315,7 +318,7 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       // Parameters.
       car.pull(inDir);
       car.spawnMove(inDir, 'b');
-      for (var i = 0; i < child.params; ++i) {
+      for (let i = 0; i < child.params; ++i) {
         car.spawnMove(inDir, 's');
       }
       car.pop();
@@ -332,13 +335,13 @@ parsegraph_JavaScriptWidget.prototype.buildChild = function(child, inDir) {
 };
 
 /**
- * Builds each child node of a given AST node, creating the first bud in the inDir, and
- * then spawning each subsequent bud in the spawnDir direction.
- *
- * If spawnDir === parsegraph_FORWARD, then the child graph will be downward and centered.
- * If spawnDir === parsegraph_DOWNWARD, then the child graph will be forward and narrow.
+ * Builds each child node of a given AST node, creating the first bud in the
+ * inDir, and then spawning each subsequent bud in the spawnDir direction.
+ * If spawnDir === FORWARD, then the child graph will be downward
+ * and centered. If spawnDir === DOWNWARD, then the child graph
+ * will be forward and narrow.
  */
-parsegraph_JavaScriptWidget.prototype.buildBody = function(
+JavaScriptWidget.prototype.buildBody = function(
     ast,
     inDir,
     spawnDir,
@@ -358,7 +361,7 @@ parsegraph_JavaScriptWidget.prototype.buildBody = function(
   }
 
   car.spawn(inDir, 'bu');
-  if (spawnDir === parsegraph_FORWARD) {
+  if (spawnDir === FORWARD) {
     car.align(inDir, 'center');
   }
   car.move(inDir);
@@ -376,7 +379,7 @@ parsegraph_JavaScriptWidget.prototype.buildBody = function(
   car.pop();
 };
 
-parsegraph_JavaScriptWidget.prototype.load = function(url) {
+JavaScriptWidget.prototype.load = function(url) {
   const that = this;
   function buildTree() {
     if (!esprima) {
@@ -394,7 +397,7 @@ parsegraph_JavaScriptWidget.prototype.load = function(url) {
     car.label(ast.sourceType);
     car.move('o');
 
-    that.buildBody(ast, parsegraph_DOWNWARD, parsegraph_FORWARD);
+    that.buildBody(ast, DOWNWARD, FORWARD);
 
     that.graph.scheduleRepaint();
   }
