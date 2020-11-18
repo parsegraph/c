@@ -1,6 +1,6 @@
-parsegraph_SynthWidget_COUNT = 0;
-function parsegraph_SynthWidget(graph) {
-  this._id = parsegraph_SynthWidget_COUNT++;
+synthWidgetCount = 0;
+export default function SynthWidget(graph) {
+  this._id = synthWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._oscType = 'sine';
@@ -10,7 +10,7 @@ function parsegraph_SynthWidget(graph) {
   this._listeners = [];
 }
 
-parsegraph_SynthWidget.prototype.build = function(audio) {
+SynthWidget.prototype.build = function(audio) {
   const oscillator = audio.createOscillator();
   oscillator.frequency.value = this._oscFrequency;
   oscillator.type = this._oscType;
@@ -18,7 +18,7 @@ parsegraph_SynthWidget.prototype.build = function(audio) {
   return oscillator;
 };
 
-parsegraph_SynthWidget.prototype.addListener = function(
+SynthWidget.prototype.addListener = function(
     listener,
     listenerThisArg,
 ) {
@@ -33,22 +33,22 @@ parsegraph_SynthWidget.prototype.addListener = function(
   };
 };
 
-parsegraph_SynthWidget.prototype.notePlayed = function(freq) {
+SynthWidget.prototype.notePlayed = function(freq) {
   for (let i = 0; i < this._listeners.length; ++i) {
     const l = this._listeners[i];
     l[0].call(l[1], freq);
   }
 };
 
-parsegraph_SynthWidget.prototype.setOscillatorType = function(oscType) {
+SynthWidget.prototype.setOscillatorType = function(oscType) {
   this._oscType = oscType;
 };
 
-parsegraph_SynthWidget.prototype.setOscillatorDetune = function(value) {
+SynthWidget.prototype.setOscillatorDetune = function(value) {
   this._oscDetune = value;
 };
 
-parsegraph_SynthWidget.prototype.play = function(freq) {
+SynthWidget.prototype.play = function(freq) {
   if (!this._keyListener) {
     return;
   }
@@ -56,7 +56,7 @@ parsegraph_SynthWidget.prototype.play = function(freq) {
   this.notePlayed(freq);
 };
 
-parsegraph_SynthWidget.prototype.onPlay = function(
+SynthWidget.prototype.onPlay = function(
     keyListener,
     keyListenerThisArg,
 ) {
@@ -64,27 +64,27 @@ parsegraph_SynthWidget.prototype.onPlay = function(
   this._keyListenerThisArg = keyListenerThisArg;
 };
 
-parsegraph_SynthWidget.prototype.refreshTypes = function() {
+SynthWidget.prototype.refreshTypes = function() {
   updateUnsel();
   for (const type in this._types) {
     this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
   }
 };
 
-parsegraph_SynthWidget.prototype.node = function() {
+SynthWidget.prototype.node = function() {
   const FS = 500;
   const MAXFS = 3000;
   if (!this._containerNode) {
-    const car = new parsegraph_Caret(parsegraph_BLOCK);
+    const car = new Caret(parsegraph_BLOCK);
     this._containerNode = car.root();
     car.label('Synthesizer');
     // car.fitExact();
 
-    car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
-    car.pull(parsegraph_DOWNWARD);
+    car.spawnMove(parsegraph_INWARD, BUD, parsegraph_ALIGN_VERTICAL);
+    car.pull(DOWNWARD);
     car.push();
     car.shrink();
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.spawnMove(DOWNWARD, parsegraph_SLOT);
     car.label('Type');
     car.push();
     ['sine', 'square', 'sawtooth', 'triangle'].forEach(function(oscType, i) {
@@ -112,7 +112,7 @@ parsegraph_SynthWidget.prototype.node = function() {
     car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
     car.label('Detune');
     car.push();
-    const detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    const detuneSlider = car.spawnMove(DOWNWARD, parsegraph_SLIDER);
     car.onChange(function() {
       this.setOscillatorDetune(detuneSlider.value() * 200);
       console.log('Detune: ' + this._oscDetune.value);
@@ -125,7 +125,7 @@ parsegraph_SynthWidget.prototype.node = function() {
     // keyBlock.minHeight = keyBlock.minHeight * 10;
     keyBlock.horizontalSeparation = 0;
     keyBlock.verticalSeparation = 0;
-    keyBlock.fontSize = parsegraph_FONT_SIZE / 3;
+    keyBlock.fontSize = FONT_SIZE / 3;
     [
       16.35,
       17.32,
@@ -245,7 +245,7 @@ parsegraph_SynthWidget.prototype.node = function() {
         if (i == 0) {
           key
               .parentNode()
-              .setNodeAlignmentMode(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+              .setNodeAlignmentMode(DOWNWARD, parsegraph_ALIGN_CENTER);
         }
         car.push();
       } else {

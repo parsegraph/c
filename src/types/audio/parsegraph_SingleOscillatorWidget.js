@@ -1,6 +1,6 @@
-parsegraph_SingleOscillatorWidget_COUNT = 0;
-function parsegraph_SingleOscillatorWidget(graph) {
-  this._id = parsegraph_SingleOscillatorWidget_COUNT++;
+singleOscillatorWidgetCount = 0;
+export default function SingleOscillatorWidget(graph) {
+  this._id = singleOscillatorWidgetCount++;
   this._graph = graph;
   this._audio = null;
   this._containerNode = null;
@@ -17,17 +17,17 @@ function parsegraph_SingleOscillatorWidget(graph) {
   this._sliderCurve = 2;
 }
 
-parsegraph_SingleOscillatorWidget.prototype.node = function() {
+SingleOscillatorWidget.prototype.node = function() {
   if (!this._containerNode) {
-    const car = new parsegraph_Caret(parsegraph_BLOCK);
+    const car = new Caret(parsegraph_BLOCK);
     car.node().setIgnoreMouse(true);
     this._containerNode = car.root();
     car.label('Single Oscillator');
     car.spawnMove('i', 'u', 'v');
 
     const offStyle = parsegraph_copyStyle(parsegraph_BUD);
-    offStyle.backgroundColor = new parsegraph_Color(0.7, 0.7, 0.7, 1);
-    offStyle.borderColor = new parsegraph_Color(0.5, 0.5, 0.5, 1);
+    offStyle.backgroundColor = new Color(0.7, 0.7, 0.7, 1);
+    offStyle.borderColor = new Color(0.5, 0.5, 0.5, 1);
     offStyle.minWidth *= 4;
     offStyle.minHeight *= 4;
     offStyle.borderRoundness *= 2.5;
@@ -35,8 +35,8 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
     this._offStyle = offStyle;
 
     const redStyle = parsegraph_copyStyle(parsegraph_BUD);
-    redStyle.backgroundColor = new parsegraph_Color(1, 0, 0, 1);
-    redStyle.borderColor = new parsegraph_Color(1, 0.5, 0.5, 1);
+    redStyle.backgroundColor =new Color(1, 0, 0, 1);
+    redStyle.borderColor = new Color(1, 0.5, 0.5, 1);
     redStyle.minWidth *= 4;
     redStyle.minHeight *= 4;
     redStyle.borderRoundness *= 2.5;
@@ -48,7 +48,7 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
     car.spawnMove('d', 'u', 'c');
     car.pull('d');
 
-    this._masterSwitch = new parsegraph_OnOffWidget(this._graph);
+    this._masterSwitch = new OnOffWidget(this._graph);
     car.connect('d', this._masterSwitch.node());
     this._masterSwitch.setOnOn(function() {
       this.play();
@@ -60,8 +60,8 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
     }, this);
 
     const whiteStyle = parsegraph_copyStyle(parsegraph_SLOT);
-    whiteStyle.borderColor = new parsegraph_Color(0.2, 0.2, 0.2, 1);
-    whiteStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+    whiteStyle.borderColor = new Color(0.2, 0.2, 0.2, 1);
+    whiteStyle.backgroundColor = new Color(1, 1, 1, 1);
     car.spawnMove('f', 'u');
     car.pull('d');
 
@@ -88,7 +88,7 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
 
     car.push();
 
-    this._tremoloSwitch = new parsegraph_OnOffWidget(this._graph);
+    this._tremoloSwitch = new OnOffWidget(this._graph);
     car.connect('d', this._tremoloSwitch.node());
     this._tremoloSwitch.setOnOn(this.refresh, this);
     this._tremoloSwitch.setOnOff(this.refresh, this);
@@ -121,7 +121,7 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
     car.pull('d');
 
     car.push();
-    this._warbleSwitch = new parsegraph_OnOffWidget(this._graph);
+    this._warbleSwitch = new OnOffWidget(this._graph);
     car.connect('d', this._warbleSwitch.node());
     this._warbleSwitch.setOnOn(this.refresh, this);
     this._warbleSwitch.setOnOff(this.refresh, this);
@@ -163,7 +163,7 @@ parsegraph_SingleOscillatorWidget.prototype.node = function() {
   return this._containerNode;
 };
 
-parsegraph_SingleOscillatorWidget.prototype.refresh = function() {
+SingleOscillatorWidget.prototype.refresh = function() {
   if (!this._osc) {
     return;
   }
@@ -185,7 +185,8 @@ parsegraph_SingleOscillatorWidget.prototype.refresh = function() {
         Math.pow(this._tremoloScaleSlider.value(), this._sliderCurve),
         this._audio.currentTime,
     );
-    // console.log(this._maxTremoloRange * Math.pow(this._tremoloScaleSlider.value(), this._sliderCurve));
+    // console.log(this._maxTremoloRange * Math.pow(
+    //   this._tremoloScaleSlider.value(), this._sliderCurve));
   } else {
     this._tremolo.frequency.setValueAtTime(0, this._audio.currentTime, 0.1);
     this._tremoloSink.gain.setValueAtTime(0, this._audio.currentTime);
@@ -208,7 +209,7 @@ parsegraph_SingleOscillatorWidget.prototype.refresh = function() {
   }
 };
 
-parsegraph_SingleOscillatorWidget.prototype.audioOut = function() {
+SingleOscillatorWidget.prototype.audioOut = function() {
   if (this._osc) {
     return this._osc;
   }
@@ -237,7 +238,7 @@ parsegraph_SingleOscillatorWidget.prototype.audioOut = function() {
   return this._osc;
 };
 
-parsegraph_SingleOscillatorWidget.prototype.play = function() {
+SingleOscillatorWidget.prototype.play = function() {
   if (!this._audio) {
     this._audio = this._graph.surface().startAudio();
   }
@@ -265,7 +266,7 @@ parsegraph_SingleOscillatorWidget.prototype.play = function() {
   this.refresh();
 };
 
-parsegraph_SingleOscillatorWidget.prototype.stop = function() {
+SingleOscillatorWidget.prototype.stop = function() {
   if (!this._gain) {
     return;
   }

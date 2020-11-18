@@ -1,29 +1,29 @@
 function makeDistortionCurve(amount) {
   const k = typeof amount === 'number' ? amount : 50;
-  const n_samples = 44100;
+  const nSamples = 44100;
   const curve = new Float32Array(n_samples);
   const deg = Math.PI / 180;
   let i = 0;
   let x;
-  for (; i < n_samples; ++i) {
-    x = (i * 2) / n_samples - 1;
+  for (; i < nSamples; ++i) {
+    x = (i * 2) / nSamples - 1;
     curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
   }
   return curve;
 }
 
-function parsegraph_WaveShaperWidget(graph) {
+export default function WaveShaperWidget(graph) {
   this._graph = graph;
   this._active = false;
   this._maxAmount = 100;
   this._oversampling = 'none';
 }
 
-parsegraph_WaveShaperWidget.prototype.font = function() {
+WaveShaperWidget.prototype.font = function() {
   return parsegraph_defaultFont();
 };
 
-parsegraph_WaveShaperWidget.prototype.audioNode = function() {
+WaveShaperWidget.prototype.audioNode = function() {
   if (!this._waveShapeNode) {
     const audio = this._graph.surface().audio();
     this._waveShapeNode = audio.createWaveShaper();
@@ -39,11 +39,11 @@ parsegraph_WaveShaperWidget.prototype.audioNode = function() {
   return this._waveShapeNode;
 };
 
-parsegraph_WaveShaperWidget.prototype.node = function() {
+WaveShaperWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  let car = new parsegraph_Caret(parsegraph_SLOT);
+  let car = new Caret(parsegraph_SLOT);
   this._containerNode = car.root();
   car.label('WaveShaper');
 
@@ -78,7 +78,7 @@ parsegraph_WaveShaperWidget.prototype.node = function() {
       parsegraph_BLOCK,
   );
   oversample.setScale(0.5);
-  car = new parsegraph_Caret(oversample);
+  car = new Caret(oversample);
   car.label('none');
   car.onClick(function() {
     this._oversampling = 'none';

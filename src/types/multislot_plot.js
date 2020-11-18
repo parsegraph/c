@@ -1,10 +1,10 @@
-function parsegraph_MultislotPlot(multislot, index) {
+export default function MultislotPlot(multislot, index) {
   this._index = index;
   this._multislot = multislot;
   this._version = 0;
   this._id = null;
 
-  const car = new parsegraph_Caret('s');
+  const car = new Caret('s');
   this._root = car.node();
   const bs = parsegraph_copyStyle('s');
   bs.backgroundColor = multislot.color();
@@ -12,13 +12,13 @@ function parsegraph_MultislotPlot(multislot, index) {
   this._root.setBlockStyle(bs);
 
   this._claimedStyle = parsegraph_copyStyle('s');
-  this._claimedStyle.backgroundColor = new parsegraph_Color(1, 1, 1);
+  this._claimedStyle.backgroundColor = new Color(1, 1, 1);
 
   car.spawn('d', 'u');
   car.pull('d');
   car.move('d');
 
-  this._unclaimedActions = new parsegraph_ActionCarousel();
+  this._unclaimedActions = new ActionCarousel();
   this._unclaimedActions.addAction(
       'Claim',
       function() {
@@ -27,7 +27,7 @@ function parsegraph_MultislotPlot(multislot, index) {
         if (!username) {
           throw new Error('Room must have a valid username');
         }
-        this.room().submit(new parsegraph_ClaimPlotAction(this, username));
+        this.room().submit(new ClaimPlotAction(this, username));
       },
       this,
   );
@@ -46,15 +46,15 @@ function parsegraph_MultislotPlot(multislot, index) {
         'Unclaim',
         function() {
           const room = this._multislot.room();
-          this.room().submit(new parsegraph_UnclaimPlotAction(this));
+          this.room().submit(new UnclaimPlotAction(this));
         },
         this,
     );
   };
-  this._populatedActions = new parsegraph_ActionCarousel();
+  this._populatedActions = new ActionCarousel();
   addDefaultActions.call(this, this._populatedActions);
 
-  this._claimedActions = new parsegraph_ActionCarousel();
+  this._claimedActions = new ActionCarousel();
   this._claimedActions.addAction(
       'Lisp',
       function(plotId) {
@@ -65,16 +65,16 @@ function parsegraph_MultislotPlot(multislot, index) {
   addDefaultActions.call(this, this._claimedActions);
 }
 
-parsegraph_MultislotPlot.prototype.setId = function(id) {
+MultislotPlot.prototype.setId = function(id) {
   console.log('ID set for plot');
   this._id = id;
 };
 
-parsegraph_MultislotPlot.prototype.id = function() {
+MultislotPlot.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_MultislotPlot.prototype.claimant = function() {
+MultislotPlot.prototype.claimant = function() {
   const claimant = this._root.label();
   if (claimant === '') {
     return null;
@@ -82,67 +82,67 @@ parsegraph_MultislotPlot.prototype.claimant = function() {
   return claimant;
 };
 
-parsegraph_MultislotPlot.prototype.claim = function(name) {
+MultislotPlot.prototype.claim = function(name) {
   this._root.setLabel(name);
   this._root.setBlockStyle(this._claimedStyle);
   this.room().scheduleUpdate();
   this._actionRemover();
   this._actionRemover = this._claimedActions.install(
-      this._root.nodeAt(parsegraph_DOWNWARD),
+      this._root.nodeAt(DOWNWARD),
   );
 };
 
-parsegraph_MultislotPlot.prototype.populate = function(item) {};
+MultislotPlot.prototype.populate = function(item) {};
 
-parsegraph_MultislotPlot.prototype.depopulate = function() {
+MultislotPlot.prototype.depopulate = function() {
   const content = this._content;
-  this._root.disconnectNode(parsegraph_DOWNWARD);
-  const node = this._root.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  this._root.disconnectNode(DOWNWARD);
+  const node = this._root.spawnNode(DOWNWARD, BUD);
   this._content = null;
   return content;
 };
 
-parsegraph_MultislotPlot.prototype.unclaim = function() {
+MultislotPlot.prototype.unclaim = function() {
   this._actionRemover();
-  this._root.disconnectNode(parsegraph_DOWNWARD);
+  this._root.disconnectNode(DOWNWARD);
   this._root.setLabel('');
-  const node = this._root.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const node = this._root.spawnNode(DOWNWARD, BUD);
   this._actionRemover = this._unclaimedActions.install(node);
   this._root.setBlockStyle(this._unclaimedStyle);
   this.room().scheduleUpdate();
 };
 
-parsegraph_MultislotPlot.prototype.multislot = function() {
+MultislotPlot.prototype.multislot = function() {
   return this._multislot;
 };
 
-parsegraph_MultislotPlot.prototype.room = function() {
+MultislotPlot.prototype.room = function() {
   return this._multislot.room();
 };
 
-parsegraph_MultislotPlot.prototype.version = function() {
+MultislotPlot.prototype.version = function() {
   return this._version;
 };
 
-parsegraph_MultislotPlot.prototype.nextVersion = function() {
+MultislotPlot.prototype.nextVersion = function() {
   return ++this._version;
 };
 
-parsegraph_MultislotPlot.prototype.index = function() {
+MultislotPlot.prototype.index = function() {
   return this._index;
 };
 
-parsegraph_MultislotPlot.prototype.node = function() {
+MultislotPlot.prototype.node = function() {
   return this._root;
 };
 
-function parsegraph_ClaimPlotAction(plot, username) {
+export default function ClaimPlotAction(plot, username) {
   this._plot = plot;
   this._username = username;
   this._originalClaimant = null;
 }
 
-parsegraph_ClaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
+ClaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
   if (this._listener) {
     console.log('Refusing to overwrite existing listener');
     console.log('Original listener:');
@@ -155,15 +155,15 @@ parsegraph_ClaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
   this._listenerThisArg = cbThisArg;
 };
 
-parsegraph_ClaimPlotAction.prototype.room = function() {
+ClaimPlotAction.prototype.room = function() {
   return this._plot.room();
 };
 
-parsegraph_ClaimPlotAction.prototype.multislot = function() {
+ClaimPlotAction.prototype.multislot = function() {
   return this._plot.multislot();
 };
 
-parsegraph_ClaimPlotAction.prototype.advance = function() {
+ClaimPlotAction.prototype.advance = function() {
   const multislotId = this.room().getId(this.multislot());
   if (multislotId === null) {
     return false;
@@ -181,7 +181,7 @@ parsegraph_ClaimPlotAction.prototype.advance = function() {
   return true;
 };
 
-parsegraph_ClaimPlotAction.prototype.reverse = function() {
+ClaimPlotAction.prototype.reverse = function() {
   if (this._plot.version() !== this._version) {
     // Preempted.
     return false;
@@ -194,7 +194,7 @@ parsegraph_ClaimPlotAction.prototype.reverse = function() {
   return true;
 };
 
-parsegraph_ClaimPlotAction.prototype.receive = function(err, resp) {
+ClaimPlotAction.prototype.receive = function(err, resp) {
   if (err) {
     this.reverse();
   } else {
@@ -205,12 +205,12 @@ parsegraph_ClaimPlotAction.prototype.receive = function(err, resp) {
   }
 };
 
-function parsegraph_UnclaimPlotAction(plot) {
+export default function UnclaimPlotAction(plot) {
   this._plot = plot;
   this._originalClaimant = null;
 }
 
-parsegraph_UnclaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
+UnclaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
   if (this._listener) {
     throw new Error('Refusing to overwrite existing listener');
   }
@@ -218,15 +218,15 @@ parsegraph_UnclaimPlotAction.prototype.setListener = function(cb, cbThisArg) {
   this._listenerThisArg = cbThisArg;
 };
 
-parsegraph_UnclaimPlotAction.prototype.room = function() {
+UnclaimPlotAction.prototype.room = function() {
   return this._plot.room();
 };
 
-parsegraph_UnclaimPlotAction.prototype.multislot = function() {
+UnclaimPlotAction.prototype.multislot = function() {
   return this._plot.multislot();
 };
 
-parsegraph_UnclaimPlotAction.prototype.advance = function() {
+UnclaimPlotAction.prototype.advance = function() {
   const multislotId = this.room().getId(this.multislot());
   if (multislotId === null) {
     return false;
@@ -238,7 +238,7 @@ parsegraph_UnclaimPlotAction.prototype.advance = function() {
   return true;
 };
 
-parsegraph_UnclaimPlotAction.prototype.reverse = function() {
+UnclaimPlotAction.prototype.reverse = function() {
   if (this._plot.version() !== this._version) {
     // Preempted.
     return false;
@@ -251,7 +251,7 @@ parsegraph_UnclaimPlotAction.prototype.reverse = function() {
   return true;
 };
 
-parsegraph_UnclaimPlotAction.prototype.receive = function(err, resp) {
+UnclaimPlotAction.prototype.receive = function(err, resp) {
   if (err) {
     this.reverse();
   } else {

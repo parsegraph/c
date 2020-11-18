@@ -1,9 +1,9 @@
-function parsegraph_Multislot(room, rowSize, columnSize, color, subtype) {
+export default function Multislot(room, rowSize, columnSize, color, subtype) {
   this._room = room;
   this._plots = [];
   this._id = null;
 
-  const car = new parsegraph_Caret('b');
+  const car = new Caret('b');
   this._root = car.node();
   this._size = rowSize * columnSize;
   this._columnSize = columnSize;
@@ -12,7 +12,7 @@ function parsegraph_Multislot(room, rowSize, columnSize, color, subtype) {
 
   this.build(car, subtype);
 
-  const multislotActions = new parsegraph_ActionCarousel();
+  const multislotActions = new ActionCarousel();
   multislotActions.addAction(
       'Edit',
       function() {
@@ -25,7 +25,7 @@ function parsegraph_Multislot(room, rowSize, columnSize, color, subtype) {
   this._root.label(subtype);
 }
 
-parsegraph_Multislot.prototype.setId = function(id) {
+Multislot.prototype.setId = function(id) {
   if (this._id) {
     this.room().removeItemListener(this._id, this.onItemEvent, this);
   }
@@ -35,7 +35,7 @@ parsegraph_Multislot.prototype.setId = function(id) {
   }
 };
 
-parsegraph_Multislot.prototype.onItemEvent = function(obj) {
+Multislot.prototype.onItemEvent = function(obj) {
   if (!this.id()) {
     return;
   }
@@ -52,38 +52,38 @@ parsegraph_Multislot.prototype.onItemEvent = function(obj) {
   }
 };
 
-parsegraph_Multislot.prototype.id = function() {
+Multislot.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Multislot.prototype.color = function() {
+Multislot.prototype.color = function() {
   return this._color;
 };
 
-parsegraph_Multislot.prototype.node = function() {
+Multislot.prototype.node = function() {
   return this._root;
 };
 
-parsegraph_Multislot.prototype.room = function() {
+Multislot.prototype.room = function() {
   return this._room;
 };
 
-parsegraph_Multislot.prototype.scheduleUpdate = function() {
+Multislot.prototype.scheduleUpdate = function() {
   return this.room().scheduleRepaint();
 };
 
-parsegraph_Multislot.prototype.getPlot = function(index) {
+Multislot.prototype.getPlot = function(index) {
   return this._plots[index];
 };
 
-parsegraph_Multislot.prototype.build = function(car, subtype) {
+Multislot.prototype.build = function(car, subtype) {
   // console.log("Subtype=" + subtype);
   const plotListener = function(ev) {
     const node = this;
     switch (ev.event) {
       case 'pushListItem':
-        var child = ev.item;
-        var car = new parsegraph_Caret(node);
+        const child = ev.item;
+        const car = new Caret(node);
         this.room().spawn(car, child);
         this.scheduleUpdate();
         break;
@@ -92,14 +92,14 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
 
   const spawnPlot = function() {
     const index = this._plots.length;
-    const plot = new parsegraph_MultislotPlot(this, index);
+    const plot = new MultislotPlot(this, index);
     this._plots.push(plot);
     return plot;
   };
 
   const cs = parsegraph_copyStyle('u');
-  cs.backgroundColor = new parsegraph_Color(0.8);
-  cs.borderColor = new parsegraph_Color(0.6);
+  cs.backgroundColor = new Color(0.8);
+  cs.borderColor = new Color(0.6);
 
   const us = parsegraph_copyStyle('u');
   us.backgroundColor = this._color;
@@ -108,8 +108,8 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
 
   this._root.setLabel(subtype);
   if (subtype === 0) {
-    var index = 0;
-    for (var y = 0; y < this._columnSize; ++y) {
+    const index = 0;
+    for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.pull('d');
         car.align('d', parsegraph_ALIGN_CENTER);
@@ -125,23 +125,23 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
         car.shrink();
       }
       car.push();
-      for (var x = 0; x < this._rowSize; ++x) {
-        var plot = spawnPlot.call(this);
+      for (let x = 0; x < this._rowSize; ++x) {
+        const plot = spawnPlot.call(this);
         car.connect('f', plot.node());
         car.move('f');
         // console.log(x + ", " + y);
       }
       car.pop();
-      parsegraph_FIT_LOOSE && car.fitLoose();
-      parsegraph_CREASE && car.crease();
+      FIT_LOOSE && car.fitLoose();
+      CREASE && car.crease();
     }
   } else if (subtype === 1) {
-    var index = 0;
+    const index = 0;
     car.align('d', 'c');
     car.pull('d');
     car.spawnMove('d', 'u');
 
-    for (var y = 0; y < this._columnSize; ++y) {
+    for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         // car.align('d', parsegraph_ALIGN_CENTER);
         car.shrink();
@@ -154,26 +154,26 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
         car.shrink();
       }
       car.push();
-      for (var x = 0; x < this._rowSize; ++x) {
+      for (let x = 0; x < this._rowSize; ++x) {
         car.spawnMove('d', 'u');
         car.replace('u');
         car.node().setBlockStyle(cs);
         car.pull('f');
-        var plot = spawnPlot.call(this);
+        const plot = spawnPlot.call(this);
         car.connect('f', plot.node());
       }
       car.pop();
       car.pull('d');
-      parsegraph_FIT_LOOSE && car.fitLoose();
-      parsegraph_CREASE && car.crease();
+      FIT_LOOSE && car.fitLoose();
+      CREASE && car.crease();
     }
   } else if (subtype === 2) {
     car.align('d', 'c');
     car.pull('d');
     // car.spawnMove('d', 'u');
-    var index = 0;
+    const index = 0;
 
-    for (var y = 0; y < this._columnSize; ++y) {
+    for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.align('d', parsegraph_ALIGN_CENTER);
         car.spawnMove('d', 'u');
@@ -186,25 +186,25 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
         car.shrink();
       }
       car.push();
-      for (var x = 0; x < this._rowSize; ++x) {
+      for (let x = 0; x < this._rowSize; ++x) {
         car.spawnMove('d', 's');
         car.node().setBlockStyle(cs);
-        var plot = spawnPlot.call(this);
+        const plot = spawnPlot.call(this);
         car.connect('f', plot.node());
         car.pull('f');
       }
       car.pop();
       car.pull('d');
-      parsegraph_FIT_LOOSE && car.fitLoose();
-      parsegraph_CREASE && car.crease();
+      FIT_LOOSE && car.fitLoose();
+      CREASE && car.crease();
     }
   } else if (subtype === 3) {
     car.align('d', 'c');
     car.pull('d');
     // car.spawnMove('d', 'u');
 
-    var index = 0;
-    for (var y = 0; y < this._columnSize; ++y) {
+    const index = 0;
+    for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.align('d', parsegraph_ALIGN_CENTER);
         car.spawnMove('d', 'u');
@@ -217,21 +217,21 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
         car.shrink();
       }
       car.push();
-      for (var x = 0; x < this._rowSize; ++x) {
+      for (let x = 0; x < this._rowSize; ++x) {
         car.spawnMove('d', 's');
         car.node().setBlockStyle(cs);
         car.pull('b');
-        var plot = spawnPlot.call(this);
+        const plot = spawnPlot.call(this);
         car.connect('b', plot.node());
       }
       car.pop();
       car.pull('d');
-      parsegraph_FIT_LOOSE && car.fitLoose();
-      parsegraph_CREASE && car.crease();
+      FIT_LOOSE && car.fitLoose();
+      CREASE && car.crease();
     }
   } else if (subtype === 4) {
-    var index = 0;
-    for (var y = 0; y < this._columnSize; ++y) {
+    const index = 0;
+    for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.pull('d');
         car.align('d', parsegraph_ALIGN_CENTER);
@@ -247,17 +247,17 @@ parsegraph_Multislot.prototype.build = function(car, subtype) {
         car.shrink();
       }
       car.push();
-      for (var x = 0; x < this._rowSize; ++x) {
+      for (let x = 0; x < this._rowSize; ++x) {
         car.spawnMove('b', 's');
         car.node().setBlockStyle(cs);
-        var plot = spawnPlot.call(this);
+        const plot = spawnPlot.call(this);
         car.connect('d', plot.node());
         car.pull('d');
         console.log(x + ', ' + y);
       }
       car.pop();
-      parsegraph_FIT_LOOSE && car.fitLoose();
-      parsegraph_CREASE && car.crease();
+      FIT_LOOSE && car.fitLoose();
+      CREASE && car.crease();
     }
   } else {
     throw new Error('Subtype not recognized');
@@ -270,12 +270,12 @@ parsegraph_listClasses.multislot = {
     const subtype = params[0];
     const rowSize = params[1];
     const columnSize = params[2];
-    const color = new parsegraph_Color(
+    const color = new Color(
         params[3] / 255,
         params[4] / 255,
         params[5] / 255,
     );
-    const multislot = new parsegraph_Multislot(
+    const multislot = new Multislot(
         room,
         rowSize,
         columnSize,

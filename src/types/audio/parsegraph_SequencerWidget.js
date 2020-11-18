@@ -1,19 +1,20 @@
-function parsegraph_SequenceStep(seq, i) {
+export default function SequenceStep(seq, i) {
   this._seq = seq;
   this._i = i;
   this._active = true;
 }
 
-parsegraph_SequenceStep.prototype.setFrequency = function(freq) {
+SequenceStep.prototype.setFrequency = function(freq) {
   // if(this._lastOsc) {
-  // this._lastOsc.frequency.setValueAtTime(freq, this._lastOsc.context.currentTime);
+  // this._lastOsc.frequency.setValueAtTime(
+  //   freq, this._lastOsc.context.currentTime);
   // }
   this._pitchSlider.setValue((freq - 16) / 7902);
   this._pitchSlider.layoutWasChanged();
   // console.log(this._i, this._pitchSlider.value());
 };
 
-parsegraph_SequenceStep.prototype.setActive = function(isActive) {
+SequenceStep.prototype.setActive = function(isActive) {
   this._active = isActive;
   if (this._active) {
     this._onButton.setLabel('On');
@@ -22,7 +23,7 @@ parsegraph_SequenceStep.prototype.setActive = function(isActive) {
   }
 };
 
-parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end) {
+SequenceStep.prototype.play = function(osc, gain, start, end) {
   const len = end - start;
   osc.frequency.setValueAtTime(16 + 7902 * this._pitchSlider.value(), start);
   // this._lastOsc = osc;
@@ -61,20 +62,20 @@ parsegraph_SequenceStep.prototype.play = function(osc, gain, start, end) {
   gain.gain.linearRampToValueAtTime(0, start + len * (ae + de + se + re));
 };
 
-parsegraph_SequenceStep.prototype.randomize = function() {
+SequenceStep.prototype.randomize = function() {
   this.setFrequency(16 + Math.random() * 7902);
   this.setActive(Math.random() > 0.2);
 };
 
-parsegraph_SequenceStep.prototype.node = function() {
+SequenceStep.prototype.node = function() {
   if (this._node) {
     return this._node;
   }
 
-  step = new parsegraph_Node(parsegraph_BLOCK);
+  step = new Node(parsegraph_BLOCK);
   this._node = step;
   const b = parsegraph_copyStyle(parsegraph_BLOCK);
-  b.backgroundColor = new parsegraph_Color(1, 1, this._i % 2 == 0 ? 1 : 0.8, 1);
+  b.backgroundColor = new Color(1, 1, this._i % 2 == 0 ? 1 : 0.8, 1);
   step.setBlockStyle(b);
   step.setLabel(1 + this._i, parsegraph_defaultFont());
   const s = step.spawnNode(parsegraph_INWARD, parsegraph_BUD);
@@ -97,7 +98,7 @@ parsegraph_SequenceStep.prototype.node = function() {
   const stepLabel = s.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
   stepLabel.setLabel('Pitch', ga);
   stepLabel.setScale(0.5);
-  var stepSlider = s.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = s.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._pitchSlider = stepSlider;
   this._pitchSlider.setValue(Math.random());
@@ -143,7 +144,7 @@ parsegraph_SequenceStep.prototype.node = function() {
   );
   attackLabel.setLabel('Attack', ga);
   attackLabel.setScale(0.5);
-  var stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._attackSlider = stepSlider;
   this._attackSlider.setValue(Math.random());
@@ -155,7 +156,7 @@ parsegraph_SequenceStep.prototype.node = function() {
   const decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
   decayLabel.setLabel('Decay', ga);
   decayLabel.setScale(0.5);
-  var stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._decaySlider = stepSlider;
   this._decaySlider.setValue(Math.random());
@@ -175,7 +176,7 @@ parsegraph_SequenceStep.prototype.node = function() {
       parsegraph_BUD,
   );
   sustainSliders.setScale(0.5);
-  var stepSlider = sustainSliders.spawnNode(
+  let stepSlider = sustainSliders.spawnNode(
       parsegraph_FORWARD,
       parsegraph_SLIDER,
   );
@@ -199,7 +200,7 @@ parsegraph_SequenceStep.prototype.node = function() {
   );
   releaseLabel.setLabel('Release', ga);
   releaseLabel.setScale(0.5);
-  var stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._releaseSlider = stepSlider;
   this._releaseSlider.setValue(Math.random());
@@ -209,9 +210,9 @@ parsegraph_SequenceStep.prototype.node = function() {
   return this._node;
 };
 
-parsegraph_SequencerWidget_COUNT = 0;
-function parsegraph_SequencerWidget(graph) {
-  this._id = parsegraph_SequencerWidget_COUNT++;
+sequencerWidgetCount = 0;
+export default function SequencerWidget(graph) {
+  this._id = sequencerWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._steps = [];
@@ -224,7 +225,7 @@ function parsegraph_SequencerWidget(graph) {
   this._detuneScale = 300;
 }
 
-parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth) {
+SequencerWidget.prototype.useSynthesizer = function(synth) {
   if (this._synth) {
     this._synth();
     this._synth = null;
@@ -240,7 +241,7 @@ parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth) {
     if (this._playing) {
       const t =
         Math.floor((now - this._startTime) / this._beatLength) % this._numSteps;
-      var step = this._steps[t];
+      const step = this._steps[t];
     } else {
       step = this._steps[this._currentStep];
     }
@@ -253,18 +254,18 @@ parsegraph_SequencerWidget.prototype.useSynthesizer = function(synth) {
   }, this);
 };
 
-parsegraph_SequencerWidget.prototype.output = function() {
+SequencerWidget.prototype.output = function() {
   return this._sink;
 };
 
-parsegraph_SequencerWidget.prototype.onPlay = function(
+SequencerWidget.prototype.onPlay = function(
     listener,
     listenerThisArg,
 ) {
   this._listeners.push([listener, listenerThisArg]);
 };
 
-parsegraph_SequencerWidget.prototype.play = function(bpm) {
+SequencerWidget.prototype.play = function(bpm) {
   const audio = this._graph.surface().audio();
   this._timer = audio.createConstantSource();
   const that = this;
@@ -282,7 +283,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
 
   if (this._voices) {
     for (const type in this._voices) {
-      var voice = this._voices[type];
+      const voice = this._voices[type];
       voice.osc.stop();
     }
   }
@@ -354,7 +355,7 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
   this._beatLength = 60 / bpm;
   for (let i = 0; i < this._steps.length; ++i) {
     const s = this._steps[i];
-    var voice = this._voices[s._type];
+    const voice = this._voices[s._type];
     if (!voice) {
       console.log('No voice for ' + s._type);
       continue;
@@ -365,13 +366,13 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
         now + (i * 60) / bpm,
         now + ((i + 1) * 60) / bpm,
     );
-    var last = now + ((i + 1) * 60) / bpm;
+    const last = now + ((i + 1) * 60) / bpm;
   }
   this._timer.stop(last);
 
   this._lastSelected = null;
   this._currentStep = null;
-  this._renderTimer = new parsegraph_TimeoutTimer();
+  this._renderTimer = new TimeoutTimer();
   this._renderTimer.setDelay(this._beatLength);
   this._renderTimer.setListener(function() {
     now = this._graph.surface().audio().currentTime;
@@ -384,8 +385,8 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
       for (let i = 0; i < this._steps.length; ++i) {
         var s = this._steps[i];
         if (i != t) {
-          var b = parsegraph_copyStyle(parsegraph_BLOCK);
-          b.backgroundColor = new parsegraph_Color(
+          const b = parsegraph_copyStyle(parsegraph_BLOCK);
+          b.backgroundColor = new Color(
               1,
               1,
             i % 2 == 0 ? 1 : 0.8,
@@ -393,8 +394,8 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
           );
           s._node.setBlockStyle(b);
         } else {
-          var b = parsegraph_copyStyle(parsegraph_BLOCK);
-          b.backgroundColor = new parsegraph_Color(0.5, 0, 0, 1);
+          const b = parsegraph_copyStyle(parsegraph_BLOCK);
+          b.backgroundColor = new Color(0.5, 0, 0, 1);
           s._node.setBlockStyle(b);
         }
       }
@@ -406,15 +407,15 @@ parsegraph_SequencerWidget.prototype.play = function(bpm) {
   // this._renderTimer.schedule();
 };
 
-parsegraph_SequencerWidget.prototype.font = function() {
+SequencerWidget.prototype.font = function() {
   return parsegraph_defaultFont();
 };
 
-parsegraph_SequencerWidget.prototype.node = function() {
+SequencerWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new parsegraph_Caret(parsegraph_SLOT);
+  const car = new Caret(parsegraph_SLOT);
   this._containerNode = car.root();
   car.label('Sequencer', this.font());
   // car.fitExact();
@@ -437,12 +438,12 @@ parsegraph_SequencerWidget.prototype.node = function() {
     this._recording = !this._recording;
     if (this._recording) {
       // Now recording
-      var b = parsegraph_copyStyle(parsegraph_BLOCK);
-      b.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
+      const b = parsegraph_copyStyle(parsegraph_BLOCK);
+      b.backgroundColor = new Color(1, 1, 0, 1);
       this._recordButton.setBlockStyle(b);
       this._recordButton.setLabel('Recording');
     } else {
-      var b = parsegraph_copyStyle(parsegraph_BLOCK);
+      const b = parsegraph_copyStyle(parsegraph_BLOCK);
       this._recordButton.setBlockStyle(b);
       this._recordButton.setLabel('Record');
     }
@@ -520,13 +521,13 @@ parsegraph_SequencerWidget.prototype.node = function() {
   car.pull(parsegraph_DOWNWARD);
   const l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
   const y = parsegraph_copyStyle(parsegraph_BLOCK);
-  y.backgroundColor = new parsegraph_Color(1, 1, 0, 1);
+  y.backgroundColor = new Color(1, 1, 0, 1);
   l.setBlockStyle(y);
   l.setLabel('Oscillator', this.font());
   let rootStep = n;
   const voices = ['sine', 'sawtooth', 'square', 'triangle'];
   for (let i = 0; i < this._numSteps; ++i) {
-    const newStep = new parsegraph_SequenceStep(this, i);
+    const newStep = new SequenceStep(this, i);
     const v = voices[Math.floor(Math.random() * voices.length)];
     newStep._type = v;
     this._steps.push(newStep);
@@ -545,10 +546,10 @@ parsegraph_SequencerWidget.prototype.node = function() {
         [this, i],
     );
   }
-  var addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+  let addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
   addStep.setLabel('+', this.font());
 
-  var addStep = n.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  let addStep = n.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
   addStep.setLabel('+', this.font());
   return this._containerNode;
 };
