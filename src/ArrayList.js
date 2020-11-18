@@ -41,7 +41,9 @@ parsegraph_ArrayList.prototype.at = function(i) {
   return this.data[i];
 };
 
-const parsegraph_ArrayList_Tests = new parsegraph_TestSuite('parsegraph_ArrayList');
+const parsegraph_ArrayList_Tests = new parsegraph_TestSuite(
+    'parsegraph_ArrayList',
+);
 
 parsegraph_ArrayList_Tests.addTest('new parsegraph_ArrayList', function() {
   const l = new parsegraph_ArrayList();
