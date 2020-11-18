@@ -15,19 +15,19 @@ export default function parsegraph_Unicode() {
   this.unicodeCategoryCounts = {};
 }
 
-let parsegraph_UNICODE_INSTANCE = null;
+let UNICODE_INSTANCE = null;
 const parsegraph_UNICODE_STORAGE = localStorage;
 export function parsegraph_defaultUnicode() {
-  if (!parsegraph_UNICODE_INSTANCE) {
-    parsegraph_UNICODE_INSTANCE = new parsegraph_Unicode();
-    // parsegraph_UNICODE_INSTANCE.load();
-    parsegraph_UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
+  if (!UNICODE_INSTANCE) {
+    UNICODE_INSTANCE = new parsegraph_Unicode();
+    // UNICODE_INSTANCE.load();
+    UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
   }
-  return parsegraph_UNICODE_INSTANCE;
+  return UNICODE_INSTANCE;
 }
 
 export function parsegraph_setDefaultUnicode(unicode) {
-  parsegraph_UNICODE_INSTANCE = unicode;
+  UNICODE_INSTANCE = unicode;
 }
 
 parsegraph_Unicode.prototype.get = function(codeOrLetter) {
@@ -80,42 +80,31 @@ parsegraph_Unicode.prototype.get = function(codeOrLetter) {
 }
 
 parsegraph_Unicode.prototype.getGlyphDirection = function(text) {
+  const directions = {};
+  'L LRE LRO EN ES ET'.split(' ').forEach((cat)=>{
+    // Left-to-right.
+    directions[cat] = 'L';
+  });
+  'R AL AN RLE RLO'.split(' ').forEach((cat)=>{
+    // Right-to-left
+    directions[cat] = 'R';
+  });
+  'PDF CS ON WS BN S NSM B'.split(' ').forEach((cat)=>{
+    // Neutral characters
+    directions[cat] = null;
+  });
   const data = this.get(text);
   if (!data) {
     return null;
   }
-  switch (data[UNICODE_bidirectionalCategory]) {
-    case 'L':
-    case 'LRE':
-    case 'LRO':
-    case 'EN':
-    case 'ES':
-    case 'ET':
-      // Left-to-right.
-      return 'L';
-    case 'R':
-    case 'AL':
-    case 'AN':
-    case 'RLE':
-    case 'RLO':
-      // Right-to-left
-      return 'R';
-    case 'PDF':
-    case 'CS':
-    case 'ON':
-    case 'WS':
-    case 'BN':
-    case 'S':
-    case 'NSM':
-    case 'B':
-      // Neutral characters
-      return null;
-    default:
-      throw new Error(
-          'Unrecognized character: \\u' +
-          glyphData.letter.charCodeAt(0).toString(16),
-      );
+  const dir = directions[data[UNICODE_bidirectionalCategory]];
+  if (dir === undefined) {
+    throw new Error(
+        'Unrecognized character: \\u' +
+      glyphData.letter.charCodeAt(0).toString(16),
+    );
   }
+  return dir;
 };
 
 parsegraph_Unicode.prototype.cursive = function(
@@ -146,11 +135,7 @@ parsegraph_Unicode.prototype.cursive = function(
     if (prevLetter && prevCursiveMapping[1]) {
       if (cursiveMapping[2]) {
         givenLetter = cursiveMapping[2]; // medial
-      }
-      // else if(cursiveMapping[3]) {
-      // givenLetter = cursiveMapping[3]; // final
-      // }
-      else {
+      } else {
         givenLetter = cursiveMapping[0]; // isolated
       }
     } else {
@@ -175,11 +160,11 @@ parsegraph_Unicode.prototype.cursive = function(
 };
 
 let i = 0;
-const UNICODE_codeValue = i++;
+const UNICODE_CODE_VALUE = i++;
 // const UNICODE_characterName = i++;
-const UNICODE_generalCategory = i++;
+const UNICODE_GENERAL_CATEGORY = i++;
 // const UNICODE_canonicalCombiningClasses = i++;
-const UNICODE_bidirectionalCategory = i++;
+const UNICODE_BIDIRECTIONAL_CATEGORY = i++;
 // const UNICODE_decompositionMapping = i++;
 // const UNICODE_decimalDigitValue = i++;
 // const UNICODE_digitValue = i++;
@@ -221,19 +206,19 @@ parsegraph_Unicode.prototype.loadFromString = function(t) {
         // parseInt(charData[13], 16), // lowercaseMapping
         // parseInt(charData[14], 16) // titlecaseMapping
       ];
-      this.unicodeProperties[charNamedData[UNICODE_codeValue]] = charNamedData;
+      this.unicodeProperties[charNamedData[UNICODE_CODE_VALUE]] = charNamedData;
 
       if (!(charNamedData.bidirectionalCategory in this.unicodeBidiCounts)) {
         this.unicodeBidiCounts[
-            charNamedData[UNICODE_bidirectionalCategory]
+            charNamedData[UNICODE_BIDIRECTIONAL_CATEGORY]
         ] = 1;
       } else {
-        ++this.unicodeBidiCounts[charNamedData[UNICODE_bidirectionalCategory]];
+        ++this.unicodeBidiCounts[charNamedData[UNICODE_BIDIRECTIONAL_CATEGORY]];
       }
       if (!(charNamedData.generalCategory in this.unicodeCategoryCounts)) {
-        this.unicodeCategoryCounts[charNamedData[UNICODE_generalCategory]] = 1;
+        this.unicodeCategoryCounts[charNamedData[UNICODE_GENERAL_CATEGORY]] = 1;
       } else {
-        ++this.unicodeCategoryCounts[charNamedData[UNICODE_generalCategory]];
+        ++this.unicodeCategoryCounts[charNamedData[UNICODE_GENERAL_CATEGORY]];
       }
     }
   }
