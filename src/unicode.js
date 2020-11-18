@@ -4,33 +4,39 @@
     '\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF';
   const rtlChars = '\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC';
   const rtlDirCheck = new RegExp('^[^' + ltrChars + ']*[' + rtlChars + ']');
+
+  // eslint-disable-next-line require-jsdoc, no-unused-vars
   function isRTL(s) {
     return rtlDirCheck.test(s);
   }
 }
 
-export default function parsegraph_Unicode() {
+// eslint-disable-next-line require-jsdoc
+export default function Unicode() {
   this.unicodeProperties = {};
   this.unicodeBidiCounts = {};
   this.unicodeCategoryCounts = {};
 }
 
 let UNICODE_INSTANCE = null;
-const parsegraph_UNICODE_STORAGE = localStorage;
-export function parsegraph_defaultUnicode() {
+const UNICODE_STORAGE = localStorage;
+
+// eslint-disable-next-line require-jsdoc
+export function defaultUnicode() {
   if (!UNICODE_INSTANCE) {
-    UNICODE_INSTANCE = new parsegraph_Unicode();
+    UNICODE_INSTANCE = new Unicode();
     // UNICODE_INSTANCE.load();
-    UNICODE_INSTANCE.load(null, parsegraph_UNICODE_STORAGE);
+    UNICODE_INSTANCE.load(null, UNICODE_STORAGE);
   }
   return UNICODE_INSTANCE;
 }
 
-export function parsegraph_setDefaultUnicode(unicode) {
+// eslint-disable-next-line require-jsdoc
+export function setDefaultUnicode(unicode) {
   UNICODE_INSTANCE = unicode;
 }
 
-parsegraph_Unicode.prototype.get = function(codeOrLetter) {
+Unicode.prototype.get = function(codeOrLetter) {
   if (typeof codeOrLetter === 'number') {
     return this.unicodeProperties[codeOrLetter];
   }
@@ -38,7 +44,8 @@ parsegraph_Unicode.prototype.get = function(codeOrLetter) {
 };
 
 {
-  // SemanticCodeValue:[Isolated, Initial, Medial, Final]. Use null for non-applicable.
+  // SemanticCodeValue:[Isolated, Initial, Medial, Final].
+  // Use null for non-applicable.
   const unicodeCursiveMap = {
     0x627: [0xfe8d, null, null, 0xfe8e], // ALEF
     0x628: [0xfe8f, 0xfe91, 0xfe92, 0xfe90], // BEH
@@ -71,7 +78,7 @@ parsegraph_Unicode.prototype.get = function(codeOrLetter) {
     0x64a: [0xfef1, 0xfef3, 0xfef4, 0xfef2], // YEH,
   };
 
-  parsegraph_Unicode.prototype.getCursiveMapping = function(t) {
+  Unicode.prototype.getCursiveMapping = function(t) {
     if (typeof t !== 'number') {
       t = t.charCodeAt(0);
     }
@@ -79,7 +86,7 @@ parsegraph_Unicode.prototype.get = function(codeOrLetter) {
   };
 }
 
-parsegraph_Unicode.prototype.getGlyphDirection = function(text) {
+Unicode.prototype.getGlyphDirection = function(text) {
   const directions = {};
   'L LRE LRO EN ES ET'.split(' ').forEach((cat)=>{
     // Left-to-right.
@@ -107,7 +114,7 @@ parsegraph_Unicode.prototype.getGlyphDirection = function(text) {
   return dir;
 };
 
-parsegraph_Unicode.prototype.cursive = function(
+Unicode.prototype.cursive = function(
     givenLetter,
     prevLetter,
     nextLetter,
@@ -176,7 +183,7 @@ const UNICODE_BIDIRECTIONAL_CATEGORY = i++;
 // const UNICODE_lowercaseMapping = i++;
 // const UNICODE_titlecaseMapping = i++;
 
-parsegraph_Unicode.prototype.loadFromString = function(t) {
+Unicode.prototype.loadFromString = function(t) {
   let lines = 0;
   let start = 0;
   const ws = /[\n\r]/;
@@ -225,7 +232,7 @@ parsegraph_Unicode.prototype.loadFromString = function(t) {
   // console.log("Text received: " + t.length + " bytes, " + lines + " lines");
 };
 
-parsegraph_Unicode.prototype.isArabic = function(letter) {
+Unicode.prototype.isArabic = function(letter) {
   if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
@@ -237,7 +244,7 @@ parsegraph_Unicode.prototype.isArabic = function(letter) {
   return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.isMark = function(letter) {
+Unicode.prototype.isMark = function(letter) {
   if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
@@ -249,7 +256,7 @@ parsegraph_Unicode.prototype.isMark = function(letter) {
   return cat === 'Mn' || cat === 'Mc' || cat === 'Me';
 };
 
-parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
+Unicode.prototype.isArabicDiacritic = function(letter) {
   if (typeof letter !== 'number') {
     letter = letter.charCodeAt(0);
   }
@@ -261,7 +268,7 @@ parsegraph_Unicode.prototype.isArabicDiacritic = function(letter) {
   return cv >= 0x621 && cv <= 0x64a;
 };
 
-parsegraph_Unicode.prototype.load = function(dbURL, storage) {
+Unicode.prototype.load = function(dbURL, storage) {
   if (this._loaded) {
     return;
   }
@@ -272,7 +279,8 @@ parsegraph_Unicode.prototype.load = function(dbURL, storage) {
   const storageKey = 'UNICODE@' + dbURL;
   const that = this;
   const complete = function() {
-    // console.log("Time till unicode parsed: " + parsegraph_elapsed(parsegraph_START_TIME));
+    // console.log("Time till unicode parsed: " +
+    // parsegraph_elapsed(parsegraph_START_TIME));
     that._loaded = true;
     if (that.onLoad) {
       that.onLoad();
@@ -302,7 +310,8 @@ parsegraph_Unicode.prototype.load = function(dbURL, storage) {
   xhr.open('GET', dbURL);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      // console.log("Time till unicode received: " + parsegraph_elapsed(parsegraph_START_TIME));
+      // console.log("Time till unicode received: " +
+      // parsegraph_elapsed(parsegraph_START_TIME));
       that.loadFromString(xhr.responseText);
       complete.call(that);
       if (storage) {
@@ -318,17 +327,19 @@ parsegraph_Unicode.prototype.load = function(dbURL, storage) {
         }
       }
     } else {
-      // console.log("Receiving " + xhr.readyState + "\n" + xhr.responseText.length + " bytes received.\nTime: " + new Date().getTime()/1000);
+      // console.log("Receiving " + xhr.readyState + "\n" +
+      // xhr.responseText.length + " bytes received.\nTime: "
+      // + new Date().getTime()/1000);
     }
   };
   xhr.send();
 };
 
-parsegraph_Unicode.prototype.loaded = function() {
+Unicode.prototype.loaded = function() {
   return this._loaded;
 };
 
-parsegraph_Unicode.prototype.setOnLoad = function(onLoad, onLoadThisArg) {
+Unicode.prototype.setOnLoad = function(onLoad, onLoadThisArg) {
   if (this._loaded) {
     throw new Error('Unicode character database is already loaded');
   }
