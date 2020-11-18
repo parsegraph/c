@@ -8,6 +8,10 @@ VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes -
 checkvalgrind:
 	cd src; $(VALGRIND) .libs/lt-parsegraph
 
+check:
+	npm run test
+.PHONY: check
+
 run: src/parsegraph
 	$<
 .PHONY: run
