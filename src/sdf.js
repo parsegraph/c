@@ -1,10 +1,10 @@
 const INF = 1e20;
 
 import {
-  parsegraph_LETTER_HEIGHT,
-  parsegraph_SDF_RADIUS,
+  LETTER_HEIGHT,
+  SDF_RADIUS,
 } from './graph/settings';
-
+// eslint-disable-next-line require-jsdoc
 export default function TinySDF(
     fontSize,
     radius,
@@ -14,11 +14,11 @@ export default function TinySDF(
 ) {
   // console.log("TinySDF (fontsize=" + fontSize + ")");
   this.fontSize = fontSize || 24;
-  this.fontSizeHeight = Math.ceil(fontSize * parsegraph_LETTER_HEIGHT);
+  this.fontSizeHeight = Math.ceil(fontSize * LETTER_HEIGHT);
   this.cutoff = cutoff || 0.5;
   this.fontFamily = fontFamily || 'sans-serif';
   this.fontWeight = fontWeight || 'normal';
-  this.radius = radius || parsegraph_SDF_RADIUS;
+  this.radius = radius || SDF_RADIUS;
 
   this.canvas = document.createElement('canvas');
   this.canvas.width = this.fontSize;
@@ -66,7 +66,7 @@ TinySDF.prototype.draw = function(char) {
       4 * this.fontSize * this.fontSizeHeight,
   );
 
-  for (var i = 0; i < this.fontSize * this.fontSizeHeight; i++) {
+  for (let i = 0; i < this.fontSize * this.fontSizeHeight; i++) {
     const a = imgData.data[i * 4 + 3] / 255; // alpha value
     this.gridOuter[i] =
       a === 1 ? 0 : a === 0 ? INF : Math.pow(Math.max(0, 0.5 - a), 2);

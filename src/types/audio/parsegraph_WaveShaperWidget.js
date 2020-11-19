@@ -1,3 +1,4 @@
+// eslint-disable-next-line require-jsdoc
 function makeDistortionCurve(amount) {
   const k = typeof amount === 'number' ? amount : 50;
   const nSamples = 44100;
@@ -12,6 +13,7 @@ function makeDistortionCurve(amount) {
   return curve;
 }
 
+// eslint-disable-next-line require-jsdoc
 export default function WaveShaperWidget(graph) {
   this._graph = graph;
   this._active = false;

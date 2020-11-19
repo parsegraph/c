@@ -1,4 +1,5 @@
 onOffWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
 export default function OnOffWidget(graph, sink) {
   this._id = onOffWidgetCount++;
   this._graph = graph;

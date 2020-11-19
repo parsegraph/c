@@ -1,6 +1,7 @@
-parsegraph_DelayWidget_COUNT = 0;
-function parsegraph_DelayWidget(graph) {
-  this._id = parsegraph_DelayWidget_COUNT++;
+delayWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
+export default function DelayWidget(graph) {
+  this._id = delayWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._listeners = [];
@@ -8,15 +9,15 @@ function parsegraph_DelayWidget(graph) {
   // this._delay = graph.surface().audio().createDelay(this._maxDelay);
 }
 
-parsegraph_DelayWidget.prototype.audioNode = function() {
+DelayWidget.prototype.audioNode = function() {
   return this._delay;
 };
 
-parsegraph_DelayWidget.prototype.node = function() {
+DelayWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new parsegraph_Caret(parsegraph_SLOT);
+  const car = new Caret(parsegraph_SLOT);
   this._containerNode = car.root();
   car.label('Delay');
   car.fitExact();

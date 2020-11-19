@@ -1,4 +1,5 @@
-function parsegraph_lisp_expression(app, car, id, value, items) {
+// eslint-disable-next-line require-jsdoc
+export default function lispExpression(app, car, id, value, items) {
   const node = car.node();
   node.setType(parsegraph_BUD);
 
@@ -11,7 +12,7 @@ function parsegraph_lisp_expression(app, car, id, value, items) {
     car.spawnMove('d', 'u');
   }
 
-  const actions = new parsegraph_ActionCarousel(app.graph());
+  const actions = new ActionCarousel(app.graph());
   actions.addAction(
       'Add expression',
       function() {
@@ -29,7 +30,7 @@ function parsegraph_lisp_expression(app, car, id, value, items) {
           case 'destroyListItem':
             break;
           case 'pushListItem':
-            var item = ev.item;
+            const item = ev.item;
             car.push();
             car.spawnMove('f', 'u');
             app.spawn(car, item);
@@ -44,20 +45,20 @@ function parsegraph_lisp_expression(app, car, id, value, items) {
   );
 }
 
-parsegraph_listClasses['lisp'] = {
+listClasses['lisp'] = {
   spawn: function(app, car, id, value, items) {
     const node = car.node();
     node.setType(parsegraph_BLOCK);
     car.label('Lisp');
     car.spawnMove('d', 'u');
 
-    parsegraph_lisp_expression(app, car, id, value, items);
+    lispExpression(app, car, id, value, items);
   },
 };
 
-parsegraph_listClasses['lisp::expression'] = {
+listClasses['lisp::expression'] = {
   spawn: function(app, car, id, value, items) {
-    const actions = new parsegraph_ActionCarousel(app.graph());
+    const actions = new ActionCarousel(app.graph());
     actions.addAction(
         'Add symbol',
         function() {
@@ -118,7 +119,7 @@ parsegraph_listClasses['lisp::expression'] = {
           const node = this;
           switch (ev.event) {
             case 'pushListItem':
-              var item = ev.item;
+              const item = ev.item;
               if (item.type === 'lisp::expression::newline') {
                 car.pop();
                 car.spawnMove('d', 'u');
@@ -140,9 +141,9 @@ parsegraph_listClasses['lisp::expression'] = {
   },
 };
 
-parsegraph_listClasses['lisp::expression::symbol'] = {
+listClasses['lisp::expression::symbol'] = {
   spawn: function(app, car, id, value, items) {
-    const actions = new parsegraph_ActionCarousel(app.graph());
+    const actions = new ActionCarousel(app.graph());
     const bg = document.createElement('div');
     bg.className = 'bg';
 
@@ -255,7 +256,7 @@ parsegraph_listClasses['lisp::expression::symbol'] = {
         this,
     );
 
-    var permissionForm = new parsegraph_PermissionsForm(app, id);
+    const permissionForm = new PermissionsForm(app, id);
     container.appendChild(permissionForm.container());
 
     car.replace('b');
@@ -264,18 +265,18 @@ parsegraph_listClasses['lisp::expression::symbol'] = {
   },
 };
 
-parsegraph_listClasses['lisp::expression::quote'] = {
+listClasses['lisp::expression::quote'] = {
   spawn: function(app, car, id, value, items) {
     car.replace('b');
     car.label(JSON.parse(value));
   },
 };
 
-parsegraph_listClasses['lisp::list'] = {
+listClasses['lisp::list'] = {
   spawn: function(app, car, id, value, items) {
     car.replace('s');
     car.spawnMove('i', 'u');
     car.shrink();
-    parsegraph_lisp_expression(app, car, id, value, items);
+    lispExpression(app, car, id, value, items);
   },
 };

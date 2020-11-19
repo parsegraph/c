@@ -1,3 +1,4 @@
+// eslint-disable-next-line require-jsdoc
 export default function Multislot(room, rowSize, columnSize, color, subtype) {
   this._room = room;
   this._plots = [];

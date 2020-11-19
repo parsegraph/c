@@ -1,4 +1,5 @@
 synthWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
 export default function SynthWidget(graph) {
   this._id = synthWidgetCount++;
   this._graph = graph;

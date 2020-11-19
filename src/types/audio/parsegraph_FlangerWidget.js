@@ -1,6 +1,7 @@
-parsegraph_FlangerWidget_COUNT = 0;
-function parsegraph_FlangerWidget(graph) {
-  this._id = parsegraph_FlangerWidget_COUNT++;
+flangerWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
+export default function FlangerWidget(graph) {
+  this._id = flangerWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._listeners = [];
@@ -18,15 +19,15 @@ function parsegraph_FlangerWidget(graph) {
   this._gain.connect(this._delay.delayTime);
 }
 
-parsegraph_FlangerWidget.prototype.audioNode = function() {
+FlangerWidget.prototype.audioNode = function() {
   return this._delay;
 };
 
-parsegraph_FlangerWidget.prototype.node = function() {
+FlangerWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new parsegraph_Caret(parsegraph_SLOT);
+  const car = new Caret(parsegraph_SLOT);
   this._containerNode = car.root();
   car.label('Flange');
   car.fitExact();

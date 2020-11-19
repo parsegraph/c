@@ -1,4 +1,5 @@
-function parsegraph_FilterWidget(graph) {
+// eslint-disable-next-line require-jsdoc
+export default function FilterWidget(graph) {
   this._graph = graph;
 
   this._frequency = 440;
@@ -10,14 +11,14 @@ function parsegraph_FilterWidget(graph) {
   this._types = {};
 }
 
-parsegraph_FilterWidget.prototype.update = function() {
+FilterWidget.prototype.update = function() {
   if (!this._listener) {
     return;
   }
   this._listener.apply(this._listenerThisArg);
 };
 
-parsegraph_FilterWidget.prototype.setUpdateListener = function(
+FilterWidget.prototype.setUpdateListener = function(
     listener,
     listenerThisArg,
 ) {
@@ -25,33 +26,33 @@ parsegraph_FilterWidget.prototype.setUpdateListener = function(
   this._listenerThisArg = listenerThisArg;
 };
 
-parsegraph_FilterWidget.prototype.setDetune = function(value) {
+FilterWidget.prototype.setDetune = function(value) {
   this._detune = value;
   this.update();
 };
 
-parsegraph_FilterWidget.prototype.setFrequency = function(value) {
+FilterWidget.prototype.setFrequency = function(value) {
   this._frequency = value;
   this.update();
 };
 
-parsegraph_FilterWidget.prototype.setGain = function(value) {
+FilterWidget.prototype.setGain = function(value) {
   this._gain = value;
   this.update();
 };
 
-parsegraph_FilterWidget.prototype.setQ = function(value) {
+FilterWidget.prototype.setQ = function(value) {
   this._q = value;
   this.update();
 };
 
-parsegraph_FilterWidget.prototype.build = function(audio) {
+FilterWidget.prototype.build = function(audio) {
   const n = audio.createBiquadFilter();
   this.save(n);
   return n;
 };
 
-parsegraph_FilterWidget.prototype.save = function(n) {
+FilterWidget.prototype.save = function(n) {
   if (!Number.isNaN(this._detune)) {
     n.detune.value = this._detune;
   }
@@ -64,7 +65,7 @@ parsegraph_FilterWidget.prototype.save = function(n) {
   n.type = this._type;
 };
 
-parsegraph_FilterWidget.prototype.load = function(n) {
+FilterWidget.prototype.load = function(n) {
   this._detune = n.detune.value;
   this._q = n.Q.value;
   this._gain = n.gain.value;
@@ -73,7 +74,7 @@ parsegraph_FilterWidget.prototype.load = function(n) {
   this.refreshTypes();
 };
 
-parsegraph_FilterWidget.prototype.refreshTypes = function() {
+FilterWidget.prototype.refreshTypes = function() {
   updateUnsel();
   for (const type in this._types) {
     const node = this._types[type];
@@ -85,9 +86,9 @@ parsegraph_FilterWidget.prototype.refreshTypes = function() {
   }
 };
 
-parsegraph_FilterWidget.prototype.typeNode = function() {
+FilterWidget.prototype.typeNode = function() {
   if (!this._typeNode) {
-    const car = new parsegraph_Caret('s');
+    const car = new Caret('s');
     this._typeNode = car.root();
     car.label('Type');
 
@@ -123,9 +124,9 @@ parsegraph_FilterWidget.prototype.typeNode = function() {
   return this._typeNode;
 };
 
-parsegraph_FilterWidget.prototype.frequencyNode = function() {
+FilterWidget.prototype.frequencyNode = function() {
   if (!this._frequencyNode) {
-    const car = new parsegraph_Caret('s');
+    const car = new Caret('s');
     car.label('Frequency');
     this._frequencyNode = car.root();
     const MAXFS = 20000;
@@ -148,9 +149,9 @@ parsegraph_FilterWidget.prototype.frequencyNode = function() {
   return this._frequencyNode;
 };
 
-parsegraph_FilterWidget.prototype.qNode = function() {
+FilterWidget.prototype.qNode = function() {
   if (!this._qNode) {
-    const car = new parsegraph_Caret('s');
+    const car = new Caret('s');
     car.label('Q');
     this._qNode = car.root();
     const MAXFS = 20000;
@@ -173,9 +174,9 @@ parsegraph_FilterWidget.prototype.qNode = function() {
   return this._qNode;
 };
 
-parsegraph_FilterWidget.prototype.gainNode = function() {
+FilterWidget.prototype.gainNode = function() {
   if (!this._gainNode) {
-    const car = new parsegraph_Caret('s');
+    const car = new Caret('s');
     car.label('Gain');
     this._gainNode = car.root();
     const valueSlider = car.spawn('d', 'sli');
@@ -187,9 +188,9 @@ parsegraph_FilterWidget.prototype.gainNode = function() {
   return this._gainNode;
 };
 
-parsegraph_FilterWidget.prototype.detuneNode = function() {
+FilterWidget.prototype.detuneNode = function() {
   if (!this._detuneNode) {
-    const car = new parsegraph_Caret('s');
+    const car = new Caret('s');
     car.label('Detune');
     this._detuneNode = car.root();
     const MAXFS = 20000;
@@ -212,9 +213,9 @@ parsegraph_FilterWidget.prototype.detuneNode = function() {
   return this._detuneNode;
 };
 
-parsegraph_FilterWidget.prototype.node = function() {
+FilterWidget.prototype.node = function() {
   if (!this._containerNode) {
-    const car = new parsegraph_Caret('b');
+    const car = new Caret('b');
     this._containerNode = car.root();
     car.label('BiquadFilterNode');
 

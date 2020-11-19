@@ -1,4 +1,6 @@
 singleOscillatorWidgetCount = 0;
+
+// eslint-disable-next-line require-jsdoc
 export default function SingleOscillatorWidget(graph) {
   this._id = singleOscillatorWidgetCount++;
   this._graph = graph;

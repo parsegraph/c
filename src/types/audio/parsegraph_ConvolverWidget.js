@@ -1,5 +1,10 @@
 // https://stackoverflow.com/questions/22525934/connecting-convolvernode-to-an-oscillatornode-with-the-web-audio-the-simple-wa
-function impulseResponse(audioContext, duration, decay, reverse) {
+// eslint-disable-next-line require-jsdoc
+export default function impulseResponse(
+    audioContext,
+    duration,
+    decay,
+    reverse) {
   const sampleRate = audioContext.sampleRate;
   const length = sampleRate * duration;
   const impulse = audioContext.createBuffer(2, length, sampleRate);
@@ -15,9 +20,10 @@ function impulseResponse(audioContext, duration, decay, reverse) {
   return impulse;
 }
 
-parsegraph_ConvolverWidget_COUNT = 0;
-function parsegraph_ConvolverWidget(graph) {
-  this._id = parsegraph_ConvolverWidget_COUNT++;
+convolverWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
+function ConvolverWidget(graph) {
+  this._id = convolverWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
 
@@ -33,7 +39,7 @@ function parsegraph_ConvolverWidget(graph) {
   // this.refresh();
 }
 
-parsegraph_ConvolverWidget.prototype.refresh = function() {
+ConvolverWidget.prototype.refresh = function() {
   const audio = this._graph.surface().audio();
   if (this._duration == 0 || this._decay == 0) {
     this._convolver.buffer = null;
@@ -47,11 +53,11 @@ parsegraph_ConvolverWidget.prototype.refresh = function() {
   }
 };
 
-parsegraph_ConvolverWidget.prototype.node = function() {
+ConvolverWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new parsegraph_Caret(parsegraph_BLOCK);
+  const car = new Caret(parsegraph_BLOCK);
   this._containerNode = car.root();
   car.label('Convolver');
 

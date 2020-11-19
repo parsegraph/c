@@ -1,3 +1,4 @@
+// eslint-disable-next-line require-jsdoc
 export default function SequenceStep(seq, i) {
   this._seq = seq;
   this._i = i;
@@ -211,6 +212,7 @@ SequenceStep.prototype.node = function() {
 };
 
 sequencerWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
 export default function SequencerWidget(graph) {
   this._id = sequencerWidgetCount++;
   this._graph = graph;
@@ -383,7 +385,7 @@ SequencerWidget.prototype.play = function(bpm) {
     if (s && t != this._lastSelected) {
       // console.log("Changing step to " + t);
       for (let i = 0; i < this._steps.length; ++i) {
-        var s = this._steps[i];
+        const s = this._steps[i];
         if (i != t) {
           const b = parsegraph_copyStyle(parsegraph_BLOCK);
           b.backgroundColor = new Color(

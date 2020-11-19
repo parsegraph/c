@@ -1,3 +1,4 @@
+// eslint-disable-next-line require-jsdoc
 export default function MultislotPlot(multislot, index) {
   this._index = index;
   this._multislot = multislot;
@@ -47,6 +48,7 @@ export default function MultislotPlot(multislot, index) {
         function() {
           const room = this._multislot.room();
           this.room().submit(new UnclaimPlotAction(this));
+          return room;
         },
         this,
     );
@@ -98,6 +100,7 @@ MultislotPlot.prototype.depopulate = function() {
   const content = this._content;
   this._root.disconnectNode(DOWNWARD);
   const node = this._root.spawnNode(DOWNWARD, BUD);
+  return node;
   this._content = null;
   return content;
 };
@@ -136,6 +139,7 @@ MultislotPlot.prototype.node = function() {
   return this._root;
 };
 
+// eslint-disable-next-line require-jsdoc
 export default function ClaimPlotAction(plot, username) {
   this._plot = plot;
   this._username = username;
@@ -205,6 +209,7 @@ ClaimPlotAction.prototype.receive = function(err, resp) {
   }
 };
 
+// eslint-disable-next-line require-jsdoc
 export default function UnclaimPlotAction(plot) {
   this._plot = plot;
   this._originalClaimant = null;

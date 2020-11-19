@@ -1,16 +1,11 @@
-/**
- * Creates a parsegraph that models the loaded JavaScript file.
- *
- * Requires Esprima.
- * @param {graph} graph
- */
+// eslint-disable-next-line require-jsdoc
 export default function JavaScriptWidget(graph) {
   this.graph = graph;
   this.caret = new Caret('b');
   this.caret.label('Program');
 }
 
-/**
+/*
  * Builds a child node in the given direcction. The caret is left at a position
  * where another child node could be spawned in that direction.
  *
@@ -334,7 +329,7 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
   }
 };
 
-/**
+/*
  * Builds each child node of a given AST node, creating the first bud in the
  * inDir, and then spawning each subsequent bud in the spawnDir direction.
  * If spawnDir === FORWARD, then the child graph will be downward
@@ -381,6 +376,7 @@ JavaScriptWidget.prototype.buildBody = function(
 
 JavaScriptWidget.prototype.load = function(url) {
   const that = this;
+  // eslint-disable-next-line require-jsdoc
   function buildTree() {
     if (!esprima) {
       throw new Error('Esprima must be included.');

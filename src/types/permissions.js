@@ -1,3 +1,4 @@
+// eslint-disable-next-line require-jsdoc
 export default function setListOwner(room, id, ownerName, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/changeowner', true);
@@ -24,6 +25,7 @@ export default function setListOwner(room, id, ownerName, cb, cbThisArg) {
   xhr.send('username=' + ownerName + '&world_session=' + room.sessionId());
 }
 
+// eslint-disable-next-line require-jsdoc
 export default function setListGroup(room, id, group, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/changegroup', true);
@@ -50,6 +52,7 @@ export default function setListGroup(room, id, group, cb, cbThisArg) {
   xhr.send('group=' + group + '&world_session=' + room.sessionId());
 }
 
+// eslint-disable-next-line require-jsdoc
 export default function setListPermissions(room, id, perms, cb, cbThisArg) {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/@' + room.roomId() + '/' + id + '/permissions', true);
@@ -77,6 +80,7 @@ export default function setListPermissions(room, id, perms, cb, cbThisArg) {
   xhr.send(JSON.stringify(perms));
 }
 
+// eslint-disable-next-line require-jsdoc
 export default function PermissionsForm(room, id) {
   this._room = room;
   this.id = id;

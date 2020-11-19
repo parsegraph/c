@@ -1,14 +1,15 @@
-const parsegraph_START_TIME = new Date();
+const START_TIME = new Date();
 
+// eslint-disable-next-line require-jsdoc
 export function timediffMs(a, b) {
   return b.getTime() - a.getTime();
 }
-
+// eslint-disable-next-line require-jsdoc
 export function elapsed(startTime, ct) {
   ct = ct || new Date();
   return ct.getTime() - startTime.getTime();
 }
-
+// eslint-disable-next-line require-jsdoc
 export function later(cb, cbThisArg) {
   let t = setTimeout(function() {
     cb.call(cbThisArg);
@@ -20,18 +21,18 @@ export function later(cb, cbThisArg) {
     }
   };
 }
-
+// eslint-disable-next-line require-jsdoc
 export function timeout(name, timeoutMs) {
   if (arguments.length === 1) {
     if (typeof arguments[0] === 'number') {
       name = null;
       timeoutMs = arguments[0];
     } else {
-      timeoutMs = parsegraph_TIMEOUT;
+      timeoutMs = TIMEOUT;
     }
   } else if (arguments.length === 0) {
     name = null;
-    timeoutMs = parsegraph_TIMEOUT;
+    timeoutMs = TIMEOUT;
   }
   const startTime = getTimeInMillis();
   return function() {
@@ -50,6 +51,7 @@ export function timeout(name, timeoutMs) {
   };
 }
 
+// eslint-disable-next-line require-jsdoc
 export function AnimationTimer() {
   this.timerId = null;
 
@@ -101,6 +103,7 @@ AnimationTimer.prototype.cancel = function() {
   this.timerId = null;
 };
 
+// eslint-disable-next-line require-jsdoc
 export function TimeoutTimer() {
   this.delay = 0;
 
@@ -157,6 +160,7 @@ TimeoutTimer.prototype.cancel = function() {
   }
 };
 
+// eslint-disable-next-line require-jsdoc
 export function IntervalTimer() {
   this.delay = 0;
 
@@ -173,16 +177,18 @@ export function IntervalTimer() {
   };
 }
 
-/**
+/*
  * Sets the delay, in milliseconds.
  */
+// eslint-disable-next-line require-jsdoc
 IntervalTimer.prototype.setDelay = function(ms) {
   this.delay = ms;
 };
 
-/**
+/*
  * Gets the delay, in milliseconds.
  */
+// eslint-disable-next-line require-jsdoc
 IntervalTimer.prototype.delay = function() {
   return this.delay;
 };

@@ -1,6 +1,7 @@
-parsegraph_OscillatorWidget_COUNT = 0;
-function parsegraph_OscillatorWidget(graph) {
-  this._id = parsegraph_OscillatorWidget_COUNT++;
+oscillatorWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
+export default function OscillatorWidget(graph) {
+  this._id = oscillatorWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._oscType = 'sine';
@@ -9,7 +10,7 @@ function parsegraph_OscillatorWidget(graph) {
   this._types = {};
 }
 
-parsegraph_OscillatorWidget.prototype.build = function(audio) {
+OscillatorWidget.prototype.build = function(audio) {
   const oscillator = audio.createOscillator();
   oscillator.frequency.setValueAtTime(this._oscFrequency, audio.currentTime);
   oscillator.type = this._oscType;
@@ -17,32 +18,32 @@ parsegraph_OscillatorWidget.prototype.build = function(audio) {
   return oscillator;
 };
 
-parsegraph_OscillatorWidget.prototype.setOscillatorType = function(oscType) {
+OscillatorWidget.prototype.setOscillatorType = function(oscType) {
   this._oscType = oscType;
 };
 
-parsegraph_OscillatorWidget.prototype.setOscillatorFrequency = function(
+OscillatorWidget.prototype.setOscillatorFrequency = function(
     value,
 ) {
   this._oscFrequency = value;
 };
 
-parsegraph_OscillatorWidget.prototype.setOscillatorDetune = function(value) {
+OscillatorWidget.prototype.setOscillatorDetune = function(value) {
   this._oscDetune = value;
 };
 
-parsegraph_OscillatorWidget.prototype.refreshTypes = function() {
+OscillatorWidget.prototype.refreshTypes = function() {
   updateUnsel();
   for (const type in this._types) {
     this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
   }
 };
 
-parsegraph_OscillatorWidget.prototype.node = function() {
+OscillatorWidget.prototype.node = function() {
   let FS = 500;
   const MAXFS = 3000;
   if (!this._containerNode) {
-    const car = new parsegraph_Caret(parsegraph_BLOCK);
+    const car = new Caret(parsegraph_BLOCK);
     this._containerNode = car.root();
     car.label('Oscillator');
     // car.fitExact();
@@ -90,7 +91,7 @@ parsegraph_OscillatorWidget.prototype.node = function() {
       freqSlider.setValue(FS > 0 ? this._oscFrequency / FS : 0);
     }, this);
     car.pull('d');
-    var freqSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    const freqSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
     freqSlider.setValue(this._oscFrequency / FS);
     car.onChange(function() {
       this.setOscillatorFrequency(freqSlider.value() * FS);

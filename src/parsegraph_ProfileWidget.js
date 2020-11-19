@@ -1,4 +1,5 @@
-function parsegraph_getUserProfile(username, listener, listenerThisArg) {
+// eslint-disable-next-line require-jsdoc
+export default function getUserProfile(username, listener, listenerThisArg) {
   if (!listener) {
     throw new Error('Refusing to fire without a non-null listener');
   }
@@ -32,8 +33,8 @@ function parsegraph_getUserProfile(username, listener, listenerThisArg) {
 
   return xhr;
 }
-
-function parsegraph_setUserProfile(
+// eslint-disable-next-line require-jsdoc
+export default function setUserProfile(
     username,
     profile,
     listener,
@@ -66,36 +67,36 @@ function parsegraph_setUserProfile(
 
   return xhr;
 }
-
-function parsegraph_ProfileWidget(graph) {
+// eslint-disable-next-line require-jsdoc
+export default function ProfileWidget(graph) {
   this._graph = graph;
 
   this._listener = null;
   this._listenerThisArg = null;
 
-  this._saveTimer = new parsegraph_TimeoutTimer();
+  this._saveTimer = new TimeoutTimer();
   this._saveTimer.setDelay(0);
   this._saveTimer.setListener(this.onSave, this);
 
   this._containerNode = null;
 }
 
-parsegraph_ProfileWidget.prototype.node = function() {
+ProfileWidget.prototype.node = function() {
   if (!this._containerNode) {
-    this._containerNode = new parsegraph_Node(parsegraph_SLOT);
+    this._containerNode = new Node(parsegraph_SLOT);
   }
   return this._containerNode;
 };
 
-parsegraph_ProfileWidget.prototype.load = function(username) {
+ProfileWidget.prototype.load = function(username) {
   return parsegraph_getUserProfile(username, this.onLoad, this);
 };
 
-parsegraph_ProfileWidget.prototype.save = function() {
+ProfileWidget.prototype.save = function() {
   this._saveTimer.schedule();
 };
 
-parsegraph_ProfileWidget.prototype.onSave = function() {
+ProfileWidget.prototype.onSave = function() {
   if (this._saving) {
     return;
   }
@@ -103,11 +104,11 @@ parsegraph_ProfileWidget.prototype.onSave = function() {
   this._saving = parsegraph_setUserProfile(null, profile, this.onSaved, this);
 };
 
-parsegraph_ProfileWidget.prototype.onSaved = function(res, response) {
+ProfileWidget.prototype.onSaved = function(res, response) {
   this._saving = null;
 };
 
-parsegraph_ProfileWidget.prototype.setLoadListener = function(
+ProfileWidget.prototype.setLoadListener = function(
     listener,
     listenerThisArg,
 ) {
@@ -118,7 +119,7 @@ parsegraph_ProfileWidget.prototype.setLoadListener = function(
   this._listenerThisArg = listenerThisArg;
 };
 
-parsegraph_ProfileWidget.prototype.onLoad = function(success, response) {
+ProfileWidget.prototype.onLoad = function(success, response) {
   if (!success) {
     return;
   }

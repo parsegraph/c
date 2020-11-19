@@ -1,5 +1,6 @@
 const listClasses = {};
 
+// eslint-disable-next-line require-jsdoc
 export default function Room(belt, world, roomId) {
   this._belt = belt;
   this._world = world;
@@ -285,16 +286,16 @@ Room.prototype.unregister = function(id) {
 Room.prototype.onItemEvent = function(id, event) {
   const listeners = this._itemListeners[id];
   if (listeners) {
-    // console.log("Listeners for item: " + id);
+    // console.log("Liswteners for item: " + id);
+    // eslint-disable-next-line guard-for-in
     for (const i in listeners) {
       const cb = listeners[i];
       cb[0].call(cb[1], event);
-    }
-    if (event.event === 'destroyListItem') {
+    } if (event.event === 'destroyListItem') {
       this.unregister(id);
+    } else {
+      console.log('No listeners for item: ' + id);
     }
-  } else {
-    // console.log("No listeners for item: " + id);
   }
 };
 
@@ -474,6 +475,7 @@ Room.prototype.request = function(reqBody, cb, cbThisArg) {
   xhr.send(JSON.stringify(reqBody));
 };
 
+// eslint-disable-next-line require-jsdoc
 export default function OfflineRoom(room) {
   if (!room) {
     throw new Error('Room must be provided');
@@ -512,6 +514,7 @@ OfflineRoom.prototype.start = function() {
   });
 };
 
+// eslint-disable-next-line require-jsdoc
 export default function testRoom(out, belt, world) {
   const window = new Window();
   belt.addWindow(window);
@@ -548,6 +551,7 @@ roomTests.addTest('Room', function(out) {
   if (!multislot) {
     throw new Error('Multislot must be spawned');
   }
-
-  testRoom(out, belt, world);
+  (testRoom(out, belt, world));
 });
+
+

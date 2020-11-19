@@ -1,6 +1,7 @@
-parsegraph_8BitWidget_COUNT = 0;
-function parsegraph_8BitWidget(graph) {
-  this._id = parsegraph_8BitWidget_COUNT++;
+parsegraph8BitWidgetCount = 0;
+// eslint-disable-next-line require-jsdoc
+export default function parsegraph8BitWidget(graph) {
+  this._id = parsegraph8BitWidgetCount++;
   this._graph = graph;
   this._containerNode = null;
   this._listeners = [];
@@ -10,7 +11,7 @@ function parsegraph_8BitWidget(graph) {
   this._ditherSlider = null;
 }
 
-parsegraph_8BitWidget.prototype.audioNode = function() {
+parsegraph8BitWidget.prototype.audioNode = function() {
   if (!this._audioNode) {
     const audio = this._graph.surface().audio();
     this._audioNode = audio.createScriptProcessor(4096, 1, 1);
@@ -34,7 +35,8 @@ parsegraph_8BitWidget.prototype.audioNode = function() {
         // Loop through the 4096 samples
         for (let sample = 0; sample < inputBuffer.length; sample++) {
           if (that._active) {
-            // console.log(((inputData[sample]*0xffffFFFF) & (-1 << 24))/0xffffFFFF);
+            // console.log(((inputData[sample]*0xffffFFFF) &
+            // (-1 << 24))/0xffffFFFF);
             outputData[sample] =
               ((inputData[sample] * 0xffffffff) & (-1 << 30)) / 0xffffffff;
             outputData[sample] =
@@ -50,11 +52,11 @@ parsegraph_8BitWidget.prototype.audioNode = function() {
   return this._audioNode;
 };
 
-parsegraph_8BitWidget.prototype.node = function() {
+parsegraph8BitWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new parsegraph_Caret(parsegraph_SLOT);
+  const car = new Caret(parsegraph_SLOT);
   this._containerNode = car.root();
   car.label('8Bit');
   car.fitExact();

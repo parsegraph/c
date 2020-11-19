@@ -1,13 +1,14 @@
-function parsegraph_EnvelopeGeneratorWidget(graph) {
+// eslint-disable-next-line require-jsdoc
+export default function EnvelopeGeneratorWidget(graph) {
   this._graph = graph;
 }
 
-parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
+EnvelopeGeneratorWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
 
-  this._containerNode = new parsegraph_Node(parsegraph_BLOCK);
+  this._containerNode = new Node(parsegraph_BLOCK);
   const ga = this._graph.glyphAtlas();
 
   let prior = this._containerNode;
@@ -20,7 +21,7 @@ parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
   );
   attackLabel.setLabel('Attack', ga);
   attackLabel.setScale(0.5);
-  var stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._attackSlider = stepSlider;
   this._attackSlider.setValue(Math.random());
@@ -32,7 +33,7 @@ parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
   const decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
   decayLabel.setLabel('Decay', ga);
   decayLabel.setScale(0.5);
-  var stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._decaySlider = stepSlider;
   this._decaySlider.setValue(Math.random());
@@ -52,7 +53,7 @@ parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
       parsegraph_BUD,
   );
   sustainSliders.setScale(0.5);
-  var stepSlider = sustainSliders.spawnNode(
+  let stepSlider = sustainSliders.spawnNode(
       parsegraph_FORWARD,
       parsegraph_SLIDER,
   );
@@ -76,7 +77,7 @@ parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
   );
   releaseLabel.setLabel('Release', ga);
   releaseLabel.setScale(0.5);
-  var stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
   stepSlider.setScale(0.5);
   this._releaseSlider = stepSlider;
   this._releaseSlider.setValue(Math.random());
@@ -86,7 +87,7 @@ parsegraph_EnvelopeGeneratorWidget.prototype.node = function() {
   return this._containerNode;
 };
 
-parsegraph_EnvelopeGeneratorWidget.prototype.playNote = function(
+EnvelopeGeneratorWidget.prototype.playNote = function(
     osc,
     gain,
     start,
