@@ -211,8 +211,10 @@ PermissionsForm.prototype.refresh = function(...args) {
     this.ownerForm.action = '/@' + roomId + '/' + this.id + '/changeowner';
   }
   for (const n in this.perms) {
-    this.perms[n].enabled = false;
-    this.perms[n].checked = false;
+    if (Object.prototype.hasOwnProperty.call(this.perms, n)) {
+      this.perms[n].enabled = false;
+      this.perms[n].checked = false;
+    }
   }
 
   const xhr = new XMLHttpRequest();
@@ -235,7 +237,9 @@ PermissionsForm.prototype.refresh = function(...args) {
       const resp = JSON.parse(xhr.responseText);
       if (xhr.status === 200 && resp.result === true) {
         for (const n in this.perms) {
-          this.perms[n].enabled = true;
+          if (Object.prototype.hasOwnProperty.call(this.perms, n)) {
+            this.perms[n].enabled = true;
+          }
         }
         perms.user_access.checked = resp.user_access;
         perms.user_change.checked = resp.user_change;
