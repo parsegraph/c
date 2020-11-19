@@ -1,6 +1,9 @@
-import {countGLBufferBytes} from './gl';
+// import {countGLBufferBytes} from './gl';
 // eslint-disable-next-line require-jsdoc
-export default function _BufferPage(pagingBuffer, renderFunc, renderFuncThisArg) {
+export default function BufferPage(
+    pagingBuffer,
+    renderFunc,
+    renderFuncThisArg) {
   if (!renderFuncThisArg) {
     renderFuncThisArg = this;
   }
@@ -24,7 +27,7 @@ export default function _BufferPage(pagingBuffer, renderFunc, renderFuncThisArg)
   }, this);
 }
 
-parsegraph_BufferPage.prototype.isEmpty = function() {
+BufferPage.prototype.isEmpty = function() {
   if (this.buffers.length === 0) {
     return true;
   }
@@ -44,7 +47,8 @@ parsegraph_BufferPage.prototype.isEmpty = function() {
  * Adds each of the specified values to the working buffer. If the value is an
  * array, each of its internal values are added.
  */
-parsegraph_BufferPage.prototype.appendData = function(
+// eslint-disable-next-line require-jsdoc
+BufferPage.prototype.appendData = function(
     attribIndex, /* , ... */
 ) {
   // Ensure attribIndex points to a valid attribute.
@@ -59,7 +63,7 @@ parsegraph_BufferPage.prototype.appendData = function(
    * Adds the specified value to the current vertex attribute buffer.
    */
   const pagingBuffer = this;
-  var appendValue = function(value) {
+  const appendValue = function(value) {
     let numAdded = 0;
     if (typeof value.forEach == 'function') {
       value.forEach(function(x) {
@@ -84,20 +88,20 @@ parsegraph_BufferPage.prototype.appendData = function(
 
   // Add each argument individually.
   let cumulativeAdded = 0;
-  for (let i = 1; i < arguments.length; ++i) {
-    cumulativeAdded += appendValue.call(this, arguments[i]);
+  for (let i = 1; i < args.length; ++i) {
+    cumulativeAdded += appendValue.call(this, args[i]);
   }
   return cumulativeAdded;
 };
 
-parsegraph_BufferPage.prototype.appendRGB = function(attribIndex, color) {
+BufferPage.prototype.appendRGB = function(attribIndex, color) {
   if (typeof color.r == 'function') {
     return this.appendData(attribIndex, color.r(), color.g(), color.b());
   }
   return this.appendData(attribIndex, color.r, color.g, color.b);
 };
 
-parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color) {
+BufferPage.prototype.appendRGBA = function(attribIndex, color) {
   if (typeof color.r == 'function') {
     return this.appendData(
         attribIndex,
@@ -114,7 +118,8 @@ parsegraph_BufferPage.prototype.appendRGBA = function(attribIndex, color) {
  * Manages the low-level paging of vertex attributes. For
  * demonstrations of use, see any painter class.
  */
-export default function parsegraph_PagingBuffer(gl, program) {
+// eslint-disable-next-line require-jsdoc
+export default function PagingBuffer(gl, program) {
   // Contains vertex attribute information used for drawing. Provide using
   // defineAttrib.
   this._attribs = [];
@@ -126,12 +131,12 @@ export default function parsegraph_PagingBuffer(gl, program) {
   this._gl = gl;
   this._program = program;
 }
-
-export function parsegraph_createPagingBuffer(gl, program) {
-  return new parsegraph_PagingBuffer(gl, program);
+// eslint-disable-next-line require-jsdoc
+export function createPagingBuffer(gl, program) {
+  return new PagingBuffer(gl, program);
 }
 
-parsegraph_PagingBuffer.prototype.isEmpty = function() {
+PagingBuffer.prototype.isEmpty = function() {
   // Check each page's buffer, failing early if possible.
   if (this._pages.length === 0) {
     return true;
@@ -144,7 +149,7 @@ parsegraph_PagingBuffer.prototype.isEmpty = function() {
   return false;
 };
 
-parsegraph_PagingBuffer.prototype.addPage = function(
+PagingBuffer.prototype.addPage = function(
     renderFunc,
     renderFuncThisArg,
 ) {
@@ -156,7 +161,7 @@ parsegraph_PagingBuffer.prototype.addPage = function(
   }
 
   // Create a new page.
-  const page = new parsegraph_BufferPage(this, renderFunc, renderFuncThisArg);
+  const page = new BufferPage(this, renderFunc, renderFuncThisArg);
 
   // Add the page.
   this._pages.push(page);
@@ -177,10 +182,12 @@ parsegraph_PagingBuffer.prototype.getWorkingPage = function() {
  * Defines an attribute for data entry.
  *
  * name - the attribute name in this paging buffer's GL program
- * numComponents - the number of components in the named attribute type (1, 2, 3, or 4)
- * drawMode - the WebGL draw mode. Defaults to gl.STATIC_DRAW
+ * numComponents - the number of components in the named attribute
+ * type (1, 2, 3, or 4) drawMode - the WebGL draw mode.
+ * Defaults to gl.STATIC_DRAW
  */
-parsegraph_PagingBuffer.prototype.defineAttrib = function(
+// eslint-disable-next-line require-jsdoc
+PagingBuffer.prototype.defineAttrib = function(
     name,
     numComponents,
     drawMode,
@@ -207,19 +214,19 @@ parsegraph_PagingBuffer.prototype.defineAttrib = function(
   return this._attribs.length - 1;
 };
 
-parsegraph_PagingBuffer.prototype.appendRGB = function(/**/) {
+PagingBuffer.prototype.appendRGB = function(/**/) {
   const page = this.getWorkingPage();
-  return page.appendRGB.apply(page, arguments);
+  return page.appendRGB.apply(page, ...args);
 };
 
-parsegraph_PagingBuffer.prototype.appendRGBA = function(/**/) {
+PagingBuffer.prototype.appendRGBA = function(/**/) {
   const page = this.getWorkingPage();
-  return page.appendRGBA.apply(page, arguments);
+  return page.appendRGBA.apply(page, ...args);
 };
 
-parsegraph_PagingBuffer.prototype.appendData = function(/**/) {
+PagingBuffer.prototype.appendData = function(/**/) {
   const page = this.getWorkingPage();
-  return page.appendData.apply(page, arguments);
+  return page.appendData.apply(page, ...args);
 };
 
 /**
@@ -241,14 +248,15 @@ parsegraph_PagingBuffer.prototype.clear = function() {
 };
 
 /**
- * Render each page. This function sets up vertex attribute buffers and calls drawArrays
- * for each page.
+ * Render each page. This function sets up vertex attribute
+ * buffers and calls drawArrays for each page.
  *
  * gl.drawArrays(gl.TRIANGLES, 0, numVertices)
  *
- * where numVertices is calculated from the appended data size / component count. The least-filled
- * buffer is used for the size, if the sizes differ.
+ * where numVertices is calculated from the appended data size / component
+ * count. The least-filled buffer is used for the size, if the sizes differ.
  */
+// eslint-disable-next-line require-jsdoc
 parsegraph_PagingBuffer.prototype.renderPages = function() {
   let count = 0;
 
