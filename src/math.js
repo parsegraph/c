@@ -1,9 +1,10 @@
-const getNumberParts_FARRAY = new Float64Array(1);
-const getNumberParts_UARRAY = new Uint8Array(getNumberParts_FARRAY.buffer);
+const getNumberPartsFArray = new Float64Array(1);
+const getNumberPartsUArray = new Uint8Array(getNumberParts_FARRAY.buffer);
 // http://stackoverflow.com/questions/9383593/extracting-the-exponent-and-mantissa-of-a-javascript-number
+// eslint-disable-next-line require-jsdoc
 export function getNumberParts(x) {
-  const float = getNumberParts_FARRAY;
-  const bytes = getNumberParts_UARRAY;
+  const float = getNumberPartsFArray;
+  const bytes = getNumberPartsUArray;
   float[0] = x;
 
   const sign = bytes[7] >> 7;
@@ -16,8 +17,8 @@ export function getNumberParts(x) {
     mantissa: float[0],
   };
 }
-
-export function parsegraph_fuzzyEquals(a, b, fuzziness) {
+// eslint-disable-next-line require-jsdoc
+export function fuzzyEquals(a, b, fuzziness) {
   if (!fuzziness) {
     return (isNaN(a) && isNaN(b)) || a === b;
   }

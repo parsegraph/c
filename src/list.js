@@ -1,4 +1,5 @@
-function viewList(itemCreator) {
+// eslint-disable-next-line require-jsdoc
+export default function viewList(itemCreator) {
   const listView = document.createElement('div');
 
   listView.appendChild(itemCreator());

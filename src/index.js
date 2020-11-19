@@ -1,4 +1,4 @@
-import parsegraph_TestSuite, {parsegraph_AllTests} from './TestSuite';
+import TestSuite, {AllTests} from './TestSuite';
 import Rect from './graph/Rect';
 import Node, {
   Direction,
@@ -10,7 +10,7 @@ import Node, {
   labeledBud,
   labeledSlot,
 } from './graph/Node';
-import parsegraph_showGraph from './graph/showGraph';
+import showGraph from './graph/showGraph';
 import {addEventMethod} from './event';
 import Viewport from './graph/Viewport';
 import Window from './graph/Window';
@@ -21,9 +21,9 @@ import buildTextDemo from './apps/text';
 import PrimesWidget from './apps/primes';
 import MemoryPiers from './apps/piers';
 import {elapsed, AnimationTimer, TimeoutTimer, IntervalTimer} from './timing';
-import parsegraph_Unicode, {
-  parsegraph_defaultUnicode,
-  parsegraph_setDefaultUnicode,
+import Unicode, {
+  defaultUnicode,
+  setDefaultUnicode,
 } from './unicode';
 import {CREASE} from './graph/settings';
 
@@ -48,11 +48,11 @@ export {
   AnimationTimer,
   TimeoutTimer,
   IntervalTimer,
-  parsegraph_TestSuite,
-  parsegraph_AllTests,
+  TestSuite,
+  AllTests,
   Node,
   Rect,
-  parsegraph_showGraph,
+  showGraph,
   Type,
   Direction,
   Axis,
@@ -66,9 +66,9 @@ export {
   buildTextDemo,
   Caret,
   PrimesWidget,
-  parsegraph_Unicode,
-  parsegraph_defaultUnicode,
-  parsegraph_setDefaultUnicode,
+  Unicode,
+  defaultUnicode,
+  setDefaultUnicode,
   MemoryPiers,
   labeledBlock,
   labeledSlot,

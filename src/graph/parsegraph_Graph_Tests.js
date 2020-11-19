@@ -1,28 +1,28 @@
-parsegraph_Node_Tests = new parsegraph_TestSuite('parsegraph_Node');
+nodeTests = new TestSuite('parsegraph_Node');
 
-parsegraph_Node_Tests.addTest('parsegraph_Node.setClickListener', function() {
-  const n = new parsegraph_Node(parsegraph_BLOCK);
+nodeTests.addTest('parsegraph_Node.setClickListener', function() {
+  const n = new Node(parsegraph_BLOCK);
   n.setClickListener(function() {});
 });
 
-parsegraph_Node_Tests.addTest('parsegraph_Node.setKeyListener', function() {
-  const n = new parsegraph_Node(parsegraph_BLOCK);
+nodeTests.addTest('parsegraph_Node.setKeyListener', function() {
+  const n = new Node(parsegraph_BLOCK);
   n.setKeyListener(function() {});
 });
 
-parsegraph_Viewport_Tests.addTest('parsegraph_Viewport', function() {
-  let caret = new parsegraph_Caret(parsegraph_SLOT);
-  if (caret.node().type() !== parsegraph_SLOT) {
+viewport_Tests.addTest('parsegraph_Viewport', function() {
+  let caret = new Caret(SLOT);
+  if (caret.node().type() !== SLOT) {
     return 'Graph must use the provided type for its root.';
   }
-  caret = new parsegraph_Caret(parsegraph_BUD);
-  if (caret.node().type() !== parsegraph_BUD) {
+  caret = new Caret(BUD);
+  if (caret.node().type() !== BUD) {
     return 'Graph must use the provided type for its root.';
   }
 });
 
-parsegraph_Viewport_Tests.addTest('parsegraph_Viewport.spawn', function() {
-  const caret = new parsegraph_Caret('b');
+viewport_Tests.addTest('parsegraph_Viewport.spawn', function() {
+  const caret = new Caret('b');
   if (
     caret.has(parsegraph_FORWARD) ||
     caret.has(parsegraph_BACKWARD) ||
@@ -55,12 +55,12 @@ parsegraph_Viewport_Tests.addTest('parsegraph_Viewport.spawn', function() {
   }
 });
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Trivial layout',
     function() {
     // Spawn the graph.
     // console.log("TRIV");
-      const caret = new parsegraph_Caret('b');
+      const caret = new Caret('b');
       caret.node().commitLayoutIteratively();
 
       // Run the comparison tests.
@@ -123,12 +123,12 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with forward bud',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(parsegraph_FORWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run the comparison tests.
@@ -182,11 +182,11 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - PaintGroup sanity',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(parsegraph_BUD);
 
       const node = caret.node();
       if (node._paintGroupNext !== node) {
@@ -203,16 +203,16 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with forward creased bud',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
-      const creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BUD);
+      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
       caret.crease();
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-      // caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
+      // caret.spawnMove(parsegraph_FORWARD, BUD);
       caret.moveToRoot();
       if (creased._layoutNext !== grandchild) {
         throw new Error(
@@ -248,11 +248,20 @@ parsegraph_Viewport_Tests.addTest(
       }
       caret.node().commitLayoutIteratively();
     // console.log("Group X of root: " + caret.node().groupX());
-    // console.log("Group X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).groupX());
-    // console.log("Abs X of forward: " + caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
-    // console.log("Abs X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
-    // console.log("Group X of forward forward: " + caret.node().nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
-    // console.log(caret.node().nodeAt(parsegraph_DOWNWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    // console.log("Group X of forward: " +
+    //   caret.node().nodeAt(parsegraph_FORWARD).groupX());
+    // console.log("Abs X of forward: " +
+    //   caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
+    // console.log("Abs X of forward forward: " +
+    //   caret.node().nodeAt(
+    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
+    // console.log("Group X of forward forward: " +
+    //   caret.node().nodeAt(
+    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    // console.log(caret.node().nodeAt(
+    //   parsegraph_DOWNWARD).nodeAt(
+    //   parsegraph_FORWARD).nodeAt(
+    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
     },
 );
 
@@ -260,12 +269,12 @@ parsegraph_Viewport_Tests.addTest(
     'parsegraph_Viewport - Block with forward creased bud, uncreased',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
       const root = caret.root();
-      const creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
       caret.crease();
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
       creased.setPaintGroup(false);
       if (creased._paintGroupPrev !== creased) {
         throw new Error('Creased\'s previous paint group must be reset');
@@ -282,15 +291,15 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with forward creased bud, removed',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
       const root = caret.root();
-      const creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
       creased.disconnectNode();
       if (creased._paintGroupPrev !== creased) {
         throw new Error('Creased\'s previous paint group must be reset');
@@ -307,12 +316,12 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with backward bud',
     function() {
     // Spawn the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_BACKWARD, BUD);
       caret.node().commitLayoutIteratively();
       caret.moveToRoot();
 
@@ -375,10 +384,10 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest('nodeAt returns parent', function() {
+viewport_Tests.addTest('nodeAt returns parent', function() {
   // Build the graph.
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
-  caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+  const caret = new Caret(parsegraph_BLOCK);
+  caret.spawn(parsegraph_DOWNWARD, BUD);
   caret.move('d');
   if (caret.node().nodeAt(parsegraph_UPWARD) === null) {
     throw new Error('nodeAt must return parent if possible');
@@ -388,11 +397,11 @@ parsegraph_Viewport_Tests.addTest('nodeAt returns parent', function() {
   caret.moveToRoot();
 });
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'Multiple crease still creates valid paint group chain',
     function() {
     // console.log("Multiple crease");
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
       caret.node()._id = 'Multiple crease root';
       const first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
       first._id = 'first';
@@ -430,18 +439,18 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest('Fancy crease', function() {
+viewport_Tests.addTest('Fancy crease', function() {
   // Build the graph.
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+  const caret = new Caret(parsegraph_BLOCK);
   caret.node()._id = 'root';
-  const first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+  const first = caret.spawnMove(parsegraph_DOWNWARD, BUD);
   first._id = 'first';
-  const second = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+  const second = caret.spawnMove(parsegraph_DOWNWARD, BUD);
   caret.push();
   second._id = 'second';
-  const third = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+  const third = caret.spawnMove(parsegraph_DOWNWARD, BUD);
   third._id = 'third';
-  const fourth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+  const fourth = caret.spawnMove(parsegraph_DOWNWARD, BUD);
   fourth._id = 'fourth';
   caret.pop();
   let n = caret.node();
@@ -459,12 +468,12 @@ parsegraph_Viewport_Tests.addTest('Fancy crease', function() {
   // console.log(parsegraph_dumpPaintGroups(caret.root()));
 });
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with downward bud',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
       caret.moveToRoot();
 
@@ -519,11 +528,11 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Bud with downward block',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
       caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
@@ -579,20 +588,20 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Bud with vertical blocks, two deep',
     function(dom) {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
 
       const depth = 2;
       caret.push();
-      for (var i = 0; i < depth; ++i) {
+      for (let i = 0; i < depth; ++i) {
         caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
       }
       caret.pop();
       caret.push();
-      for (var i = 0; i < depth; ++i) {
+      for (let i = 0; i < depth; ++i) {
         caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
       }
       caret.pop();
@@ -669,12 +678,12 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with upward bud',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_UPWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -737,14 +746,14 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with upward and downward buds',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
+      const caret = new Caret(parsegraph_BLOCK);
 
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      caret.spawn(parsegraph_UPWARD, BUD);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -807,13 +816,13 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with forward and backward buds',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_FORWARD, BUD);
+      caret.spawn(parsegraph_BACKWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -876,14 +885,14 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Double Axis Sans Backward T layout',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_FORWARD, BUD);
+      caret.spawn(parsegraph_UPWARD, BUD);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -892,14 +901,16 @@ parsegraph_Viewport_Tests.addTest(
         caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
       caret.node().extentOffsetAt(parsegraph_FORWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       if (
         caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-      caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(parsegraph_DOWNWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       const expect = function(expected, actual) {
@@ -960,13 +971,13 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Positive Direction Layout',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_UPWARD, BUD);
+      caret.spawn(parsegraph_FORWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run the tests.
@@ -974,14 +985,16 @@ parsegraph_Viewport_Tests.addTest(
         caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
       caret.node().extentOffsetAt(parsegraph_FORWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       if (
         caret.node().extentOffsetAt(parsegraph_UPWARD) !=
       caret.node().extentOffsetAt(parsegraph_DOWNWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       const expect = function(expected, actual) {
@@ -1042,13 +1055,13 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Negative Direction Layout',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_BACKWARD, BUD);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
@@ -1056,14 +1069,16 @@ parsegraph_Viewport_Tests.addTest(
         caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
       caret.node().extentOffsetAt(parsegraph_FORWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       if (
         caret.node().extentOffsetAt(parsegraph_UPWARD) !=
       caret.node().extentOffsetAt(parsegraph_DOWNWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       const expect = function(expected, actual) {
@@ -1124,15 +1139,15 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Double Axis layout',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_FORWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_BACKWARD, BUD);
+      caret.spawn(parsegraph_FORWARD, BUD);
+      caret.spawn(parsegraph_UPWARD, BUD);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
@@ -1140,14 +1155,16 @@ parsegraph_Viewport_Tests.addTest(
         caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
       caret.node().extentOffsetAt(parsegraph_FORWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       if (
         caret.node().extentOffsetAt(parsegraph_UPWARD) !=
       caret.node().extentOffsetAt(parsegraph_DOWNWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       const expect = function(expected, actual) {
@@ -1216,13 +1233,13 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Block with shrunk bud',
     function(resultDom) {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
+      const caret = new Caret(parsegraph_BLOCK);
       caret.fitExact();
-      caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      caret.spawnMove(parsegraph_FORWARD, BUD);
       caret.shrink();
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
@@ -1232,9 +1249,9 @@ parsegraph_Viewport_Tests.addTest(
       parsegraph_style('b').minWidth / 2 +
       parsegraph_style('b').horizontalPadding +
       parsegraph_style('b').borderThickness +
-      parsegraph_SHRINK_SCALE *
+      SHRINK_SCALE *
         caret.node().horizontalSeparation(parsegraph_FORWARD) +
-      parsegraph_SHRINK_SCALE *
+      SHRINK_SCALE *
         (parsegraph_style('bu').horizontalPadding +
           parsegraph_style('bu').borderThickness +
           parsegraph_style('bu').minWidth / 2);
@@ -1255,23 +1272,23 @@ parsegraph_Viewport_Tests.addTest(
         return diff;
       };
 
-      const downwardExtent = new parsegraph_Extent();
+      const downwardExtent = new Extent();
       downwardExtent.appendLS(
           parsegraph_style('b').minWidth +
         parsegraph_style('b').borderThickness * 2 +
         parsegraph_style('b').horizontalPadding * 2 +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           caret.node().horizontalSeparation(parsegraph_FORWARD),
           parsegraph_style('b').verticalPadding +
         parsegraph_style('b').borderThickness +
         parsegraph_style('b').minHeight / 2,
       );
       downwardExtent.appendLS(
-          parsegraph_SHRINK_SCALE *
+          SHRINK_SCALE *
         (2 * parsegraph_style('bu').horizontalPadding +
           2 * parsegraph_style('bu').borderThickness +
           parsegraph_style('bu').minWidth),
-          parsegraph_SHRINK_SCALE *
+          SHRINK_SCALE *
         (parsegraph_style('bu').horizontalPadding +
           parsegraph_style('bu').borderThickness +
           parsegraph_style('bu').minWidth / 2),
@@ -1291,7 +1308,8 @@ parsegraph_Viewport_Tests.addTest(
         );
         resultDom.appendChild(
             document.createTextNode(
-                'Extent offset = ' + caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+                'Extent offset = ' +
+                  caret.node().extentOffsetAt(parsegraph_DOWNWARD),
             ),
         );
         return 'Downward extent differs.';
@@ -1307,24 +1325,24 @@ parsegraph_Viewport_Tests.addTest(
       parsegraph_style('bu').borderThickness * 2 +
       parsegraph_style('bu').verticalPadding * 2;
 
-      const forwardExtent = new parsegraph_Extent();
+      const forwardExtent = new Extent();
       forwardExtent.appendLS(
-          blockHeight / 2 - (parsegraph_SHRINK_SCALE * budHeight) / 2,
+          blockHeight / 2 - (SHRINK_SCALE * budHeight) / 2,
           parsegraph_style('b').minWidth / 2 +
         parsegraph_style('b').horizontalPadding +
         parsegraph_style('b').borderThickness,
       );
       forwardExtent.appendLS(
-          parsegraph_SHRINK_SCALE * budHeight,
+          SHRINK_SCALE * budHeight,
           parsegraph_style('b').minWidth / 2 +
         parsegraph_style('b').horizontalPadding +
         parsegraph_style('b').borderThickness +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           caret.node().horizontalSeparation(parsegraph_FORWARD) +
-        parsegraph_SHRINK_SCALE * budHeight,
+        SHRINK_SCALE * budHeight,
       );
       forwardExtent.appendLS(
-          blockHeight / 2 - (parsegraph_SHRINK_SCALE * budHeight) / 2,
+          blockHeight / 2 - (SHRINK_SCALE * budHeight) / 2,
           parsegraph_style('b').minWidth / 2 +
         parsegraph_style('b').horizontalPadding +
         parsegraph_style('b').borderThickness,
@@ -1342,7 +1360,8 @@ parsegraph_Viewport_Tests.addTest(
         );
         resultDom.appendChild(
             document.createTextNode(
-                'Extent offset = ' + caret.node().extentOffsetAt(parsegraph_FORWARD),
+                'Extent offset = ' +
+                  caret.node().extentOffsetAt(parsegraph_FORWARD),
             ),
         );
         return 'Forward extent differs.';
@@ -1350,41 +1369,41 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Bud with 2-deep shrunk downward block',
     function(resultDom) {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
       caret.fitExact();
-      caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+      caret.spawnMove(parsegraph_DOWNWARD, BUD);
       caret.shrink();
       caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
-      const downwardExtent = new parsegraph_Extent();
+      const downwardExtent = new Extent();
       downwardExtent.appendLS(
-          parsegraph_SHRINK_SCALE *
+          SHRINK_SCALE *
         (parsegraph_style('b').minWidth +
           parsegraph_style('b').borderThickness * 2 +
           parsegraph_style('b').horizontalPadding * 2),
           parsegraph_style('bu').verticalPadding +
         parsegraph_style('bu').borderThickness +
         parsegraph_style('bu').minHeight / 2 +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           caret.node().verticalSeparation(parsegraph_DOWNWARD) +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           2 *
           (parsegraph_style('bu').verticalPadding +
             parsegraph_style('bu').borderThickness +
             parsegraph_style('bu').minHeight / 2) +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           caret
               .node()
               .nodeAt(parsegraph_DOWNWARD)
               .verticalSeparation(parsegraph_DOWNWARD) +
-        parsegraph_SHRINK_SCALE *
+        SHRINK_SCALE *
           (parsegraph_style('b').minHeight +
             parsegraph_style('b').verticalPadding * 2 +
             parsegraph_style('b').borderThickness * 2),
@@ -1404,14 +1423,14 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'parsegraph_Viewport - Double Axis Sans Forward T layout',
     function() {
     // Build the graph.
-      const caret = new parsegraph_Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_UPWARD, parsegraph_BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BUD);
+      const caret = new Caret(parsegraph_BLOCK);
+      caret.spawn(parsegraph_BACKWARD, BUD);
+      caret.spawn(parsegraph_UPWARD, BUD);
+      caret.spawn(parsegraph_DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -1420,14 +1439,16 @@ parsegraph_Viewport_Tests.addTest(
         caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
       caret.node().extentOffsetAt(parsegraph_FORWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       if (
         caret.node().extentOffsetAt(parsegraph_UPWARD) !=
       caret.node().extentOffsetAt(parsegraph_DOWNWARD)
       ) {
-        return 'Graphs symmetric about the root should have symmetric extent offsets.';
+        return 'Graphs symmetric about the root should' +
+               ' have symmetric extent offsets.';
       }
 
       const expect = function(expected, actual) {
@@ -1516,9 +1537,9 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest('Creased forward buds', function() {
+viewport_Tests.addTest('Creased forward buds', function() {
   // console.log("Creased forward buds");
-  const car = new parsegraph_Caret('b');
+  const car = new Caret('b');
   const root = car.root();
   root._id = 'root';
   const bnode = car.spawnMove('f', 'u');
@@ -1542,7 +1563,8 @@ parsegraph_Viewport_Tests.addTest('Creased forward buds', function() {
     console.log(bnode);
     console.log(cnode);
     throw new Error(
-        'root\'s next paint group must be cnode but was ' + root._paintGroupNext,
+        'root\'s next paint group must be cnode but was ' +
+          root._paintGroupNext,
     );
   }
   car.root().commitLayoutIteratively();
@@ -1551,7 +1573,7 @@ parsegraph_Viewport_Tests.addTest('Creased forward buds', function() {
 parsegraph_Viewport_Tests.addTest(
     'Centrally aligned back-and-forth',
     function() {
-      const car = new parsegraph_Caret('b');
+      const car = new Caret('b');
       car.spawnMove('d', 'bu');
       car.align('f', 'c');
       car.spawnMove('f', 'bu');
@@ -1560,13 +1582,16 @@ parsegraph_Viewport_Tests.addTest(
       car.root().commitLayoutIteratively();
       const sep = car.root().separationAt(parsegraph_DOWNWARD);
 
-      // console.log("Bud size: " + (parsegraph_style('bu').horizontalPadding * 2 +
-      // parsegraph_style('bu').borderThickness * 2 +
-      // parsegraph_style('bu').minWidth));
-      // console.log("Vertical separation: " + car.root().verticalSeparation(parsegraph_DOWNWARD));
-      // console.log("Block size: " + (parsegraph_style('b').horizontalPadding * 2 +
-      // parsegraph_style('b').borderThickness * 2 +
-      // parsegraph_style('b').minWidth));
+      // console.log("Bud size: " +
+      //   (parsegraph_style('bu').horizontalPadding * 2 +
+      //   parsegraph_style('bu').borderThickness * 2 +
+      //   parsegraph_style('bu').minWidth));
+      // console.log("Vertical separation: " +
+      //   car.root().verticalSeparation(parsegraph_DOWNWARD));
+      // console.log("Block size: " +
+      //   (parsegraph_style('b').horizontalPadding * 2 +
+      //   parsegraph_style('b').borderThickness * 2 +
+      //   parsegraph_style('b').minWidth));
       // console.log(sep);
     /* return sep - (
         (parsegraph_style('b').horizontalPadding +
@@ -1580,35 +1605,35 @@ parsegraph_Viewport_Tests.addTest(
     },
 );
 
-parsegraph_Viewport_Tests.addTest('Label test', function() {
-  const car = new parsegraph_Caret('b');
+viewport_Tests.addTest('Label test', function() {
+  const car = new Caret('b');
   car.label('No time');
   car.root().commitLayoutIteratively();
 });
-
-function parsegraph_simpleGraph(container, node) {
+// eslint-disable-next-line require-jsdoc
+export default function simpleGraph(container, node) {
   if (node.root) {
     node = node.root();
   }
-  const graph = new parsegraph_Viewport();
+  const graph = new Viewport();
   graph.window().resize(500, 500);
   container.appendChild(graph.window().container());
   graph.plot(node);
   graph.scheduleRepaint();
-  const timer = new parsegraph_AnimationTimer();
+  const timer = new AnimationTimer();
   timer.setListener(function() {
     node.showInCamera(graph.camera(), true);
     graph.window().paint();
     graph.window().render();
   });
-  graph.input().SetListener(function() {
+  graph.input().setListener(function() {
     timer.schedule();
   });
   timer.schedule();
 }
 
-parsegraph_Viewport_Tests.addTest('Intra-group move test', function(out) {
-  const car = new parsegraph_Caret('b');
+viewport_Tests.addTest('Intra-group move test', function(out) {
+  const car = new Caret('b');
 
   const bnode = car.spawn('d', 'b');
   car.pull('d');
@@ -1641,8 +1666,8 @@ parsegraph_Viewport_Tests.addTest('Intra-group move test', function(out) {
   }
 });
 
-parsegraph_Viewport_Tests.addTest('Absolute position test', function(out) {
-  const car = new parsegraph_Caret(parsegraph_BLOCK);
+viewport_Tests.addTest('Absolute position test', function(out) {
+  const car = new Caret(parsegraph_BLOCK);
   const bnode = car.spawnMove('f', 'b');
   car.spawnMove('f', 'b');
   car.root().commitLayoutIteratively();
@@ -1657,30 +1682,30 @@ parsegraph_Viewport_Tests.addTest('Absolute position test', function(out) {
   // console.log("bnode", bnode.absoluteX(), bnode.absoluteY());
 });
 
-parsegraph_Node_Tests.addTest('parsegraph_Node.setLabel', function() {
-  const n = new parsegraph_Node(parsegraph_BLOCK);
-  const font = parsegraph_defaultFont();
+nodeTests.addTest('parsegraph_Node.setLabel', function() {
+  const n = new Node(parsegraph_BLOCK);
+  const font = defaultFont();
   n.setLabel('No time', font);
 });
 
-parsegraph_Node_Tests.addTest(
+nodeTests.addTest(
     'parsegraph_Node Morris world threading spawned',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       n.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
     },
 );
-
-function makeChild() {
-  const car = new parsegraph_Caret(parsegraph_BLOCK);
+// eslint-disable-next-line require-jsdoc
+export default function makeChild() {
+  const car = new Caret(parsegraph_BLOCK);
   car.spawnMove('f', 'b');
   car.spawnMove('i', 'b');
   car.spawnMove('f', 's');
   return car.root();
 }
-
-function makeChild2() {
-  const car = new parsegraph_Caret(parsegraph_SLOT);
+// eslint-disable-next-line require-jsdoc
+export default function makeChild2() {
+  const car = new Caret(SLOT);
   car.spawnMove('i', 'b');
   car.spawnMove('f', 's');
   car.spawnMove('i', 'b');
@@ -1688,8 +1713,8 @@ function makeChild2() {
   return car.root();
 }
 
-parsegraph_Node_Tests.addTest('parsegraph_Node lisp test', function(out) {
-  const car = new parsegraph_Caret(parsegraph_BUD);
+nodeTests.addTest('parsegraph_Node lisp test', function(out) {
+  const car = new Caret(BUD);
   car.push();
   car.spawnMove('f', 's');
   car.spawnMove('f', 's');
@@ -1714,30 +1739,30 @@ parsegraph_Node_Tests.addTest('parsegraph_Node lisp test', function(out) {
   car.spawnMove('d', 'u');
   car.root().commitLayoutIteratively();
   // parsegraph_getLayoutNodes(car.root());
-  const window = new parsegraph_Window();
-  const world = new parsegraph_World();
-  const g = new parsegraph_Viewport(window, world);
+  const window = new Window();
+  const world = new World();
+  const g = new Viewport(window, world);
   world.plot(car.root());
-  g.input().SetListener(function() {
+  g.input().setListener(function() {
     g.window().paint();
     g.window().render();
   });
 });
 
-parsegraph_Node_Tests.addTest('parsegraph_Node lisp test simplified', function(
+nodeTests.addTest('parsegraph_Node lisp test simplified', function(
     out,
 ) {
-  const root = new parsegraph_Node(parsegraph_BUD);
+  const root = new Node(BUD);
   root._id = 'root';
 
-  const a = new parsegraph_Node(parsegraph_BLOCK);
+  const a = new Node(parsegraph_BLOCK);
   a._id = 'a';
-  const b = new parsegraph_Node(parsegraph_BLOCK);
+  const b = new Node(parsegraph_BLOCK);
   b._id = 'b';
-  const c = new parsegraph_Node(parsegraph_BLOCK);
+  const c = new Node(parsegraph_BLOCK);
   c._id = 'c';
 
-  const chi = new parsegraph_Node(parsegraph_BUD);
+  const chi = new Node(BUD);
   chi._id = 'chi';
 
   chi.connectNode(parsegraph_FORWARD, c);
@@ -1751,32 +1776,34 @@ parsegraph_Node_Tests.addTest('parsegraph_Node lisp test simplified', function(
   root.commitLayoutIteratively();
 });
 
-parsegraph_Node_Tests.addTest(
+nodeTests.addTest(
     'parsegraph_Node layout preference test',
     function(out) {
-      const root = new parsegraph_Node(parsegraph_BUD);
+      const root = new Node(BUD);
       root._id = 'root';
 
-      const a = new parsegraph_Node(parsegraph_BLOCK);
+      const a = new Node(parsegraph_BLOCK);
       a._id = 'a';
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       b._id = 'b';
-      const c = new parsegraph_Node(parsegraph_BLOCK);
+      const c = new Node(parsegraph_BLOCK);
       c._id = 'c';
 
-      const chi = new parsegraph_Node(parsegraph_BUD);
+      const chi = new Node(BUD);
       chi._id = 'chi';
 
       chi.connectNode(parsegraph_FORWARD, c);
 
-      // console.log("cur a", parsegraph_nameLayoutPreference(a._layoutPreference));
+      // console.log("cur a",
+      //   parsegraph_nameLayoutPreference(a._layoutPreference));
       a.connectNode(parsegraph_DOWNWARD, chi);
       a.connectNode(parsegraph_FORWARD, b);
       root.connectNode(parsegraph_FORWARD, a);
       a.setLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS);
 
-      // console.log("new a", parsegraph_nameLayoutPreference(a._layoutPreference));
-      const r = parsegraph_getLayoutNodes(root)[0];
+      // console.log("new a",
+      //   parsegraph_nameLayoutPreference(a._layoutPreference));
+      const r = getLayoutNodes(root)[0];
       if (r !== c) {
         throw new Error('Expected c, got ' + r._id);
       }
@@ -1784,7 +1811,7 @@ parsegraph_Node_Tests.addTest(
       root.commitLayoutIteratively();
 
       root.disconnectNode(parsegraph_FORWARD);
-      if (a._layoutPreference !== parsegraph_PREFER_VERTICAL_AXIS) {
+      if (a._layoutPreference !== PREFER_VERTICAL_AXIS) {
         throw new Error(
             'a layoutPreference was not VERT but ' +
           parsegraph_nameLayoutPreference(a._layoutPreference),
@@ -1793,10 +1820,10 @@ parsegraph_Node_Tests.addTest(
     },
 );
 
-parsegraph_Node_Tests.addTest(
+nodeTests.addTest(
     'parsegraph_Node Morris world threading connected',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
       }
@@ -1804,7 +1831,7 @@ parsegraph_Node_Tests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       if (b._layoutNext != b) {
         throw new Error('Previous sanity');
       }
@@ -1828,10 +1855,10 @@ parsegraph_Node_Tests.addTest(
     },
 );
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading connected with multiple siblings',
+nodeTests.addTest(
+    'Node Morris world threading connected with multiple siblings',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       n._id = 'n';
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
@@ -1840,7 +1867,7 @@ parsegraph_Node_Tests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       b._id = 'b';
       if (b._layoutNext != b) {
         throw new Error('Previous sanity');
@@ -1862,7 +1889,7 @@ parsegraph_Node_Tests.addTest(
       if (b._layoutNext != n) {
         throw new Error('Next connected sanity');
       }
-      const c = new parsegraph_Node(parsegraph_BLOCK);
+      const c = new Node(parsegraph_BLOCK);
       c._id = 'c';
       n.connectNode(parsegraph_BACKWARD, c);
 
@@ -1879,12 +1906,13 @@ parsegraph_Node_Tests.addTest(
     },
 );
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading connected with multiple siblings and disconnected',
+nodeTests.addTest(
+    'Node Morris world threading connected with' +
+    ' multiple siblings and disconnected',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       n._id = 'n';
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       b._id = 'b';
 
       const inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
@@ -1917,7 +1945,7 @@ parsegraph_Node_Tests.addTest(
       }
       // console.log("LNS");
       // console.log(parsegraph_getLayoutNodes(n));
-      const c = new parsegraph_Node(parsegraph_BLOCK);
+      const c = new Node(parsegraph_BLOCK);
       c._id = 'c';
       n.connectNode(parsegraph_BACKWARD, c);
       // console.log("PLNS");
@@ -1942,10 +1970,11 @@ parsegraph_Node_Tests.addTest(
     },
 );
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading connected with multiple siblings and disconnected 2',
+nodeTests.addTest(
+    'Node Morris world threading connected with' +
+    ' multiple siblings and disconnected 2',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       n._id = 'n';
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
@@ -1954,7 +1983,7 @@ parsegraph_Node_Tests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       b._id = 'b';
       parsegraph_testLayoutNodes([b]);
 
@@ -1964,7 +1993,7 @@ parsegraph_Node_Tests.addTest(
 
       n.connectNode(parsegraph_FORWARD, b);
       parsegraph_testLayoutNodes([inner, b, n]);
-      const c = new parsegraph_Node(parsegraph_BLOCK);
+      const c = new Node(parsegraph_BLOCK);
       c._id = 'c';
       n.connectNode(parsegraph_BACKWARD, c);
       parsegraph_testLayoutNodes([c, inner, b, n]);
@@ -1975,8 +2004,8 @@ parsegraph_Node_Tests.addTest(
       parsegraph_testLayoutNodes([inner, b, n], 'finished');
     },
 );
-
-function parsegraph_testLayoutNodes(expected, name) {
+// eslint-disable-next-line require-jsdoc
+export default function testLayoutNodes(expected, name) {
   const node = expected[expected.length - 1];
   const nodes = parsegraph_getLayoutNodes(node);
   for (let i = 0; i < expected.length; ++i) {
@@ -1996,25 +2025,26 @@ function parsegraph_testLayoutNodes(expected, name) {
   }
 }
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading deeply connected',
+nodeTests.addTest(
+    'Node Morris world threading deeply connected',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
       n._id = 'n';
       parsegraph_testLayoutNodes([n], 'deeply conn 1');
-      const b = n.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+      const b = n.spawnNode(parsegraph_FORWARD, BUD);
       b._id = 'b';
       parsegraph_testLayoutNodes([b, n], 'deeply conn 2');
       const c = b.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
       c._id = 'c';
       parsegraph_testLayoutNodes([c, b, n], 'deeply conn 3');
-      const d = b.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+      const d = b.spawnNode(parsegraph_FORWARD, BUD);
       d._id = 'd';
       parsegraph_testLayoutNodes([c, d, b, n], 'deeply conn 4');
 
       if (n._layoutNext !== c) {
         throw new Error(
-            'Previous sanity 1: got ' + n._layoutNext._id + ' expected ' + c._id,
+            'Previous sanity 1: got ' +
+              n._layoutNext._id + ' expected ' + c._id,
         );
       }
       if (d._layoutNext !== b) {
@@ -2029,13 +2059,13 @@ parsegraph_Node_Tests.addTest(
     },
 );
 
-parsegraph_Node_Tests.AddTest('Right-to-left test', function() {
-  const node = new parsegraph_Node(parsegraph_BUD);
+nodeTests.addTest('Right-to-left test', function() {
+  const node = new Node(BUD);
   node.setRightToLeft(true);
 });
 
-parsegraph_Node_Tests.AddTest('Disconnect trivial test', function() {
-  const car = new parsegraph_Caret(parsegraph_BUD);
+nodeTests.addTest('Disconnect trivial test', function() {
+  const car = new Caret(BUD);
   car.node().commitLayoutIteratively();
   const originalRoot = car.node();
   car.spawnMove('f', 'b');
@@ -2046,9 +2076,9 @@ parsegraph_Node_Tests.AddTest('Disconnect trivial test', function() {
   newRoot.commitLayoutIteratively();
 });
 
-parsegraph_Node_Tests.AddTest('Disconnect simple test', function() {
+nodeTests.addTest('Disconnect simple test', function() {
   // console.log("DISCONNECT SIMPLE TEST");
-  const car = new parsegraph_Caret(parsegraph_BUD);
+  const car = new Caret(BUD);
   car.node().commitLayoutIteratively();
   const originalRoot = car.node();
   const midRoot = car.spawnMove('f', 'b');
@@ -2077,8 +2107,8 @@ parsegraph_Node_Tests.AddTest('Disconnect simple test', function() {
   originalRoot.commitLayoutIteratively();
 });
 
-parsegraph_Node_Tests.AddTest('Disconnect simple test, reversed', function() {
-  const car = new parsegraph_Caret(parsegraph_BUD);
+nodeTests.addTest('Disconnect simple test, reversed', function() {
+  const car = new Caret(BUD);
   car.node().commitLayoutIteratively();
   const originalRoot = car.node();
   const midRoot = car.spawnMove('f', 'b');
@@ -2093,47 +2123,51 @@ parsegraph_Node_Tests.AddTest('Disconnect simple test, reversed', function() {
   }
 });
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading connected with crease',
+nodeTests.addTest(
+    'Node Morris world threading connected with crease',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       n.connectNode(parsegraph_FORWARD, b);
       b.setPaintGroup(true);
       if (b._layoutNext !== b) {
         throw new Error(
-            'Crease must remove that node from its parents layout chain (child)',
+            'Crease must remove that node' +
+            ' from its parents layout chain (child)',
         );
       }
       if (n._layoutNext !== n) {
         throw new Error(
-            'Crease must remove that node from its parents layout chain (parent)',
+            'Crease must remove that node' +
+            ' from its parents layout chain (parent)',
         );
       }
     },
 );
 
-parsegraph_Node_Tests.addTest(
-    'parsegraph_Node Morris world threading connected with creased child',
+nodeTests.addTest(
+    'Node Morris world threading connected with creased child',
     function() {
-      const n = new parsegraph_Node(parsegraph_BLOCK);
-      const b = new parsegraph_Node(parsegraph_BLOCK);
+      const n = new Node(parsegraph_BLOCK);
+      const b = new Node(parsegraph_BLOCK);
       b.setPaintGroup(true);
       n.connectNode(parsegraph_FORWARD, b);
       if (b._layoutNext !== b) {
         throw new Error(
-            'Crease must remove that node from its parents layout chain (child)',
+            'Crease must remove that node' +
+            ' from its parents layout chain (child)',
         );
       }
       if (n._layoutNext !== n) {
         throw new Error(
-            'Crease must remove that node from its parents layout chain (parent)',
+            'Crease must remove that node' +
+            ' from its parents layout chain (parent)',
         );
       }
     },
 );
-
-function parsegraph_getLayoutNodes(node) {
+// eslint-disable-next-line require-jsdoc
+export default function getLayoutNodes(node) {
   const list = [];
   const orig = node;
   const start = new Date();
@@ -2154,8 +2188,8 @@ function parsegraph_getLayoutNodes(node) {
   return list;
 }
 
-parsegraph_Node_Tests.AddTest('Disconnect complex test', function() {
-  const car = new parsegraph_Caret(parsegraph_BUD);
+nodeTests.addTest('Disconnect complex test', function() {
+  const car = new Caret(BUD);
   car.node().commitLayoutIteratively();
   const originalRoot = car.node();
   car.spawnMove('f', 'b');
@@ -2177,9 +2211,9 @@ parsegraph_Node_Tests.AddTest('Disconnect complex test', function() {
   originalRoot.commitLayoutIteratively();
 });
 
-parsegraph_Node_Tests.AddTest('Proportion pull test', function() {
+nodeTests.addTest('Proportion pull test', function() {
   const font = parsegraph_defaultFont();
-  const car = new parsegraph_Caret(parsegraph_BUD);
+  const car = new Caret(BUD);
   car.setFont(font);
   car.node().commitLayoutIteratively();
   const originalRoot = car.node();
