@@ -202,10 +202,10 @@ PermissionsForm.prototype.container = function() {
   return this.form;
 };
 
-PermissionsForm.prototype.refresh = function() {
+PermissionsForm.prototype.refresh = function(...args) {
   const roomId = this._room.roomId();
-  if (arguments.length > 0) {
-    this.id = arguments[0];
+  if (args.length > 0) {
+    this.id = args[0];
     this.permForm.action = '/@' + roomId + '/' + this.id + '/permissions';
     this.groupForm.action = '/@' + roomId + '/' + this.id + '/changegroup';
     this.ownerForm.action = '/@' + roomId + '/' + this.id + '/changeowner';
