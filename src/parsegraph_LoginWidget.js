@@ -290,7 +290,7 @@ LoginWidget.prototype.onLogout = function(res, result) {
   } else if (res === false) {
     console.log('Logout failed: ' + result);
   } else {
-    console.log('Exception occurred during logout:', arguments);
+    console.log('Exception occurred during logout:', ...args);
   }
 };
 

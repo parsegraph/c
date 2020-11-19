@@ -1,4 +1,5 @@
-function parsegraph_sendCameraUpdate(
+// eslint-disable-next-line require-jsdoc
+export default function sendCameraUpdate(
     envGuid,
     sessionId,
     camera,
@@ -38,8 +39,8 @@ function parsegraph_sendCameraUpdate(
   xhr.send(JSON.stringify(obj));
   return xhr;
 }
-
-function parsegraph_sendMouseUpdate(
+// eslint-disable-next-line require-jsdoc
+export default function sendMouseUpdate(
     envGuid,
     sessionId,
     input,
@@ -82,9 +83,9 @@ function parsegraph_sendMouseUpdate(
   xhr.send(JSON.stringify(obj));
   return xhr;
 }
-
-function parsegraph_InputProtocol(envGuid, sessionId, input) {
-  const timer = new parsegraph_TimeoutTimer();
+// eslint-disable-next-line require-jsdoc
+export default function InputProtocol(envGuid, sessionId, input) {
+  const timer = new TimeoutTimer();
   timer.setDelay(400);
 
   this._envGuid = envGuid;
@@ -106,11 +107,11 @@ function parsegraph_InputProtocol(envGuid, sessionId, input) {
   this._timer = timer;
 }
 
-parsegraph_InputProtocol.prototype.sendMouseUpdate = function() {
+InputProtocol.prototype.sendMouseUpdate = function() {
   if (this._lastSentMouseVersion != this._input.mouseVersion()) {
     ++this._waiting;
     this._lastSentMouseVersion = this._input.mouseVersion();
-    parsegraph_sendMouseUpdate(
+    sendMouseUpdate(
         this._envGuid,
         this._sessionId,
         this._input,
@@ -130,11 +131,11 @@ parsegraph_InputProtocol.prototype.sendMouseUpdate = function() {
   }
 };
 
-parsegraph_InputProtocol.prototype.sendCameraUpdate = function() {
+InputProtocol.prototype.sendCameraUpdate = function() {
   if (this._lastSentVersion != this._camera.changeVersion()) {
     ++this._waiting;
     this._lastSentVersion = this._camera.changeVersion();
-    parsegraph_sendCameraUpdate(
+    sendCameraUpdate(
         this._envGuid,
         this._sessionId,
         this._camera,
@@ -154,7 +155,7 @@ parsegraph_InputProtocol.prototype.sendCameraUpdate = function() {
   }
 };
 
-parsegraph_InputProtocol.prototype.sendUpdate = function() {
+InputProtocol.prototype.sendUpdate = function() {
   if (this._waiting > 0) {
     return;
   }
@@ -162,10 +163,10 @@ parsegraph_InputProtocol.prototype.sendUpdate = function() {
   this.sendMouseUpdate();
 };
 
-parsegraph_InputProtocol.prototype.update = function() {
+InputProtocol.prototype.update = function() {
   this.sendUpdate();
 };
 
-parsegraph_InputProtocol.prototype.scheduleUpdate = function() {
+InputProtocol.prototype.scheduleUpdate = function() {
   this._timer.schedule();
 };

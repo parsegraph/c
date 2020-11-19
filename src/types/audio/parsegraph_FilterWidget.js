@@ -77,11 +77,13 @@ FilterWidget.prototype.load = function(n) {
 FilterWidget.prototype.refreshTypes = function() {
   updateUnsel();
   for (const type in this._types) {
-    const node = this._types[type];
-    if (this._type == type) {
-      node.setBlockStyle(sel);
-    } else {
-      node.setBlockStyle(unsel);
+    if (Object.prototype.hasOwnProperty.call(this._types, type)) {
+      const node = this._types[type];
+      if (this._type == type) {
+        node.setBlockStyle(sel);
+      } else {
+        node.setBlockStyle(unsel);
+      }
     }
   }
 };

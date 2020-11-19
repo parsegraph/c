@@ -285,8 +285,10 @@ SequencerWidget.prototype.play = function(bpm) {
 
   if (this._voices) {
     for (const type in this._voices) {
-      const voice = this._voices[type];
-      voice.osc.stop();
+      if (Object.prototype.hasOwnProperty.call(this._voices, type)) {
+        const voice = this._voices[type];
+        voice.osc.stop();
+      }
     }
   }
   this._gain = audio.createGain();

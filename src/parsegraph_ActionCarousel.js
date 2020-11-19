@@ -1,20 +1,20 @@
-import parsegraph_Node from './graph/Node';
-import {parsegraph_defaultFont} from './graph/settings';
+import Node from './graph/Node';
+import {defaultFont} from './graph/settings';
 import {Type} from './graph/Node';
-
-export default function parsegraph_ActionCarousel() {
+// eslint-disable-next-line require-jsdoc
+export default function ActionCarousel() {
   this._actions = [];
 }
 
-parsegraph_ActionCarousel.prototype.addAction = function(
+ActionCarousel.prototype.addAction = function(
     action,
     listener,
     listenerThisArg,
 ) {
   if (typeof action === 'string') {
     const label = action;
-    action = new parsegraph_Node(Type.BLOCK);
-    action.setLabel(label, parsegraph_defaultFont());
+    action = new Node(Type.BLOCK);
+    action.setLabel(label, defaultFont());
   }
   if (!listenerThisArg) {
     listenerThisArg = this;
@@ -22,7 +22,7 @@ parsegraph_ActionCarousel.prototype.addAction = function(
   this._actions.push([action, listener, listenerThisArg]);
 };
 
-parsegraph_ActionCarousel.prototype.install = function(node, nodeData) {
+ActionCarousel.prototype.install = function(node, nodeData) {
   node.setClickListener(function(viewport) {
     this.onClick(viewport, node, nodeData);
   }, this);
@@ -31,7 +31,7 @@ parsegraph_ActionCarousel.prototype.install = function(node, nodeData) {
   };
 };
 
-parsegraph_ActionCarousel.prototype.onClick = function(
+ActionCarousel.prototype.onClick = function(
     viewport,
     node,
     nodeData,
@@ -43,13 +43,15 @@ parsegraph_ActionCarousel.prototype.onClick = function(
   carousel.showCarousel();
 
   for (const i in this._actions) {
-    const actionData = this._actions[i];
-    carousel.addToCarousel(
-        actionData[0],
-        actionData[1],
-        actionData[2],
-        nodeData,
-    );
+    if (Object.prototype.hasOwnProperty.call(this._actions, i)) {
+      const actionData = this._actions[i];
+      carousel.addToCarousel(
+          actionData[0],
+          actionData[1],
+          actionData[2],
+          nodeData,
+      );
+    }
   }
   carousel.scheduleCarouselRepaint();
 };

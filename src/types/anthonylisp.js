@@ -4,12 +4,14 @@ export default function lispExpression(app, car, id, value, items) {
   node.setType(parsegraph_BUD);
 
   for (const i in items) {
-    car.push();
-    car.spawnMove('f', 'u');
-    const item = items[i];
-    app.spawn(car, item);
-    car.pop();
-    car.spawnMove('d', 'u');
+    if (Object.prototype.hasOwnProperty.call(items, i)) {
+      car.push();
+      car.spawnMove('f', 'u');
+      const item = items[i];
+      app.spawn(car, item);
+      car.pop();
+      car.spawnMove('d', 'u');
+    }
   }
 
   const actions = new ActionCarousel(app.graph());
@@ -98,7 +100,9 @@ listClasses['lisp::expression'] = {
     const node = car.node();
     car.push();
     for (const i in items) {
-      const item = items[i];
+      if (Object.prototype.hasOwnProperty.call(items, i)) {
+        const item = items[i];
+      }
       if (item.type === 'lisp::expression::newline') {
         actions.install(car.node());
         car.pop();

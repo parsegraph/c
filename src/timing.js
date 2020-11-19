@@ -22,15 +22,15 @@ export function later(cb, cbThisArg) {
   };
 }
 // eslint-disable-next-line require-jsdoc
-export function timeout(name, timeoutMs) {
-  if (arguments.length === 1) {
-    if (typeof arguments[0] === 'number') {
+export function timeout(name, timeoutMs, ...args) {
+  if (args.length === 1) {
+    if (typeof args[0] === 'number') {
       name = null;
-      timeoutMs = arguments[0];
+      timeoutMs = args[0];
     } else {
       timeoutMs = TIMEOUT;
     }
-  } else if (arguments.length === 0) {
+  } else if (args.length === 0) {
     name = null;
     timeoutMs = TIMEOUT;
   }
@@ -60,7 +60,7 @@ export function AnimationTimer() {
     that.timerId = null;
     if (that.listener) {
       try {
-        return that.listener[0].apply(that.listener[1], arguments);
+        return that.listener[0].apply(that.listener[1], ...args);
       } catch (ex) {
         console.log(ex);
         alert('Error during timer: ' + ex);
@@ -116,7 +116,7 @@ export function TimeoutTimer() {
   this.fire = function() {
     that.timerId = null;
     if (that.listener) {
-      return that.listener[0].apply(that.listener[1], arguments);
+      return that.listener[0].apply(that.listener[1], ...args);
     }
   };
 }
@@ -172,7 +172,7 @@ export function IntervalTimer() {
   const that = this;
   this.fire = function() {
     if (that.listener) {
-      return that.listener[0].apply(that.listener[1], arguments);
+      return that.listener[0].apply(that.listener[1], ...args);
     }
   };
 }

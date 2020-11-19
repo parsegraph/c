@@ -1,6 +1,6 @@
-import {parsegraph_countGLBufferBytes} from './gl';
-
-function parsegraph_BufferPage(pagingBuffer, renderFunc, renderFuncThisArg) {
+import {countGLBufferBytes} from './gl';
+// eslint-disable-next-line require-jsdoc
+export default function _BufferPage(pagingBuffer, renderFunc, renderFuncThisArg) {
   if (!renderFuncThisArg) {
     renderFuncThisArg = this;
   }
