@@ -68,7 +68,9 @@ SynthWidget.prototype.onPlay = function(
 SynthWidget.prototype.refreshTypes = function() {
   updateUnsel();
   for (const type in this._types) {
-    this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
+    if (Object.prototype.hasOwnProperty.call(this._types, type)) {
+      this._types[type].setBlockStyle(this._oscType == type ? sel : unsel);
+    }
   }
 };
 
