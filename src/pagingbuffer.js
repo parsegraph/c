@@ -214,17 +214,17 @@ PagingBuffer.prototype.defineAttrib = function(
   return this._attribs.length - 1;
 };
 
-PagingBuffer.prototype.appendRGB = function(/**/) {
+PagingBuffer.prototype.appendRGB = function(...args) {
   const page = this.getWorkingPage();
   return page.appendRGB.apply(page, ...args);
 };
 
-PagingBuffer.prototype.appendRGBA = function(/**/) {
+PagingBuffer.prototype.appendRGBA = function(...args) {
   const page = this.getWorkingPage();
   return page.appendRGBA.apply(page, ...args);
 };
 
-PagingBuffer.prototype.appendData = function(/**/) {
+PagingBuffer.prototype.appendData = function(...args) {
   const page = this.getWorkingPage();
   return page.appendData.apply(page, ...args);
 };
