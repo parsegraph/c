@@ -1,14 +1,14 @@
-import {parsegraph_BACKGROUND_COLOR} from './settings';
+import {BACKGROUND_COLOR} from './settings';
 import {
-  parsegraph_LayoutList,
-  parsegraph_COMPONENT_LAYOUT_HORIZONTAL,
+  LayoutList,
+  COMPONENT_LAYOUT_HORIZONTAL,
 } from './layout';
 import {addEventMethod, normalizeWheel} from '../event';
 import Rect from './Rect';
-import {parsegraph_checkGLError} from '../gl';
+import {checkGLError} from '../gl';
 import {elapsed} from '../timing';
 
-const parsegraph_Window_VertexShader =
+const windowVertexShader =
   'uniform mat3 u_world;\n' +
   '' +
   'attribute vec2 a_position;' +
@@ -21,7 +21,7 @@ const parsegraph_Window_VertexShader =
   'texCoord = a_texCoord;' +
   '}';
 
-const parsegraph_Window_FragmentShader =
+const windowFragmentShader =
   'uniform sampler2D u_texture;\n' +
   'varying highp vec2 texCoord;\n' +
   '\n' +
@@ -29,14 +29,14 @@ const parsegraph_Window_FragmentShader =
   'gl_FragColor = texture2D(u_texture, texCoord.st);' +
   // "gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
   '}';
-let parsegraph_WINDOW_COUNT = 0;
-
-export default function parsegraph_Window() {
-  this._id = ++parsegraph_WINDOW_COUNT;
-  this._backgroundColor = parsegraph_BACKGROUND_COLOR;
+let WINDOW_COUNT = 0;
+// eslint-disable-next-line require-jsdoc
+export default function Window() {
+  this._id = ++WINDOW_COUNT;
+  this._backgroundColor = BACKGROUND_COLOR;
 
   this._container = document.createElement('div');
-  this._container.className = 'parsegraph_Window';
+  this._container.className = 'Window';
 
   this._framebuffer = null;
   this._renderbuffer = null;
@@ -50,7 +50,8 @@ export default function parsegraph_Window() {
   // The 3D canvas that will be drawn to.
   this._canvas = document.createElement('canvas');
   // if(WebGLDebugUtils) {
-  // this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(this._canvas);
+  // this._canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(
+  //   this._canvas);
   // }
   const that = this;
   this._canvas.addEventListener(
@@ -99,8 +100,8 @@ export default function parsegraph_Window() {
   this._debugPanel.innerHTML = 'DEBUG';
   // this._container.appendChild(this._debugPanel);
 
-  this._layoutList = new parsegraph_LayoutList(
-      parsegraph_COMPONENT_LAYOUT_HORIZONTAL,
+  this._layoutList = new LayoutList(
+      COMPONENT_LAYOUT_HORIZONTAL,
   );
 
   this._textureSize = NaN;
@@ -269,7 +270,7 @@ export default function parsegraph_Window() {
 
     if (
       this._touchstartTime != null &&
-      Date.now() - this._touchstartTime < parsegraph_CLICK_DELAY_MILLIS
+      Date.now() - this._touchstartTime < CLICK_DELAY_MILLIS
     ) {
       const that = this;
       this._touchendTimeout = setTimeout(function() {
@@ -283,7 +284,7 @@ export default function parsegraph_Window() {
 
         // Single touch ended.
         that._isDoubleTouch = false;
-      }, parsegraph_CLICK_DELAY_MILLIS);
+      }, CLICK_DELAY_MILLIS);
     }
 
     if (
@@ -327,7 +328,8 @@ export default function parsegraph_Window() {
           this.canvas().focus();
         }
 
-        // This click is a second click following a recent click; it's a double-click.
+        // This click is a second click following
+        // a recent click; it's a double-click.
         if (this._mouseupTimeout) {
           window.clearTimeout(this._mouseupTimeout);
           this._mouseupTimeout = null;
@@ -405,11 +407,11 @@ export default function parsegraph_Window() {
   );
 }
 
-parsegraph_Window.prototype.isOffscreen = function() {
+Window.prototype.isOffscreen = function() {
   return false;
 };
 
-parsegraph_Window.prototype.numActiveTouches = function() {
+Window.prototype.numActiveTouches = function() {
   let realMonitoredTouches = 0;
   this._monitoredTouches.forEach(function(touchRec) {
     if (touchRec.touchstart) {
@@ -419,19 +421,19 @@ parsegraph_Window.prototype.numActiveTouches = function() {
   return realMonitoredTouches;
 };
 
-parsegraph_Window.prototype.numComponents = function() {
+Window.prototype.numComponents = function() {
   return this._layoutList.count();
 };
 
-parsegraph_Window.prototype.setCursor = function(cursorType) {
+Window.prototype.setCursor = function(cursorType) {
   this.canvas().style.cursor = cursorType;
 };
 
-parsegraph_Window.prototype.focusedComponent = function() {
+Window.prototype.focusedComponent = function() {
   return this._focused ? this._focusedComponent : null;
 };
 
-parsegraph_Window.prototype.layout = function(target) {
+Window.prototype.layout = function(target) {
   let targetSize = null;
   this.forEach(function(comp, compSize) {
     if (target === comp) {
@@ -445,20 +447,20 @@ parsegraph_Window.prototype.layout = function(target) {
   return targetSize;
 };
 
-parsegraph_Window.prototype.getSize = function(sizeOut) {
+Window.prototype.getSize = function(sizeOut) {
   sizeOut.setX(0);
   sizeOut.setY(0);
   sizeOut.setWidth(this.width());
   sizeOut.setHeight(this.height());
 };
 
-parsegraph_Window.prototype.forEach = function(func, funcThisArg) {
+Window.prototype.forEach = function(func, funcThisArg) {
   const windowSize = new Rect();
   this.getSize(windowSize);
   return this._layoutList.forEach(func, funcThisArg, windowSize);
 };
 
-parsegraph_Window.prototype.setFocusedComponent = function(x, y) {
+Window.prototype.setFocusedComponent = function(x, y) {
   const compSize = new Rect();
   y = this.height() - y;
   // console.log("Focusing component at (" + x + ", " + y + ")");
@@ -469,7 +471,8 @@ parsegraph_Window.prototype.setFocusedComponent = function(x, y) {
       }
       // console.log("Component size", compSize);
       if (x < compSize.x() || y < compSize.y()) {
-        // console.log("Component is greater than X or Y (" + compSize.x() + ", " + compSize.y() + ")");
+        // console.log("Component is greater than X or Y (" +
+        // compSize.x() + ", " + compSize.y() + ")");
         return;
       }
       if (
@@ -496,7 +499,7 @@ parsegraph_Window.prototype.setFocusedComponent = function(x, y) {
   this._focusedComponent = null;
 };
 
-parsegraph_Window.prototype.handleEvent = function(eventType, inputData) {
+Window.prototype.handleEvent = function(eventType, inputData) {
   if (eventType === 'tick') {
     let needsUpdate = false;
     this.forEach(function(comp) {
@@ -515,7 +518,7 @@ parsegraph_Window.prototype.handleEvent = function(eventType, inputData) {
       // console.log("No focused component");
       return;
     }
-    var compSize = this.layout(this._focusedComponent);
+    const compSize = this.layout(this._focusedComponent);
     inputData.x -= compSize.x();
     // Input data is topleft-origin.
     // Component position is bottomleft-origin.
@@ -533,7 +536,7 @@ parsegraph_Window.prototype.handleEvent = function(eventType, inputData) {
   }
   if (this._focusedComponent) {
     if (eventType === 'touchend' || eventType === 'mousemove') {
-      var compSize = this.layout(this._focusedComponent);
+      const compSize = this.layout(this._focusedComponent);
       inputData.x -= compSize.x();
       inputData.y -= this.height() - (compSize.y() + compSize.height());
     }
@@ -545,7 +548,7 @@ parsegraph_Window.prototype.handleEvent = function(eventType, inputData) {
   return false;
 };
 
-parsegraph_Window.prototype.getTouchByIdentifier = function(identifier) {
+Window.prototype.getTouchByIdentifier = function(identifier) {
   for (let i = 0; i < this._monitoredTouches.length; ++i) {
     if (this._monitoredTouches[i].identifier == identifier) {
       return this._monitoredTouches[i];
@@ -554,7 +557,7 @@ parsegraph_Window.prototype.getTouchByIdentifier = function(identifier) {
   return null;
 };
 
-parsegraph_Window.prototype.removeTouchByIdentifier = function(identifier) {
+Window.prototype.removeTouchByIdentifier = function(identifier) {
   let touch = null;
   for (let i = 0; i < this._monitoredTouches.length; ++i) {
     if (this._monitoredTouches[i].identifier == identifier) {
@@ -565,14 +568,14 @@ parsegraph_Window.prototype.removeTouchByIdentifier = function(identifier) {
   return touch;
 };
 
-parsegraph_Window.prototype.scheduleUpdate = function() {
+Window.prototype.scheduleUpdate = function() {
   // console.log("Window is scheduling update");
   if (this._schedulerFunc) {
     this._schedulerFunc.call(this._schedulerFuncThisArg, this);
   }
 };
 
-parsegraph_Window.prototype.setOnScheduleUpdate = function(
+Window.prototype.setOnScheduleUpdate = function(
     schedulerFunc,
     schedulerFuncThisArg,
 ) {
@@ -580,44 +583,48 @@ parsegraph_Window.prototype.setOnScheduleUpdate = function(
   this._schedulerFuncThisArg = schedulerFuncThisArg;
 };
 
-parsegraph_Window.prototype.lastMouseCoords = function() {
+Window.prototype.lastMouseCoords = function() {
   return [this._lastMouseX, this._lastMouseY];
 };
 
-parsegraph_Window.prototype.lastMouseX = function() {
+Window.prototype.lastMouseX = function() {
   return this._lastMouseX;
 };
 
-parsegraph_Window.prototype.lastMouseY = function() {
+Window.prototype.lastMouseY = function() {
   return this._lastMouseY;
 };
 
-parsegraph_Window.prototype.id = function() {
+Window.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Window.prototype.shaders = function() {
+Window.prototype.shaders = function() {
   return this._shaders;
 };
 
-parsegraph_Window.prototype.textureSize = function() {
+Window.prototype.textureSize = function() {
   if (this._gl.isContextLost()) {
     return NaN;
   }
   if (Number.isNaN(this._textureSize)) {
-    this._textureSize = Math.min(512, parsegraph_getTextureSize(this._gl));
+    this._textureSize = Math.min(512, getTextureSize(this._gl));
   }
   return this._textureSize;
 };
 
-parsegraph_Window.prototype.onContextChanged = function(isLost) {
+Window.prototype.onContextChanged = function(isLost) {
   if (isLost) {
     const keys = [];
     for (const k in this._shaders) {
-      keys.push(k);
+      if (Object.prototype.hasOwnProperty.call(this._shaders, k)) {
+        keys.push(k);
+      }
     }
     for (const i in keys) {
-      delete this._shaders[keys[i]];
+      if (Object.prototype.hasOwnProperty.call(keys, i)) {
+        delete this._shaders[keys[i]];
+      }
     }
   }
   this.forEach(function(comp) {
@@ -627,19 +634,19 @@ parsegraph_Window.prototype.onContextChanged = function(isLost) {
   }, this);
 };
 
-parsegraph_Window.prototype.canvas = function() {
+Window.prototype.canvas = function() {
   return this._canvas;
 };
 
-parsegraph_Window.prototype.overlay = function() {
+Window.prototype.overlay = function() {
   return this._overlayCtx;
 };
 
-parsegraph_Window.prototype.overlayCanvas = function() {
+Window.prototype.overlayCanvas = function() {
   return this._overlayCanvas;
 };
 
-parsegraph_Window.prototype.gl = function() {
+Window.prototype.gl = function() {
   if (this._gl) {
     return this._gl;
   }
@@ -648,26 +655,26 @@ parsegraph_Window.prototype.gl = function() {
   // });
   if (this._gl) {
     // this.render = this.renderWebgl2;
-    parsegraph_checkGLError(this._gl, 'WebGL2 creation');
+    checkGLError(this._gl, 'WebGL2 creation');
     return this._gl;
   }
   this._gl = this._canvas.getContext('webgl');
   if (this._gl) {
-    parsegraph_checkGLError(this._gl, 'WebGL creation');
+    checkGLError(this._gl, 'WebGL creation');
     return this._gl;
   }
   throw new Error('GL context is not supported');
 };
 
-parsegraph_Window.prototype.setGL = function(gl) {
+Window.prototype.setGL = function(gl) {
   this._gl = gl;
 };
 
-parsegraph_Window.prototype.setAudio = function(audio) {
+Window.prototype.setAudio = function(audio) {
   this._audio = audio;
 };
 
-parsegraph_Window.prototype.startAudio = function() {
+Window.prototype.startAudio = function() {
   if (!this._audio) {
     try {
       this._audio = new AudioContext();
@@ -681,11 +688,11 @@ parsegraph_Window.prototype.startAudio = function() {
   return this.audio();
 };
 
-parsegraph_Window.prototype.audio = function() {
+Window.prototype.audio = function() {
   return this._audio;
 };
 
-parsegraph_Window.prototype.resize = function(w, h) {
+Window.prototype.resize = function(w, h) {
   this.container().style.width = typeof w === 'number' ? w + 'px' : w;
   if (arguments.length === 1) {
     h = w;
@@ -693,38 +700,39 @@ parsegraph_Window.prototype.resize = function(w, h) {
   this.container().style.height = typeof h === 'number' ? h + 'px' : h;
 };
 
-parsegraph_Window.prototype.setExplicitSize = function(w, h) {
+Window.prototype.setExplicitSize = function(w, h) {
   this._explicitWidth = w;
   this._explicitHeight = h;
   this.resize(w, h);
 };
 
-parsegraph_Window.prototype.getWidth = function() {
+Window.prototype.getWidth = function() {
   return this._explicitWidth || this.container().clientWidth;
 };
-parsegraph_Window.prototype.width = parsegraph_Window.prototype.getWidth;
+Window.prototype.width = Window.prototype.getWidth;
 
-parsegraph_Window.prototype.getHeight = function() {
+Window.prototype.getHeight = function() {
   return this._explicitHeight || this.container().clientHeight;
 };
-parsegraph_Window.prototype.height = parsegraph_Window.prototype.getHeight;
+Window.prototype.height = Window.prototype.getHeight;
 
 /**
  * Returns the container that holds the canvas for this graph.
  */
-parsegraph_Window.prototype.container = function() {
+// eslint-disable-next-line require-jsdoc
+Window.prototype.container = function() {
   return this._container;
 };
 
-parsegraph_Window.prototype.addWidget = function(widget) {
+Window.prototype.addWidget = function(widget) {
   return this.addComponent(widget.component());
 };
 
-parsegraph_Window.prototype.addComponent = function(comp) {
+Window.prototype.addComponent = function(comp) {
   return this.addHorizontal(comp, null);
 };
 
-parsegraph_Window.prototype.addHorizontal = function(comp, other) {
+Window.prototype.addHorizontal = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
@@ -738,7 +746,7 @@ parsegraph_Window.prototype.addHorizontal = function(comp, other) {
   container.addHorizontal(comp);
 };
 
-parsegraph_Window.prototype.addVertical = function(comp, other) {
+Window.prototype.addVertical = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
@@ -754,7 +762,7 @@ parsegraph_Window.prototype.addVertical = function(comp, other) {
   console.log(this._layoutList);
 };
 
-parsegraph_Window.prototype.removeComponent = function(compToRemove) {
+Window.prototype.removeComponent = function(compToRemove) {
   this.scheduleUpdate();
   if (compToRemove === this._focusedComponent) {
     if (this._focusedComponent) {
@@ -767,7 +775,7 @@ parsegraph_Window.prototype.removeComponent = function(compToRemove) {
   return this._layoutList.remove(compToRemove);
 };
 
-parsegraph_Window.prototype.tick = function(startTime) {
+Window.prototype.tick = function(startTime) {
   let needsUpdate = false;
   this.forEach(function(comp) {
     needsUpdate = comp.handleEvent('tick', startTime) || needsUpdate;
@@ -775,7 +783,7 @@ parsegraph_Window.prototype.tick = function(startTime) {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.paint = function(timeout) {
+Window.prototype.paint = function(timeout) {
   if (this.gl().isContextLost()) {
     return;
   }
@@ -795,9 +803,9 @@ parsegraph_Window.prototype.paint = function(timeout) {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.setBackground = function(color) {
-  if (arguments.length > 1) {
-    return this.setBackground(parsegraph_createColor.apply(this, arguments));
+Window.prototype.setBackground = function(color, ...args) {
+  if (args.length > 1) {
+    return this.setBackground(createColor.apply(this, args));
   }
   this._backgroundColor = color;
 };
@@ -805,21 +813,23 @@ parsegraph_Window.prototype.setBackground = function(color) {
 /**
  * Retrieves the current background color.
  */
-parsegraph_Window.prototype.backgroundColor = function() {
+// eslint-disable-next-line require-jsdoc
+Window.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
 
 /**
  * Returns whether the window has a nonzero client width and height.
  */
-parsegraph_Window.prototype.canProject = function() {
+// eslint-disable-next-line require-jsdoc
+Window.prototype.canProject = function() {
   const displayWidth = this.getWidth();
   const displayHeight = this.getHeight();
 
   return displayWidth != 0 && displayHeight != 0;
 };
 
-parsegraph_Window.prototype.renderWebgl2 = function() {
+Window.prototype.renderWebgl2 = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
   const gl = this.gl();
@@ -829,7 +839,9 @@ parsegraph_Window.prototype.renderWebgl2 = function() {
   // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
+        'Refusing to render to an unprojectable window.' +
+        ' Use canProject() to handle, and parent' +
+        ' this window\'s container to fix.',
     );
   }
 
@@ -909,7 +921,8 @@ parsegraph_Window.prototype.renderWebgl2 = function() {
   const compSize = new Rect();
   this.forEach(function(comp, compSize) {
     // console.log("Rendering: " + comp.peer().id());
-    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+    // console.log("Rendering component of size " +
+    //   compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
         compSize.x(),
@@ -942,7 +955,7 @@ parsegraph_Window.prototype.renderWebgl2 = function() {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
+Window.prototype.renderMultisampleFramebuffer = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
   const gl = this.gl();
   if (this.gl().isContextLost()) {
@@ -951,7 +964,9 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
   // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
+        'Refusing to render to an unprojectable window.' +
+        ' Use canProject() to handle, and parent' +
+        ' this window\'s container to fix.',
     );
   }
 
@@ -1028,7 +1043,8 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
   gl.enable(gl.SCISSOR_TEST);
   this.forEach(function(comp, compSize) {
     // console.log("Rendering: " + comp.peer().id());
-    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+    // console.log("Rendering component of size " +
+    // compSize.width() + "x" + compSize.height());
     gl.scissor(
         multisample * compSize.x(),
         multisample * compSize.y(),
@@ -1048,11 +1064,11 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
   if (!this._program) {
-    this._program = parsegraph_compileProgram(
+    this._program = compileProgram(
         this,
-        'parsegraph_Window',
-        parsegraph_Window_VertexShader,
-        parsegraph_Window_FragmentShader,
+        'Window',
+        Window_VertexShader,
+        Window_FragmentShader,
     );
     this.u_world = gl.getUniformLocation(this._program, 'u_world');
     this.u_texture = gl.getUniformLocation(this._program, 'u_texture');
@@ -1136,7 +1152,7 @@ parsegraph_Window.prototype.renderMultisampleFramebuffer = function() {
  *
  * Throws if canProject() returns false.
  */
-parsegraph_Window.prototype.renderFramebuffer = function() {
+Window.prototype.renderFramebuffer = function() {
   const gl = this.gl();
   if (this.gl().isContextLost()) {
     return;
@@ -1144,7 +1160,9 @@ parsegraph_Window.prototype.renderFramebuffer = function() {
   // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
+        'Refusing to render to an unprojectable window.' +
+        ' Use canProject() to handle, and parent this window\'s' +
+        ' container to fix.',
     );
   }
 
@@ -1220,7 +1238,8 @@ parsegraph_Window.prototype.renderFramebuffer = function() {
   gl.enable(gl.SCISSOR_TEST);
   this.forEach(function(comp, compSize) {
     // console.log("Rendering: " + comp.peer().id());
-    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+    // console.log("Rendering component of size " + compSize.width() +
+    //   "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
         compSize.x(),
@@ -1235,11 +1254,11 @@ parsegraph_Window.prototype.renderFramebuffer = function() {
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
   if (!this._program) {
-    this._program = parsegraph_compileProgram(
+    this._program = compileProgram(
         this,
-        'parsegraph_Window',
-        parsegraph_Window_VertexShader,
-        parsegraph_Window_FragmentShader,
+        'Window',
+        Window_VertexShader,
+        Window_FragmentShader,
     );
     this.u_world = gl.getUniformLocation(this._program, 'u_world');
     this.u_texture = gl.getUniformLocation(this._program, 'u_texture');
@@ -1318,20 +1337,20 @@ parsegraph_Window.prototype.renderFramebuffer = function() {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
 
-parsegraph_Window.prototype.log = function(msg) {
+Window.prototype.log = function(msg) {
   this._debugLog += msg + '<br/>';
 };
 
-parsegraph_Window.prototype.clearLog = function() {
+Window.prototype.clearLog = function() {
   this._debugLog = '';
   this.finalizeLog();
 };
 
-parsegraph_Window.prototype.finalizeLog = function() {
+Window.prototype.finalizeLog = function() {
   this._debugPanel.innerHTML = this._debugLog;
 };
 
-parsegraph_Window.prototype.renderBasic = function() {
+Window.prototype.renderBasic = function() {
   this._container.style.backgroundColor = this._backgroundColor.asRGB();
 
   const gl = this.gl();
@@ -1341,7 +1360,9 @@ parsegraph_Window.prototype.renderBasic = function() {
   // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
+        'Refusing to render to an unprojectable window.' +
+        ' Use canProject() to handle, and parent this' +
+        ' window\'s container to fix.',
     );
   }
 
@@ -1369,7 +1390,8 @@ parsegraph_Window.prototype.renderBasic = function() {
   gl.enable(gl.SCISSOR_TEST);
   this.forEach(function(comp, compSize) {
     // console.log("Rendering: " + comp.peer().id());
-    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+    // console.log("Rendering component of size " +
+    // compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
         compSize.x(),
@@ -1385,7 +1407,7 @@ parsegraph_Window.prototype.renderBasic = function() {
   return needsUpdate;
 };
 
-parsegraph_Window.prototype.render = function() {
+Window.prototype.render = function() {
   this._overlayCanvas.width = top.window.innerWidth;
   this._overlayCanvas.height = top.window.innerHeight;
   this._overlayCtx.clearRect(

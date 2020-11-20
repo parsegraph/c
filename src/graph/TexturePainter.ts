@@ -1,11 +1,11 @@
-import {parsegraph_compileProgram} from '../gl';
-import parsegraph_PagingBuffer, {
-  parsegraph_createPagingBuffer,
+import {compileProgram} from '../gl';
+import pagingBuffer, {
+  createPagingBuffer,
 } from '../pagingbuffer';
 import Color from './Color';
-import parsegraph_Window from './Window';
+import Window from './Window';
 
-const parsegraph_TexturePainter_VertexShader =
+const texturePainterVertexShader =
   'uniform mat3 u_world;\n' +
   '' +
   'attribute vec2 a_position;' +
@@ -21,7 +21,7 @@ const parsegraph_TexturePainter_VertexShader =
   'alpha = a_alpha;' +
   '}';
 
-const parsegraph_TexturePainter_FragmentShader =
+const texturePainterFragmentShader =
   'uniform sampler2D u_texture;\n' +
   'varying highp vec2 texCoord;\n' +
   'varying highp float alpha;\n' +
@@ -31,26 +31,28 @@ const parsegraph_TexturePainter_FragmentShader =
   'gl_FragColor.a = gl_FragColor.a * alpha;' +
   '}';
 
+// eslint-disable-next-line require-jsdoc
 export default class TexturePainter {
   _gl;
   _textureProgram: number;
   _texture: number;
   _texWidth: number;
   _texHeight: number;
-  _buffer: parsegraph_PagingBuffer;
-  a_position: number;
-  a_color: number;
-  a_backgroundColor: number;
-  a_texCoord: number;
-  a_alpha: number;
-  u_world: number;
-  u_texture: number;
-  _color: parsegraph_Color;
-  _backgroundColor: parsegraph_Color;
+  _buffer: pagingBuffer;
+  aPosition: number;
+  aColor: number;
+  aBackgroundColor: number;
+  aTexCoord: number;
+  aAlpha: number;
+  uWorld: number;
+  uTexture: number;
+  _color: Color;
+  _backgroundColor: Color;
   _alpha: number;
 
+  // eslint-disable-next-line require-jsdoc
   constructor(
-      window: parsegraph_Window,
+      window: Window,
       textureId: number,
       texWidth: number,
       texHeight: number,
@@ -58,30 +60,30 @@ export default class TexturePainter {
     this._gl = window.gl();
 
     // Compile the shader program.
-    this._textureProgram = parsegraph_compileProgram(
+    this._textureProgram = compileProgram(
         window,
-        'parsegraph_TexturePainter',
-        parsegraph_TexturePainter_VertexShader,
-        parsegraph_TexturePainter_FragmentShader,
+        'TexturePainter',
+        TexturePainter_VertexShader,
+        TexturePainter_FragmentShader,
     );
     this._texture = textureId;
     this._texWidth = texWidth;
     this._texHeight = texHeight;
 
     // Prepare attribute buffers.
-    this._buffer = parsegraph_createPagingBuffer(
+    this._buffer = createPagingBuffer(
         this._gl,
         this._textureProgram,
     );
-    this.a_position = this._buffer.defineAttrib('a_position', 2);
-    this.a_color = this._buffer.defineAttrib('a_color', 4);
-    this.a_backgroundColor = this._buffer.defineAttrib('a_backgroundColor', 4);
-    this.a_texCoord = this._buffer.defineAttrib('a_texCoord', 2);
-    this.a_alpha = this._buffer.defineAttrib('a_alpha', 1);
+    this.aPosition = this._buffer.defineAttrib('a_position', 2);
+    this.aColor = this._buffer.defineAttrib('a_color', 4);
+    this.aBackgroundColor = this._buffer.defineAttrib('a_backgroundColor', 4);
+    this.aTexCoord = this._buffer.defineAttrib('a_texCoord', 2);
+    this.aAlpha = this._buffer.defineAttrib('a_alpha', 1);
 
     // Cache program locations.
-    this.u_world = this._gl.getUniformLocation(this._textureProgram, 'u_world');
-    this.u_texture = this._gl.getUniformLocation(
+    this.uWorld = this._gl.getUniformLocation(this._textureProgram, 'u_world');
+    this.uTexture = this._gl.getUniformLocation(
         this._textureProgram,
         'u_texture',
     );
@@ -93,14 +95,17 @@ export default class TexturePainter {
     this._alpha = 1;
   }
 
+  // eslint-disable-next-line require-jsdoc
   texture() {
     return this._texture;
   }
 
+  // eslint-disable-next-line require-jsdoc
   setAlpha(alpha: number): void {
     this._alpha = alpha;
   }
 
+  // eslint-disable-next-line require-jsdoc
   drawWholeTexture(
       x: number,
       y: number,
@@ -121,6 +126,7 @@ export default class TexturePainter {
     );
   }
 
+  // eslint-disable-next-line require-jsdoc
   drawTexture(
       iconX: number,
       iconY: number,
@@ -133,7 +139,7 @@ export default class TexturePainter {
       scale: number,
   ) {
     // Append position data.
-    this._buffer.appendData(this.a_position, [
+    this._buffer.appendData(this.aPosition, [
       x,
       y,
       x + width * scale,
@@ -170,15 +176,17 @@ export default class TexturePainter {
       iconY / this._texHeight,
     ]);
     for (let i = 0; i < 6; ++i) {
-      this._buffer.appendData(this.a_alpha, this._alpha);
+      this._buffer.appendData(this.aAlpha, this._alpha);
     }
   }
 
+  // eslint-disable-next-line require-jsdoc
   clear(): void {
     this._buffer.clear();
     this._buffer.addPage();
   }
 
+  // eslint-disable-next-line require-jsdoc
   render(world: number[]): void {
     const gl = this._gl;
 

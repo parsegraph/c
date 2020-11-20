@@ -1,43 +1,43 @@
 import {AnimationTimer, TimeoutTimer, elapsed} from '../timing';
 
-import {parsegraph_Method} from '../function';
+import {Method} from '../function';
 
 import {
-  parsegraph_GOVERNOR,
-  parsegraph_BURST_IDLE,
-  parsegraph_INTERVAL,
-  parsegraph_IDLE_MARGIN,
+  GOVERNOR,
+  BURST_IDLE,
+  INTERVAL,
+  IDLE_MARGIN,
 } from './settings';
-
-export default function parsegraph_TimingBelt() {
+// eslint-disable-next-line require-jsdoc
+export default function TimingBelt() {
   this._windows = [];
 
   this._idleJobs = [];
   this._renderTimer = new AnimationTimer();
   this._renderTimer.setListener(this.cycle, this);
 
-  this._governor = parsegraph_GOVERNOR;
-  this._burstIdle = parsegraph_BURST_IDLE;
-  this._interval = parsegraph_INTERVAL;
+  this._governor = GOVERNOR;
+  this._burstIdle = BURST_IDLE;
+  this._interval = INTERVAL;
   this._idleTimer = new TimeoutTimer();
-  this._idleTimer.setDelay(parsegraph_INTERVAL);
+  this._idleTimer.setDelay(INTERVAL);
   this._idleTimer.setListener(this.onIdleTimer, this);
   this._idleTimer.schedule();
 
   this._lastRender = null;
 }
 
-parsegraph_TimingBelt.prototype.onIdleTimer = function() {
-  this.idle(parsegraph_INTERVAL - parsegraph_IDLE_MARGIN);
+TimingBelt.prototype.onIdleTimer = function() {
+  this.idle(INTERVAL - IDLE_MARGIN);
 };
 
-parsegraph_TimingBelt.prototype.addWindow = function(window) {
+TimingBelt.prototype.addWindow = function(window) {
   this._windows.push(window);
   window.setOnScheduleUpdate(this.scheduleUpdate, this);
   this.scheduleUpdate();
 };
 
-parsegraph_TimingBelt.prototype.removeWindow = function(window) {
+TimingBelt.prototype.removeWindow = function(window) {
   for (const i in this._windows) {
     if (this._windows[i] === window) {
       this._windows.splice(i, 1);
@@ -48,24 +48,24 @@ parsegraph_TimingBelt.prototype.removeWindow = function(window) {
   return false;
 };
 
-parsegraph_TimingBelt.prototype.setGovernor = function(governor) {
+TimingBelt.prototype.setGovernor = function(governor) {
   this._governor = governor;
 };
 
-parsegraph_TimingBelt.prototype.setBurstIdle = function(burstIdle) {
+TimingBelt.prototype.setBurstIdle = function(burstIdle) {
   this._burstIdle = burstIdle;
 };
 
-parsegraph_TimingBelt.prototype.setInterval = function(interval) {
+TimingBelt.prototype.setInterval = function(interval) {
   this._interval = interval;
 };
 
-parsegraph_TimingBelt.prototype.queueJob = function(jobFunc, jobFuncThisArg) {
-  this._idleJobs.push(new parsegraph_Method(jobFunc, jobFuncThisArg));
+TimingBelt.prototype.queueJob = function(jobFunc, jobFuncThisArg) {
+  this._idleJobs.push(new Method(jobFunc, jobFuncThisArg));
   this.scheduleUpdate();
 };
 
-parsegraph_TimingBelt.prototype.idle = function(interval) {
+TimingBelt.prototype.idle = function(interval) {
   if (this._idleJobs.length === 0) {
     // ("Nothing to idle");
     return;
@@ -81,7 +81,7 @@ parsegraph_TimingBelt.prototype.idle = function(interval) {
       // log("Idling");
       const job = this._idleJobs[0];
       try {
-        var r = job.call(interval - elapsed(startTime));
+        const r = job.call(interval - elapsed(startTime));
       } catch (ex) {
         this._idleJobs.shift();
         this.scheduleUpdate();
@@ -105,7 +105,8 @@ parsegraph_TimingBelt.prototype.idle = function(interval) {
   } else if (this._idleJobs.length > 0) {
     if (elapsed(startTime) >= interval) {
       alert(
-          'Idle suppressed because there is no remaining time in the render loop.',
+          'Idle suppressed because there is no' +
+          ' remaining time in the render loop.',
       );
     } else if (
       this._governor &&
@@ -117,13 +118,13 @@ parsegraph_TimingBelt.prototype.idle = function(interval) {
   }
 };
 
-parsegraph_TimingBelt.prototype.doCycle = function() {
+TimingBelt.prototype.doCycle = function() {
   const startTime = new Date();
 
   // Update all input functions.
   let inputChangedScene = false;
-  for (var i = 0; i < this._windows.length; ++i) {
-    var window = this._windows[i];
+  for (let i = 0; i < this._windows.length; ++i) {
+    const window = this._windows[i];
     window.clearLog();
     inputChangedScene =
       window.handleEvent('tick', startTime) || inputChangedScene;
@@ -139,9 +140,10 @@ parsegraph_TimingBelt.prototype.doCycle = function() {
   const windowOffset = Math.floor(Math.random() % this._windows.length);
   if (inputChangedScene) {
     // console.log("Render and paint");
-    for (var i = 0; i < this._windows.length; ++i) {
-      var window = this._windows[(windowOffset + i) % this._windows.length];
-      // Eagerly retrieve the GL context since this can take a while on first attempt.
+    for (let i = 0; i < this._windows.length; ++i) {
+      const window = this._windows[(windowOffset + i) % this._windows.length];
+      // Eagerly retrieve the GL context since this
+      // can take a while on first attempt.
       window.gl();
       if (elapsed(startTime) > interval) {
         window.log('Timeout');
@@ -159,8 +161,8 @@ parsegraph_TimingBelt.prototype.doCycle = function() {
     }
   } else {
     window.log('Paint and render');
-    for (var i = 0; i < this._windows.length; ++i) {
-      var window = this._windows[(windowOffset + i) % this._windows.length];
+    for (let i = 0; i < this._windows.length; ++i) {
+      const window = this._windows[(windowOffset + i) % this._windows.length];
       if (elapsed(startTime) > interval) {
         window.log('Timeout');
         needsUpdate = true;
@@ -194,27 +196,27 @@ parsegraph_TimingBelt.prototype.doCycle = function() {
   );
 };
 
-parsegraph_TimingBelt.prototype.cycle = function() {
+TimingBelt.prototype.cycle = function() {
   const startTime = new Date();
 
   // Update all input functions.
   const inputChangedScene = false;
-  for (var i = 0; i < this._windows.length; ++i) {
-    var window = this._windows[i];
+  for (let i = 0; i < this._windows.length; ++i) {
+    const window = this._windows[i];
     window.clearLog();
   }
 
   try {
     this.doCycle();
   } finally {
-    for (var i = 0; i < this._windows.length; ++i) {
-      var window = this._windows[i];
+    for (let i = 0; i < this._windows.length; ++i) {
+      const window = this._windows[i];
       window.finalizeLog();
     }
   }
 };
 
-parsegraph_TimingBelt.prototype.scheduleUpdate = function() {
+TimingBelt.prototype.scheduleUpdate = function() {
   // console.log("TimingBelt is scheduling update");
   return this._renderTimer.schedule();
 };

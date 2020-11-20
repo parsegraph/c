@@ -1570,7 +1570,7 @@ viewport_Tests.addTest('Creased forward buds', function() {
   car.root().commitLayoutIteratively();
 });
 
-parsegraph_Viewport_Tests.addTest(
+viewport_Tests.addTest(
     'Centrally aligned back-and-forth',
     function() {
       const car = new Caret('b');
@@ -1682,7 +1682,7 @@ viewport_Tests.addTest('Absolute position test', function(out) {
   // console.log("bnode", bnode.absoluteX(), bnode.absoluteY());
 });
 
-nodeTests.addTest('parsegraph_Node.setLabel', function() {
+nodeTests.addTest('Node.setLabel', function() {
   const n = new Node(parsegraph_BLOCK);
   const font = defaultFont();
   n.setLabel('No time', font);
@@ -1713,7 +1713,7 @@ export default function makeChild2() {
   return car.root();
 }
 
-nodeTests.addTest('parsegraph_Node lisp test', function(out) {
+nodeTests.addTest('Node lisp test', function(out) {
   const car = new Caret(BUD);
   car.push();
   car.spawnMove('f', 's');
@@ -1749,7 +1749,7 @@ nodeTests.addTest('parsegraph_Node lisp test', function(out) {
   });
 });
 
-nodeTests.addTest('parsegraph_Node lisp test simplified', function(
+nodeTests.addTest('Node lisp test simplified', function(
     out,
 ) {
   const root = new Node(BUD);
@@ -1777,7 +1777,7 @@ nodeTests.addTest('parsegraph_Node lisp test simplified', function(
 });
 
 nodeTests.addTest(
-    'parsegraph_Node layout preference test',
+    'Node layout preference test',
     function(out) {
       const root = new Node(BUD);
       root._id = 'root';
@@ -1821,7 +1821,7 @@ nodeTests.addTest(
 );
 
 nodeTests.addTest(
-    'parsegraph_Node Morris world threading connected',
+    'Node Morris world threading connected',
     function() {
       const n = new Node(parsegraph_BLOCK);
       if (n._layoutNext != n) {

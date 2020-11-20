@@ -1,42 +1,43 @@
-export const parsegraph_COMPONENT_LAYOUT_VERTICAL = 'LAYOUT_VERTICAL';
-export const parsegraph_COMPONENT_LAYOUT_HORIZONTAL = 'LAYOUT_HORIZONTAL';
-export const parsegraph_COMPONENT_LAYOUT_ENTRY = 'LAYOUT_ENTRY';
+export const COMPONENT_LAYOUT_VERTICAL = 'LAYOUT_VERTICAL';
+export const COMPONENT_LAYOUT_HORIZONTAL = 'LAYOUT_HORIZONTAL';
+export const COMPONENT_LAYOUT_ENTRY = 'LAYOUT_ENTRY';
 
-export function parsegraph_LayoutList(type, parent) {
+// eslint-disable-next-line require-jsdoc
+export default function LayoutList(type, parent) {
   this._type = type;
   this._parent = parent;
   this._entries = [];
 }
 
-parsegraph_LayoutList.prototype.setEntry = function(comp) {
+LayoutList.prototype.setEntry = function(comp) {
   if (this._entries[0]) {
     throw new Error('A layout list must not change its entry once set');
   }
   this._entries[0] = comp;
 };
 
-parsegraph_LayoutList.prototype.component = function() {
+LayoutList.prototype.component = function() {
   return this._entries[0];
 };
 
-parsegraph_LayoutList.prototype.type = function() {
+LayoutList.prototype.type = function() {
   return this._type;
 };
 
-parsegraph_LayoutList.prototype.addWithType = function(comp, layoutType) {
+LayoutList.prototype.addWithType = function(comp, layoutType) {
   if (
-    layoutType !== parsegraph_COMPONENT_LAYOUT_HORIZONTAL &&
-    layoutType !== parsegraph_COMPONENT_LAYOUT_VERTICAL
+    layoutType !== COMPONENT_LAYOUT_HORIZONTAL &&
+    layoutType !== COMPONENT_LAYOUT_VERTICAL
   ) {
     throw new Error(
         'LayoutList type must be horizontal or vertical when adding with type.',
     );
   }
-  var entry;
-  if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+  let entry;
+  if (this._type === COMPONENT_LAYOUT_ENTRY) {
     if (this._parent && layoutType === this._parent.type()) {
-      var entry = new parsegraph_LayoutList(
-          parsegraph_COMPONENT_LAYOUT_ENTRY,
+      const entry = new LayoutList(
+          COMPONENT_LAYOUT_ENTRY,
           this._parent,
       );
       entry.setEntry(comp);
@@ -50,12 +51,12 @@ parsegraph_LayoutList.prototype.addWithType = function(comp, layoutType) {
     }
     // console.log("Changing list from entry");
     this._type = layoutType;
-    var firstEntry = new parsegraph_LayoutList(
-        parsegraph_COMPONENT_LAYOUT_ENTRY,
+    const firstEntry = new LayoutList(
+        COMPONENT_LAYOUT_ENTRY,
         this,
     );
     firstEntry.setEntry(this.component());
-    entry = new parsegraph_LayoutList(parsegraph_COMPONENT_LAYOUT_ENTRY, this);
+    entry = new LayoutList(COMPONENT_LAYOUT_ENTRY, this);
     entry.setEntry(comp);
     this._entries[0] = firstEntry;
     this._entries[1] = entry;
@@ -65,41 +66,41 @@ parsegraph_LayoutList.prototype.addWithType = function(comp, layoutType) {
     this._type === layoutType ||
     this._entries.length === 0 ||
     (this._entries.length === 1 &&
-      this._entries[0].type() === parsegraph_COMPONENT_LAYOUT_ENTRY)
+      this._entries[0].type() === COMPONENT_LAYOUT_ENTRY)
   ) {
     // console.log("Repurposing list");
     this._type = layoutType;
-    entry = new parsegraph_LayoutList(parsegraph_COMPONENT_LAYOUT_ENTRY, this);
+    entry = new LayoutList(COMPONENT_LAYOUT_ENTRY, this);
     entry.setEntry(comp);
     this._entries.push(entry);
   } else {
     // console.log("Creating nested list");
-    var firstEntry = new parsegraph_LayoutList(layoutType, this);
+    const firstEntry = new LayoutList(layoutType, this);
     firstEntry.addWithType(comp, layoutType);
     this._entries.push(firstEntry);
   }
 };
 
-parsegraph_LayoutList.prototype.addVertical = function(comp) {
-  return this.addWithType(comp, parsegraph_COMPONENT_LAYOUT_VERTICAL);
+LayoutList.prototype.addVertical = function(comp) {
+  return this.addWithType(comp, COMPONENT_LAYOUT_VERTICAL);
 };
 
-parsegraph_LayoutList.prototype.addHorizontal = function(comp) {
-  return this.addWithType(comp, parsegraph_COMPONENT_LAYOUT_HORIZONTAL);
+LayoutList.prototype.addHorizontal = function(comp) {
+  return this.addWithType(comp, COMPONENT_LAYOUT_HORIZONTAL);
 };
 
-parsegraph_LayoutList.prototype.forEach = function(
+LayoutList.prototype.forEach = function(
     func,
     funcThisArg,
     compSize,
 ) {
-  if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+  if (this._type === COMPONENT_LAYOUT_ENTRY) {
     return func.call(funcThisArg, this.component(), compSize);
   }
   const entrySize = compSize ? compSize.clone() : null;
   for (const i in this._entries) {
     if (compSize) {
-      if (this._type === parsegraph_COMPONENT_LAYOUT_HORIZONTAL) {
+      if (this._type === COMPONENT_LAYOUT_HORIZONTAL) {
         entrySize.setWidth(compSize.width() / this._entries.length);
         entrySize.setX(compSize.x() + i * entrySize.width());
       } else {
@@ -116,11 +117,11 @@ parsegraph_LayoutList.prototype.forEach = function(
   }
 };
 
-parsegraph_LayoutList.prototype.isEmpty = function() {
+LayoutList.prototype.isEmpty = function() {
   return this._entries.length === 0;
 };
 
-parsegraph_LayoutList.prototype.getPrevious = function(target) {
+LayoutList.prototype.getPrevious = function(target) {
   let prior = null;
   if (
     this.forEach(function(comp) {
@@ -135,7 +136,7 @@ parsegraph_LayoutList.prototype.getPrevious = function(target) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.getNext = function(target) {
+LayoutList.prototype.getNext = function(target) {
   let next = null;
   let found = false;
   if (
@@ -154,13 +155,13 @@ parsegraph_LayoutList.prototype.getNext = function(target) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.remove = function(comp) {
-  if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+LayoutList.prototype.remove = function(comp) {
+  if (this._type === COMPONENT_LAYOUT_ENTRY) {
     throw new Error('A layoutList entry cannot remove itself');
   }
   for (const i in this._entries) {
     const entry = this._entries[i];
-    if (entry.type() === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+    if (entry.type() === COMPONENT_LAYOUT_ENTRY) {
       if (entry.component() === comp) {
         this._entries.splice(i, 1);
         return true;
@@ -177,8 +178,8 @@ parsegraph_LayoutList.prototype.remove = function(comp) {
   return false;
 };
 
-parsegraph_LayoutList.prototype.contains = function(comp) {
-  if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+LayoutList.prototype.contains = function(comp) {
+  if (this._type === COMPONENT_LAYOUT_ENTRY) {
     return this.component() === comp ? this : null;
   }
   for (const i in this._entries) {
@@ -191,8 +192,8 @@ parsegraph_LayoutList.prototype.contains = function(comp) {
   return null;
 };
 
-parsegraph_LayoutList.prototype.count = function() {
-  if (this._type === parsegraph_COMPONENT_LAYOUT_ENTRY) {
+LayoutList.prototype.count = function() {
+  if (this._type === COMPONENT_LAYOUT_ENTRY) {
     return this.component() ? 1 : 0;
   }
   let c = 0;

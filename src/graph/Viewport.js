@@ -1,8 +1,8 @@
-import parsegraph_Component from './Component';
-import parsegraph_Camera from './Camera';
-import parsegraph_Carousel from './Carousel';
-import parsegraph_Input from './Input';
-import parsegraph_BurgerMenu from './BurgerMenu';
+import Component from './Component';
+import Camera from './Camera';
+import Carousel from './Carousel';
+import Input from './Input';
+import BurgerMenu from './BurgerMenu';
 
 /**
  * TODO Add gridX and gridY camera listeners, with support for loading from an
@@ -38,24 +38,25 @@ import parsegraph_BurgerMenu from './BurgerMenu';
   * grid cells is determined for each axis using the camera's axis size
   * adjusted by some constant.
  */
-let parsegraph_Viewport_COUNT = 0;
-const parsegraph_Viewport_TYPE = 'parsegraph_Viewport';
-export default function parsegraph_Viewport(window, world) {
+let viewportCount = 0;
+const viewportType = 'Viewport';
+// eslint-disable-next-line require-jsdoc
+export default function Viewport(window, world) {
   if (!window) {
     throw new Error('A window must be provided');
   }
-  this._id = ++parsegraph_Viewport_COUNT;
+  this._id = ++viewportCount;
   // Construct the graph.
-  this._component = new parsegraph_Component(this, parsegraph_Viewport_TYPE);
+  this._component = new Component(this, viewportType);
   this._window = window;
   this._world = world;
-  this._camera = new parsegraph_Camera();
-  this._carousel = new parsegraph_Carousel(this);
-  this._input = new parsegraph_Input(this);
+  this._camera = new Camera();
+  this._carousel = new Carousel(this);
+  this._input = new Input(this);
 
   this._menu = null;
-  this._menu = new parsegraph_BurgerMenu(this);
-  // this._piano = new parsegraph_AudioKeyboard(this._camera);
+  this._menu = new BurgerMenu(this);
+  // this._piano = new AudioKeyboard(this._camera);
   this._renderedMouse = -1;
   this._needsRender = true;
 
@@ -66,11 +67,11 @@ export default function parsegraph_Viewport(window, world) {
   this._component.setSerializer(this.serialize, this);
 }
 
-parsegraph_Viewport.prototype.id = function() {
+Viewport.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Viewport.prototype.handleEvent = function(eventType, eventData) {
+Viewport.prototype.handleEvent = function(eventType, eventData) {
   if (eventType === 'blur') {
     this._menu.closeMenu();
     return true;
@@ -107,59 +108,59 @@ parsegraph_Viewport.prototype.handleEvent = function(eventType, eventData) {
     return this._input.onKeyup(eventData);
   }
   if (eventType === 'tick') {
-    return this._input.Update(eventData);
+    return this._input.update(eventData);
   }
   console.log('Unhandled event type: ' + eventType);
 };
 
-parsegraph_Viewport.prototype.serialize = function() {
+Viewport.prototype.serialize = function() {
   return {
-    componentType: parsegraph_Viewport_TYPE,
+    componentType: viewportType,
     camera: this._camera.toJSON(),
   };
 };
 
-parsegraph_Viewport.prototype.component = function() {
+Viewport.prototype.component = function() {
   return this._component;
 };
 
-parsegraph_Viewport.prototype.width = function() {
+Viewport.prototype.width = function() {
   return this._window.layout(this.component()).width();
 };
 
-parsegraph_Viewport.prototype.x = function() {
+Viewport.prototype.x = function() {
   return this._window.layout(this.component()).x();
 };
 
-parsegraph_Viewport.prototype.y = function() {
+Viewport.prototype.y = function() {
   return this._window.layout(this.component()).y();
 };
 
-parsegraph_Viewport.prototype.height = function() {
+Viewport.prototype.height = function() {
   return this._window.layout(this.component()).height();
 };
 
-parsegraph_Viewport.prototype.setLayout = function(layout) {
+Viewport.prototype.setLayout = function(layout) {
   this._component.setLayout(layout);
 };
 
-parsegraph_Viewport.prototype.layout = function(window, outSize) {
+Viewport.prototype.layout = function(window, outSize) {
   return this._component.layout(window, outSize);
 };
 
-parsegraph_Viewport.prototype.shaders = function() {
+Viewport.prototype.shaders = function() {
   return this.window().shaders();
 };
 
-parsegraph_Viewport.prototype.window = function() {
+Viewport.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_Viewport.prototype.gl = function() {
+Viewport.prototype.gl = function() {
   return this._window.gl();
 };
 
-parsegraph_Viewport.prototype.contextChanged = function(isLost) {
+Viewport.prototype.contextChanged = function(isLost) {
   const window = this.window();
   this._world.contextChanged(isLost, window);
   this._carousel.contextChanged(isLost);
@@ -167,44 +168,44 @@ parsegraph_Viewport.prototype.contextChanged = function(isLost) {
   this._menu.contextChanged(isLost);
 };
 
-parsegraph_Viewport.prototype.world = function() {
+Viewport.prototype.world = function() {
   return this._world;
 };
 
-parsegraph_Viewport.prototype.carousel = function() {
+Viewport.prototype.carousel = function() {
   return this._carousel;
 };
 
-parsegraph_Viewport.prototype.menu = function() {
+Viewport.prototype.menu = function() {
   return this._menu;
 };
 
-parsegraph_Viewport.prototype.camera = function() {
+Viewport.prototype.camera = function() {
   return this._camera;
 };
 
-parsegraph_Viewport.prototype.input = function() {
+Viewport.prototype.input = function() {
   return this._input;
 };
 
-parsegraph_Viewport.prototype.dispose = function() {
+Viewport.prototype.dispose = function() {
   this._menu.dispose();
 };
 
-parsegraph_Viewport.prototype.scheduleRepaint = function() {
+Viewport.prototype.scheduleRepaint = function() {
   // console.log("Viewport is scheduling repaint");
   this._component.scheduleUpdate();
   this._needsRepaint = true;
   this._needsRender = true;
 };
 
-parsegraph_Viewport.prototype.scheduleRender = function() {
+Viewport.prototype.scheduleRender = function() {
   // console.log("Viewport is scheduling render");
   this._component.scheduleUpdate();
   this._needsRender = true;
 };
 
-parsegraph_Viewport.prototype.needsRepaint = function() {
+Viewport.prototype.needsRepaint = function() {
   return (
     this._needsRepaint ||
     this._world.needsRepaint() ||
@@ -213,7 +214,7 @@ parsegraph_Viewport.prototype.needsRepaint = function() {
   );
 };
 
-parsegraph_Viewport.prototype.needsRender = function() {
+Viewport.prototype.needsRender = function() {
   return (
     this.needsRepaint() ||
     this._needsRender ||
@@ -221,8 +222,8 @@ parsegraph_Viewport.prototype.needsRender = function() {
   );
 };
 
-parsegraph_Viewport.prototype.plot = function() {
-  return this.world().plot.apply(this.world(), arguments);
+Viewport.prototype.plot = function(...args) {
+  return this.world().plot.apply(this.world(), ...args);
 };
 
 /**
@@ -230,7 +231,8 @@ parsegraph_Viewport.prototype.plot = function() {
  *
  * Returns true if the graph completed painting.
  */
-parsegraph_Viewport.prototype.paint = function(timeout) {
+// eslint-disable-next-line require-jsdoc
+Viewport.prototype.paint = function(timeout) {
   const window = this._window;
   const gl = this._window.gl();
   if (gl.isContextLost()) {
@@ -255,16 +257,16 @@ parsegraph_Viewport.prototype.paint = function(timeout) {
   return needsUpdate;
 };
 
-parsegraph_Viewport.prototype.mouseVersion = function() {
+Viewport.prototype.mouseVersion = function() {
   return this._renderedMouse;
 };
 
-parsegraph_Viewport.prototype.showInCamera = function(node) {
+Viewport.prototype.showInCamera = function(node) {
   this._nodeShown = node;
   this.scheduleRender();
 };
 
-parsegraph_Viewport.prototype.render = function(
+Viewport.prototype.render = function(
     width,
     height,
     avoidIfPossible,

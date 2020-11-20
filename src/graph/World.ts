@@ -1,6 +1,6 @@
-import parsegraph_TestSuite from '../TestSuite';
-import parsegraph_Freezer from './Freezer';
-import parsegraph_CameraBox from './CameraBox';
+import TestSuite from '../TestSuite';
+import Freezer from './Freezer';
+import CameraBox from './CameraBox';
 import Node, {
   resetNodesPainted,
   outputNodesPainted,
@@ -8,18 +8,19 @@ import Node, {
   Type,
 } from './Node';
 import Caret from './Caret';
-import parsegraph_Rect from './Rect';
-import parsegraph_Window from './Window';
-import parsegraph_Camera from './Camera';
+import Rect from './Rect';
+import Window from './Window';
+import Camera from './Camera';
 
+// eslint-disable-next-line require-jsdoc
 export default class World {
   _worldPaintingDirty: boolean;
   _worldRoots: Node[];
   _nodeUnderCursor: Node;
   _previousWorldPaintState: number;
-  _freezer: parsegraph_Freezer;
-  _cameraBox: parsegraph_CameraBox;
-
+  _freezer: Freezer;
+  _cameraBox: CameraBox;
+  // eslint-disable-next-line require-jsdoc
   constructor() {
     // World-rendered graphs.
     this._worldPaintingDirty = true;
@@ -29,15 +30,15 @@ export default class World {
     this._nodeUnderCursor = null;
 
     this._previousWorldPaintState = null;
-    this._freezer = new parsegraph_Freezer();
-    this._cameraBox = new parsegraph_CameraBox();
+    this._freezer = new Freezer();
+    this._cameraBox = new CameraBox();
   }
-
-  freezer(): parsegraph_Freezer {
+  // eslint-disable-next-line require-jsdoc
+  freezer(): Freezer {
     return this._freezer;
   }
-
-  contextChanged(isLost: boolean, window: parsegraph_Window): void {
+  // eslint-disable-next-line require-jsdoc
+  contextChanged(isLost: boolean, window: Window): void {
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
     for (let i = 0; i < this._worldRoots.length; ++i) {
@@ -46,7 +47,7 @@ export default class World {
     }
     this._cameraBox.contextChanged(isLost, window);
   }
-
+  // eslint-disable-next-line require-jsdoc
   plot(node: Node | Caret): void {
     if (!node) {
       throw new Error('Node must not be null');
@@ -60,7 +61,7 @@ export default class World {
     }
     this._worldRoots.push(node);
   }
-
+  // eslint-disable-next-line require-jsdoc
   removePlot(plot: Node): Node {
     for (let i = 0; i < this._worldRoots.length; ++i) {
       if (this._worldRoots[i] === plot) {
@@ -78,6 +79,7 @@ export default class World {
    *
    * Returns true if this event processing requires a graph repaint.
    */
+  // eslint-disable-next-line require-jsdoc
   mouseOver(x: number, y: number): number {
     if (!this.readyForInput()) {
       return 1;
@@ -118,10 +120,10 @@ export default class World {
 
     return 2;
   }
-
-  boundingRect(outRect?: parsegraph_Rect): parsegraph_Rect {
+  // eslint-disable-next-line require-jsdoc
+  boundingRect(outRect?: Rect): Rect {
     if (!outRect) {
-      outRect = new parsegraph_Rect(0, 0, 0, 0);
+      outRect = new Rect(0, 0, 0, 0);
     }
     this._worldRoots.forEach(function(plot) {
       plot.commitLayoutIteratively();
@@ -188,17 +190,17 @@ export default class World {
 
     return outRect;
   }
-
+  // eslint-disable-next-line require-jsdoc
   scheduleRepaint(): void {
     // console.log(new Error("Scheduling repaint"));
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
   }
-
+  // eslint-disable-next-line require-jsdoc
   nodeUnderCursor(): Node {
     return this._nodeUnderCursor;
   }
-
+  // eslint-disable-next-line require-jsdoc
   readyForInput(): boolean {
     // Test if there is a node under the given coordinates.
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -209,7 +211,7 @@ export default class World {
     }
     return true;
   }
-
+  // eslint-disable-next-line require-jsdoc
   commitLayout(timeout?: number): boolean {
     let completed = true;
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -223,6 +225,7 @@ export default class World {
   /**
    * Tests whether the given position, in world space, is within a node.
    */
+  // eslint-disable-next-line require-jsdoc
   nodeUnderCoords(x: number, y: number): Node {
     // Test if there is a node under the given coordinates.
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -234,12 +237,12 @@ export default class World {
     }
     return null;
   }
-
+  // eslint-disable-next-line require-jsdoc
   needsRepaint(): boolean {
     return this._worldPaintingDirty || this._cameraBox.needsRepaint();
   }
-
-  paint(window: parsegraph_Window, timeout?: number): boolean {
+  // eslint-disable-next-line require-jsdoc
+  paint(window: Window, timeout?: number): boolean {
     const gl = window.gl();
     if (gl.isContextLost()) {
       return false;
@@ -300,8 +303,8 @@ export default class World {
 
     return false;
   }
-
-  render(window: parsegraph_Window, camera: parsegraph_Camera): boolean {
+  // eslint-disable-next-line require-jsdoc
+  render(window: Window, camera: Camera): boolean {
     const gl = window.gl();
     if (gl.isContextLost()) {
       return false;
@@ -316,9 +319,9 @@ export default class World {
   }
 }
 
-const parsegraph_World_Tests = new parsegraph_TestSuite('parsegraph_World');
+const worldTests = new TestSuite('World');
 
-parsegraph_World_Tests.addTest('parsegraph_World.plot', function() {
+worldTests.addTest('World.plot', function() {
   const w = new World();
 
   let f = 0;
@@ -330,11 +333,11 @@ parsegraph_World_Tests.addTest('parsegraph_World.plot', function() {
     f = 3;
   }
   if (f != 3) {
-    return 'parsegraph_plot must fail with null node';
+    return 'plot must fail with null node';
   }
 });
 
-parsegraph_World_Tests.addTest('world.plot with caret', function() {
+worldTests.addTest('world.plot with caret', function() {
   const w = new World();
   const car = new Caret('b');
   let f = 0;
@@ -346,11 +349,11 @@ parsegraph_World_Tests.addTest('world.plot with caret', function() {
     f = ex;
   }
   if (f != 2) {
-    return 'parsegraph_plot must handle being passed a Caret: ' + f;
+    return 'plot must handle being passed a Caret: ' + f;
   }
 });
 
-parsegraph_World_Tests.addTest('boundingRect', function() {
+worldTests.addTest('boundingRect', function() {
   const w = new World();
   const car = new Caret('b');
   w.plot(car);
