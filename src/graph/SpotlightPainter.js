@@ -1,11 +1,11 @@
 import {
-  parsegraph_generateRectangleVertices,
-  parsegraph_generateRectangleTexcoords,
-  parsegraph_compileProgram,
+  generateRectangleVertices,
+  generateRectangleTexcoords,
+  compileProgram,
 } from '../gl';
-import {parsegraph_createPagingBuffer} from '../pagingbuffer';
+import {createPagingBuffer} from '../pagingbuffer';
 
-const parsegraph_SpotlightPainter_VertexShader =
+const spotlightPainterVertexShader =
   'uniform mat3 u_world;\n' +
   '\n' +
   'attribute vec2 a_position;\n' +
@@ -21,7 +21,7 @@ const parsegraph_SpotlightPainter_VertexShader =
   'texCoord = a_texCoord;' +
   '}';
 
-const parsegraph_SpotlightPainter_FragmentShader =
+const spotlightPainterFragmentShader =
   '#ifdef GL_ES\n' +
   'precision mediump float;\n' +
   '#endif\n' +
@@ -38,7 +38,8 @@ const parsegraph_SpotlightPainter_FragmentShader =
   'gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);' +
   '}';
 
-export default function parsegraph_SpotlightPainter(window) {
+// eslint-disable-next-line require-jsdoc
+export default function SpotlightPainter(window) {
   this._window = window;
   if (!this._window) {
     throw new Error('Window must be provided');
@@ -48,7 +49,7 @@ export default function parsegraph_SpotlightPainter(window) {
   this.contextChanged(this._window.gl().isContextLost());
 }
 
-parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
+SpotlightPainter.prototype.drawSpotlight = function(
     cx,
     cy,
     radius,
@@ -61,13 +62,13 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
   // Append position data.
   this._spotlightBuffer.appendData(
       this.a_position,
-      parsegraph_generateRectangleVertices(cx, cy, radius * 2, radius * 2),
+      generateRectangleVertices(cx, cy, radius * 2, radius * 2),
   );
 
   // Append texture coordinate data.
   this._spotlightBuffer.appendData(
       this.a_texCoord,
-      parsegraph_generateRectangleTexcoords(),
+      generateRectangleTexcoords(),
   );
 
   // Append color data.
@@ -82,7 +83,7 @@ parsegraph_SpotlightPainter.prototype.drawSpotlight = function(
   }
 };
 
-parsegraph_SpotlightPainter.prototype.drawRectSpotlight = function(
+SpotlightPainter.prototype.drawRectSpotlight = function(
     cx,
     cy,
     w,
@@ -95,13 +96,13 @@ parsegraph_SpotlightPainter.prototype.drawRectSpotlight = function(
   // Append position data.
   this._spotlightBuffer.appendData(
       this.a_position,
-      parsegraph_generateRectangleVertices(cx, cy, w, h),
+      generateRectangleVertices(cx, cy, w, h),
   );
 
   // Append texture coordinate data.
   this._spotlightBuffer.appendData(
       this.a_texCoord,
-      parsegraph_generateRectangleTexcoords(),
+      generateRectangleTexcoords(),
   );
 
   // Append color data.
@@ -116,12 +117,12 @@ parsegraph_SpotlightPainter.prototype.drawRectSpotlight = function(
   }
 };
 
-parsegraph_SpotlightPainter.prototype.clear = function() {
+SpotlightPainter.prototype.clear = function() {
   this._spotlightBuffer.clear();
   this._spotlightBuffer.addPage();
 };
 
-parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost) {
+SpotlightPainter.prototype.contextChanged = function(isLost) {
   if (isLost) {
     // console.log(new Error("Losing spotlight painter"));
     this._program = null;
@@ -130,14 +131,14 @@ parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost) {
   } else {
     // console.log(new Error("Restoring spotlight painter"));
     const gl = this._window.gl();
-    this._program = parsegraph_compileProgram(
+    this._program = compileProgram(
         this._window,
-        'parsegraph_SpotlightPainter',
-        parsegraph_SpotlightPainter_VertexShader,
-        parsegraph_SpotlightPainter_FragmentShader,
+        'SpotlightPainter',
+        SpotlightPainter_VertexShader,
+        SpotlightPainter_FragmentShader,
     );
     // Prepare attribute buffers.
-    this._spotlightBuffer = parsegraph_createPagingBuffer(gl, this._program);
+    this._spotlightBuffer = createPagingBuffer(gl, this._program);
     this._spotlightBuffer.addPage();
 
     this.a_position = this._spotlightBuffer.defineAttrib('a_position', 2);
@@ -146,7 +147,7 @@ parsegraph_SpotlightPainter.prototype.contextChanged = function(isLost) {
   }
 };
 
-parsegraph_SpotlightPainter.prototype.render = function(world, scale) {
+SpotlightPainter.prototype.render = function(world, scale) {
   const gl = this._window.gl();
   if (gl.isContextLost()) {
     return;

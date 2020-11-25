@@ -1,4 +1,5 @@
-import parsegraph_TestSuite from '../TestSuite';
+/* eslint-disable require-jsdoc */
+import TestSuite from '../TestSuite';
 
 export default class Rect {
   _x: number;
@@ -163,37 +164,37 @@ export default class Rect {
   }
 }
 
-const parsegraph_Rect_Tests = new parsegraph_TestSuite('parsegraph_Rect');
+const rectTests = new TestSuite('Rect');
 
-parsegraph_Rect_Tests.addTest('vMin', function() {
+rectTests.addTest('vMin', function() {
   const r = new Rect(0, 0, 200, 200);
   if (r.vMin() !== -100) {
     return 'vMin, expected -100, got ' + r.vMin();
   }
 });
 
-parsegraph_Rect_Tests.addTest('vMax', function() {
+rectTests.addTest('vMax', function() {
   const r = new Rect(0, 0, 200, 200);
   if (r.vMax() !== 100) {
     return 'vMax, expected 100, got ' + r.vMax();
   }
 });
 
-parsegraph_Rect_Tests.addTest('hMin', function() {
+rectTests.addTest('hMin', function() {
   const r = new Rect(0, 0, 300, 200);
   if (r.hMin() !== -150) {
     return 'vMin, expected -150, got ' + r.vMin();
   }
 });
 
-parsegraph_Rect_Tests.addTest('hMax', function() {
+rectTests.addTest('hMax', function() {
   const r = new Rect(0, 0, 300, 200);
   if (r.hMax() !== 150) {
     return 'hMax, expected 150, got ' + r.vMax();
   }
 });
 
-parsegraph_Rect_Tests.addTest('include', function() {
+rectTests.addTest('include', function() {
   const r = new Rect(0, 0, 200, 200);
   r.include(0, 400, 200, 200);
 

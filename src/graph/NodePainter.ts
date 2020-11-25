@@ -1,4 +1,5 @@
-import {parsegraph_checkGLError, parsegraph_getTextureSize} from '../gl';
+/* eslint-disable require-jsdoc */
+import {checkGLError, getTextureSize} from '../gl';
 import Node, {
   Type,
   Direction,
@@ -7,32 +8,32 @@ import Node, {
   directionSign,
 } from './Node';
 import BlockPainter from './BlockPainter';
-import {parsegraph_BACKGROUND_COLOR} from './settings';
+import {BACKGROUND_COLOR} from './settings';
 import {
-  parsegraph_SELECTED_LINE_COLOR,
-  parsegraph_LINE_COLOR,
-  parsegraph_LINE_THICKNESS,
-  parsegraph_EXTENT_BORDER_ROUNDEDNESS,
-  parsegraph_EXTENT_BORDER_THICKNESS,
-  parsegraph_EXTENT_BORDER_COLOR,
-  parsegraph_EXTENT_BACKGROUND_COLOR,
+  SELECTED_LINE_COLOR,
+  LINE_COLOR,
+  LINE_THICKNESS,
+  EXTENT_BORDER_ROUNDEDNESS,
+  EXTENT_BORDER_THICKNESS,
+  EXTENT_BORDER_COLOR,
+  EXTENT_BACKGROUND_COLOR,
 } from './NodeStyle';
 import Size from './Size';
-import parsegraph_GlyphPainter from './GlyphPainter';
+import GlyphPainter from './GlyphPainter';
 import Rect from './Rect';
-import parsegraph_Window from './Window';
+import Window from './Window';
 import Color from './Color';
-import parsegraph_Font from './Font';
+import Font from './Font';
 import TexturePainter from './TexturePainter';
 
 export default class NodePainter {
-  _window: parsegraph_Window;
+  _window: Window;
   _backgroundColor: Color;
   _blockPainter: BlockPainter;
   _renderBlocks: boolean;
   _extentPainter: BlockPainter;
   _renderExtents: boolean;
-  _fontPainters: { [key: string]: parsegraph_GlyphPainter };
+  _fontPainters: { [key: string]: GlyphPainter };
   _renderText: boolean;
   _textures: TexturePainter[];
   _pagesPerGlyphTexture: number;
@@ -42,10 +43,10 @@ export default class NodePainter {
   _renderScenes: boolean;
   bodySize: Size;
 
-  constructor(window: parsegraph_Window) {
+  constructor(window: Window) {
     this._window = window;
 
-    this._backgroundColor = parsegraph_BACKGROUND_COLOR;
+    this._backgroundColor = BACKGROUND_COLOR;
 
     this._blockPainter = new BlockPainter(window);
     this._renderBlocks = true;
@@ -68,8 +69,10 @@ export default class NodePainter {
     this._blockPainter.contextChanged(isLost);
     this._extentPainter.contextChanged(isLost);
     for (const fontName in this._fontPainters) {
-      const fontPainter = this._fontPainters[fontName];
-      fontPainter.contextChanged(isLost);
+      if (Object.prototype.hasOwnProperty.call(this._fontPainters, fontName)) {
+        const fontPainter = this._fontPainters[fontName];
+        fontPainter.contextChanged(isLost);
+      }
     }
     this._textures.forEach(function(t) {
       t.contextChanged(isLost);
@@ -81,17 +84,17 @@ export default class NodePainter {
     return this._blockPainter.bounds();
   }
 
-  getFontPainter(font: parsegraph_Font): parsegraph_GlyphPainter {
+  getFontPainter(font: Font): GlyphPainter {
     const fullFontName: string = font.fullName();
-    let painter: parsegraph_GlyphPainter = this._fontPainters[fullFontName];
+    let painter: GlyphPainter = this._fontPainters[fullFontName];
     if (!painter) {
-      painter = new parsegraph_GlyphPainter(this.window(), font);
+      painter = new GlyphPainter(this.window(), font);
       this._fontPainters[fullFontName] = painter;
     }
     return painter;
   }
 
-  window(): parsegraph_Window {
+  window(): Window {
     return this._window;
   }
 
@@ -114,8 +117,10 @@ export default class NodePainter {
     this._blockPainter.clear();
     this._extentPainter.clear();
     for (const fontName in this._fontPainters) {
-      const fontPainter: parsegraph_GlyphPainter = this._fontPainters[fontName];
-      fontPainter.clear();
+      if (Object.prototype.hasOwnProperty.call(this._fontPainters, fontName)) {
+        const fontPainter: GlyphPainter = this._fontPainters[fontName];
+        fontPainter.clear();
+      }
     }
 
     // const gl = this.gl();
@@ -145,24 +150,24 @@ export default class NodePainter {
       if (x1 == x2) {
         // Vertical line.
         size = new Size(
-            parsegraph_LINE_THICKNESS * node.groupScale() * thickness,
+            LINE_THICKNESS * node.groupScale() * thickness,
             Math.abs(y2 - y1),
         );
       } else {
         // Horizontal line.
         size = new Size(
             Math.abs(x2 - x1),
-            parsegraph_LINE_THICKNESS * node.groupScale() * thickness,
+            LINE_THICKNESS * node.groupScale() * thickness,
         );
       }
 
       if (color === undefined) {
         if (node.isSelected()) {
-          color = parsegraph_SELECTED_LINE_COLOR.premultiply(
+          color = SELECTED_LINE_COLOR.premultiply(
               style.backgroundColor,
           );
         } else {
-          color = parsegraph_LINE_COLOR.premultiply(style.backgroundColor);
+          color = LINE_COLOR.premultiply(style.backgroundColor);
         }
       }
       painter.setBorderColor(color);
@@ -260,7 +265,11 @@ export default class NodePainter {
     //    );
     /* if(style.maxLabelChars) {
             fontPainter.setWrapWidth(
-                fontScale * style.fontSize * style.maxLabelChars * style.letterWidth * node.groupScale()
+                fontScale *
+                style.fontSize *
+                style.maxLabelChars *
+                style.letterWidth *
+                node.groupScale()
             );
         }*/
 
@@ -349,10 +358,10 @@ export default class NodePainter {
     }
 
     gl.clearColor(
-        parsegraph_BACKGROUND_COLOR.r(),
-        parsegraph_BACKGROUND_COLOR.g(),
-        parsegraph_BACKGROUND_COLOR.b(),
-        parsegraph_BACKGROUND_COLOR.a(),
+        BACKGROUND_COLOR.r(),
+        BACKGROUND_COLOR.g(),
+        BACKGROUND_COLOR.b(),
+        BACKGROUND_COLOR.a(),
     );
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.disable(gl.BLEND);
@@ -394,13 +403,17 @@ export default class NodePainter {
     }
     if (counts.numGlyphs) {
       for (const fullFontName in counts.numGlyphs) {
-        const numGlyphs = counts.numGlyphs[fullFontName];
-        let fontPainter = this._fontPainters[fullFontName];
-        if (!fontPainter) {
-          fontPainter = new parsegraph_FontPainter(numGlyphs.font);
-          this._fontPainters[fullFontName] = fontPainter;
+        if (Object.prototype.hasOwnProperty.call(
+            this._fontPainters,
+            fontName)) {
+          const numGlyphs = counts.numGlyphs[fullFontName];
+          let fontPainter = this._fontPainters[fullFontName];
+          if (!fontPainter) {
+            fontPainter = new FontPainter(numGlyphs.font);
+            this._fontPainters[fullFontName] = fontPainter;
+          }
+          fontPainter.initBuffer(numGlyphs);
         }
-        fontPainter.initBuffer(numGlyphs);
       }
     }
   }
@@ -452,7 +465,7 @@ export default class NodePainter {
     const fontPainter = this.getFontPainter(font);
 
     if (isNaN(this._pagesPerGlyphTexture)) {
-      const glTextureSize = parsegraph_getTextureSize(this.gl());
+      const glTextureSize = getTextureSize(this.gl());
       if (this.gl().isContextLost()) {
         return;
       }
@@ -485,7 +498,7 @@ export default class NodePainter {
     if (this.isExtentRenderingEnabled() && !node.isRoot()) {
       this.paintExtent(node);
     }
-    parsegraph_checkGLError(gl, 'Before Node drawNode');
+    checkGLError(gl, 'Before Node drawNode');
 
     switch (node.type()) {
       case Type.SLIDER:
@@ -498,7 +511,7 @@ export default class NodePainter {
         this.paintLines(node);
         this.paintBlock(node);
     }
-    parsegraph_checkGLError(gl, 'After Node drawNode');
+    checkGLError(gl, 'After Node drawNode');
   }
 
   paintLines(node) {
@@ -512,12 +525,12 @@ export default class NodePainter {
       }
       const directionData = node.neighborAt(direction);
 
-      const selectedColor = parsegraph_SELECTED_LINE_COLOR.premultiply(
-          this.backgroundColor(),
+      const selectedColor = SELECTED_LINE_COLOR.premultiply(
+          backgroundColor(),
       );
-      const color = parsegraph_LINE_COLOR.premultiply(this.backgroundColor());
+      const color = LINE_COLOR.premultiply(backgroundColor());
 
-      const painter = this._blockPainter;
+      const painter = blockPainter;
       if (node.isSelected() && node.isSelectedAt(direction)) {
         painter.setBorderColor(selectedColor);
         painter.setBackgroundColor(selectedColor);
@@ -532,18 +545,20 @@ export default class NodePainter {
       if (typeof scale !== 'number' || isNaN(scale)) {
         console.log(directionData.node);
         throw new Error(
-            directionData.node + '\'s groupScale must be a number but was ' + scale,
+            directionData.node +
+            '\'s groupScale must be a number but was ' +
+            scale,
         );
       }
 
       const thickness =
-        parsegraph_LINE_THICKNESS * scale * directionData.node.scale();
+        LINE_THICKNESS * scale * directionData.node.scale();
       // console.log(thickness, scale);
       if (isVerticalDirection(direction)) {
-        var length =
+        const length =
           directionSign(direction) *
           parentScale *
-          (directionData.lineLength + parsegraph_LINE_THICKNESS / 2);
+          (directionData.lineLength + LINE_THICKNESS / 2);
         painter.drawBlock(
             node.groupX(),
             node.groupY() + length / 2,
@@ -555,10 +570,10 @@ export default class NodePainter {
         );
       } else {
         // Horizontal line.
-        var length =
+        const length =
           directionSign(direction) *
           parentScale *
-          (directionData.lineLength + parsegraph_LINE_THICKNESS / 2);
+          (directionData.lineLength + LINE_THICKNESS / 2);
         painter.drawBlock(
             node.groupX() + length / 2,
             node.groupY(),
@@ -575,8 +590,8 @@ export default class NodePainter {
 
   paintExtent(node) {
     const painter = this._extentPainter;
-    painter.setBorderColor(parsegraph_EXTENT_BORDER_COLOR);
-    painter.setBackgroundColor(parsegraph_EXTENT_BACKGROUND_COLOR);
+    painter.setBorderColor(EXTENT_BORDER_COLOR);
+    painter.setBackgroundColor(EXTENT_BACKGROUND_COLOR);
 
     const paintBound = function(rect) {
       if (isNaN(rect.height()) || isNaN(rect.width())) {
@@ -587,8 +602,8 @@ export default class NodePainter {
           rect.y() + rect.height() / 2,
           rect.width(),
           rect.height(),
-          parsegraph_EXTENT_BORDER_ROUNDEDNESS,
-          parsegraph_EXTENT_BORDER_THICKNESS,
+          EXTENT_BORDER_ROUNDEDNESS,
+          EXTENT_BORDER_THICKNESS,
           node.groupScale(),
       );
     };
@@ -708,7 +723,11 @@ export default class NodePainter {
 
     // Draw the block.
     const size = node.groupSize(this.bodySize);
-    // console.log(nameType(node.type()) + " x=" + node.groupX() + ", " + node.groupY());
+    // console.log(nameType(node.type()) +
+    //   " x=" +
+    //   node.groupX() +
+    //   ", " +
+    //   node.groupY());
     painter.drawBlock(
         node.groupX(),
         node.groupY(),
@@ -772,8 +791,12 @@ export default class NodePainter {
     if (!forceSimple && this._renderText) {
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       for (const fontName in this._fontPainters) {
-        const fontPainter = this._fontPainters[fontName];
-        fontPainter.render(world, scale);
+        if (Object.prototype.hasOwnProperty.call(
+            this._fontPainters,
+            fontName)) {
+          const fontPainter = this._fontPainters[fontName];
+          fontPainter.render(world, scale);
+        }
       }
     }
 

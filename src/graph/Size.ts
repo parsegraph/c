@@ -1,4 +1,5 @@
-let parsegraph_Size_COUNT: number = 0;
+/* eslint-disable require-jsdoc */
+let sizeCount: number = 0;
 export default class Size {
   id: number;
   length: number;
@@ -6,7 +7,7 @@ export default class Size {
   '1': number;
 
   constructor(w?: number, h?: number) {
-    this.id = parsegraph_Size_COUNT++;
+    this.id = sizeCount++;
     if (arguments.length > 0) {
       this[0] = w;
       this[1] = h;
