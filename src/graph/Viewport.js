@@ -4,6 +4,7 @@ import Carousel from './Carousel';
 import Input from './Input';
 import BurgerMenu from './BurgerMenu';
 
+/* eslint-disable require-jsdoc */
 /**
  * TODO Add gridX and gridY camera listeners, with support for loading from an
  * infinite grid of cells.
@@ -40,7 +41,6 @@ import BurgerMenu from './BurgerMenu';
  */
 let viewportCount = 0;
 const viewportType = 'Viewport';
-// eslint-disable-next-line require-jsdoc
 export default function Viewport(window, world) {
   if (!window) {
     throw new Error('A window must be provided');
@@ -231,7 +231,6 @@ Viewport.prototype.plot = function(...args) {
  *
  * Returns true if the graph completed painting.
  */
-// eslint-disable-next-line require-jsdoc
 Viewport.prototype.paint = function(timeout) {
   const window = this._window;
   const gl = this._window.gl();

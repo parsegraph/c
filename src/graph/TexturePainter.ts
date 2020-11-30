@@ -4,6 +4,7 @@ import pagingBuffer, {
 } from '../pagingbuffer';
 import Color from './Color';
 import Window from './Window';
+/* eslint-disable require-jsdoc */
 
 const texturePainterVertexShader =
   'uniform mat3 u_world;\n' +
@@ -31,7 +32,6 @@ const texturePainterFragmentShader =
   'gl_FragColor.a = gl_FragColor.a * alpha;' +
   '}';
 
-// eslint-disable-next-line require-jsdoc
 export default class TexturePainter {
   _gl;
   _textureProgram: number;
@@ -50,7 +50,6 @@ export default class TexturePainter {
   _backgroundColor: Color;
   _alpha: number;
 
-  // eslint-disable-next-line require-jsdoc
   constructor(
       window: Window,
       textureId: number,
@@ -95,17 +94,14 @@ export default class TexturePainter {
     this._alpha = 1;
   }
 
-  // eslint-disable-next-line require-jsdoc
   texture() {
     return this._texture;
   }
 
-  // eslint-disable-next-line require-jsdoc
   setAlpha(alpha: number): void {
     this._alpha = alpha;
   }
 
-  // eslint-disable-next-line require-jsdoc
   drawWholeTexture(
       x: number,
       y: number,
@@ -126,7 +122,6 @@ export default class TexturePainter {
     );
   }
 
-  // eslint-disable-next-line require-jsdoc
   drawTexture(
       iconX: number,
       iconY: number,
@@ -180,13 +175,11 @@ export default class TexturePainter {
     }
   }
 
-  // eslint-disable-next-line require-jsdoc
   clear(): void {
     this._buffer.clear();
     this._buffer.addPage();
   }
 
-  // eslint-disable-next-line require-jsdoc
   render(world: number[]): void {
     const gl = this._gl;
 

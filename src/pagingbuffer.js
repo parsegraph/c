@@ -1,5 +1,6 @@
 // import {countGLBufferBytes} from './gl';
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function BufferPage(
     pagingBuffer,
     renderFunc,
@@ -47,7 +48,6 @@ BufferPage.prototype.isEmpty = function() {
  * Adds each of the specified values to the working buffer. If the value is an
  * array, each of its internal values are added.
  */
-// eslint-disable-next-line require-jsdoc
 BufferPage.prototype.appendData = function(
     attribIndex, /* , ... */
 ) {
@@ -118,7 +118,6 @@ BufferPage.prototype.appendRGBA = function(attribIndex, color) {
  * Manages the low-level paging of vertex attributes. For
  * demonstrations of use, see any painter class.
  */
-// eslint-disable-next-line require-jsdoc
 export default function PagingBuffer(gl, program) {
   // Contains vertex attribute information used for drawing. Provide using
   // defineAttrib.
@@ -131,7 +130,6 @@ export default function PagingBuffer(gl, program) {
   this._gl = gl;
   this._program = program;
 }
-// eslint-disable-next-line require-jsdoc
 export function createPagingBuffer(gl, program) {
   return new PagingBuffer(gl, program);
 }
@@ -171,7 +169,7 @@ PagingBuffer.prototype.addPage = function(
   return page;
 };
 
-parsegraph_PagingBuffer.prototype.getWorkingPage = function() {
+PagingBuffer.prototype.getWorkingPage = function() {
   if (this._pages.length === 0) {
     throw new Error('Refusing to create a new page; call addPage()');
   }
@@ -186,7 +184,6 @@ parsegraph_PagingBuffer.prototype.getWorkingPage = function() {
  * type (1, 2, 3, or 4) drawMode - the WebGL draw mode.
  * Defaults to gl.STATIC_DRAW
  */
-// eslint-disable-next-line require-jsdoc
 PagingBuffer.prototype.defineAttrib = function(
     name,
     numComponents,
@@ -232,7 +229,7 @@ PagingBuffer.prototype.appendData = function(...args) {
 /**
  * Deletes all buffers and empties values.
  */
-parsegraph_PagingBuffer.prototype.clear = function() {
+PagingBuffer.prototype.clear = function() {
   // Clear the buffers for all pages.
   this._pages.forEach(function(page) {
     this._attribs.forEach(function(attrib, attribIndex) {
@@ -256,8 +253,7 @@ parsegraph_PagingBuffer.prototype.clear = function() {
  * where numVertices is calculated from the appended data size / component
  * count. The least-filled buffer is used for the size, if the sizes differ.
  */
-// eslint-disable-next-line require-jsdoc
-parsegraph_PagingBuffer.prototype.renderPages = function() {
+PagingBuffer.prototype.renderPages = function() {
   let count = 0;
 
   // Enable used vertex attributes.
@@ -291,7 +287,7 @@ parsegraph_PagingBuffer.prototype.renderPages = function() {
       const bufferData = page.buffers[attribIndex];
       if (page.needsUpdate && bufferData.length > 0) {
         // console.log("Pushing bytes to GL");
-        parsegraph_countGLBufferBytes(bufferData.length);
+        countGLBufferBytes(bufferData.length);
         this._gl.bufferData(
             this._gl.ARRAY_BUFFER,
             new Float32Array(bufferData),

@@ -1,13 +1,14 @@
-import parsegraph_TestSuite from '../TestSuite';
+import TestSuite from '../TestSuite';
 import Color from './Color';
-import {parsegraph_getTextureSize} from '../gl';
-import parsegraph_Window from './Window';
-import {parsegraph_defaultFont} from './settings';
+import {getTextureSize} from '../gl';
+import Window from './Window';
+import {defaultFont} from './settings';
+/* eslint-disable require-jsdoc */
 
 // TODO Add runs of selected text
-let parsegraph_GlyphPainter_COUNT = 0;
+let glyphPainterCount = 0;
 
-const parsegraph_GlyphPainter_VertexShader =
+const glyphPainterVertexShader =
   'uniform mat3 u_world;\n' +
   'uniform highp float u_scale;\n' +
   '' +
@@ -30,7 +31,7 @@ const parsegraph_GlyphPainter_VertexShader =
   'scale = a_scale * u_scale;\n' +
   '}';
 
-const parsegraph_GlyphPainter_FragmentShader =
+const glyphPainterFragmentShader =
   '#extension GL_OES_standard_derivatives : enable\n' +
   'uniform sampler2D u_glyphTexture;\n' +
   'varying highp vec4 fragmentColor;\n' +
@@ -48,8 +49,8 @@ const parsegraph_GlyphPainter_FragmentShader =
   'gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n' +
   'highp float distance = texture2D(u_glyphTexture, texCoord.st).a;' +
   'highp float smoothing=0.5;\n' +
-  'highp float opacity = mix(aastep(smoothing, distance), distance, min(0.0, scale));\n' +
-  'if(backgroundColor.a == 0.0) {' +
+  'highp float opacity = mix(aastep(smoothing, distance),' +
+  ' distance, min(0.0, scale));\n' + 'if(backgroundColor.a == 0.0) {' +
   'gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a * opacity);' +
   '}' +
   'else {' +
@@ -57,12 +58,12 @@ const parsegraph_GlyphPainter_FragmentShader =
   '}' +
   '}';
 
-export default function parsegraph_GlyphPainter(window, font) {
+export default function GlyphPainter(window, font) {
   if (!font) {
     throw new Error('Font must be provided');
   }
   this._font = font;
-  this._id = ++parsegraph_GlyphPainter_COUNT;
+  this._id = ++glyphPainterCount;
 
   this._window = window;
   this._textBuffers = {};
@@ -85,48 +86,48 @@ export default function parsegraph_GlyphPainter(window, font) {
   this._lines = [];
 }
 
-parsegraph_GlyphPainter.prototype.window = function() {
+GlyphPainter.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_GlyphPainter.prototype.contextChanged = function(isLost) {
+GlyphPainter.prototype.contextChanged = function(isLost) {
   this._textProgram = null;
   this.clear();
 };
 
-parsegraph_GlyphPainter.prototype.color = function() {
+GlyphPainter.prototype.color = function() {
   return this._color;
 };
 
-parsegraph_GlyphPainter.prototype.setColor = function() {
-  if (arguments.length > 1) {
-    this._color = new Color(...arguments);
+GlyphPainter.prototype.setColor = function(...args) {
+  if (args.length > 1) {
+    this._color = new Color(...args);
   } else {
-    this._color = arguments[0];
+    this._color = args[0];
   }
 };
 
-parsegraph_GlyphPainter.prototype.backgroundColor = function() {
+GlyphPainter.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
 
-parsegraph_GlyphPainter.prototype.setBackgroundColor = function() {
-  if (arguments.length > 1) {
-    this._backgroundColor = new Color(...arguments);
+GlyphPainter.prototype.setBackgroundColor = function(...args) {
+  if (args.length > 1) {
+    this._backgroundColor = new Color(...args);
   } else {
-    this._backgroundColor = arguments[0];
+    this._backgroundColor = args[0];
   }
 };
 
-parsegraph_GlyphPainter.prototype.fontSize = function() {
+GlyphPainter.prototype.fontSize = function() {
   return this._font.fontSize();
 };
 
-parsegraph_GlyphPainter.prototype.font = function() {
+GlyphPainter.prototype.font = function() {
   return this._font;
 };
 
-function parsegraph_GlyphPageRenderer(painter, textureIndex) {
+export default function GlyphPageRenderer(painter, textureIndex) {
   this._painter = painter;
   this._textureIndex = textureIndex;
   this._glyphBuffer = null;
@@ -139,14 +140,15 @@ function parsegraph_GlyphPageRenderer(painter, textureIndex) {
   );
 }
 
-parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs) {
+GlyphPageRenderer.prototype.initBuffer = function(numGlyphs) {
   if (this._glyphBufferNumVertices / 6 === numGlyphs) {
     // console.log("Reusing existing buffer");
     this._glyphBufferVertexIndex = 0;
     this._dataBufferVertexIndex = 0;
     return;
   } else {
-    // console.log("Recreating buffer with " + numGlyphs + " from " + this._glyphBufferNumVertices);
+    // console.log("Recreating buffer with " + numGlyphs +
+    //   " from " + this._glyphBufferNumVertices);
   }
   if (this._glyphBuffer) {
     this.clear();
@@ -162,7 +164,7 @@ parsegraph_GlyphPageRenderer.prototype.initBuffer = function(numGlyphs) {
   this._glyphBufferNumVertices = numGlyphs * 6;
 };
 
-parsegraph_GlyphPageRenderer.prototype.clear = function() {
+GlyphPageRenderer.prototype.clear = function() {
   const gl = this._painter.window().gl();
   if (this._glyphBuffer && !gl.isContextLost()) {
     gl.deleteBuffer(this._glyphBuffer);
@@ -173,7 +175,7 @@ parsegraph_GlyphPageRenderer.prototype.clear = function() {
   this._glyphBufferVertexIndex = 0;
 };
 
-parsegraph_GlyphPageRenderer.prototype.flush = function() {
+GlyphPageRenderer.prototype.flush = function() {
   if (this._dataBufferVertexIndex === 0) {
     return;
   }
@@ -196,14 +198,18 @@ parsegraph_GlyphPageRenderer.prototype.flush = function() {
     );
   }
   if (this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
-    // console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._glyphBufferVertexIndex + " of " + this._glyphBufferNumVertices + " vertices");
+    // console.log("Writing " + this._dataBufferNumVertices +
+    // " vertices to offset " + this._glyphBufferVertexIndex +
+    // " of " + this._glyphBufferNumVertices + " vertices");
     gl.bufferSubData(
         gl.ARRAY_BUFFER,
         this._glyphBufferVertexIndex * stride,
         this._dataBuffer,
     );
   } else {
-    // console.log("Partial flush (" + this._glyphBufferVertexIndex + "/" + this._glyphBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
+    // console.log("Partial flush (" + this._glyphBufferVertexIndex + "/" +
+    // this._glyphBufferNumVertices + " from " +
+    // (this._dataBufferVertexIndex*stride/4) + ")");
     gl.bufferSubData(
         gl.ARRAY_BUFFER,
         this._glyphBufferVertexIndex * stride,
@@ -214,7 +220,7 @@ parsegraph_GlyphPageRenderer.prototype.flush = function() {
   this._dataBufferVertexIndex = 0;
 };
 
-parsegraph_GlyphPageRenderer.prototype.writeVertex = function() {
+GlyphPageRenderer.prototype.writeVertex = function() {
   const pos = (this._dataBufferVertexIndex++ * this._painter._stride) / 4;
   this._dataBuffer.set(this._painter._vertexBuffer, pos);
   if (this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
@@ -222,7 +228,7 @@ parsegraph_GlyphPageRenderer.prototype.writeVertex = function() {
   }
 };
 
-parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(
+GlyphPageRenderer.prototype.drawGlyph = function(
     glyphData,
     x,
     y,
@@ -230,7 +236,7 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(
 ) {
   const gl = this._painter.window().gl();
   const font = this._painter.font();
-  const glTextureSize = parsegraph_getTextureSize(gl);
+  const glTextureSize = getTextureSize(gl);
   if (gl.isContextLost()) {
     return;
   }
@@ -316,7 +322,7 @@ parsegraph_GlyphPageRenderer.prototype.drawGlyph = function(
   this.writeVertex();
 };
 
-parsegraph_GlyphPainter.prototype.drawLine = function(
+GlyphPainter.prototype.drawLine = function(
     text,
     worldX,
     worldY,
@@ -330,7 +336,7 @@ parsegraph_GlyphPainter.prototype.drawLine = function(
   });
 };
 
-parsegraph_GlyphPageRenderer.prototype.render = function() {
+GlyphPageRenderer.prototype.render = function() {
   if (!this._glyphBuffer) {
     throw new Error('GlyphPageRenderer must be initialized before rendering');
   }
@@ -341,7 +347,8 @@ parsegraph_GlyphPageRenderer.prototype.render = function() {
   const gl = this._painter.window().gl();
   const glyphTexture = this._painter._font._pages[this._textureIndex]
       ._glyphTexture[this._painter.window().id()];
-  // console.log("Rendering " + (this._glyphBufferVertexIndex/6) + " glyphs of glyph page " + this._textureIndex);
+  // console.log("Rendering " + (this._glyphBufferVertexIndex/6) +
+  //   " glyphs of glyph page " + this._textureIndex);
   gl.bindTexture(gl.TEXTURE_2D, glyphTexture);
   gl.uniform1i(this._painter.u_glyphTexture, 0);
 
@@ -368,7 +375,7 @@ parsegraph_GlyphPageRenderer.prototype.render = function() {
   gl.drawArrays(gl.TRIANGLES, 0, this._glyphBufferVertexIndex);
 };
 
-parsegraph_GlyphPainter.prototype.drawGlyph = function(
+GlyphPainter.prototype.drawGlyph = function(
     glyphData,
     x,
     y,
@@ -380,7 +387,7 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(
   glyphData.painted = true;
 
   const gl = this.window().gl();
-  const glTextureSize = parsegraph_getTextureSize(gl);
+  const glTextureSize = getTextureSize(gl);
   if (gl.isContextLost()) {
     return;
   }
@@ -403,7 +410,7 @@ parsegraph_GlyphPainter.prototype.drawGlyph = function(
   gp.drawGlyph(glyphData, x, y, fontScale);
 };
 
-parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs) {
+GlyphPainter.prototype.initBuffer = function(numGlyphs) {
   this.clear();
   let maxPage = NaN;
   for (const i in numGlyphs) {
@@ -416,7 +423,7 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs) {
     maxPage = Math.max(i, maxPage);
     let gp = this._textBuffers[i];
     if (!gp) {
-      gp = new parsegraph_GlyphPageRenderer(this, i);
+      gp = new GlyphPageRenderer(this, i);
       ++this._numTextBuffers;
       this._textBuffers[i] = gp;
     }
@@ -427,10 +434,12 @@ parsegraph_GlyphPainter.prototype.initBuffer = function(numGlyphs) {
   }
 };
 
-parsegraph_GlyphPainter.prototype.clear = function() {
+GlyphPainter.prototype.clear = function() {
   for (const i in this._textBuffers) {
-    const gp = this._textBuffers[i];
-    gp.clear();
+    if (Object.prototype.hasOwnProperty.call(this._textBuffers, i)) {
+      const gp = this._textBuffers[i];
+      gp.clear();
+    }
   }
   this._textBuffers = {};
   this._numTextBuffers = 0;
@@ -438,9 +447,9 @@ parsegraph_GlyphPainter.prototype.clear = function() {
   this._lines = [];
 };
 
-parsegraph_GlyphPainter.prototype.render = function(world, scale) {
+GlyphPainter.prototype.render = function(world, scale) {
   const overlay = this.window().overlay();
-  for (var i = 0; i < this._lines.length; ++i) {
+  for (let i = 0; i < this._lines.length; ++i) {
     const line = this._lines[i];
     overlay.font = '72px sans-serif';
     overlay.fillText(line.text, line.x, line.y);
@@ -448,7 +457,8 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale) {
   return;
   this._font.update(this._window);
   // console.log(new Error("GlyphPainter scale="+scale));
-  // console.log("Max scale of a single largest glyph would be: " + (this._maxSize *scale));
+  // console.log("Max scale of a single largest glyph would be: " +
+  //   (this._maxSize *scale));
   if (scale < 0.2 && this._maxSize * scale < 1) {
     return;
   }
@@ -464,21 +474,22 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale) {
 
   // Compile the shader program.
   if (this._textProgram === null) {
-    this._textProgram = parsegraph_compileProgram(
+    this._textProgram = compileProgram(
         this.window(),
-        'parsegraph_GlyphPainter',
-        parsegraph_GlyphPainter_VertexShader,
-        parsegraph_GlyphPainter_FragmentShader,
+        'GlyphPainter',
+        GlyphPainter_VertexShader,
+        GlyphPainter_FragmentShader,
     );
     /* if(gl.getExtension("OES_standard_derivatives") != null) {
-            this._textProgram = parsegraph_compileProgram(this.window(),
-                "parsegraph_GlyphPainter",
-                parsegraph_GlyphPainter_VertexShader,
-                parsegraph_GlyphPainter_FragmentShader
+            this._textProgram = compileProgram(this.window(),
+                "GlyphPainter",
+                GlyphPainter_VertexShader,
+                GlyphPainter_FragmentShader
             );
         }
         else {
-            throw new Error("TextPainter requires OES_standard_derivatives GL extension");
+            throw new Error("TextPainter requires' +
+              ' OES_standard_derivatives GL extension");
         }*/
 
     // Cache program locations.
@@ -511,9 +522,11 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale) {
   gl.enableVertexAttribArray(this.a_color);
   gl.enableVertexAttribArray(this.a_backgroundColor);
   gl.enableVertexAttribArray(this.a_scale);
-  for (var i in this._textBuffers) {
-    const gp = this._textBuffers[i];
-    gp.render();
+  for (const i in this._textBuffers) {
+    if (Object.prototype.hasOwnProperty.call(this._textBuffers, i)) {
+      const gp = this._textBuffers[i];
+      gp.render();
+    }
   }
   gl.disableVertexAttribArray(this.a_position);
   gl.disableVertexAttribArray(this.a_texCoord);
@@ -522,30 +535,30 @@ parsegraph_GlyphPainter.prototype.render = function(world, scale) {
   gl.disableVertexAttribArray(this.a_scale);
 };
 
-const parsegraph_GlyphPainter_Tests = new parsegraph_TestSuite(
-    'parsegraph_GlyphPainter',
+const glyphPainterTests = new TestSuite(
+    'GlyphPainter',
 );
 
-parsegraph_GlyphPainter_Tests.addTest('parsegraph_GlyphPainter', function() {
-  const window = new parsegraph_Window();
-  const font = parsegraph_defaultFont();
+glyphPainterTests.addTest('GlyphPainter', function() {
+  const window = new Window();
+  const font = defaultFont();
 
-  const painter = new parsegraph_GlyphPainter(window, font);
+  const painter = new GlyphPainter(window, font);
   painter.initBuffer({0: 1000, 1: 1000});
-  for (var i = 0; i < 1000; ++i) {
+  for (let i = 0; i < 1000; ++i) {
     painter.drawGlyph(String.fromCharCode(32 + i), 0, 0, 1);
   }
   painter.initBuffer({0: 1000});
-  for (var i = 0; i < 400; ++i) {
+  for (let i = 0; i < 400; ++i) {
     painter.drawGlyph(String.fromCharCode(32 + i), 0, 0, 1);
   }
   painter.initBuffer({0: 1000, 1: 1000});
-  for (var i = 0; i < 1000; ++i) {
+  for (let i = 0; i < 1000; ++i) {
     painter.drawGlyph(String.fromCharCode(32 + i), 0, 0, 1);
   }
   painter.initBuffer({});
   painter.initBuffer({0: 1000, 1: 1000});
-  for (var i = 0; i < 1000; ++i) {
+  for (let i = 0; i < 1000; ++i) {
     painter.drawGlyph(String.fromCharCode(32 + i), 0, 0, 1);
   }
 });

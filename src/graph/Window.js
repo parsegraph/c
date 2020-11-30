@@ -7,6 +7,7 @@ import {addEventMethod, normalizeWheel} from '../event';
 import Rect from './Rect';
 import {checkGLError} from '../gl';
 import {elapsed} from '../timing';
+/* eslint-disable require-jsdoc */
 
 const windowVertexShader =
   'uniform mat3 u_world;\n' +
@@ -30,7 +31,6 @@ const windowFragmentShader =
   // "gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
   '}';
 let WINDOW_COUNT = 0;
-// eslint-disable-next-line require-jsdoc
 export default function Window() {
   this._id = ++WINDOW_COUNT;
   this._backgroundColor = BACKGROUND_COLOR;
@@ -813,7 +813,6 @@ Window.prototype.setBackground = function(color, ...args) {
 /**
  * Retrieves the current background color.
  */
-// eslint-disable-next-line require-jsdoc
 Window.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
@@ -821,7 +820,6 @@ Window.prototype.backgroundColor = function() {
 /**
  * Returns whether the window has a nonzero client width and height.
  */
-// eslint-disable-next-line require-jsdoc
 Window.prototype.canProject = function() {
   const displayWidth = this.getWidth();
   const displayHeight = this.getHeight();

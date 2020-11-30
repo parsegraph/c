@@ -1,6 +1,7 @@
+/* eslint-disable require-jsdoc */
+
 singleOscillatorWidgetCount = 0;
 
-// eslint-disable-next-line require-jsdoc
 export default function SingleOscillatorWidget(graph) {
   this._id = singleOscillatorWidgetCount++;
   this._graph = graph;
@@ -21,13 +22,13 @@ export default function SingleOscillatorWidget(graph) {
 
 SingleOscillatorWidget.prototype.node = function() {
   if (!this._containerNode) {
-    const car = new Caret(parsegraph_BLOCK);
+    const car = new Caret(BLOCK);
     car.node().setIgnoreMouse(true);
     this._containerNode = car.root();
     car.label('Single Oscillator');
     car.spawnMove('i', 'u', 'v');
 
-    const offStyle = parsegraph_copyStyle(parsegraph_BUD);
+    const offStyle = copyStyle(BUD);
     offStyle.backgroundColor = new Color(0.7, 0.7, 0.7, 1);
     offStyle.borderColor = new Color(0.5, 0.5, 0.5, 1);
     offStyle.minWidth *= 4;
@@ -36,7 +37,7 @@ SingleOscillatorWidget.prototype.node = function() {
     offStyle.borderThickness *= 2;
     this._offStyle = offStyle;
 
-    const redStyle = parsegraph_copyStyle(parsegraph_BUD);
+    const redStyle = copyStyle(BUD);
     redStyle.backgroundColor =new Color(1, 0, 0, 1);
     redStyle.borderColor = new Color(1, 0.5, 0.5, 1);
     redStyle.minWidth *= 4;
@@ -61,7 +62,7 @@ SingleOscillatorWidget.prototype.node = function() {
       return true;
     }, this);
 
-    const whiteStyle = parsegraph_copyStyle(parsegraph_SLOT);
+    const whiteStyle = copyStyle(SLOT);
     whiteStyle.borderColor = new Color(0.2, 0.2, 0.2, 1);
     whiteStyle.backgroundColor = new Color(1, 1, 1, 1);
     car.spawnMove('f', 'u');

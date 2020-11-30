@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
+
 oscillatorWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function OscillatorWidget(graph) {
   this._id = oscillatorWidgetCount++;
   this._graph = graph;
@@ -45,17 +46,17 @@ OscillatorWidget.prototype.node = function() {
   let FS = 500;
   const MAXFS = 3000;
   if (!this._containerNode) {
-    const car = new Caret(parsegraph_BLOCK);
+    const car = new Caret(BLOCK);
     this._containerNode = car.root();
     car.label('Oscillator');
     // car.fitExact();
 
-    car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
+    car.spawnMove(INWARD, BUD, ALIGN_VERTICAL);
 
     car.push();
-    car.pull(parsegraph_DOWNWARD);
+    car.pull(DOWNWARD);
     car.shrink();
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.spawnMove(DOWNWARD, SLOT);
     car.label('Type');
     car.push();
     ['sine', 'square', 'sawtooth', 'triangle'].forEach(function(oscType, i) {
@@ -78,10 +79,10 @@ OscillatorWidget.prototype.node = function() {
     car.pop();
 
     // Frequency
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+    car.spawnMove(FORWARD, BUD);
     car.push();
-    car.pull(parsegraph_DOWNWARD);
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.pull(DOWNWARD);
+    car.spawnMove(DOWNWARD, SLOT);
     car.label('Frequency');
     const fsSlider = car.spawn('i', 'sli', 'v');
     fsSlider.setValue(FS / MAXFS);
@@ -93,7 +94,7 @@ OscillatorWidget.prototype.node = function() {
       freqSlider.setValue(FS > 0 ? this._oscFrequency / FS : 0);
     }, this);
     car.pull('d');
-    const freqSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    const freqSlider = car.spawnMove(DOWNWARD, SLIDER);
     freqSlider.setValue(this._oscFrequency / FS);
     car.onChange(function() {
       this.setOscillatorFrequency(freqSlider.value() * FS);
@@ -102,11 +103,11 @@ OscillatorWidget.prototype.node = function() {
     car.pop();
 
     // Detune
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.spawnMove(FORWARD, BUD);
+    car.spawnMove(DOWNWARD, SLOT);
     car.label('Detune');
     car.push();
-    const detuneSlider = car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLIDER);
+    const detuneSlider = car.spawnMove(DOWNWARD, SLIDER);
     car.onChange(function() {
       this.setOscillatorDetune(detuneSlider.value() * 200);
       // console.log("Detune: " + this._oscDetune.value);

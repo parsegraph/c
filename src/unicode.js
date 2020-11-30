@@ -1,3 +1,5 @@
+/* eslint-disable require-jsdoc */
+
 {
   const ltrChars =
     'A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF' +
@@ -5,13 +7,11 @@
   const rtlChars = '\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC';
   const rtlDirCheck = new RegExp('^[^' + ltrChars + ']*[' + rtlChars + ']');
 
-  // eslint-disable-next-line require-jsdoc, no-unused-vars
   function isRTL(s) {
     return rtlDirCheck.test(s);
   }
 }
 
-// eslint-disable-next-line require-jsdoc
 export default function Unicode() {
   this.unicodeProperties = {};
   this.unicodeBidiCounts = {};
@@ -21,7 +21,6 @@ export default function Unicode() {
 let UNICODE_INSTANCE = null;
 const UNICODE_STORAGE = localStorage;
 
-// eslint-disable-next-line require-jsdoc
 export function defaultUnicode() {
   if (!UNICODE_INSTANCE) {
     UNICODE_INSTANCE = new Unicode();
@@ -280,7 +279,7 @@ Unicode.prototype.load = function(dbURL, storage) {
   const that = this;
   const complete = function() {
     // console.log("Time till unicode parsed: " +
-    // parsegraph_elapsed(parsegraph_START_TIME));
+    // elapsed(START_TIME));
     that._loaded = true;
     if (that.onLoad) {
       that.onLoad();
@@ -311,7 +310,7 @@ Unicode.prototype.load = function(dbURL, storage) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4 && xhr.status == 200) {
       // console.log("Time till unicode received: " +
-      // parsegraph_elapsed(parsegraph_START_TIME));
+      // elapsed(START_TIME));
       that.loadFromString(xhr.responseText);
       complete.call(that);
       if (storage) {

@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function ChatProtocol(ws, eventFunc, eventFuncThisArg) {
   if (!eventFunc) {
     throw new Error('An eventFunc must be provided');

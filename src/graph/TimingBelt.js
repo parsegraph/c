@@ -8,7 +8,8 @@ import {
   INTERVAL,
   IDLE_MARGIN,
 } from './settings';
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function TimingBelt() {
   this._windows = [];
 

@@ -4,6 +4,7 @@ import {
   compileProgram,
 } from '../gl';
 import {createPagingBuffer} from '../pagingbuffer';
+/* eslint-disable require-jsdoc */
 
 const spotlightPainterVertexShader =
   'uniform mat3 u_world;\n' +
@@ -38,7 +39,6 @@ const spotlightPainterFragmentShader =
   'gl_FragColor = vec4(contentColor.rgb, contentColor.a * d);' +
   '}';
 
-// eslint-disable-next-line require-jsdoc
 export default function SpotlightPainter(window) {
   this._window = window;
   if (!this._window) {

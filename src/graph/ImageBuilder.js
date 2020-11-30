@@ -1,35 +1,37 @@
-function parsegraph_ImageBuilder(width, height) {
-  this._renderTimer = new parsegraph_AnimationTimer();
+/* eslint-disable require-jsdoc */
+
+export default function ImageBuilder(width, height) {
+  this._renderTimer = new AnimationTimer();
   this._renderTimer.setListener(this.cycle, this);
 
   this._jobs = [];
   this._builders = [];
-  this._window = new parsegraph_ImageWindow(width, height);
+  this._window = new ImageWindow(width, height);
   this._window.setOnScheduleUpdate(this.scheduleUpdate, this);
-  this._world = new parsegraph_World();
-  this._viewport = new parsegraph_Viewport(this._window, this._world);
+  this._world = new World();
+  this._viewport = new Viewport(this._window, this._world);
   this._window.addComponent(this._viewport.component());
 
   this.scheduleUpdate();
 }
 
-parsegraph_ImageBuilder.prototype.scheduleUpdate = function() {
+ImageBuilder.prototype.scheduleUpdate = function() {
   this._renderTimer.schedule();
 };
 
-parsegraph_ImageBuilder.prototype.window = function() {
+ImageBuilder.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_ImageBuilder.prototype.viewport = function() {
+ImageBuilder.prototype.viewport = function() {
   return this._viewport;
 };
 
-parsegraph_ImageBuilder.prototype.world = function() {
+ImageBuilder.prototype.world = function() {
   return this._world;
 };
 
-parsegraph_ImageBuilder.prototype.createImage = function(
+ImageBuilder.prototype.createImage = function(
     creatorFunc,
     creatorFuncThisArg,
     callbackFunc,
@@ -43,7 +45,7 @@ parsegraph_ImageBuilder.prototype.createImage = function(
   });
 };
 
-parsegraph_ImageBuilder.prototype.queueJob = function(
+ImageBuilder.prototype.queueJob = function(
     builderFunc,
     builderFuncThisArg,
 ) {
@@ -59,11 +61,11 @@ parsegraph_ImageBuilder.prototype.queueJob = function(
   job.builders.push([builderFunc, builderFuncThisArg]);
 };
 
-parsegraph_ImageBuilder.prototype.cycle = function() {
-  const timeout = parsegraph_INTERVAL;
+ImageBuilder.prototype.cycle = function() {
+  const timeout = INTERVAL;
   const startTime = new Date();
   const timeLeft = function() {
-    return timeout - parsegraph_elapsed(startTime);
+    return timeout - elapsed(startTime);
   };
   const job = this._jobs[0];
   if (!job) {

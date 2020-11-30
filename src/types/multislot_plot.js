@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function MultislotPlot(multislot, index) {
   this._index = index;
   this._multislot = multislot;
@@ -7,12 +8,12 @@ export default function MultislotPlot(multislot, index) {
 
   const car = new Caret('s');
   this._root = car.node();
-  const bs = parsegraph_copyStyle('s');
+  const bs = copyStyle('s');
   bs.backgroundColor = multislot.color();
   this._unclaimedStyle = bs;
   this._root.setBlockStyle(bs);
 
-  this._claimedStyle = parsegraph_copyStyle('s');
+  this._claimedStyle = copyStyle('s');
   this._claimedStyle.backgroundColor = new Color(1, 1, 1);
 
   car.spawn('d', 'u');
@@ -60,7 +61,7 @@ export default function MultislotPlot(multislot, index) {
   this._claimedActions.addAction(
       'Lisp',
       function(plotId) {
-        parsegraph_pushListItem(this.room(), plotId, 'lisp', '');
+        pushListItem(this.room(), plotId, 'lisp', '');
       },
       this,
   );
@@ -139,7 +140,6 @@ MultislotPlot.prototype.node = function() {
   return this._root;
 };
 
-// eslint-disable-next-line require-jsdoc
 export default function ClaimPlotAction(plot, username) {
   this._plot = plot;
   this._username = username;
@@ -209,7 +209,6 @@ ClaimPlotAction.prototype.receive = function(err, resp) {
   }
 };
 
-// eslint-disable-next-line require-jsdoc
 export default function UnclaimPlotAction(plot) {
   this._plot = plot;
   this._originalClaimant = null;

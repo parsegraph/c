@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
+
 delayWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function DelayWidget(graph) {
   this._id = delayWidgetCount++;
   this._graph = graph;
@@ -17,23 +18,23 @@ DelayWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new Caret(parsegraph_SLOT);
+  const car = new Caret(SLOT);
   this._containerNode = car.root();
   car.label('Delay');
   car.fitExact();
 
   this._containerNode.setNodeAlignmentMode(
-      parsegraph_INWARD,
-      parsegraph_ALIGN_VERTICAL,
+      INWARD,
+      ALIGN_VERTICAL,
   );
   const onOff = this._containerNode.spawnNode(
-      parsegraph_INWARD,
-      parsegraph_BLOCK,
+      INWARD,
+      BLOCK,
   );
   onOff.setLabel('Play', this._graph.font());
   this._onButton = onOff;
 
-  const slider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+  const slider = onOff.spawnNode(DOWNWARD, SLIDER);
   slider.setValue(0.5);
   slider.setChangeListener(function() {
     if (onOff.label() === 'Stop') {

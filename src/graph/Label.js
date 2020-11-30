@@ -5,7 +5,7 @@ import Caret from './Caret';
 import Rect from './Rect';
 /* eslint-disable require-jsdoc */
 
-function GlyphIterator(font, text) {
+export default function GlyphIterator(font, text) {
   this.font = font;
   this.index = 0;
   this.len = text.length;
@@ -183,10 +183,10 @@ const lineTests = new TestSuite('Line');
 lineTests.addTest('new Line', function() {
   const font = defaultFont();
   const label = new Label(font);
-  let l = new Line(label);
+  const l = new Line(label);
   let f = 0;
   try {
-    let l = new Line(null);
+    const l = new Line(null);
     f = 2;
   } catch (ex) {
     f = 3;
@@ -231,7 +231,7 @@ Line.prototype.appendText = function(text) {
 };
 
 Line.prototype.insertText = function(pos, text, args) {
-  let i = 0;
+  const i = 0;
   const font = this.font();
   if (!font) {
     throw new Error('Line cannot add text without the label having a font.');
@@ -586,8 +586,8 @@ Label.prototype.key = function(key) {
       while (this._caretLine > this._lines.length) {
         this._lines.push(new Line(this));
       }
-      let insertLine = this._lines[this._caretLine];
-      let insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
+      const insertLine = this._lines[this._caretLine];
+      const insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
       if (insertPos === insertLine._glyphs.length) {
         insertLine.appendText(key);
       } else {
@@ -798,11 +798,11 @@ Line.prototype.drawLTRGlyphRun = function(
   // log("Drawing LTR run from %d to %d.", startRun, endRun);
   let maxAscent = 0;
   for (let q = startRun; q <= endRun; ++q) {
-    let glyphData = this._glyphs[q];
+    const glyphData = this._glyphs[q];
     maxAscent = Math.max(maxAscent, glyphData.ascent);
   }
   for (let q = startRun; q <= endRun; ++q) {
-    let glyphData = this._glyphs[q];
+    const glyphData = this._glyphs[q];
     painter.drawGlyph(
         glyphData,
         worldX + pos[0],
@@ -827,13 +827,13 @@ Line.prototype.drawRTLGlyphRun = function(
   let runWidth = 0;
   let maxAscent = 0;
   for (let q = startRun; q <= endRun; ++q) {
-    let glyphData = this._glyphs[q];
+    const glyphData = this._glyphs[q];
     runWidth += glyphData.advance * fontScale;
     maxAscent = Math.max(maxAscent, glyphData.ascent);
   }
   let advance = 0;
   for (let q = startRun; q <= endRun; ++q) {
-    let glyphData = this._glyphs[q];
+    const glyphData = this._glyphs[q];
     advance += (glyphData.advance - 1) * fontScale;
     painter.drawGlyph(
         glyphData,

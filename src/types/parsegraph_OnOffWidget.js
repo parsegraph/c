@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
+
 onOffWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function OnOffWidget(graph, sink) {
   this._id = onOffWidgetCount++;
   this._graph = graph;
@@ -54,7 +55,7 @@ OnOffWidget.prototype.setOnOn = function(
 OnOffWidget.prototype.node = function() {
   if (!this._containerNode) {
     // Switch case.
-    const car = new Caret(parsegraph_SLOT);
+    const car = new Caret(SLOT);
     this._containerNode = car.root();
     car.node().setIgnoreMouse(true);
     car.shrink();
@@ -66,7 +67,7 @@ OnOffWidget.prototype.node = function() {
       this.turnOff();
       return true;
     }, this);
-    const blackStyle = parsegraph_copyStyle(parsegraph_SLOT);
+    const blackStyle = copyStyle(SLOT);
     blackStyle.backgroundColor = new Color(0, 0, 0, 1);
     blackStyle.fontColor = new Color(1, 0, 0, 1);
     car.node().setBlockStyle(blackStyle);
@@ -78,7 +79,7 @@ OnOffWidget.prototype.node = function() {
       this.turnOn();
       return true;
     }, this);
-    const whiteStyle = parsegraph_copyStyle(parsegraph_SLOT);
+    const whiteStyle = copyStyle(SLOT);
     whiteStyle.borderColor = new Color(0.2, 0.2, 0.2, 1);
     whiteStyle.backgroundColor = new Color(1, 1, 1, 1);
     car.node().setBlockStyle(whiteStyle);

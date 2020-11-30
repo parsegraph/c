@@ -11,8 +11,8 @@ import Caret from './Caret';
 import Rect from './Rect';
 import Window from './Window';
 import Camera from './Camera';
+/* eslint-disable require-jsdoc */
 
-// eslint-disable-next-line require-jsdoc
 export default class World {
   _worldPaintingDirty: boolean;
   _worldRoots: Node[];
@@ -20,7 +20,6 @@ export default class World {
   _previousWorldPaintState: number;
   _freezer: Freezer;
   _cameraBox: CameraBox;
-  // eslint-disable-next-line require-jsdoc
   constructor() {
     // World-rendered graphs.
     this._worldPaintingDirty = true;
@@ -33,11 +32,9 @@ export default class World {
     this._freezer = new Freezer();
     this._cameraBox = new CameraBox();
   }
-  // eslint-disable-next-line require-jsdoc
   freezer(): Freezer {
     return this._freezer;
   }
-  // eslint-disable-next-line require-jsdoc
   contextChanged(isLost: boolean, window: Window): void {
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
@@ -47,7 +44,6 @@ export default class World {
     }
     this._cameraBox.contextChanged(isLost, window);
   }
-  // eslint-disable-next-line require-jsdoc
   plot(node: Node | Caret): void {
     if (!node) {
       throw new Error('Node must not be null');
@@ -61,7 +57,6 @@ export default class World {
     }
     this._worldRoots.push(node);
   }
-  // eslint-disable-next-line require-jsdoc
   removePlot(plot: Node): Node {
     for (let i = 0; i < this._worldRoots.length; ++i) {
       if (this._worldRoots[i] === plot) {
@@ -79,7 +74,6 @@ export default class World {
    *
    * Returns true if this event processing requires a graph repaint.
    */
-  // eslint-disable-next-line require-jsdoc
   mouseOver(x: number, y: number): number {
     if (!this.readyForInput()) {
       return 1;
@@ -120,7 +114,6 @@ export default class World {
 
     return 2;
   }
-  // eslint-disable-next-line require-jsdoc
   boundingRect(outRect?: Rect): Rect {
     if (!outRect) {
       outRect = new Rect(0, 0, 0, 0);
@@ -190,17 +183,14 @@ export default class World {
 
     return outRect;
   }
-  // eslint-disable-next-line require-jsdoc
   scheduleRepaint(): void {
     // console.log(new Error("Scheduling repaint"));
     this._worldPaintingDirty = true;
     this._previousWorldPaintState = null;
   }
-  // eslint-disable-next-line require-jsdoc
   nodeUnderCursor(): Node {
     return this._nodeUnderCursor;
   }
-  // eslint-disable-next-line require-jsdoc
   readyForInput(): boolean {
     // Test if there is a node under the given coordinates.
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -211,7 +201,6 @@ export default class World {
     }
     return true;
   }
-  // eslint-disable-next-line require-jsdoc
   commitLayout(timeout?: number): boolean {
     let completed = true;
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -225,7 +214,6 @@ export default class World {
   /**
    * Tests whether the given position, in world space, is within a node.
    */
-  // eslint-disable-next-line require-jsdoc
   nodeUnderCoords(x: number, y: number): Node {
     // Test if there is a node under the given coordinates.
     for (let i: number = this._worldRoots.length - 1; i >= 0; --i) {
@@ -237,11 +225,9 @@ export default class World {
     }
     return null;
   }
-  // eslint-disable-next-line require-jsdoc
   needsRepaint(): boolean {
     return this._worldPaintingDirty || this._cameraBox.needsRepaint();
   }
-  // eslint-disable-next-line require-jsdoc
   paint(window: Window, timeout?: number): boolean {
     const gl = window.gl();
     if (gl.isContextLost()) {
@@ -303,7 +289,6 @@ export default class World {
 
     return false;
   }
-  // eslint-disable-next-line require-jsdoc
   render(window: Window, camera: Camera): boolean {
     const gl = window.gl();
     if (gl.isContextLost()) {

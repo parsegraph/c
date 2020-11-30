@@ -1,18 +1,19 @@
-parsegraph_IMAGEWINDOW_COUNT = 0;
+IMAGEWINDOW_COUNT = 0;
+/* eslint-disable require-jsdoc */
 
-function parsegraph_ImageWindow(width, height) {
+export default function ImageWindow(width, height) {
   if (!width || !height) {
     throw new Error(
         'ImageWindow must receive a width and height during construction',
     );
   }
-  if (!parsegraph_INITIALIZED) {
+  if (!INITIALIZED) {
     throw new Error(
-        'Parsegraph must be initialized using parsegraph_initialize()',
+        'Parsegraph must be initialized using initialize()',
     );
   }
-  this._id = ++parsegraph_IMAGEWINDOW_COUNT;
-  this._backgroundColor = parsegraph_BACKGROUND_COLOR;
+  this._id = ++IMAGEWINDOW_COUNT;
+  this._backgroundColor = BACKGROUND_COLOR;
 
   this._schedulerFunc = null;
   this._schedulerFuncThisArg = null;
@@ -51,8 +52,8 @@ function parsegraph_ImageWindow(width, height) {
   this._gl = null;
   this._shaders = {};
 
-  this._layoutList = new parsegraph_LayoutList(
-      parsegraph_COMPONENT_LAYOUT_HORIZONTAL,
+  this._layoutList = new LayoutList(
+      COMPONENT_LAYOUT_HORIZONTAL,
   );
 
   this._textureSize = NaN;
@@ -67,19 +68,19 @@ function parsegraph_ImageWindow(width, height) {
   this._imageContext = this._imageCanvas.getContext('2d');
 }
 
-parsegraph_ImageWindow.prototype.log = function() {};
+ImageWindow.prototype.log = function() {};
 
-parsegraph_ImageWindow.prototype.clearLog = function() {};
+ImageWindow.prototype.clearLog = function() {};
 
-parsegraph_ImageWindow.prototype.isOffscreen = function() {
+ImageWindow.prototype.isOffscreen = function() {
   return true;
 };
 
-parsegraph_ImageWindow.prototype.numComponents = function() {
+ImageWindow.prototype.numComponents = function() {
   return this._layoutList.count();
 };
 
-parsegraph_ImageWindow.prototype.layout = function(target) {
+ImageWindow.prototype.layout = function(target) {
   let targetSize = null;
   this.forEach(function(comp, compSize) {
     if (target === comp) {
@@ -93,7 +94,7 @@ parsegraph_ImageWindow.prototype.layout = function(target) {
   return targetSize;
 };
 
-parsegraph_ImageWindow.prototype.handleEvent = function(eventType, inputData) {
+ImageWindow.prototype.handleEvent = function(eventType, inputData) {
   if (eventType === 'tick') {
     let needsUpdate = false;
     this.forEach(function(comp) {
@@ -104,27 +105,27 @@ parsegraph_ImageWindow.prototype.handleEvent = function(eventType, inputData) {
   return false;
 };
 
-parsegraph_ImageWindow.prototype.getSize = function(sizeOut) {
+ImageWindow.prototype.getSize = function(sizeOut) {
   sizeOut.setX(0);
   sizeOut.setY(0);
   sizeOut.setWidth(this.width());
   sizeOut.setHeight(this.height());
 };
 
-parsegraph_ImageWindow.prototype.forEach = function(func, funcThisArg) {
-  const windowSize = new parsegraph_Rect();
+ImageWindow.prototype.forEach = function(func, funcThisArg) {
+  const windowSize = new Rect();
   this.getSize(windowSize);
   return this._layoutList.forEach(func, funcThisArg, windowSize);
 };
 
-parsegraph_ImageWindow.prototype.scheduleUpdate = function() {
+ImageWindow.prototype.scheduleUpdate = function() {
   // console.log("Window is scheduling update");
   if (this._schedulerFunc) {
     this._schedulerFunc.call(this._schedulerFuncThisArg, this);
   }
 };
 
-parsegraph_ImageWindow.prototype.setOnScheduleUpdate = function(
+ImageWindow.prototype.setOnScheduleUpdate = function(
     schedulerFunc,
     schedulerFuncThisArg,
 ) {
@@ -132,32 +133,36 @@ parsegraph_ImageWindow.prototype.setOnScheduleUpdate = function(
   this._schedulerFuncThisArg = schedulerFuncThisArg;
 };
 
-parsegraph_ImageWindow.prototype.id = function() {
+ImageWindow.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_ImageWindow.prototype.shaders = function() {
+ImageWindow.prototype.shaders = function() {
   return this._shaders;
 };
 
-parsegraph_ImageWindow.prototype.textureSize = function() {
+ImageWindow.prototype.textureSize = function() {
   if (this._gl.isContextLost()) {
     return NaN;
   }
   if (Number.isNaN(this._textureSize)) {
-    this._textureSize = Math.min(512, parsegraph_getTextureSize(this._gl));
+    this._textureSize = Math.min(512, getTextureSize(this._gl));
   }
   return this._textureSize;
 };
 
-parsegraph_ImageWindow.prototype.onContextChanged = function(isLost) {
+ImageWindow.prototype.onContextChanged = function(isLost) {
   if (isLost) {
     const keys = [];
     for (const k in this._shaders) {
-      keys.push(k);
+      if (Object.prototype.hasOwnProperty.call(this._shaders, k)) {
+        keys.push(k);
+      }
     }
     for (const i in keys) {
-      delete this._shaders[keys[i]];
+      if (Object.prototype.hasOwnProperty.call(keys, i)) {
+        delete this._shaders[keys[i]];
+      }
     }
   }
   this.forEach(function(comp) {
@@ -167,11 +172,11 @@ parsegraph_ImageWindow.prototype.onContextChanged = function(isLost) {
   }, this);
 };
 
-parsegraph_ImageWindow.prototype.canvas = function() {
+ImageWindow.prototype.canvas = function() {
   return this._canvas;
 };
 
-parsegraph_ImageWindow.prototype.gl = function() {
+ImageWindow.prototype.gl = function() {
   if (this._gl) {
     return this._gl;
   }
@@ -189,40 +194,40 @@ parsegraph_ImageWindow.prototype.gl = function() {
   throw new Error('GL context is not supported');
 };
 
-parsegraph_ImageWindow.prototype.setGL = function(gl) {
+ImageWindow.prototype.setGL = function(gl) {
   this._gl = gl;
 };
 
-parsegraph_ImageWindow.prototype.setExplicitSize = function(w, h) {
+ImageWindow.prototype.setExplicitSize = function(w, h) {
   this._explicitWidth = w;
   this._explicitHeight = h;
 };
 
-parsegraph_ImageWindow.prototype.upscale = function() {
+ImageWindow.prototype.upscale = function() {
   return 2;
 };
 
-parsegraph_ImageWindow.prototype.getWidth = function() {
+ImageWindow.prototype.getWidth = function() {
   return this._explicitWidth * this.upscale();
 };
-parsegraph_ImageWindow.prototype.width =
-  parsegraph_ImageWindow.prototype.getWidth;
+ImageWindow.prototype.width =
+  ImageWindow.prototype.getWidth;
 
-parsegraph_ImageWindow.prototype.getHeight = function() {
+ImageWindow.prototype.getHeight = function() {
   return this._explicitHeight * this.upscale();
 };
-parsegraph_ImageWindow.prototype.height =
-  parsegraph_ImageWindow.prototype.getHeight;
+ImageWindow.prototype.height =
+  ImageWindow.prototype.getHeight;
 
-parsegraph_ImageWindow.prototype.addWidget = function(widget) {
+ImageWindow.prototype.addWidget = function(widget) {
   return this.addComponent(widget.component());
 };
 
-parsegraph_ImageWindow.prototype.addComponent = function(comp) {
+ImageWindow.prototype.addComponent = function(comp) {
   return this.addHorizontal(comp, null);
 };
 
-parsegraph_ImageWindow.prototype.addHorizontal = function(comp, other) {
+ImageWindow.prototype.addHorizontal = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
@@ -236,7 +241,7 @@ parsegraph_ImageWindow.prototype.addHorizontal = function(comp, other) {
   container.addHorizontal(comp);
 };
 
-parsegraph_ImageWindow.prototype.addVertical = function(comp, other) {
+ImageWindow.prototype.addVertical = function(comp, other) {
   comp.setOwner(this);
   this.scheduleUpdate();
   if (!other) {
@@ -252,7 +257,7 @@ parsegraph_ImageWindow.prototype.addVertical = function(comp, other) {
   console.log(this._layoutList);
 };
 
-parsegraph_ImageWindow.prototype.removeComponent = function(compToRemove) {
+ImageWindow.prototype.removeComponent = function(compToRemove) {
   this.scheduleUpdate();
   if (compToRemove === this._focusedComponent) {
     if (this._focusedComponent) {
@@ -265,7 +270,7 @@ parsegraph_ImageWindow.prototype.removeComponent = function(compToRemove) {
   return this._layoutList.remove(compToRemove);
 };
 
-parsegraph_ImageWindow.prototype.tick = function(startTime) {
+ImageWindow.prototype.tick = function(startTime) {
   let needsUpdate = false;
   this.forEach(function(comp) {
     needsUpdate = comp.handleEvent('tick', startTime) || needsUpdate;
@@ -273,7 +278,7 @@ parsegraph_ImageWindow.prototype.tick = function(startTime) {
   return needsUpdate;
 };
 
-parsegraph_ImageWindow.prototype.paint = function(timeout) {
+ImageWindow.prototype.paint = function(timeout) {
   if (this.gl().isContextLost()) {
     return;
   }
@@ -288,36 +293,36 @@ parsegraph_ImageWindow.prototype.paint = function(timeout) {
     this.forEach(function(comp) {
       needsUpdate = comp.paint(timeout / compCount) || needsUpdate;
     }, this);
-    timeout = Math.max(0, timeout - parsegraph_elapsed(startTime));
+    timeout = Math.max(0, timeout - elapsed(startTime));
   }
   return needsUpdate;
 };
 
-parsegraph_ImageWindow.prototype.setBackground = function(color) {
+ImageWindow.prototype.setBackground = function(color, ...args) {
   if (arguments.length > 1) {
-    return this.setBackground(parsegraph_createColor.apply(this, arguments));
+    return this.setBackground(createColor.apply(this, ...args));
   }
   this._backgroundColor = color;
 };
 
-/**
- * Retrieves the current background color.
- */
-parsegraph_ImageWindow.prototype.backgroundColor = function() {
+
+// Retrieves the current background color.
+
+ImageWindow.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
 
-/**
- * Returns whether the window has a nonzero client width and height.
- */
-parsegraph_ImageWindow.prototype.canProject = function() {
+
+// Returns whether the window has a nonzero client width and height.
+
+ImageWindow.prototype.canProject = function() {
   const displayWidth = this.getWidth();
   const displayHeight = this.getHeight();
 
   return displayWidth != 0 && displayHeight != 0;
 };
 
-parsegraph_ImageWindow.prototype.renderBasic = function() {
+ImageWindow.prototype.renderBasic = function() {
   const gl = this.gl();
   if (this.gl().isContextLost()) {
     return false;
@@ -325,11 +330,13 @@ parsegraph_ImageWindow.prototype.renderBasic = function() {
   // console.log("Rendering window");
   if (!this.canProject()) {
     throw new Error(
-        'Refusing to render to an unprojectable window. Use canProject() to handle, and parent this window\'s container to fix.',
+        'Refusing to render to an unprojectable window.' +
+        ' Use canProject() to handle, and parent this' +
+        ' window\'s container to fix.',
     );
   }
 
-  const compSize = new parsegraph_Rect();
+  const compSize = new Rect();
   let needsUpdate = false;
   gl.clearColor(
       this._backgroundColor.r(),
@@ -340,7 +347,8 @@ parsegraph_ImageWindow.prototype.renderBasic = function() {
   gl.enable(gl.SCISSOR_TEST);
   this.forEach(function(comp, compSize) {
     // console.log("Rendering: " + comp.peer().id());
-    // console.log("Rendering component of size " + compSize.width() + "x" + compSize.height());
+    // console.log("Rendering component of size " +
+    //   compSize.width() + "x" + compSize.height());
     gl.scissor(compSize.x(), compSize.y(), compSize.width(), compSize.height());
     gl.viewport(
         compSize.x(),
@@ -356,7 +364,7 @@ parsegraph_ImageWindow.prototype.renderBasic = function() {
   return needsUpdate;
 };
 
-parsegraph_ImageWindow.prototype.loadImageFromTexture = function(
+ImageWindow.prototype.loadImageFromTexture = function(
     gl,
     texture,
     width,
@@ -393,17 +401,17 @@ parsegraph_ImageWindow.prototype.loadImageFromTexture = function(
   this._image.src = canvas.toDataURL();
 };
 
-parsegraph_ImageWindow.prototype.image = function() {
+ImageWindow.prototype.image = function() {
   return this._image;
 };
 
-parsegraph_ImageWindow.prototype.newImage = function() {
+ImageWindow.prototype.newImage = function() {
   this._image = new Image();
   this._image.style.width = Math.floor(this._explicitWidth) + 'px';
   this._image.style.height = Math.floor(this._explicitHeight) + 'px';
 };
 
-parsegraph_ImageWindow.prototype.render = function() {
+ImageWindow.prototype.render = function() {
   const needsUpdate = this.renderBasic();
   const gl = this.gl();
   const targetTextureWidth = this.width();
@@ -419,7 +427,7 @@ parsegraph_ImageWindow.prototype.render = function() {
     gl.bindTexture(gl.TEXTURE_2D, targetTexture);
     {
       // define size and format of level 0
-      var level = 0;
+      const level = 0;
       const internalFormat = gl.RGBA;
       const border = 0;
       const format = gl.RGBA;
@@ -457,9 +465,9 @@ parsegraph_ImageWindow.prototype.render = function() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._fb);
   }
 
-  parsegraph_VFLIP = true;
+  VFLIP = true;
   this.renderBasic();
-  parsegraph_VFLIP = false;
+  VFLIP = false;
 
   this.loadImageFromTexture(
       gl,

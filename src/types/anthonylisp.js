@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function lispExpression(app, car, id, value, items) {
   const node = car.node();
   node.setType(parsegraph_BUD);
@@ -18,7 +19,7 @@ export default function lispExpression(app, car, id, value, items) {
   actions.addAction(
       'Add expression',
       function() {
-        parsegraph_pushListItem(app, id, 'lisp::expression', '');
+        pushListItem(app, id, 'lisp::expression', '');
       },
       this,
   );
@@ -50,7 +51,7 @@ export default function lispExpression(app, car, id, value, items) {
 listClasses['lisp'] = {
   spawn: function(app, car, id, value, items) {
     const node = car.node();
-    node.setType(parsegraph_BLOCK);
+    node.setType(BLOCK);
     car.label('Lisp');
     car.spawnMove('d', 'u');
 
@@ -64,35 +65,35 @@ listClasses['lisp::expression'] = {
     actions.addAction(
         'Add symbol',
         function() {
-          parsegraph_pushListItem(app, id, 'lisp::expression::symbol', '');
+          pushListItem(app, id, 'lisp::expression::symbol', '');
         },
         this,
     );
     actions.addAction(
         'New line',
         function() {
-          parsegraph_pushListItem(app, id, 'lisp::expression::newline', null);
+          pushListItem(app, id, 'lisp::expression::newline', null);
         },
         this,
     );
     actions.addAction(
         'Add quote',
         function() {
-          parsegraph_pushListItem(app, id, 'lisp::expression::quote', '');
+          pushListItem(app, id, 'lisp::expression::quote', '');
         },
         this,
     );
     actions.addAction(
         'Add list',
         function() {
-          parsegraph_pushListItem(app, id, 'lisp::list');
+          pushListItem(app, id, 'lisp::list');
         },
         this,
     );
     actions.addAction(
         'Delete',
         function() {
-          parsegraph_destroyListItem(app, id);
+          destroyListItem(app, id);
         },
         this,
     );
@@ -152,7 +153,7 @@ listClasses['lisp::expression::symbol'] = {
     bg.className = 'bg';
 
     const container = document.createElement('div');
-    parsegraph_addEventListener(
+    addEventListener(
         container,
         'submit',
         function(e) {
@@ -164,7 +165,7 @@ listClasses['lisp::expression::symbol'] = {
     container.className = 'popup';
     bg.appendChild(container);
 
-    parsegraph_addEventListener(bg, 'click', function() {
+    addEventListener(bg, 'click', function() {
       if (bg.parentNode) {
         bg.parentNode.removeChild(bg);
       }
@@ -175,7 +176,7 @@ listClasses['lisp::expression::symbol'] = {
     h.innerHTML = 'Value';
     form.appendChild(h);
     container.appendChild(form);
-    parsegraph_addEventListener(container, 'click', function(e) {
+    addEventListener(container, 'click', function(e) {
       e.stopImmediatePropagation();
     });
 
@@ -184,7 +185,7 @@ listClasses['lisp::expression::symbol'] = {
     valueField.className = 'main';
     valueField.cols = 50;
     valueField.rows = 1;
-    parsegraph_addEventListener(
+    addEventListener(
         valueField,
         'keypress',
         function(e) {
@@ -212,7 +213,7 @@ listClasses['lisp::expression::symbol'] = {
     app.listen(
         id,
         function(e) {
-          if (e.event == 'parsegraph_editItem') {
+          if (e.event == 'editItem') {
             car.label(JSON.parse(e.value));
             if (bg.parentNode) {
               bg.parentNode.removeChild(bg);
@@ -223,8 +224,8 @@ listClasses['lisp::expression::symbol'] = {
         this,
     );
 
-    parsegraph_addEventListener(submitField, 'click', function() {
-      parsegraph_editItem(app, id, valueField.value);
+    addEventListener(submitField, 'click', function() {
+      editItem(app, id, valueField.value);
     });
     actions.addAction(
         'Edit',
@@ -234,7 +235,7 @@ listClasses['lisp::expression::symbol'] = {
           } else {
             document.body.appendChild(bg);
             permissionForm.refresh();
-            parsegraph_addEventListener(
+            addEventListener(
                 valueField,
                 'keydown',
                 function(e) {
@@ -255,7 +256,7 @@ listClasses['lisp::expression::symbol'] = {
     actions.addAction(
         'Delete',
         function() {
-          parsegraph_destroyListItem(app, id);
+          destroyListItem(app, id);
         },
         this,
     );

@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function EnvelopeGeneratorWidget(graph) {
   this._graph = graph;
 }
@@ -8,20 +9,20 @@ EnvelopeGeneratorWidget.prototype.node = function() {
     return this._containerNode;
   }
 
-  this._containerNode = new Node(parsegraph_BLOCK);
+  this._containerNode = new Node(BLOCK);
   const ga = this._graph.glyphAtlas();
 
   let prior = this._containerNode;
 
   // Attack
-  const attackBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const attackBud = prior.spawnNode(DOWNWARD, BUD);
   const attackLabel = attackBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   attackLabel.setLabel('Attack', ga);
   attackLabel.setScale(0.5);
-  let stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = attackBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._attackSlider = stepSlider;
   this._attackSlider.setValue(Math.random());
@@ -29,11 +30,11 @@ EnvelopeGeneratorWidget.prototype.node = function() {
   prior = attackBud;
 
   // Decay
-  const decayBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  const decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  const decayBud = prior.spawnNode(DOWNWARD, BUD);
+  const decayLabel = decayBud.spawnNode(BACKWARD, BLOCK);
   decayLabel.setLabel('Decay', ga);
   decayLabel.setScale(0.5);
-  let stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = decayBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._decaySlider = stepSlider;
   this._decaySlider.setValue(Math.random());
@@ -41,26 +42,26 @@ EnvelopeGeneratorWidget.prototype.node = function() {
   prior = decayBud;
 
   // Sustain
-  const sustainBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const sustainBud = prior.spawnNode(DOWNWARD, BUD);
   const sustainLabel = sustainBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   sustainLabel.setLabel('Sustain', ga);
   sustainLabel.setScale(0.5);
   const sustainSliders = sustainBud.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_BUD,
+      FORWARD,
+      BUD,
   );
   sustainSliders.setScale(0.5);
   let stepSlider = sustainSliders.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_SLIDER,
+      FORWARD,
+      SLIDER,
   );
 
   const lenSlider = sustainSliders
-      .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
-      .spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+      .spawnNode(DOWNWARD, BUD)
+      .spawnNode(FORWARD, SLIDER);
   this._sustainLengthSlider = lenSlider;
   this._sustainLengthSlider.setValue(Math.random());
 
@@ -70,14 +71,14 @@ EnvelopeGeneratorWidget.prototype.node = function() {
   prior = sustainBud;
 
   // Release
-  const releaseBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const releaseBud = prior.spawnNode(DOWNWARD, BUD);
   const releaseLabel = releaseBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   releaseLabel.setLabel('Release', ga);
   releaseLabel.setScale(0.5);
-  let stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = releaseBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._releaseSlider = stepSlider;
   this._releaseSlider.setValue(Math.random());
