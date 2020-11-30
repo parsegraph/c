@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
+
 parsegraph8BitWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function parsegraph8BitWidget(graph) {
   this._id = parsegraph8BitWidgetCount++;
   this._graph = graph;
@@ -56,18 +57,18 @@ parsegraph8BitWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new Caret(parsegraph_SLOT);
+  const car = new Caret(SLOT);
   this._containerNode = car.root();
   car.label('8Bit');
   car.fitExact();
 
   this._containerNode.setNodeAlignmentMode(
-      parsegraph_INWARD,
-      parsegraph_ALIGN_VERTICAL,
+      INWARD,
+      ALIGN_VERTICAL,
   );
   const onOff = this._containerNode.spawnNode(
-      parsegraph_INWARD,
-      parsegraph_BLOCK,
+      INWARD,
+      BLOCK,
   );
   onOff.setLabel('Play', this._graph.font());
   this._onButton = onOff;
@@ -81,7 +82,7 @@ parsegraph8BitWidget.prototype.node = function() {
     }
   }, this);
 
-  this._ditherSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+  this._ditherSlider = onOff.spawnNode(DOWNWARD, SLIDER);
   this._ditherSlider.setValue(this._dither);
   this._ditherSlider.setChangeListener(function() {
     this._dither = this._ditherSlider.value();

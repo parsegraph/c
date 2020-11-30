@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function Multislot(room, rowSize, columnSize, color, subtype) {
   this._room = room;
   this._plots = [];
@@ -98,13 +99,13 @@ Multislot.prototype.build = function(car, subtype) {
     return plot;
   };
 
-  const cs = parsegraph_copyStyle('u');
+  const cs = copyStyle('u');
   cs.backgroundColor = new Color(0.8);
   cs.borderColor = new Color(0.6);
 
-  const us = parsegraph_copyStyle('u');
+  const us = copyStyle('u');
   us.backgroundColor = this._color;
-  const bs = parsegraph_copyStyle('b');
+  const bs = copyStyle('b');
   bs.backgroundColor = this._color;
 
   this._root.setLabel(subtype);
@@ -113,7 +114,7 @@ Multislot.prototype.build = function(car, subtype) {
     for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.pull('d');
-        car.align('d', parsegraph_ALIGN_CENTER);
+        car.align('d', ALIGN_CENTER);
         car.spawnMove('d', 'u');
         car.shrink();
       } else {
@@ -144,7 +145,7 @@ Multislot.prototype.build = function(car, subtype) {
 
     for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
-        // car.align('d', parsegraph_ALIGN_CENTER);
+        // car.align('d', ALIGN_CENTER);
         car.shrink();
       } else {
         car.spawnMove('f', 'u');
@@ -176,7 +177,7 @@ Multislot.prototype.build = function(car, subtype) {
 
     for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
-        car.align('d', parsegraph_ALIGN_CENTER);
+        car.align('d', ALIGN_CENTER);
         car.spawnMove('d', 'u');
         car.shrink();
       } else {
@@ -207,7 +208,7 @@ Multislot.prototype.build = function(car, subtype) {
     const index = 0;
     for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
-        car.align('d', parsegraph_ALIGN_CENTER);
+        car.align('d', ALIGN_CENTER);
         car.spawnMove('d', 'u');
         car.shrink();
       } else {
@@ -235,7 +236,7 @@ Multislot.prototype.build = function(car, subtype) {
     for (let y = 0; y < this._columnSize; ++y) {
       if (y === 0) {
         car.pull('d');
-        car.align('d', parsegraph_ALIGN_CENTER);
+        car.align('d', ALIGN_CENTER);
         car.spawnMove('d', 'u');
         car.shrink();
       } else {
@@ -265,7 +266,7 @@ Multislot.prototype.build = function(car, subtype) {
   }
 };
 
-parsegraph_listClasses.multislot = {
+listClasses.multislot = {
   spawnItem: function(room, value, children, id) {
     const params = JSON.parse(value);
     const subtype = params[0];

@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function SequenceStep(seq, i) {
   this._seq = seq;
   this._i = i;
@@ -73,18 +74,18 @@ SequenceStep.prototype.node = function() {
     return this._node;
   }
 
-  step = new Node(parsegraph_BLOCK);
+  step = new Node(BLOCK);
   this._node = step;
-  const b = parsegraph_copyStyle(parsegraph_BLOCK);
+  const b = copyStyle(BLOCK);
   b.backgroundColor = new Color(1, 1, this._i % 2 == 0 ? 1 : 0.8, 1);
   step.setBlockStyle(b);
-  step.setLabel(1 + this._i, parsegraph_defaultFont());
-  const s = step.spawnNode(parsegraph_INWARD, parsegraph_BUD);
+  step.setLabel(1 + this._i, defaultFont());
+  const s = step.spawnNode(INWARD, BUD);
   s.setIgnoreMouse(true);
   s.setScale(0.5);
-  step.setNodeAlignmentMode(parsegraph_INWARD, parsegraph_ALIGN_VERTICAL);
+  step.setNodeAlignmentMode(INWARD, ALIGN_VERTICAL);
 
-  const stepOn = s.spawnNode(parsegraph_UPWARD, parsegraph_BLOCK);
+  const stepOn = s.spawnNode(UPWARD, BLOCK);
   stepOn.setLabel(Math.random() > 0.3 ? 'On' : 'Off', ga);
   stepOn.setClickListener(function() {
     this._active = !this._active;
@@ -96,56 +97,56 @@ SequenceStep.prototype.node = function() {
   }, this);
   this._onButton = stepOn;
 
-  const stepLabel = s.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  const stepLabel = s.spawnNode(BACKWARD, BLOCK);
   stepLabel.setLabel('Pitch', ga);
   stepLabel.setScale(0.5);
-  let stepSlider = s.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = s.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._pitchSlider = stepSlider;
   this._pitchSlider.setValue(Math.random());
   rootStep = step;
 
-  const ns = s.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  let tn = ns.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+  const ns = s.spawnNode(DOWNWARD, BUD);
+  let tn = ns.spawnNode(FORWARD, BLOCK);
   tn.setLabel('sine', ga);
   tn.setClickListener(function() {
     this._type = 'sine';
   }, this);
   tn.setScale(0.25);
-  let tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+  let tnn = tn.spawnNode(DOWNWARD, BLOCK);
   tnn.setLabel('triangle', ga);
   tnn.setClickListener(function() {
     this._type = 'triangle';
   }, this);
   tn = tnn;
-  tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+  tnn = tn.spawnNode(DOWNWARD, BLOCK);
   tnn.setLabel('sawtooth', ga);
   tnn.setClickListener(function() {
     this._type = 'sawtooth';
   }, this);
   tn = tnn;
-  tnn = tn.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+  tnn = tn.spawnNode(DOWNWARD, BLOCK);
   tnn.setLabel('square', ga);
   tnn.setClickListener(function() {
     this._type = 'square';
   }, this);
   tn = tnn;
 
-  const nsl = ns.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  const nsl = ns.spawnNode(BACKWARD, BLOCK);
   nsl.setLabel('Type', ga);
   nsl.setScale(0.5);
 
   let prior = ns;
 
   // Attack
-  const attackBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const attackBud = prior.spawnNode(DOWNWARD, BUD);
   const attackLabel = attackBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   attackLabel.setLabel('Attack', ga);
   attackLabel.setScale(0.5);
-  let stepSlider = attackBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = attackBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._attackSlider = stepSlider;
   this._attackSlider.setValue(Math.random());
@@ -153,11 +154,11 @@ SequenceStep.prototype.node = function() {
   prior = attackBud;
 
   // Decay
-  const decayBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
-  const decayLabel = decayBud.spawnNode(parsegraph_BACKWARD, parsegraph_BLOCK);
+  const decayBud = prior.spawnNode(DOWNWARD, BUD);
+  const decayLabel = decayBud.spawnNode(BACKWARD, BLOCK);
   decayLabel.setLabel('Decay', ga);
   decayLabel.setScale(0.5);
-  let stepSlider = decayBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = decayBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._decaySlider = stepSlider;
   this._decaySlider.setValue(Math.random());
@@ -165,26 +166,26 @@ SequenceStep.prototype.node = function() {
   prior = decayBud;
 
   // Sustain
-  const sustainBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const sustainBud = prior.spawnNode(DOWNWARD, BUD);
   const sustainLabel = sustainBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   sustainLabel.setLabel('Sustain', ga);
   sustainLabel.setScale(0.5);
   const sustainSliders = sustainBud.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_BUD,
+      FORWARD,
+      BUD,
   );
   sustainSliders.setScale(0.5);
   let stepSlider = sustainSliders.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_SLIDER,
+      FORWARD,
+      SLIDER,
   );
 
   const lenSlider = sustainSliders
-      .spawnNode(parsegraph_DOWNWARD, parsegraph_BUD)
-      .spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+      .spawnNode(DOWNWARD, BUD)
+      .spawnNode(FORWARD, SLIDER);
   this._sustainLengthSlider = lenSlider;
   this._sustainLengthSlider.setValue(Math.random());
 
@@ -194,14 +195,14 @@ SequenceStep.prototype.node = function() {
   prior = sustainBud;
 
   // Release
-  const releaseBud = prior.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  const releaseBud = prior.spawnNode(DOWNWARD, BUD);
   const releaseLabel = releaseBud.spawnNode(
-      parsegraph_BACKWARD,
-      parsegraph_BLOCK,
+      BACKWARD,
+      BLOCK,
   );
   releaseLabel.setLabel('Release', ga);
   releaseLabel.setScale(0.5);
-  let stepSlider = releaseBud.spawnNode(parsegraph_FORWARD, parsegraph_SLIDER);
+  let stepSlider = releaseBud.spawnNode(FORWARD, SLIDER);
   stepSlider.setScale(0.5);
   this._releaseSlider = stepSlider;
   this._releaseSlider.setValue(Math.random());
@@ -212,7 +213,6 @@ SequenceStep.prototype.node = function() {
 };
 
 sequencerWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function SequencerWidget(graph) {
   this._id = sequencerWidgetCount++;
   this._graph = graph;
@@ -389,7 +389,7 @@ SequencerWidget.prototype.play = function(bpm) {
       for (let i = 0; i < this._steps.length; ++i) {
         const s = this._steps[i];
         if (i != t) {
-          const b = parsegraph_copyStyle(parsegraph_BLOCK);
+          const b = copyStyle(BLOCK);
           b.backgroundColor = new Color(
               1,
               1,
@@ -398,7 +398,7 @@ SequencerWidget.prototype.play = function(bpm) {
           );
           s._node.setBlockStyle(b);
         } else {
-          const b = parsegraph_copyStyle(parsegraph_BLOCK);
+          const b = copyStyle(BLOCK);
           b.backgroundColor = new Color(0.5, 0, 0, 1);
           s._node.setBlockStyle(b);
         }
@@ -412,42 +412,42 @@ SequencerWidget.prototype.play = function(bpm) {
 };
 
 SequencerWidget.prototype.font = function() {
-  return parsegraph_defaultFont();
+  return defaultFont();
 };
 
 SequencerWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new Caret(parsegraph_SLOT);
+  const car = new Caret(SLOT);
   this._containerNode = car.root();
   car.label('Sequencer', this.font());
   // car.fitExact();
 
   this._containerNode.setNodeAlignmentMode(
-      parsegraph_INWARD,
-      parsegraph_ALIGN_VERTICAL,
+      INWARD,
+      ALIGN_VERTICAL,
   );
   const onOff = this._containerNode.spawnNode(
-      parsegraph_INWARD,
-      parsegraph_BLOCK,
+      INWARD,
+      BLOCK,
   );
   onOff.setLabel('Play', this.font());
   this._onButton = onOff;
 
-  this._recordButton = onOff.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+  this._recordButton = onOff.spawnNode(FORWARD, BLOCK);
   this._recordButton.setLabel('Record', this.font());
 
   this._recordButton.setClickListener(function() {
     this._recording = !this._recording;
     if (this._recording) {
       // Now recording
-      const b = parsegraph_copyStyle(parsegraph_BLOCK);
+      const b = copyStyle(BLOCK);
       b.backgroundColor = new Color(1, 1, 0, 1);
       this._recordButton.setBlockStyle(b);
       this._recordButton.setLabel('Recording');
     } else {
-      const b = parsegraph_copyStyle(parsegraph_BLOCK);
+      const b = copyStyle(BLOCK);
       this._recordButton.setBlockStyle(b);
       this._recordButton.setLabel('Record');
     }
@@ -455,7 +455,7 @@ SequencerWidget.prototype.node = function() {
     this._graph.scheduleRepaint();
   }, this);
 
-  const bpmSlider = onOff.spawnNode(parsegraph_DOWNWARD, parsegraph_SLIDER);
+  const bpmSlider = onOff.spawnNode(DOWNWARD, SLIDER);
   bpmSlider.setValue(0.5);
   bpmSlider.setChangeListener(function() {
     bpmSlider.value();
@@ -476,8 +476,8 @@ SequencerWidget.prototype.node = function() {
   }, this);
 
   this._resetButton = this._recordButton.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_BLOCK,
+      FORWARD,
+      BLOCK,
   );
   this._resetButton.setLabel('Reset', this.font());
   this._resetButton.setClickListener(function() {
@@ -490,8 +490,8 @@ SequencerWidget.prototype.node = function() {
   }, this);
 
   this._randomizeButton = this._resetButton.spawnNode(
-      parsegraph_FORWARD,
-      parsegraph_BLOCK,
+      FORWARD,
+      BLOCK,
   );
   this._randomizeButton.setLabel('Randomize', this.font());
   this._randomizeButton.setClickListener(function() {
@@ -503,8 +503,8 @@ SequencerWidget.prototype.node = function() {
   }, this);
 
   this._detuneSlider = this._randomizeButton.spawnNode(
-      parsegraph_DOWNWARD,
-      parsegraph_SLIDER,
+      DOWNWARD,
+      SLIDER,
   );
   this._detuneSlider.setValue(0.5);
   this._detuneSlider.setChangeListener(function() {
@@ -518,13 +518,13 @@ SequencerWidget.prototype.node = function() {
   }, this);
 
   const n = car.spawn(
-      parsegraph_DOWNWARD,
-      parsegraph_BUD,
-      parsegraph_ALIGN_CENTER,
+      DOWNWARD,
+      BUD,
+      ALIGN_CENTER,
   );
-  car.pull(parsegraph_DOWNWARD);
-  const l = n.spawnNode(parsegraph_BACKWARD, parsegraph_SLOT);
-  const y = parsegraph_copyStyle(parsegraph_BLOCK);
+  car.pull(DOWNWARD);
+  const l = n.spawnNode(BACKWARD, SLOT);
+  const y = copyStyle(BLOCK);
   y.backgroundColor = new Color(1, 1, 0, 1);
   l.setBlockStyle(y);
   l.setLabel('Oscillator', this.font());
@@ -535,7 +535,7 @@ SequencerWidget.prototype.node = function() {
     const v = voices[Math.floor(Math.random() * voices.length)];
     newStep._type = v;
     this._steps.push(newStep);
-    rootStep.connectNode(parsegraph_FORWARD, newStep.node());
+    rootStep.connectNode(FORWARD, newStep.node());
     rootStep = newStep.node();
     rootStep.setClickListener(
         function() {
@@ -550,10 +550,10 @@ SequencerWidget.prototype.node = function() {
         [this, i],
     );
   }
-  let addStep = rootStep.spawnNode(parsegraph_FORWARD, parsegraph_BUD);
+  let addStep = rootStep.spawnNode(FORWARD, BUD);
   addStep.setLabel('+', this.font());
 
-  let addStep = n.spawnNode(parsegraph_DOWNWARD, parsegraph_BUD);
+  let addStep = n.spawnNode(DOWNWARD, BUD);
   addStep.setLabel('+', this.font());
   return this._containerNode;
 };

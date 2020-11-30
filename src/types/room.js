@@ -1,10 +1,11 @@
+/* eslint-disable require-jsdoc */
+
 const listClasses = {};
 
-// eslint-disable-next-line require-jsdoc
 export default function Room(belt, world, roomId) {
   this._belt = belt;
   this._world = world;
-  this._root = new Node(parsegraph_BLOCK);
+  this._root = new Node(BLOCK);
   this._root.setLabel('Untitled');
   this._itemList = [];
 
@@ -62,7 +63,7 @@ export default function Room(belt, world, roomId) {
   container.className = 'popup';
   bg.appendChild(container);
 
-  parsegraph_addEventListener(
+  addEventListener(
       container,
       'submit',
       function(e) {
@@ -72,12 +73,12 @@ export default function Room(belt, world, roomId) {
       this,
   );
 
-  parsegraph_addEventListener(bg, 'click', function() {
+  addEventListener(bg, 'click', function() {
     if (bg.parentNode) {
       bg.parentNode.removeChild(bg);
     }
   });
-  parsegraph_addEventListener(container, 'click', function(e) {
+  addEventListener(container, 'click', function(e) {
     e.stopImmediatePropagation();
   });
 
@@ -116,7 +117,7 @@ Room.prototype.scheduleRepaint = function() {
   this._belt.scheduleUpdate();
 };
 Room.prototype.scheduleUpdate =
-  parsegraph_Room.prototype.scheduleRepaint;
+  Room.prototype.scheduleRepaint;
 
 Room.prototype.loaded = function() {
   return this._loaded;
@@ -124,7 +125,7 @@ Room.prototype.loaded = function() {
 
 Room.prototype.load = function(items) {
   this._loaded = true;
-  this._root.disconnectNode(parsegraph_DOWNWARD);
+  this._root.disconnectNode(DOWNWARD);
   const car = new Caret(this._root);
   this._itemList = [];
 
@@ -177,18 +178,18 @@ Room.prototype.processMessage = function(obj) {
     }
     this._sessionId = obj.guid;
     /* if(!this._cameraProtocol) {
-         this._cameraProtocol = new parsegraph_InputProtocol(this.roomId(),
+         this._cameraProtocol = new InputProtocol(this.roomId(),
          this.sessionId(),
          this.graph().input());
      }*/
     console.log(
-        'Time till session start: ' + parsegraph_elapsed(parsegraph_START_TIME),
+        'Time till session start: ' + elapsed(START_TIME),
     );
   } else if (obj.event === 'initialData') {
     this.load(obj.root.items);
   } else if (obj.event === 'join') {
     this.setUsername(obj.username);
-  } else if (obj.event == 'parsegraph_editItem') {
+  } else if (obj.event == 'editItem') {
     /* else if(obj.event === "camera_move") {
         if(userLogin.username === obj.username) {
             return;
@@ -475,7 +476,6 @@ Room.prototype.request = function(reqBody, cb, cbThisArg) {
   xhr.send(JSON.stringify(reqBody));
 };
 
-// eslint-disable-next-line require-jsdoc
 export default function OfflineRoom(room) {
   if (!room) {
     throw new Error('Room must be provided');
@@ -514,7 +514,6 @@ OfflineRoom.prototype.start = function() {
   });
 };
 
-// eslint-disable-next-line require-jsdoc
 export default function testRoom(out, belt, world) {
   const window = new Window();
   belt.addWindow(window);

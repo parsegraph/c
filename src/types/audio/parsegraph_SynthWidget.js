@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
+
 synthWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 export default function SynthWidget(graph) {
   this._id = synthWidgetCount++;
   this._graph = graph;
@@ -78,16 +79,16 @@ SynthWidget.prototype.node = function() {
   const FS = 500;
   const MAXFS = 3000;
   if (!this._containerNode) {
-    const car = new Caret(parsegraph_BLOCK);
+    const car = new Caret(BLOCK);
     this._containerNode = car.root();
     car.label('Synthesizer');
     // car.fitExact();
 
-    car.spawnMove(parsegraph_INWARD, BUD, parsegraph_ALIGN_VERTICAL);
+    car.spawnMove(INWARD, BUD, ALIGN_VERTICAL);
     car.pull(DOWNWARD);
     car.push();
     car.shrink();
-    car.spawnMove(DOWNWARD, parsegraph_SLOT);
+    car.spawnMove(DOWNWARD, SLOT);
     car.label('Type');
     car.push();
     ['sine', 'square', 'sawtooth', 'triangle'].forEach(function(oscType, i) {
@@ -111,11 +112,11 @@ SynthWidget.prototype.node = function() {
     car.pop();
 
     // Detune
-    car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-    car.spawnMove(parsegraph_DOWNWARD, parsegraph_SLOT);
+    car.spawnMove(FORWARD, BUD);
+    car.spawnMove(DOWNWARD, SLOT);
     car.label('Detune');
     car.push();
-    const detuneSlider = car.spawnMove(DOWNWARD, parsegraph_SLIDER);
+    const detuneSlider = car.spawnMove(DOWNWARD, SLIDER);
     car.onChange(function() {
       this.setOscillatorDetune(detuneSlider.value() * 200);
       console.log('Detune: ' + this._oscDetune.value);
@@ -124,7 +125,7 @@ SynthWidget.prototype.node = function() {
 
     car.moveToRoot();
 
-    const keyBlock = parsegraph_copyStyle('s');
+    const keyBlock = copyStyle('s');
     // keyBlock.minHeight = keyBlock.minHeight * 10;
     keyBlock.horizontalSeparation = 0;
     keyBlock.verticalSeparation = 0;
@@ -248,7 +249,7 @@ SynthWidget.prototype.node = function() {
         if (i == 0) {
           key
               .parentNode()
-              .setNodeAlignmentMode(DOWNWARD, parsegraph_ALIGN_CENTER);
+              .setNodeAlignmentMode(DOWNWARD, ALIGN_CENTER);
         }
         car.push();
       } else {

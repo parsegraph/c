@@ -1,5 +1,6 @@
 // https://stackoverflow.com/questions/22525934/connecting-convolvernode-to-an-oscillatornode-with-the-web-audio-the-simple-wa
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function impulseResponse(
     audioContext,
     duration,
@@ -21,7 +22,6 @@ export default function impulseResponse(
 }
 
 convolverWidgetCount = 0;
-// eslint-disable-next-line require-jsdoc
 function ConvolverWidget(graph) {
   this._id = convolverWidgetCount++;
   this._graph = graph;
@@ -57,18 +57,18 @@ ConvolverWidget.prototype.node = function() {
   if (this._containerNode) {
     return this._containerNode;
   }
-  const car = new Caret(parsegraph_BLOCK);
+  const car = new Caret(BLOCK);
   this._containerNode = car.root();
   car.label('Convolver');
 
-  car.spawnMove(parsegraph_INWARD, parsegraph_BUD, parsegraph_ALIGN_VERTICAL);
-  car.pull(parsegraph_DOWNWARD);
+  car.spawnMove(INWARD, BUD, ALIGN_VERTICAL);
+  car.pull(DOWNWARD);
   car.shrink();
-  const aSlider = car.spawn(parsegraph_DOWNWARD, parsegraph_SLIDER);
-  car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-  car.pull(parsegraph_DOWNWARD);
+  const aSlider = car.spawn(DOWNWARD, SLIDER);
+  car.spawnMove(FORWARD, BUD);
+  car.pull(DOWNWARD);
   car.shrink();
-  const bSlider = car.spawn(parsegraph_DOWNWARD, parsegraph_SLIDER);
+  const bSlider = car.spawn(DOWNWARD, SLIDER);
 
   aSlider.setValue(this._decay / this._maxDecay);
   aSlider.setChangeListener(function() {
@@ -81,10 +81,10 @@ ConvolverWidget.prototype.node = function() {
     this.refresh();
   }, this);
 
-  car.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
-  car.pull(parsegraph_DOWNWARD);
+  car.spawnMove(FORWARD, BUD);
+  car.pull(DOWNWARD);
   car.shrink();
-  const reversedButton = car.spawn(parsegraph_DOWNWARD, parsegraph_SLOT);
+  const reversedButton = car.spawn(DOWNWARD, SLOT);
   reversedButton.setLabel('Reverse', this._graph.font());
   reversedButton.setClickListener(function() {
     this._reversed = !this._reversed;

@@ -1,4 +1,5 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
+
 export default function FilterWidget(graph) {
   this._graph = graph;
 
@@ -226,13 +227,13 @@ FilterWidget.prototype.node = function() {
     car.move('i');
     car
         .spawnMove('d', 'u', 'c')
-        .connectNode(parsegraph_DOWNWARD, this.frequencyNode());
+        .connectNode(DOWNWARD, this.frequencyNode());
     car.pull('d');
-    car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.qNode());
-    car.pull(parsegraph_DOWNWARD);
-    car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.gainNode());
-    car.pull(parsegraph_DOWNWARD);
-    car.spawnMove('f', 'u').connectNode(parsegraph_DOWNWARD, this.detuneNode());
+    car.spawnMove('f', 'u').connectNode(DOWNWARD, this.qNode());
+    car.pull(DOWNWARD);
+    car.spawnMove('f', 'u').connectNode(DOWNWARD, this.gainNode());
+    car.pull(DOWNWARD);
+    car.spawnMove('f', 'u').connectNode(DOWNWARD, this.detuneNode());
   }
   return this._containerNode;
 };

@@ -1,4 +1,4 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
 export default function JavaScriptWidget(graph) {
   this.graph = graph;
   this.caret = new Caret('b');
@@ -19,11 +19,11 @@ export default function JavaScriptWidget(graph) {
  *  +== forward spawnDir
  *  |
  *
- * I expect inDir to be either parsegraph_INWARD, parsegraph_FORWARD, or
- * parsegraph_DOWNWARD.
+ * I expect inDir to be either INWARD, FORWARD, or
+ * DOWNWARD.
  */
 JavaScriptWidget.prototype.buildChild = function(child, inDir) {
-  inDir = parsegraph_readNodeDirection(inDir);
+  inDir = readNodeDirection(inDir);
   const car = this.caret;
   switch (child.type) {
     case 'Identifier':
@@ -129,7 +129,7 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       }
       break;
     case 'BlockStatement':
-      this.buildBody(child, inDir, parsegraph_turnRight(inDir));
+      this.buildBody(child, inDir, turnRight(inDir));
       break;
     case 'ForStatement':
       car.spawnMove(inDir, 'b');
@@ -155,7 +155,7 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       this.buildChild(child.update, 'f');
       car.pop();
 
-      this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
+      this.buildBody(child.body, DOWNWARD, DOWNWARD);
       break;
     /*    case 'ArrayExpression':
         car.spawnMove(inDir, 'b');
@@ -177,8 +177,8 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
     case 'ThrowStatement':
         car.spawnMove(inDir, 'b');
         car.label('throw');
-        if(inDir === parsegraph_INWARD) {
-            inDir = parsegraph_FORWARD;
+        if(inDir === INWARD) {
+            inDir = FORWARD;
         }
         this.buildChild(child.argument, inDir);
         break;
@@ -245,15 +245,15 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       this.buildChild(child.test, 'i');
       car.pop();
 
-      inDir = parsegraph_alternateNodeDirection(inDir);
+      inDir = alternateNodeDirection(inDir);
       car.spawnMove(inDir, 'bu');
       car.shrink();
       car.label('then');
 
       car.push();
-      inDir = parsegraph_alternateNodeDirection(inDir);
+      inDir = alternateNodeDirection(inDir);
       car.pull(inDir);
-      if (parsegraph_isVerticalNodeDirection(inDir)) {
+      if (isVerticalNodeDirection(inDir)) {
         car.align(inDir, 'center');
       }
       this.buildChild(child.consequent, inDir);
@@ -266,7 +266,7 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
           car.spawnMove('d', 'bu');
         }
         car.label('else');
-        if (parsegraph_isVerticalNodeDirection(inDir)) {
+        if (isVerticalNodeDirection(inDir)) {
           car.align(inDir, 'center');
         }
         this.buildChild(child.alternate, inDir);
@@ -319,8 +319,8 @@ JavaScriptWidget.prototype.buildChild = function(child, inDir) {
       car.pop();
 
       // Body.
-      this.buildBody(child.body, parsegraph_DOWNWARD, parsegraph_DOWNWARD);
-      car.shrink(parsegraph_DOWNWARD);
+      this.buildBody(child.body, DOWNWARD, DOWNWARD);
+      car.shrink(DOWNWARD);
       break;
     default:
       car.spawnMove(inDir, 'b');
@@ -365,7 +365,7 @@ JavaScriptWidget.prototype.buildBody = function(
       car.spawnMove(spawnDir, 'bu');
     }
 
-    const realSpawnDir = parsegraph_alternateNodeDirection(spawnDir);
+    const realSpawnDir = alternateNodeDirection(spawnDir);
     car.pull(realSpawnDir);
     car.push();
     this.buildChild(ast.body[i], realSpawnDir);
