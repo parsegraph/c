@@ -1,10 +1,11 @@
-import {parsegraph_defaultUnicode} from '../unicode';
-import parsegraph_TestSuite from '../TestSuite';
-import {parsegraph_RIGHT_TO_LEFT, parsegraph_defaultFont} from './settings';
-import parsegraph_Caret from './Caret';
+import {defaultUnicode} from '../unicode';
+import TestSuite from '../TestSuite';
+import {RIGHT_TO_LEFT, defaultFont} from './settings';
+import Caret from './Caret';
 import Rect from './Rect';
+/* eslint-disable require-jsdoc */
 
-function parsegraph_GlyphIterator(font, text) {
+function GlyphIterator(font, text) {
   this.font = font;
   this.index = 0;
   this.len = text.length;
@@ -12,8 +13,8 @@ function parsegraph_GlyphIterator(font, text) {
   this.text = text;
 }
 
-parsegraph_GlyphIterator.prototype.next = function() {
-  const unicode = parsegraph_defaultUnicode();
+GlyphIterator.prototype.next = function() {
+  const unicode = defaultUnicode();
   if (!unicode.loaded()) {
     return null;
   }
@@ -22,7 +23,7 @@ parsegraph_GlyphIterator.prototype.next = function() {
   }
   let start = this.text[this.index];
   const startIndex = this.index;
-  var len = 1;
+  let len = 1;
   if (this.text.codePointAt(this.index) > 0xffff) {
     len = 2;
     start = this.text.substring(this.index, this.index + 2);
@@ -30,12 +31,12 @@ parsegraph_GlyphIterator.prototype.next = function() {
   this.index += len;
   if (unicode.isMark(start)) {
     // Show an isolated mark.
-    // parsegraph_log("Found isolated Unicode mark character %x.\n", start[0]);
+    // log("Found isolated Unicode mark character %x.\n", start[0]);
     const rv = font.getGlyph(start);
     return rv;
   }
 
-  // parsegraph_log("Found Unicode character %x.\n", start[0]);
+  // log("Found Unicode character %x.\n", start[0]);
 
   // Form ligatures.
   let givenLetter = start.charCodeAt(0);
@@ -50,12 +51,12 @@ parsegraph_GlyphIterator.prototype.next = function() {
     }
     // Skip the ligature'd character.
     this.prevLetter = 0x627;
-    // parsegraph_log("Found ligature %x->%x\n", gi->prevLetter, givenLetter);
+    // log("Found ligature %x->%x\n", gi->prevLetter, givenLetter);
   } else {
     let nextLetterChar = null;
     for (let i = 0; this.index + i < this.len; ) {
       let nextLetter = this.text[this.index + i];
-      var len = 1;
+      let len = 1;
       if (nextLetter.codePointAt(0) > 0xffff) {
         nextLetter = this.text.substring(this.index + 1, this.index + 3);
         len = 2;
@@ -80,11 +81,13 @@ parsegraph_GlyphIterator.prototype.next = function() {
         nextLetterChar,
     );
     if (cursiveLetter != null) {
-      // console.log("Found cursive char " + givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
+      // console.log("Found cursive char " +
+      // givenLetter.toString(16) + "->" + cursiveLetter.toString(16));
       this.prevLetter = givenLetter;
       givenLetter = cursiveLetter;
     } else {
-      // console.log("Found non-cursive char " + givenLetter.toString(16) + ".");
+      // console.log("Found non-cursive char " +
+      // givenLetter.toString(16) + ".");
       this.prevLetter = null;
     }
   }
@@ -106,13 +109,13 @@ parsegraph_GlyphIterator.prototype.next = function() {
       foundVirama = letter[0].charCodeAt(0) == 0x094d;
       len += llen;
       this.index += llen;
-      // parsegraph_log("Found Unicode mark character %x.\n", letter[0]);
+      // log("Found Unicode mark character %x.\n", letter[0]);
       continue;
     } else if (foundVirama) {
       foundVirama = 0;
       len += llen;
       this.index += llen;
-      // parsegraph_log("Found Unicode character %x combined using Virama.\n", letter[0]);
+      // log("Found Unicode character %x combined using Virama.\n", letter[0]);
       continue;
     }
 
@@ -125,45 +128,47 @@ parsegraph_GlyphIterator.prototype.next = function() {
   return this.font.getGlyph(trueText);
 };
 
-const parsegraph_Label_Tests = new parsegraph_TestSuite('parsegraph_Label');
+const labelTests = new TestSuite('Label');
 
-parsegraph_Label_Tests.addTest('parsegraph_defaultFont', function() {
-  const font = parsegraph_defaultFont();
+labelTests.addTest('defaultFont', function() {
+  const font = defaultFont();
   if (!font) {
     return 'No font created';
   }
 });
 
-parsegraph_Label_Tests.addTest('new parsegraph_Label', function() {
-  const font = parsegraph_defaultFont();
-  const label = new parsegraph_Label(font);
+labelTests.addTest('new Label', function() {
+  const font = defaultFont();
+  const label = new Label(font);
   if (!label) {
     return 'No label created';
   }
 });
 
-parsegraph_Label_Tests.addTest('parsegraph_Label.label', function() {
-  const font = parsegraph_defaultFont();
-  const label = new parsegraph_Label(font);
+labelTests.addTest('Label.label', function() {
+  const font = defaultFont();
+  const label = new Label(font);
   if (!label) {
     return 'No label created';
   }
 
-  const car = new parsegraph_Caret('s');
+  const car = new Caret('s');
   car.setFont(font);
   car.label('No time');
 });
 
-function parsegraph_Line(label, text) {
+function Line(label, text) {
   if (!label) {
     throw new Error('Label must not be null');
   }
   this._label = label;
 
-  // The glyphs contains the memory representation of the Unicode string represented by this line.
+  // The glyphs contains the memory representation
+  // of the Unicode string represented by this line.
   //
-  // Diacritics are represented as additional characters in Unicode. These characters result in a
-  // unique texture rendering of the modified glyph.
+  // Diacritics are represented as additional characters in Unicode.
+  // These characters result in a unique texture
+  // rendering of the modified glyph.
   this._glyphs = [];
   this._width = 0;
   this._height = 0;
@@ -173,15 +178,15 @@ function parsegraph_Line(label, text) {
   }
 }
 
-const parsegraph_Line_Tests = new parsegraph_TestSuite('parsegraph_Line');
+const lineTests = new TestSuite('Line');
 
-parsegraph_Line_Tests.addTest('new parsegraph_Line', function() {
-  const font = parsegraph_defaultFont();
-  const label = new parsegraph_Label(font);
-  var l = new parsegraph_Line(label);
+lineTests.addTest('new Line', function() {
+  const font = defaultFont();
+  const label = new Label(font);
+  let l = new Line(label);
   let f = 0;
   try {
-    var l = new parsegraph_Line(null);
+    let l = new Line(null);
     f = 2;
   } catch (ex) {
     f = 3;
@@ -191,29 +196,29 @@ parsegraph_Line_Tests.addTest('new parsegraph_Line', function() {
   }
 });
 
-parsegraph_Line.prototype.isEmpty = function() {
+Line.prototype.isEmpty = function() {
   return this._width === 0;
 };
 
-parsegraph_Line.prototype.font = function() {
+Line.prototype.font = function() {
   return this._label.font();
 };
 
-parsegraph_Line.prototype.remove = function(pos, count) {
+Line.prototype.remove = function(pos, count) {
   const removed = this._glyphs.splice(pos, count);
   removed.forEach(function(glyphData) {
     this._width -= glyphData.width;
   }, this);
 };
 
-parsegraph_Line.prototype.appendText = function(text) {
+Line.prototype.appendText = function(text) {
   const i = 0;
   const font = this.font();
   if (!font) {
     throw new Error('Line cannot add text without the label having a font.');
   }
 
-  const gi = new parsegraph_GlyphIterator(font, text);
+  const gi = new GlyphIterator(font, text);
   let glyphData = null;
   while ((glyphData = gi.next()) != null) {
     // console.log("LETTER: " + glyphData.letter);
@@ -225,23 +230,23 @@ parsegraph_Line.prototype.appendText = function(text) {
   this._text += text;
 };
 
-parsegraph_Line.prototype.insertText = function(pos, text) {
-  var i = 0;
+Line.prototype.insertText = function(pos, text, args) {
+  let i = 0;
   const font = this.font();
   if (!font) {
     throw new Error('Line cannot add text without the label having a font.');
   }
 
-  const gi = new parsegraph_GlyphIterator(font, text);
+  const gi = new GlyphIterator(font, text);
   let glyphData = null;
   const spliced = [pos, 0];
-  for (var i = 0; (glyphData = gi.next()) != null; ++i) {
+  for (let i = 0; (glyphData = gi.next()) != null; ++i) {
     spliced.push(glyphData);
     this._height = Math.max(this._height, glyphData.height);
     this._width += glyphData.advance;
   }
 
-  this._glyphs.splice.apply(this._glyphs, spliced);
+  this._glyphs.splice.apply(this._glyphs, spliced, ...args);
 
   this._text =
     this._text.slice(0, pos) +
@@ -249,7 +254,7 @@ parsegraph_Line.prototype.insertText = function(pos, text) {
     this._text.slice(pos + 1, this._text.length - pos);
 };
 
-parsegraph_Line.prototype.length = function() {
+Line.prototype.length = function() {
   let len = 0;
   this._glyphs.forEach(function(glyphData) {
     len += glyphData.letter.length;
@@ -257,7 +262,7 @@ parsegraph_Line.prototype.length = function() {
   return len;
 };
 
-parsegraph_Line.prototype.glyphCount = function(counts, pagesPerTexture) {
+Line.prototype.glyphCount = function(counts, pagesPerTexture) {
   if (counts) {
     this._glyphs.forEach(function(glyphData) {
       const bufIndex = Math.floor(glyphData.glyphPage._id / pagesPerTexture);
@@ -274,32 +279,32 @@ parsegraph_Line.prototype.glyphCount = function(counts, pagesPerTexture) {
   return this._glyphs.length;
 };
 
-parsegraph_Line.prototype.getText = function() {
+Line.prototype.getText = function() {
   let t = '';
   this._glyphs.forEach(function(glyphData) {
     t += glyphData.letter;
   });
   return t;
 };
-parsegraph_Line.prototype.text = parsegraph_Line.prototype.getText;
+Line.prototype.text = Line.prototype.getText;
 
-parsegraph_Line.prototype.linePos = function() {
+Line.prototype.linePos = function() {
   return this._linePos;
 };
 
-parsegraph_Line.prototype.label = function() {
+Line.prototype.label = function() {
   return this._label;
 };
 
-parsegraph_Line.prototype.width = function() {
+Line.prototype.width = function() {
   return this._width;
 };
 
-parsegraph_Line.prototype.height = function() {
+Line.prototype.height = function() {
   return this._height;
 };
 
-parsegraph_Line.prototype.posAt = function(limit) {
+Line.prototype.posAt = function(limit) {
   let w = 0;
   for (let i = 0; i < limit && i < this._glyphs.length; ++i) {
     w += this._glyphs[i].width;
@@ -307,7 +312,7 @@ parsegraph_Line.prototype.posAt = function(limit) {
   return w;
 };
 
-parsegraph_Line.prototype.glyphs = function() {
+Line.prototype.glyphs = function() {
   return this._glyphs;
 };
 
@@ -317,7 +322,7 @@ parsegraph_Line.prototype.glyphs = function() {
 //
 // ////////////////////////////////////
 
-export default function parsegraph_Label(font) {
+export default function Label(font) {
   if (!font) {
     throw new Error('Label requires a font.');
   }
@@ -336,11 +341,11 @@ export default function parsegraph_Label(font) {
   this._y = null;
 }
 
-parsegraph_Label.prototype.font = function() {
+Label.prototype.font = function() {
   return this._font;
 };
 
-parsegraph_Label.prototype.isEmpty = function() {
+Label.prototype.isEmpty = function() {
   for (let i = 0; i < this._lines.length; ++i) {
     const l = this._lines[i];
     if (!l.isEmpty()) {
@@ -350,9 +355,9 @@ parsegraph_Label.prototype.isEmpty = function() {
   return true;
 };
 
-parsegraph_Label_Tests.addTest('isEmpty', function() {
-  const font = parsegraph_defaultFont();
-  const l = new parsegraph_Label(font);
+labelTests.addTest('isEmpty', function() {
+  const font = defaultFont();
+  const l = new Label(font);
   if (!l.isEmpty()) {
     return 'New label must begin as empty.';
   }
@@ -362,14 +367,14 @@ parsegraph_Label_Tests.addTest('isEmpty', function() {
   }
 });
 
-parsegraph_Label.prototype.forEach = function(func, funcThisArg) {
+Label.prototype.forEach = function(func, funcThisArg) {
   if (!funcThisArg) {
     funcThisArg = this;
   }
   this._lines.forEach(func, funcThisArg);
 };
 
-parsegraph_Label.prototype.getText = function() {
+Label.prototype.getText = function() {
   let t = '';
   this._lines.forEach(function(l) {
     if (t.length > 0) {
@@ -379,13 +384,13 @@ parsegraph_Label.prototype.getText = function() {
   });
   return t;
 };
-parsegraph_Label.prototype.text = parsegraph_Label.prototype.getText;
+Label.prototype.text = Label.prototype.getText;
 
-parsegraph_Label.prototype.clear = function() {
+Label.prototype.clear = function() {
   this._lines = [];
 };
 
-parsegraph_Label.prototype.length = function() {
+Label.prototype.length = function() {
   let totallen = 0;
   this._lines.forEach(function(l) {
     if (totallen.length > 0) {
@@ -396,7 +401,7 @@ parsegraph_Label.prototype.length = function() {
   return totallen;
 };
 
-parsegraph_Label.prototype.glyphCount = function(counts, pagesPerTexture) {
+Label.prototype.glyphCount = function(counts, pagesPerTexture) {
   let totallen = 0;
   this._lines.forEach(function(l) {
     totallen += l.glyphCount(counts, pagesPerTexture);
@@ -404,7 +409,7 @@ parsegraph_Label.prototype.glyphCount = function(counts, pagesPerTexture) {
   return totallen;
 };
 
-parsegraph_Label.prototype.setText = function(text) {
+Label.prototype.setText = function(text) {
   if (typeof text !== 'string') {
     text = '' + text;
   }
@@ -414,22 +419,22 @@ parsegraph_Label.prototype.setText = function(text) {
   this._width = 0;
   this._height = 0;
   text.split(/\n/).forEach(function(textLine) {
-    const l = new parsegraph_Line(this, textLine);
+    const l = new Line(this, textLine);
     this._lines.push(l);
     this._width = Math.max(this._width, l.width());
     this._height += l.height();
   }, this);
 };
 
-parsegraph_Label.prototype.moveCaretDown = function(world) {
+Label.prototype.moveCaretDown = function(world) {
   console.log('Moving caret down');
 };
 
-parsegraph_Label.prototype.moveCaretUp = function(world) {
+Label.prototype.moveCaretUp = function(world) {
   console.log('Moving caret up');
 };
 
-parsegraph_Label.prototype.moveCaretBackward = function(world) {
+Label.prototype.moveCaretBackward = function(world) {
   if (this._caretPos === 0) {
     if (this._caretLine <= 0) {
       return false;
@@ -442,7 +447,7 @@ parsegraph_Label.prototype.moveCaretBackward = function(world) {
   return true;
 };
 
-parsegraph_Label.prototype.moveCaretForward = function() {
+Label.prototype.moveCaretForward = function() {
   if (this._caretPos == this._lines[this._caretLine]._glyphs.length) {
     if (this._caretLine === this._lines.length - 1) {
       // At the end.
@@ -456,7 +461,7 @@ parsegraph_Label.prototype.moveCaretForward = function() {
   return true;
 };
 
-parsegraph_Label.prototype.backspaceCaret = function() {
+Label.prototype.backspaceCaret = function() {
   const line = this._lines[this._caretLine];
   if (this._caretPos === 0) {
     if (this._caretLine === 0) {
@@ -475,7 +480,7 @@ parsegraph_Label.prototype.backspaceCaret = function() {
   return true;
 };
 
-parsegraph_Label.prototype.deleteCaret = function() {
+Label.prototype.deleteCaret = function() {
   const line = this._lines[this._caretLine];
   if (this._caretPos > line._glyphs.length - 1) {
     return false;
@@ -486,7 +491,7 @@ parsegraph_Label.prototype.deleteCaret = function() {
   return true;
 };
 
-parsegraph_Label.prototype.ctrlKey = function(key) {
+Label.prototype.ctrlKey = function(key) {
   switch (key) {
     case 'Control':
     case 'Alt':
@@ -528,7 +533,7 @@ parsegraph_Label.prototype.ctrlKey = function(key) {
   return false;
 };
 
-parsegraph_Label.prototype.key = function(key) {
+Label.prototype.key = function(key) {
   switch (key) {
     case 'Control':
     case 'Alt':
@@ -579,10 +584,10 @@ parsegraph_Label.prototype.key = function(key) {
       // this.setText(this._labelNode._label.text() + key);
 
       while (this._caretLine > this._lines.length) {
-        this._lines.push(new parsegraph_Line(this));
+        this._lines.push(new Line(this));
       }
-      var insertLine = this._lines[this._caretLine];
-      var insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
+      let insertLine = this._lines[this._caretLine];
+      let insertPos = Math.min(this._caretPos, insertLine._glyphs.length);
       if (insertPos === insertLine._glyphs.length) {
         insertLine.appendText(key);
       } else {
@@ -600,7 +605,7 @@ parsegraph_Label.prototype.key = function(key) {
   return false;
 };
 
-parsegraph_Label.prototype.onTextChanged = function(
+Label.prototype.onTextChanged = function(
     listener,
     listenerThisArg,
 ) {
@@ -608,7 +613,7 @@ parsegraph_Label.prototype.onTextChanged = function(
   this._onTextChangedListenerThisArg = listenerThisArg;
 };
 
-parsegraph_Label.prototype.textChanged = function() {
+Label.prototype.textChanged = function() {
   if (this._onTextChangedListener) {
     return this._onTextChangedListener.call(
         this._onTextChangedListenerThisArg,
@@ -617,15 +622,15 @@ parsegraph_Label.prototype.textChanged = function() {
   }
 };
 
-parsegraph_Label.prototype.editable = function() {
+Label.prototype.editable = function() {
   return this._editable;
 };
 
-parsegraph_Label.prototype.setEditable = function(editable) {
+Label.prototype.setEditable = function(editable) {
   this._editable = editable;
 };
 
-parsegraph_Label.prototype.click = function(x, y) {
+Label.prototype.click = function(x, y) {
   if (y < 0 && x < 0) {
     this._caretLine = 0;
     this._caretPos = 0;
@@ -668,9 +673,9 @@ parsegraph_Label.prototype.click = function(x, y) {
   throw new Error('click fall-through that should not be reached');
 };
 
-parsegraph_Label_Tests.addTest('Click before beginning', function() {
-  const font = parsegraph_defaultFont();
-  const l = new parsegraph_Label(font);
+labelTests.addTest('Click before beginning', function() {
+  const font = defaultFont();
+  const l = new Label(font);
   l.setText('No time');
   l.click(-5, -5);
 
@@ -682,9 +687,9 @@ parsegraph_Label_Tests.addTest('Click before beginning', function() {
   }
 });
 
-parsegraph_Label_Tests.addTest('Click on second character', function() {
-  const font = parsegraph_defaultFont();
-  const l = new parsegraph_Label(font);
+labelTests.addTest('Click on second character', function() {
+  const font = defaultFont();
+  const l = new Label(font);
   l.setText('No time');
   l.click(font.getGlyph('N').width + 1, 0);
 
@@ -696,9 +701,9 @@ parsegraph_Label_Tests.addTest('Click on second character', function() {
   }
 });
 
-parsegraph_Label_Tests.addTest('Click on second line', function() {
-  const font = parsegraph_defaultFont();
-  const l = new parsegraph_Label(font);
+labelTests.addTest('Click on second line', function() {
+  const font = defaultFont();
+  const l = new Label(font);
   l.setText('No time\nLol');
   l.click(font.getGlyph('L').width + 1, l.lineAt(0).height() + 1);
 
@@ -710,9 +715,9 @@ parsegraph_Label_Tests.addTest('Click on second line', function() {
   }
 });
 
-parsegraph_Label_Tests.addTest('Click past end', function() {
-  const font = parsegraph_defaultFont();
-  const l = new parsegraph_Label(font);
+labelTests.addTest('Click past end', function() {
+  const font = defaultFont();
+  const l = new Label(font);
   l.setText('No time\nLol');
   l.click(
       font.getGlyph('L').width + 1,
@@ -727,19 +732,19 @@ parsegraph_Label_Tests.addTest('Click past end', function() {
   }
 });
 
-parsegraph_Label.prototype.lineAt = function(n) {
+Label.prototype.lineAt = function(n) {
   return this._lines[n];
 };
 
-parsegraph_Label.prototype.caretLine = function() {
+Label.prototype.caretLine = function() {
   return this._caretLine;
 };
 
-parsegraph_Label.prototype.caretPos = function() {
+Label.prototype.caretPos = function() {
   return this._caretPos;
 };
 
-parsegraph_Label.prototype.getCaretRect = function(outRect) {
+Label.prototype.getCaretRect = function(outRect) {
   if (!outRect) {
     outRect = new Rect();
   }
@@ -757,15 +762,15 @@ parsegraph_Label.prototype.getCaretRect = function(outRect) {
   return outRect;
 };
 
-parsegraph_Label.prototype.glyphPos = function() {
+Label.prototype.glyphPos = function() {
   return this._caretPos;
 };
 
-parsegraph_Label.prototype.fontSize = function() {
+Label.prototype.fontSize = function() {
   return this._font.fontSize();
 };
 
-parsegraph_Label.prototype.width = function() {
+Label.prototype.width = function() {
   if (this._width === null) {
     this._width = 0;
     this._lines.forEach(function(l) {
@@ -775,11 +780,11 @@ parsegraph_Label.prototype.width = function() {
   return this._width;
 };
 
-parsegraph_Label.prototype.height = function() {
+Label.prototype.height = function() {
   return this._height;
 };
 
-parsegraph_Line.prototype.drawLTRGlyphRun = function(
+Line.prototype.drawLTRGlyphRun = function(
     painter,
     worldX,
     worldY,
@@ -790,14 +795,14 @@ parsegraph_Line.prototype.drawLTRGlyphRun = function(
 ) {
   const overlay = painter.window().overlay();
   painter.drawLine(this._text, worldX, worldY, fontScale);
-  // parsegraph_log("Drawing LTR run from %d to %d.", startRun, endRun);
+  // log("Drawing LTR run from %d to %d.", startRun, endRun);
   let maxAscent = 0;
-  for (var q = startRun; q <= endRun; ++q) {
-    var glyphData = this._glyphs[q];
+  for (let q = startRun; q <= endRun; ++q) {
+    let glyphData = this._glyphs[q];
     maxAscent = Math.max(maxAscent, glyphData.ascent);
   }
-  for (var q = startRun; q <= endRun; ++q) {
-    var glyphData = this._glyphs[q];
+  for (let q = startRun; q <= endRun; ++q) {
+    let glyphData = this._glyphs[q];
     painter.drawGlyph(
         glyphData,
         worldX + pos[0],
@@ -808,7 +813,7 @@ parsegraph_Line.prototype.drawLTRGlyphRun = function(
   }
 };
 
-parsegraph_Line.prototype.drawRTLGlyphRun = function(
+Line.prototype.drawRTLGlyphRun = function(
     painter,
     worldX,
     worldY,
@@ -821,14 +826,14 @@ parsegraph_Line.prototype.drawRTLGlyphRun = function(
   painter.drawLine(this._text, worldX, worldY, fontScale);
   let runWidth = 0;
   let maxAscent = 0;
-  for (var q = startRun; q <= endRun; ++q) {
-    var glyphData = this._glyphs[q];
+  for (let q = startRun; q <= endRun; ++q) {
+    let glyphData = this._glyphs[q];
     runWidth += glyphData.advance * fontScale;
     maxAscent = Math.max(maxAscent, glyphData.ascent);
   }
   let advance = 0;
-  for (var q = startRun; q <= endRun; ++q) {
-    var glyphData = this._glyphs[q];
+  for (let q = startRun; q <= endRun; ++q) {
+    let glyphData = this._glyphs[q];
     advance += (glyphData.advance - 1) * fontScale;
     painter.drawGlyph(
         glyphData,
@@ -840,7 +845,7 @@ parsegraph_Line.prototype.drawRTLGlyphRun = function(
   pos[0] += runWidth;
 };
 
-parsegraph_Line.prototype.drawGlyphRun = function(
+Line.prototype.drawGlyphRun = function(
     painter,
     worldX,
     worldY,
@@ -850,7 +855,7 @@ parsegraph_Line.prototype.drawGlyphRun = function(
     endRun,
 ) {
   // Draw the run.
-  if (pos[2] === 'L' || (!parsegraph_RIGHT_TO_LEFT && pos[2] === 'WS')) {
+  if (pos[2] === 'L' || (!RIGHT_TO_LEFT && pos[2] === 'WS')) {
     this.drawLTRGlyphRun(
         painter,
         worldX,
@@ -873,7 +878,7 @@ parsegraph_Line.prototype.drawGlyphRun = function(
   }
 };
 
-parsegraph_Line.prototype.paint = function(
+Line.prototype.paint = function(
     painter,
     worldX,
     worldY,
@@ -881,7 +886,7 @@ parsegraph_Line.prototype.paint = function(
     fontScale,
 ) {
   let startRun = 0;
-  const unicode = parsegraph_defaultUnicode();
+  const unicode = defaultUnicode();
   if (!unicode.loaded()) {
     return;
   }
@@ -907,7 +912,7 @@ parsegraph_Line.prototype.paint = function(
   pos[0] = 0;
 };
 
-parsegraph_Label.prototype.paint = function(
+Label.prototype.paint = function(
     painter,
     worldX,
     worldY,
