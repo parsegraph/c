@@ -5,7 +5,7 @@ import Input from './Input';
 import BurgerMenu from './BurgerMenu';
 
 /* eslint-disable require-jsdoc */
-/**
+/*
  * TODO Add gridX and gridY camera listeners, with support for loading from an
  * infinite grid of cells.
  *
@@ -226,7 +226,7 @@ Viewport.prototype.plot = function(...args) {
   return this.world().plot.apply(this.world(), ...args);
 };
 
-/**
+/*
  * Paints the graph up to the given time, in milliseconds.
  *
  * Returns true if the graph completed painting.

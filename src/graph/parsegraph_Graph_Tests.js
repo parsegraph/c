@@ -1,16 +1,18 @@
-nodeTests = new TestSuite('parsegraph_Node');
+/* eslint-disable require-jsdoc  */
 
-nodeTests.addTest('parsegraph_Node.setClickListener', function() {
-  const n = new Node(parsegraph_BLOCK);
+nodeTests = new TestSuite('Node');
+
+nodeTests.addTest('Node.setClickListener', function() {
+  const n = new Node(BLOCK);
   n.setClickListener(function() {});
 });
 
-nodeTests.addTest('parsegraph_Node.setKeyListener', function() {
-  const n = new Node(parsegraph_BLOCK);
+nodeTests.addTest('Node.setKeyListener', function() {
+  const n = new Node(BLOCK);
   n.setKeyListener(function() {});
 });
 
-viewport_Tests.addTest('parsegraph_Viewport', function() {
+viewport_Tests.addTest('Viewport', function() {
   let caret = new Caret(SLOT);
   if (caret.node().type() !== SLOT) {
     return 'Graph must use the provided type for its root.';
@@ -21,42 +23,42 @@ viewport_Tests.addTest('parsegraph_Viewport', function() {
   }
 });
 
-viewport_Tests.addTest('parsegraph_Viewport.spawn', function() {
+viewport_Tests.addTest('Viewport.spawn', function() {
   const caret = new Caret('b');
   if (
-    caret.has(parsegraph_FORWARD) ||
-    caret.has(parsegraph_BACKWARD) ||
-    caret.has(parsegraph_UPWARD) ||
-    caret.has(parsegraph_DOWNWARD)
+    caret.has(FORWARD) ||
+    caret.has(BACKWARD) ||
+    caret.has(UPWARD) ||
+    caret.has(DOWNWARD)
   ) {
     return 'Graph roots must begin as leaves.';
   }
 
-  caret.spawn(parsegraph_FORWARD, parsegraph_SLOT);
-  if (!caret.has(parsegraph_FORWARD)) {
+  caret.spawn(FORWARD, SLOT);
+  if (!caret.has(FORWARD)) {
     return 'Graph must add nodes in the specified direction.';
   }
   if (
-    caret.has(parsegraph_DOWNWARD) ||
-    caret.has(parsegraph_BACKWARD) ||
-    caret.has(parsegraph_UPWARD)
+    caret.has(DOWNWARD) ||
+    caret.has(BACKWARD) ||
+    caret.has(UPWARD)
   ) {
     return 'Graph must not add nodes in incorrect directions.';
   }
 
-  caret.erase(parsegraph_FORWARD);
+  caret.erase(FORWARD);
   if (
-    caret.has(parsegraph_FORWARD) ||
-    caret.has(parsegraph_BACKWARD) ||
-    caret.has(parsegraph_UPWARD) ||
-    caret.has(parsegraph_DOWNWARD)
+    caret.has(FORWARD) ||
+    caret.has(BACKWARD) ||
+    caret.has(UPWARD) ||
+    caret.has(DOWNWARD)
   ) {
     return 'Erase must remove the specified node.';
   }
 });
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Trivial layout',
+    'Viewport - Trivial layout',
     function() {
     // Spawn the graph.
     // console.log("TRIV");
@@ -65,12 +67,12 @@ viewport_Tests.addTest(
 
       // Run the comparison tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_FORWARD) !=
+        caret.node().extentOffsetAt(FORWARD) !=
       caret.node().blockStyle().minHeight / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().verticalPadding
       ) {
-        console.log(caret.node().extentOffsetAt(parsegraph_FORWARD));
+        console.log(caret.node().extentOffsetAt(FORWARD));
         console.log(caret.node().blockStyle().minHeight / 2);
         console.log(caret.node().blockStyle().borderThickness);
         console.log(caret.node().blockStyle().verticalPadding);
@@ -83,12 +85,12 @@ viewport_Tests.addTest(
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
+        caret.node().extentOffsetAt(BACKWARD) !=
       caret.node().blockStyle().minHeight / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().verticalPadding
       ) {
-        console.log(caret.node().extentOffsetAt(parsegraph_BACKWARD));
+        console.log(caret.node().extentOffsetAt(BACKWARD));
         console.log(caret.node().blockStyle().minHeight / 2);
         console.log(caret.node().blockStyle().borderThickness);
         console.log(caret.node().blockStyle().verticalPadding);
@@ -96,12 +98,12 @@ viewport_Tests.addTest(
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
+        caret.node().extentOffsetAt(UPWARD) !=
       caret.node().blockStyle().minWidth / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().horizontalPadding
       ) {
-        console.log(caret.node().extentOffsetAt(parsegraph_UPWARD));
+        console.log(caret.node().extentOffsetAt(UPWARD));
         console.log(caret.node().blockStyle().minWidth / 2);
         console.log(caret.node().blockStyle().borderThickness);
         console.log(caret.node().blockStyle().horizontalPadding);
@@ -109,12 +111,12 @@ viewport_Tests.addTest(
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_DOWNWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD) !=
       caret.node().blockStyle().minWidth / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().horizontalPadding
       ) {
-        console.log(caret.node().extentOffsetAt(parsegraph_DOWNWARD));
+        console.log(caret.node().extentOffsetAt(DOWNWARD));
         console.log(caret.node().blockStyle().minWidth / 2);
         console.log(caret.node().blockStyle().borderThickness);
         console.log(caret.node().blockStyle().horizontalPadding);
@@ -124,11 +126,11 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with forward bud',
+    'Viewport - Block with forward bud',
     function() {
     // Spawn the graph.
       const caret = new Caret(BLOCK);
-      caret.spawn(parsegraph_FORWARD, BUD);
+      caret.spawn(FORWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run the comparison tests.
@@ -142,39 +144,39 @@ viewport_Tests.addTest(
 
       let diff = expect(
           caret.node().blockStyle().minHeight / 2 +
-        caret.node().blockStyle().borderThickness +
-        caret.node().blockStyle().verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          caret.node().blockStyle().borderThickness +
+          caret.node().blockStyle().verticalPadding,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('b').minHeight / 2 +
+          style('b').borderThickness +
+          style('b').verticalPadding,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+          style('b').borderThickness +
+          style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+          style('b').borderThickness +
+          style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -183,16 +185,16 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - PaintGroup sanity',
+    'Viewport - PaintGroup sanity',
     function() {
     // Spawn the graph.
-      const caret = new Caret(parsegraph_BUD);
+      const caret = new Caret(BUD);
 
       const node = caret.node();
       if (node._paintGroupNext !== node) {
         throw new Error('Node\'s paint group next is not itself');
       }
-      const creased = caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+      const creased = caret.spawnMove(FORWARD, BUD);
       if (creased._paintGroupNext !== creased._paintGroupNext) {
         throw new Error('Child\'s paint group next is not null');
       }
@@ -204,15 +206,15 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with forward creased bud',
+    'Viewport - Block with forward creased bud',
     function() {
     // Spawn the graph.
-      const caret = new Caret(parsegraph_BUD);
-      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
+      const caret = new Caret(BUD);
+      const creased = caret.spawnMove(FORWARD, BUD);
       caret.crease();
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
-      // caret.spawnMove(parsegraph_FORWARD, BUD);
+      const grandchild = caret.spawnMove(FORWARD, BUD);
+      // caret.spawnMove(FORWARD, BUD);
       caret.moveToRoot();
       if (creased._layoutNext !== grandchild) {
         throw new Error(
@@ -249,32 +251,32 @@ viewport_Tests.addTest(
       caret.node().commitLayoutIteratively();
     // console.log("Group X of root: " + caret.node().groupX());
     // console.log("Group X of forward: " +
-    //   caret.node().nodeAt(parsegraph_FORWARD).groupX());
+    //   caret.node().nodeAt(FORWARD).groupX());
     // console.log("Abs X of forward: " +
-    //   caret.node().nodeAt(parsegraph_FORWARD).absoluteX());
+    //   caret.node().nodeAt(FORWARD).absoluteX());
     // console.log("Abs X of forward forward: " +
     //   caret.node().nodeAt(
-    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).absoluteX());
+    //   FORWARD).nodeAt(FORWARD).absoluteX());
     // console.log("Group X of forward forward: " +
     //   caret.node().nodeAt(
-    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    //   FORWARD).nodeAt(FORWARD).groupX());
     // console.log(caret.node().nodeAt(
-    //   parsegraph_DOWNWARD).nodeAt(
-    //   parsegraph_FORWARD).nodeAt(
-    //   parsegraph_FORWARD).nodeAt(parsegraph_FORWARD).groupX());
+    //   DOWNWARD).nodeAt(
+    //   FORWARD).nodeAt(
+    //   FORWARD).nodeAt(FORWARD).groupX());
     },
 );
 
-parsegraph_Viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with forward creased bud, uncreased',
+viewport_Tests.addTest(
+    'Viewport - Block with forward creased bud, uncreased',
     function() {
     // Spawn the graph.
       const caret = new Caret(BUD);
       const root = caret.root();
-      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
+      const creased = caret.spawnMove(FORWARD, BUD);
       caret.crease();
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
+      const grandchild = caret.spawnMove(FORWARD, BUD);
       creased.setPaintGroup(false);
       if (creased._paintGroupPrev !== creased) {
         throw new Error('Creased\'s previous paint group must be reset');
@@ -292,14 +294,14 @@ parsegraph_Viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with forward creased bud, removed',
+    'Viewport - Block with forward creased bud, removed',
     function() {
     // Spawn the graph.
       const caret = new Caret(BUD);
       const root = caret.root();
-      const creased = caret.spawnMove(parsegraph_FORWARD, BUD);
+      const creased = caret.spawnMove(FORWARD, BUD);
       caret.shrink();
-      const grandchild = caret.spawnMove(parsegraph_FORWARD, BUD);
+      const grandchild = caret.spawnMove(FORWARD, BUD);
       creased.disconnectNode();
       if (creased._paintGroupPrev !== creased) {
         throw new Error('Creased\'s previous paint group must be reset');
@@ -317,11 +319,11 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with backward bud',
+    'Viewport - Block with backward bud',
     function() {
     // Spawn the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(BACKWARD, BUD);
       caret.node().commitLayoutIteratively();
       caret.moveToRoot();
 
@@ -338,7 +340,7 @@ viewport_Tests.addTest(
           caret.node().blockStyle().minHeight / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
@@ -348,35 +350,35 @@ viewport_Tests.addTest(
           caret.node().blockStyle().minHeight / 2 +
         caret.node().blockStyle().borderThickness +
         caret.node().blockStyle().verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bud').minWidth +
-        parsegraph_style('bud').borderThickness * 2 +
-        parsegraph_style('bud').horizontalPadding * 2 +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('block').minWidth / 2 +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('bud').minWidth +
+        style('bud').borderThickness * 2 +
+        style('bud').horizontalPadding * 2 +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('block').minWidth / 2 +
+        style('block').borderThickness +
+        style('block').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bud').minWidth +
-        parsegraph_style('bud').borderThickness * 2 +
-        parsegraph_style('bud').horizontalPadding * 2 +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('block').minWidth / 2 +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('bud').minWidth +
+        style('bud').borderThickness * 2 +
+        style('bud').horizontalPadding * 2 +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('block').minWidth / 2 +
+        style('block').borderThickness +
+        style('block').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -386,10 +388,10 @@ viewport_Tests.addTest(
 
 viewport_Tests.addTest('nodeAt returns parent', function() {
   // Build the graph.
-  const caret = new Caret(parsegraph_BLOCK);
-  caret.spawn(parsegraph_DOWNWARD, BUD);
+  const caret = new Caret(BLOCK);
+  caret.spawn(DOWNWARD, BUD);
   caret.move('d');
-  if (caret.node().nodeAt(parsegraph_UPWARD) === null) {
+  if (caret.node().nodeAt(UPWARD) === null) {
     throw new Error('nodeAt must return parent if possible');
   }
   caret.move('u');
@@ -403,20 +405,20 @@ viewport_Tests.addTest(
     // console.log("Multiple crease");
       const caret = new Caret(BUD);
       caret.node()._id = 'Multiple crease root';
-      const first = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      const first = caret.spawnMove(DOWNWARD, BLOCK);
       first._id = 'first';
-      const second = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      const second = caret.spawnMove(DOWNWARD, BLOCK);
       second._id = 'second';
-      const third = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      const third = caret.spawnMove(DOWNWARD, BLOCK);
       third._id = 'third';
-      const fourth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      const fourth = caret.spawnMove(DOWNWARD, BLOCK);
       fourth._id = 'fourth';
-      const fifth = caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      const fifth = caret.spawnMove(DOWNWARD, BLOCK);
       fifth._id = 'fifth';
       caret.root().commitLayoutIteratively();
       first.setPaintGroup(true);
       third.setPaintGroup(true);
-      const pgs = parsegraph_dumpPaintGroups(caret.root());
+      const pgs = dumpPaintGroups(caret.root());
       if (pgs[0] !== third) {
         console.log(pgs);
         throw new Error(
@@ -441,22 +443,22 @@ viewport_Tests.addTest(
 
 viewport_Tests.addTest('Fancy crease', function() {
   // Build the graph.
-  const caret = new Caret(parsegraph_BLOCK);
+  const caret = new Caret(BLOCK);
   caret.node()._id = 'root';
-  const first = caret.spawnMove(parsegraph_DOWNWARD, BUD);
+  const first = caret.spawnMove(DOWNWARD, BUD);
   first._id = 'first';
-  const second = caret.spawnMove(parsegraph_DOWNWARD, BUD);
+  const second = caret.spawnMove(DOWNWARD, BUD);
   caret.push();
   second._id = 'second';
-  const third = caret.spawnMove(parsegraph_DOWNWARD, BUD);
+  const third = caret.spawnMove(DOWNWARD, BUD);
   third._id = 'third';
-  const fourth = caret.spawnMove(parsegraph_DOWNWARD, BUD);
+  const fourth = caret.spawnMove(DOWNWARD, BUD);
   fourth._id = 'fourth';
   caret.pop();
   let n = caret.node();
   while (n) {
     n.setPaintGroup(true);
-    n = n.nodeAt(parsegraph_DOWNWARD);
+    n = n.nodeAt(DOWNWARD);
   }
   caret.root().commitLayoutIteratively();
   second.setPaintGroup(false);
@@ -465,15 +467,15 @@ viewport_Tests.addTest('Fancy crease', function() {
   if (caret.root().needsCommit()) {
     throw new Error('Failed to fully commit layout');
   }
-  // console.log(parsegraph_dumpPaintGroups(caret.root()));
+  // console.log(dumpPaintGroups(caret.root()));
 });
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with downward bud',
+    'Viewport - Block with downward bud',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
       caret.moveToRoot();
 
@@ -487,40 +489,40 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('block').verticalPadding +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('block').verticalPadding +
+        style('block').borderThickness +
+        style('block').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('block').verticalPadding +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('block').verticalPadding +
+        style('block').borderThickness +
+        style('block').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('block').minWidth / 2 +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('block').minWidth / 2 +
+        style('block').borderThickness +
+        style('block').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('block').minWidth / 2 +
-        parsegraph_style('block').borderThickness +
-        parsegraph_style('block').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('block').minWidth / 2 +
+        style('block').borderThickness +
+        style('block').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -529,11 +531,11 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Bud with downward block',
+    'Viewport - Bud with downward block',
     function() {
     // Build the graph.
       const caret = new Caret(BUD);
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      caret.spawn(DOWNWARD, BLOCK);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -547,40 +549,40 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').verticalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').verticalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -589,7 +591,7 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Bud with vertical blocks, two deep',
+    'Viewport - Bud with vertical blocks, two deep',
     function(dom) {
     // Build the graph.
       const caret = new Caret(BUD);
@@ -597,12 +599,12 @@ viewport_Tests.addTest(
       const depth = 2;
       caret.push();
       for (let i = 0; i < depth; ++i) {
-        caret.spawnMove(parsegraph_UPWARD, parsegraph_BLOCK);
+        caret.spawnMove(UPWARD, BLOCK);
       }
       caret.pop();
       caret.push();
       for (let i = 0; i < depth; ++i) {
-        caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+        caret.spawnMove(DOWNWARD, BLOCK);
       }
       caret.pop();
       caret.moveToRoot();
@@ -618,24 +620,24 @@ viewport_Tests.addTest(
       };
 
       const computedBlockSize =
-      parsegraph_style('b').verticalPadding * 2 +
-      parsegraph_style('b').borderThickness * 2 +
-      parsegraph_style('b').minHeight +
-      caret
-          .node()
-          .nodeAt(parsegraph_UPWARD)
-          .verticalSeparation(parsegraph_UPWARD);
+        style('b').verticalPadding * 2 +
+        style('b').borderThickness * 2 +
+        style('b').minHeight +
+        caret
+            .node()
+            .nodeAt(UPWARD)
+            .verticalSeparation(UPWARD);
 
       let diff = expect(
           computedBlockSize * (depth - 1) +
-        parsegraph_style('b').verticalPadding * 2 +
-        parsegraph_style('b').borderThickness * 2 +
-        parsegraph_style('b').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('bu').verticalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+        style('b').verticalPadding * 2 +
+        style('b').borderThickness * 2 +
+        style('b').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
@@ -643,34 +645,34 @@ viewport_Tests.addTest(
 
       diff = expect(
           computedBlockSize * (depth - 1) +
-        parsegraph_style('b').verticalPadding * 2 +
-        parsegraph_style('b').borderThickness * 2 +
-        parsegraph_style('b').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('bu').verticalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+        style('b').verticalPadding * 2 +
+        style('b').borderThickness * 2 +
+        style('b').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -679,11 +681,11 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with upward bud',
+    'Viewport - Block with upward bud',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_UPWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(UPWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -697,48 +699,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -747,13 +749,13 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with upward and downward buds',
+    'Viewport - Block with upward and downward buds',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
+      const caret = new Caret(BLOCK);
 
-      caret.spawn(parsegraph_UPWARD, BUD);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      caret.spawn(UPWARD, BUD);
+      caret.spawn(DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -767,48 +769,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding +
+        caret.node().verticalSeparation(UPWARD) +
+        style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding +
+        caret.node().verticalSeparation(UPWARD) +
+        style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -817,12 +819,12 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with forward and backward buds',
+    'Viewport - Block with forward and backward buds',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_FORWARD, BUD);
-      caret.spawn(parsegraph_BACKWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(FORWARD, BUD);
+      caret.spawn(BACKWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
@@ -836,48 +838,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minWidth +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').horizontalPadding * 2 +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('bu').minWidth +
+        style('bu').borderThickness * 2 +
+        style('bu').horizontalPadding * 2 +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minWidth +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').horizontalPadding * 2 +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('bu').minWidth +
+        style('bu').borderThickness * 2 +
+        style('bu').horizontalPadding * 2 +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -886,28 +888,28 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Double Axis Sans Backward T layout',
+    'Viewport - Double Axis Sans Backward T layout',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_FORWARD, BUD);
-      caret.spawn(parsegraph_UPWARD, BUD);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(FORWARD, BUD);
+      caret.spawn(UPWARD, BUD);
+      caret.spawn(DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
-      caret.node().extentOffsetAt(parsegraph_FORWARD)
+        caret.node().extentOffsetAt(BACKWARD) !=
+        caret.node().extentOffsetAt(FORWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-        caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(UPWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
@@ -922,48 +924,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+          style('b').borderThickness +
+          style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -972,26 +974,26 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Positive Direction Layout',
+    'Viewport - Positive Direction Layout',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_UPWARD, BUD);
-      caret.spawn(parsegraph_FORWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(UPWARD, BUD);
+      caret.spawn(FORWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run the tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
-      caret.node().extentOffsetAt(parsegraph_FORWARD)
+        caret.node().extentOffsetAt(BACKWARD) !=
+        caret.node().extentOffsetAt(FORWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-      caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(UPWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
@@ -1006,48 +1008,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').minHeight +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').verticalPadding * 2 +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').minHeight +
+        style('bu').borderThickness * 2 +
+        style('bu').verticalPadding * 2 +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minHeight +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').verticalPadding * 2 +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').minHeight +
+        style('bu').borderThickness * 2 +
+        style('bu').verticalPadding * 2 +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -1056,26 +1058,26 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Negative Direction Layout',
+    'Viewport - Negative Direction Layout',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, BUD);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(BACKWARD, BUD);
+      caret.spawn(DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
-      caret.node().extentOffsetAt(parsegraph_FORWARD)
+        caret.node().extentOffsetAt(BACKWARD) !=
+        caret.node().extentOffsetAt(FORWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-      caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(UPWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
@@ -1090,48 +1092,48 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minWidth +
-        2 * parsegraph_style('bu').horizontalPadding +
-        2 * parsegraph_style('bu').borderThickness +
-        caret.node().horizontalSeparation(parsegraph_DOWNWARD) +
-        parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('bu').minWidth +
+        2 * style('bu').horizontalPadding +
+        2 * style('bu').borderThickness +
+        caret.node().horizontalSeparation(DOWNWARD) +
+        style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').horizontalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minWidth +
-        caret.node().horizontalSeparation(parsegraph_DOWNWARD) +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('bu').horizontalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minWidth +
+        caret.node().horizontalSeparation(DOWNWARD) +
+        style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -1140,28 +1142,28 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Double Axis layout',
+    'Viewport - Double Axis layout',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, BUD);
-      caret.spawn(parsegraph_FORWARD, BUD);
-      caret.spawn(parsegraph_UPWARD, BUD);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(BACKWARD, BUD);
+      caret.spawn(FORWARD, BUD);
+      caret.spawn(UPWARD, BUD);
+      caret.spawn(DOWNWARD, BUD);
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
-      caret.node().extentOffsetAt(parsegraph_FORWARD)
+        caret.node().extentOffsetAt(BACKWARD) !=
+        caret.node().extentOffsetAt(FORWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-      caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(UPWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
@@ -1176,56 +1178,56 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').minHeight +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').verticalPadding * 2 +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').minHeight / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').verticalPadding,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').minHeight +
+        style('bu').borderThickness * 2 +
+        style('bu').verticalPadding * 2 +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').minHeight / 2 +
+        style('b').borderThickness +
+        style('b').verticalPadding,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         return 'Forward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_FORWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(FORWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minWidth +
-        2 * parsegraph_style('bu').horizontalPadding +
-        2 * parsegraph_style('bu').borderThickness +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('bu').minWidth +
+        2 * style('bu').horizontalPadding +
+        2 * style('bu').borderThickness +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').horizontalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minWidth +
-        caret.node().horizontalSeparation(parsegraph_FORWARD) +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('bu').horizontalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minWidth +
+        caret.node().horizontalSeparation(FORWARD) +
+        style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -1234,33 +1236,31 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Block with shrunk bud',
+    'Viewport - Block with shrunk bud',
     function(resultDom) {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
+      const caret = new Caret(BLOCK);
       caret.fitExact();
-      caret.spawnMove(parsegraph_FORWARD, BUD);
+      caret.spawnMove(FORWARD, BUD);
       caret.shrink();
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       const expectedSeparation =
-      parsegraph_style('b').minWidth / 2 +
-      parsegraph_style('b').horizontalPadding +
-      parsegraph_style('b').borderThickness +
-      SHRINK_SCALE *
-        caret.node().horizontalSeparation(parsegraph_FORWARD) +
-      SHRINK_SCALE *
-        (parsegraph_style('bu').horizontalPadding +
-          parsegraph_style('bu').borderThickness +
-          parsegraph_style('bu').minWidth / 2);
-      if (caret.node().separationAt(parsegraph_FORWARD) != expectedSeparation) {
+      style('b').minWidth / 2 +
+      style('b').horizontalPadding +
+      style('b').borderThickness +
+      SHRINK_SCALE * caret.node().horizontalSeparation(FORWARD) +
+      SHRINK_SCALE * (style('bu').horizontalPadding +
+      style('bu').borderThickness +
+      style('bu').minWidth / 2);
+      if (caret.node().separationAt(FORWARD) != expectedSeparation) {
         return (
           'Expected forward separation = ' +
-        expectedSeparation +
-        ', actual = ' +
-        caret.node().separationAt(parsegraph_FORWARD)
+          expectedSeparation +
+          ', actual = ' +
+          caret.node().separationAt(FORWARD)
         );
       }
 
@@ -1274,27 +1274,24 @@ viewport_Tests.addTest(
 
       const downwardExtent = new Extent();
       downwardExtent.appendLS(
-          parsegraph_style('b').minWidth +
-        parsegraph_style('b').borderThickness * 2 +
-        parsegraph_style('b').horizontalPadding * 2 +
-        SHRINK_SCALE *
-          caret.node().horizontalSeparation(parsegraph_FORWARD),
-          parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
+          style('b').minWidth +
+        style('b').borderThickness * 2 +
+        style('b').horizontalPadding * 2 +
+        SHRINK_SCALE * caret.node().horizontalSeparation(FORWARD),
+          style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
       );
       downwardExtent.appendLS(
-          SHRINK_SCALE *
-        (2 * parsegraph_style('bu').horizontalPadding +
-          2 * parsegraph_style('bu').borderThickness +
-          parsegraph_style('bu').minWidth),
-          SHRINK_SCALE *
-        (parsegraph_style('bu').horizontalPadding +
-          parsegraph_style('bu').borderThickness +
-          parsegraph_style('bu').minWidth / 2),
+          SHRINK_SCALE * (2 * style('bu').horizontalPadding +
+        2 * style('bu').borderThickness +
+        style('bu').minWidth),
+          SHRINK_SCALE * (style('bu').horizontalPadding +
+        style('bu').borderThickness +
+        style('bu').minWidth / 2),
       );
 
-      if (!caret.node().extentsAt(parsegraph_DOWNWARD).equals(downwardExtent)) {
+      if (!caret.node().extentsAt(DOWNWARD).equals(downwardExtent)) {
       // graph._nodePainter.enableExtentRendering();
       // resultDom.appendChild(
       // graph._container
@@ -1303,65 +1300,64 @@ viewport_Tests.addTest(
         resultDom.appendChild(
             caret
                 .node()
-                .extentsAt(parsegraph_DOWNWARD)
+                .extentsAt(DOWNWARD)
                 .toDom('Actual downward extent'),
         );
         resultDom.appendChild(
             document.createTextNode(
                 'Extent offset = ' +
-                  caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+                  caret.node().extentOffsetAt(DOWNWARD),
             ),
         );
         return 'Downward extent differs.';
       }
 
       const blockHeight =
-      parsegraph_style('b').minHeight +
-      parsegraph_style('b').borderThickness * 2 +
-      parsegraph_style('b').verticalPadding * 2;
+      style('b').minHeight +
+      style('b').borderThickness * 2 +
+      style('b').verticalPadding * 2;
 
       const budHeight =
-      parsegraph_style('bu').minHeight +
-      parsegraph_style('bu').borderThickness * 2 +
-      parsegraph_style('bu').verticalPadding * 2;
+      style('bu').minHeight +
+      style('bu').borderThickness * 2 +
+      style('bu').verticalPadding * 2;
 
       const forwardExtent = new Extent();
       forwardExtent.appendLS(
           blockHeight / 2 - (SHRINK_SCALE * budHeight) / 2,
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness,
+          style('b').minWidth / 2 +
+        style('b').horizontalPadding +
+        style('b').borderThickness,
       );
       forwardExtent.appendLS(
           SHRINK_SCALE * budHeight,
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        SHRINK_SCALE *
-          caret.node().horizontalSeparation(parsegraph_FORWARD) +
+          style('b').minWidth / 2 +
+        style('b').horizontalPadding +
+        style('b').borderThickness +
+        SHRINK_SCALE * caret.node().horizontalSeparation(FORWARD) +
         SHRINK_SCALE * budHeight,
       );
       forwardExtent.appendLS(
           blockHeight / 2 - (SHRINK_SCALE * budHeight) / 2,
-          parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness,
+          style('b').minWidth / 2 +
+        style('b').horizontalPadding +
+        style('b').borderThickness,
       );
 
-      if (!caret.node().extentsAt(parsegraph_FORWARD).equals(forwardExtent)) {
+      if (!caret.node().extentsAt(FORWARD).equals(forwardExtent)) {
         graph._nodePainter.enableExtentRendering();
         resultDom.appendChild(graph._container);
         resultDom.appendChild(forwardExtent.toDom('Expected forward extent'));
         resultDom.appendChild(
             caret
                 .node()
-                .extentsAt(parsegraph_FORWARD)
+                .extentsAt(FORWARD)
                 .toDom('Actual forward extent'),
         );
         resultDom.appendChild(
             document.createTextNode(
                 'Extent offset = ' +
-                  caret.node().extentOffsetAt(parsegraph_FORWARD),
+                  caret.node().extentOffsetAt(FORWARD),
             ),
         );
         return 'Forward extent differs.';
@@ -1370,49 +1366,44 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Bud with 2-deep shrunk downward block',
+    'Viewport - Bud with 2-deep shrunk downward block',
     function(resultDom) {
     // Build the graph.
       const caret = new Caret(BUD);
       caret.fitExact();
-      caret.spawnMove(parsegraph_DOWNWARD, BUD);
+      caret.spawnMove(DOWNWARD, BUD);
       caret.shrink();
-      caret.spawn(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      caret.spawn(DOWNWARD, BLOCK);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       const downwardExtent = new Extent();
       downwardExtent.appendLS(
-          SHRINK_SCALE *
-        (parsegraph_style('b').minWidth +
-          parsegraph_style('b').borderThickness * 2 +
-          parsegraph_style('b').horizontalPadding * 2),
-          parsegraph_style('bu').verticalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minHeight / 2 +
+          SHRINK_SCALE * (style('b').minWidth +
+        style('b').borderThickness * 2 +
+        style('b').horizontalPadding * 2),
+          style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2 +
+        SHRINK_SCALE * caret.node().verticalSeparation(DOWNWARD) +
+        SHRINK_SCALE * 2 * (style('bu').verticalPadding +
+        style('bu').borderThickness +
+        style('bu').minHeight / 2) +
         SHRINK_SCALE *
-          caret.node().verticalSeparation(parsegraph_DOWNWARD) +
-        SHRINK_SCALE *
-          2 *
-          (parsegraph_style('bu').verticalPadding +
-            parsegraph_style('bu').borderThickness +
-            parsegraph_style('bu').minHeight / 2) +
-        SHRINK_SCALE *
-          caret
-              .node()
-              .nodeAt(parsegraph_DOWNWARD)
-              .verticalSeparation(parsegraph_DOWNWARD) +
-        SHRINK_SCALE *
-          (parsegraph_style('b').minHeight +
-            parsegraph_style('b').verticalPadding * 2 +
-            parsegraph_style('b').borderThickness * 2),
+        caret
+            .node()
+            .nodeAt(DOWNWARD)
+            .verticalSeparation(DOWNWARD) +
+            SHRINK_SCALE * (style('b').minHeight +
+            style('b').verticalPadding * 2 +
+            style('b').borderThickness * 2),
       );
 
       if (
-        !parsegraph_checkExtentsEqual(
+        !checkExtentsEqual(
             caret,
-            parsegraph_DOWNWARD,
+            DOWNWARD,
             downwardExtent,
             resultDom,
         )
@@ -1424,28 +1415,28 @@ viewport_Tests.addTest(
 );
 
 viewport_Tests.addTest(
-    'parsegraph_Viewport - Double Axis Sans Forward T layout',
+    'Viewport - Double Axis Sans Forward T layout',
     function() {
     // Build the graph.
-      const caret = new Caret(parsegraph_BLOCK);
-      caret.spawn(parsegraph_BACKWARD, BUD);
-      caret.spawn(parsegraph_UPWARD, BUD);
-      caret.spawn(parsegraph_DOWNWARD, BUD);
+      const caret = new Caret(BLOCK);
+      caret.spawn(BACKWARD, BUD);
+      caret.spawn(UPWARD, BUD);
+      caret.spawn(DOWNWARD, BUD);
       caret.moveToRoot();
       caret.node().commitLayoutIteratively();
 
       // Run comparison tests.
       if (
-        caret.node().extentOffsetAt(parsegraph_BACKWARD) !=
-      caret.node().extentOffsetAt(parsegraph_FORWARD)
+        caret.node().extentOffsetAt(BACKWARD) !=
+        caret.node().extentOffsetAt(FORWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
       }
 
       if (
-        caret.node().extentOffsetAt(parsegraph_UPWARD) !=
-      caret.node().extentOffsetAt(parsegraph_DOWNWARD)
+        caret.node().extentOffsetAt(UPWARD) !=
+        caret.node().extentOffsetAt(DOWNWARD)
       ) {
         return 'Graphs symmetric about the root should' +
                ' have symmetric extent offsets.';
@@ -1460,32 +1451,32 @@ viewport_Tests.addTest(
       };
 
       let diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_FORWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(FORWARD),
       );
       if (diff) {
         console.log(
             'Forward extent (offset to center=' +
-          caret.node().extentOffsetAt(parsegraph_FORWARD) +
+          caret.node().extentOffsetAt(FORWARD) +
           ')',
         );
-        const forwardExtent = caret.node().extentsAt(parsegraph_FORWARD);
+        const forwardExtent = caret.node().extentsAt(FORWARD);
         forwardExtent.forEach(function(length, size, i) {
           console.log(i + '. l=' + length + ', s=' + size);
         });
 
         console.log(
             'UPWARDExtent (offset to center=' +
-          caret.node().extentOffsetAt(parsegraph_UPWARD) +
+            caret.node().extentOffsetAt(UPWARD) +
           ')',
         );
-        const UPWARDExtent = caret.node().extentsAt(parsegraph_UPWARD);
+        const UPWARDExtent = caret.node().extentsAt(UPWARD);
         UPWARDExtent.forEach(function(length, size, i) {
           console.log(i + '. l=' + length + ', s=' + size);
         });
@@ -1494,42 +1485,42 @@ viewport_Tests.addTest(
       }
 
       diff = expect(
-          parsegraph_style('bu').verticalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minHeight +
-        caret.node().verticalSeparation(parsegraph_UPWARD) +
-        parsegraph_style('b').verticalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minHeight / 2,
-          caret.node().extentOffsetAt(parsegraph_BACKWARD),
+          style('bu').verticalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minHeight +
+        caret.node().verticalSeparation(UPWARD) +
+        style('b').verticalPadding +
+        style('b').borderThickness +
+        style('b').minHeight / 2,
+          caret.node().extentOffsetAt(BACKWARD),
       );
       if (diff) {
         return 'Backward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').minWidth +
-        2 * parsegraph_style('bu').horizontalPadding +
-        2 * parsegraph_style('bu').borderThickness +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('b').minWidth / 2 +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').horizontalPadding,
-          caret.node().extentOffsetAt(parsegraph_UPWARD),
+          style('bu').minWidth +
+        2 * style('bu').horizontalPadding +
+        2 * style('bu').borderThickness +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('b').minWidth / 2 +
+        style('b').borderThickness +
+        style('b').horizontalPadding,
+          caret.node().extentOffsetAt(UPWARD),
       );
       if (diff) {
         return 'Upward extent offset is off by ' + diff;
       }
 
       diff = expect(
-          parsegraph_style('bu').horizontalPadding * 2 +
-        parsegraph_style('bu').borderThickness * 2 +
-        parsegraph_style('bu').minWidth +
-        caret.node().horizontalSeparation(parsegraph_BACKWARD) +
-        parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2,
-          caret.node().extentOffsetAt(parsegraph_DOWNWARD),
+          style('bu').horizontalPadding * 2 +
+        style('bu').borderThickness * 2 +
+        style('bu').minWidth +
+        caret.node().horizontalSeparation(BACKWARD) +
+        style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2,
+          caret.node().extentOffsetAt(DOWNWARD),
       );
       if (diff) {
         return 'Downward extent offset is off by ' + diff;
@@ -1580,27 +1571,27 @@ viewport_Tests.addTest(
       car.spawnMove('d', 'bu');
 
       car.root().commitLayoutIteratively();
-      const sep = car.root().separationAt(parsegraph_DOWNWARD);
+      const sep = car.root().separationAt(DOWNWARD);
 
       // console.log("Bud size: " +
-      //   (parsegraph_style('bu').horizontalPadding * 2 +
-      //   parsegraph_style('bu').borderThickness * 2 +
-      //   parsegraph_style('bu').minWidth));
+      //   (style('bu').horizontalPadding * 2 +
+      //   style('bu').borderThickness * 2 +
+      //   style('bu').minWidth));
       // console.log("Vertical separation: " +
-      //   car.root().verticalSeparation(parsegraph_DOWNWARD));
+      //   car.root().verticalSeparation(DOWNWARD));
       // console.log("Block size: " +
-      //   (parsegraph_style('b').horizontalPadding * 2 +
-      //   parsegraph_style('b').borderThickness * 2 +
-      //   parsegraph_style('b').minWidth));
+      //   (style('b').horizontalPadding * 2 +
+      //   style('b').borderThickness * 2 +
+      //   style('b').minWidth));
       // console.log(sep);
     /* return sep - (
-        (parsegraph_style('b').horizontalPadding +
-        parsegraph_style('b').borderThickness +
-        parsegraph_style('b').minWidth / 2) +
-        car.root().verticalSeparation(parsegraph_DOWNWARD) +
-        (parsegraph_style('bu').horizontalPadding +
-        parsegraph_style('bu').borderThickness +
-        parsegraph_style('bu').minWidth / 2)
+        (style('b').horizontalPadding +
+        style('b').borderThickness +
+        style('b').minWidth / 2) +
+        car.root().verticalSeparation(DOWNWARD) +
+        (style('bu').horizontalPadding +
+        style('bu').borderThickness +
+        style('bu').minWidth / 2)
     );*/
     },
 );
@@ -1610,7 +1601,7 @@ viewport_Tests.addTest('Label test', function() {
   car.label('No time');
   car.root().commitLayoutIteratively();
 });
-// eslint-disable-next-line require-jsdoc
+
 export default function simpleGraph(container, node) {
   if (node.root) {
     node = node.root();
@@ -1645,17 +1636,17 @@ viewport_Tests.addTest('Intra-group move test', function(out) {
 
   const gx = mnode.groupX();
 
-  const ns = parsegraph_copyStyle('b');
+  const ns = copyStyle('b');
   const increase = 100;
   ns.minWidth += increase;
   bnode.setBlockStyle(ns);
   car.root().commitLayoutIteratively();
   if (ax === anode.groupX()) {
-    parsegraph_simpleGraph(out, car);
+    simpleGraph(out, car);
     throw new Error('Bud must move when another node grows in size.');
   }
   if (gx + increase / 2 !== mnode.groupX()) {
-    parsegraph_simpleGraph(out, car);
+    simpleGraph(out, car);
     throw new Error(
         'Node must be moved when another node grows in size. (expected ' +
         (gx + increase / 2) +
@@ -1667,14 +1658,14 @@ viewport_Tests.addTest('Intra-group move test', function(out) {
 });
 
 viewport_Tests.addTest('Absolute position test', function(out) {
-  const car = new Caret(parsegraph_BLOCK);
+  const car = new Caret(BLOCK);
   const bnode = car.spawnMove('f', 'b');
   car.spawnMove('f', 'b');
   car.root().commitLayoutIteratively();
   car.crease();
   // console.log("bnode", bnode.absoluteX(), bnode.absoluteY());
   // console.log("bnode", bnode.groupX(), bnode.groupY(), bnode.groupScale());
-  const bstyle = parsegraph_copyStyle('b');
+  const bstyle = copyStyle('b');
   bstyle.minWidth += 100;
   bnode.setBlockStyle(bstyle);
   car.root().commitLayoutIteratively();
@@ -1683,27 +1674,27 @@ viewport_Tests.addTest('Absolute position test', function(out) {
 });
 
 nodeTests.addTest('Node.setLabel', function() {
-  const n = new Node(parsegraph_BLOCK);
+  const n = new Node(BLOCK);
   const font = defaultFont();
   n.setLabel('No time', font);
 });
 
 nodeTests.addTest(
-    'parsegraph_Node Morris world threading spawned',
+    'Node Morris world threading spawned',
     function() {
-      const n = new Node(parsegraph_BLOCK);
-      n.spawnNode(parsegraph_FORWARD, parsegraph_BLOCK);
+      const n = new Node(BLOCK);
+      n.spawnNode(FORWARD, BLOCK);
     },
 );
-// eslint-disable-next-line require-jsdoc
+
 export default function makeChild() {
-  const car = new Caret(parsegraph_BLOCK);
+  const car = new Caret(BLOCK);
   car.spawnMove('f', 'b');
   car.spawnMove('i', 'b');
   car.spawnMove('f', 's');
   return car.root();
 }
-// eslint-disable-next-line require-jsdoc
+
 export default function makeChild2() {
   const car = new Caret(SLOT);
   car.spawnMove('i', 'b');
@@ -1738,7 +1729,7 @@ nodeTests.addTest('Node lisp test', function(out) {
   car.pop();
   car.spawnMove('d', 'u');
   car.root().commitLayoutIteratively();
-  // parsegraph_getLayoutNodes(car.root());
+  // getLayoutNodes(car.root());
   const window = new Window();
   const world = new World();
   const g = new Viewport(window, world);
@@ -1755,23 +1746,23 @@ nodeTests.addTest('Node lisp test simplified', function(
   const root = new Node(BUD);
   root._id = 'root';
 
-  const a = new Node(parsegraph_BLOCK);
+  const a = new Node(BLOCK);
   a._id = 'a';
-  const b = new Node(parsegraph_BLOCK);
+  const b = new Node(BLOCK);
   b._id = 'b';
-  const c = new Node(parsegraph_BLOCK);
+  const c = new Node(BLOCK);
   c._id = 'c';
 
   const chi = new Node(BUD);
   chi._id = 'chi';
 
-  chi.connectNode(parsegraph_FORWARD, c);
+  chi.connectNode(FORWARD, c);
 
-  a.connectNode(parsegraph_DOWNWARD, chi);
-  a.connectNode(parsegraph_FORWARD, b);
+  a.connectNode(DOWNWARD, chi);
+  a.connectNode(FORWARD, b);
   // console.log("LISP TEST");
-  // console.log(parsegraph_getLayoutNodes(a));
-  root.connectNode(parsegraph_FORWARD, a);
+  // console.log(getLayoutNodes(a));
+  root.connectNode(FORWARD, a);
 
   root.commitLayoutIteratively();
 });
@@ -1782,27 +1773,27 @@ nodeTests.addTest(
       const root = new Node(BUD);
       root._id = 'root';
 
-      const a = new Node(parsegraph_BLOCK);
+      const a = new Node(BLOCK);
       a._id = 'a';
-      const b = new Node(parsegraph_BLOCK);
+      const b = new Node(BLOCK);
       b._id = 'b';
-      const c = new Node(parsegraph_BLOCK);
+      const c = new Node(BLOCK);
       c._id = 'c';
 
       const chi = new Node(BUD);
       chi._id = 'chi';
 
-      chi.connectNode(parsegraph_FORWARD, c);
+      chi.connectNode(FORWARD, c);
 
       // console.log("cur a",
-      //   parsegraph_nameLayoutPreference(a._layoutPreference));
-      a.connectNode(parsegraph_DOWNWARD, chi);
-      a.connectNode(parsegraph_FORWARD, b);
-      root.connectNode(parsegraph_FORWARD, a);
-      a.setLayoutPreference(parsegraph_PREFER_PERPENDICULAR_AXIS);
+      //   nameLayoutPreference(a._layoutPreference));
+      a.connectNode(DOWNWARD, chi);
+      a.connectNode(FORWARD, b);
+      root.connectNode(FORWARD, a);
+      a.setLayoutPreference(PREFER_PERPENDICULAR_AXIS);
 
       // console.log("new a",
-      //   parsegraph_nameLayoutPreference(a._layoutPreference));
+      //   nameLayoutPreference(a._layoutPreference));
       const r = getLayoutNodes(root)[0];
       if (r !== c) {
         throw new Error('Expected c, got ' + r._id);
@@ -1810,11 +1801,11 @@ nodeTests.addTest(
 
       root.commitLayoutIteratively();
 
-      root.disconnectNode(parsegraph_FORWARD);
+      root.disconnectNode(FORWARD);
       if (a._layoutPreference !== PREFER_VERTICAL_AXIS) {
         throw new Error(
             'a layoutPreference was not VERT but ' +
-          parsegraph_nameLayoutPreference(a._layoutPreference),
+          nameLayoutPreference(a._layoutPreference),
         );
       }
     },
@@ -1823,7 +1814,7 @@ nodeTests.addTest(
 nodeTests.addTest(
     'Node Morris world threading connected',
     function() {
-      const n = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
       }
@@ -1831,7 +1822,7 @@ nodeTests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new Node(parsegraph_BLOCK);
+      const b = new Node(BLOCK);
       if (b._layoutNext != b) {
         throw new Error('Previous sanity');
       }
@@ -1839,7 +1830,7 @@ nodeTests.addTest(
         throw new Error('Next sanity');
       }
 
-      n.connectNode(parsegraph_FORWARD, b);
+      n.connectNode(FORWARD, b);
       if (n._layoutPrev != b) {
         throw new Error('Next connected sanity');
       }
@@ -1858,7 +1849,7 @@ nodeTests.addTest(
 nodeTests.addTest(
     'Node Morris world threading connected with multiple siblings',
     function() {
-      const n = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
       n._id = 'n';
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
@@ -1867,7 +1858,7 @@ nodeTests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new Node(parsegraph_BLOCK);
+      const b = new Node(BLOCK);
       b._id = 'b';
       if (b._layoutNext != b) {
         throw new Error('Previous sanity');
@@ -1876,7 +1867,7 @@ nodeTests.addTest(
         throw new Error('Next sanity');
       }
 
-      n.connectNode(parsegraph_FORWARD, b);
+      n.connectNode(FORWARD, b);
       if (n._layoutPrev != b) {
         throw new Error('Next connected sanity');
       }
@@ -1889,11 +1880,11 @@ nodeTests.addTest(
       if (b._layoutNext != n) {
         throw new Error('Next connected sanity');
       }
-      const c = new Node(parsegraph_BLOCK);
+      const c = new Node(BLOCK);
       c._id = 'c';
-      n.connectNode(parsegraph_BACKWARD, c);
+      n.connectNode(BACKWARD, c);
 
-      const nodes = parsegraph_getLayoutNodes(n);
+      const nodes = getLayoutNodes(n);
       if (nodes[0] != c) {
         throw new Error('First node is not C');
       }
@@ -1910,12 +1901,12 @@ nodeTests.addTest(
     'Node Morris world threading connected with' +
     ' multiple siblings and disconnected',
     function() {
-      const n = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
       n._id = 'n';
-      const b = new Node(parsegraph_BLOCK);
+      const b = new Node(BLOCK);
       b._id = 'b';
 
-      const inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+      const inner = b.spawnNode(INWARD, BLOCK);
       inner._id = 'inner';
       if (b._layoutPrev != inner) {
         return 'B layoutBefore isn\'t inner';
@@ -1924,7 +1915,7 @@ nodeTests.addTest(
         return 'Inner layoutBefore isn\'t B';
       }
 
-      n.connectNode(parsegraph_FORWARD, b);
+      n.connectNode(FORWARD, b);
       if (n._layoutPrev != b) {
         throw new Error('Next connected sanity');
       }
@@ -1944,14 +1935,14 @@ nodeTests.addTest(
         throw new Error('N layoutBefore wasn\'t B');
       }
       // console.log("LNS");
-      // console.log(parsegraph_getLayoutNodes(n));
-      const c = new Node(parsegraph_BLOCK);
+      // console.log(getLayoutNodes(n));
+      const c = new Node(BLOCK);
       c._id = 'c';
-      n.connectNode(parsegraph_BACKWARD, c);
+      n.connectNode(BACKWARD, c);
       // console.log("PLNS");
-      // console.log(parsegraph_getLayoutNodes(n));
+      // console.log(getLayoutNodes(n));
 
-      const nodes = parsegraph_getLayoutNodes(n);
+      const nodes = getLayoutNodes(n);
       if (nodes[0] != c) {
         throw new Error('First node is not C');
       }
@@ -1964,7 +1955,7 @@ nodeTests.addTest(
       if (nodes[3] != n) {
         throw new Error('Third node is not n');
       }
-      if (b !== n.disconnectNode(parsegraph_FORWARD)) {
+      if (b !== n.disconnectNode(FORWARD)) {
         throw new Error('Not even working properly');
       }
     },
@@ -1974,7 +1965,7 @@ nodeTests.addTest(
     'Node Morris world threading connected with' +
     ' multiple siblings and disconnected 2',
     function() {
-      const n = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
       n._id = 'n';
       if (n._layoutNext != n) {
         throw new Error('Previous sanity');
@@ -1983,31 +1974,32 @@ nodeTests.addTest(
         throw new Error('Next sanity');
       }
 
-      const b = new Node(parsegraph_BLOCK);
+      const b = new Node(BLOCK);
       b._id = 'b';
-      parsegraph_testLayoutNodes([b]);
+      testLayoutNodes([b]);
 
-      const inner = b.spawnNode(parsegraph_INWARD, parsegraph_BLOCK);
+      const inner = b.spawnNode(INWARD, BLOCK);
       inner._id = 'inner';
-      parsegraph_testLayoutNodes([inner, b]);
+      testLayoutNodes([inner, b]);
 
-      n.connectNode(parsegraph_FORWARD, b);
-      parsegraph_testLayoutNodes([inner, b, n]);
-      const c = new Node(parsegraph_BLOCK);
+      n.connectNode(FORWARD, b);
+      testLayoutNodes([inner, b, n]);
+      const c = new Node(BLOCK);
       c._id = 'c';
-      n.connectNode(parsegraph_BACKWARD, c);
-      parsegraph_testLayoutNodes([c, inner, b, n]);
-      if (c !== n.disconnectNode(parsegraph_BACKWARD)) {
+      n.connectNode(BACKWARD, c);
+      testLayoutNodes([c, inner, b, n]);
+      if (c !== n.disconnectNode(BACKWARD)) {
         throw new Error('Not even working properly');
       }
-      parsegraph_testLayoutNodes([c], 'disconnected');
-      parsegraph_testLayoutNodes([inner, b, n], 'finished');
+      testLayoutNodes([c], 'disconnected');
+      testLayoutNodes([inner, b, n], 'finished');
     },
 );
-// eslint-disable-next-line require-jsdoc
+
+
 export default function testLayoutNodes(expected, name) {
   const node = expected[expected.length - 1];
-  const nodes = parsegraph_getLayoutNodes(node);
+  const nodes = getLayoutNodes(node);
   for (let i = 0; i < expected.length; ++i) {
     if (nodes[i] != expected[i]) {
       // console.log("TESTLAYOUTNODES");
@@ -2028,18 +2020,18 @@ export default function testLayoutNodes(expected, name) {
 nodeTests.addTest(
     'Node Morris world threading deeply connected',
     function() {
-      const n = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
       n._id = 'n';
-      parsegraph_testLayoutNodes([n], 'deeply conn 1');
-      const b = n.spawnNode(parsegraph_FORWARD, BUD);
+      testLayoutNodes([n], 'deeply conn 1');
+      const b = n.spawnNode(FORWARD, BUD);
       b._id = 'b';
-      parsegraph_testLayoutNodes([b, n], 'deeply conn 2');
-      const c = b.spawnNode(parsegraph_DOWNWARD, parsegraph_BLOCK);
+      testLayoutNodes([b, n], 'deeply conn 2');
+      const c = b.spawnNode(DOWNWARD, BLOCK);
       c._id = 'c';
-      parsegraph_testLayoutNodes([c, b, n], 'deeply conn 3');
-      const d = b.spawnNode(parsegraph_FORWARD, BUD);
+      testLayoutNodes([c, b, n], 'deeply conn 3');
+      const d = b.spawnNode(FORWARD, BUD);
       d._id = 'd';
-      parsegraph_testLayoutNodes([c, d, b, n], 'deeply conn 4');
+      testLayoutNodes([c, d, b, n], 'deeply conn 4');
 
       if (n._layoutNext !== c) {
         throw new Error(
@@ -2126,9 +2118,9 @@ nodeTests.addTest('Disconnect simple test, reversed', function() {
 nodeTests.addTest(
     'Node Morris world threading connected with crease',
     function() {
-      const n = new Node(parsegraph_BLOCK);
-      const b = new Node(parsegraph_BLOCK);
-      n.connectNode(parsegraph_FORWARD, b);
+      const n = new Node(BLOCK);
+      const b = new Node(BLOCK);
+      n.connectNode(FORWARD, b);
       b.setPaintGroup(true);
       if (b._layoutNext !== b) {
         throw new Error(
@@ -2148,10 +2140,10 @@ nodeTests.addTest(
 nodeTests.addTest(
     'Node Morris world threading connected with creased child',
     function() {
-      const n = new Node(parsegraph_BLOCK);
-      const b = new Node(parsegraph_BLOCK);
+      const n = new Node(BLOCK);
+      const b = new Node(BLOCK);
       b.setPaintGroup(true);
-      n.connectNode(parsegraph_FORWARD, b);
+      n.connectNode(FORWARD, b);
       if (b._layoutNext !== b) {
         throw new Error(
             'Crease must remove that node' +
@@ -2166,7 +2158,7 @@ nodeTests.addTest(
       }
     },
 );
-// eslint-disable-next-line require-jsdoc
+
 export default function getLayoutNodes(node) {
   const list = [];
   const orig = node;
@@ -2181,7 +2173,7 @@ export default function getLayoutNodes(node) {
       }
     }
     list.push(node);
-    if (parsegraph_elapsed(start) > 5000) {
+    if (elapsed(start) > 5000) {
       throw new Error('Infinite loop');
     }
   } while (orig != node);
@@ -2201,18 +2193,18 @@ nodeTests.addTest('Disconnect complex test', function() {
   car.spawnMove('f', 'b');
   car.node().commitLayoutIteratively();
   const newRoot = car.node();
-  const newLastNode = newRoot.nodeAt(parsegraph_BACKWARD);
+  const newLastNode = newRoot.nodeAt(BACKWARD);
   // console.log("Doing complex disc", originalRoot);
-  // console.log(parsegraph_getLayoutNodes(originalRoot));
+  // console.log(getLayoutNodes(originalRoot));
   car.disconnect();
   // console.log("COMPLEX DISCONNECT DONE");
-  // console.log(parsegraph_getLayoutNodes(originalRoot));
+  // console.log(getLayoutNodes(originalRoot));
   // newRoot.commitLayoutIteratively();
   originalRoot.commitLayoutIteratively();
 });
 
 nodeTests.addTest('Proportion pull test', function() {
-  const font = parsegraph_defaultFont();
+  const font = defaultFont();
   const car = new Caret(BUD);
   car.setFont(font);
   car.node().commitLayoutIteratively();

@@ -810,14 +810,14 @@ Window.prototype.setBackground = function(color, ...args) {
   this._backgroundColor = color;
 };
 
-/**
+/*
  * Retrieves the current background color.
  */
 Window.prototype.backgroundColor = function() {
   return this._backgroundColor;
 };
 
-/**
+/*
  * Returns whether the window has a nonzero client width and height.
  */
 Window.prototype.canProject = function() {

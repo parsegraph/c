@@ -1448,14 +1448,14 @@ export default class Node {
     return this._extended && this._extended.changeListener != null;
   }
 
-  valueChanged(): any {
+  valueChanged(...args): any {
     // Invoke the listener.
     if (!this.hasChangeListener()) {
       return;
     }
     return this._extended.changeListener.apply(
         this._extended.changeListenerThisArg,
-        arguments,
+        ...args,
     );
   }
 
@@ -1492,14 +1492,14 @@ export default class Node {
     return this._extended && this._extended.keyListener != null;
   }
 
-  key(): any {
+  key(...args): any {
     // Invoke the key listener.
     if (!this.hasKeyListener()) {
       return;
     }
     return this._extended.keyListener.apply(
         this._extended.keyListenerThisArg,
-        arguments,
+        ...args,
     );
   }
 
@@ -2106,12 +2106,12 @@ export default class Node {
 
   setNodeAlignmentMode(
       inDirection: Direction | Alignment,
-      newAlignmentMode?: Aligment,
+      newAlignmentMode?: Aligment, ...args
   ): void {
-    if (arguments.length === 1) {
+    if (args.length === 1) {
       return this.parentNode().setNodeAlignmentMode(
           reverseDirection(this.parentDirection()),
-          arguments[0],
+          args[0],
       );
     }
     this.ensureNeighbor(inDirection).alignmentMode = newAlignmentMode;
@@ -2128,20 +2128,20 @@ export default class Node {
 
   setAxisOverlap(
       inDirection: Direction | AxisOverlap,
-      newAxisOverlap?: AxisOverlap,
+      newAxisOverlap?: AxisOverlap, ...args
   ): void {
-    if (arguments.length === 1) {
+    if (args.length === 1) {
       return this.parentNode().setAxisOverlap(
           reverseDirection(this.parentDirection()),
-          arguments[0],
+          args[0],
       );
     }
     this.ensureNeighbor(inDirection).allowAxisOverlap = newAxisOverlap;
     this.layoutWasChanged(inDirection);
   }
 
-  axisOverlap(inDirection?: Direction): AxisOverlap {
-    if (arguments.length === 0) {
+  axisOverlap(inDirection?: Direction, ...args): AxisOverlap {
+    if (args.length === 0) {
       return this.parentNode().axisOverlap(
           reverseDirection(this.parentDirection()),
       );
@@ -2937,9 +2937,9 @@ export default class Node {
                 console.log("Length offset: " + lengthOffset);
                 console.log("Size adjustment: " + sizeAdjustment);
                 console.log("ExtentOffset : " +
-		  _neighbors[direction].extentOffset);
+                  _neighbors[direction].extentOffset);
                 console.log("Scaled child ExtentOffset : " +
-	        (scaleAt(childDirection) * child.extentOffsetAt(direction)));*/
+                (scaleAt(childDirection) * child.extentOffsetAt(direction))); */
         const e: Extent = extentsAt(direction);
         const scale: number = scaleAt(childDirection);
         if (nodeFit() == Fit.LOOSE) {
@@ -3068,6 +3068,7 @@ export default class Node {
       }
 
       // Separate the child from this node.
+
       let separationFromChild: number = extentsAt(direction).separation(
           childExtent,
           extentOffsetAt(direction) +
@@ -3168,8 +3169,8 @@ export default class Node {
             );*/
 
       // This node has first-axis children in both directions.
-      const firstNode: Node = this.nodeAt(firstDirection);
-      const secondNode: Node = this.nodeAt(secondDirection);
+      const firstNode: Node = nodeAt(firstDirection);
+      const secondNode: Node = nodeAt(secondDirection);
 
       // Get the alignments for the children.
       const firstNodeAlignment: number = getAlignment.call(

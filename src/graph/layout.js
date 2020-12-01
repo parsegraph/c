@@ -1,8 +1,8 @@
 export const COMPONENT_LAYOUT_VERTICAL = 'LAYOUT_VERTICAL';
 export const COMPONENT_LAYOUT_HORIZONTAL = 'LAYOUT_HORIZONTAL';
 export const COMPONENT_LAYOUT_ENTRY = 'LAYOUT_ENTRY';
+/* eslint-disable require-jsdoc */
 
-// eslint-disable-next-line require-jsdoc
 export default function LayoutList(type, parent) {
   this._type = type;
   this._parent = parent;

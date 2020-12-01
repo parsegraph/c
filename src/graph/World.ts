@@ -69,7 +69,7 @@ export default class World {
     return null;
   }
 
-  /**
+  /*
    * Receives a mouseover event at the given coordinates, in world space.
    *
    * Returns true if this event processing requires a graph repaint.
@@ -211,7 +211,7 @@ export default class World {
     return completed;
   }
 
-  /**
+  /*
    * Tests whether the given position, in world space, is within a node.
    */
   nodeUnderCoords(x: number, y: number): Node {
