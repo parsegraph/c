@@ -1,16 +1,17 @@
-import parsegraph_TestSuite from '../TestSuite';
-import parsegraph_Window from './Window';
+import TestSuite from '../TestSuite';
+import Window from './Window';
 import {
-  parsegraph_compileProgram,
-  parsegraph_generateRectangleVertices,
-  parsegraph_generateRectangleTexcoords,
+  compileProgram,
+  generateRectangleVertices,
+  generateRectangleTexcoords,
 } from '../gl';
-import {parsegraph_createPagingBuffer} from '../pagingbuffer';
-import parsegraph_Color from './Color';
-import {alpha_ToRadians} from '../alpha/Maths';
+import {createPagingBuffer} from '../pagingbuffer';
+import Color from './Color';
+import {alphaToRadians} from '../alpha/Maths';
 
+/* eslint-disable require-jsdoc, max-len  */
 // TODO Separate coloring and slicing from drawing the circle... Basically, make this actually just draw the fans we want.
-const parsegraph_FanPainter_VertexShader =
+const fanPainterVertexShader =
   'uniform mat3 u_world;\n' +
   '\n' +
   'attribute vec2 a_position;\n' +
@@ -32,7 +33,7 @@ const parsegraph_FanPainter_VertexShader =
   'selectionSize = a_selectionSize;' +
   '}';
 
-const parsegraph_FanPainter_FragmentShader =
+const fanPainterFragmentShader =
   '#ifdef GL_ES\n' +
   'precision mediump float;\n' +
   '#endif\n' +
@@ -64,10 +65,10 @@ const parsegraph_FanPainter_FragmentShader =
   // "}"
   '}';
 
-/**
+/*
  * Shows a circle that allows some parts to show as selected.
  */
-export default function parsegraph_FanPainter(window) {
+export default function FanPainter(window) {
   this._window = window;
   if (!this._window) {
     throw new Error('Window must be provided');
@@ -79,15 +80,15 @@ export default function parsegraph_FanPainter(window) {
   this._selectionSize = null;
 
   // Compile the shader program.
-  this.fanProgram = parsegraph_compileProgram(
+  this.fanProgram = compileProgram(
       this._window,
-      'parsegraph_FanPainter',
-      parsegraph_FanPainter_VertexShader,
-      parsegraph_FanPainter_FragmentShader,
+      'FanPainter',
+      FanPainter_VertexShader,
+      FanPainter_FragmentShader,
   );
 
   // Prepare attribute buffers.
-  this._fanBuffer = parsegraph_createPagingBuffer(window.gl(), this.fanProgram);
+  this._fanBuffer = createPagingBuffer(window.gl(), this.fanProgram);
   this.a_position = this._fanBuffer.defineAttrib('a_position', 2);
   this.a_color = this._fanBuffer.defineAttrib('a_color', 4);
   this.a_texCoord = this._fanBuffer.defineAttrib('a_texCoord', 2);
@@ -102,26 +103,26 @@ export default function parsegraph_FanPainter(window) {
   this._fanBuffer.addPage();
 }
 
-const parsegraph_FanPainter_Tests = new parsegraph_TestSuite(
-    'parsegraph_FanPainter',
+const fanPainterTests = new TestSuite(
+    'FanPainter',
 );
 
-parsegraph_FanPainter_Tests.addTest('parsegraph_FanPainter', function(
+FanPainter_Tests.addTest('FanPainter', function(
     resultDom,
 ) {
-  const window = new parsegraph_Window();
-  const painter = new parsegraph_FanPainter(window);
+  const window = new Window();
+  const painter = new FanPainter(window);
   painter.selectDeg(
       0,
       0,
       0,
       90,
-      new parsegraph_Color(0, 0, 0, 1),
-      new parsegraph_Color(1, 0, 1, 1),
+      new Color(0, 0, 0, 1),
+      new Color(1, 0, 1, 1),
   );
 });
 
-parsegraph_FanPainter.prototype.selectDeg = function(
+FanPainter.prototype.selectDeg = function(
     userX,
     userY,
     startAngle,
@@ -139,26 +140,29 @@ parsegraph_FanPainter.prototype.selectDeg = function(
   );
 };
 
-/**
+/*
  * Highlights arcs under the given selection.
  */
-parsegraph_FanPainter.prototype.selectRad = function(
+FanPainter.prototype.selectRad = function(
     userX,
     userY,
     startAngle,
     spanAngle,
     startColor,
-    endColor, // parsegraph_FanPainter.prototype.drawFan = function(
-) //    cx, cy, radius, color)
-{
-  // console.log(userx + ", " + userY + ". startAngle=" + startAngle + ", spanAngle=" + spanAngle);
+    endColor,
+) {
+  // FanPainter.prototype.drawFan = function() //    cx, cy, radius, color)
+
+  //  console.log(
+  //    userx +
+  //    ", " + userY + ". startAngle=" +
+  //    startAngle + ", spanAngle=" + spanAngle);
 
   const radius = this._ascendingRadius + this._descendingRadius;
-
   // Append position data.
   this._fanBuffer.appendData(
       this.a_position,
-      parsegraph_generateRectangleVertices(userX, userY, radius * 2, radius * 2),
+      generateRectangleVertices(userX, userY, radius * 2, radius * 2),
   );
 
   // Append texture coordinate data.
@@ -182,38 +186,38 @@ parsegraph_FanPainter.prototype.selectRad = function(
   }
 };
 
-parsegraph_FanPainter.prototype.setAscendingRadius = function(
+FanPainter.prototype.setAscendingRadius = function(
     ascendingRadius,
 ) {
   this._ascendingRadius = ascendingRadius;
 };
 
-parsegraph_FanPainter.prototype.setDescendingRadius = function(
+FanPainter.prototype.setDescendingRadius = function(
     descendingRadius,
 ) {
   this._descendingRadius = descendingRadius;
 };
 
-parsegraph_FanPainter.prototype.setSelectionAngle = function(selectionAngle) {
+FanPainter.prototype.setSelectionAngle = function(selectionAngle) {
   // console.log("Selection angle: " + selectionAngle);
   this._selectionAngle = selectionAngle;
 };
 
-parsegraph_FanPainter.prototype.setSelectionSize = function(selectionSize) {
+FanPainter.prototype.setSelectionSize = function(selectionSize) {
   // console.log("Selection size: " + selectionSize);
   this._selectionSize = Math.min(Math.PI / 2.0, selectionSize);
 };
 
-parsegraph_FanPainter.prototype.window = function() {
+FanPainter.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_FanPainter.prototype.clear = function() {
+FanPainter.prototype.clear = function() {
   this._fanBuffer.clear();
   this._fanBuffer.addPage();
 };
 
-parsegraph_FanPainter.prototype.render = function(viewMatrix) {
+FanPainter.prototype.render = function(viewMatrix) {
   if (!viewMatrix) {
     throw new Error('A viewMatrix must be provided');
   }
