@@ -1,4 +1,4 @@
-// import {countGLBufferBytes} from './gl';
+import {countGLBufferBytes} from './gl';
 /* eslint-disable require-jsdoc */
 
 export default function BufferPage(
@@ -41,7 +41,7 @@ BufferPage.prototype.isEmpty = function() {
   return false;
 };
 
-/**
+/*
  * appendData(attribIndex, value1, value2, ...);
  * appendData(attribIndex, valueArray);
  *
@@ -114,7 +114,7 @@ BufferPage.prototype.appendRGBA = function(attribIndex, color) {
   return this.appendData(attribIndex, color.r, color.g, color.b, color.a);
 };
 
-/**
+/*
  * Manages the low-level paging of vertex attributes. For
  * demonstrations of use, see any painter class.
  */
@@ -176,7 +176,7 @@ PagingBuffer.prototype.getWorkingPage = function() {
   return this._pages[this._currentPage];
 };
 
-/**
+/*
  * Defines an attribute for data entry.
  *
  * name - the attribute name in this paging buffer's GL program
@@ -226,7 +226,7 @@ PagingBuffer.prototype.appendData = function(...args) {
   return page.appendData.apply(page, ...args);
 };
 
-/**
+/*
  * Deletes all buffers and empties values.
  */
 PagingBuffer.prototype.clear = function() {
@@ -244,7 +244,7 @@ PagingBuffer.prototype.clear = function() {
   this._currentPage = -1;
 };
 
-/**
+/*
  * Render each page. This function sets up vertex attribute
  * buffers and calls drawArrays for each page.
  *

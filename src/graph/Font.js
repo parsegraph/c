@@ -1,7 +1,9 @@
-import {parsegraph_SDF_RADIUS, parsegraph_MAX_PAGE_WIDTH} from './settings';
+import {SDF_RADIUS, MAX_PAGE_WIDTH} from './settings';
 import TinySDF from '../sdf';
 
-function parsegraph_GlyphPage(font) {
+/* eslint-disable require-jsdoc  */
+
+export default function GlyphPage(font) {
   this._id = font._maxPage++;
   this._glyphTexture = {};
   this._firstGlyph = false;
@@ -9,7 +11,7 @@ function parsegraph_GlyphPage(font) {
   this.next = null;
 }
 
-function parsegraph_GlyphData(
+export default function GlyphData(
     glyphPage,
     glyph,
     x,
@@ -35,20 +37,20 @@ function parsegraph_GlyphData(
   this.next = null;
 }
 
-function parsegraph_FontWindow(font, window) {
+export default function FontWindow(font, window) {
   this._glTextureSize = null;
   this._numGlyphs = 0;
   this._textureArray = null;
 }
 
-/**
+/*
  * TODO Allow glyph texture data to be downloaded rather than generated.
  *
  * http://webglfundamentals.org/webgl/lessons/webgl-text-glyphs.html
  */
-let parsegraph_Font_COUNT = 0;
-export default function parsegraph_Font(fontSizePixels, fontName, fillStyle) {
-  this._id = parsegraph_Font_COUNT++;
+let fontCount = 0;
+export default function Font(fontSizePixels, fontName, fillStyle) {
+  this._id = fontCount++;
   this._fontSize = fontSizePixels;
   this._fontName = fontName;
   this._fillStyle = fillStyle;
@@ -60,7 +62,7 @@ export default function parsegraph_Font(fontSizePixels, fontName, fillStyle) {
   this._measureCtx.fillStyle = this._fillStyle;
   // this._measureCtx.textBaseline = 'top';
   console.log(
-      'parsegraph_Font font',
+      'Font font',
       this._measureCtx.font,
       this._measureCtx.fillStyle,
   );
@@ -76,7 +78,7 @@ export default function parsegraph_Font(fontSizePixels, fontName, fillStyle) {
   this._currentRowHeight = 0;
 
   // Glyph atlas working position.
-  this._padding = parsegraph_SDF_RADIUS * 2; // this.fontSize() / 4;
+  this._padding = SDF_RADIUS * 2; // this.fontSize() / 4;
   this._x = this._padding;
   this._y = this._padding;
 
@@ -85,9 +87,9 @@ export default function parsegraph_Font(fontSizePixels, fontName, fillStyle) {
   this._sdf = new TinySDF(fontSizePixels, null, null, fontName);
 }
 
-parsegraph_Font.prototype.toString = function() {
+Font.prototype.toString = function() {
   return (
-    '[parsegraph_Font ' +
+    '[Font ' +
     this._id +
     ': ' +
     this._fontName +
@@ -97,11 +99,11 @@ parsegraph_Font.prototype.toString = function() {
   );
 };
 
-parsegraph_Font.prototype.getGlyph = function(glyph) {
+Font.prototype.getGlyph = function(glyph) {
   if (typeof glyph !== 'string') {
     glyph = String.fromCharCode(glyph);
   }
-  var glyphData = this._glyphData[glyph];
+  let glyphData = this._glyphData[glyph];
   if (glyphData !== undefined) {
     return glyphData;
   }
@@ -114,7 +116,7 @@ parsegraph_Font.prototype.getGlyph = function(glyph) {
 
   let glyphPage = null;
   if (this._pages.length === 0) {
-    glyphPage = new parsegraph_GlyphPage(this);
+    glyphPage = new GlyphPage(this);
     this._pages.push(glyphPage);
   } else {
     glyphPage = this._pages[this._pages.length - 1];
@@ -133,14 +135,14 @@ parsegraph_Font.prototype.getGlyph = function(glyph) {
   }
   if (this._y + this._currentRowHeight + this._padding > pageTextureSize) {
     // Move to the next page.
-    glyphPage = new parsegraph_GlyphPage(this);
+    glyphPage = new GlyphPage(this);
     this._pages.push(glyphPage);
     this._x = this._padding;
     this._y = this._padding;
     this._currentRowHeight = letterHeight;
   }
 
-  var glyphData = new parsegraph_GlyphData(
+  let glyphData = new GlyphData(
       glyphPage,
       glyph,
       this._x,
@@ -167,26 +169,26 @@ parsegraph_Font.prototype.getGlyph = function(glyph) {
 
   return glyphData;
 };
-parsegraph_Font.prototype.get = parsegraph_Font.prototype.getGlyph;
+Font.prototype.get = Font.prototype.getGlyph;
 
-parsegraph_Font.prototype.hasGlyph = function(glyph) {
+Font.prototype.hasGlyph = function(glyph) {
   const glyphData = this._glyphData[glyph];
   return glyphData !== undefined;
 };
-parsegraph_Font.prototype.has = parsegraph_Font.prototype.hasGlyph;
+Font.prototype.has = Font.prototype.hasGlyph;
 
-parsegraph_Font.prototype.contextChanged = function(isLost, window) {
+Font.prototype.contextChanged = function(isLost, window) {
   if (!isLost) {
     return;
   }
   this.dispose(window);
 };
 
-parsegraph_Font.prototype.update = function(window) {
+Font.prototype.update = function(window) {
   if (!window) {
     throw new Error('Window must be provided');
   }
-  var gl = window.gl();
+  let gl = window.gl();
   if (gl.isContextLost()) {
     return;
   }
@@ -194,15 +196,15 @@ parsegraph_Font.prototype.update = function(window) {
   const pageTextureSize = this.pageTextureSize();
   let ctx = this._windows[window.id()];
   if (!ctx) {
-    ctx = new parsegraph_FontWindow(this, window);
+    ctx = new FontWindow(this, window);
     this._windows[window.id()] = ctx;
   }
-  var gl = window.gl();
+  let gl = window.gl();
   if (gl.isContextLost()) {
     return;
   }
   if (!ctx._glTextureSize) {
-    ctx._glTextureSize = parsegraph_getTextureSize(gl);
+    ctx._glTextureSize = getTextureSize(gl);
     // console.log("GLTEXTURESIZE=" + ctx._glTextureSize);
     ctx._textureArray = new Uint8Array(ctx._glTextureSize * ctx._glTextureSize);
   }
@@ -218,7 +220,11 @@ parsegraph_Font.prototype.update = function(window) {
     // console.log("Dont need update");
     return;
   }
-  // console.log(this.fullName() + " has " + this._numGlyphs + " and window has " + ctx._numGlyphs);
+  // console.log(this.fullName() +
+  //   " has " +
+  //   this._numGlyphs +
+  //   " and window has " +
+  //   ctx._numGlyphs);
   ctx._numGlyphs = 0;
 
   let pageX = 0;
@@ -257,7 +263,7 @@ parsegraph_Font.prototype.update = function(window) {
           gl.UNSIGNED_BYTE,
           ctx._textureArray,
       );
-      // console.log("Upload time: " + parsegraph_elapsed(ut));
+      // console.log("Upload time: " + elapsed(ut));
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(
           gl.TEXTURE_2D,
@@ -302,10 +308,14 @@ parsegraph_Font.prototype.update = function(window) {
     gl.generateMipmap(gl.TEXTURE_2D);
   }
   gl.bindTexture(gl.TEXTURE_2D, null);
-  // console.log("Font updated " + pagesUpdated + " page(s) in " + parsegraph_elapsed(td) + "ms");
+  // console.log("Font updated " +
+  //   pagesUpdated +
+  //   " page(s) in " +
+  //   elapsed(td) +
+  //   "ms");
 };
 
-parsegraph_Font.prototype.dispose = function(window) {
+Font.prototype.dispose = function(window) {
   const ctx = this._windows[window.id()];
   if (!ctx) {
     return;
@@ -324,10 +334,10 @@ parsegraph_Font.prototype.dispose = function(window) {
   ctx._numGlyphs = 0;
 };
 
-parsegraph_Font.prototype.clear = function() {
+Font.prototype.clear = function() {
   for (const i in this._pages) {
     const page = this._pages[i];
-    for (var wid in page._glyphTexture) {
+    for (const wid in page._glyphTexture) {
       const tex = page._glyphTexture[wid];
       const ctx = this._windows[wid];
       if (ctx && ctx._gl && !ctx._gl.isContextLost()) {
@@ -336,35 +346,37 @@ parsegraph_Font.prototype.clear = function() {
     }
     page._glyphTexture = {};
   }
-  for (var wid in this._windows) {
-    this._windows[wid]._numGlyphs = 0;
+  for (const wid in this._windows) {
+    if (Object.prototype.hasOwnProperty.call(this._windows, wid)) {
+      this._windows[wid]._numGlyphs = 0;
+    }
   }
 };
 
-parsegraph_Font.prototype.font = function() {
+Font.prototype.font = function() {
   return this._fontSize + 'px ' + this._fontName;
 };
 
-parsegraph_Font.prototype.pageTextureSize = function() {
-  return parsegraph_MAX_PAGE_WIDTH;
+Font.prototype.pageTextureSize = function() {
+  return MAX_PAGE_WIDTH;
 };
 
-parsegraph_Font.prototype.fontBaseline = function() {
+Font.prototype.fontBaseline = function() {
   return this.fontSize();
 };
 
-parsegraph_Font.prototype.fontSize = function() {
+Font.prototype.fontSize = function() {
   return this._fontSize;
 };
 
-parsegraph_Font.prototype.fullName = function() {
+Font.prototype.fullName = function() {
   return this._fontName + ' ' + this._fillStyle;
 };
 
-parsegraph_Font.prototype.fontName = function() {
+Font.prototype.fontName = function() {
   return this._fontName;
 };
 
-parsegraph_Font.prototype.isNewline = function(c) {
+Font.prototype.isNewline = function(c) {
   return c === '\n';
 };

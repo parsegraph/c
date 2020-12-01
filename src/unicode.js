@@ -30,7 +30,6 @@ export function defaultUnicode() {
   return UNICODE_INSTANCE;
 }
 
-// eslint-disable-next-line require-jsdoc
 export function setDefaultUnicode(unicode) {
   UNICODE_INSTANCE = unicode;
 }
