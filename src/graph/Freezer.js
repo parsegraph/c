@@ -1,7 +1,9 @@
-import {parsegraph_FREEZER_TEXTURE_SCALE} from './settings';
-import parsegraph_Camera from './Camera';
+/* eslint-disable require-jsdoc */
 
-const parsegraph_Freezer_VertexShader =
+import {FREEZER_TEXTURE_SCALE} from './settings';
+import Camera from './Camera';
+
+const freezerVertexShader =
   'uniform mat3 u_world;\n' +
   '' +
   'attribute vec2 a_position;' +
@@ -14,7 +16,7 @@ const parsegraph_Freezer_VertexShader =
   'texCoord = a_texCoord;' +
   '}';
 
-const parsegraph_Freezer_FragmentShader =
+const freezerFragmentShader =
   'uniform sampler2D u_texture;\n' +
   'varying highp vec2 texCoord;\n' +
   '\n' +
@@ -23,19 +25,19 @@ const parsegraph_Freezer_FragmentShader =
   // "gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);" +
   '}';
 
-const parsegraph_FREEZER_MARGIN = 8;
+const FREEZER_MARGIN = 8;
 
-function parsegraph_FreezerWindow(freezer, window) {
+export default function FreezerWindow(freezer, window) {
   this._freezer = freezer;
   this._window = window;
   this._gl = this._window.gl();
   this._shaders = this._window.shaders();
-  this._highAspectRow = new parsegraph_FreezerRow(freezer, window, true);
-  this._lowAspectRow = new parsegraph_FreezerRow(freezer, window, false);
+  this._highAspectRow = new FreezerRow(freezer, window, true);
+  this._lowAspectRow = new FreezerRow(freezer, window, false);
 }
 
-parsegraph_FreezerWindow.prototype.allocate = function(width, height) {
-  const frag = new parsegraph_FrozenNodeFragment(width, height);
+FreezerWindow.prototype.allocate = function(width, height) {
+  const frag = new FrozenNodeFragment(width, height);
   const aspect = width / height;
   if (aspect < 1 / 4) {
     this._lowAspectRow.allocate(frag);
@@ -45,7 +47,7 @@ parsegraph_FreezerWindow.prototype.allocate = function(width, height) {
   return frag;
 };
 
-parsegraph_FreezerWindow.prototype.renderFragment = function(
+FreezerWindow.prototype.renderFragment = function(
     frag,
     world,
     needsSetup,
@@ -55,11 +57,11 @@ parsegraph_FreezerWindow.prototype.renderFragment = function(
   let err;
   if (needsSetup) {
     if (!this._program) {
-      this._program = parsegraph_compileProgram(
+      this._program = compileProgram(
           this._window,
-          'parsegraph_Freezer',
-          parsegraph_Freezer_VertexShader,
-          parsegraph_Freezer_FragmentShader,
+          'Freezer',
+          freezerVertexShader,
+          freezerFragmentShader,
       );
       this.u_world = gl.getUniformLocation(this._program, 'u_world');
       this.u_texture = gl.getUniformLocation(this._program, 'u_texture');
@@ -99,11 +101,11 @@ parsegraph_FreezerWindow.prototype.renderFragment = function(
     }*/
 };
 
-parsegraph_FreezerWindow.prototype.textureSize = function() {
+FreezerWindow.prototype.textureSize = function() {
   return this._window.textureSize();
 };
 
-parsegraph_FreezerWindow.prototype.activate = function(slot) {
+FreezerWindow.prototype.activate = function(slot) {
   const gl = this._gl;
   this._origFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
   this._origRenderbuffer = gl.getParameter(gl.RENDERBUFFER_BINDING);
@@ -136,7 +138,7 @@ parsegraph_FreezerWindow.prototype.activate = function(slot) {
   );
 };
 
-parsegraph_FreezerWindow.prototype.deactivate = function() {
+FreezerWindow.prototype.deactivate = function() {
   if (!this._activated) {
     return;
   }
@@ -146,37 +148,39 @@ parsegraph_FreezerWindow.prototype.deactivate = function() {
   gl.bindRenderbuffer(gl.RENDERBUFFER, this._origRenderbuffer);
 };
 
-parsegraph_FreezerWindow.prototype.gl = function() {
+FreezerWindow.prototype.gl = function() {
   return this._gl;
 };
 
-export default function parsegraph_Freezer(window) {
+export default function Freezer(window) {
   this._frozenNodes = [];
-  this._textureScale = parsegraph_FREEZER_TEXTURE_SCALE;
+  this._textureScale = FREEZER_TEXTURE_SCALE;
 
   this._windowData = {};
 
-  this._camera = new parsegraph_Camera();
+  this._camera = new Camera();
 
   this._framebuffer = null;
   this._renderbuffer = null;
   this._activated = false;
 }
 
-parsegraph_Freezer.prototype.windowData = function(window) {
+Freezer.prototype.windowData = function(window) {
   return this._windowData[window.id()];
 };
 
-parsegraph_Freezer.prototype.cache = function(node) {
-  const item = new parsegraph_FrozenNode(this, node);
+Freezer.prototype.cache = function(node) {
+  const item = new FrozenNode(this, node);
   this._frozenNodes.push(item);
   return item;
 };
 
-parsegraph_Freezer.prototype.contextChanged = function(isLost) {
+Freezer.prototype.contextChanged = function(isLost) {
   for (const wid in this._windowData) {
-    const wdata = this._windowData[wid];
-    wdata.contextChanged(isLost);
+    if (Object.prototype.hasOwnProperty.call(this._windowData, wid)) {
+      const wdata = this._windowData[wid];
+      wdata.contextChanged(isLost);
+    }
   }
   this._lowAspectRow.contextChanged(isLost);
   this._highAspectRow.contextChanged(isLost);
@@ -188,24 +192,24 @@ parsegraph_Freezer.prototype.contextChanged = function(isLost) {
   }
 };
 
-parsegraph_Freezer.prototype.allocate = function(window, width, height) {
+Freezer.prototype.allocate = function(window, width, height) {
   let wdata = this._windowData[window.id()];
   if (!wdata) {
-    wdata = new parsegraph_FreezerWindow(this, window);
+    wdata = new FreezerWindow(this, window);
     this._windowData[window.id()] = wdata;
   }
   return wdata.allocate(width, height);
 };
 
-parsegraph_Freezer.prototype.camera = function() {
+Freezer.prototype.camera = function() {
   return this._camera;
 };
 
-parsegraph_Freezer.prototype.textureScale = function() {
+Freezer.prototype.textureScale = function() {
   return this._textureScale;
 };
 
-function parsegraph_FreezerRow(freezer, window, colFirst) {
+export default function FreezerRow(freezer, window, colFirst) {
   this._freezer = freezer;
   this._window = window;
   this._colFirst = colFirst;
@@ -216,22 +220,22 @@ function parsegraph_FreezerRow(freezer, window, colFirst) {
   this._currentMax = 0;
 }
 
-parsegraph_FreezerRow.prototype.gl = function() {
+FreezerRow.prototype.gl = function() {
   return this._window.gl();
 };
 
-parsegraph_FreezerRow.prototype.window = function() {
+FreezerRow.prototype.window = function() {
   return this._window;
 };
 
-parsegraph_FreezerRow.prototype.textureSize = function() {
+FreezerRow.prototype.textureSize = function() {
   return this._window.textureSize();
 };
 
-parsegraph_FreezerRow.prototype.allocate = function(frag) {
+FreezerRow.prototype.allocate = function(frag) {
   let lastSlot = this._slots[this._slots.length - 1];
   if (!lastSlot) {
-    lastSlot = new parsegraph_FreezerSlot(this);
+    lastSlot = new FreezerSlot(this);
     this._slots.push(lastSlot);
   }
   const neededWidth = frag.width();
@@ -251,11 +255,11 @@ parsegraph_FreezerRow.prototype.allocate = function(frag) {
   // Search for a space.
   if (this._colFirst) {
     if (this._y + neededHeight > tsize) {
-      this._x += this._currentMax + parsegraph_FREEZER_MARGIN;
+      this._x += this._currentMax + FREEZER_MARGIN;
       this._y = 0;
     }
     if (this._x + neededWidth > tsize) {
-      lastSlot = new parsegraph_FreezerSlot(this);
+      lastSlot = new FreezerSlot(this);
       this._slots.push(lastSlot);
       this._x = 0;
       this._y = 0;
@@ -263,19 +267,19 @@ parsegraph_FreezerRow.prototype.allocate = function(frag) {
     }
     // console.log("COL", lastSlot, this._x);
     frag.assignSlot(lastSlot, this._x, this._y, neededWidth, neededHeight);
-    this._y += neededHeight + parsegraph_FREEZER_MARGIN;
+    this._y += neededHeight + FREEZER_MARGIN;
     this._currentMax = Math.max(
         this._currentMax,
-        neededWidth + parsegraph_FREEZER_MARGIN,
+        neededWidth + FREEZER_MARGIN,
     );
   } else {
     // Row first
     if (this._x + neededWidth > tsize) {
       this._x = 0;
-      this._y += this._currentMax + parsegraph_FREEZER_MARGIN;
+      this._y += this._currentMax + FREEZER_MARGIN;
     }
     if (this._y + neededHeight > tsize) {
-      lastSlot = new parsegraph_FreezerSlot(this);
+      lastSlot = new FreezerSlot(this);
       this._slots.push(lastSlot);
       this._x = 0;
       this._y = 0;
@@ -283,18 +287,20 @@ parsegraph_FreezerRow.prototype.allocate = function(frag) {
     }
     // console.log("ROW", lastSlot, this._x);
     frag.assignSlot(lastSlot, this._x, this._y, neededWidth, neededHeight);
-    this._x += neededWidth + parsegraph_FREEZER_MARGIN;
+    this._x += neededWidth + FREEZER_MARGIN;
     this._currentMax = Math.max(
         this._currentMax,
-        neededHeight + parsegraph_FREEZER_MARGIN,
+        neededHeight + FREEZER_MARGIN,
     );
   }
 };
 
-parsegraph_FreezerRow.prototype.contextChanged = function(isLost) {
+FreezerRow.prototype.contextChanged = function(isLost) {
   for (const i in this._slots) {
-    const slot = this._slots[i];
-    slot.contextChanged(isLost);
+    if (Object.prototype.hasOwnProperty.call(this._slots, i)) {
+      const slot = this._slots[i];
+      slot.contextChanged(isLost);
+    }
   }
   this._slots.splice(0, this._slots.length);
   this._x = 0;
@@ -302,33 +308,33 @@ parsegraph_FreezerRow.prototype.contextChanged = function(isLost) {
   this._currentMax = 0;
 };
 
-parsegraph_FreezerRow.prototype.freezer = function() {
+FreezerRow.prototype.freezer = function() {
   return this._freezer;
 };
 
-let parsegraph_FreezerSlot_COUNT = 0;
+let freezerSlotCount = 0;
 
-function parsegraph_FreezerSlot(row) {
-  this._id = ++parsegraph_FreezerSlot_COUNT;
+export default function FreezerSlot(row) {
+  this._id = ++freezerSlotCount;
   this._row = row;
   this._glTexture = null;
   this._fragments = [];
   this.init();
 }
 
-parsegraph_FreezerSlot.prototype.glTexture = function() {
+FreezerSlot.prototype.glTexture = function() {
   return this._glTexture;
 };
 
-parsegraph_FreezerSlot.prototype.gl = function() {
+FreezerSlot.prototype.gl = function() {
   return this._row.gl();
 };
 
-parsegraph_FreezerSlot.prototype.window = function() {
+FreezerSlot.prototype.window = function() {
   return this._row.window();
 };
 
-parsegraph_FreezerSlot.prototype.init = function() {
+FreezerSlot.prototype.init = function() {
   const tsize = this._row.textureSize();
   const gl = this.gl();
   this._glTexture = gl.createTexture();
@@ -349,39 +355,43 @@ parsegraph_FreezerSlot.prototype.init = function() {
   // console.log("Creating new freezer texture");
 };
 
-parsegraph_FreezerSlot.prototype.contextChanged = function(isLost) {
+FreezerSlot.prototype.contextChanged = function(isLost) {
   if (!isLost) {
     this.init();
   } else {
     for (const i in this._fragments) {
-      this._fragments[i].dispose();
+      if (Object.prototype.hasOwnProperty.call(this._fragments, i)) {
+        this._fragments[i].dispose();
+      }
     }
     this._fragments.splice(0, this._fragments.length);
   }
 };
 
-parsegraph_FreezerSlot.prototype.addFragment = function(frag) {
+FreezerSlot.prototype.addFragment = function(frag) {
   this._fragments.push(frag);
 };
 
-parsegraph_FreezerSlot.prototype.freezer = function() {
+FreezerSlot.prototype.freezer = function() {
   return this._row.freezer();
 };
 
-function parsegraph_FrozenNode(freezer, node) {
+export default function FrozenNode(freezer, node) {
   this._node = node;
   this._freezer = freezer;
   this._windowFragments = {};
   this.invalidate();
 }
 
-parsegraph_FrozenNode.prototype.invalidate = function() {
+FrozenNode.prototype.invalidate = function() {
   // console.log("Invalidating cache for " + this._node);
   for (const wid in this._windowFragments) {
     const fragments = this._windowFragments[wid];
     for (const i in fragments) {
-      const frag = fragments[i];
-      frag.dispose();
+      if (Object.prototype.hasOwnProperty.call(fragments, i)) {
+        const frag = fragments[i];
+        frag.dispose();
+      }
     }
     fragments.splice(0, fragments.length);
   }
@@ -392,11 +402,11 @@ parsegraph_FrozenNode.prototype.invalidate = function() {
   this._y = NaN;
 };
 
-parsegraph_FrozenNode.prototype.validate = function() {
+FrozenNode.prototype.validate = function() {
   if (this._validated) {
     return;
   }
-  const bounds = parsegraph_calculatePaintGroupBounds(this.node());
+  const bounds = calculatePaintGroupBounds(this.node());
   this._width = bounds.left + bounds.right;
   this._height = bounds.top + bounds.bottom;
   this._x = bounds.left;
@@ -405,7 +415,7 @@ parsegraph_FrozenNode.prototype.validate = function() {
   this._validated = true;
 };
 
-parsegraph_FrozenNode.prototype.paint = function(window) {
+FrozenNode.prototype.paint = function(window) {
   // console.log("Painting frozen node");
   this.validate();
   let fragments = this._windowFragments[window.id()];
@@ -441,11 +451,13 @@ parsegraph_FrozenNode.prototype.paint = function(window) {
     }
   }
   for (const i in fragments) {
-    fragments[i].paint();
+    if (Object.prototype.hasOwnProperty.call(fragments, i)) {
+      fragments[i].paint();
+    }
   }
 };
 
-parsegraph_FrozenNode.prototype.render = function(
+FrozenNode.prototype.render = function(
     window,
     world,
     renderData,
@@ -472,11 +484,11 @@ parsegraph_FrozenNode.prototype.render = function(
   return renderedClean;
 };
 
-parsegraph_FrozenNode.prototype.node = function() {
+FrozenNode.prototype.node = function() {
   return this._node;
 };
 
-function parsegraph_FrozenNodeFragment(width, height) {
+export default function FrozenNodeFragment(width, height) {
   this._width = width;
   this._height = height;
   this._x = NaN;
@@ -488,7 +500,7 @@ function parsegraph_FrozenNodeFragment(width, height) {
   this._vertexBuffer = null;
 }
 
-parsegraph_FrozenNodeFragment.prototype.assignNode = function(
+FrozenNodeFragment.prototype.assignNode = function(
     frozenNode,
     x,
     y,
@@ -498,7 +510,7 @@ parsegraph_FrozenNodeFragment.prototype.assignNode = function(
   this._y = y;
 };
 
-parsegraph_FrozenNodeFragment.prototype.assignSlot = function(
+FrozenNodeFragment.prototype.assignSlot = function(
     slot,
     textureX,
     textureY,
@@ -513,23 +525,23 @@ parsegraph_FrozenNodeFragment.prototype.assignSlot = function(
   this._textureHeight = textureHeight;
 };
 
-parsegraph_FrozenNodeFragment.prototype.vertexBuffer = function() {
+FrozenNodeFragment.prototype.vertexBuffer = function() {
   return this._vertexBuffer;
 };
 
-parsegraph_FrozenNodeFragment.prototype.window = function() {
+FrozenNodeFragment.prototype.window = function() {
   return this._slot.window();
 };
 
-parsegraph_FrozenNodeFragment.prototype.windowData = function() {
+FrozenNodeFragment.prototype.windowData = function() {
   return this.freezer().windowData(this.window());
 };
 
-parsegraph_FrozenNodeFragment.prototype.gl = function() {
+FrozenNodeFragment.prototype.gl = function() {
   return this.window().gl();
 };
 
-parsegraph_FrozenNodeFragment.prototype.paint = function() {
+FrozenNodeFragment.prototype.paint = function() {
   if (this._vertexBuffer) {
     return;
   }
@@ -546,13 +558,18 @@ parsegraph_FrozenNodeFragment.prototype.paint = function() {
     gl.generateMipmap(gl.TEXTURE_2D);
     wdata.activate(this._slot);
     const cam = freezer.camera();
-    const margin = parsegraph_FREEZER_MARGIN;
-    const halfMarg = parsegraph_FREEZER_MARGIN / 2;
+    const margin = FREEZER_MARGIN;
+    const halfMarg = FREEZER_MARGIN / 2;
     cam.setSize(this._width, this._height);
     const scale = freezer.textureScale();
     cam.setScale(scale);
     cam.setOrigin(-this._x / scale, -this._y / scale);
-    // console.log("Viewport=", this._textureX, this._textureY, this._textureWidth, this._textureHeight);
+    // console.log(
+    //   "Viewport=",
+    //   this._textureX,
+    //   this._textureY,
+    //   this._textureWidth,
+    //   this._textureHeight);
     gl.viewport(
         this._textureX,
         this._textureY,
@@ -618,7 +635,7 @@ parsegraph_FrozenNodeFragment.prototype.paint = function() {
   }
 };
 
-parsegraph_FrozenNodeFragment.prototype.render = function(
+FrozenNodeFragment.prototype.render = function(
     world,
     renderData,
     needsSetup,
@@ -631,7 +648,7 @@ parsegraph_FrozenNodeFragment.prototype.render = function(
   return true;
 };
 
-parsegraph_FrozenNodeFragment.prototype.dispose = function() {
+FrozenNodeFragment.prototype.dispose = function() {
   if (this._vertexBuffer) {
     const gl = this.gl();
     if (!gl.isContextLost()) {
@@ -647,31 +664,31 @@ parsegraph_FrozenNodeFragment.prototype.dispose = function() {
   this._textureHeight = NaN;
 };
 
-parsegraph_FrozenNodeFragment.prototype.width = function() {
+FrozenNodeFragment.prototype.width = function() {
   return this._width;
 };
 
-parsegraph_FrozenNodeFragment.prototype.height = function() {
+FrozenNodeFragment.prototype.height = function() {
   return this._height;
 };
 
-parsegraph_FrozenNodeFragment.prototype.slot = function() {
+FrozenNodeFragment.prototype.slot = function() {
   return this._slot;
 };
 
-parsegraph_FrozenNodeFragment.prototype.freezer = function() {
+FrozenNodeFragment.prototype.freezer = function() {
   if (!this._slot) {
     throw new Error('This fragment has not been assigned a slot');
   }
   return this._slot.freezer();
 };
 
-function parsegraph_calculatePaintGroupBounds(nodeRoot) {
+export default function calculatePaintGroupBounds(nodeRoot) {
   if (!nodeRoot.localPaintGroup()) {
     throw new Error('Node must be a paint group');
   }
   let node = nodeRoot;
-  const parentSize = new parsegraph_Size();
+  const parentSize = new Size();
   const groupBounds = {};
   let numNodes = 0;
   do {
@@ -688,7 +705,7 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
     const order = node.layoutOrder();
     for (let i = 0; i < order.length; ++i) {
       const dir = order[i];
-      if (dir === parsegraph_OUTWARD || dir === parsegraph_INWARD) {
+      if (dir === OUTWARD || dir === INWARD) {
         continue;
       }
       if (!node.hasChildAt(dir)) {
@@ -700,15 +717,16 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
         const childBounds = groupBounds[child._id];
         if (!childBounds) {
           throw new Error(
-              'Child paint group bounds must have been calculated before its parent',
+              'Child paint group bounds must have' +
+              ' been calculated before its parent',
           );
         }
         if (Number.isNaN(childBounds.left)) {
           throw new Error('Bounds must not be NaN');
         }
-        var neighbor = node.neighborAt(dir);
+        const neighbor = node.neighborAt(dir);
         switch (dir) {
-          case parsegraph_UPWARD:
+          case UPWARD:
             parentBounds.top = Math.max(
                 parentBounds.top,
                 childBounds.top + neighbor.separation,
@@ -726,7 +744,7 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
                 childBounds.bottom - neighbor.separation,
             );
             break;
-          case parsegraph_DOWNWARD:
+          case DOWNWARD:
             parentBounds.top = Math.max(
                 parentBounds.top,
                 childBounds.top - neighbor.separation,
@@ -744,7 +762,7 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
                 childBounds.bottom + neighbor.separation,
             );
             break;
-          case parsegraph_FORWARD:
+          case FORWARD:
             parentBounds.top = Math.max(
                 parentBounds.top,
                 childBounds.top - neighbor.alignmentOffset,
@@ -762,7 +780,7 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
                 childBounds.bottom + neighbor.alignmentOffset,
             );
             break;
-          case parsegraph_BACKWARD:
+          case BACKWARD:
             parentBounds.top = Math.max(
                 parentBounds.top,
                 childBounds.top - neighbor.alignmentOffset,
@@ -782,32 +800,32 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
             break;
           default:
             throw new Error(
-                'Unexpected node direction: ' + parsegraph_nameNodeDirection(dir),
+                'Unexpected node direction: ' + nameNodeDirection(dir),
             );
         }
       } else {
         // Node is part of a different paint group.
-        var neighbor = node.neighborAt(dir);
+        const neighbor = node.neighborAt(dir);
         switch (dir) {
-          case parsegraph_UPWARD:
+          case UPWARD:
             parentBounds.top = Math.max(
                 parentBounds.top,
                 parentSize.height() / 2 + neighbor.lineLength,
             );
             break;
-          case parsegraph_DOWNWARD:
+          case DOWNWARD:
             parentBounds.bottom = Math.max(
                 parentBounds.bottom,
                 parentSize.height() / 2 + neighbor.lineLength,
             );
             break;
-          case parsegraph_FORWARD:
+          case FORWARD:
             parentBounds.right = Math.max(
                 parentBounds.right,
                 parentSize.width() / 2 + neighbor.lineLength,
             );
             break;
-          case parsegraph_BACKWARD:
+          case BACKWARD:
             parentBounds.left = Math.max(
                 parentBounds.left,
                 parentSize.width() / 2 + neighbor.lineLength,
@@ -815,12 +833,14 @@ function parsegraph_calculatePaintGroupBounds(nodeRoot) {
             break;
           default:
             throw new Error(
-                'Unexpected node direction: ' + parsegraph_nameNodeDirection(dir),
+                'Unexpected node direction: ' + nameNodeDirection(dir),
             );
         }
       }
     }
   } while (node !== nodeRoot);
-  // console.log(nodeRoot, "Bounds in " + numNodes + " nodes", groupBounds[node._id]);
+  // console.log(
+  //   nodeRoot,
+  //   "Bounds in " + numNodes + " nodes", groupBounds[node._id]);
   return groupBounds[node._id];
 }
