@@ -1,12 +1,13 @@
-import parsegraph_TestSuite from '../TestSuite';
-import {parsegraph_getTimeInMillis, parsegraph_TIMEOUT} from '../date';
-import {parsegraph_FUZZINESS} from './settings';
-import {parsegraph_fuzzyEquals} from '../math';
+import TestSuite from '../TestSuite';
+import {getTimeInMillis, TIMEOUT} from '../date';
+import {FUZZINESS} from './settings';
+import {fuzzyEquals} from '../math';
 
-const parsegraph_DEFAULT_EXTENT_BOUNDS = 1;
-const parsegraph_NUM_EXTENT_BOUND_COMPONENTS = 2;
+const DEFAULT_EXTENT_BOUNDS = 1;
+const NUM_EXTENT_BOUND_COMPONENTS = 2;
+/* eslint-disable require-jsdoc, max-len  */
 
-export default function parsegraph_Extent(copy) {
+export default function Extent(copy) {
   if (copy !== undefined && copy._bounds) {
     this._offset = copy._offset;
     this._numBounds = copy._numBounds;
@@ -28,15 +29,15 @@ export default function parsegraph_Extent(copy) {
   }
 }
 
-parsegraph_Extent.prototype.setOffset = function(offset) {
+Extent.prototype.setOffset = function(offset) {
   this._offset = offset;
 };
 
-parsegraph_Extent.prototype.offset = function() {
+Extent.prototype.offset = function() {
   return this._offset;
 };
 
-parsegraph_Extent.prototype.forEach = function(func, thisArg) {
+Extent.prototype.forEach = function(func, thisArg) {
   if (arguments.length === 1 || thisArg === undefined) {
     thisArg = this;
   }
@@ -45,64 +46,64 @@ parsegraph_Extent.prototype.forEach = function(func, thisArg) {
   }
 };
 
-parsegraph_Extent.prototype.clone = function() {
-  return new parsegraph_Extent(this);
+Extent.prototype.clone = function() {
+  return new Extent(this);
 };
 
-parsegraph_Extent.prototype.clear = function() {
+Extent.prototype.clear = function() {
   this._numBounds = 0;
   this.invalidateBoundingValues();
 };
 
-parsegraph_Extent.prototype.numBounds = function() {
+Extent.prototype.numBounds = function() {
   return this._numBounds;
 };
 
-parsegraph_Extent.prototype.hasBounds = function() {
+Extent.prototype.hasBounds = function() {
   return this.numBounds() > 0;
 };
 
-parsegraph_Extent.prototype.boundLengthAt = function(index) {
+Extent.prototype.boundLengthAt = function(index) {
   return this._bounds[
-      parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+      NUM_EXTENT_BOUND_COMPONENTS *
       ((this._start + index) % this.boundCapacity())
   ];
 };
 
-parsegraph_Extent.prototype.boundSizeAt = function(index) {
+Extent.prototype.boundSizeAt = function(index) {
   return this._bounds[
-      parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+      NUM_EXTENT_BOUND_COMPONENTS *
       ((this._start + index) % this.boundCapacity()) +
       1
   ];
 };
 
-parsegraph_Extent.prototype.invalidateBoundingValues = function() {
+Extent.prototype.invalidateBoundingValues = function() {
   this._minSize = null;
   this._maxSize = null;
   this._totalLength = null;
 };
 
-parsegraph_Extent.prototype.setBoundLengthAt = function(index, length) {
+Extent.prototype.setBoundLengthAt = function(index, length) {
   this._bounds[
-      parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+      NUM_EXTENT_BOUND_COMPONENTS *
       ((this._start + index) % this.boundCapacity())
   ] = length;
   this.invalidateBoundingValues();
 };
 
-parsegraph_Extent.prototype.setBoundSizeAt = function(index, size) {
+Extent.prototype.setBoundSizeAt = function(index, size) {
   this._bounds[
-      parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+      NUM_EXTENT_BOUND_COMPONENTS *
       ((this._start + index) % this.boundCapacity()) +
       1
   ] = size;
   this.invalidateBoundingValues();
 };
 
-parsegraph_Extent.prototype.realloc = function(capacity) {
-  if (capacity < parsegraph_DEFAULT_EXTENT_BOUNDS) {
-    capacity = parsegraph_DEFAULT_EXTENT_BOUNDS;
+Extent.prototype.realloc = function(capacity) {
+  if (capacity < DEFAULT_EXTENT_BOUNDS) {
+    capacity = DEFAULT_EXTENT_BOUNDS;
   }
   const oldBounds = this._bounds;
   const oldCap = this.boundCapacity();
@@ -113,7 +114,7 @@ parsegraph_Extent.prototype.realloc = function(capacity) {
 
   // Change the capacity.
   this._bounds = new Float32Array(
-      parsegraph_NUM_EXTENT_BOUND_COMPONENTS * capacity,
+      NUM_EXTENT_BOUND_COMPONENTS * capacity,
   );
 
   if (oldBounds) {
@@ -121,18 +122,18 @@ parsegraph_Extent.prototype.realloc = function(capacity) {
       const frontBounds = this._start + this._numBounds - oldCap;
       // TODO See if this can be copied more efficiently, and if that matters.
       for (
-        var i = 0;
+        let i = 0;
         i <
-        parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+        NUM_EXTENT_BOUND_COMPONENTS *
           (this._numBounds - frontBounds);
         ++i
       ) {
         this._bounds[i] = oldBounds[this._start + i];
       }
       for (
-        var i = 0;
+        let i = 0;
         i <
-        parsegraph_NUM_EXTENT_BOUND_COMPONENTS *
+        NUM_EXTENT_BOUND_COMPONENTS *
           (this._numBounds - frontBounds);
         ++i
       ) {
@@ -141,8 +142,8 @@ parsegraph_Extent.prototype.realloc = function(capacity) {
     } else {
       // Can do it in a single copy.
       for (
-        var i = 0;
-        i < parsegraph_NUM_EXTENT_BOUND_COMPONENTS * this._numBounds;
+        let i = 0;
+        i < NUM_EXTENT_BOUND_COMPONENTS * this._numBounds;
         ++i
       ) {
         this._bounds[i] = oldBounds[this._start + i];
@@ -156,7 +157,7 @@ parsegraph_Extent.prototype.realloc = function(capacity) {
   return 0;
 };
 
-parsegraph_Extent.prototype.prependLS = function(length, size) {
+Extent.prototype.prependLS = function(length, size) {
   if (isNaN(length)) {
     throw new Error('Length must not be NaN');
   }
@@ -184,7 +185,7 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
 
   if (this.boundCapacity() == this.numBounds()) {
     // Completely full, so expand.
-    let newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
+    let newCap = DEFAULT_EXTENT_BOUNDS;
     if (this.boundCapacity() > 0) {
       newCap = 2 * this.boundCapacity();
     }
@@ -202,14 +203,14 @@ parsegraph_Extent.prototype.prependLS = function(length, size) {
   this.setBoundSizeAt(0, size);
 };
 
-parsegraph_Extent.prototype.boundCapacity = function() {
+Extent.prototype.boundCapacity = function() {
   if (!this._bounds) {
     return 0;
   }
-  return this._bounds.length / parsegraph_NUM_EXTENT_BOUND_COMPONENTS;
+  return this._bounds.length / NUM_EXTENT_BOUND_COMPONENTS;
 };
 
-parsegraph_Extent.prototype.appendLS = function(length, size) {
+Extent.prototype.appendLS = function(length, size) {
   if (isNaN(length)) {
     throw new Error('Length must not be NaN');
   }
@@ -218,8 +219,7 @@ parsegraph_Extent.prototype.appendLS = function(length, size) {
     return;
   }
   if (length < 0) {
-    let str;
-    str =
+    const str =
       'Non-positive bound lengths are not allowed, but ' +
       length +
       ' was given anyway.';
@@ -239,7 +239,7 @@ parsegraph_Extent.prototype.appendLS = function(length, size) {
 
   if (this.boundCapacity() == this.numBounds()) {
     // Completely full, so expand.
-    let newCap = parsegraph_DEFAULT_EXTENT_BOUNDS;
+    let newCap = DEFAULT_EXTENT_BOUNDS;
     if (this.boundCapacity() > 0) {
       newCap = 2 * this.boundCapacity();
     }
@@ -251,15 +251,15 @@ parsegraph_Extent.prototype.appendLS = function(length, size) {
   this.setBoundSizeAt(this.numBounds() - 1, size);
 };
 
-parsegraph_Extent.prototype.prependSL = function(size, length) {
+Extent.prototype.prependSL = function(size, length) {
   this.prependLS(length, size);
 };
 
-parsegraph_Extent.prototype.appendSL = function(size, length) {
+Extent.prototype.appendSL = function(size, length) {
   this.appendLS(length, size);
 };
 
-parsegraph_Extent.prototype.adjustSize = function(adjustment) {
+Extent.prototype.adjustSize = function(adjustment) {
   // Adjust the size of each bound.
   for (let i = 0; i < this.numBounds(); ++i) {
     const size = this.boundSizeAt(i);
@@ -270,7 +270,7 @@ parsegraph_Extent.prototype.adjustSize = function(adjustment) {
   }
 };
 
-parsegraph_Extent.prototype.simplify = function() {
+Extent.prototype.simplify = function() {
   let totalLength = 0;
   let maxSize = NaN;
   for (let i = 0; i < this.numBounds(); ++i) {
@@ -287,15 +287,15 @@ parsegraph_Extent.prototype.simplify = function() {
   this.appendLS(totalLength, maxSize);
 };
 
-parsegraph_Extent.prototype.sizeAt = function(offset) {
+Extent.prototype.sizeAt = function(offset) {
   // Do not allow negative offsets.
   if (offset < 0) {
-    throw parsegraph_createException(parsegraph_OFFSET_IS_NEGATIVE);
+    throw createException(OFFSET_IS_NEGATIVE);
   }
 
   // Determine the bound at the given offset.
   let pos = 0;
-  for (var i = 0; i < this.numBounds(); ++i) {
+  for (let i = 0; i < this.numBounds(); ++i) {
     const thisBoundLength = this.boundLengthAt(i);
     if (offset <= pos + thisBoundLength) {
       break;
@@ -311,27 +311,27 @@ parsegraph_Extent.prototype.sizeAt = function(offset) {
   return this.boundSizeAt(i);
 };
 
-parsegraph_Extent.prototype.combineBound = function(
+Extent.prototype.combineBound = function(
     newBoundStart,
     newBoundLength,
     newBoundSize,
 ) {
   // Create the extent to be merged.
-  const added = new parsegraph_Extent();
+  const added = new Extent();
   added.appendLS(newBoundLength, newBoundSize);
 
   // Copy the combined result into this extent.
   this.copyFrom(this.combinedExtent(added, newBoundStart));
 };
 
-parsegraph_Extent.prototype.copyFrom = function(from) {
+Extent.prototype.copyFrom = function(from) {
   this._numBounds = from._numBounds;
   this._bounds = from._bounds;
   from.clear();
   this.invalidateBoundingValues();
 };
 
-parsegraph_Extent.prototype.combineExtentAndSimplify = function(
+Extent.prototype.combineExtentAndSimplify = function(
     given,
     lengthAdjustment,
     sizeAdjustment,
@@ -366,7 +366,7 @@ parsegraph_Extent.prototype.combineExtentAndSimplify = function(
   );
 };
 
-parsegraph_Extent.prototype.combineExtent = function(
+Extent.prototype.combineExtent = function(
     given,
     lengthAdjustment,
     sizeAdjustment,
@@ -384,7 +384,7 @@ parsegraph_Extent.prototype.combineExtent = function(
   this.copyFrom(result);
 };
 
-parsegraph_Extent.prototype.combinedExtent = function(
+Extent.prototype.combinedExtent = function(
     given,
     lengthAdjustment,
     sizeAdjustment,
@@ -400,7 +400,7 @@ parsegraph_Extent.prototype.combinedExtent = function(
     scale = 1.0;
   }
   if (lengthAdjustment < 0) {
-    var result = given.combinedExtent(
+    const result = given.combinedExtent(
         this,
         -lengthAdjustment / scale,
         -sizeAdjustment / scale,
@@ -482,7 +482,7 @@ parsegraph_Extent.prototype.combinedExtent = function(
   };
 
   // Create the aggregate result.
-  var result = new parsegraph_Extent();
+  const result = new Extent();
 
   // Iterate over each bound.
   let combinedIteration = 0;
@@ -494,7 +494,7 @@ parsegraph_Extent.prototype.combinedExtent = function(
     const thisSize = getThisSize.call(this);
     const givenSize = getGivenSize.call(this);
 
-    var newSize;
+    let newSize;
     if (!isNaN(thisSize) && !isNaN(givenSize)) {
       newSize = Math.max(thisSize, givenSize);
     } else if (!isNaN(thisSize)) {
@@ -556,7 +556,7 @@ parsegraph_Extent.prototype.combinedExtent = function(
   return result;
 };
 
-parsegraph_Extent.prototype.scale = function(factor) {
+Extent.prototype.scale = function(factor) {
   this.forEach(function(length, size, i) {
     this.setBoundLengthAt(i, length * factor);
     if (!isNaN(this.boundSizeAt(i))) {
@@ -565,7 +565,7 @@ parsegraph_Extent.prototype.scale = function(factor) {
   }, this);
 };
 
-parsegraph_Extent.prototype.separation = function(
+Extent.prototype.separation = function(
     given,
     positionAdjustment,
     allowAxisOverlap,
@@ -594,7 +594,7 @@ parsegraph_Extent.prototype.separation = function(
   // The position of given. This is in this node's space.
   let givenPosition = 0;
 
-  /**
+  /*
    * Moves the iterator for this extent to its next bound.
    *
    * The iterator is just a fancy counter. Both the position
@@ -621,7 +621,7 @@ parsegraph_Extent.prototype.separation = function(
     return this.boundSizeAt(thisBound);
   };
 
-  /**
+  /*
    * Moves the iterator for the given extent to the next bound.
    *
    * The iterator is just a fancy counter. Both the position
@@ -654,7 +654,7 @@ parsegraph_Extent.prototype.separation = function(
     ) {
       // If we don't allow axis overlap, then be sure to include these bounds
       // that are being skipped.
-      var boundSeparation = givenBoundSize();
+      const boundSeparation = givenBoundSize();
       if (
         !allowAxisOverlap &&
         !isNaN(boundSeparation) &&
@@ -670,7 +670,7 @@ parsegraph_Extent.prototype.separation = function(
       !thisAtEnd() &&
       thisPosition + this.boundLengthAt(thisBound) <= positionAdjustment
     ) {
-      var boundSeparation = thisBoundSize.call(this);
+      const boundSeparation = thisBoundSize.call(this);
       if (
         !allowAxisOverlap &&
         !isNaN(boundSeparation) &&
@@ -689,8 +689,8 @@ parsegraph_Extent.prototype.separation = function(
     // console.log("This bound size: " + this.boundSizeAt(thisBound));
     // console.log("Given bound size: " + givenBoundSize());
     const thisSize = this.boundSizeAt(thisBound);
-    var givenSize = givenBoundSize();
-    var boundSeparation;
+    const givenSize = givenBoundSize();
+    let boundSeparation;
     if (!isNaN(thisSize) && !isNaN(givenSize)) {
       boundSeparation = thisSize + givenSize;
     } else if (!allowAxisOverlap) {
@@ -742,13 +742,13 @@ parsegraph_Extent.prototype.separation = function(
   if (!allowAxisOverlap) {
     // Calculate the separation between the remaining bounds of given and
     // the separation boundary.
-    const startTime = parsegraph_getTimeInMillis();
+    const startTime = getTimeInMillis();
     while (!givenAtEnd()) {
-      if (parsegraph_getTimeInMillis() - startTime > parsegraph_TIMEOUT) {
+      if (getTimeInMillis() - startTime > TIMEOUT) {
         throw new Error('Extent separation timed out');
       }
 
-      var givenSize = given.boundSizeAt(givenBound);
+      const givenSize = given.boundSizeAt(givenBound);
       if (!isNaN(givenSize)) {
         extentSeparation = Math.max(
             extentSeparation,
@@ -762,7 +762,7 @@ parsegraph_Extent.prototype.separation = function(
   return extentSeparation;
 };
 
-parsegraph_Extent.prototype.boundingValues = function(outVal) {
+Extent.prototype.boundingValues = function(outVal) {
   if (!outVal) {
     outVal = [null, null, null];
   }
@@ -802,7 +802,7 @@ parsegraph_Extent.prototype.boundingValues = function(outVal) {
   return outVal;
 };
 
-parsegraph_Extent.prototype.equals = function(other, fuzziness) {
+Extent.prototype.equals = function(other, fuzziness) {
   // Exit quickly if we are comparing with ourselves.
   if (this === other) {
     return true;
@@ -816,10 +816,10 @@ parsegraph_Extent.prototype.equals = function(other, fuzziness) {
   // Compare the bounds for equality.
   for (let i = 0; i < this.numBounds(); ++i) {
     if (
-      !parsegraph_fuzzyEquals(
+      !fuzzyEquals(
           this.boundLengthAt(i),
           other.boundLengthAt(i),
-          parsegraph_FUZZINESS,
+          FUZZINESS,
       )
     ) {
       return false;
@@ -835,10 +835,10 @@ parsegraph_Extent.prototype.equals = function(other, fuzziness) {
       return false;
     }
     if (
-      !parsegraph_fuzzyEquals(
+      !fuzzyEquals(
           this.boundSizeAt(i),
           other.boundSizeAt(i),
-          parsegraph_FUZZINESS,
+          FUZZINESS,
       )
     ) {
       return false;
@@ -847,14 +847,14 @@ parsegraph_Extent.prototype.equals = function(other, fuzziness) {
   return true;
 };
 
-parsegraph_Extent.prototype.dump = function(message) {
+Extent.prototype.dump = function(message) {
   if (message !== undefined) {
-    parsegraph_log(message);
+    log(message);
   }
 
   let offset = 0;
   for (let i = 0; i < this.numBounds(); ++i) {
-    parsegraph_log(
+    log(
         '' +
         offset +
         ': [length=' +
@@ -867,9 +867,9 @@ parsegraph_Extent.prototype.dump = function(message) {
   }
 };
 
-parsegraph_Extent.prototype.toDom = function(message) {
+Extent.prototype.toDom = function(message) {
   const rv = document.createElement('table');
-  rv.className = 'parsegraph_Extent';
+  rv.className = 'Extent';
 
   if (message !== undefined) {
     const titleRow = document.createElement('tr');
@@ -908,14 +908,14 @@ parsegraph_Extent.prototype.toDom = function(message) {
   return rv;
 };
 
-export function parsegraph_createExtent(copy) {
-  return new parsegraph_Extent(copy);
+export function createExtent(copy) {
+  return new Extent(copy);
 }
 
-const parsegraph_Extent_Tests = new parsegraph_TestSuite('parsegraph_Extent');
+const extentTests = new TestSuite('Extent');
 
-parsegraph_Extent_Tests.addTest('parsegraph_Extent.simplify', function() {
-  const extent = new parsegraph_Extent();
+extentTests.addTest('Extent.simplify', function() {
+  const extent = new Extent();
   extent.appendLS(10, 20);
   extent.appendLS(5, 20);
   extent.simplify();
@@ -924,8 +924,8 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.simplify', function() {
   }
 });
 
-parsegraph_Extent_Tests.addTest('parsegraph_Extent.numBounds', function() {
-  const extent = new parsegraph_Extent();
+extentTests.addTest('Extent.numBounds', function() {
+  const extent = new Extent();
   if (extent.numBounds() !== 0) {
     return 'Extent must begin with an empty numBounds.';
   }
@@ -940,9 +940,9 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.numBounds', function() {
   }
 });
 
-parsegraph_Extent_Tests.addTest('parsegraph_Extent.separation', function() {
-  const forwardExtent = new parsegraph_Extent();
-  const backwardExtent = new parsegraph_Extent();
+extentTests.addTest('Extent.separation', function() {
+  const forwardExtent = new Extent();
+  const backwardExtent = new Extent();
 
   const testSeparation = function(expected) {
     return (
@@ -983,11 +983,11 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.separation', function() {
   }
 });
 
-parsegraph_Extent_Tests.addTest(
-    'parsegraph_Extent.Simple combinedExtent',
+extentTests.addTest(
+    'Extent.Simple combinedExtent',
     function(resultDom) {
-      const rootNode = new parsegraph_Extent();
-      const forwardNode = new parsegraph_Extent();
+      const rootNode = new Extent();
+      const forwardNode = new Extent();
 
       rootNode.appendLS(50, 25);
       forwardNode.appendLS(12, 6);
@@ -995,7 +995,7 @@ parsegraph_Extent_Tests.addTest(
 
       const combined = rootNode.combinedExtent(forwardNode, 0, separation);
 
-      const expected = new parsegraph_Extent();
+      const expected = new Extent();
       expected.appendLS(12, separation + 6);
       expected.appendLS(38, 25);
 
@@ -1007,11 +1007,11 @@ parsegraph_Extent_Tests.addTest(
     },
 );
 
-parsegraph_Extent_Tests.addTest('parsegraph_Extent.equals', function(
+extentTests.addTest('Extent.equals', function(
     resultDom,
 ) {
-  const rootNode = new parsegraph_Extent();
-  const forwardNode = new parsegraph_Extent();
+  const rootNode = new Extent();
+  const forwardNode = new Extent();
 
   rootNode.appendLS(10, 10);
   rootNode.appendLS(10, NaN);
@@ -1026,11 +1026,11 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.equals', function(
   }
 });
 
-parsegraph_Extent_Tests.addTest(
-    'parsegraph_Extent.combinedExtent with NaN',
+extentTests.addTest(
+    'Extent.combinedExtent with NaN',
     function(resultDom) {
-      const rootNode = new parsegraph_Extent();
-      const forwardNode = new parsegraph_Extent();
+      const rootNode = new Extent();
+      const forwardNode = new Extent();
 
       rootNode.appendLS(50, 25);
 
@@ -1048,7 +1048,7 @@ parsegraph_Extent_Tests.addTest(
 
       const combined = rootNode.combinedExtent(forwardNode, 0, separation);
 
-      const expected = new parsegraph_Extent();
+      const expected = new Extent();
       expected.appendLS(10, 25);
       expected.appendLS(30, 35);
       expected.appendLS(10, 25);
@@ -1061,11 +1061,11 @@ parsegraph_Extent_Tests.addTest(
     },
 );
 
-parsegraph_Extent_Tests.addTest('parsegraph_Extent.combinedExtent', function(
+extentTests.addTest('Extent.combinedExtent', function(
     resultDom,
 ) {
-  const rootNode = new parsegraph_Extent();
-  const forwardNode = new parsegraph_Extent();
+  const rootNode = new Extent();
+  const forwardNode = new Extent();
 
   rootNode.appendLS(50, 25);
   forwardNode.appendLS(12, 6);
@@ -1073,7 +1073,7 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.combinedExtent', function(
 
   const combined = rootNode.combinedExtent(forwardNode, 25 - 6, separation);
 
-  const expected = new parsegraph_Extent();
+  const expected = new Extent();
   expected.appendLS(19, 25);
   expected.appendLS(12, separation + 6);
   expected.appendLS(19, 25);
@@ -1085,7 +1085,7 @@ parsegraph_Extent_Tests.addTest('parsegraph_Extent.combinedExtent', function(
   }
 });
 
-export function parsegraph_checkExtentsEqual(
+export function checkExtentsEqual(
     caret,
     direction,
     expected,
@@ -1097,14 +1097,14 @@ export function parsegraph_checkExtentsEqual(
   if (resultDom) {
     resultDom.appendChild(
         expected.toDom(
-            'Expected ' + parsegraph_nameNodeDirection(direction) + ' extent',
+            'Expected ' + nameNodeDirection(direction) + ' extent',
         ),
     );
     resultDom.appendChild(
         caret
             .node()
             .extentsAt(direction)
-            .toDom('Actual ' + parsegraph_nameNodeDirection(direction) + ' extent'),
+            .toDom('Actual ' + nameNodeDirection(direction) + ' extent'),
     );
     resultDom.appendChild(
         document.createTextNode(
