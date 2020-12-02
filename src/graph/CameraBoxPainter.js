@@ -1,15 +1,16 @@
-import {parsegraph_defaultFont} from './settings';
+import {defaultFont} from './settings';
 import {timediffMs} from '../timing';
 import Color from './Color';
-import parsegraph_Label from './Label';
-import parsegraph_GlyphPainter from './GlyphPainter';
+import Label from './Label';
+import GlyphPainter from './GlyphPainter';
 import BlockPainter from './BlockPainter';
+/* eslint-disable require-jsdoc */
 
-export default function parsegraph_CameraBoxPainter(window) {
+export default function CameraBoxPainter(window) {
   this._blockPainter = new BlockPainter(window);
-  this._glyphPainter = new parsegraph_GlyphPainter(
+  this._glyphPainter = new GlyphPainter(
       window,
-      parsegraph_defaultFont(),
+      defaultFont(),
   );
 
   this._borderColor = new Color(1, 1, 1, 0.1);
@@ -18,7 +19,7 @@ export default function parsegraph_CameraBoxPainter(window) {
   this._fontSize = 24;
 }
 
-parsegraph_CameraBoxPainter.prototype.contextChanged = function(isLost) {
+CameraBoxPainter.prototype.contextChanged = function(isLost) {
   if (!isLost) {
     return;
   }
@@ -26,12 +27,12 @@ parsegraph_CameraBoxPainter.prototype.contextChanged = function(isLost) {
   this._glyphPainter.contextChanged(isLost);
 };
 
-parsegraph_CameraBoxPainter.prototype.clear = function() {
+CameraBoxPainter.prototype.clear = function() {
   this._glyphPainter.clear();
   this._blockPainter.clear();
 };
 
-parsegraph_CameraBoxPainter.prototype.drawBox = function(
+CameraBoxPainter.prototype.drawBox = function(
     name,
     rect,
     scale,
@@ -67,7 +68,7 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(
       scale,
   );
   const font = this._glyphPainter.font();
-  const label = new parsegraph_Label(font);
+  const label = new Label(font);
   label.setText(name);
   const lw = (label.width() * (this._fontSize / font.fontSize())) / scale;
   const lh = (label.height() * (this._fontSize / font.fontSize())) / scale;
@@ -97,7 +98,7 @@ parsegraph_CameraBoxPainter.prototype.drawBox = function(
   return interp > 0;
 };
 
-parsegraph_CameraBoxPainter.prototype.render = function(world, scale) {
+CameraBoxPainter.prototype.render = function(world, scale) {
   this._blockPainter.render(world, scale);
   this._glyphPainter.render(world, scale);
 };

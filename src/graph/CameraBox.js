@@ -1,7 +1,8 @@
-import parsegraph_CameraBoxPainter from './CameraBoxPainter';
-import parsegraph_Rect from './Rect';
+import CameraBoxPainter from './CameraBoxPainter';
+import Rect from './Rect';
+/* eslint-disable require-jsdoc */
 
-export default function parsegraph_CameraBox() {
+export default function CameraBox() {
   // Camera boxes.
   this._showCameraBoxes = true;
   this._cameraBoxDirty = true;
@@ -13,7 +14,7 @@ export default function parsegraph_CameraBox() {
   this._numBoxes = 0;
 }
 
-parsegraph_CameraBox.prototype.contextChanged = function(isLost, window) {
+CameraBox.prototype.contextChanged = function(isLost, window) {
   this._cameraBoxDirty = true;
   if (!isLost) {
     return;
@@ -25,15 +26,15 @@ parsegraph_CameraBox.prototype.contextChanged = function(isLost, window) {
   }
 };
 
-parsegraph_CameraBox.prototype.needsRepaint = function() {
+CameraBox.prototype.needsRepaint = function() {
   return this._cameraBoxDirty;
 };
 
-parsegraph_CameraBox.prototype.glyphAtlas = function() {
+CameraBox.prototype.glyphAtlas = function() {
   return this._glyphAtlas;
 };
 
-parsegraph_CameraBox.prototype.setCameraMouse = function(name, x, y) {
+CameraBox.prototype.setCameraMouse = function(name, x, y) {
   if (!(name in this._cameraBoxes)) {
     ++this._numBoxes;
     this._cameraBoxes[name] = {};
@@ -45,7 +46,7 @@ parsegraph_CameraBox.prototype.setCameraMouse = function(name, x, y) {
   this._viewport.scheduleRepaint();
 };
 
-parsegraph_CameraBox.prototype.setCamera = function(name, camera) {
+CameraBox.prototype.setCamera = function(name, camera) {
   let oldMouseX;
   let oldMouseY;
   if (!(name in this._cameraBoxes)) {
@@ -62,7 +63,7 @@ parsegraph_CameraBox.prototype.setCamera = function(name, camera) {
   this._viewport.scheduleRepaint();
 };
 
-parsegraph_CameraBox.prototype.removeCamera = function(name) {
+CameraBox.prototype.removeCamera = function(name) {
   if (!(name in this._cameraBoxes)) {
     return;
   }
@@ -72,47 +73,49 @@ parsegraph_CameraBox.prototype.removeCamera = function(name) {
   this.scheduleRepaint();
 };
 
-parsegraph_CameraBox.prototype.scheduleRepaint = function() {
+CameraBox.prototype.scheduleRepaint = function() {
   this._graph.scheduleRepaint();
 };
 
-parsegraph_CameraBox.prototype.paint = function(window) {
+CameraBox.prototype.paint = function(window) {
   // console.log("Repainting camera boxes");
   let needsRepaint = false;
   if (this._showCameraBoxes && this._cameraBoxDirty) {
     let painter = this._painters[window.id()];
     if (!painter) {
-      painter = new parsegraph_CameraBoxPainter(window);
+      painter = new CameraBoxPainter(window);
       this._painters[window.id()] = painter;
     } else {
       painter.clear();
     }
     painter._blockPainter.initBuffer(this._numBoxes);
-    const rect = new parsegraph_Rect();
+    const rect = new Rect();
     for (const name in this._cameraBoxes) {
-      const cameraBox = this._cameraBoxes[name];
-      const hw = cameraBox.width / cameraBox.scale;
-      const hh = cameraBox.height / cameraBox.scale;
-      rect.setX(-cameraBox.cameraX + hw / 2);
-      rect.setY(-cameraBox.cameraY + hh / 2);
-      rect.setWidth(cameraBox.width / cameraBox.scale);
-      rect.setHeight(cameraBox.height / cameraBox.scale);
-      needsRepaint =
-        painter.drawBox(
-            name,
-            rect,
-            cameraBox.scale,
-            cameraBox.mouseX,
-            cameraBox.mouseY,
-            cameraBox.when,
-        ) || needsRepaint;
+      if (Object.prototype.hasOwnProperty.call(this._cameraBoxes, name)) {
+        const cameraBox = this._cameraBoxes[name];
+        const hw = cameraBox.width / cameraBox.scale;
+        const hh = cameraBox.height / cameraBox.scale;
+        rect.setX(-cameraBox.cameraX + hw / 2);
+        rect.setY(-cameraBox.cameraY + hh / 2);
+        rect.setWidth(cameraBox.width / cameraBox.scale);
+        rect.setHeight(cameraBox.height / cameraBox.scale);
+        needsRepaint =
+          painter.drawBox(
+              name,
+              rect,
+              cameraBox.scale,
+              cameraBox.mouseX,
+              cameraBox.mouseY,
+              cameraBox.when,
+          ) || needsRepaint;
+      }
     }
     this._cameraBoxDirty = needsRepaint;
   }
   return needsRepaint;
 };
 
-parsegraph_CameraBox.prototype.render = function(window, camera) {
+CameraBox.prototype.render = function(window, camera) {
   if (!this._showCameraBoxes) {
     return true;
   }

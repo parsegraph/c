@@ -14,27 +14,28 @@ import Node, {
   isVerticalDirection,
   getDirectionAxis,
 } from './Node';
-import {parsegraph_defaultFont, parsegraph_SHRINK_SCALE} from './settings';
+import {defaultFont, SHRINK_SCALE} from './settings';
 import {
-  parsegraph_BLOCK_MATH_STYLE,
-  parsegraph_SLOT_MATH_STYLE,
+  BLOCK_MATH_STYLE,
+  SLOT_MATH_STYLE,
 } from './NodeStyle';
-import parsegraph_TestSuite from '../TestSuite';
+import TestSuite from '../TestSuite';
 import {
-  parsegraph_createException,
-  parsegraph_NO_NODE_FOUND,
+  createException,
+  NO_NODE_FOUND,
 } from './Exception';
-import parsegraph_generateID from '../id';
-import parsegraph_Font from './Font';
-import parsegraph_World from './World';
+import generateID from '../id';
+import Font from './Font';
+import World from './World';
+/* eslint-disable require-jsdoc */
 
 export default class Caret {
   _nodeRoot: Node;
   _mathMode: boolean;
-  _world: parsegraph_World;
+  _world: World;
   _nodes: Node[];
   _savedNodes: { [key: string]: Node };
-  _font: parsegraph_Font;
+  _font: Font;
 
   constructor(...args: any[]) {
     if (arguments.length === 0) {
@@ -53,7 +54,7 @@ export default class Caret {
     // A mapping of nodes to their saved names.
     this._savedNodes = null;
 
-    this._font = args.length > 1 ? args[1] : parsegraph_defaultFont();
+    this._font = args.length > 1 ? args[1] : defaultFont();
     this._world = null;
   }
 
@@ -67,10 +68,10 @@ export default class Caret {
     if (mathMode) {
       switch (curr.type()) {
         case Type.BLOCK:
-          curr.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+          curr.setBlockStyle(BLOCK_MATH_STYLE);
           break;
         case Type.SLOT:
-          curr.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+          curr.setBlockStyle(SLOT_MATH_STYLE);
           break;
       }
     }
@@ -80,11 +81,11 @@ export default class Caret {
     return this._mathMode;
   }
 
-  setFont(font: parsegraph_Font): void {
+  setFont(font: Font): void {
     this._font = font;
   }
 
-  font(): parsegraph_Font {
+  font(): Font {
     if (!this._font) {
       throw new Error('Caret does not have a Font');
     }
@@ -93,7 +94,7 @@ export default class Caret {
 
   node(): Node {
     if (this._nodes.length === 0) {
-      throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
+      throw createException(NO_NODE_FOUND);
     }
     return this._nodes[this._nodes.length - 1];
   }
@@ -127,10 +128,10 @@ export default class Caret {
     if (this._mathMode) {
       switch (newType) {
         case Type.BLOCK:
-          created.setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+          created.setBlockStyle(BLOCK_MATH_STYLE);
           break;
         case Type.SLOT:
-          created.setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+          created.setBlockStyle(SLOT_MATH_STYLE);
           break;
       }
     }
@@ -180,7 +181,7 @@ export default class Caret {
     }
   }
 
-  setWorld(world: parsegraph_World): void {
+  setWorld(world: World): void {
     this._world = world;
   }
 
@@ -265,7 +266,7 @@ export default class Caret {
     toDirection = readDirection(toDirection);
     const dest: Node = this.node().nodeAt(toDirection);
     if (!dest) {
-      throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
+      throw createException(NO_NODE_FOUND);
     }
     this._nodes[this._nodes.length - 1] = dest;
   }
@@ -276,7 +277,7 @@ export default class Caret {
 
   save(id?: string): string {
     if (id === undefined) {
-      id = parsegraph_generateID();
+      id = generateID();
     }
     if (!this._savedNodes) {
       this._savedNodes = {};
@@ -318,7 +319,7 @@ export default class Caret {
 
   pop(): void {
     if (this._nodes.length <= 1) {
-      throw parsegraph_createException(parsegraph_NO_NODE_FOUND);
+      throw createException(NO_NODE_FOUND);
     }
     this._nodes.pop();
   }
@@ -350,10 +351,10 @@ export default class Caret {
     if (this._mathMode) {
       switch (withType) {
         case Type.BLOCK:
-          this.node().setBlockStyle(parsegraph_BLOCK_MATH_STYLE);
+          this.node().setBlockStyle(BLOCK_MATH_STYLE);
           break;
         case Type.SLOT:
-          this.node().setBlockStyle(parsegraph_SLOT_MATH_STYLE);
+          this.node().setBlockStyle(SLOT_MATH_STYLE);
           break;
       }
     }
@@ -429,7 +430,7 @@ export default class Caret {
       node = node.nodeAt(readDirection(inDirection));
     }
     if (node) {
-      node.setScale(parsegraph_SHRINK_SCALE);
+      node.setScale(SHRINK_SCALE);
     }
   }
 
@@ -527,7 +528,7 @@ export default class Caret {
     node.setSelected(false);
   }
 
-  /**
+  /*
    * Returns the initially provided node.
    */
   root(): Node {
@@ -535,8 +536,8 @@ export default class Caret {
   }
 }
 
-const Caret_Tests = new parsegraph_TestSuite('parsegraph.Caret');
-Caret_Tests.addTest('new Caret', function() {
+const caretTests = new TestSuite('parsegraph.Caret');
+caretTests.addTest('new Caret', function() {
   let car = new Caret('s');
   const n = new Node(Type.BLOCK);
   car = new Caret(n);
@@ -547,7 +548,7 @@ Caret_Tests.addTest('new Caret', function() {
   }
 });
 
-Caret_Tests.addTest('Caret.onKey', function() {
+caretTests.addTest('Caret.onKey', function() {
   const car = new Caret();
   car.onKey(function() {
     console.log('Key pressed');
