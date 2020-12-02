@@ -1,4 +1,6 @@
-function createDay(
+/* eslint-disable require-jsdoc */
+
+export default function createDay(
     i,
     d,
     currentDate,
@@ -7,35 +9,35 @@ function createDay(
     onUpdateNote,
     onUpdateNoteThisArg,
 ) {
-  const names = parsegraph_getListOfDays();
+  const names = getListOfDays();
   const weekday = names[i];
 
   const futureStyleName = 'b';
   const pastStyleName = 's';
 
-  const noteStyle = parsegraph_copyStyle(parsegraph_BLOCK);
+  const noteStyle = copyStyle(BLOCK);
   noteStyle.minWidth = 500;
   noteStyle.minHeight = 200;
-  noteStyle.backgroundColor = new parsegraph_Color(1, 1, 0.9);
+  noteStyle.backgroundColor = new Color(1, 1, 0.9);
 
-  const pastNoteStyle = parsegraph_copyStyle(parsegraph_SLOT);
+  const pastNoteStyle = copyStyle(SLOT);
   pastNoteStyle.minWidth = 500;
   pastNoteStyle.minHeight = 200;
 
-  const workNoteStyle = parsegraph_copyStyle(parsegraph_BLOCK);
+  const workNoteStyle = copyStyle(BLOCK);
   workNoteStyle.minWidth = 500;
   workNoteStyle.minHeight = 200;
-  workNoteStyle.backgroundColor = new parsegraph_Color(0.9, 1, 1);
+  workNoteStyle.backgroundColor = new Color(0.9, 1, 1);
 
-  const car = new parsegraph_Caret('bu');
+  const car = new Caret('bu');
   car.shrink();
 
   const isWorkday = weekday !== 'Sunday' && weekday !== 'Saturday';
   for (let h = 0; h < 24; ++h) {
     if (h > 0) {
-      car.spawnMove(parsegraph_DOWNWARD, parsegraph_BUD);
+      car.spawnMove(DOWNWARD, BUD);
     }
-    car.spawnMove(parsegraph_BACKWARD, futureStyleName);
+    car.spawnMove(BACKWARD, futureStyleName);
     switch (h) {
       case 0:
         car.label('Midnight');
@@ -46,11 +48,11 @@ function createDay(
       default:
         car.label((h % 12) + (h > 12 ? 'PM' : 'AM'));
     }
-    if (d && parsegraph_datesEqual(d, currentDate)) {
+    if (d && datesEqual(d, currentDate)) {
       if (h < currentDate.getHours()) {
         car.replace(pastStyleName);
       }
-    } else if (d && !parsegraph_dateGreater(d, currentDate)) {
+    } else if (d && !dateGreater(d, currentDate)) {
       car.replace(pastStyleName);
     }
     car.move('f');
@@ -78,7 +80,7 @@ function createDay(
           }, car.node());
       car.node().setValue(h);
     }
-    if (d && parsegraph_datesEqual(d, currentDate)) {
+    if (d && datesEqual(d, currentDate)) {
       if (h < currentDate.getHours()) {
         car.node().setBlockStyle(pastNoteStyle);
       }
@@ -89,30 +91,30 @@ function createDay(
   return car.root();
 }
 
-function parsegraph_CalendarWidget(belt, world) {
+export default function CalendarWidget(belt, world) {
   this._belt = belt;
   this._world = world;
 }
 
-parsegraph_CalendarWidget.prototype.noteID = function(d, h) {
+CalendarWidget.prototype.noteID = function(d, h) {
   return (
-    'CalendarWidget-' + parsegraph_outputDate(d, true, false, false) + '@' + h
+    'CalendarWidget-' + outputDate(d, true, false, false) + '@' + h
   );
 };
 
-parsegraph_CalendarWidget.prototype.scheduleUpdate = function() {
+CalendarWidget.prototype.scheduleUpdate = function() {
   this._belt.scheduleUpdate();
   this._world.scheduleRepaint();
 };
 
-parsegraph_CalendarWidget.prototype.updateNote = function(d, h, note) {
+CalendarWidget.prototype.updateNote = function(d, h, note) {
   // console.log(d + " " + note);
   localStorage.setItem(this.noteID(d, h), note);
   // console.log(this.noteID(d, h));
   this.scheduleUpdate();
 };
 
-parsegraph_CalendarWidget.prototype.getNote = function(d, h) {
+CalendarWidget.prototype.getNote = function(d, h) {
   const rv = localStorage.getItem(this.noteID(d, h));
   if (rv === null) {
     return '';
@@ -120,21 +122,21 @@ parsegraph_CalendarWidget.prototype.getNote = function(d, h) {
   return rv;
 };
 
-parsegraph_CalendarWidget.prototype.pastStyleName = function() {
+CalendarWidget.prototype.pastStyleName = function() {
   return 'slot';
 };
 
-parsegraph_CalendarWidget.prototype.futureStyleName = function() {
+CalendarWidget.prototype.futureStyleName = function() {
   return 'block';
 };
 
-parsegraph_CalendarWidget.prototype.createWeek = function(
+CalendarWidget.prototype.createWeek = function(
     d,
     currentDate,
     firstWeekOfYear,
     lastWeekOfYear,
 ) {
-  const caret = new parsegraph_Caret(parsegraph_BUD);
+  const caret = new Caret(BUD);
 
   if (firstWeekOfYear && lastWeekOfYear) {
     throw new Error(
@@ -152,12 +154,12 @@ parsegraph_CalendarWidget.prototype.createWeek = function(
           this.pastStyleName() :
           this.futureStyleName(),
       );
-      d = parsegraph_nextDay(d);
+      d = nextDay(d);
     }
   }
 
-  const dayNames = parsegraph_getListOfDays();
-  const monthNames = parsegraph_getListOfMonths();
+  const dayNames = getListOfDays();
+  const monthNames = getListOfMonths();
 
   const year = d.getFullYear();
 
@@ -171,33 +173,36 @@ parsegraph_CalendarWidget.prototype.createWeek = function(
       if (thisMonth === -1) {
         thisMonth = d.getMonth();
         if (d.getDate() === 1) {
-          weekLabel = parsegraph_outputMonth(d);
+          weekLabel = outputMonth(d);
         }
       } else if (thisMonth !== d.getMonth()) {
         // Changed months.
-        weekLabel = parsegraph_outputMonth(d);
+        weekLabel = outputMonth(d);
       }
     }
 
-    if (parsegraph_dateGreater(d, currentDate)) {
+    if (dateGreater(d, currentDate)) {
       caret.replace(this.futureStyleName());
-    } else if (parsegraph_datesEqual(d, currentDate)) {
-      const bColor = parsegraph_style(parsegraph_BLOCK).backgroundColor;
-      const sColor = parsegraph_style(parsegraph_SLOT).backgroundColor;
+    } else if (datesEqual(d, currentDate)) {
+      const bColor = style(BLOCK).backgroundColor;
+      const sColor = style(SLOT).backgroundColor;
     } else {
-      // console.log(d + " is less than " + currentDate + ", so it stays a block.");
+      // console.log(
+      //   d +
+      //   " is less than " +
+      //   currentDate + ", so it stays a block.");
     }
 
     if (!lastWeekOfYear || d.getFullYear() === year) {
       if (
         currentDate.getFullYear() === d.getFullYear() &&
-        (parsegraph_datesEqual(
-            parsegraph_getFirstDayOfWeek(d),
-            parsegraph_getFirstDayOfWeek(currentDate),
+        (datesEqual(
+            getFirstDayOfWeek(d),
+            getFirstDayOfWeek(currentDate),
         ) ||
-          parsegraph_datesEqual(
-              parsegraph_getFirstDayOfWeek(parsegraph_nextWeek(currentDate)),
-              parsegraph_getFirstDayOfWeek(d),
+          datesEqual(
+              getFirstDayOfWeek(nextWeek(currentDate)),
+              getFirstDayOfWeek(d),
           ))
       ) {
         // console.log(d.getFullYear() + " " + currentDate.getFullYear());
@@ -232,7 +237,7 @@ parsegraph_CalendarWidget.prototype.createWeek = function(
     }
 
     // Advance to the next day.
-    d = parsegraph_nextDay(d);
+    d = nextDay(d);
   } while (d.getDay() !== 0);
 
   caret.moveToRoot();
@@ -255,10 +260,10 @@ parsegraph_CalendarWidget.prototype.createWeek = function(
   return caret.node();
 };
 
-parsegraph_CalendarWidget.prototype.createYear = function(year, currentDate) {
-  const caret = new parsegraph_Caret(parsegraph_BUD);
+CalendarWidget.prototype.createYear = function(year, currentDate) {
+  const caret = new Caret(BUD);
 
-  let d = parsegraph_getFirstDayOfWeek(new Date(year, 0, 1));
+  let d = getFirstDayOfWeek(new Date(year, 0, 1));
   for (let i = 0; i <= 52; ++i) {
     if (d.getFullYear() > year) {
       break;
@@ -279,20 +284,20 @@ parsegraph_CalendarWidget.prototype.createYear = function(year, currentDate) {
     }
 
     caret.connect(
-        parsegraph_DOWNWARD,
+        DOWNWARD,
         this.createWeek(d, currentDate, i === 0, i === 52),
     );
-    caret.move(parsegraph_DOWNWARD);
+    caret.move(DOWNWARD);
     if (i === 0) {
-      if (!caret.has(parsegraph_BACKWARD)) {
+      if (!caret.has(BACKWARD)) {
         caret.spawnMove(
-            parsegraph_BACKWARD,
+            BACKWARD,
           year === currentDate.getFullYear() ?
-            parsegraph_BLOCK :
-            parsegraph_SLOT,
+            BLOCK :
+            SLOT,
         );
       } else {
-        caret.move(parsegraph_BACKWARD);
+        caret.move(BACKWARD);
       }
       caret.replace(
         year <= currentDate.getFullYear() ?
@@ -300,15 +305,15 @@ parsegraph_CalendarWidget.prototype.createYear = function(year, currentDate) {
           this.pastStyleName(),
       );
       caret.label('January ' + year);
-      caret.move(parsegraph_FORWARD);
+      caret.move(FORWARD);
     }
-    d = parsegraph_nextWeek(d);
+    d = nextWeek(d);
   }
   caret.moveToRoot();
   return caret.node();
 };
 
-parsegraph_CalendarWidget.prototype.createCalendar = function(
+CalendarWidget.prototype.createCalendar = function(
     currentDate,
     previousYears,
     nextYears,
@@ -328,7 +333,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(
   }
 
   const year = currentDate.getFullYear();
-  const caret = new parsegraph_Caret(parsegraph_SLOT);
+  const caret = new Caret(SLOT);
   caret.label(year);
   caret.align('d', 'c');
   caret.connect('d', this.createYear(year, currentDate));
@@ -336,7 +341,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(
   caret.crease();
 
   caret.push();
-  for (var i = 1; i <= previousYears; ++i) {
+  for (let i = 1; i <= previousYears; ++i) {
     caret.spawnMove('b', this.pastStyleName());
     caret.pull('d');
     caret.label(year - i);
@@ -347,7 +352,7 @@ parsegraph_CalendarWidget.prototype.createCalendar = function(
   caret.pop();
 
   caret.push();
-  for (var i = 1; i <= nextYears; ++i) {
+  for (let i = 1; i <= nextYears; ++i) {
     caret.spawnMove('f', this.futureStyleName());
     caret.pull('d');
     caret.label(year + i);

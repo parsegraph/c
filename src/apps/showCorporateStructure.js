@@ -1,5 +1,7 @@
-function showCorporateStructure() {
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+/* eslint-disable require-jsdoc */
+
+export default function showCorporateStructure() {
+  const caret = new Caret(BLOCK);
   caret.label('Shareholders');
 
   // Show the board
@@ -23,7 +25,7 @@ function showCorporateStructure() {
   // Show the board members.
   for (let i = 0; i < 8; ++i) {
     if (i == 0) {
-      caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+      caret.spawnMove('d', 'bu', ALIGN_CENTER);
       caret.crease();
       caret.shrink();
     } else {
@@ -70,7 +72,7 @@ function showCorporateStructure() {
     'Chief Inspector; Auditing',
   ].forEach(function(executive, i) {
     if (i == 0) {
-      caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+      caret.spawnMove('d', 'bu', ALIGN_CENTER);
       caret.crease();
       caret.shrink();
     } else {
@@ -109,7 +111,7 @@ function showCorporateStructure() {
     'Public Administration',
   ].forEach(function(sector, i) {
     if (i == 0) {
-      caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
+      caret.spawnMove('d', 'bud', ALIGN_CENTER);
       caret.shrink();
     } else {
       caret.spawnMove('f', 'bud');
@@ -155,7 +157,7 @@ function showCorporateStructure() {
       ['Administrative', 'Operations', 'Engineering', 'Sales', 'Media'].forEach(
           function(division, k) {
             if (k == 0) {
-              caret.spawnMove('d', 'bu', parsegraph_ALIGN_CENTER);
+              caret.spawnMove('d', 'bu', ALIGN_CENTER);
               caret.crease();
               caret.shrink();
             } else {

@@ -1,25 +1,26 @@
-/**
+/* eslint-disable require-jsdoc */
+/*
  * Shows a bunch of branches that demonstrate how buds and blocks align. It's
  * also a good demonstration of what pull does. It's also a good stress test
  * for user input.
  *
  * Presently, COUNT cannot be more than 100. It defaults to 10.
  */
-function parsegraph_ProportionWidget(maxSize) {
-  this.caret = new parsegraph_Caret('b');
+export default function ProportionWidget(maxSize) {
+  this.caret = new Caret('b');
   this._maxSize = maxSize || 100;
   this._count = 0;
 }
 
-parsegraph_ProportionWidget.prototype.node = function() {
+ProportionWidget.prototype.node = function() {
   return this.caret.root();
 };
 
-parsegraph_ProportionWidget.prototype.size = function() {
+ProportionWidget.prototype.size = function() {
   return this._count;
 };
 
-parsegraph_ProportionWidget.prototype.step = function() {
+ProportionWidget.prototype.step = function() {
   const caret = this.caret;
 
   const spawnRow = function(dir) {
@@ -43,13 +44,13 @@ parsegraph_ProportionWidget.prototype.step = function() {
 
   const commands = ['0 Copy', '1 Cut', '2 Paste', '3 Delete', 'Open', 'New'];
 
-  const commandStyle = parsegraph_copyStyle(parsegraph_BLOCK);
-  commandStyle.backgroundColor = new parsegraph_Color(0.4, 1, 0.4, 1);
-  commandStyle.borderColor = new parsegraph_Color(0, 0.5, 0, 1);
+  const commandStyle = copyStyle(BLOCK);
+  commandStyle.backgroundColor = new Color(0.4, 1, 0.4, 1);
+  commandStyle.borderColor = new Color(0, 0.5, 0, 1);
 
-  const commandItemStyle = parsegraph_copyStyle(parsegraph_BLOCK);
-  commandItemStyle.backgroundColor = new parsegraph_Color(1, 0, 0, 1);
-  commandItemStyle.borderColor = new parsegraph_Color(0, 0.5, 0, 1);
+  const commandItemStyle = copyStyle(BLOCK);
+  commandItemStyle.backgroundColor = new Color(1, 0, 0, 1);
+  commandItemStyle.borderColor = new Color(0, 0.5, 0, 1);
 
   // Attach commands for this block.
   caret.onClick(function(viewport) {
@@ -67,7 +68,7 @@ parsegraph_ProportionWidget.prototype.step = function() {
 
     let i = 0;
     commands.forEach(function(command) {
-      const commandCaret = new parsegraph_Caret(parsegraph_BLOCK);
+      const commandCaret = new Caret(BLOCK);
 
       commandCaret.node().setBlockStyle(commandStyle);
       commandCaret.label(command);
@@ -80,7 +81,8 @@ parsegraph_ProportionWidget.prototype.step = function() {
       carousel.addToCarousel(
           commandCaret.root(),
           function() {
-          // console.log("Clicked " + command + commandCaret.root().isSelected());
+          // console.log(
+          //   "Clicked " + command + commandCaret.root().isSelected());
             carousel.clearCarousel();
             carousel.hideCarousel();
             carousel.scheduleCarouselRepaint();
