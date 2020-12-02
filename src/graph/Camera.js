@@ -1,6 +1,6 @@
-import parsegraph_TestSuite from '../TestSuite';
+import TestSuite from '../TestSuite';
 
-import {parsegraph_VFLIP} from './settings';
+import {VFLIP} from './settings';
 import {
   matrixMultiply3x3,
   makeTranslation3x3,
@@ -9,8 +9,9 @@ import {
   matrixTransform2D,
   makeInverse3x3,
 } from '../gl';
+/* eslint-disable require-jsdoc */
 
-export default function parsegraph_Camera() {
+export default function Camera() {
   this._cameraX = 0;
   this._cameraY = 0;
   this._scale = 1;
@@ -21,12 +22,12 @@ export default function parsegraph_Camera() {
 
   this._changeVersion = 0;
 
-  this._vflip = parsegraph_VFLIP;
+  this._vflip = VFLIP;
 }
 
-const parsegraph_Camera_Tests = new parsegraph_TestSuite('parsegraph_Camera');
+const cameraTests = new TestSuite('Camera');
 
-export function parsegraph_containsAll(
+export function containsAll(
     viewportX,
     viewportY,
     viewWidth,
@@ -56,29 +57,29 @@ export function parsegraph_containsAll(
   return true;
 }
 
-parsegraph_Camera_Tests.addTest('containsAll', function() {
-  if (!parsegraph_containsAll(0, 0, 800, 600, 0, 0, 400, 200)) {
+cameraTests.addTest('containsAll', function() {
+  if (!containsAll(0, 0, 800, 600, 0, 0, 400, 200)) {
     return 'Small box in viewport';
   }
 
-  if (parsegraph_containsAll(0, 0, 800, 600, 0, 0, 900, 200)) {
+  if (containsAll(0, 0, 800, 600, 0, 0, 900, 200)) {
     return 'Taller box in viewport';
   }
 
-  if (parsegraph_containsAll(0, 0, 800, 600, 0, 0, 400, 1000)) {
+  if (containsAll(0, 0, 800, 600, 0, 0, 400, 1000)) {
     return 'Wider box in viewport';
   }
 
-  if (parsegraph_containsAll(0, 0, 800, 600, 0, 0, 1000, 1000)) {
+  if (containsAll(0, 0, 800, 600, 0, 0, 1000, 1000)) {
     return 'Larger box in viewport';
   }
 
-  if (parsegraph_containsAll(0, 0, 800, 600, 600, 0, 400, 200)) {
+  if (containsAll(0, 0, 800, 600, 600, 0, 400, 200)) {
     return 'Small box on edge of viewport';
   }
 });
 
-export function parsegraph_containsAny(
+export function containsAny(
     viewportX,
     viewportY,
     viewWidth,
@@ -120,36 +121,37 @@ export function parsegraph_containsAny(
     return false;
   }
   if (cy + halfHeight < viewportY - viewHalfHeight) {
-    // console.log("Viewport does not contain any: given vmax is less than viewport's vmin");
+    // console.log("Viewport does not contain any: given vmax' +
+    //   ' is less than viewport's vmin");
     // dump();
     return false;
   }
   return true;
 }
 
-parsegraph_Camera_Tests.addTest('containsAny', function() {
-  if (!parsegraph_containsAny(0, 0, 800, 600, 0, 0, 400, 200)) {
+cameraTests.addTest('containsAny', function() {
+  if (!containsAny(0, 0, 800, 600, 0, 0, 400, 200)) {
     return 'Small box in viewport';
   }
 
-  if (!parsegraph_containsAny(0, 0, 800, 600, 0, 0, 900, 200)) {
+  if (!containsAny(0, 0, 800, 600, 0, 0, 900, 200)) {
     return 'Taller box in viewport';
   }
 
-  if (!parsegraph_containsAny(0, 0, 800, 600, 0, 0, 400, 1000)) {
+  if (!containsAny(0, 0, 800, 600, 0, 0, 400, 1000)) {
     return 'Wider box in viewport';
   }
 
-  if (!parsegraph_containsAny(0, 0, 800, 600, 0, 0, 1000, 1000)) {
+  if (!containsAny(0, 0, 800, 600, 0, 0, 1000, 1000)) {
     return 'Larger box in viewport';
   }
 
-  if (!parsegraph_containsAny(0, 0, 800, 600, 600, 0, 400, 200)) {
+  if (!containsAny(0, 0, 800, 600, 600, 0, 400, 200)) {
     return 'Small box on edge of viewport';
   }
 });
 
-parsegraph_Camera.prototype.setSize = function(width, height) {
+Camera.prototype.setSize = function(width, height) {
   if (this._width === width && this._height === height) {
     return false;
   }
@@ -166,7 +168,7 @@ parsegraph_Camera.prototype.setSize = function(width, height) {
   return true;
 };
 
-parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y) {
+Camera.prototype.zoomToPoint = function(scaleFactor, x, y) {
   // Get the current mouse position, in world space.
   const mouseInWorld = matrixTransform2D(
       makeInverse3x3(this.worldMatrix()),
@@ -184,7 +186,11 @@ parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y) {
       x,
       y,
   );
-  // console.log("mouseAdjustment=" + mouseAdjustment[0] + ", " + mouseAdjustment[1]);
+  // console.log(
+  //   "mouseAdjustment=" +
+  //   mouseAdjustment[0] +
+  //   ", " +
+  //   mouseAdjustment[1]);
 
   // Adjust the origin by the movement of the fixed point.
   this.adjustOrigin(
@@ -193,7 +199,7 @@ parsegraph_Camera.prototype.zoomToPoint = function(scaleFactor, x, y) {
   );
 };
 
-parsegraph_Camera.prototype.setOrigin = function(x, y) {
+Camera.prototype.setOrigin = function(x, y) {
   if (x == this._cameraX && y == this._cameraY) {
     return;
   }
@@ -202,16 +208,16 @@ parsegraph_Camera.prototype.setOrigin = function(x, y) {
   this.hasChanged();
 };
 
-parsegraph_Camera.prototype.changeVersion = function() {
+Camera.prototype.changeVersion = function() {
   return this._changeVersion;
 };
 
-parsegraph_Camera.prototype.hasChanged = function() {
+Camera.prototype.hasChanged = function() {
   ++this._changeVersion;
   this._worldMatrix = null;
 };
 
-parsegraph_Camera.prototype.toJSON = function() {
+Camera.prototype.toJSON = function() {
   return {
     cameraX: this._cameraX,
     cameraY: this._cameraY,
@@ -221,37 +227,37 @@ parsegraph_Camera.prototype.toJSON = function() {
   };
 };
 
-parsegraph_Camera.prototype.restore = function(json) {
+Camera.prototype.restore = function(json) {
   this.setOrigin(json.cameraX, json.cameraY);
   this.setScale(json.scale);
 };
 
-parsegraph_Camera.prototype.copy = function(other) {
+Camera.prototype.copy = function(other) {
   this.setOrigin(other.x(), other.y());
   this.setScale(other.scale());
 };
 
-parsegraph_Camera.prototype.scale = function() {
+Camera.prototype.scale = function() {
   return this._scale;
 };
 
-parsegraph_Camera.prototype.x = function() {
+Camera.prototype.x = function() {
   return this._cameraX;
 };
 
-parsegraph_Camera.prototype.y = function() {
+Camera.prototype.y = function() {
   return this._cameraY;
 };
 
-parsegraph_Camera.prototype.setScale = function(scale) {
+Camera.prototype.setScale = function(scale) {
   this._scale = scale;
 };
 
-parsegraph_Camera.prototype.toString = function() {
+Camera.prototype.toString = function() {
   return '(' + this._cameraX + ', ' + this._cameraY + ', ' + this._scale + ')';
 };
 
-parsegraph_Camera.prototype.adjustOrigin = function(x, y) {
+Camera.prototype.adjustOrigin = function(x, y) {
   if (x == 0 && y == 0) {
     return;
   }
@@ -265,30 +271,30 @@ parsegraph_Camera.prototype.adjustOrigin = function(x, y) {
   this.hasChanged();
 };
 
-parsegraph_Camera.prototype.worldMatrix = function() {
+Camera.prototype.worldMatrix = function() {
   return matrixMultiply3x3(
       makeTranslation3x3(this.x(), this.y()),
       makeScale3x3(this.scale(), this.scale()),
   );
 };
 
-parsegraph_Camera.prototype.aspectRatio = function() {
+Camera.prototype.aspectRatio = function() {
   return this._aspectRatio;
 };
 
-parsegraph_Camera.prototype.width = function() {
+Camera.prototype.width = function() {
   return this._width;
 };
 
-parsegraph_Camera.prototype.height = function() {
+Camera.prototype.height = function() {
   return this._height;
 };
 
-parsegraph_Camera.prototype.canProject = function() {
+Camera.prototype.canProject = function() {
   return !Number.isNaN(this._width) && !Number.isNaN(this._height);
 };
 
-parsegraph_Camera.prototype.projectionMatrix = function() {
+Camera.prototype.projectionMatrix = function() {
   if (!this.canProject()) {
     throw new Error(
         'Camera cannot create a projection matrix because the ' +
@@ -299,9 +305,9 @@ parsegraph_Camera.prototype.projectionMatrix = function() {
   return make2DProjection(this._width, this._height);
 };
 
-parsegraph_Camera.prototype.project = function() {
-  if (!this._worldMatrix || parsegraph_VFLIP !== this._vflip) {
-    this._vflip = parsegraph_VFLIP;
+Camera.prototype.project = function() {
+  if (!this._worldMatrix || VFLIP !== this._vflip) {
+    this._vflip = VFLIP;
     this._worldMatrix = matrixMultiply3x3(
         this.worldMatrix(),
         this.projectionMatrix(),
@@ -310,7 +316,7 @@ parsegraph_Camera.prototype.project = function() {
   return this._worldMatrix;
 };
 
-parsegraph_Camera.prototype.containsAny = function(s) {
+Camera.prototype.containsAny = function(s) {
   if (s.isNaN()) {
     return false;
   }
@@ -331,12 +337,12 @@ parsegraph_Camera.prototype.containsAny = function(s) {
   return true;
 };
 
-parsegraph_Camera.prototype.containsAll = function(s) {
+Camera.prototype.containsAll = function(s) {
   if (s.isNaN()) {
     return false;
   }
   const camera = this;
-  return parsegraph_containsAll(
+  return containsAll(
       -camera.x() + camera.width() / (camera.scale() * 2),
       -camera.y() + camera.height() / (camera.scale() * 2),
       camera.width() / camera.scale(),

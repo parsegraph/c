@@ -1,21 +1,22 @@
-import parsegraph_TexturePainter from './TexturePainter';
+import TexturePainter from './TexturePainter';
 import {matrixMultiply3x3I, makeTranslation3x3} from '../gl';
-import parsegraph_Viewport from './Viewport';
+import Viewport from './Viewport';
 
-const parsegraph_MENU_ICON_TEXTURE_SIZE = 32;
-const parsegraph_MENU_ICON_SIZE = 32;
-const parsegraph_MENU_ICON_PADDING = parsegraph_MENU_ICON_SIZE / 2;
+const MENU_ICON_TEXTURE_SIZE = 32;
+const MENU_ICON_SIZE = 32;
+const MENU_ICON_PADDING = MENU_ICON_SIZE / 2;
 
-const parsegraph_MENU_ICON_MAIN = 0;
-const parsegraph_MENU_ICON_UNDO = 1;
-const parsegraph_MENU_ICON_REDO = 2;
-const parsegraph_MENU_ICON_VSPLIT = 3;
-const parsegraph_MENU_ICON_HSPLIT = 4;
-const parsegraph_MENU_ICON_RESET_CAMERA = 5;
-const parsegraph_MENU_ICON_CLOSE = 6;
-const parsegraph_MENU_ICON_DEBUG = 7;
+const MENU_ICON_MAIN = 0;
+const MENU_ICON_UNDO = 1;
+const MENU_ICON_REDO = 2;
+const MENU_ICON_VSPLIT = 3;
+const MENU_ICON_HSPLIT = 4;
+const MENU_ICON_RESET_CAMERA = 5;
+const MENU_ICON_CLOSE = 6;
+const MENU_ICON_DEBUG = 7;
+/* eslint-disable require-jsdoc */
 
-export default function parsegraph_BurgerMenu(viewport) {
+export default function BurgerMenu(viewport) {
   this._viewport = viewport;
 
   this._iconImage = new Image();
@@ -42,31 +43,31 @@ export default function parsegraph_BurgerMenu(viewport) {
   }
 }
 
-parsegraph_BurgerMenu.prototype.scheduleRepaint = function() {
+BurgerMenu.prototype.scheduleRepaint = function() {
   // console.log("BurgerMenu is scheduling repaint");
   this._needsRepaint = true;
   this._viewport.scheduleRepaint();
 };
 
-parsegraph_BurgerMenu.prototype.scheduleRender = function() {
+BurgerMenu.prototype.scheduleRender = function() {
   // console.log("BurgerMenu is scheduling render");
   this._needsRepaint = true;
   this._viewport.scheduleRender();
 };
 
-parsegraph_BurgerMenu.prototype.getIcon = function(x, y) {
-  if (y < 0 || y > parsegraph_MENU_ICON_SIZE) {
+BurgerMenu.prototype.getIcon = function(x, y) {
+  if (y < 0 || y > MENU_ICON_SIZE) {
     return null;
   }
   if (!this._menuOpened) {
     const center = this._viewport.width() / 2;
     if (
-      x < center - parsegraph_MENU_ICON_SIZE / 2 ||
-      x > center + parsegraph_MENU_ICON_SIZE / 2
+      x < center - MENU_ICON_SIZE / 2 ||
+      x > center + MENU_ICON_SIZE / 2
     ) {
       return null;
     }
-    return parsegraph_MENU_ICON_MAIN;
+    return MENU_ICON_MAIN;
   }
 
   // Menu is opened.
@@ -74,8 +75,8 @@ parsegraph_BurgerMenu.prototype.getIcon = function(x, y) {
   for (const iconIndex in this._iconLocations) {
     const iconLocation = this._iconLocations[iconIndex];
     if (
-      x < iconLocation - parsegraph_MENU_ICON_SIZE / 2 ||
-      x > iconLocation + parsegraph_MENU_ICON_SIZE / 2
+      x < iconLocation - MENU_ICON_SIZE / 2 ||
+      x > iconLocation + MENU_ICON_SIZE / 2
     ) {
       continue;
     }
@@ -84,7 +85,7 @@ parsegraph_BurgerMenu.prototype.getIcon = function(x, y) {
   return null;
 };
 
-parsegraph_BurgerMenu.prototype.onMousemove = function(x, y) {
+BurgerMenu.prototype.onMousemove = function(x, y) {
   const iconIndex = this.getIcon(x, y);
   // console.log(iconIndex);
   if (iconIndex === null && this._menuHovered === null) {
@@ -99,15 +100,15 @@ parsegraph_BurgerMenu.prototype.onMousemove = function(x, y) {
   return true;
 };
 
-parsegraph_BurgerMenu.prototype.onMousedown = function(x, y) {
-  if (y < 0 || y > parsegraph_MENU_ICON_SIZE) {
+BurgerMenu.prototype.onMousedown = function(x, y) {
+  if (y < 0 || y > MENU_ICON_SIZE) {
     return false;
   }
   if (!this._menuOpened) {
     const center = this._viewport.width() / 2;
     if (
-      x < center - parsegraph_MENU_ICON_SIZE / 2 ||
-      x > center + parsegraph_MENU_ICON_SIZE / 2
+      x < center - MENU_ICON_SIZE / 2 ||
+      x > center + MENU_ICON_SIZE / 2
     ) {
       return false;
     }
@@ -119,34 +120,36 @@ parsegraph_BurgerMenu.prototype.onMousedown = function(x, y) {
   // Menu is opened.
   x -= this._viewport.width() / 2;
   for (const iconIndex in this._iconLocations) {
-    const iconLocation = this._iconLocations[iconIndex];
-    if (
-      x < iconLocation - parsegraph_MENU_ICON_SIZE / 2 ||
-      x > iconLocation + parsegraph_MENU_ICON_SIZE / 2
-    ) {
-      continue;
+    if (Object.prototype.hasOwnProperty.call(this._iconLocations, iconIndex)) {
+      const iconLocation = this._iconLocations[iconIndex];
+      if (
+        x < iconLocation - MENU_ICON_SIZE / 2 ||
+        x > iconLocation + MENU_ICON_SIZE / 2
+      ) {
+        continue;
+      }
     }
-    if (iconIndex == parsegraph_MENU_ICON_MAIN) {
+    if (iconIndex == MENU_ICON_MAIN) {
       // Hide menu.
       this._menuOpened = false;
       this.scheduleRepaint();
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_UNDO) {
+    if (iconIndex == MENU_ICON_UNDO) {
       console.log('Undo!');
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_REDO) {
+    if (iconIndex == MENU_ICON_REDO) {
       console.log('Redo!');
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_RESET_CAMERA) {
+    if (iconIndex == MENU_ICON_RESET_CAMERA) {
       this._viewport.input().resetCamera(true);
       this._viewport.scheduleRender();
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_HSPLIT) {
-      var newViewport = new parsegraph_Viewport(
+    if (iconIndex == MENU_ICON_HSPLIT) {
+      const newViewport = new Viewport(
           this.window(),
           this._viewport.world(),
       );
@@ -164,8 +167,8 @@ parsegraph_BurgerMenu.prototype.onMousedown = function(x, y) {
       this.scheduleRepaint();
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_VSPLIT) {
-      var newViewport = new parsegraph_Viewport(
+    if (iconIndex == MENU_ICON_VSPLIT) {
+      const newViewport = new Viewport(
           this.window(),
           this._viewport.world(),
       );
@@ -183,7 +186,7 @@ parsegraph_BurgerMenu.prototype.onMousedown = function(x, y) {
       this.scheduleRepaint();
       return true;
     }
-    if (iconIndex == parsegraph_MENU_ICON_CLOSE) {
+    if (iconIndex == MENU_ICON_CLOSE) {
       console.log('Closing widget');
       this.window().removeComponent(this._viewport.component());
       this._viewport.dispose();
@@ -195,18 +198,18 @@ parsegraph_BurgerMenu.prototype.onMousedown = function(x, y) {
   return false;
 };
 
-parsegraph_BurgerMenu.prototype.dispose = function() {
+BurgerMenu.prototype.dispose = function() {
   this._textInput.parentNode.removeChild(this._textInput);
   this._textInput = null;
 };
 
-parsegraph_BurgerMenu.prototype.contextChanged = function(isLost) {
+BurgerMenu.prototype.contextChanged = function(isLost) {
   if (this._blockPainter) {
     this._blockPainter.contextChanged(isLost);
   }
 };
 
-parsegraph_BurgerMenu.prototype.closeMenu = function() {
+BurgerMenu.prototype.closeMenu = function() {
   if (!this._menuOpened) {
     return;
   }
@@ -214,31 +217,31 @@ parsegraph_BurgerMenu.prototype.closeMenu = function() {
   this.scheduleRepaint();
 };
 
-parsegraph_BurgerMenu.prototype.drawIcon = function(iconIndex, x, y) {
+BurgerMenu.prototype.drawIcon = function(iconIndex, x, y) {
   if (arguments.length === 2) {
-    y = parsegraph_MENU_ICON_SIZE;
+    y = MENU_ICON_SIZE;
   }
   this._iconLocations[iconIndex] = x;
-  x -= parsegraph_MENU_ICON_SIZE / 2;
+  x -= MENU_ICON_SIZE / 2;
   if (this._menuHovered == iconIndex) {
     this._iconPainter.setAlpha(0.9);
   } else {
     this._iconPainter.setAlpha(0.5);
   }
   this._iconPainter.drawTexture(
-      iconIndex * parsegraph_MENU_ICON_TEXTURE_SIZE,
+      iconIndex * MENU_ICON_TEXTURE_SIZE,
       0, // iconX, iconY
-      parsegraph_MENU_ICON_TEXTURE_SIZE,
-      parsegraph_MENU_ICON_TEXTURE_SIZE, // iconWidth, iconHeight
+      MENU_ICON_TEXTURE_SIZE,
+      MENU_ICON_TEXTURE_SIZE, // iconWidth, iconHeight
       x,
       y,
-      parsegraph_MENU_ICON_SIZE,
-      -parsegraph_MENU_ICON_SIZE, // width, height
+      MENU_ICON_SIZE,
+      -MENU_ICON_SIZE, // width, height
       1,
   );
 };
 
-parsegraph_BurgerMenu.prototype.paint = function() {
+BurgerMenu.prototype.paint = function() {
   if (!this._iconReady) {
     return;
   }
@@ -258,46 +261,48 @@ parsegraph_BurgerMenu.prototype.paint = function() {
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
   if (!this._iconPainter) {
-    this._iconPainter = new parsegraph_TexturePainter(
+    this._iconPainter = new TexturePainter(
         this.window(),
         this._iconTexture,
-        parsegraph_MENU_ICON_TEXTURE_SIZE * 8,
-        parsegraph_MENU_ICON_TEXTURE_SIZE,
+        MENU_ICON_TEXTURE_SIZE * 8,
+        MENU_ICON_TEXTURE_SIZE,
     );
   }
   this._iconPainter.clear();
   this._iconPainter.setAlpha(0.5);
   for (const iconIndex in this._iconLocations) {
-    this._iconLocations[iconIndex] = null;
+    if (Object.prototype.hasOwnProperty.call(this._iconLocations, iconIndex)) {
+      this._iconLocations[iconIndex] = null;
+    }
   }
-  this.drawIcon(parsegraph_MENU_ICON_MAIN, 0);
+  this.drawIcon(MENU_ICON_MAIN, 0);
   if (this._menuOpened) {
     const viewportWidth = this._viewport.width();
     this._iconPainter.setAlpha(0.9);
-    const pad = parsegraph_MENU_ICON_PADDING;
-    this.drawIcon(parsegraph_MENU_ICON_REDO, -parsegraph_MENU_ICON_SIZE - pad);
+    const pad = MENU_ICON_PADDING;
+    this.drawIcon(MENU_ICON_REDO, -MENU_ICON_SIZE - pad);
     this.drawIcon(
-        parsegraph_MENU_ICON_UNDO,
-        -2 * parsegraph_MENU_ICON_SIZE - pad,
+        MENU_ICON_UNDO,
+        -2 * MENU_ICON_SIZE - pad,
     );
     this.drawIcon(
-        parsegraph_MENU_ICON_VSPLIT,
-        pad + 2 * parsegraph_MENU_ICON_SIZE,
+        MENU_ICON_VSPLIT,
+        pad + 2 * MENU_ICON_SIZE,
     );
-    this.drawIcon(parsegraph_MENU_ICON_HSPLIT, pad + parsegraph_MENU_ICON_SIZE);
+    this.drawIcon(MENU_ICON_HSPLIT, pad + MENU_ICON_SIZE);
     this.drawIcon(
-        parsegraph_MENU_ICON_RESET_CAMERA,
-        pad + 3 * parsegraph_MENU_ICON_SIZE,
+        MENU_ICON_RESET_CAMERA,
+        pad + 3 * MENU_ICON_SIZE,
     );
     if (this.window().numComponents() > 1) {
       this.drawIcon(
-          parsegraph_MENU_ICON_CLOSE,
-          viewportWidth - viewportWidth / 2 - parsegraph_MENU_ICON_SIZE / 2,
+          MENU_ICON_CLOSE,
+          viewportWidth - viewportWidth / 2 - MENU_ICON_SIZE / 2,
       );
     }
     this._textInput.style.display = 'block';
     this._textInput.style.position = 'absolute';
-    this._textInput.style.width = parsegraph_MENU_ICON_SIZE * 6 + 'px';
+    this._textInput.style.width = MENU_ICON_SIZE * 6 + 'px';
     this._textInput.style.transform = 'translateX(-50%)';
   } else {
     this._textInput.style.display = 'none';
@@ -305,7 +310,7 @@ parsegraph_BurgerMenu.prototype.paint = function() {
   this._needsRepaint = false;
 };
 
-parsegraph_BurgerMenu.prototype.render = function() {
+BurgerMenu.prototype.render = function() {
   if (!this._iconPainter) {
     return;
   }
@@ -315,8 +320,8 @@ parsegraph_BurgerMenu.prototype.render = function() {
     this._textInput.style.bottom =
       this._viewport.y() +
       this._viewport.height() -
-      parsegraph_MENU_ICON_SIZE -
-      1.5 * parsegraph_MENU_ICON_PADDING +
+      MENU_ICON_SIZE -
+      1.5 * MENU_ICON_PADDING +
       'px';
   }
   const world = this._viewport.camera().projectionMatrix();
@@ -330,14 +335,14 @@ parsegraph_BurgerMenu.prototype.render = function() {
   this._iconPainter.render(world);
 };
 
-parsegraph_BurgerMenu.prototype.needsRepaint = function() {
+BurgerMenu.prototype.needsRepaint = function() {
   return (this._iconReady && !this._iconTexture) || this._needsRepaint;
 };
 
-parsegraph_BurgerMenu.prototype.gl = function() {
+BurgerMenu.prototype.gl = function() {
   return this._viewport.window().gl();
 };
 
-parsegraph_BurgerMenu.prototype.window = function() {
+BurgerMenu.prototype.window = function() {
   return this._viewport.window();
 };

@@ -1,23 +1,24 @@
 import Color from './Color';
 import Rect from './Rect';
-import {parsegraph_compileProgram} from '../gl';
+import {compileProgram} from '../gl';
 import Window from './Window';
+/* eslint-disable require-jsdoc, max-len */
 
-import parsegraph_BlockPainter_VertexShader from './BlockPainter_VertexShader.glsl';
-import parsegraph_BlockPainter_VertexShader_Simple from './BlockPainter_VertexShader_Simple.glsl';
-import parsegraph_BlockPainter_FragmentShader from './BlockPainter_FragmentShader.glsl';
+import blockPainterVertexShader from './BlockPainter_VertexShader.glsl';
+import blockPainterVertexShaderSimple from './BlockPainter_VertexShader_Simple.glsl';
+import blockPainterFragmentShader from './BlockPainter_FragmentShader.glsl';
 
 // Same as above, but using a better antialiasing technique.
-import parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives from './BlockPainter_FragmentShader_OES_standard_derivatives.glsl';
+import blockPainterFragmentShaderOESStandardDerivatives from './BlockPainter_FragmentShader_OES_standard_derivatives.glsl';
 
-import parsegraph_BlockPainter_FragmentShader_Simple from './BlockPainter_FragmentShader_Simple.glsl';
-// import parsegraph_BlockPainter_SquareFragmentShader from './BlockPainter_SquareFragmentShader.glsl';
-// import parsegraph_BlockPainter_ShadyFragmentShader from './BlockPainter_ShadyFragmentShader.glsl';
-// import parsegraph_BlockPainter_AngleFragmentShader from './BlockPainter_AngleFragmentShader.glsl';
-// import parsegraph_BlockPainter_ParenthesisFragmentShader from './BlockPainter_ParenthesisFragmentShader.glsl';
-// import parsegraph_BlockPainter_CurlyFragmentShader from './BlockPainter_CurlyFragmentShader.glsl';
+import blockPainterFragmentShaderSimple from './BlockPainter_FragmentShader_Simple.glsl';
+// import BlockPainter_SquareFragmentShader from './BlockPainter_SquareFragmentShader.glsl';
+// import BlockPainter_ShadyFragmentShader from './BlockPainter_ShadyFragmentShader.glsl';
+// import BlockPainter_AngleFragmentShader from './BlockPainter_AngleFragmentShader.glsl';
+// import BlockPainter_ParenthesisFragmentShader from './BlockPainter_ParenthesisFragmentShader.glsl';
+// import BlockPainter_CurlyFragmentShader from './BlockPainter_CurlyFragmentShader.glsl';
 
-let parsegraph_BlockPainter_COUNT = 0;
+let blockPainterCount = 0;
 
 export default class BlockPainter {
   _id: number;
@@ -36,26 +37,28 @@ export default class BlockPainter {
   _dataBufferNumVertices: number;
   _dataBuffer: Float32Array;
   _maxSize: number;
-  u_world: number;
-  a_position: number;
-  a_texCoord: number;
-  a_color: number;
-  a_borderColor: number;
-  a_borderRoundedness: number;
-  a_borderThickness: number;
-  a_aspectRatio: number;
-  simple_u_world: number;
-  simple_a_position: number;
-  simple_a_color: number;
+  uWorld: number;
+  aPosition: number;
+  aTexCoord: number;
+  aColor: number;
+  aBorderColor: number;
+  aBorderRoundedness: number;
+  aBorderThickness: number;
+  aAspectRatio: number;
+  simpleUWorld: number;
+  simpleAPosition: number;
+  simpleAColor: number;
 
   constructor(window: Window) {
-    this._id = parsegraph_BlockPainter_COUNT++;
+    this._id = blockPainterCount++;
     this._window = window;
     if (!this._window) {
       throw new Error('Window must be provided');
     }
 
-    // Prepare buffer using prepare(numBlocks). BlockPainter supports a fixed number of blocks.
+    // Prepare buffer using prepare(numBlocks).
+    // BlockPainter supports a fixed number of blocks.
+
     this._blockBuffer = null;
     this._blockBufferNumVertices = null;
     this._blockBufferVertexIndex = 0;
@@ -175,14 +178,23 @@ export default class BlockPainter {
       );
     }
     if (this._dataBufferVertexIndex >= this._dataBufferNumVertices) {
-      // console.log("Writing " + this._dataBufferNumVertices + " vertices to offset " + this._blockBufferVertexIndex + " of " + this._blockBufferNumVertices + " vertices");
+      // console.log(
+      //   "Writing " +
+      //   this._dataBufferNumVertices +
+      //   " vertices to offset " +
+      //   this._blockBufferVertexIndex +
+      //   " of " + this._blockBufferNumVertices + " vertices");
       gl.bufferSubData(
           gl.ARRAY_BUFFER,
           this._blockBufferVertexIndex * stride,
           this._dataBuffer,
       );
     } else {
-      // console.log("Partial flush (" + this._blockBufferVertexIndex + "/" + this._blockBufferNumVertices + " from " + (this._dataBufferVertexIndex*stride/4) + ")");
+      // console.log(
+      //   "Partial flush (" +
+      //   this._blockBufferVertexIndex +
+      //   "/" + this._blockBufferNumVertices +
+      //   " from " + (this._dataBufferVertexIndex*stride/4) + ")");
       gl.bufferSubData(
           gl.ARRAY_BUFFER,
           this._blockBufferVertexIndex * stride,
@@ -309,7 +321,7 @@ export default class BlockPainter {
   }
 
   toString(): string {
-    return '[parsegraph_BlockPainter ' + this._id + ']';
+    return '[BlockPainter ' + this._id + ']';
   }
 
   contextChanged(isLost: boolean) {
@@ -330,18 +342,18 @@ export default class BlockPainter {
     // console.log(this._id, this._maxSize * scale, usingSimple);
 
     if (this._blockProgram === null) {
-      let fragProgram = parsegraph_BlockPainter_FragmentShader;
+      let fragProgram = blockPainterFragmentShader;
       // Avoid OES_standard_derivatives on Firefox.
       if (
         navigator.userAgent.indexOf('Firefox') == -1 &&
         gl.getExtension('OES_standard_derivatives') != null
       ) {
-        fragProgram = parsegraph_BlockPainter_FragmentShader_OES_standard_derivatives;
+        fragProgram = blockPainterFragmentShaderOESStandardDerivatives;
       }
-      this._blockProgram = parsegraph_compileProgram(
+      this._blockProgram = compileProgram(
           this._window,
-          'parsegraph_BlockPainter',
-          parsegraph_BlockPainter_VertexShader,
+          'BlockPainter',
+          blockPainterVertexShader,
           fragProgram,
       );
 
@@ -369,11 +381,11 @@ export default class BlockPainter {
       );
     }
     if (this._blockProgramSimple === null) {
-      this._blockProgramSimple = parsegraph_compileProgram(
+      this._blockProgramSimple = compileProgram(
           this._window,
-          'parsegraph_BlockPainter_Simple',
-          parsegraph_BlockPainter_VertexShader_Simple,
-          parsegraph_BlockPainter_FragmentShader_Simple,
+          'BlockPainter_Simple',
+          blockPainterVertexShader_Simple,
+          blockPainterFragmentShader_Simple,
       );
       this.simple_u_world = gl.getUniformLocation(
           this._blockProgramSimple,
@@ -409,7 +421,8 @@ export default class BlockPainter {
     const stride = this._stride;
     if (!this._blockBuffer) {
       throw new Error(
-          'No block buffer to render; BlockPainter.initBuffer(numBlocks) must be called first.',
+          'No block buffer to render;' +
+          ' BlockPainter.initBuffer(numBlocks) must be called first.',
       );
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, this._blockBuffer);
