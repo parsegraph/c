@@ -1,5 +1,7 @@
-function createWeek(belt, world) {
-  const car = new parsegraph_Caret(parsegraph_BUD);
+/* eslint-disable require-jsdoc */
+
+export default function createWeek(belt, world) {
+  const car = new Caret(BUD);
   [
     'Sunday',
     'Monday',
