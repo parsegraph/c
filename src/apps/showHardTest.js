@@ -1,5 +1,7 @@
+/* eslint-disable require-jsdoc */
+
 function showHardTest(graph, server) {
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+  const caret = new Caret(BLOCK);
 
   caret.replace('block');
 
@@ -53,16 +55,17 @@ function showHardTest(graph, server) {
 
         const i = 0;
         for (const key in response) {
-          const value = response[key];
-          caret.push();
-          caret.spawnMove('f', 'slot');
-          caret.label(key);
-          caret.spawnMove('i', 'block');
-          caret.label(value);
-          caret.pop();
-          caret.spawnMove('d', 'bud');
+          if (Object.prototype.hasOwnProperty.call(response, key)) {
+            const value = response[key];
+            caret.push();
+            caret.spawnMove('f', 'slot');
+            caret.label(key);
+            caret.spawnMove('i', 'block');
+            caret.label(value);
+            caret.pop();
+            caret.spawnMove('d', 'bud');
+          }
         }
-
         graph.scheduleRepaint();
       },
       this,

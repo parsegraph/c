@@ -1,9 +1,11 @@
-function showIPAddresses(maxDepth) {
+/* eslint-disable require-jsdoc */
+
+export default function showIPAddresses(maxDepth) {
   let COUNT = 2;
   COUNT = Math.max(2, COUNT);
   const MAX_DEPTH = maxDepth || 15;
 
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+  const caret = new Caret(BLOCK);
 
   function showLevel(depth, index) {
     if (depth === undefined) {
@@ -25,7 +27,7 @@ function showIPAddresses(maxDepth) {
 
     for (let i = 0; i < COUNT; ++i) {
       if (i === 0) {
-        caret.spawnMove('d', 'bud', parsegraph_ALIGN_CENTER);
+        caret.spawnMove('d', 'bud', ALIGN_CENTER);
         caret.crease();
         caret.pull('d');
         caret.push();

@@ -1,10 +1,12 @@
-function showFunction(COUNT) {
+/* eslint-disable require-jsdoc */
+
+export default function showFunction(COUNT) {
   if (COUNT === undefined) {
     COUNT = 50;
   }
 
   // Enter.
-  const caret = new parsegraph_Caret(parsegraph_BUD);
+  const caret = new Caret(BUD);
   caret.spawnMove('f', 'bud');
 
   // HOIRZONTAL_STEPS is the number of times the function is evaluated

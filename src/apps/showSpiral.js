@@ -1,4 +1,6 @@
-function showSpiral(COUNT) {
+/* eslint-disable require-jsdoc */
+
+export default function showSpiral(COUNT) {
   if (COUNT === undefined) {
     COUNT = 25;
   }
@@ -6,10 +8,10 @@ function showSpiral(COUNT) {
   COUNT = Math.min(100, COUNT);
 
   // Enter
-  let spawnDir = parsegraph_FORWARD;
-  const spiralType = parsegraph_BUD;
+  let spawnDir = FORWARD;
+  const spiralType = BUD;
 
-  const caret = new parsegraph_Caret(spiralType);
+  const caret = new Caret(spiralType);
   caret.spawnMove(spawnDir, spiralType);
 
   caret.push();
@@ -17,7 +19,7 @@ function showSpiral(COUNT) {
     for (let j = 1; j < 2; ++j) {
       caret.spawnMove(spawnDir, spiralType);
     }
-    spawnDir = parsegraph_turnLeft(spawnDir);
+    spawnDir = turnLeft(spawnDir);
   }
   caret.pop();
 

@@ -1,27 +1,29 @@
-function showStatements() {
-  const wordDir = parsegraph_FORWARD;
-  const lineDir = parsegraph_DOWNWARD;
+/* eslint-disable require-jsdoc, max-len */
 
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+function showStatements() {
+  const wordDir = FORWARD;
+  const lineDir = DOWNWARD;
+
+  const caret = new Caret(BLOCK);
   caret.fitExact();
 
-  caret.spawn(parsegraph_reverseNodeDirection(lineDir), parsegraph_BUD);
+  caret.spawn(reverseNodeDirection(lineDir), BUD);
   caret.pull(wordDir);
   caret.push();
 
   const operator = function(name) {
-    caret.spawnMove(wordDir, parsegraph_BUD);
+    caret.spawnMove(wordDir, BUD);
     caret.label(name);
   };
 
   const statement = function(name) {
-    caret.spawnMove(wordDir, parsegraph_BLOCK);
+    caret.spawnMove(wordDir, BLOCK);
     caret.label(name);
   };
 
   const nextLine = function() {
     caret.pop();
-    caret.spawnMove(lineDir, parsegraph_BUD);
+    caret.spawnMove(lineDir, BUD);
     caret.pull(wordDir);
     caret.push();
   };
@@ -33,13 +35,13 @@ function showStatements() {
   statement('"B"');
 
   caret.push();
-  caret.align(parsegraph_DOWNWARD, parsegraph_ALIGN_CENTER);
+  caret.align(DOWNWARD, ALIGN_CENTER);
 
-  caret.spawnMove(parsegraph_DOWNWARD, parsegraph_BLOCK);
+  caret.spawnMove(DOWNWARD, BLOCK);
   caret.label('"A"');
-  caret.spawnMove(parsegraph_FORWARD, parsegraph_BUD);
+  caret.spawnMove(FORWARD, BUD);
   caret.label('<=|=>');
-  caret.spawnMove(parsegraph_FORWARD, parsegraph_BLOCK);
+  caret.spawnMove(FORWARD, BLOCK);
   caret.label('"B"');
   caret.pop();
   nextLine();

@@ -1,5 +1,6 @@
-import parsegraph_Caret from '../graph/Caret';
+import Caret from '../graph/Caret';
 import {Type} from '../graph/Node';
+/* eslint-disable require-jsdoc */
 
 const englishSentences = [
   'Hello.',
@@ -112,7 +113,7 @@ const testLanguageNames = [
 ];
 
 export default function buildTextDemo() {
-  const caret = new parsegraph_Caret(Type.BUD);
+  const caret = new Caret(Type.BUD);
 
   for (let i = 0; i < testLanguages.length; ++i) {
     if (i > 0) {
