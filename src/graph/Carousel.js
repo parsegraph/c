@@ -1,7 +1,8 @@
-import parsegraph_FanPainter from './FanPainter';
+import FanPainter from './FanPainter';
 import {matrixMultiply3x3, makeScale3x3, makeTranslation3x3} from '../gl';
+/* eslint-disable require-jsdoc */
 
-export default function parsegraph_Carousel(viewport) {
+export default function Carousel(viewport) {
   this._viewport = viewport;
 
   this._updateRepeatedly = false;
@@ -29,38 +30,38 @@ export default function parsegraph_Carousel(viewport) {
   this._selectedPlot = null;
 }
 
-parsegraph_Carousel.prototype.window = function() {
+Carousel.prototype.window = function() {
   return this._viewport.window();
 };
 
-parsegraph_Carousel.prototype.camera = function() {
+Carousel.prototype.camera = function() {
   return this._viewport.camera();
 };
 
-parsegraph_Carousel.prototype.needsRepaint = function() {
+Carousel.prototype.needsRepaint = function() {
   return this._carouselPaintingDirty || this._updateRepeatedly;
 };
 
-parsegraph_Carousel.prototype.moveCarousel = function(worldX, worldY) {
+Carousel.prototype.moveCarousel = function(worldX, worldY) {
   this._carouselCoords[0] = worldX;
   this._carouselCoords[1] = worldY;
 };
 
-parsegraph_Carousel.prototype.setCarouselSize = function(size) {
+Carousel.prototype.setCarouselSize = function(size) {
   this._carouselSize = size;
 };
 
-parsegraph_Carousel.prototype.showCarousel = function() {
+Carousel.prototype.showCarousel = function() {
   this._showCarousel = true;
   this._updateRepeatedly = true;
   this._showTime = new Date();
 };
 
-parsegraph_Carousel.prototype.isCarouselShown = function() {
+Carousel.prototype.isCarouselShown = function() {
   return this._showCarousel;
 };
 
-parsegraph_Carousel.prototype.hideCarousel = function() {
+Carousel.prototype.hideCarousel = function() {
   // console.log(new Error("Hiding carousel"));
   this._selectedCarouselPlot = null;
   this._selectedCarouselPlotIndex = null;
@@ -69,7 +70,7 @@ parsegraph_Carousel.prototype.hideCarousel = function() {
   this._viewport.scheduleRepaint();
 };
 
-parsegraph_Carousel.prototype.addToCarousel = function(
+Carousel.prototype.addToCarousel = function(
     node,
     callback,
     thisArg,
@@ -90,7 +91,7 @@ parsegraph_Carousel.prototype.addToCarousel = function(
   // console.log("Added to carousel");
 };
 
-parsegraph_Carousel.prototype.clearCarousel = function() {
+Carousel.prototype.clearCarousel = function() {
   // console.log("carousel cleared");
   this._carouselPlots.splice(0, this._carouselPlots.length);
   this._carouselCallbacks.splice(0, this._carouselCallbacks.length);
@@ -98,7 +99,7 @@ parsegraph_Carousel.prototype.clearCarousel = function() {
   this._selectedCarouselPlotIndex = null;
 };
 
-parsegraph_Carousel.prototype.removeFromCarousel = function(node) {
+Carousel.prototype.removeFromCarousel = function(node) {
   if (!node) {
     throw new Error('Node must not be null');
   }
@@ -121,18 +122,18 @@ parsegraph_Carousel.prototype.removeFromCarousel = function(node) {
   return null;
 };
 
-parsegraph_Carousel.prototype.updateRepeatedly = function() {
+Carousel.prototype.updateRepeatedly = function() {
   return this._updateRepeatedly;
 };
 
-parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown) {
+Carousel.prototype.clickCarousel = function(x, y, asDown) {
   if (!this.isCarouselShown()) {
     return false;
   }
 
   if (this._showTime) {
     const ms = new Date().getTime() - this._showTime.getTime();
-    if (ms < parsegraph_CAROUSEL_SHOW_DURATION) {
+    if (ms < CAROUSEL_SHOW_DURATION) {
       // Ignore events that occur so early.
       return true;
     }
@@ -144,7 +145,8 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown) {
   );
   if (dist < (this._carouselSize * 0.75) / this.camera().scale()) {
     if (asDown) {
-      // console.log("Down events within the inner region are treated as 'cancel.'");
+      // console.log("Down events within the inner' +
+      //   ' region are treated as 'cancel.'");
       this.hideCarousel();
       this.scheduleCarouselRepaint();
       return true;
@@ -155,7 +157,8 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown) {
   } else if (dist > (this._carouselSize * 4) / this.camera().scale()) {
     this.hideCarousel();
     this.scheduleCarouselRepaint();
-    // console.log("Click occurred so far outside that it is considered its own event.");
+    // console.log("Click occurred so far outside that' +
+    //   ' it is considered its own event.");
     return false;
   }
 
@@ -164,11 +167,17 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown) {
       y - this._carouselCoords[1],
       x - this._carouselCoords[0],
   );
-  // console.log(alpha_ToDegrees(mouseAngle) + " degrees = caret " + i + " angleSpan = " + angleSpan);
+  // console.log(
+  //   alpha_ToDegrees(mouseAngle) +
+  //   " degrees = caret " +
+  //   i +
+  //   " angleSpan = " +
+  //   angleSpan);
   if (this._carouselPlots.length == 1 && Math.abs(mouseAngle) > Math.PI / 2) {
     this.hideCarousel();
     this.scheduleCarouselRepaint();
-    // console.log("Click occurred so far outside that it is considered its own event.");
+    // console.log("Click occurred so far outside that' +
+    //   ' it is considered its own event.");
     return false;
   }
   mouseAngle += Math.PI;
@@ -189,7 +198,7 @@ parsegraph_Carousel.prototype.clickCarousel = function(x, y, asDown) {
   return true;
 };
 
-parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y) {
+Carousel.prototype.mouseOverCarousel = function(x, y) {
   if (!this.isCarouselShown()) {
     return 0;
   }
@@ -205,14 +214,19 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y) {
 
   if (
     dist < (this._carouselSize * 4) / this.camera().scale() &&
-    dist > (parsegraph_BUD_RADIUS * 4) / this.camera().scale()
+    dist > (BUD_RADIUS * 4) / this.camera().scale()
   ) {
     if (
       this._carouselPlots.length > 1 ||
       Math.abs(mouseAngle - Math.PI) < Math.PI / 2
     ) {
       const i = Math.floor(mouseAngle / angleSpan);
-      // console.log(alpha_ToDegrees(mouseAngle-Math.PI) + " degrees = caret " + i + " angleSpan = " + angleSpan);
+      // console.log(
+      //   alpha_ToDegrees(mouseAngle-Math.PI) +
+      //   " degrees = caret " +
+      //   i +
+      //   " angleSpan = " +
+      //   angleSpan);
       const selectionAngle = angleSpan / 2 + i * angleSpan - Math.PI;
       if (i != this._selectedCarouselPlotIndex) {
         this._selectedCarouselPlotIndex = i;
@@ -236,22 +250,22 @@ parsegraph_Carousel.prototype.mouseOverCarousel = function(x, y) {
   }
 };
 
-parsegraph_Carousel.prototype.showScale = function() {
+Carousel.prototype.showScale = function() {
   return this._showScale;
 };
 
-parsegraph_Carousel.prototype.arrangeCarousel = function() {
+Carousel.prototype.arrangeCarousel = function() {
   if (this._carouselPlots.length === 0) {
     return;
   }
 
   const angleSpan = (2 * Math.PI) / this._carouselPlots.length;
 
-  const parsegraph_MAX_CAROUSEL_SIZE = 150;
+  const MAX_CAROUSEL_SIZE = 150;
 
   const now = new Date();
   // Milliseconds
-  const showDuration = parsegraph_CAROUSEL_SHOW_DURATION;
+  const showDuration = CAROUSEL_SHOW_DURATION;
   if (this._showTime) {
     let ms = now.getTime() - this._showTime.getTime();
     if (ms < showDuration) {
@@ -287,8 +301,8 @@ parsegraph_Carousel.prototype.arrangeCarousel = function() {
 
     // Set the scale.
     const commandSize = root.extentSize();
-    const xMax = parsegraph_MAX_CAROUSEL_SIZE;
-    const yMax = parsegraph_MAX_CAROUSEL_SIZE;
+    const xMax = MAX_CAROUSEL_SIZE;
+    const yMax = MAX_CAROUSEL_SIZE;
     let xShrinkFactor = 1;
     let yShrinkFactor = 1;
     if (commandSize.width() > xMax) {
@@ -297,7 +311,11 @@ parsegraph_Carousel.prototype.arrangeCarousel = function() {
     if (commandSize.height() > yMax) {
       yShrinkFactor = commandSize.height() / yMax;
     }
-    // console.log(commandSize.width(), commandSize.height(), 1/Math.max(xShrinkFactor, yShrinkFactor));
+    // console.log(
+    //   commandSize.width(),
+    //   commandSize.height(),
+    //   1/Math.max(xShrinkFactor,
+    //   yShrinkFactor));
     minScale = Math.min(
         minScale,
         this._showScale / Math.max(xShrinkFactor, yShrinkFactor),
@@ -313,13 +331,13 @@ parsegraph_Carousel.prototype.arrangeCarousel = function() {
   }, this);
 };
 
-parsegraph_Carousel.prototype.setOnScheduleRepaint = function(func, thisArg) {
+Carousel.prototype.setOnScheduleRepaint = function(func, thisArg) {
   thisArg = thisArg || this;
   this.onScheduleRepaint = func;
   this.onScheduleRepaintThisArg = thisArg;
 };
 
-parsegraph_Carousel.prototype.scheduleCarouselRepaint = function() {
+Carousel.prototype.scheduleCarouselRepaint = function() {
   // console.log("Scheduling carousel repaint.");
   this._carouselPaintingDirty = true;
   if (this.onScheduleRepaint) {
@@ -327,19 +345,21 @@ parsegraph_Carousel.prototype.scheduleCarouselRepaint = function() {
   }
 };
 
-parsegraph_Carousel.prototype.contextChanged = function(isLost) {
+Carousel.prototype.contextChanged = function(isLost) {
   this._carouselPaintingDirty = true;
   if (this._fanPainter) {
     this._fanPainter.contextChanged(isLost);
   }
   for (const i in this._carouselPlots) {
-    const carouselData = this._carouselPlots[i];
-    const root = carouselData[0];
-    root.contextChanged(isLost);
+    if (Object.prototype.hasOwnProperty.call(this._carouselPlots, i)) {
+      const carouselData = this._carouselPlots[i];
+      const root = carouselData[0];
+      root.contextChanged(isLost);
+    }
   }
 };
 
-parsegraph_Carousel.prototype.paint = function() {
+Carousel.prototype.paint = function() {
   if (
     !this._updateRepeatedly &&
     (!this._carouselPaintingDirty || !this._showCarousel)
@@ -351,12 +371,14 @@ parsegraph_Carousel.prototype.paint = function() {
   // console.log("Painting the carousel");
   this.arrangeCarousel();
   for (const i in this._carouselPlots) {
-    const paintCompleted = this._carouselPlots[i][0].paint(this.window());
+    if (Object.prototype.hasOwnProperty.call(this._carouselPlots, i)) {
+      const paintCompleted = this._carouselPlots[i][0].paint(this.window());
+    }
   }
 
   // Paint the background highlighting fan.
   if (!this._fanPainter) {
-    this._fanPainter = new parsegraph_FanPainter(this.window());
+    this._fanPainter = new FanPainter(this.window());
   } else {
     this._fanPainter.clear();
   }
@@ -372,15 +394,15 @@ parsegraph_Carousel.prototype.paint = function() {
       0,
       0,
       Math.PI * 2,
-      parsegraph_createColor(1, 1, 1, 1),
-      parsegraph_createColor(0.5, 0.5, 0.5, 0.4),
+      createColor(1, 1, 1, 1),
+      createColor(0.5, 0.5, 0.5, 0.4),
   );
 
   this._carouselPaintingDirty = false;
   return this._updateRepeatedly;
 };
 
-parsegraph_Carousel.prototype.render = function(world) {
+Carousel.prototype.render = function(world) {
   if (!this._showCarousel) {
     return;
   }
@@ -398,19 +420,21 @@ parsegraph_Carousel.prototype.render = function(world) {
 
   // Render the carousel if requested.
   for (const i in this._carouselPlots) {
-    const carouselData = this._carouselPlots[i];
-    const root = carouselData[0];
-    root.renderOffscreen(
-        this.window(),
-        // scale * trans * world
-        matrixMultiply3x3(
-            makeScale3x3(carouselData[3]),
-            matrixMultiply3x3(
-                makeTranslation3x3(carouselData[1], carouselData[2]),
-                world,
-            ),
-        ),
-        1.0,
-    );
+    if (Object.prototype.hasOwnProperty.call(this._carouselPlots, i)) {
+      const carouselData = this._carouselPlots[i];
+      const root = carouselData[0];
+      root.renderOffscreen(
+          this.window(),
+          // scale * trans * world
+          matrixMultiply3x3(
+              makeScale3x3(carouselData[3]),
+              matrixMultiply3x3(
+                  makeTranslation3x3(carouselData[1], carouselData[2]),
+                  world,
+              ),
+          ),
+          1.0,
+      );
+    }
   }
 };

@@ -1,6 +1,8 @@
-let parsegraph_Component_COUNT = 0;
-export default function parsegraph_Component(peer, peerType) {
-  this._id = ++parsegraph_Component_COUNT;
+/* eslint-disable require-jsdoc */
+
+let componentCount = 0;
+export default function Component(peer, peerType) {
+  this._id = ++componentCount;
   this._painterFunc = null;
   this._painterFuncThisArg = null;
   this._rendererFunc = null;
@@ -16,23 +18,23 @@ export default function parsegraph_Component(peer, peerType) {
   this._serializerFuncThisArg = null;
 }
 
-parsegraph_Component.prototype.toString = function() {
-  return '[parsegraph_Component ' + this.id() + ']';
+Component.prototype.toString = function() {
+  return '[Component ' + this.id() + ']';
 };
 
-parsegraph_Component.prototype.id = function() {
+Component.prototype.id = function() {
   return this._id;
 };
 
-parsegraph_Component.prototype.type = function() {
+Component.prototype.type = function() {
   return this._peerType;
 };
 
-parsegraph_Component.prototype.peer = function() {
+Component.prototype.peer = function() {
   return this._peer;
 };
 
-parsegraph_Component.prototype.paint = function(timeout) {
+Component.prototype.paint = function(timeout) {
   if (!this._painterFunc) {
     return false;
   }
@@ -43,7 +45,7 @@ parsegraph_Component.prototype.paint = function(timeout) {
   return false;
 };
 
-parsegraph_Component.prototype.render = function(
+Component.prototype.render = function(
     width,
     height,
     avoidIfPossible,
@@ -65,11 +67,11 @@ parsegraph_Component.prototype.render = function(
   return false;
 };
 
-parsegraph_Component.prototype.needsUpdate = function() {
+Component.prototype.needsUpdate = function() {
   return this._needsUpdate;
 };
 
-parsegraph_Component.prototype.setOwner = function(window) {
+Component.prototype.setOwner = function(window) {
   if (this._window === window) {
     return;
   }
@@ -83,32 +85,32 @@ parsegraph_Component.prototype.setOwner = function(window) {
   }
 };
 
-parsegraph_Component.prototype.scheduleUpdate = function() {
+Component.prototype.scheduleUpdate = function() {
   // console.log("Component is scheduling update", this._window);
   if (this._window) {
     this._window.scheduleUpdate();
   }
 };
 
-parsegraph_Component.prototype.contextChanged = function(isLost) {
+Component.prototype.contextChanged = function(isLost) {
   if (!this._contextChangedFunc) {
     return;
   }
   return this._contextChangedFunc.call(this._contextChangedFuncThisArg, isLost);
 };
 
-parsegraph_Component.prototype.hasEventHandler = function() {
+Component.prototype.hasEventHandler = function() {
   return !!this._eventHandler;
 };
 
-parsegraph_Component.prototype.handleEvent = function() {
+Component.prototype.handleEvent = function(...args) {
   if (!this._eventHandler) {
     return false;
   }
-  return this._eventHandler.apply(this._eventHandlerThisArg, arguments);
+  return this._eventHandler.apply(this._eventHandlerThisArg, args);
 };
 
-parsegraph_Component.prototype.setPainter = function(
+Component.prototype.setPainter = function(
     painterFunc,
     painterFuncThisArg,
 ) {
@@ -116,7 +118,7 @@ parsegraph_Component.prototype.setPainter = function(
   this._painterFuncThisArg = painterFuncThisArg;
 };
 
-parsegraph_Component.prototype.setRenderer = function(
+Component.prototype.setRenderer = function(
     rendererFunc,
     rendererFuncThisArg,
 ) {
@@ -124,7 +126,7 @@ parsegraph_Component.prototype.setRenderer = function(
   this._rendererFuncThisArg = rendererFuncThisArg;
 };
 
-parsegraph_Component.prototype.setEventHandler = function(
+Component.prototype.setEventHandler = function(
     eventHandler,
     eventHandlerThisArg,
 ) {
@@ -132,7 +134,7 @@ parsegraph_Component.prototype.setEventHandler = function(
   this._eventHandlerThisArg = eventHandlerThisArg;
 };
 
-parsegraph_Component.prototype.setContextChanged = function(
+Component.prototype.setContextChanged = function(
     contextChanged,
     contextChangedThisArg,
 ) {
@@ -140,7 +142,7 @@ parsegraph_Component.prototype.setContextChanged = function(
   this._contextChangedFuncThisArg = contextChangedThisArg;
 };
 
-parsegraph_Component.prototype.setSerializer = function(
+Component.prototype.setSerializer = function(
     serializerFunc,
     serializerFuncThisArg,
 ) {
