@@ -1,20 +1,21 @@
-import {parsegraph_IGNORE_GL_ERRORS} from './graph/settings';
-import {parsegraph_VFLIP} from './graph/settings';
+import {IGNORE_GL_ERRORS} from './graph/settings';
+import {VFLIP} from './graph/settings';
+/* eslint-disable require-jsdoc, valid-jsdoc, camelcase */
 
-export var parsegraph_glBufferData_BYTES = 0;
-export function parsegraph_clearPerformanceCounters() {
-  parsegraph_glBufferData_BYTES = 0;
+export let glBufferDataBytes = 0;
+export function clearPerformanceCounters() {
+  glBufferDataBytes = 0;
 }
 
-export function parsegraph_countGLBufferBytes(size) {
-  parsegraph_glBufferData_BYTES += size;
+export function countGLBufferBytes(size) {
+  glBufferDataBytes += size;
 }
 
-/**
+/*
  * Returns a list of 2-D vertex coordinates that will create
  * a rectangle, centered at the specified position.
  */
-export function parsegraph_generateRectangleVertices(x, y, w, h) {
+export function generateRectangleVertices(x, y, w, h) {
   return [
     x - w / 2,
     y - h / 2,
@@ -32,7 +33,7 @@ export function parsegraph_generateRectangleVertices(x, y, w, h) {
   ];
 }
 
-export function parsegraph_getTextureSize(gl) {
+export function getTextureSize(gl) {
   return Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE));
 }
 
@@ -76,7 +77,7 @@ export function getVerts(width, length, height) {
   ];
 }
 
-export function parsegraph_generateRectangleTexcoords() {
+export function generateRectangleTexcoords() {
   return [0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1];
 }
 
@@ -102,7 +103,7 @@ export function compileShader(gl, shaderSource, shaderType, shaderName) {
   gl.compileShader(shader);
 
   // Check if it compiled
-  if (!parsegraph_IGNORE_GL_ERRORS) {
+  if (!IGNORE_GL_ERRORS) {
     const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (!success) {
       // Something went wrong during compilation; get the error
@@ -143,13 +144,13 @@ export function createProgram(gl, vertexShader, fragmentShader) {
   const success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (!success) {
     // something went wrong with the link
-    throw 'program filed to link:' + gl.getProgramInfoLog(program);
+    throw new Error('program filed to link:' + gl.getProgramInfoLog(program));
   }
 
   return program;
 }
 
-export function parsegraph_glErrorString(gl, err) {
+export function glErrorString(gl, err) {
   if (arguments.length < 2) {
     throw new Error('A GL context must be provided with the error');
   }
@@ -173,31 +174,31 @@ export function parsegraph_glErrorString(gl, err) {
   }
 }
 
-export function parsegraph_checkGLError() {
-  if (parsegraph_IGNORE_GL_ERRORS) {
+export function checkGLError(...args) {
+  if (IGNORE_GL_ERRORS) {
     return;
   }
-  const gl = arguments[0];
+  const gl = args[0];
   let msg;
-  if (arguments.length > 1) {
-    msg = arguments[1];
-    for (let i = 2; i < arguments.length; ++i) {
-      msg += arguments[i];
+  if (args.length > 1) {
+    msg = args[1];
+    for (let i = 2; i < args.length; ++i) {
+      msg += args[i];
     }
   }
   let err;
   if ((err = gl.getError()) != gl.NO_ERROR && err != gl.CONTEXT_LOST_WEBGL) {
     if (msg) {
       throw new Error(
-          'WebGL error during ' + msg + ': ' + parsegraph_glErrorString(gl, err),
+          'WebGL error during ' + msg + ': ' + glErrorString(gl, err),
       );
     } else {
-      throw new Error('WebGL error: ' + parsegraph_glErrorString(gl, err));
+      throw new Error('WebGL error: ' + glErrorString(gl, err));
     }
   }
 }
 
-export function parsegraph_compileProgram(
+export function compileProgram(
     window,
     shaderName,
     vertexShader,
@@ -213,7 +214,7 @@ export function parsegraph_compileProgram(
   }
 
   const program = gl.createProgram();
-  parsegraph_checkGLError(
+  checkGLError(
       gl,
       'compileProgram.createProgram(shaderName=\'',
       shaderName,
@@ -226,7 +227,7 @@ export function parsegraph_compileProgram(
       gl.VERTEX_SHADER,
       shaderName,
   );
-  parsegraph_checkGLError(
+  checkGLError(
       gl,
       'compileProgram.compile vertex shader(shaderName=\'',
       shaderName,
@@ -234,7 +235,7 @@ export function parsegraph_compileProgram(
   );
 
   gl.attachShader(program, compiledVertexShader);
-  parsegraph_checkGLError(
+  checkGLError(
       gl,
       'compileProgram.attach vertex shader(shaderName=\'',
       shaderName,
@@ -247,14 +248,14 @@ export function parsegraph_compileProgram(
       gl.FRAGMENT_SHADER,
       shaderName,
   );
-  parsegraph_checkGLError(
+  checkGLError(
       gl,
       'compileProgram.compile fragment shader(shaderName=\'',
       shaderName,
       ')',
   );
   gl.attachShader(program, compiledFragmentShader);
-  parsegraph_checkGLError(
+  checkGLError(
       gl,
       'compileProgram.attach fragment shader(shaderName=\'',
       shaderName,
@@ -262,7 +263,7 @@ export function parsegraph_compileProgram(
   );
 
   gl.linkProgram(program);
-  if (!parsegraph_IGNORE_GL_ERRORS) {
+  if (!IGNORE_GL_ERRORS) {
     const st = gl.getProgramParameter(program, gl.LINK_STATUS);
     if (!st) {
       throw new Error(
@@ -295,11 +296,11 @@ export function parsegraph_compileProgram(
  *     script tag.
  * @return {!WebGLShader} A shader.
  */
-export function createShaderFromScriptTag(gl, scriptId, opt_shaderType) {
+export function createShaderFromScriptTag(gl, scriptId, optshaderType) {
   // look up the script tag by id.
   const shaderScript = document.getElementById(scriptId);
   if (!shaderScript) {
-    throw '*** Error: unknown script element: ' + scriptId;
+    throw new Error('*** Error: unknown script element: ' + scriptId);
   }
 
   // extract the contents of the script tag.
@@ -307,13 +308,13 @@ export function createShaderFromScriptTag(gl, scriptId, opt_shaderType) {
 
   // If we didn't pass in a type, use the 'type' from
   // the script tag.
-  if (!opt_shaderType) {
+  if (!optshaderType) {
     if (shaderScript.type == 'x-shader/x-vertex') {
-      opt_shaderType = gl.VERTEX_SHADER;
+      optshaderType = gl.VERTEX_SHADER;
     } else if (shaderScript.type == 'x-shader/x-fragment') {
-      opt_shaderType = gl.FRAGMENT_SHADER;
+      optshaderType = gl.FRAGMENT_SHADER;
     } else if (!opt_shaderType) {
-      throw '*** Error: shader type not set';
+      throw new Error('*** Error: shader type not set');
     }
   }
 
@@ -375,17 +376,17 @@ export function matrixCopy3x3(src) {
   ];
 }
 
-export function matrixMultiply3x3() {
-  if (arguments.length === 0) {
+export function matrixMultiply3x3(...args) {
+  if (args.length === 0) {
     throw new Error('At least two matrices must be provided.');
   }
-  if (arguments.length === 1) {
-    return arguments[0];
+  if (args.length === 1) {
+    return args[0];
   }
-  let rv = matrixCopy3x3(arguments[0]);
-  for (let i = 1; i < arguments.length; ++i) {
+  let rv = matrixCopy3x3(args[0]);
+  for (let i = 1; i < args.length; ++i) {
     const a = rv;
-    const b = arguments[i];
+    const b = args[i];
     rv = [
       a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
       a[0] * b[1] + a[1] * b[4] + a[2] * b[7],
@@ -499,7 +500,7 @@ export function midPoint(x1, y1, x2, y2) {
 
 export function make2DProjection(width, height, flipVertical) {
   if (flipVertical === undefined) {
-    flipVertical = parsegraph_VFLIP;
+    flipVertical = VFLIP;
   }
   flipVertical = flipVertical === true;
   // console.log("Making 2D projection (flipVertical=" + flipVertical + ")");
@@ -786,7 +787,7 @@ export function matrixVectorMultiply4x4(v, m) {
   return dst;
 }
 
-/**
+/*
  * Returns a 4x4 matrix that, positioned from the camera position,
  * looks at the target, a position in 3-space, angled using the
  * up vector.

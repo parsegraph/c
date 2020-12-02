@@ -1,10 +1,12 @@
-function parsegraph_focusElement(element) {
+/* eslint-disable require-jsdoc */
+
+export default function focusElement(element) {
   return window.setTimeout(function() {
     element.focus();
   });
 }
 
-function parsegraph_findSelected(selectElement) {
+export default function findSelected(selectElement) {
   let c = selectElement.firstChild;
   while (c != null) {
     if (c.selected) {
@@ -15,7 +17,7 @@ function parsegraph_findSelected(selectElement) {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
-function fixedCharAt(str, idx) {
+export default function fixedCharAt(str, idx) {
   let ret = '';
   str += '';
   const end = str.length;
@@ -46,14 +48,13 @@ function fixedCharAt(str, idx) {
   return ret;
 }
 
-parsegraph_Browser_Tests = new parsegraph_TestSuite('Browser');
+browserTests = new TestSuite('Browser');
 
-parsegraph_Browser_Tests.addTest(
+browserTests.addTest(
     'arguments referenced from other closures',
     function() {
-      const foo = function() {
-        const args = arguments;
-        return function() {
+      const foo = function(...args) {
+        return function(...args) {
           return args[0];
         };
       };

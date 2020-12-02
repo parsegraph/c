@@ -1,3 +1,5 @@
+/* eslint-disable require-jsdoc, valid-jsdoc */
+
 export function addEventListener(
     targetElement,
     eventName,
@@ -32,8 +34,8 @@ export function addEventMethod(
   return addEventListener(
       targetElement,
       eventName,
-      function() {
-        listener.apply(listenerThisArg, arguments);
+      function(...args) {
+        listener.apply(listenerThisArg, args);
       },
       useCapture,
   );
