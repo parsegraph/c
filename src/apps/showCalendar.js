@@ -1,4 +1,4 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc, max-len */
 
 export default function createDay(
     i,

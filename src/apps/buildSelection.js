@@ -1,15 +1,17 @@
-function buildSelection(graph, COUNT) {
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+/* eslint-disable require-jsdoc */
+
+export default function buildSelection(graph, COUNT) {
+  const caret = new Caret(BLOCK);
   caret.push();
 
-  let d = parsegraph_FORWARD;
+  let d = FORWARD;
   for (let i = 0; i < COUNT; ++i) {
     if (i % 3 == 0) {
-      caret.spawn(d, parsegraph_BLOCK);
+      caret.spawn(d, BLOCK);
     } else if (i % 2 == 0) {
-      caret.spawn(d, parsegraph_SLOT);
+      caret.spawn(d, SLOT);
     } else {
-      caret.spawn(d, parsegraph_BUD);
+      caret.spawn(d, BUD);
     }
     caret.label(i);
     if (i % 2 == 0) {
@@ -17,7 +19,7 @@ function buildSelection(graph, COUNT) {
     }
     caret.move(d);
     caret.shrink();
-    d = parsegraph_turnLeft(d);
+    d = turnLeft(d);
   }
   caret.pop();
 
@@ -25,7 +27,7 @@ function buildSelection(graph, COUNT) {
     graph.scheduleRepaint();
 
     caret.moveToRoot();
-    let d = parsegraph_FORWARD;
+    let d = FORWARD;
     for (let i = 0; i < COUNT; ++i) {
       if (caret.selected()) {
         caret.deselect();
@@ -33,11 +35,11 @@ function buildSelection(graph, COUNT) {
         caret.select();
       }
       caret.move(d);
-      d = parsegraph_turnLeft(d);
+      d = turnLeft(d);
     }
   };
 
-  var scheduleAddBlock = function() {
+  const scheduleAddBlock = function() {
     addBlock();
     window.setTimeout(scheduleAddBlock, 1000);
   };

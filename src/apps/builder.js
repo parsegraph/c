@@ -1,50 +1,52 @@
-function showFlowchartTemplate(world, belt) {
-  const caret = new parsegraph_Caret('b');
+/* eslint-disable require-jsdoc */
 
-  var clickChild = function() {
+export default function showFlowchartTemplate(world, belt) {
+  const caret = new Caret('b');
+
+  const clickChild = function() {
     // Spawn a reasonable child in an allowed direction.
     let child;
 
     let dirs;
     switch (this.type()) {
-      case parsegraph_BLOCK:
+      case BLOCK:
         dirs = [
-          parsegraph_FORWARD,
-          parsegraph_DOWNWARD,
-          parsegraph_UPWARD,
-          parsegraph_BACKWARD,
-          parsegraph_INWARD,
+          FORWARD,
+          DOWNWARD,
+          UPWARD,
+          BACKWARD,
+          INWARD,
         ];
         break;
-      case parsegraph_SLOT:
+      case SLOT:
         if (
           this.parentDirection() &&
-          this.parentDirection() != parsegraph_OUTWARD
+          this.parentDirection() != OUTWARD
         ) {
           dirs = [
-            parsegraph_reverseNodeDirection(this.parentDirection()),
-            parsegraph_FORWARD,
-            parsegraph_BACKWARD,
-            parsegraph_UPWARD,
-            parsegraph_DOWNWARD,
-            parsegraph_INWARD,
+            reverseNodeDirection(this.parentDirection()),
+            FORWARD,
+            BACKWARD,
+            UPWARD,
+            DOWNWARD,
+            INWARD,
           ];
         } else {
           dirs = [
-            parsegraph_FORWARD,
-            parsegraph_BACKWARD,
-            parsegraph_UPWARD,
-            parsegraph_DOWNWARD,
-            parsegraph_INWARD,
+            FORWARD,
+            BACKWARD,
+            UPWARD,
+            DOWNWARD,
+            INWARD,
           ];
         }
         break;
-      case parsegraph_BUD:
+      case BUD:
         dirs = [
-          parsegraph_DOWNWARD,
-          parsegraph_FORWARD,
-          parsegraph_BACKWARD,
-          parsegraph_UPWARD,
+          DOWNWARD,
+          FORWARD,
+          BACKWARD,
+          UPWARD,
         ];
         break;
     }
@@ -54,24 +56,24 @@ function showFlowchartTemplate(world, belt) {
       if (this.hasNode(dir)) {
         continue;
       }
-      if (this.type() == parsegraph_BUD && dir == parsegraph_INWARD) {
+      if (this.type() == BUD && dir == INWARD) {
         continue;
       }
-      let t = parsegraph_BLOCK;
+      let t = BLOCK;
       switch (this.type()) {
-        case parsegraph_BLOCK:
-          t = dir == parsegraph_INWARD ? parsegraph_SLOT : parsegraph_BUD;
+        case BLOCK:
+          t = dir == INWARD ? SLOT : BUD;
           break;
-        case parsegraph_SLOT:
-          t = dir == parsegraph_INWARD ? parsegraph_BLOCK : parsegraph_SLOT;
+        case SLOT:
+          t = dir == INWARD ? BLOCK : SLOT;
           break;
-        case parsegraph_BUD:
-          t = parsegraph_BLOCK;
+        case BUD:
+          t = BLOCK;
           break;
       }
       child = this.spawnNode(dir, t);
-      if (dir == parsegraph_INWARD) {
-        child.setScale(parsegraph_SHRINK_SCALE);
+      if (dir == INWARD) {
+        child.setScale(SHRINK_SCALE);
       }
       break;
     }

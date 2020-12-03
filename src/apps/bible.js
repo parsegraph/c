@@ -1,4 +1,6 @@
-function parsegraph_BibleWidget(belt, world) {
+/* eslint-disable require-jsdoc */
+
+export default function BibleWidget(belt, world) {
   this.belt = belt;
   this.world = world;
   this._nextRequest = null;
@@ -6,31 +8,31 @@ function parsegraph_BibleWidget(belt, world) {
   this._loadedData = {};
 }
 
-parsegraph_BibleWidget.prototype.setNextRequest = function(nextRequest) {
+BibleWidget.prototype.setNextRequest = function(nextRequest) {
   if (this._nextRequest) {
     throw new Error('Refusing to overwrite next request');
   }
   this._nextRequest = nextRequest;
 };
 
-parsegraph_BibleWidget.prototype.clearNextRequest = function() {
+BibleWidget.prototype.clearNextRequest = function() {
   this._nextRequest = null;
 };
 
-parsegraph_BibleWidget.prototype.getNextRequest = function() {
+BibleWidget.prototype.getNextRequest = function() {
   return this._nextRequest;
 };
 
-parsegraph_BibleWidget.prototype.callNextRequest = function() {
+BibleWidget.prototype.callNextRequest = function() {
   this._nextRequest();
 };
 
-parsegraph_BibleWidget.prototype.getRequestSent = function() {
+BibleWidget.prototype.getRequestSent = function() {
   // console.log("Getting request sent. Value=" + this._requestSent);
   return this._requestSent;
 };
 
-parsegraph_BibleWidget.prototype.setRequestSent = function() {
+BibleWidget.prototype.setRequestSent = function() {
   if (this._requestSent) {
     throw new Error('Sent request flag cannot be set again');
   }
@@ -38,12 +40,12 @@ parsegraph_BibleWidget.prototype.setRequestSent = function() {
   this._requestSent = true;
 };
 
-parsegraph_BibleWidget.prototype.clearRequestSent = function() {
+BibleWidget.prototype.clearRequestSent = function() {
   // console.log("Clearing request sent");
   this._requestSent = false;
 };
 
-parsegraph_BibleWidget.prototype.tick = function() {
+BibleWidget.prototype.tick = function() {
   if (!this.getNextRequest() && !this.getRequestSent()) {
     // console.log("No next request");
     return false;
@@ -59,7 +61,7 @@ parsegraph_BibleWidget.prototype.tick = function() {
   return true;
 };
 
-parsegraph_BibleWidget.prototype.parseChapter = function(chapterText) {
+BibleWidget.prototype.parseChapter = function(chapterText) {
   const data = {paragraphs: []};
   chapterText.split('¶').forEach(function(paragraph, paraIndex) {
     const lines = paragraph.split('\n');
@@ -79,7 +81,7 @@ parsegraph_BibleWidget.prototype.parseChapter = function(chapterText) {
   return data;
 };
 
-parsegraph_BibleWidget.prototype.preload = function(
+BibleWidget.prototype.preload = function(
     callback,
     callbackThisArg,
 ) {
@@ -125,7 +127,7 @@ parsegraph_BibleWidget.prototype.preload = function(
   });
 };
 
-parsegraph_BibleWidget.prototype.loadChapter = function(
+BibleWidget.prototype.loadChapter = function(
     book,
     chap,
     callback,
@@ -178,7 +180,7 @@ parsegraph_BibleWidget.prototype.loadChapter = function(
   return xhr;
 };
 
-parsegraph_BibleWidget.prototype.getChapter = function(
+BibleWidget.prototype.getChapter = function(
     caret,
     book,
     chap,
@@ -226,7 +228,7 @@ parsegraph_BibleWidget.prototype.getChapter = function(
   });
 };
 
-parsegraph_BibleWidget.prototype.getAllChapters = function(
+BibleWidget.prototype.getAllChapters = function(
     caret,
     book,
     maxChaps,
@@ -234,7 +236,7 @@ parsegraph_BibleWidget.prototype.getAllChapters = function(
     callbackThisArg,
 ) {
   let chapNum = 1;
-  var cont = function() {
+  const cont = function() {
     if (chapNum > maxChaps) {
       if (callback) {
         callback.call(callbackThisArg);
@@ -265,14 +267,14 @@ parsegraph_BibleWidget.prototype.getAllChapters = function(
   };
 };
 
-parsegraph_BibleWidget.prototype.getAllBooks = function(
+BibleWidget.prototype.getAllBooks = function(
     caret,
     booksAndChaps,
     callback,
     callbackThisArg,
 ) {
   let bookIndex = 0;
-  var cont = function() {
+  const cont = function() {
     if (bookIndex >= booksAndChaps.length) {
       caret.pop();
       if (callback) {
@@ -299,7 +301,7 @@ parsegraph_BibleWidget.prototype.getAllBooks = function(
   };
 };
 
-parsegraph_BibleWidget.prototype.getOldTestament = function(
+BibleWidget.prototype.getOldTestament = function(
     caret,
     callback,
     callbackThisArg,
@@ -352,7 +354,7 @@ parsegraph_BibleWidget.prototype.getOldTestament = function(
   );
 };
 
-parsegraph_BibleWidget.prototype.getNewTestament = function(
+BibleWidget.prototype.getNewTestament = function(
     caret,
     callback,
     callbackThisArg,

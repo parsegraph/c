@@ -1,5 +1,6 @@
 import Caret from '../graph/Caret';
 import {Type} from '../graph/Node';
+/* eslint-disable require-jsdoc */
 
 export default class MemoryPiers {
   constructor(COUNT) {

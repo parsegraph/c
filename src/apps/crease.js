@@ -1,10 +1,12 @@
-function parsegraph_CreaseWidget(belt, world) {
-  const caret = new parsegraph_Caret(parsegraph_BUD);
+/* eslint-disable require-jsdoc */
+
+export default function CreaseWidget(belt, world) {
+  const caret = new Caret(BUD);
   this._belt = belt;
   this._world = world;
 
   this._root = caret.root();
-  const rs = parsegraph_copyStyle(parsegraph_BUD);
+  const rs = copyStyle(BUD);
   rs.minWidth *= 20;
   rs.minHeight *= 20;
   rs.borderRoundness *= 18;
@@ -13,18 +15,18 @@ function parsegraph_CreaseWidget(belt, world) {
 
   const addActions = function(id) {
     const node = caret.node();
-    node.setLabel(id, parsegraph_defaultFont());
+    node.setLabel(id, defaultFont());
     let uninstall = null;
     let reinstall;
     reinstall = function() {
       if (uninstall) {
         uninstall();
       }
-      const carousel = new parsegraph_ActionCarousel();
+      const carousel = new ActionCarousel();
       if (node.value().startTime) {
         carousel.addAction('Stop', function() {
           node.value().startTime = false;
-          const s = parsegraph_copyStyle(parsegraph_BLOCK);
+          const s = copyStyle(BLOCK);
           node.setBlockStyle(s);
           reinstall();
         });
@@ -46,13 +48,13 @@ function parsegraph_CreaseWidget(belt, world) {
         let dir;
         switch (id) {
           case 'Center':
-            dir = parsegraph_DOWNWARD;
+            dir = DOWNWARD;
             break;
           case 'Forward':
-            dir = parsegraph_FORWARD;
+            dir = FORWARD;
             break;
           case 'Backward':
-            dir = parsegraph_BACKWARD;
+            dir = BACKWARD;
             break;
         }
         for (let n = node; n; n = n.nodeAt(dir)) {
@@ -84,7 +86,7 @@ function parsegraph_CreaseWidget(belt, world) {
   caret.pull('d');
 
   caret.push();
-  for (var i = 0; i < size; ++i) {
+  for (let i = 0; i < size; ++i) {
     caret.spawnMove('d', 'b');
     addActions('Center');
     caret.node()._id = 'Center ' + i;
@@ -92,7 +94,7 @@ function parsegraph_CreaseWidget(belt, world) {
   }
   caret.pop();
   caret.push();
-  for (var i = 0; i < size; ++i) {
+  for (let i = 0; i < size; ++i) {
     caret.spawnMove('b', 'b');
     addActions('Backward');
     caret.node()._id = 'Backward ' + i;
@@ -100,7 +102,7 @@ function parsegraph_CreaseWidget(belt, world) {
   }
   caret.pop();
   caret.push();
-  for (var i = 0; i < size; ++i) {
+  for (let i = 0; i < size; ++i) {
     caret.spawnMove('f', 'b');
     addActions('Forward');
     caret.node()._id = 'Forward ' + i;
@@ -108,13 +110,15 @@ function parsegraph_CreaseWidget(belt, world) {
   }
   caret.pop();
 
-  const rootActions = new parsegraph_ActionCarousel();
+  const rootActions = new ActionCarousel();
   rootActions.addAction(
       'Crease random',
       function() {
         for (const i in this.creasables) {
-          const n = this.creasables[i];
-          n.setPaintGroup(Math.random() > 0.5);
+          if (Object.prototype.hasOwnProperty.call(this.creasables, i)) {
+            const n = this.creasables[i];
+            n.setPaintGroup(Math.random() > 0.5);
+          }
         }
       },
       this,
@@ -123,9 +127,11 @@ function parsegraph_CreaseWidget(belt, world) {
       'Grow all',
       function() {
         for (const i in this.creasables) {
-          const n = this.creasables[i];
-          n.value().startTime = Math.random() > 0.5 ? new Date() : false;
-          n.value().reinstall();
+          if (Object.prototype.hasOwnProperty.call(this.creasables, i)) {
+            const n = this.creasables[i];
+            n.value().startTime = Math.random() > 0.5 ? new Date() : false;
+            n.value().reinstall();
+          }
         }
       },
       this,
@@ -133,7 +139,7 @@ function parsegraph_CreaseWidget(belt, world) {
   rootActions.install(caret.node());
 }
 
-parsegraph_CreaseWidget.prototype.tick = function() {
+CreaseWidget.prototype.tick = function() {
   let animating = false;
   for (let i = 0; i < this.creasables.length; ++i) {
     const node = this.creasables[i];
@@ -142,23 +148,23 @@ parsegraph_CreaseWidget.prototype.tick = function() {
     }
     animating = true;
     const startTime = node.value().startTime;
-    const s = parsegraph_copyStyle(parsegraph_BLOCK);
-    if (node.parentDirection() === parsegraph_UPWARD) {
+    const s = copyStyle(BLOCK);
+    if (node.parentDirection() === UPWARD) {
       s.verticalPadding =
         10 *
-        parsegraph_BUD_RADIUS *
-        (1 + Math.sin(parsegraph_elapsed(startTime) / 1000));
+        BUD_RADIUS *
+        (1 + Math.sin(elapsed(startTime) / 1000));
     } else {
       s.horizontalPadding =
         10 *
-        parsegraph_BUD_RADIUS *
-        (1 + Math.sin(parsegraph_elapsed(startTime) / 1000));
+        BUD_RADIUS *
+        (1 + Math.sin(elapsed(startTime) / 1000));
     }
     node.setBlockStyle(s);
   }
   return animating;
 };
 
-parsegraph_CreaseWidget.prototype.node = function() {
+CreaseWidget.prototype.node = function() {
   return this._root;
 };

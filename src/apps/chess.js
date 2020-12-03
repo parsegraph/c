@@ -1,4 +1,6 @@
-function parsegraph_ChessWidget() {}
+/* eslint-disable require-jsdoc */
+
+export default function ChessWidget() {}
 
 let whiteStyle;
 let blackstyle;
@@ -7,8 +9,8 @@ function updateStyle() {
   if (whiteStyle) {
     return;
   }
-  whiteStyle = parsegraph_copyStyle('b');
-  blackStyle = parsegraph_copyStyle('s');
+  whiteStyle = copyStyle('b');
+  blackStyle = copyStyle('s');
   whiteStyle.minWidth = 400;
   blackStyle.minWidth = 400;
   whiteStyle.minHeight = 400;
@@ -16,43 +18,43 @@ function updateStyle() {
   whiteStyle.verticalSeparation = 0;
   blackStyle.verticalSeparation = 0;
 
-  emptyStyle = parsegraph_copyStyle('b');
+  emptyStyle = copyStyle('b');
   emptyStyle.minWidth = 200;
   emptyStyle.minHeight = 200;
-  emptyStyle.backgroundColor = new parsegraph_Color(0.9, 0.9, 0);
+  emptyStyle.backgroundColor = new Color(0.9, 0.9, 0);
 
-  whitePieceStyle = parsegraph_copyStyle('b');
-  whitePieceStyle.backgroundColor = new parsegraph_Color(1, 1, 1, 1);
+  whitePieceStyle = copyStyle('b');
+  whitePieceStyle.backgroundColor = new Color(1, 1, 1, 1);
 
-  blackPieceStyle = parsegraph_copyStyle('s');
-  blackPieceStyle.backgroundColor = new parsegraph_Color(0, 0, 0, 1);
-  blackPieceStyle.fontColor = new parsegraph_Color(1, 1, 1, 1);
+  blackPieceStyle = copyStyle('s');
+  blackPieceStyle.backgroundColor = new Color(0, 0, 0, 1);
+  blackPieceStyle.fontColor = new Color(1, 1, 1, 1);
   whitePieceStyle.minWidth = 200;
   blackPieceStyle.minWidth = 200;
   whitePieceStyle.minHeight = 200;
   blackPieceStyle.minHeight = 200;
 
   whitePieceStyle.fontSize = blackPieceStyle.fontSize =
-    3 * parsegraph_FONT_SIZE;
+    3 * FONT_SIZE;
 
-  budPiece = parsegraph_copyStyle('u');
+  budPiece = copyStyle('u');
   budPiece.horizontalSeparation = 0;
 }
 
-parsegraph_ChessWidget.prototype.node = function() {
+ChessWidget.prototype.node = function() {
   updateStyle();
   if (!this._containerNode) {
     this._squares = [];
-    const car = new parsegraph_Caret('u');
+    const car = new Caret('u');
     car.fitExact();
     this._containerNode = car.root();
     const fs = 'abcdefgh';
     const rs = '12345678';
-    for (var f = 1; f <= 8; ++f) {
+    for (let f = 1; f <= 8; ++f) {
       car.spawnMove('f', 'u');
       car.node().setBlockStyle(budPiece);
       car.push();
-      for (var r = 1; r <= 8; ++r) {
+      for (let r = 1; r <= 8; ++r) {
         car.spawnMove('u', 'b');
         car.label(fs.charAt(f - 1) + rs.charAt(r - 1));
         car.node().setBlockStyle(r % 2 == f % 2 ? blackStyle : whiteStyle);
@@ -64,7 +66,7 @@ parsegraph_ChessWidget.prototype.node = function() {
         };
         SQUARES = this._squares;
 
-        var makePossible = function(node) {
+        const makePossible = function(node) {
           node.setBlockStyle(r <= 2 ? whitePieceStyle : blackPieceStyle);
         };
 
@@ -126,22 +128,22 @@ parsegraph_ChessWidget.prototype.node = function() {
               break;
             case 'Rook':
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('u', 'b'));
               }
               car.pop();
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('d', 'b'));
               }
               car.pop();
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('f', 'b'));
               }
               car.pop();
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('b', 'b'));
               }
               car.pop();
@@ -150,20 +152,20 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.push();
               makePossible(car.spawnMove('f', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('f', 'b'));
               }
               car.pop();
               car.push();
               makePossible(car.spawnMove('u', 'b'));
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 car.spawnMove('u', 'b');
                 makePossible(car.spawnMove('f', 'b'));
               }
               car.pop();
               makePossible(car.spawnMove('d', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 car.spawnMove('d', 'b');
                 makePossible(car.spawnMove('f', 'b'));
               }
@@ -172,21 +174,21 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.move('b');
               makePossible(car.spawnMove('d', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('d', 'b'));
               }
               car.pop();
               car.move('u');
               makePossible(car.spawnMove('b', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('b', 'b'));
               }
               car.pop();
               makePossible(car.spawnMove('u', 'b'));
               car.push();
               car.spawnMove('u', 'b');
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('b', 'b'));
                 car.spawnMove('u', 'b');
               }
@@ -194,7 +196,7 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.move('d');
               makePossible(car.spawnMove('d', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 car.spawnMove('d', 'b');
                 makePossible(car.spawnMove('b', 'b'));
               }
@@ -203,7 +205,7 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.move('f');
               makePossible(car.spawnMove('u', 'b'));
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 makePossible(car.spawnMove('u', 'b'));
               }
               car.pop();
@@ -213,7 +215,7 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.push();
               car.spawnMove('u', 'b');
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 if (i > 0) {
                   car.spawnMove('u', 'b');
                 }
@@ -232,7 +234,7 @@ parsegraph_ChessWidget.prototype.node = function() {
               car.push();
               car.spawnMove('d', 'b');
               car.push();
-              for (var i = 0; i < 4; ++i) {
+              for (let i = 0; i < 4; ++i) {
                 if (i > 0) {
                   car.spawnMove('d', 'b');
                 }
@@ -279,11 +281,11 @@ parsegraph_ChessWidget.prototype.node = function() {
 
           // Scale the internal model.
           car.move('o');
-          car.node().nodeAt(parsegraph_INWARD).commitLayoutIteratively();
-          const es = car.node().nodeAt(parsegraph_INWARD).extentSize();
+          car.node().nodeAt(INWARD).commitLayoutIteratively();
+          const es = car.node().nodeAt(INWARD).extentSize();
           car
               .node()
-              .nodeAt(parsegraph_INWARD)
+              .nodeAt(INWARD)
               .setScale(1 / Math.max(es.width() / 320, es.height() / 320));
         };
         switch (r) {

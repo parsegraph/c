@@ -1,5 +1,7 @@
-function createSliderDemo() {
-  const caret = new parsegraph_Caret(parsegraph_BLOCK);
+/* eslint-disable require-jsdoc */
+
+export default function createSliderDemo() {
+  const caret = new Caret(BLOCK);
   caret.fitExact();
   caret.label('Slider');
   caret.spawnMove('d', 'slider');
