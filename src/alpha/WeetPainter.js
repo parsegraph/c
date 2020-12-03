@@ -1,4 +1,6 @@
-alpha_WeetPainter_VertexShader =
+/* eslint-disable require-jsdoc */
+
+alphaWeetPainterVertexShader =
   'uniform mat4 u_world;\n' +
   '\n' +
   'attribute vec4 a_position;\n' +
@@ -11,7 +13,7 @@ alpha_WeetPainter_VertexShader =
   'contentColor = a_color;' +
   '}';
 
-alpha_WeetPainter_FragmentShader =
+alphaWeetPainterFragmentShader =
   '#ifdef GL_ES\n' +
   'precision mediump float;\n' +
   '#endif\n' +
@@ -22,10 +24,10 @@ alpha_WeetPainter_FragmentShader =
   'gl_FragColor = contentColor;' +
   '}';
 
-/**
+/*
  * Draws 3d faces in a solid color.
  */
-function alpha_WeetPainter(window) {
+export function alphaWeetPainter(window) {
   if (!window) {
     throw new Error('A Window must be provided when creating a WeetPainter');
   }
@@ -89,19 +91,19 @@ function alpha_WeetPainter(window) {
     [-width, length, -height], // v3
     [width, length, -height], // v2
   ];
-  alpha_CUBE_VERTICES = cv;
+  CUBE_VERTICES = cv;
 
-  alpha_CUBE_COLORS = [
-    new alpha_Color(1, 1, 0), // 0
-    new alpha_Color(0, 1, 1), // 5
-    new alpha_Color(1, 0, 1), // 1
-    new alpha_Color(0, 0, 1), // 2
-    new alpha_Color(1, 0, 0), // 3
-    new alpha_Color(0, 1, 0), // 4
+  CUBE_COLORS = [
+    new AlphaColor(1, 1, 0), // 0
+    new AlphaColor(0, 1, 1), // 5
+    new AlphaColor(1, 0, 1), // 1
+    new AlphaColor(0, 0, 1), // 2
+    new AlphaColor(1, 0, 0), // 3
+    new AlphaColor(0, 1, 0), // 4
   ];
 }
 
-alpha_WeetPainter.prototype.Init = function(numCubes) {
+alphaWeetPainter.prototype.Init = function(numCubes) {
   if (!this._posBuffer) {
     this._posBuffer = this.gl.createBuffer();
   }
@@ -119,7 +121,7 @@ alpha_WeetPainter.prototype.Init = function(numCubes) {
     // Cube
     for (let j = 0; j < 6; ++j) {
       // Face
-      const col = alpha_CUBE_COLORS[j];
+      const col = CUBE_COLORS[j];
       for (let k = 0; k < 6; ++k) {
         // Vertex
         colorData[x++] = col[0];
@@ -134,7 +136,7 @@ alpha_WeetPainter.prototype.Init = function(numCubes) {
   this._numCubes = numCubes;
 };
 
-alpha_WeetPainter.prototype.Cube = function(m) {
+alphaWeetPainter.prototype.Cube = function(m) {
   if (!this._data) {
     throw new Error('Init must be called first');
   }
@@ -158,8 +160,8 @@ alpha_WeetPainter.prototype.Cube = function(m) {
     drawVert.call(this, c4);
   };
 
-  const cv = alpha_CUBE_VERTICES;
-  const cc = alpha_CUBE_COLORS;
+  const cv = CUBE_VERTICES;
+  const cc = CUBE_COLORS;
   // Front, COLOR
   drawFace.call(this, cv[0], cv[1], cv[2], cv[3], cc[0]);
   // Back
@@ -174,14 +176,14 @@ alpha_WeetPainter.prototype.Cube = function(m) {
   drawFace.call(this, cv[20], cv[21], cv[22], cv[23], cc[4]);
 };
 
-alpha_WeetPainter.prototype.Clear = function() {
+alphaWeetPainter.prototype.Clear = function() {
   if (!this._data) {
     return;
   }
   this._dataX = 0;
 };
 
-alpha_WeetPainter.prototype.Draw = function(viewMatrix) {
+alphaWeetPainter.prototype.Draw = function(viewMatrix) {
   if (!viewMatrix) {
     throw new Error('A viewMatrix must be provided');
   }

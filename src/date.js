@@ -1,6 +1,7 @@
-import parsegraph_TestSuite from './TestSuite';
+import TestSuite from './TestSuite';
+/* eslint-disable require-jsdoc, max-len */
 
-export function parsegraph_datesEqual(a, b) {
+export function datesEqual(a, b) {
   if (a == undefined || b == undefined) {
     return a == undefined && b == undefined;
   }
@@ -11,7 +12,7 @@ export function parsegraph_datesEqual(a, b) {
   );
 }
 
-export function parsegraph_dateGreater(a, b) {
+export function dateGreater(a, b) {
   if (a == undefined) {
     return false;
   }
@@ -40,18 +41,18 @@ export function parsegraph_dateGreater(a, b) {
   return true;
 }
 
-const parsegraph_Date_Tests = new parsegraph_TestSuite('parsegraph_Date');
+const dateTests = new TestSuite('Date');
 
-parsegraph_Date_Tests.addTest('parsegraph_dateGreater', function(dom) {
-  if (parsegraph_dateGreater(new Date(2016, 0, 1), new Date(2017, 0, 1))) {
+dateTests.addTest('dateGreater', function(dom) {
+  if (dateGreater(new Date(2016, 0, 1), new Date(2017, 0, 1))) {
     return '2016 is showing as greater than 2017?!';
   }
-  if (!parsegraph_dateGreater(new Date(2018, 0, 1), new Date(2017, 0, 1))) {
+  if (!dateGreater(new Date(2018, 0, 1), new Date(2017, 0, 1))) {
     return '2018 is showing as less than 2017?!';
   }
 });
 
-function parsegraph_getListOfDays() {
+function getListOfDays() {
   return [
     'Sunday',
     'Monday',
@@ -63,7 +64,7 @@ function parsegraph_getListOfDays() {
   ];
 }
 
-function parsegraph_getListOfMonths() {
+function getListOfMonths() {
   return [
     'January',
     'February',
@@ -80,18 +81,18 @@ function parsegraph_getListOfMonths() {
   ];
 }
 
-const parsegraph_OFFSET = new Date().getTime();
-export function parsegraph_getRuntimeInMillis() {
-  return parsegraph_getTimeInMillis() - parsegraph_OFFSET;
+const OFFSET = new Date().getTime();
+export function getRuntimeInMillis() {
+  return getTimeInMillis() - OFFSET;
 }
 
-export function parsegraph_getTimeInMillis() {
+export function getTimeInMillis() {
   return new Date().getTime();
 }
 
-export const parsegraph_TIMEOUT = 40000;
+export const TIMEOUT = 40000;
 
-export function parsegraph_outputMonth(d, includeYear) {
+export function outputMonth(d, includeYear) {
   let str = parsegraph_getListOfMonths()[d.getMonth()];
   if (includeYear || includeYear === undefined) {
     str += ' ' + d.getFullYear();
@@ -99,7 +100,7 @@ export function parsegraph_outputMonth(d, includeYear) {
   return str;
 }
 
-export function parsegraph_outputDate(
+export function outputDate(
     d,
     includeDate,
     includeTime,
@@ -108,16 +109,16 @@ export function parsegraph_outputDate(
   let timeString = '';
   if (includeDate || includeDate === undefined) {
     if (
-      parsegraph_datesEqual(d, new Date()) &&
+      datesEqual(d, new Date()) &&
       (includeToday || includeToday === undefined)
     ) {
       timeString += 'Today, ';
     }
 
-    const dayOfWeek = parsegraph_getListOfDays();
+    const dayOfWeek = getListOfDays();
     timeString += dayOfWeek[d.getDay()] + ', ';
 
-    const months = parsegraph_getListOfMonths();
+    const months = getListOfMonths();
     timeString +=
       months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
     if (includeTime || includeTime === undefined) {
@@ -144,7 +145,7 @@ export function parsegraph_outputDate(
   return timeString;
 }
 
-export function parsegraph_previousMonth(d) {
+export function previousMonth(d) {
   d = new Date(d);
   if (d.getMonth() == 0) {
     d.setFullYear(d.getFullYear() - 1, 11, d.getDate());
@@ -154,7 +155,7 @@ export function parsegraph_previousMonth(d) {
   return d;
 }
 
-export function parsegraph_nextMonth(d) {
+export function nextMonth(d) {
   d = new Date(d);
   if (d.getMonth() == 11) {
     d.setFullYear(d.getFullYear() + 1, 0, d.getDate());
@@ -164,33 +165,33 @@ export function parsegraph_nextMonth(d) {
   return d;
 }
 
-export function parsegraph_previousDay(d) {
+export function previousDay(d) {
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   d.setDate(d.getDate() - 1);
   return d;
 }
 
-export function parsegraph_nextDay(d) {
+export function nextDay(d) {
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   d.setDate(d.getDate() + 1);
   return d;
 }
 
-export function parsegraph_previousWeek(d) {
+export function previousWeek(d) {
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   d.setDate(d.getDate() - 7);
   return d;
 }
 
-export function parsegraph_nextWeek(d) {
+export function nextWeek(d) {
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   d.setDate(d.getDate() + 7);
   return d;
 }
 
-export function parsegraph_getFirstDayOfWeek(d) {
+export function getFirstDayOfWeek(d) {
   while (d.getDay() != 0) {
-    d = parsegraph_previousDay(d);
+    d = previousDay(d);
   }
   return d;
 }
