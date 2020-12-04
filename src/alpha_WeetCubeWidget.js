@@ -1,16 +1,18 @@
+/* eslint-disable require-jsdoc, new-cap, max-len */
+
 const audioTransition = 1.2;
-function alpha_WeetCubeWidget(window) {
+export default function alphaWeetCubeWidget(window) {
   this.window = window;
   if (!this.window) {
     throw new Error('A Window must be provided when creating a Widget');
   }
 
-  this.camera = new alpha_Camera();
+  this.camera = new AlphaCamera();
   this.camera.SetFovX(60);
   this.camera.SetFarDistance(1000);
   this.camera.SetNearDistance(0.1);
 
-  this._input = new alpha_Input(this.window, this.camera);
+  this._input = new AlphaInput(this.window, this.camera);
   this._input.SetMouseSensitivity(0.4);
   this._lastPaint = new Date();
 
@@ -133,15 +135,15 @@ function alpha_WeetCubeWidget(window) {
   this.camera.GetParent().SetPosition(-1, -1, this._zMax * -5.0);
   this.camera
       .GetParent()
-      .SetOrientation(alpha_QuaternionFromAxisAndAngle(0, 1, 0, Math.PI));
+      .SetOrientation(QuaternionFromAxisAndAngle(0, 1, 0, Math.PI));
 
-  this._component = new parsegraph_Component();
+  this._component = new Component();
   this._component.setPainter(this.paint, this);
   this._component.setRenderer(this.render, this);
   this._component.setEventHandler(this.handleEvent, this);
 }
 
-alpha_WeetCubeWidget.prototype.handleEvent = function(eventType, eventData) {
+alphaWeetCubeWidget.prototype.handleEvent = function(eventType, eventData) {
   if (eventType === 'tick') {
     this.Tick();
     return true;
@@ -161,18 +163,18 @@ alpha_WeetCubeWidget.prototype.handleEvent = function(eventType, eventData) {
   return false;
 };
 
-alpha_WeetCubeWidget.prototype.component = function() {
+alphaWeetCubeWidget.prototype.component = function() {
   return this._component;
 };
 
-alpha_WeetCubeWidget.prototype.createAudioNode = function(audio) {
+alphaWeetCubeWidget.prototype.createAudioNode = function(audio) {
   const creator = this._audioModes[this._currentAudioMode];
   const n = creator.call(this, audio);
   // console.log("Creating audio node: ", this._currentAudioMode, n);
   return n;
 };
 
-alpha_WeetCubeWidget.prototype.onKeyDown = function(key) {
+alphaWeetCubeWidget.prototype.onKeyDown = function(key) {
   // console.log(key);
   switch (key) {
     case 'Enter':
@@ -185,13 +187,13 @@ alpha_WeetCubeWidget.prototype.onKeyDown = function(key) {
   }
 };
 
-alpha_WeetCubeWidget.prototype.switchAudioMode = function() {
+alphaWeetCubeWidget.prototype.switchAudioMode = function() {
   this._currentAudioMode =
     (this._currentAudioMode + 1) % this._audioModes.length;
   this._modeSwitched = true;
 };
 
-alpha_WeetCubeWidget.prototype.TickIfNecessary = function() {
+alphaWeetCubeWidget.prototype.TickIfNecessary = function() {
   // console.log("Necessary?", parsegraph_elapsed(this._lastPaint));
   if (parsegraph_elapsed(this._lastPaint) > 20) {
     console.log('Necessary:' + parsegraph_elapsed(this._lastPaint));
@@ -201,7 +203,7 @@ alpha_WeetCubeWidget.prototype.TickIfNecessary = function() {
   return false;
 };
 
-alpha_WeetCubeWidget.prototype.Tick = function() {
+alphaWeetCubeWidget.prototype.Tick = function() {
   const elapsed = parsegraph_elapsed(this._lastPaint) / 500;
   this._input.Update(elapsed);
   if (!this._frozen) {
@@ -209,42 +211,42 @@ alpha_WeetCubeWidget.prototype.Tick = function() {
   }
 };
 
-alpha_WeetCubeWidget.prototype.refresh = function() {
+alphaWeetCubeWidget.prototype.refresh = function() {
   if (this.cubePainter) {
     this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
   }
 };
 
-alpha_WeetCubeWidget.prototype.setMax = function(max) {
+alphaWeetCubeWidget.prototype.setMax = function(max) {
   this._xMax = max;
   this._yMax = max;
   this._zMax = max;
   this.refresh();
 };
 
-alpha_WeetCubeWidget.prototype.setXMax = function(xMax) {
+alphaWeetCubeWidget.prototype.setXMax = function(xMax) {
   this._xMax = xMax;
   this.refresh();
 };
 
-alpha_WeetCubeWidget.prototype.setYMax = function(yMax) {
+alphaWeetCubeWidget.prototype.setYMax = function(yMax) {
   this._yMax = yMax;
   this.refresh();
 };
 
-alpha_WeetCubeWidget.prototype.setZMax = function(zMax) {
+alphaWeetCubeWidget.prototype.setZMax = function(zMax) {
   this._zMax = zMax;
   this.refresh();
 };
 
-alpha_WeetCubeWidget.prototype.setRotq = function(rotq) {
+alphaWeetCubeWidget.prototype.setRotq = function(rotq) {
   this.rotq = rotq;
 };
 
-alpha_WeetCubeWidget.prototype.paint = function() {
+alphaWeetCubeWidget.prototype.paint = function() {
   const audio = this.window.audio();
   if (!this.cubePainter) {
-    this.cubePainter = new alpha_WeetPainter(this.window);
+    this.cubePainter = new WeetPainter(this.window);
     this.cubePainter.Init(this._xMax * this._yMax * this._zMax);
   } else {
     this.cubePainter.Clear();
@@ -276,7 +278,7 @@ alpha_WeetCubeWidget.prototype.paint = function() {
   }
   const createAudioNodes = audio && this._audioNodes.length == 0;
 
-  const c = new alpha_Physical(this.camera);
+  const c = new Physical(this.camera);
   let az = 0;
 
   this._nodesPainted = 0;
@@ -287,7 +289,7 @@ alpha_WeetCubeWidget.prototype.paint = function() {
   for (let i = 0; i < this._xMax; ++i) {
     for (let j = 0; j < this._yMax; ++j) {
       for (let k = 0; k < this._zMax; ++k) {
-        c.modelMode = alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE;
+        c.modelMode = PHYSICAL_ROTATE_TRANSLATE_SCALE;
         c.SetScale(1, 1, 1);
         c.orientation.Set(0, 0, 0, 1);
         c.position.Set(0, 0, 0);
@@ -300,7 +302,7 @@ alpha_WeetCubeWidget.prototype.paint = function() {
         this.cubePainter.Cube(c.GetModelMatrix());
         const makeAudio = Math.random() < 0.05;
         if (createAudioNodes && makeAudio) {
-          var node = this.createAudioNode(audio);
+          const node = this.createAudioNode(audio);
           panner = audio.createPanner();
           panner.panningModel = 'HRTF';
           panner.distanceModel = 'exponential';
@@ -323,7 +325,7 @@ alpha_WeetCubeWidget.prototype.paint = function() {
                 0,
                 audio.currentTime + audioTransition,
             );
-            var node = this.createAudioNode(audio);
+            const node = this.createAudioNode(audio);
             this._modeAudioNodes[az] = node;
             node.connect(panner);
           }
@@ -334,9 +336,9 @@ alpha_WeetCubeWidget.prototype.paint = function() {
 
         if (panner) {
           const wv = c.GetModelMatrix();
-          var cx;
-          var cy;
-          var cz;
+          let cx;
+          let cy;
+          let cz;
           cx = c.position[0] + cubeSize / 2;
           cy = c.position[1] + cubeSize / 2;
           cz = c.position[2] + cubeSize / 2;
@@ -366,7 +368,7 @@ alpha_WeetCubeWidget.prototype.paint = function() {
   }
 };
 
-alpha_WeetCubeWidget.prototype.setUpdateListener = function(
+alphaWeetCubeWidget.prototype.setUpdateListener = function(
     listener,
     listenerThisArg,
 ) {
@@ -374,7 +376,7 @@ alpha_WeetCubeWidget.prototype.setUpdateListener = function(
   this._listenerThisArg = listenerThisArg || this;
 };
 
-alpha_WeetCubeWidget.prototype.render = function(width, height) {
+alphaWeetCubeWidget.prototype.render = function(width, height) {
   if (!this.cubePainter) {
     return;
   }
