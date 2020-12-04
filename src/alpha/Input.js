@@ -16,12 +16,15 @@
 // do stuff because Q is down
 //       end
 
-// MouseWheelUp() // returns 1 or more if you have scrolled up recently
-// MouseWheelDegreesUp() // returns the number of degrees the wheel has scrolled recently
+// MouseWheelUp() 
+// returns 1 or more if you have scrolled up recently
+// MouseWheelDegreesUp() 
+// returns the number of degrees the wheel has scrolled recently
 
 // add this to your code to make a command only work once per button push
+/* eslint-disable require-jsdoc, new-cap */
 /*
-	if elapsed == 0 then
+        if elapsed == 0 then
                 done = false;
                 return
 
@@ -90,7 +93,7 @@ alphaInput.prototype.onMousedown = function(event) {
   return true;
 };
 
-alpha_Input.prototype.onMouseup = function(event) {
+alphaInput.prototype.onMouseup = function(event) {
   let button;
   let x;
   let y;
@@ -105,7 +108,7 @@ alpha_Input.prototype.onMouseup = function(event) {
   return true;
 };
 
-alpha_Input.prototype.onMousemove = function(event) {
+alphaInput.prototype.onMousemove = function(event) {
   let x;
   let y;
   x = event.x;
@@ -115,7 +118,7 @@ alpha_Input.prototype.onMousemove = function(event) {
   return true;
 };
 
-alpha_Input.prototype.onWheel = function(event) {
+alphaInput.prototype.onWheel = function(event) {
   const wheel = event.spinY;
   if (wheel > 0) {
     this.mouseWheelUp = this.mouseWheelUp + wheel;
@@ -126,45 +129,45 @@ alpha_Input.prototype.onWheel = function(event) {
   return true;
 };
 
-alpha_Input.prototype.onKeyDown = function() {
+alphaInput.prototype.onKeyDown = function(...args) {
   if (this._keyDownListener) {
-    return this._keyDownListener.apply(this._keyDownThisObject, arguments);
+    return this._keyDownListener.apply(this._keyDownThisObject, args);
   }
   return false;
 };
 
-alpha_Input.prototype.SetOnKeyDown = function(listener, thisObject) {
+alphaInput.prototype.SetOnKeyDown = function(listener, thisObject) {
   this._keyDownListener = listener;
   this._keyDownThisObject = thisObject;
 };
 
-alpha_Input.prototype.Get = function(key) {
+alphaInput.prototype.Get = function(key) {
   return this[key] ? 1 : 0;
 };
 
-alpha_Input.prototype.SetMouseSensitivityX = function(sensitivity) {
+alphaInput.prototype.SetMouseSensitivityX = function(sensitivity) {
   this.mouseSensitivityX = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityX = function() {
+alphaInput.prototype.GetMouseSensitivityX = function() {
   return this.mouseSensitivityX;
 };
 
-alpha_Input.prototype.SetMouseSensitivityY = function(sensitivity) {
+alphaInput.prototype.SetMouseSensitivityY = function(sensitivity) {
   this.mouseSensitivityY = sensitivity;
 };
 
-alpha_Input.prototype.GetMouseSensitivityY = function() {
+alphaInput.prototype.GetMouseSensitivityY = function() {
   return this.mouseSensitivityY;
 };
 
 // quick set both of them
-alpha_Input.prototype.SetMouseSensitivity = function(sensitivity) {
+alphaInput.prototype.SetMouseSensitivity = function(sensitivity) {
   this.SetMouseSensitivityX(sensitivity);
   this.SetMouseSensitivityY(sensitivity);
 };
 
-alpha_Input.prototype.MouseLeft = function() {
+alphaInput.prototype.MouseLeft = function() {
   if (this.endX < this.startX) {
     const change = this.startX - this.endX;
     // console.log("mouse has moved right " + change);
@@ -174,7 +177,7 @@ alpha_Input.prototype.MouseLeft = function() {
   return 0;
 };
 
-alpha_Input.prototype.MouseRight = function() {
+alphaInput.prototype.MouseRight = function() {
   if (this.endX > this.startX) {
     const change = this.endX - this.startX;
     // console.log("mouse has moved left " + change);
@@ -184,7 +187,7 @@ alpha_Input.prototype.MouseRight = function() {
   return 0;
 };
 
-alpha_Input.prototype.MouseUp = function() {
+alphaInput.prototype.MouseUp = function() {
   if (this.endY > this.startY) {
     const change = this.endY - this.startY;
     // console.log("mouse has moved down " + change);
@@ -194,7 +197,7 @@ alpha_Input.prototype.MouseUp = function() {
   return 0;
 };
 
-alpha_Input.prototype.MouseDown = function() {
+alphaInput.prototype.MouseDown = function() {
   if (this.endY < this.startY) {
     const change = this.endY - this.startY;
     // console.log("mouse has moved up " + change);
@@ -207,26 +210,26 @@ alpha_Input.prototype.MouseDown = function() {
 // mouse wheel data is stored in 1/8 of a degree
 // this returns how many ticks of a mousewheel of standard resolution
 // has been seen before an Input:Update()
-alpha_Input.prototype.MouseWheelUp = function() {
+alphaInput.prototype.MouseWheelUp = function() {
   return this.mouseWheelUp / 120;
 };
 
-alpha_Input.prototype.MouseWheelDown = function() {
+alphaInput.prototype.MouseWheelDown = function() {
   return this.mouseWheelDown / 120;
 };
 
-alpha_Input.prototype.MouseWheelDegreesUp = function() {
+alphaInput.prototype.MouseWheelDegreesUp = function() {
   return this.mouseWheelUp / 8;
 };
 
-alpha_Input.prototype.MouseWheelDegreesDown = function() {
+alphaInput.prototype.MouseWheelDegreesDown = function() {
   return this.mouseWheelDown / 8;
 };
 
-/**
+/*
  * Sets the start to the end, and clears mousewheel totals.
  */
-alpha_Input.prototype.Update = function(elapsed) {
+alphaInput.prototype.Update = function(elapsed) {
   // console.log("Updating with elapsed: " + elapsed);
   if (this.Get('Shift') > 0) {
     elapsed = elapsed * 10;
@@ -238,7 +241,8 @@ alpha_Input.prototype.Update = function(elapsed) {
 
   // console.log("LeftMouseButton: " + this.Get("LeftMouseButton"));
   // console.log("MouseLeft: " + this.MouseLeft() * elapsed);
-  // console.log("MouseLeft: " + (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
+  // console.log("MouseLeft: " + 
+  //   (this.Get("LeftMouseButton") * this.MouseLeft() * elapsed));
   // console.log("LeftMouse: " + this.Get("LeftMouseButton"));
   // console.log("TurnLeft: " + this.MouseLeft() * elapsed);
   this.camera
