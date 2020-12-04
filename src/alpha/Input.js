@@ -12,9 +12,9 @@
 // MouseUp, MouseDown, MouseLeft, MouseRight
 
 // for a simple if statement do:
-//	if input:Q() > 0 then
+//       if input:Q() > 0 then
 // do stuff because Q is down
-//	end
+//       end
 
 // MouseWheelUp() // returns 1 or more if you have scrolled up recently
 // MouseWheelDegreesUp() // returns the number of degrees the wheel has scrolled recently
@@ -22,15 +22,15 @@
 // add this to your code to make a command only work once per button push
 /*
 	if elapsed == 0 then
-		done = false;
-		return
+                done = false;
+                return
 
-	end
-	if done then return end;
-	done = true;
+        end
+        if done then return end;
+        done = true;
 */
 
-function alpha_Input(surface, camera) {
+export function alphaInput(surface, camera) {
   this.SetMouseSensitivityX(0.005);
   this.SetMouseSensitivityY(0.005);
 
@@ -45,12 +45,12 @@ function alpha_Input(surface, camera) {
   this.grabbed = null;
 }
 
-alpha_Input.prototype.onKeyup = function(event) {
+alphaInput.prototype.onKeyup = function(event) {
   this[event.key.toLowerCase()] = null;
   return true;
 };
 
-alpha_Input.prototype.onKeydown = function(event) {
+alphaInput.prototype.onKeydown = function(event) {
   if (this.onKeyDown(event.key)) {
     return;
   }
@@ -61,7 +61,7 @@ alpha_Input.prototype.onKeydown = function(event) {
   return true;
 };
 
-function alpha_GetButtonName(buttonIndex) {
+export function alphaGetButtonName(buttonIndex) {
   switch (event.button) {
     case 0:
       return 'LeftMouseButton';
@@ -73,7 +73,7 @@ function alpha_GetButtonName(buttonIndex) {
   return null;
 }
 
-alpha_Input.prototype.onMousedown = function(event) {
+alphaInput.prototype.onMousedown = function(event) {
   let button;
   let x;
   let y;

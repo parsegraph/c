@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc, max-len, new-cap */
 // Physical version 1.4.130828
 // physical is an orientation and a position
 // as well as rotation and movement
@@ -54,25 +55,25 @@
 // XXX: for some reason I have to inverse quaterions for physical
 // not for the camera. I do not understand why.
 
-alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE = 1;
-alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE = 2;
-alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE = 3;
+PHYSICAL_TRANSLATE_ROTATE_SCALE = 1;
+PHYSICAL_SCALE_ROTATE_TRANSLATE = 2;
+PHYSICAL_ROTATE_TRANSLATE_SCALE = 3;
 
-function alpha_Physical(parent) {
-  this.modelMode = alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE;
-  this.orientation = new alpha_Quaternion();
-  this.position = new alpha_Vector();
-  this.modelMatrix = new alpha_RMatrix4();
-  this.viewMatrix = new alpha_RMatrix4();
+export default function Physical(parent) {
+  this.modelMode = PHYSICAL_TRANSLATE_ROTATE_SCALE;
+  this.orientation = new Quaternion();
+  this.position = new Vector();
+  this.modelMatrix = new RMatrix4();
+  this.viewMatrix = new RMatrix4();
   this.modelDirty = false; // whether or not the matrix needs to be updated;
-  this.velocity = new alpha_Vector();
-  this.rotationSpeed = new alpha_Vector(1, 1, 1);
-  this.speed = new alpha_Vector(5, 5, 5);
-  this.scale = new alpha_Vector(1, 1, 1);
+  this.velocity = new Vector();
+  this.rotationSpeed = new Vector(1, 1, 1);
+  this.speed = new Vector(5, 5, 5);
+  this.scale = new Vector(1, 1, 1);
   this.SetParent(parent);
 }
 
-alpha_Physical.prototype.toJSON = function() {
+Physical.prototype.toJSON = function() {
   return {
     position: this.position.toJSON(),
     orientation: this.orientation.toJSON(),
@@ -80,113 +81,113 @@ alpha_Physical.prototype.toJSON = function() {
 };
 
 // Register the test suite.
-alpha_Physical_Tests = new parsegraph_TestSuite('alpha_Physical');
+alphaPhysicalTests = new TestSuite('Physical');
 
-alpha_Physical_Tests.addTest('alpha_Physical', function(resultDom) {
-  const surface = new alpha_GLWidget();
-  const cam = new alpha_Camera(surface);
-  const p = new alpha_Physical(cam);
+alphaPhysicalTests.addTest('Physical', function(resultDom) {
+  const surface = new GLWidget();
+  const cam = new Camera(surface);
+  const p = new Physical(cam);
 });
 
 // -----------------------------------
 // ---------- Rotation ---------------
 // -----------------------------------
 
-alpha_Physical.prototype.SetOrientation = function() {
-  this.orientation.Set.apply(this.orientation, arguments);
+Physical.prototype.SetOrientation = function(...args) {
+  this.orientation.Set.apply(this.orientation, ...args);
   this.modelDirty = true;
 };
 
-/**
+/*
  * returns as Quaternion
  */
-alpha_Physical.prototype.GetOrientation = function() {
+Physical.prototype.GetOrientation = function() {
   return this.orientation;
 };
 
-/**
+/*
  * in radians / second
  */
-alpha_Physical.prototype.SetRotationSpeeds = function() {
-  this.rotationSpeed.Set.apply(this.rotationSpeed, arguments);
+Physical.prototype.SetRotationSpeeds = function(...args) {
+  this.rotationSpeed.Set.apply(this.rotationSpeed, ...args);
 };
-alpha_Physical.prototype.SetRotationSpeed =
-  alpha_Physical.prototype.SetRotationSpeeds;
+Physical.prototype.SetRotationSpeed =
+  Physical.prototype.SetRotationSpeeds;
 
-alpha_Physical.prototype.GetRotationSpeeds = function() {
+Physical.prototype.GetRotationSpeeds = function() {
   return this.rotationSpeed;
 };
 
-alpha_Physical.prototype.Rotate = function(angle, x, y, z) {
+Physical.prototype.Rotate = function(angle, x, y, z) {
   // if you aren't rotating about an angle, then you aren't rotating
   if (angle == 0) {
     return;
   }
-  const q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
+  const q = QuaternionFromAxisAndAngle(x, y, z, angle);
   this.orientation.Multiply(q);
   this.modelDirty = true;
 };
 
-alpha_Physical.prototype.RotateGlobal = function(angle, x, y, z) {
+Physical.prototype.RotateGlobal = function(angle, x, y, z) {
   // if you aren't rotating about an angle, then you aren't rotating
   if (angle == 0) {
     return;
   }
-  const q = alpha_QuaternionFromAxisAndAngle(x, y, z, angle);
+  const q = QuaternionFromAxisAndAngle(x, y, z, angle);
   this.orientation.Set(q.Multiply(this.orientation));
   this.modelDirty = true;
 };
 
-/**
+/*
  * these rotations take place at the speeds set by rotationSpeed
  */
-alpha_Physical.prototype.YawLeft = function(elapsed) {
+Physical.prototype.YawLeft = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[1];
   this.Rotate(angle, 0, 1, 0);
 };
 
-alpha_Physical.prototype.YawRight = function(elapsed) {
+Physical.prototype.YawRight = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[1];
   this.Rotate(-angle, 0, 1, 0);
 };
 
-alpha_Physical.prototype.PitchUp = function(elapsed) {
+Physical.prototype.PitchUp = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[0];
   this.Rotate(angle, 1, 0, 0);
 };
 
-alpha_Physical.prototype.PitchDown = function(elapsed) {
+Physical.prototype.PitchDown = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[0];
   this.Rotate(-angle, 1, 0, 0);
 };
 
-alpha_Physical.prototype.RollLeft = function(elapsed) {
+Physical.prototype.RollLeft = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[2];
   this.Rotate(angle, 0, 0, 1);
 };
 
-alpha_Physical.prototype.RollRight = function(elapsed) {
+Physical.prototype.RollRight = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[2];
   this.Rotate(-angle, 0, 0, 1);
 };
 
-alpha_Physical.prototype.Turn = function(angle) {
+Physical.prototype.Turn = function(angle) {
   // if you aren't rotating about an angle, then you aren't rotating
   if (angle == 0) {
     return;
   }
 
-  const q = new alpha_Quaternion();
+  const q = new Quaternion();
   q.FromAxisAndAngle(0, 1, 0, angle);
   this.SetOrientation(q.Multiply(this.GetOrientation()));
 };
 
-alpha_Physical.prototype.TurnLeft = function(elapsed) {
+Physical.prototype.TurnLeft = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[1];
   this.Turn(angle);
 };
 
-alpha_Physical.prototype.TurnRight = function(elapsed) {
+Physical.prototype.TurnRight = function(elapsed) {
   const angle = elapsed * this.rotationSpeed[1];
   this.Turn(-angle);
 };
@@ -195,29 +196,29 @@ alpha_Physical.prototype.TurnRight = function(elapsed) {
 // ------------ POSITION ---------------
 // -------------------------------------
 
-/**
+/*
  * send as x,y,z
  */
-alpha_Physical.prototype.SetPosition = function() {
+Physical.prototype.SetPosition = function(...args) {
   if (Number.isNaN(this.position[0])) {
     throw new Error('Position became NaN.');
   }
-  this.position.Set.apply(this.position, arguments);
+  this.position.Set.apply(this.position, ...args);
   this.modelDirty = true;
 };
 
-/**
+/*
  * return as Vector
  */
-alpha_Physical.prototype.GetPosition = function() {
+Physical.prototype.GetPosition = function() {
   return this.position;
 };
 
-alpha_Physical.prototype.ChangePosition = function() {
+Physical.prototype.ChangePosition = function(...args) {
   if (Number.isNaN(this.position[0])) {
     throw new Error('Position became NaN!');
   }
-  this.position.Add.apply(this.position, arguments);
+  this.position.Add.apply(this.position, ...args);
   this.modelDirty = true;
 };
 
@@ -226,21 +227,21 @@ alpha_Physical.prototype.ChangePosition = function() {
 // ------------------------------------------
 // movement is relative to the physical
 
-/**
+/*
  * convertes the local x,y,z vector to the global position vector
  */
-alpha_Physical.prototype.Warp = function() {
+Physical.prototype.Warp = function(...args) {
   let x;
   let y;
   let z;
-  if (arguments.length > 1) {
-    x = arguments[0];
-    y = arguments[1];
-    z = arguments[2];
+  if (args.length > 1) {
+    x = args[0];
+    y = args[1];
+    z = args[2];
   } else {
-    x = arguments[0][0];
-    y = arguments[0][1];
-    z = arguments[0][2];
+    x = args[0][0];
+    y = args[0][1];
+    z = args[0][2];
   }
   if (x == 0 && y == 0 && z == 0) {
     return;
@@ -260,27 +261,27 @@ alpha_Physical.prototype.Warp = function() {
 // these movement commands MOVE the physical
 // the physical's position is updated in the call
 // use the Move commands for player-commanded movement
-alpha_Physical.prototype.WarpForward = function(distance) {
+Physical.prototype.WarpForward = function(distance) {
   this.Warp(0, 0, -distance);
 };
 
-alpha_Physical.prototype.WarpBackward = function(distance) {
+Physical.prototype.WarpBackward = function(distance) {
   this.Warp(0, 0, distance);
 };
 
-alpha_Physical.prototype.WarpLeft = function(distance) {
+Physical.prototype.WarpLeft = function(distance) {
   this.Warp(-distance, 0, 0);
 };
 
-alpha_Physical.prototype.WarpRight = function(distance) {
+Physical.prototype.WarpRight = function(distance) {
   this.Warp(distance, 0, 0);
 };
 
-alpha_Physical.prototype.WarpUp = function(distance) {
+Physical.prototype.WarpUp = function(distance) {
   this.Warp(0, distance, 0);
 };
 
-alpha_Physical.prototype.WarpDown = function(distance) {
+Physical.prototype.WarpDown = function(distance) {
   this.Warp(0, -distance, 0);
 };
 
@@ -289,66 +290,66 @@ alpha_Physical.prototype.WarpDown = function(distance) {
 // ------------------------------------------
 
 // speed is in units per second
-alpha_Physical.prototype.SetSpeeds = function() {
-  this.speed.Set.apply(this.speed, arguments);
+Physical.prototype.SetSpeeds = function(...args) {
+  this.speed.Set.apply(this.speed, ...args);
 };
 
-alpha_Physical.prototype.GetSpeeds = function() {
+Physical.prototype.GetSpeeds = function() {
   return this.speed;
 };
 
-alpha_Physical.prototype.SetSpeed = function(speed) {
+Physical.prototype.SetSpeed = function(speed) {
   return this.SetSpeeds(speed, speed, speed);
 };
 
-alpha_Physical.prototype.SetVelocity = function() {
-  this.velocity.Set.apply(this.velocity, arguments);
+Physical.prototype.SetVelocity = function(...args) {
+  this.velocity.Set.apply(this.velocity, ...args);
 };
 
-alpha_Physical.prototype.GetVelocity = function() {
+Physical.prototype.GetVelocity = function() {
   return this.velocity;
 };
 
-alpha_Physical.prototype.AddVelocity = function() {
-  this.velocity.Add.apply(this.velocity, arguments);
+Physical.prototype.AddVelocity = function(...args) {
+  this.velocity.Add.apply(this.velocity, ...args);
   this.modelDirty = true;
 };
 
 // Move commands adjust the velocity
 // using the set speed
-alpha_Physical.prototype.MoveForward = function(elapsed) {
+Physical.prototype.MoveForward = function(elapsed) {
   const distance = elapsed * this.speed[2];
   this.AddVelocity(0, 0, -distance);
 };
 
-alpha_Physical.prototype.MoveBackward = function(elapsed) {
+Physical.prototype.MoveBackward = function(elapsed) {
   const distance = elapsed * this.speed[2];
   this.AddVelocity(0, 0, distance);
 };
 
-alpha_Physical.prototype.MoveLeft = function(elapsed) {
+Physical.prototype.MoveLeft = function(elapsed) {
   const distance = elapsed * this.speed[0];
   this.AddVelocity(-distance, 0, 0);
 };
 
-alpha_Physical.prototype.MoveRight = function(elapsed) {
+Physical.prototype.MoveRight = function(elapsed) {
   const distance = elapsed * this.speed[0];
   this.AddVelocity(distance, 0, 0);
 };
 
-alpha_Physical.prototype.MoveUp = function(elapsed) {
+Physical.prototype.MoveUp = function(elapsed) {
   const distance = elapsed * this.speed[1];
   this.AddVelocity(0, distance, 0);
 };
 
-alpha_Physical.prototype.MoveDown = function(elapsed) {
+Physical.prototype.MoveDown = function(elapsed) {
   const distance = elapsed * this.speed[1];
   this.AddVelocity(0, -distance, 0);
 };
 
 // calculates our new position using our current velocity
 // and then resets the velocity
-alpha_Physical.prototype.ApplyVelocity = function() {
+Physical.prototype.ApplyVelocity = function() {
   this.Warp(this.velocity);
   this.velocity.Set(0, 0, 0);
 };
@@ -360,7 +361,7 @@ alpha_Physical.prototype.ApplyVelocity = function() {
 // in order to be a good lineage:
 // a camera must be reached
 // // therefore it must not infinitely loop
-alpha_Physical.prototype.IsGoodLineageFor = function(prospectiveChild) {
+Physical.prototype.IsGoodLineageFor = function(prospectiveChild) {
   const parent = this.GetParent();
 
   // no parent = no lineage
@@ -378,7 +379,7 @@ alpha_Physical.prototype.IsGoodLineageFor = function(prospectiveChild) {
   return parent.IsGoodLineageFor(prospectiveChild);
 };
 
-alpha_Physical.prototype.SetParent = function(parent) {
+Physical.prototype.SetParent = function(parent) {
   if (!parent) {
     throw new Error(
         'A Physical must have a parent. Set it to the camera for a default',
@@ -393,7 +394,7 @@ alpha_Physical.prototype.SetParent = function(parent) {
   this.parent = parent;
 };
 
-alpha_Physical.prototype.GetParent = function() {
+Physical.prototype.GetParent = function() {
   return this.parent;
 };
 
@@ -401,17 +402,17 @@ alpha_Physical.prototype.GetParent = function() {
 // -----------  MODELVIEW MATRIX ------------
 // ------------------------------------------
 
-alpha_Physical.prototype.SetScale = function() {
-  this.scale.Set.apply(this.scale, arguments);
+Physical.prototype.SetScale = function(...args) {
+  this.scale.Set.apply(this.scale, ...args);
   this.modelDirty = true;
 };
 
-alpha_Physical.prototype.GetScale = function() {
+Physical.prototype.GetScale = function() {
   return this.scale;
 };
 
 // combine our position and orientation into a matrix;
-alpha_Physical.prototype.GetModelMatrix = function() {
+Physical.prototype.GetModelMatrix = function() {
   let x;
   let y;
   let z;
@@ -432,17 +433,17 @@ alpha_Physical.prototype.GetModelMatrix = function() {
     m.Identity();
 
     switch (this.modelMode) {
-      case alpha_PHYSICAL_TRANSLATE_ROTATE_SCALE:
+      case PHYSICAL_TRANSLATE_ROTATE_SCALE:
         m.Translate(this.position);
         m.Rotate(this.orientation);
         m.Scale(this.scale);
         break;
-      case alpha_PHYSICAL_SCALE_ROTATE_TRANSLATE:
+      case PHYSICAL_SCALE_ROTATE_TRANSLATE:
         m.Scale(this.scale);
         m.Rotate(this.orientation);
         m.Translate(this.position);
         break;
-      case alpha_PHYSICAL_ROTATE_TRANSLATE_SCALE:
+      case PHYSICAL_ROTATE_TRANSLATE_SCALE:
         m.Rotate(this.orientation);
         m.Translate(this.position);
         m.Scale(this.scale);
@@ -476,14 +477,14 @@ alpha_Physical.prototype.GetModelMatrix = function() {
 // physicals would need to know who is the child of who.
 // something like:
 /*
-	camera:CalculateViewMatrix();
-	while SomePhysicalsNotCalculated do
-		for all physicalsNotCalculated do
-			if parentPhysicalCalculated then
-				physical:CalculateViewMatrix()
-			end
-		end
-	end
+        camera:CalculateViewMatrix();
+        while SomePhysicalsNotCalculated do
+                for all physicalsNotCalculated do
+                        if parentPhysicalCalculated then
+                                physical:CalculateViewMatrix()
+                        end
+                end
+        end
 */
 
 // a more feasible method would be to
@@ -491,23 +492,23 @@ alpha_Physical.prototype.GetModelMatrix = function() {
 // then we simply chain down the list starting at the camera;
 // this is a far better solution.
 /*
-	function CalculateViewMatrices()
-		self:CalculateViewMatrix(); -- for myself
-		for each child in children do
-			child:CalculateViewMatrices() -- for my children
-		end
-	end
+        function CalculateViewMatrices()
+                self:CalculateViewMatrix(); -- for myself
+                for each child in children do
+                        child:CalculateViewMatrices() -- for my children
+                end
+        end
 */
 // it starts with a simple camera:CalculateViewMatrices();
 // I will return to this.
 
-alpha_Physical.prototype.GetViewMatrix = function() {
+Physical.prototype.GetViewMatrix = function(...args) {
   // if this was just called then we need to set who sent it
   let requestor;
-  if (arguments.length == 0) {
+  if (args.length == 0) {
     requestor = this;
   } else {
-    requestor = arguments[0];
+    requestor = args[0];
   }
 
   if (this.parent && this.parent != requestor) {
@@ -520,8 +521,8 @@ alpha_Physical.prototype.GetViewMatrix = function() {
   }
 };
 
-alpha_Physical.prototype.GetWorldPositionByViewMatrix = function() {
-  return new alpha_RMatrix4([
+Physical.prototype.GetWorldPositionByViewMatrix = function() {
+  return new RMatrix4([
     1,
     0,
     0,
@@ -543,7 +544,7 @@ alpha_Physical.prototype.GetWorldPositionByViewMatrix = function() {
 
 // legacy code; left in case I try this again
 // it does not work correctly, in all cases
-alpha_Physical.prototype.GetWorldPosition = function(requestor) {
+Physical.prototype.GetWorldPosition = function(requestor) {
   const parent = this.parent;
   if (parent && parent != requestor) {
     const rot = parent.GetWorldOrientation(requestor);
@@ -555,7 +556,7 @@ alpha_Physical.prototype.GetWorldPosition = function(requestor) {
 
 // legacy code; left in case I try this again
 // it DOES work
-alpha_Physical.prototype.GetWorldOrientation = function(requestor) {
+Physical.prototype.GetWorldOrientation = function(requestor) {
   const parent = this.parent;
   if (parent && parent != requestor) {
     return parent.GetWorldOrientation(requestor).Multiplied(this.orientation);
