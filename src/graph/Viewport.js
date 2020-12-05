@@ -108,7 +108,7 @@ Viewport.prototype.handleEvent = function(eventType, eventData) {
     return this._input.onKeyup(eventData);
   }
   if (eventType === 'tick') {
-    return this._input.update(eventData);
+    return this._input.Update(eventData);
   }
   console.log('Unhandled event type: ' + eventType);
 };
