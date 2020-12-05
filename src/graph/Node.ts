@@ -2140,8 +2140,8 @@ export default class Node {
     this.layoutWasChanged(inDirection);
   }
 
-  axisOverlap(inDirection?: Direction, ...args): AxisOverlap {
-    if (args.length === 0) {
+  axisOverlap(inDirection?: Direction): AxisOverlap {
+    if (inDirection === undefined) {
       return this.parentNode().axisOverlap(
           reverseDirection(this.parentDirection()),
       );
