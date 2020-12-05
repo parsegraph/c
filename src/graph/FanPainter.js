@@ -107,7 +107,7 @@ const fanPainterTests = new TestSuite(
     'FanPainter',
 );
 
-FanPainter_Tests.addTest('FanPainter', function(
+fanPainterTests.addTest('FanPainter', function(
     resultDom,
 ) {
   const window = new Window();

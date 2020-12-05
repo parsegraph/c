@@ -153,7 +153,7 @@ AlphaVector.prototype.Divided = function(...args) {
   return rv.Divide.apply(rv, args);
 };
 
-AlphaVectorTests.addTest('AlphaVector.Divide', function() {
+alphaVectorTests.addTest('AlphaVector.Divide', function() {
   const a = new AlphaVector(3, 4, 0);
 
   const b = new AlphaVector(2, 2, 2);
@@ -207,7 +207,7 @@ AlphaVector.prototype.Equals = function(...args) {
   return true;
 };
 
-AlphaVectorTests.addTest('AlphaVector.Equals', function() {
+alphaVectorTests.addTest('AlphaVector.Equals', function() {
   const a = new AlphaVector(3, 4, 0);
   if (!a.Equals(3, 4, 0)) {
     return a.toString();
@@ -254,7 +254,7 @@ AlphaVector.prototype.Normalize = function() {
   return this;
 };
 
-AlphaVectorTests.addTest('AlphaVector.Normalize', function() {
+alphaVectorTests.addTest('AlphaVector.Normalize', function() {
   const a = new AlphaVector(3, 4, 0);
   a.Normalize();
   if (a.Length() != 1) {
@@ -275,7 +275,7 @@ AlphaVector.prototype.Magnitude = function() {
 };
 AlphaVector.prototype.Length = AlphaVector.prototype.Magnitude;
 
-AlphaVectorTests.addTest('AlphaVector.Magnitude', function() {
+alphaVectorTests.addTest('AlphaVector.Magnitude', function() {
   let v = new AlphaVector();
   if (v.Magnitude() != 0) {
     return 'Empty vector must have zero magnitude.';
@@ -298,7 +298,7 @@ AlphaVector.prototype.DotProduct = function(other) {
 AlphaVector.prototype.InnerProduct = AlphaVector.prototype.DotProduct;
 AlphaVector.prototype.ScalarProduct = AlphaVector.prototype.DotProduct;
 
-AlphaVectorTests.addTest('AlphaVector.DotProduct', function() {
+alphaVectorTests.addTest('AlphaVector.DotProduct', function() {
   const a = new AlphaVector(1, 0, 0);
   const b = new AlphaVector(0, 1, 0);
   if (a.DotProduct(b)) {
@@ -478,7 +478,7 @@ AlphaQuaternion.prototype.Normalize = function() {
   return this;
 };
 
-AlphaQuaternion_Tests.addTest('AlphaQuaternion.Normalize', function() {
+alphaQuaternionTests.addTest('AlphaQuaternion.Normalize', function() {
   const q = new AlphaQuaternion();
   q.Normalize();
   if (!q.Equals(new AlphaQuaternion())) {
@@ -573,7 +573,7 @@ AlphaQuaternion.prototype.FromAxisAndAngle = function(...args) {
   return this;
 };
 
-AlphaQuaternion_Tests.addTest('FromAxisAndAngle', function() {
+alphaQuaternionTests.addTest('FromAxisAndAngle', function() {
   const q = new AlphaQuaternion();
   const angle = Math.PI / 2;
 
