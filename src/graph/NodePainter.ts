@@ -754,7 +754,7 @@ export default class NodePainter {
     if (node.hasNode(Direction.INWARD)) {
       const nestedNode = node.nodeAt(Direction.INWARD);
       const nodeSize = node.sizeWithoutPadding(this.bodySize);
-      if (node.nodeAlignmentMode(Direction.INWARD) == Alignment.VERTICAL) {
+      if (node.nodeAlignmentMode(Direction.INWARD) == Alignment.INWARD_VERTICAL) {
         // Align vertical.
         labelX = node.groupX() - (fontScale * label.width()) / 2;
         labelY = node.groupY() - (node.groupScale() * nodeSize.height()) / 2;
