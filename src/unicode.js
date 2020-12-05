@@ -238,7 +238,7 @@ Unicode.prototype.isArabic = function(letter) {
   if (!data) {
     return false;
   }
-  const cv = data[UNICODE_codeValue];
+  const cv = data[UNICODE_CODE_VALUE];
   return cv >= 0x621 && cv <= 0x64a;
 };
 
@@ -250,7 +250,7 @@ Unicode.prototype.isMark = function(letter) {
   if (!data) {
     return false;
   }
-  const cat = data[UNICODE_generalCategory];
+  const cat = data[UNICODE_GENERAL_CATEGORY];
   return cat === 'Mn' || cat === 'Mc' || cat === 'Me';
 };
 
@@ -262,7 +262,7 @@ Unicode.prototype.isArabicDiacritic = function(letter) {
   if (!data) {
     return false;
   }
-  const cv = data[UNICODE_codeValue];
+  const cv = data[UNICODE_CODE_VALUE];
   return cv >= 0x621 && cv <= 0x64a;
 };
 
