@@ -67,7 +67,7 @@ parsegraph_SCRIPT_FILES = \
 	src/types/room.js \
 	src/types/multislot.js \
 	src/types/multislot_plot.js \
-	src/parsegraph_ActionCarousel.js \
+	src/ActionCarousel.js \
 	src/ArrayList.js \
 	src/Float32List.js \
 	src/alpha_WeetCubeWidget.js \
