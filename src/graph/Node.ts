@@ -2772,12 +2772,12 @@ export default class Node {
      */
     const getAlignment = function(childDirection: Direction): number {
       // Calculate the alignment adjustment for both nodes.
-      const child = nodeAt(childDirection);
+      const child = this.nodeAt(childDirection);
       const axis = getPerpendicularAxis(getDirectionAxis(childDirection));
 
       let rv;
 
-      const alignmentMode = nodeAlignmentMode(childDirection);
+      const alignmentMode = this.nodeAlignmentMode(childDirection);
       switch (alignmentMode) {
         case Alignment.NULL:
           throw createException(BAD_NODE_ALIGNMENT);
@@ -2817,7 +2817,7 @@ export default class Node {
           break;
       }
       // console.log("Found alignment of " + rv);
-      return rv * scaleAt(childDirection);
+      return rv * this.scaleAt(childDirection);
     };
 
     /*
@@ -2843,18 +2843,18 @@ export default class Node {
       if (!isCardinalDirection(childDirection)) {
         throw createException(BAD_NODE_DIRECTION);
       }
-      const child: Node = nodeAt(childDirection);
+      const child: Node = this.nodeAt(childDirection);
       const reversedDirection: Direction = reverseDirection(childDirection);
 
       // Save alignment parameters.
-      _neighbors[childDirection].alignmentOffset = alignment;
+      this._neighbors[childDirection].alignmentOffset = alignment;
       // console.log("Alignment = " + alignment);
-      _neighbors[childDirection].separation = separation;
+      this._neighbors[childDirection].separation = separation;
 
       // Determine the line length.
       let lineLength: number;
       let extentSize: number;
-      if (nodeAlignmentMode(childDirection) === Alignment.NONE) {
+      if (this.nodeAlignmentMode(childDirection) === Alignment.NONE) {
         child.size(firstSize);
         if (isVerticalDirection(childDirection)) {
           extentSize = firstSize.height() / 2;
@@ -2868,11 +2868,11 @@ export default class Node {
                 _neighbors[childDirection].node.extentOffsetAt(
                     reversedDirection,
                 ) -
-              alignment / scaleAt(childDirection),
+              alignment / this.scaleAt(childDirection),
             );
       }
-      lineLength = separation - scaleAt(childDirection) * extentSize;
-      _neighbors[childDirection].lineLength = lineLength;
+      lineLength = separation - this.scaleAt(childDirection) * extentSize;
+      this._neighbors[childDirection].lineLength = lineLength;
       // console.log(
       //   "Line length: " + lineLength + ",
       //   separation: " + separation + ",
@@ -2882,9 +2882,9 @@ export default class Node {
       const dirSign = directionSign(childDirection);
       if (isVerticalDirection(childDirection)) {
         // The child is positioned vertically.
-        setPosAt(childDirection, alignment, dirSign * separation);
+        this.setPosAt(childDirection, alignment, dirSign * separation);
       } else {
-        setPosAt(childDirection, dirSign * separation, alignment);
+        this.setPosAt(childDirection, dirSign * separation, alignment);
       }
       /* console.log(
                 nameDirection(childDirection) + " " +
@@ -2910,7 +2910,7 @@ export default class Node {
         alignment: Alignment,
         separation: number,
     ): void {
-      const child: Node = nodeAt(childDirection);
+      const child: Node = this.nodeAt(childDirection);
 
       // Combine an extent.
       // lengthAdjustment and sizeAdjustment are in this node's space.
@@ -2927,9 +2927,9 @@ export default class Node {
                 );*/
         // Calculate the new offset to this node's center.
         const lengthOffset =
-          extentOffsetAt(direction) +
+          this.extentOffsetAt(direction) +
           lengthAdjustment -
-          scaleAt(childDirection) * child.extentOffsetAt(direction);
+          this.scaleAt(childDirection) * child.extentOffsetAt(direction);
 
         // Combine the two extents in the given direction.
         /* console.log("Combining " + nameDirection(direction) + ", " );
@@ -2939,10 +2939,10 @@ export default class Node {
                 console.log("ExtentOffset : " +
                   _neighbors[direction].extentOffset);
                 console.log("Scaled child ExtentOffset : " +
-                (scaleAt(childDirection) * child.extentOffsetAt(direction))); */
-        const e: Extent = extentsAt(direction);
-        const scale: number = scaleAt(childDirection);
-        if (nodeFit() == Fit.LOOSE) {
+                (this.scaleAt(childDirection) * child.extentOffsetAt(direction))); */
+        const e: Extent = this.extentsAt(direction);
+        const scale: number = this.scaleAt(childDirection);
+        if (this.nodeFit() == Fit.LOOSE) {
           e.combineExtentAndSimplify(
               child.extentsAt(direction),
               lengthOffset,
@@ -2964,7 +2964,7 @@ export default class Node {
           // console.log("Adjusting negative extent offset.");
           this.setExtentOffsetAt(
               direction,
-              extentOffsetAt(direction) + Math.abs(lengthOffset),
+              this.extentOffsetAt(direction) + Math.abs(lengthOffset),
           );
         }
 
@@ -2979,7 +2979,7 @@ export default class Node {
                 });*/
 
         // Assert the extent offset is positive.
-        if (extentOffsetAt(direction) < 0) {
+        if (this.extentOffsetAt(direction) < 0) {
           throw new Error('Extent offset must not be negative.');
         }
       };
@@ -2987,35 +2987,35 @@ export default class Node {
       switch (childDirection) {
         case Direction.DOWNWARD:
           // Downward child.
-          combineExtent.call(Direction.DOWNWARD, alignment, separation);
-          combineExtent.call(Direction.UPWARD, alignment, -separation);
+          combineExtent.call(this, Direction.DOWNWARD, alignment, separation);
+          combineExtent.call(this, Direction.UPWARD, alignment, -separation);
 
-          combineExtent.call(Direction.FORWARD, separation, alignment);
-          combineExtent.call(Direction.BACKWARD, separation, -alignment);
+          combineExtent.call(this, Direction.FORWARD, separation, alignment);
+          combineExtent.call(this, Direction.BACKWARD, separation, -alignment);
           break;
         case Direction.UPWARD:
           // Upward child.
-          combineExtent.call(Direction.DOWNWARD, alignment, -separation);
-          combineExtent.call(Direction.UPWARD, alignment, separation);
+          combineExtent.call(this, Direction.DOWNWARD, alignment, -separation);
+          combineExtent.call(this, Direction.UPWARD, alignment, separation);
 
-          combineExtent.call(Direction.FORWARD, -separation, alignment);
-          combineExtent.call(Direction.BACKWARD, -separation, -alignment);
+          combineExtent.call(this, Direction.FORWARD, -separation, alignment);
+          combineExtent.call(this, Direction.BACKWARD, -separation, -alignment);
           break;
         case Direction.FORWARD:
           // Forward child.
-          combineExtent.call(Direction.DOWNWARD, separation, alignment);
-          combineExtent.call(Direction.UPWARD, separation, -alignment);
+          combineExtent.call(this, Direction.DOWNWARD, separation, alignment);
+          combineExtent.call(this, Direction.UPWARD, separation, -alignment);
 
-          combineExtent.call(Direction.FORWARD, alignment, separation);
-          combineExtent.call(Direction.BACKWARD, alignment, -separation);
+          combineExtent.call(this, Direction.FORWARD, alignment, separation);
+          combineExtent.call(this, Direction.BACKWARD, alignment, -separation);
           break;
         case Direction.BACKWARD:
           // Backward child.
-          combineExtent.call(Direction.DOWNWARD, -separation, alignment);
-          combineExtent.call(Direction.UPWARD, -separation, -alignment);
+          combineExtent.call(this, Direction.DOWNWARD, -separation, alignment);
+          combineExtent.call(this, Direction.UPWARD, -separation, -alignment);
 
-          combineExtent.call(Direction.FORWARD, alignment, -separation);
-          combineExtent.call(Direction.BACKWARD, alignment, separation);
+          combineExtent.call(this, Direction.FORWARD, alignment, -separation);
+          combineExtent.call(this, Direction.BACKWARD, alignment, separation);
           break;
         default:
           throw createException(BAD_NODE_DIRECTION);
@@ -3046,10 +3046,10 @@ export default class Node {
             );*/
 
       // Get the alignment for the children.
-      const alignment: number = getAlignment.call(direction);
+      const alignment: number = getAlignment.call(this, direction);
       // console.log("Calculated alignment of " + alignment + ".");
 
-      const child: Node = nodeAt(direction);
+      const child: Node = this.nodeAt(direction);
       const reversed: Direction = reverseDirection(direction);
       const childExtent: Extent = child.extentsAt(reversed);
 
@@ -3069,13 +3069,13 @@ export default class Node {
 
       // Separate the child from this node.
 
-      let separationFromChild: number = extentsAt(direction).separation(
+      let separationFromChild: number = this.extentsAt(direction).separation(
           childExtent,
-          extentOffsetAt(direction) +
+          this.extentOffsetAt(direction) +
           alignment -
-          scaleAt(direction) * child.extentOffsetAt(reversed),
+          this.scaleAt(direction) * child.extentOffsetAt(reversed),
           allowAxisOverlap,
-          scaleAt(direction),
+          this.scaleAt(direction),
           LINE_THICKNESS / 2,
       );
       // console.log("Calculated unpadded separation of " +
@@ -3087,28 +3087,28 @@ export default class Node {
       if (getDirectionAxis(direction) == Axis.VERTICAL) {
         separationFromChild = Math.max(
             separationFromChild,
-            scaleAt(direction) * (firstSize.height() / 2) +
+            this.scaleAt(direction) * (firstSize.height() / 2) +
             bodySize.height() / 2,
         );
         separationFromChild +=
-          verticalSeparation(direction) * scaleAt(direction);
+          this.verticalSeparation(direction) * this.scaleAt(direction);
       } else {
         separationFromChild = Math.max(
             separationFromChild,
-            scaleAt(direction) * (firstSize.width() / 2) +
+            this.scaleAt(direction) * (firstSize.width() / 2) +
             bodySize.width() / 2,
         );
         separationFromChild +=
-          horizontalSeparation(direction) * scaleAt(direction);
+          this.horizontalSeparation(direction) * this.scaleAt(direction);
       }
       // console.log("Calculated padded separation of " +
       //   separationFromChild + ".");
 
       // Set the node's position.
-      positionChild.call(direction, alignment, separationFromChild);
+      positionChild.call(this, direction, alignment, separationFromChild);
 
       // Combine the extents of the child and this node.
-      combineExtents.call(direction, alignment, separationFromChild);
+      combineExtents.call(this, direction, alignment, separationFromChild);
     };
 
     // Layout a pair of nodes in the given directions.
@@ -3155,8 +3155,8 @@ export default class Node {
         }
 
         // Layout that node.
-        if (layoutSingle.call(firstAxisDirection, allowAxisOverlap)) {
-          _layoutState = LayoutState.NEEDS_COMMIT;
+        if (layoutSingle.call(this, firstAxisDirection, allowAxisOverlap)) {
+          this._layoutState = LayoutState.NEEDS_COMMIT;
           return true;
         }
         return;
@@ -3169,15 +3169,15 @@ export default class Node {
             );*/
 
       // This node has first-axis children in both directions.
-      const firstNode: Node = nodeAt(firstDirection);
-      const secondNode: Node = nodeAt(secondDirection);
+      const firstNode: Node = this.nodeAt(firstDirection);
+      const secondNode: Node = this.nodeAt(secondDirection);
 
       // Get the alignments for the children.
       const firstNodeAlignment: number = getAlignment.call(
-          firstDirection,
+        this, firstDirection,
       );
       const secondNodeAlignment: number = getAlignment.call(
-          secondDirection,
+        this, secondDirection,
       );
       // console.log("First alignment: " + firstNodeAlignment);
       // console.log("Second alignment: " + secondNodeAlignment);
@@ -3186,14 +3186,14 @@ export default class Node {
           .extentsAt(secondDirection)
           .separation(
               secondNode.extentsAt(firstDirection),
-              (scaleAt(secondDirection) / scaleAt(firstDirection)) *
+              (this.scaleAt(secondDirection) / this.scaleAt(firstDirection)) *
             (secondNodeAlignment - secondNode.extentOffsetAt(firstDirection)) -
             (firstNodeAlignment - firstNode.extentOffsetAt(secondDirection)),
               true,
-              scaleAt(secondDirection) / scaleAt(firstDirection),
+              this.scaleAt(secondDirection) / this.scaleAt(firstDirection),
               0,
           );
-      separationBetweenChildren *= scaleAt(firstDirection);
+      separationBetweenChildren *= this.scaleAt(firstDirection);
 
       // console.log("Separation between children="
       //   + separationBetweenChildren);
@@ -3240,7 +3240,7 @@ export default class Node {
             );*/
 
       let firstAxisOverlap: boolean = allowAxisOverlap;
-      switch (nodeAt(firstDirection).axisOverlap()) {
+      switch (this.nodeAt(firstDirection).axisOverlap()) {
         case AxisOverlap.PREVENTED:
           firstAxisOverlap = false;
           break;
@@ -3249,7 +3249,7 @@ export default class Node {
           break;
       }
       let secondAxisOverlap: boolean = allowAxisOverlap;
-      switch (nodeAt(secondDirection).axisOverlap()) {
+      switch (this.nodeAt(secondDirection).axisOverlap()) {
         case AxisOverlap.PREVENTED:
           secondAxisOverlap = false;
           break;
@@ -3260,29 +3260,29 @@ export default class Node {
 
       // Allow some overlap if we have both first-axis sides, but
       // nothing ahead on the second axis.
-      let separationFromFirst: number = extentsAt(
+      let separationFromFirst: number = this.extentsAt(
           firstDirection,
       ).separation(
           firstNode.extentsAt(secondDirection),
-          extentOffsetAt(firstDirection) +
+          this.extentOffsetAt(firstDirection) +
           firstNodeAlignment -
-          scaleAt(firstDirection) *
+          this.scaleAt(firstDirection) *
             firstNode.extentOffsetAt(secondDirection),
           firstAxisOverlap,
-          scaleAt(firstDirection),
+          this.scaleAt(firstDirection),
           LINE_THICKNESS / 2,
       );
 
-      let separationFromSecond: number = extentsAt(
+      let separationFromSecond: number = this.extentsAt(
           secondDirection,
       ).separation(
           secondNode.extentsAt(firstDirection),
-          extentOffsetAt(secondDirection) +
+          this.extentOffsetAt(secondDirection) +
           secondNodeAlignment -
-          scaleAt(secondDirection) *
+          this.scaleAt(secondDirection) *
             secondNode.extentOffsetAt(firstDirection),
           secondAxisOverlap,
-          scaleAt(secondDirection),
+          this.scaleAt(secondDirection),
           LINE_THICKNESS / 2,
       );
 
@@ -3332,48 +3332,48 @@ export default class Node {
       if (getDirectionAxis(firstDirection) === Axis.VERTICAL) {
         separationFromFirst = Math.max(
             separationFromFirst,
-            scaleAt(firstDirection) * (firstSize.height() / 2) +
+            this.scaleAt(firstDirection) * (firstSize.height() / 2) +
             bodySize.height() / 2,
         );
         separationFromFirst +=
           verticalSeparation(firstDirection) *
-          scaleAt(firstDirection);
+          this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
             separationFromSecond,
-            scaleAt(secondDirection) * (secondSize.height() / 2) +
+            this.scaleAt(secondDirection) * (secondSize.height() / 2) +
             bodySize.height() / 2,
         );
         separationFromSecond +=
           verticalSeparation(secondDirection) *
-          scaleAt(secondDirection);
+          this.scaleAt(secondDirection);
       } else {
         separationFromFirst = Math.max(
             separationFromFirst,
-            scaleAt(firstDirection) * (firstSize.width() / 2) +
+            this.scaleAt(firstDirection) * (firstSize.width() / 2) +
             bodySize.width() / 2,
         );
         separationFromFirst +=
           horizontalSeparation(firstDirection) *
-          scaleAt(firstDirection);
+          this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
             separationFromSecond,
-            scaleAt(secondDirection) * (secondSize.width() / 2) +
+            this.scaleAt(secondDirection) * (secondSize.width() / 2) +
             bodySize.width() / 2,
         );
         separationFromSecond +=
           horizontalSeparation(secondDirection) *
-          scaleAt(secondDirection);
+          this.scaleAt(secondDirection);
       }
 
       // Set the positions of the nodes.
-      positionChild.call(
+      positionChild.call(this,
           firstDirection,
           firstNodeAlignment,
           separationFromFirst,
       );
-      positionChild.call(
+      positionChild.call(this,
           secondDirection,
           secondNodeAlignment,
           separationFromSecond,
@@ -3381,11 +3381,13 @@ export default class Node {
 
       // Combine their extents.
       combineExtents.call(
+	      this,
           firstDirection,
           firstNodeAlignment,
           separationFromFirst,
       );
       combineExtents.call(
+	      this,
           secondDirection,
           secondNodeAlignment,
           separationFromSecond,
@@ -3526,20 +3528,20 @@ export default class Node {
       const perpAxis: Axis = getPerpendicularAxis(given);
       const dirSign: number = directionSign(given);
 
-      let positiveOffset: number = extentOffsetAt(
+      let positiveOffset: number = this.extentOffsetAt(
           getPositiveDirection(perpAxis),
       );
-      let negativeOffset: number = extentOffsetAt(
+      let negativeOffset: number = this.extentOffsetAt(
           getNegativeDirection(perpAxis),
       );
 
       if (dirSign < 0) {
-        const lineSize: number = sizeIn(given, lineBounds);
-        positiveOffset -= lineSize + lineLengthAt(given);
-        negativeOffset -= lineSize + lineLengthAt(given);
+        const lineSize: number = this.sizeIn(given, lineBounds);
+        positiveOffset -= lineSize + this.lineLengthAt(given);
+        negativeOffset -= lineSize + this.lineLengthAt(given);
       }
 
-      if (nodeFit() == Fit.EXACT) {
+      if (this.nodeFit() == Fit.EXACT) {
         // Append the line-shaped bound.
         let lineSize: number;
         if (perpAxis === Axis.VERTICAL) {
@@ -3550,12 +3552,12 @@ export default class Node {
         // lineSize = this.scaleAt(given) * LINE_THICKNESS / 2;
         extentsAt(getPositiveDirection(perpAxis)).combineBound(
             positiveOffset,
-            lineLengthAt(given),
+            this.lineLengthAt(given),
             lineSize,
         );
         extentsAt(getNegativeDirection(perpAxis)).combineBound(
             negativeOffset,
-            lineLengthAt(given),
+            this.lineLengthAt(given),
             lineSize,
         );
       }
