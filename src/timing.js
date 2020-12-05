@@ -53,7 +53,7 @@ export function AnimationTimer() {
   this.timerId = null;
 
   const that = this;
-  this.fire = function() {
+  this.fire = function(...args) {
     that.timerId = null;
     if (that.listener) {
       try {
@@ -109,7 +109,7 @@ export function TimeoutTimer() {
    * Forwards event arguments to the listener.
    */
   const that = this;
-  this.fire = function() {
+  this.fire = function(...args) {
     that.timerId = null;
     if (that.listener) {
       return that.listener[0].apply(that.listener[1], ...args);
@@ -165,7 +165,7 @@ export function IntervalTimer() {
    * Forwards event arguments to the listener.
    */
   const that = this;
-  this.fire = function() {
+  this.fire = function(...args) {
     if (that.listener) {
       return that.listener[0].apply(that.listener[1], ...args);
     }
