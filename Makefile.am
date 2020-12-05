@@ -104,7 +104,7 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/Component.js \
 	src/graph/layout.js \
 	src/graph/Freezer.js \
-	src/graph/Window.js \
+	src/graph/Window.ts \
 	src/graph/ImageWindow.js \
 	src/graph/ImageBuilder.js \
 	src/graph/CameraBoxPainter.js \
