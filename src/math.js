@@ -1,5 +1,5 @@
 const getNumberPartsFArray = new Float64Array(1);
-const getNumberPartsUArray = new Uint8Array(getNumberParts_FARRAY.buffer);
+const getNumberPartsUArray = new Uint8Array(getNumberPartsFArray.buffer);
 // http://stackoverflow.com/questions/9383593/extracting-the-exponent-and-mantissa-of-a-javascript-number
 // eslint-disable-next-line require-jsdoc
 export function getNumberParts(x) {
