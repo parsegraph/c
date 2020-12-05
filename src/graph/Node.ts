@@ -2687,10 +2687,10 @@ export default class Node {
         size: number,
         offset: number,
     ) {
-      const extent = extentsAt(inDirection);
+      const extent = this.extentsAt(inDirection);
       extent.clear();
       extent.appendLS(length, size);
-      setExtentOffsetAt(inDirection, offset);
+      this.setExtentOffsetAt(inDirection, offset);
       // console.log(new Error("OFFSET = " + offset));
     };
 
@@ -2962,7 +2962,7 @@ export default class Node {
         // Adjust the length offset to remain positive.
         if (lengthOffset < 0) {
           // console.log("Adjusting negative extent offset.");
-          setExtentOffsetAt(
+          this.setExtentOffsetAt(
               direction,
               extentOffsetAt(direction) + Math.abs(lengthOffset),
           );
@@ -3027,11 +3027,11 @@ export default class Node {
         direction: Direction,
         allowAxisOverlap: boolean,
     ): boolean {
-      if (!hasNode(direction)) {
+      if (!this.hasNode(direction)) {
         return;
       }
 
-      switch (axisOverlap(direction)) {
+      switch (this.axisOverlap(direction)) {
         case AxisOverlap.PREVENTED:
           allowAxisOverlap = false;
           break;
@@ -3125,10 +3125,10 @@ export default class Node {
       }
       // Change the node direction to null if there is no node in that
       // direction.
-      if (!hasNode(firstDirection)) {
+      if (!this.hasNode(firstDirection)) {
         firstDirection = Direction.NULL;
       }
-      if (!hasNode(secondDirection)) {
+      if (!this.hasNode(secondDirection)) {
         secondDirection = Direction.NULL;
       }
 
@@ -3519,7 +3519,7 @@ export default class Node {
     }
 
     const addLineBounds = function(given: Direction) {
-      if (!hasChild(given)) {
+      if (!this.hasChild(given)) {
         return;
       }
 
