@@ -3,7 +3,7 @@ import TinySDF from '../sdf';
 
 /* eslint-disable require-jsdoc  */
 
-export default function GlyphPage(font) {
+export function GlyphPage(font) {
   this._id = font._maxPage++;
   this._glyphTexture = {};
   this._firstGlyph = false;
@@ -11,7 +11,7 @@ export default function GlyphPage(font) {
   this.next = null;
 }
 
-export default function GlyphData(
+export function GlyphData(
     glyphPage,
     glyph,
     x,
@@ -37,7 +37,7 @@ export default function GlyphData(
   this.next = null;
 }
 
-export default function FontWindow(font, window) {
+export function FontWindow(font, window) {
   this._glTextureSize = null;
   this._numGlyphs = 0;
   this._textureArray = null;

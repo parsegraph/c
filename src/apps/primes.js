@@ -122,7 +122,7 @@ PrimesWidget.prototype.node = function() {
   return this.caret.root();
 };
 
-export default function PrimesModulo(frequency) {
+export function PrimesModulo(frequency) {
   this.frequency = frequency;
   this.target = 0;
 }

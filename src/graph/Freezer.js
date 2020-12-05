@@ -27,7 +27,7 @@ const freezerFragmentShader =
 
 const FREEZER_MARGIN = 8;
 
-export default function FreezerWindow(freezer, window) {
+export function FreezerWindow(freezer, window) {
   this._freezer = freezer;
   this._window = window;
   this._gl = this._window.gl();
@@ -209,7 +209,7 @@ Freezer.prototype.textureScale = function() {
   return this._textureScale;
 };
 
-export default function FreezerRow(freezer, window, colFirst) {
+export function FreezerRow(freezer, window, colFirst) {
   this._freezer = freezer;
   this._window = window;
   this._colFirst = colFirst;
@@ -314,7 +314,7 @@ FreezerRow.prototype.freezer = function() {
 
 let freezerSlotCount = 0;
 
-export default function FreezerSlot(row) {
+export function FreezerSlot(row) {
   this._id = ++freezerSlotCount;
   this._row = row;
   this._glTexture = null;
@@ -376,7 +376,7 @@ FreezerSlot.prototype.freezer = function() {
   return this._row.freezer();
 };
 
-export default function FrozenNode(freezer, node) {
+export function FrozenNode(freezer, node) {
   this._node = node;
   this._freezer = freezer;
   this._windowFragments = {};
@@ -488,7 +488,7 @@ FrozenNode.prototype.node = function() {
   return this._node;
 };
 
-export default function FrozenNodeFragment(width, height) {
+export function FrozenNodeFragment(width, height) {
   this._width = width;
   this._height = height;
   this._x = NaN;
@@ -683,7 +683,7 @@ FrozenNodeFragment.prototype.freezer = function() {
   return this._slot.freezer();
 };
 
-export default function calculatePaintGroupBounds(nodeRoot) {
+export function calculatePaintGroupBounds(nodeRoot) {
   if (!nodeRoot.localPaintGroup()) {
     throw new Error('Node must be a paint group');
   }

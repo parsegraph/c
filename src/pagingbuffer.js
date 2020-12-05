@@ -1,7 +1,7 @@
 import {countGLBufferBytes} from './gl';
 /* eslint-disable require-jsdoc */
 
-export default function BufferPage(
+export function BufferPage(
     pagingBuffer,
     renderFunc,
     renderFuncThisArg) {

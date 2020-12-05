@@ -5,7 +5,7 @@ import Caret from './Caret';
 import Rect from './Rect';
 /* eslint-disable require-jsdoc */
 
-export default function GlyphIterator(font, text) {
+export function GlyphIterator(font, text) {
   this.font = font;
   this.index = 0;
   this.len = text.length;

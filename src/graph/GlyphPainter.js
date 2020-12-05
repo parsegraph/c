@@ -127,7 +127,7 @@ GlyphPainter.prototype.font = function() {
   return this._font;
 };
 
-export default function GlyphPageRenderer(painter, textureIndex) {
+export function GlyphPageRenderer(painter, textureIndex) {
   this._painter = painter;
   this._textureIndex = textureIndex;
   this._glyphBuffer = null;

@@ -998,7 +998,7 @@ Input.prototype.render = function(world, scale) {
   }
 };
 
-export default function getproperkeyname(event) {
+export function getproperkeyname(event) {
   let keyName = event.key;
   // console.log(keyName + " " + event.keyCode);
   switch (keyName) {
