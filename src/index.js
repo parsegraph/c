@@ -21,6 +21,7 @@ import buildTextDemo from './apps/text';
 import PrimesWidget from './apps/primes';
 import ChessWidget from './apps/chess';
 import showCorporateStructure from './apps/showCorporateStructure';
+import showFlowchartTemplate from './apps/builder';
 import MemoryPiers from './apps/piers';
 import {elapsed, AnimationTimer, TimeoutTimer, IntervalTimer} from './timing';
 import Unicode, {
@@ -70,6 +71,7 @@ export {
   PrimesWidget,
   ChessWidget,
   showCorporateStructure,
+  showFlowchartTemplate,
   Unicode,
   defaultUnicode,
   setDefaultUnicode,

@@ -1,5 +1,15 @@
 /* eslint-disable require-jsdoc */
 
+import Caret from '../graph/Caret';
+import Node, {
+  Direction,
+  Type,
+  reverseDirection,
+} from '../graph/Node';
+import {
+	SHRINK_SCALE
+} from '../graph/settings';
+
 export default function showFlowchartTemplate(world, belt) {
   const caret = new Caret('b');
 
@@ -9,44 +19,44 @@ export default function showFlowchartTemplate(world, belt) {
 
     let dirs;
     switch (this.type()) {
-      case BLOCK:
+      case Type.BLOCK:
         dirs = [
-          FORWARD,
-          DOWNWARD,
-          UPWARD,
-          BACKWARD,
-          INWARD,
+          Direction.FORWARD,
+          Direction.DOWNWARD,
+          Direction.UPWARD,
+          Direction.BACKWARD,
+          Direction.INWARD,
         ];
         break;
-      case SLOT:
+      case Type.SLOT:
         if (
           this.parentDirection() &&
-          this.parentDirection() != OUTWARD
+          this.parentDirection() != Direction.OUTWARD
         ) {
           dirs = [
-            reverseNodeDirection(this.parentDirection()),
-            FORWARD,
-            BACKWARD,
-            UPWARD,
-            DOWNWARD,
-            INWARD,
+            reverseDirection(this.parentDirection()),
+            Direction.FORWARD,
+            Direction.BACKWARD,
+            Direction.UPWARD,
+            Direction.DOWNWARD,
+            Direction.INWARD,
           ];
         } else {
           dirs = [
-            FORWARD,
-            BACKWARD,
-            UPWARD,
-            DOWNWARD,
-            INWARD,
+            Direction.FORWARD,
+            Direction.BACKWARD,
+            Direction.UPWARD,
+            Direction.DOWNWARD,
+            Direction.INWARD,
           ];
         }
         break;
-      case BUD:
+      case Type.BUD:
         dirs = [
-          DOWNWARD,
-          FORWARD,
-          BACKWARD,
-          UPWARD,
+          Direction.DOWNWARD,
+          Direction.FORWARD,
+          Direction.BACKWARD,
+          Direction.UPWARD,
         ];
         break;
     }
@@ -56,23 +66,23 @@ export default function showFlowchartTemplate(world, belt) {
       if (this.hasNode(dir)) {
         continue;
       }
-      if (this.type() == BUD && dir == INWARD) {
+      if (this.type() == Type.BUD && dir == Direction.INWARD) {
         continue;
       }
-      let t = BLOCK;
+      let t = Type.BLOCK;
       switch (this.type()) {
-        case BLOCK:
-          t = dir == INWARD ? SLOT : BUD;
+        case Type.BLOCK:
+          t = dir == Direction.INWARD ? Type.SLOT : Type.BUD;
           break;
-        case SLOT:
-          t = dir == INWARD ? BLOCK : SLOT;
+        case Type.SLOT:
+          t = dir == Direction.INWARD ? Type.BLOCK : Type.SLOT;
           break;
-        case BUD:
-          t = BLOCK;
+        case Type.BUD:
+          t = Type.BLOCK;
           break;
       }
       child = this.spawnNode(dir, t);
-      if (dir == INWARD) {
+      if (dir == Direction.INWARD) {
         child.setScale(SHRINK_SCALE);
       }
       break;
