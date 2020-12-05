@@ -2,6 +2,8 @@ import {AnimationTimer, TimeoutTimer, elapsed} from '../timing';
 
 import {Method} from '../function';
 
+import Window from './Window';
+
 import {
   GOVERNOR,
   BURST_IDLE,
@@ -10,35 +12,46 @@ import {
 } from './settings';
 /* eslint-disable require-jsdoc */
 
-export default function TimingBelt() {
-  this._windows = [];
+export default class TimingBelt {
+  _window:Window[];
 
-  this._idleJobs = [];
-  this._renderTimer = new AnimationTimer();
-  this._renderTimer.setListener(this.cycle, this);
+  _idleJobs:Method[];
+  _renderTimer:AnimationTimer;
+  _governor:boolean;
+  _bursIdle:boolean;
+  _interval:number;
+  _idleTimer:TimeoutTimer;
+  _lastRender:Date;
 
-  this._governor = GOVERNOR;
-  this._burstIdle = BURST_IDLE;
-  this._interval = INTERVAL;
-  this._idleTimer = new TimeoutTimer();
-  this._idleTimer.setDelay(INTERVAL);
-  this._idleTimer.setListener(this.onIdleTimer, this);
-  this._idleTimer.schedule();
+  constructor() {
+    this._windows = [];
 
-  this._lastRender = null;
-}
+    this._idleJobs = [];
+    this._renderTimer = new AnimationTimer();
+    this._renderTimer.setListener(this.cycle, this);
 
-TimingBelt.prototype.onIdleTimer = function() {
+    this._governor = GOVERNOR;
+    this._burstIdle = BURST_IDLE;
+    this._interval = INTERVAL;
+    this._idleTimer = new TimeoutTimer();
+    this._idleTimer.setDelay(INTERVAL);
+    this._idleTimer.setListener(this.onIdleTimer, this);
+    this._idleTimer.schedule();
+
+    this._lastRender = null;
+  }
+
+onIdleTimer() {
   this.idle(INTERVAL - IDLE_MARGIN);
 };
 
-TimingBelt.prototype.addWindow = function(window) {
+addWindow(window) {
   this._windows.push(window);
   window.setOnScheduleUpdate(this.scheduleUpdate, this);
   this.scheduleUpdate();
 };
 
-TimingBelt.prototype.removeWindow = function(window) {
+removeWindow(window) {
   for (const i in this._windows) {
     if (this._windows[i] === window) {
       this._windows.splice(i, 1);
@@ -49,24 +62,24 @@ TimingBelt.prototype.removeWindow = function(window) {
   return false;
 };
 
-TimingBelt.prototype.setGovernor = function(governor) {
+setGovernor(governor) {
   this._governor = governor;
 };
 
-TimingBelt.prototype.setBurstIdle = function(burstIdle) {
+setBurstIdle(burstIdle) {
   this._burstIdle = burstIdle;
 };
 
-TimingBelt.prototype.setInterval = function(interval) {
+setInterval(interval) {
   this._interval = interval;
 };
 
-TimingBelt.prototype.queueJob = function(jobFunc, jobFuncThisArg) {
+queueJob(jobFunc, jobFuncThisArg) {
   this._idleJobs.push(new Method(jobFunc, jobFuncThisArg));
   this.scheduleUpdate();
 };
 
-TimingBelt.prototype.idle = function(interval) {
+idle(interval) {
   if (this._idleJobs.length === 0) {
     // ("Nothing to idle");
     return;
@@ -81,8 +94,9 @@ TimingBelt.prototype.idle = function(interval) {
     do {
       // log("Idling");
       const job = this._idleJobs[0];
+      let r;
       try {
-        const r = job.call(interval - elapsed(startTime));
+        r = job.call(interval - elapsed(startTime));
       } catch (ex) {
         this._idleJobs.shift();
         this.scheduleUpdate();
@@ -119,13 +133,14 @@ TimingBelt.prototype.idle = function(interval) {
   }
 };
 
-TimingBelt.prototype.doCycle = function() {
+doCycle() {
   const startTime = new Date();
 
   // Update all input functions.
   let inputChangedScene = false;
+  let window;
   for (let i = 0; i < this._windows.length; ++i) {
-    const window = this._windows[i];
+    window = this._windows[i];
     window.clearLog();
     inputChangedScene =
       window.handleEvent('tick', startTime) || inputChangedScene;
@@ -142,7 +157,7 @@ TimingBelt.prototype.doCycle = function() {
   if (inputChangedScene) {
     // console.log("Render and paint");
     for (let i = 0; i < this._windows.length; ++i) {
-      const window = this._windows[(windowOffset + i) % this._windows.length];
+      window = this._windows[(windowOffset + i) % this._windows.length];
       // Eagerly retrieve the GL context since this
       // can take a while on first attempt.
       window.gl();
@@ -163,7 +178,7 @@ TimingBelt.prototype.doCycle = function() {
   } else {
     window.log('Paint and render');
     for (let i = 0; i < this._windows.length; ++i) {
-      const window = this._windows[(windowOffset + i) % this._windows.length];
+      window = this._windows[(windowOffset + i) % this._windows.length];
       if (elapsed(startTime) > interval) {
         window.log('Timeout');
         needsUpdate = true;
@@ -197,7 +212,7 @@ TimingBelt.prototype.doCycle = function() {
   );
 };
 
-TimingBelt.prototype.cycle = function() {
+cycle() {
   const startTime = new Date();
 
   // Update all input functions.
@@ -217,7 +232,9 @@ TimingBelt.prototype.cycle = function() {
   }
 };
 
-TimingBelt.prototype.scheduleUpdate = function() {
+scheduleUpdate() {
   // console.log("TimingBelt is scheduling update");
   return this._renderTimer.schedule();
 };
+
+}
