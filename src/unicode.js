@@ -102,7 +102,7 @@ Unicode.prototype.getGlyphDirection = function(text) {
   if (!data) {
     return null;
   }
-  const dir = directions[data[UNICODE_bidirectionalCategory]];
+  const dir = directions[data[UNICODE_BIDIRECTIONAL_CATEGORY]];
   if (dir === undefined) {
     throw new Error(
         'Unrecognized character: \\u' +

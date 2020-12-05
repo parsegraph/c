@@ -383,9 +383,9 @@ export default class BlockPainter {
     if (this._blockProgramSimple === null) {
       this._blockProgramSimple = compileProgram(
           this._window,
-          'BlockPainter_Simple',
-          blockPainterVertexShader_Simple,
-          blockPainterFragmentShader_Simple,
+          'BlockPainterSimple',
+          blockPainterVertexShaderSimple,
+          blockPainterFragmentShaderSimple,
       );
       this.simple_u_world = gl.getUniformLocation(
           this._blockProgramSimple,

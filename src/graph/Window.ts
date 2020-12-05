@@ -47,7 +47,7 @@ export default class Window {
     this._backgroundColor = BACKGROUND_COLOR;
 
     this._container = document.createElement('div');
-    this._container.className = 'Window';
+    this._container.className = 'parsegraph_Window';
 
     this._framebuffer = null;
     this._renderbuffer = null;

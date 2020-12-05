@@ -2,6 +2,7 @@
 import {checkGLError, getTextureSize} from '../gl';
 import Node, {
   Type,
+  Alignment,
   Direction,
   forEachCardinalDirection,
   isVerticalDirection,
@@ -404,8 +405,8 @@ export default class NodePainter {
     if (counts.numGlyphs) {
       for (const fullFontName in counts.numGlyphs) {
         if (Object.prototype.hasOwnProperty.call(
-            this._fontPainters,
-            fontName)) {
+            counts.numGlyphs,
+            fullFontName)) {
           const numGlyphs = counts.numGlyphs[fullFontName];
           let fontPainter = this._fontPainters[fullFontName];
           if (!fontPainter) {
@@ -526,11 +527,11 @@ export default class NodePainter {
       const directionData = node.neighborAt(direction);
 
       const selectedColor = SELECTED_LINE_COLOR.premultiply(
-          backgroundColor(),
+          this.backgroundColor(),
       );
-      const color = LINE_COLOR.premultiply(backgroundColor());
+      const color = LINE_COLOR.premultiply(this.backgroundColor());
 
-      const painter = blockPainter;
+      const painter = this._blockPainter;
       if (node.isSelected() && node.isSelectedAt(direction)) {
         painter.setBorderColor(selectedColor);
         painter.setBackgroundColor(selectedColor);

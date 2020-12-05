@@ -8,22 +8,21 @@
     <script src="/parsegraph.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function (event) {
-        parsegraph_initialize();
-        var window = new parsegraph_Window();
-        var world = new parsegraph_World();
+        var window = new parsegraph.Window();
+        var world = new parsegraph.World();
         document.body.appendChild(window.container());
-        var belt = new parsegraph_TimingBelt();
+        var belt = new parsegraph.TimingBelt();
         belt.addWindow(window);
-        parsegraph_addEventMethod(
+        parsegraph.addEventMethod(
           top.window,
           "resize",
           belt.scheduleUpdate,
           belt
         );
-        var viewport = new parsegraph_Viewport(window, world);
+        var viewport = new parsegraph.Viewport(window, world);
         window.addComponent(viewport.component());
 
-        var chess = new parsegraph_ChessWidget();
+        var chess = new parsegraph.ChessWidget();
         world.plot(chess.node());
         viewport.showInCamera(chess.node());
       });

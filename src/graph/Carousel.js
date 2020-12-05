@@ -1,5 +1,6 @@
 import FanPainter from './FanPainter';
 import {matrixMultiply3x3, makeScale3x3, makeTranslation3x3} from '../gl';
+import {CAROUSEL_SHOW_DURATION} from './settings';
 /* eslint-disable require-jsdoc */
 
 export default function Carousel(viewport) {

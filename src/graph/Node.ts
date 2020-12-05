@@ -1311,7 +1311,7 @@ export default class Node {
     this._extended.commitLayoutFunc = null;
     for (const wid in this._extended.windowPaintGroup) {
       if (Object.prototype.hasOwnProperty.call(
-          this.extended.windowPaintGroup,
+          this._extended.windowPaintGroup,
           wid)) {
         this._extended.windowPaintGroup[wid] = null;
       }
@@ -3336,7 +3336,7 @@ export default class Node {
             bodySize.height() / 2,
         );
         separationFromFirst +=
-          verticalSeparation(firstDirection) *
+          this.verticalSeparation(firstDirection) *
           this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
@@ -3345,7 +3345,7 @@ export default class Node {
             bodySize.height() / 2,
         );
         separationFromSecond +=
-          verticalSeparation(secondDirection) *
+          this.verticalSeparation(secondDirection) *
           this.scaleAt(secondDirection);
       } else {
         separationFromFirst = Math.max(
@@ -3354,7 +3354,7 @@ export default class Node {
             bodySize.width() / 2,
         );
         separationFromFirst +=
-          horizontalSeparation(firstDirection) *
+          this.horizontalSeparation(firstDirection) *
           this.scaleAt(firstDirection);
 
         separationFromSecond = Math.max(
@@ -3363,7 +3363,7 @@ export default class Node {
             bodySize.width() / 2,
         );
         separationFromSecond +=
-          horizontalSeparation(secondDirection) *
+          this.horizontalSeparation(secondDirection) *
           this.scaleAt(secondDirection);
       }
 
@@ -3550,12 +3550,12 @@ export default class Node {
           lineSize = bodySize.width() / 2;
         }
         // lineSize = this.scaleAt(given) * LINE_THICKNESS / 2;
-        extentsAt(getPositiveDirection(perpAxis)).combineBound(
+        this.extentsAt(getPositiveDirection(perpAxis)).combineBound(
             positiveOffset,
             this.lineLengthAt(given),
             lineSize,
         );
-        extentsAt(getNegativeDirection(perpAxis)).combineBound(
+        this.extentsAt(getNegativeDirection(perpAxis)).combineBound(
             negativeOffset,
             this.lineLengthAt(given),
             lineSize,

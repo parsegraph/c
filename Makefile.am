@@ -92,14 +92,14 @@ parsegraph_SCRIPT_FILES = \
 	src/graph/parsegraph_Graph_Tests.js \
 	src/graph/Input.js \
 	src/graph/BlockPainter.ts \
-	src/graph/SpotlightPainter.js \
+	src/graph/SpotlightPainter.ts \
 	src/graph/Font.js \
 	src/graph/GlyphPainter.js \
 	src/graph/FanPainter.js \
 	src/graph/NodePainter.ts \
 	src/graph/TexturePainter.ts \
 	src/graph/Caret.ts \
-	src/graph/TimingBelt.js \
+	src/graph/TimingBelt.ts \
 	src/graph/Node.ts \
 	src/graph/Component.js \
 	src/graph/layout.js \
@@ -152,7 +152,7 @@ parsegraph_WIDGET_FILES = \
 	src/apps/showIPAddresses.js \
 	src/apps/piers.js \
 	src/apps/proportion.js \
-	src/apps/chess.js \
+	src/apps/chess.ts \
 	src/apps/bible.js \
 	src/apps/builder.js \
 	src/apps/ulam.js \

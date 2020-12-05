@@ -19,6 +19,8 @@ import TimingBelt from './graph/TimingBelt';
 import Caret from './graph/Caret';
 import buildTextDemo from './apps/text';
 import PrimesWidget from './apps/primes';
+import ChessWidget from './apps/chess';
+import showCorporateStructure from './apps/showCorporateStructure';
 import MemoryPiers from './apps/piers';
 import {elapsed, AnimationTimer, TimeoutTimer, IntervalTimer} from './timing';
 import Unicode, {
@@ -66,6 +68,8 @@ export {
   buildTextDemo,
   Caret,
   PrimesWidget,
+  ChessWidget,
+  showCorporateStructure,
   Unicode,
   defaultUnicode,
   setDefaultUnicode,

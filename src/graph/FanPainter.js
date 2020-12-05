@@ -5,7 +5,7 @@ import {
   generateRectangleVertices,
   generateRectangleTexcoords,
 } from '../gl';
-import {createPagingBuffer} from '../pagingbuffer';
+import PagingBuffer from '../pagingbuffer';
 import Color from './Color';
 import {alphaToRadians} from '../alpha/Maths';
 
@@ -83,12 +83,12 @@ export default function FanPainter(window) {
   this.fanProgram = compileProgram(
       this._window,
       'FanPainter',
-      FanPainter_VertexShader,
-      FanPainter_FragmentShader,
+      fanPainterVertexShader,
+      fanPainterFragmentShader,
   );
 
   // Prepare attribute buffers.
-  this._fanBuffer = createPagingBuffer(window.gl(), this.fanProgram);
+  this._fanBuffer = new PagingBuffer(window.gl(), this.fanProgram);
   this.a_position = this._fanBuffer.defineAttrib('a_position', 2);
   this.a_color = this._fanBuffer.defineAttrib('a_color', 4);
   this.a_texCoord = this._fanBuffer.defineAttrib('a_texCoord', 2);
