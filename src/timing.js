@@ -57,7 +57,7 @@ export function AnimationTimer() {
     that.timerId = null;
     if (that.listener) {
       try {
-        return that.listener[0].apply(that.listener[1], ...args);
+        return that.listener[0].apply(that.listener[1], args);
       } catch (ex) {
         console.log(ex);
         alert('Error during timer: ' + ex);
@@ -112,7 +112,7 @@ export function TimeoutTimer() {
   this.fire = function(...args) {
     that.timerId = null;
     if (that.listener) {
-      return that.listener[0].apply(that.listener[1], ...args);
+      return that.listener[0].apply(that.listener[1], args);
     }
   };
 }
@@ -167,7 +167,7 @@ export function IntervalTimer() {
   const that = this;
   this.fire = function(...args) {
     if (that.listener) {
-      return that.listener[0].apply(that.listener[1], ...args);
+      return that.listener[0].apply(that.listener[1], args);
     }
   };
 }
