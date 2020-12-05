@@ -2871,7 +2871,7 @@ export default class Node {
               alignment / scaleAt(childDirection),
             );
       }
-      const lineLength = separation - scaleAt(childDirection) * extentSize;
+      lineLength = separation - scaleAt(childDirection) * extentSize;
       _neighbors[childDirection].lineLength = lineLength;
       // console.log(
       //   "Line length: " + lineLength + ",

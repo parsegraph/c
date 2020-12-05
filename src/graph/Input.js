@@ -188,7 +188,7 @@ Input.prototype.onKeydown = function(event) {
             return;
           }
           // console.log("ArrowRight");
-          let neighbor = node.nodeAt(Direction.FORWARD);
+          neighbor = node.nodeAt(Direction.FORWARD);
           if (neighbor) {
             this._focusedNode = neighbor;
             this._focusedLabel = !event.ctrlKey;

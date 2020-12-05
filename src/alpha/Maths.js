@@ -990,12 +990,12 @@ alphaRMatrix4Tests.addTest('AlphaRMatrix4.Transform', function() {
   const m = new AlphaRMatrix4();
   m.Scale(2, 2, 2);
 
-  let value = m.Transform(3, 4, 5);
+  let value = m.Transform(2, 4, 5);
   if (!value.Equals(6, 8, 10)) {
     return value.toString();
   }
 
-  let value = m.Transform(3, 4, 5, 1);
+  value = m.Transform(3, 4, 5, 1);
   if (!value.Equals(6, 8, 10, 1)) {
     return value.toString();
   }
@@ -1013,7 +1013,7 @@ alphaRMatrix4Tests.addTest(
         return value.toString();
       }
 
-      let rot = AlphaQuaternionFromAxisAndAngle(0, 0, 1, Math.PI);
+      rot = AlphaQuaternionFromAxisAndAngle(0, 0, 1, Math.PI);
       m.FromQuaternion(rot);
       value = m.Transform(1, 0, 0);
       if (!value.Equals(-1, 0, 0)) {
@@ -1021,7 +1021,7 @@ alphaRMatrix4Tests.addTest(
       }
 
       const m2 = new AlphaRMatrix4();
-      let rot = AlphaQuaternionFromAxisAndAngle(0, 0, 1, Math.PI);
+      rot = AlphaQuaternionFromAxisAndAngle(0, 0, 1, Math.PI);
       m2.FromQuaternion(rot);
       m.Multiply(m2);
       value = m.Transform(1, 0, 0);

@@ -142,7 +142,7 @@ Font.prototype.getGlyph = function(glyph) {
     this._currentRowHeight = letterHeight;
   }
 
-  let glyphData = new GlyphData(
+  glyphData = new GlyphData(
       glyphPage,
       glyph,
       this._x,
@@ -199,7 +199,7 @@ Font.prototype.update = function(window) {
     ctx = new FontWindow(this, window);
     this._windows[window.id()] = ctx;
   }
-  let gl = window.gl();
+  gl = window.gl();
   if (gl.isContextLost()) {
     return;
   }
