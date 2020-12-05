@@ -4,7 +4,7 @@ body {
   padding: 0;
 }
 
-.parsegraph_Surface {
+.parsegraph_Window, .parsegraph_Surface {
   width: 100%;
   height: 100vh;
   margin: 0;

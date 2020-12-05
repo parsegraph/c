@@ -5,6 +5,10 @@ ACLOCAL_AMFLAGS = -I m4
 
 VALGRIND = valgrind -v --num-callers=40 --leak-check=full --trace-children=yes --show-leak-kinds=all
 
+demo: dist/parsegraph.js
+	npm run demo
+.PHONY: demo
+
 checkvalgrind:
 	cd src; $(VALGRIND) .libs/lt-parsegraph
 
