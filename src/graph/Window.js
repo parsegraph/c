@@ -1,8 +1,5 @@
 import {BACKGROUND_COLOR} from './settings';
-import {
-  LayoutList,
-  COMPONENT_LAYOUT_HORIZONTAL,
-} from './layout';
+import LayoutList, {COMPONENT_LAYOUT_HORIZONTAL} from './layout';
 import {addEventMethod, normalizeWheel} from '../event';
 import Rect from './Rect';
 import {checkGLError} from '../gl';
