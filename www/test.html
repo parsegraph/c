@@ -150,11 +150,11 @@
       document.addEventListener("DOMContentLoaded", function (event) {
         var main = document.body;
 
-        var uni = new parsegraph.parsegraph_Unicode();
+        var uni = new parsegraph.Unicode();
         uni.onLoad = function () {
           main.style.backgroundColor = "grey";
           var hasFailed = false;
-          var result = parsegraph.parsegraph_AllTests.run(function (
+          var result = parsegraph.getAllTests().run(function (
             eventName,
             result
           ) {
@@ -176,7 +176,7 @@
           result.connect(main);
         };
         uni.load();
-        parsegraph.parsegraph_setDefaultUnicode(uni);
+        parsegraph.setDefaultUnicode(uni);
 
         //var ta = createScriptGraph("parsegraph.js");
         //main.appendChild(ta);

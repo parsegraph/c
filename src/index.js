@@ -1,4 +1,4 @@
-import TestSuite, {AllTests} from 'parsegraph-testsuite';
+import TestSuite, {getAllTests} from 'parsegraph-testsuite';
 import Rect from './graph/Rect';
 import Node, {
   Direction,
@@ -52,7 +52,7 @@ export {
   TimeoutTimer,
   IntervalTimer,
   TestSuite,
-  AllTests,
+  getAllTests,
   Node,
   Rect,
   showGraph,
