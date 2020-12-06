@@ -72,7 +72,6 @@ parsegraph_SCRIPT_FILES = \
 	src/Float32List.js \
 	src/alpha_WeetCubeWidget.js \
 	src/timing.js \
-	src/pagingbuffer.js \
 	src/CommandClient.js \
 	src/DepthTraversal.js \
 	src/graph/Label.js \

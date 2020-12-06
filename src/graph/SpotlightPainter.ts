@@ -3,7 +3,7 @@ import {
   generateRectangleTexcoords,
   compileProgram,
 } from '../gl';
-import PagingBuffer from '../pagingbuffer';
+import PagingBuffer from 'parsegraph-pagingbuffer';
 /* eslint-disable require-jsdoc */
 
 import spotlightPainterVertexShader from './SpotlightPainter_VertexShader.glsl';

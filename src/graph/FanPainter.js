@@ -5,7 +5,7 @@ import {
   generateRectangleVertices,
   generateRectangleTexcoords,
 } from '../gl';
-import PagingBuffer from '../pagingbuffer';
+import PagingBuffer from 'parsegraph-pagingbuffer';
 import Color from './Color';
 import {alphaToRadians} from '../alpha/Maths';
 

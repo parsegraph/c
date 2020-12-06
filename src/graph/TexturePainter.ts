@@ -1,7 +1,5 @@
 import {compileProgram} from '../gl';
-import pagingBuffer, {
-  createPagingBuffer,
-} from '../pagingbuffer';
+import PagingBuffer from 'parsegraph-pagingbuffer';
 import Color from './Color';
 import Window from './Window';
 /* eslint-disable require-jsdoc */
@@ -70,7 +68,7 @@ export default class TexturePainter {
     this._texHeight = texHeight;
 
     // Prepare attribute buffers.
-    this._buffer = createPagingBuffer(
+    this._buffer = new PagingBuffer(
         this._gl,
         this._textureProgram,
     );
