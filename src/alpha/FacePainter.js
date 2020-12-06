@@ -22,6 +22,8 @@ alpha_FacePainter_FragmentShader =
   'gl_FragColor = contentColor;' +
   '}';
 
+const TestSuite = require('parsegraph-testsuite').default;
+
 /**
  * Draws 3d faces in a solid color.
  */
@@ -67,7 +69,7 @@ function alpha_FacePainter(gl) {
   this.faceBuffer.addPage();
 }
 
-alpha_FacePainter_Tests = new parsegraph_TestSuite('alpha_FacePainter');
+alpha_FacePainter_Tests = new TestSuite('alpha_FacePainter');
 
 alpha_FacePainter_Tests.addTest('alpha_FacePainter', function(resultDom) {
   const belt = new parsegraph_TimingBelt();

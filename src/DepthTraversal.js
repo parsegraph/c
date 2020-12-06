@@ -1,3 +1,5 @@
+const TestSuite = require('parsegraph-testsuite').default;
+
 function parsegraph_DepthTraversal(root) {
   this._nodes = [root];
   this._states = [null];
@@ -57,7 +59,7 @@ parsegraph_DepthTraversal.prototype.visit = function(visitor, visitorThisArg) {
   }
 };
 
-parsegraph_DepthTraversal_Tests = new parsegraph_TestSuite(
+parsegraph_DepthTraversal_Tests = new TestSuite(
     'parsegraph_DepthTraversal',
 );
 

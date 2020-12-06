@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 
 export default class Color {
   _r: number;

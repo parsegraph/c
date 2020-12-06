@@ -1,4 +1,4 @@
-import TestSuite, {AllTests} from './TestSuite';
+import TestSuite, {AllTests} from 'parsegraph-testsuite';
 import Rect from './graph/Rect';
 import Node, {
   Direction,

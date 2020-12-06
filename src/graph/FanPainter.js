@@ -1,4 +1,4 @@
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import Window from './Window';
 import {
   compileProgram,

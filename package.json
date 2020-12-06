@@ -75,6 +75,7 @@
     "glslify-loader": "^2.0.0",
     "openssl": "^1.1.0",
     "parsegraph-pagingbuffer": "^1.4.7",
+    "parsegraph-testsuite": "^1.4.0",
     "raw-loader": "^4.0.1",
     "ts-mocha": "^8.0.0"
   }

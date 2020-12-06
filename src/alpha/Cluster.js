@@ -4,6 +4,8 @@
 // --------------------------------------------
 // --------------------------------------------
 
+const TestSuite = require('parsegraph-testsuite').default;
+
 /**
  * Cluster is where the information from blocks, blocktype, color and face
  * actually gets put to use it figures out how to draw the blocks that have
@@ -24,7 +26,7 @@ function alpha_Cluster(widget) {
   this.facePainter = null;
 }
 
-alpha_Cluster_Tests = new parsegraph_TestSuite('alpha_Cluster');
+alpha_Cluster_Tests = new TestSuite('alpha_Cluster');
 
 alpha_Cluster_Tests.addTest('alpha_Cluster', function(resultDom) {
   const belt = new parsegraph_TimingBelt();

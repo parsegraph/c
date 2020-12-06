@@ -1,4 +1,4 @@
-import TestSuite from './TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 /* eslint-disable require-jsdoc, max-len */
 
 export function datesEqual(a, b) {

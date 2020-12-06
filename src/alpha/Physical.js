@@ -11,6 +11,8 @@
 // TODO: Children
 // TODO: acceleration
 
+import TestSuite from 'parsegraph-testsuite';
+
 // -----------------------------------
 // ------------ USAGE ----------------
 // -----------------------------------

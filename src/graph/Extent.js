@@ -1,4 +1,4 @@
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import {getTimeInMillis, TIMEOUT} from '../date';
 import {FUZZINESS} from './settings';
 import {fuzzyEquals} from '../math';

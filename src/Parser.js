@@ -570,7 +570,7 @@ int parsegraph_json_parseArray(parsegraph_json_Lexer* lexer, int parentId, int* 
     }
 }
 
-parsegraph_Parser_Tests = new parsegraph_TestSuite("parsegraph_Parser");
+parsegraph_Parser_Tests = new TestSuite("parsegraph_Parser");
 
 parsegraph_Parser_Tests.addTest("parsegraph_Parser", function(resultDom) {
     var assertEquals = function(given, expected) {

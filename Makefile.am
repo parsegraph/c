@@ -51,7 +51,6 @@ CLEANFILES = \
 
 parsegraph_SCRIPT_FILES = \
 	src/index.js \
-	src/TestSuite.js \
 	src/math.js \
 	src/date.js \
 	src/dom.js \

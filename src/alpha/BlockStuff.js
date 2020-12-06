@@ -19,6 +19,8 @@ they exist to make it easier to piece things together
 hopefully
 */
 
+const TestSuite = require('parsegraph-testsuite').default;
+
 // --------------------------------------------
 // --------------------------------------------
 // ---------------  Colors  -------------------
@@ -53,7 +55,7 @@ alpha_Color.prototype.asRGB = function() {
   );
 };
 
-alpha_Color_Tests = new parsegraph_TestSuite('alpha_Color');
+alpha_Color_Tests = new TestSuite('alpha_Color');
 
 alpha_Color_Tests.addTest('alpha_Color.<constructor>', function(resultDom) {
   let v = new alpha_Color(0.1, 0.2, 0.3);
@@ -227,7 +229,7 @@ function alpha_Skin() {
   }
 }
 
-alpha_Skin_Tests = new parsegraph_TestSuite('alpha_Skin');
+alpha_Skin_Tests = new TestSuite('alpha_Skin');
 
 alpha_Skin_Tests.addTest('alpha_Skin.<constructor>', function(resultDom) {
   const green = new alpha_Color(0, 1, 0);
@@ -451,7 +453,7 @@ alpha_BlockTypes.prototype.Get = function() {
   return this.descriptions[descSkin][descShape];
 };
 
-alpha_BlockTypes_Tests = new parsegraph_TestSuite('alpha_BlockTypes');
+alpha_BlockTypes_Tests = new TestSuite('alpha_BlockTypes');
 
 alpha_BlockTypes_Tests.addTest('alpha_BlockTypes', function(resultDom) {
   const types = new alpha_BlockTypes();

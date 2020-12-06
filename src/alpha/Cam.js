@@ -4,6 +4,8 @@
 // -- raytracing
 // -- TODO: figure out aiming for third person
 
+const TestSuite = require('parsegraph-testsuite').default;
+
 // ----------------------------------------------
 // ------------------- CAMERA  ------------------
 // ----------------------------------------------
@@ -59,7 +61,7 @@ alpha_Camera.prototype.restore = function(json) {
   console.log(this.toJSON());
 };
 
-alpha_Camera_Tests = new parsegraph_TestSuite('alpha_Camera');
+alpha_Camera_Tests = new TestSuite('alpha_Camera');
 
 alpha_Camera_Tests.addTest('alpha_Camera', function(resultDom) {
   const window = new parsegraph_Window();

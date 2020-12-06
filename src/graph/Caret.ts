@@ -19,7 +19,7 @@ import {
   BLOCK_MATH_STYLE,
   SLOT_MATH_STYLE,
 } from './NodeStyle';
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import {
   createException,
   NO_NODE_FOUND,
@@ -536,7 +536,7 @@ export default class Caret {
   }
 }
 
-const caretTests = new TestSuite('parsegraph.Caret');
+const caretTests = new TestSuite('Caret');
 caretTests.addTest('new Caret', function() {
   let car = new Caret('s');
   const n = new Node(Type.BLOCK);

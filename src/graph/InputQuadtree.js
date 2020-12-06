@@ -1,3 +1,5 @@
+import TestSuite from 'parsegraph-testsuite';
+
 function parsegraph_QuadNodeObject(node, rect) {
   this._node = node;
   this._rect = rect;
@@ -40,7 +42,7 @@ parsegraph_InputQuadtree.prototype.nodeUnderCoords = function (x, y) {
   var nodeList = this.getNodeList(x, y);
 };
 
-parsegraph_InputQuadtree_Tests = new parsegraph_TestSuite(
+parsegraph_InputQuadtree_Tests = new TestSuite(
   "parsegraph_InputQuadtree"
 );
 

@@ -1,4 +1,5 @@
 /* eslint-disable require-jsdoc  */
+import TestSuite from 'parsegraph-testsuite';
 
 nodeTests = new TestSuite('Node');
 

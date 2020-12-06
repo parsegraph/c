@@ -1,5 +1,7 @@
 /* eslint-disable require-jsdoc */
 
+import TestSuite from 'parsegraph-testsuite';
+
 const listClasses = {};
 
 export default function Room(belt, world, roomId) {

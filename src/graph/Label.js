@@ -1,5 +1,5 @@
 import {defaultUnicode} from '../unicode';
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import {RIGHT_TO_LEFT, defaultFont} from './settings';
 import Caret from './Caret';
 import Rect from './Rect';

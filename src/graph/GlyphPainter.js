@@ -1,4 +1,4 @@
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import Color from './Color';
 import {getTextureSize} from '../gl';
 import Window from './Window';

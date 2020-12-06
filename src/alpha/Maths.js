@@ -1,4 +1,4 @@
-import TestSuite from '../TestSuite';
+const TestSuite = require('parsegraph-testsuite').default;
 import {fuzzyEquals} from '../math';
 import {makePerspective} from '../gl';
 /* eslint-disable require-jsdoc, prefer-spread, new-cap */

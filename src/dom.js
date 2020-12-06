@@ -1,5 +1,7 @@
 /* eslint-disable require-jsdoc */
 
+import TestSuite from 'parsegraph-testsuite';
+
 export default function focusElement(element) {
   return window.setTimeout(function() {
     element.focus();

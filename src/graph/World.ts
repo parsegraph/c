@@ -1,4 +1,4 @@
-import TestSuite from '../TestSuite';
+import TestSuite from 'parsegraph-testsuite';
 import Freezer from './Freezer';
 import CameraBox from './CameraBox';
 import Node, {
