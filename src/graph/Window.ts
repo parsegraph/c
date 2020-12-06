@@ -820,7 +820,7 @@ export default class Window {
 
   setBackground(color, ...args) {
     if (args.length > 1) {
-      return this.setBackground(createColor.apply(this, args));
+      return this.setBackground(new Color(...args));
     }
     this._backgroundColor = color;
   };

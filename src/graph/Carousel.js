@@ -1,6 +1,7 @@
 import FanPainter from './FanPainter';
 import {matrixMultiply3x3, makeScale3x3, makeTranslation3x3} from '../gl';
 import {CAROUSEL_SHOW_DURATION} from './settings';
+import Color from './Color';
 /* eslint-disable require-jsdoc */
 
 export default function Carousel(viewport) {
@@ -395,8 +396,8 @@ Carousel.prototype.paint = function() {
       0,
       0,
       Math.PI * 2,
-      createColor(1, 1, 1, 1),
-      createColor(0.5, 0.5, 0.5, 0.4),
+      new Color(1, 1, 1, 1),
+      new Color(0.5, 0.5, 0.5, 0.4),
   );
 
   this._carouselPaintingDirty = false;

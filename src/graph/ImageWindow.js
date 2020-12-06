@@ -1,4 +1,6 @@
-IMAGEWINDOW_COUNT = 0;
+import Color from './Color';
+
+let IMAGEWINDOW_COUNT = 0;
 /* eslint-disable require-jsdoc */
 
 export default function ImageWindow(width, height) {
@@ -300,7 +302,7 @@ ImageWindow.prototype.paint = function(timeout) {
 
 ImageWindow.prototype.setBackground = function(color, ...args) {
   if (arguments.length > 1) {
-    return this.setBackground(createColor.apply(this, ...args));
+    return this.setBackground(new Color(...args));
   }
   this._backgroundColor = color;
 };
